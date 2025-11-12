@@ -1,14 +1,16 @@
 import { useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import "./App.css";
+
+import { createTauRPCProxy } from "./rpc/bindings";
+const taurpc = createTauRPCProxy();
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("");
   const [name, setName] = useState("");
 
   async function greet() {
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    setGreetMsg(await invoke("greet", { name }));
+    const msg = await taurpc.greet(name);
+    setGreetMsg(msg);
   }
 
   return (
