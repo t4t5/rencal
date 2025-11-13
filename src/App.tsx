@@ -5,9 +5,7 @@ import "@/global.css"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import { createTauRPCProxy } from "@/rpc/bindings"
-
-const taurpc = createTauRPCProxy()
+import { rpc } from "@/rpc"
 
 function App() {
   const [greetMsg, setGreetMsg] = useState("")
@@ -16,7 +14,7 @@ function App() {
   const [isConnecting, setIsConnecting] = useState(false)
 
   async function greet() {
-    const msg = await taurpc.greet(name)
+    const msg = await rpc.greet(name)
     setGreetMsg(msg)
   }
 
@@ -24,7 +22,7 @@ function App() {
     setIsConnecting(true)
     setCalendarResult("Starting OAuth flow...")
     try {
-      const result = await taurpc.start_google_oauth()
+      const result = await rpc.start_google_oauth()
       setCalendarResult(result)
     } catch (error) {
       setCalendarResult(`Error: ${error}`)
