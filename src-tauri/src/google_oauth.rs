@@ -5,8 +5,12 @@ use oauth2::{
     AccessToken, AuthUrl, AuthorizationCode, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge,
     RedirectUrl, Scope, TokenResponse, TokenUrl,
 };
-use std::io::{BufRead, BufReader, Write};
-use std::net::TcpListener;
+use socket2::{Domain, Socket, Type};
+use std::net::SocketAddr;
+use std::sync::{Arc, Mutex};
+use tauri::{AppHandle, Runtime};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::net::TcpListener;
 use url::Url;
 
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -50,48 +54,7 @@ fn create_google_oauth_client() -> Result<BasicClient> {
     )
 }
 
-// Start a temporary HTTP server to receive the OAuth callback
-fn handle_oauth_redirect() -> Result<AuthorizationCode> {
-    let bind_addr = format!("127.0.0.1:{}", LOCAL_OAUTH_REDIRECT_PORT);
-
-    let listener = TcpListener::bind(&bind_addr)
-        .with_context(|| format!("Failed to bind to {}", bind_addr))?;
-
-    let (mut stream, _) = listener.accept().context("Failed to accept connection")?;
-
-    let mut reader = BufReader::new(&stream);
-    let mut http_request = String::new();
-    reader
-        .read_line(&mut http_request)
-        .context("Failed to read HTTP request")?;
-
-    // Send success response to browser
-    stream
-        .write_all(SUCCESS_RESPONSE.as_bytes())
-        .and_then(|_| stream.flush())
-        .context("Failed to send HTTP response")?;
-
-    // Extract the path from the request
-    // (second token in "GET /path HTTP/1.1")
-    let path = http_request
-        .split_whitespace()
-        .nth(1)
-        .ok_or_else(|| anyhow!("Invalid HTTP request format"))?;
-
-    // Parse the callback URL to extract authorization code
-    let callback_url = format!("http://localhost:{}{}", LOCAL_OAUTH_REDIRECT_PORT, path);
-    let url = Url::parse(&callback_url).context("Failed to parse callback URL")?;
-
-    let code = url
-        .query_pairs()
-        .find(|(key, _)| key == "code")
-        .map(|(_, value)| value.to_string())
-        .ok_or_else(|| anyhow!("Authorization code not found in callback URL"))?;
-
-    Ok(AuthorizationCode::new(code))
-}
-
-pub async fn get_access_token() -> Result<AccessToken> {
+pub async fn get_access_token<R: Runtime>(app: AppHandle<R>) -> Result<AccessToken> {
     let client = create_google_oauth_client()?;
 
     let (pkce_challenge, pkce_verifier) = PkceCodeChallenge::new_random_sha256();
@@ -105,11 +68,98 @@ pub async fn get_access_token() -> Result<AccessToken> {
         ))
         .url();
 
-    // Open the authorization URL in the user's browser
-    open::that(auth_url.as_str()).context("Failed to open browser")?;
+    // Start HTTP server FIRST, before opening the popup
+    // Use SO_REUSEADDR to allow immediate rebinding if port was recently used
+    let bind_addr: SocketAddr = format!("127.0.0.1:{}", LOCAL_OAUTH_REDIRECT_PORT)
+        .parse()
+        .context("Failed to parse bind address")?;
 
-    // Receive the OAuth callback from the browser
-    let auth_code = handle_oauth_redirect()?;
+    let socket = Socket::new(Domain::IPV4, Type::STREAM, None)
+        .context("Failed to create socket")?;
+    socket.set_reuse_address(true)
+        .context("Failed to set SO_REUSEADDR")?;
+    socket.set_nonblocking(true)
+        .context("Failed to set non-blocking mode")?;
+    socket.bind(&bind_addr.into())
+        .with_context(|| format!("Failed to bind to {}", bind_addr))?;
+    socket.listen(1)
+        .context("Failed to listen on socket")?;
+
+    let std_listener: std::net::TcpListener = socket.into();
+    let listener = TcpListener::from_std(std_listener)
+        .context("Failed to create async listener")?;
+
+    // Create a channel to signal when the window is closed
+    let (close_tx, close_rx) = tokio::sync::oneshot::channel();
+    let close_tx = Arc::new(Mutex::new(Some(close_tx)));
+
+    // Now create the popup window with Google OAuth page
+    let window = tauri::WebviewWindowBuilder::new(
+        &app,
+        "google-oauth",
+        tauri::WebviewUrl::External(auth_url.clone()),
+    )
+    .title("Sign in with Google")
+    .inner_size(600.0, 700.0)
+    .center()
+    .resizable(false)
+    .build()
+    .context("Failed to create OAuth popup window")?;
+
+    // Listen for window close event
+    let close_tx_clone = close_tx.clone();
+    window.on_window_event(move |event| {
+        if let tauri::WindowEvent::Destroyed = event {
+            if let Ok(mut tx) = close_tx_clone.lock() {
+                if let Some(sender) = tx.take() {
+                    let _ = sender.send(());
+                }
+            }
+        }
+    });
+
+    // Race between getting the OAuth callback and the window closing
+    let auth_code = tokio::select! {
+        result = async {
+            // Wait for the OAuth callback
+            let (mut stream, _) = listener.accept().await
+                .context("Failed to accept connection")?;
+
+            let mut reader = BufReader::new(&mut stream);
+            let mut http_request = String::new();
+            reader.read_line(&mut http_request).await
+                .context("Failed to read HTTP request")?;
+
+            // Send success response to browser
+            stream.write_all(SUCCESS_RESPONSE.as_bytes()).await
+                .context("Failed to write HTTP response")?;
+            stream.flush().await
+                .context("Failed to flush HTTP response")?;
+
+            // Extract the authorization code from the callback URL
+            let path = http_request
+                .split_whitespace()
+                .nth(1)
+                .ok_or_else(|| anyhow!("Invalid HTTP request format"))?;
+
+            let callback_url = format!("http://localhost:{}{}", LOCAL_OAUTH_REDIRECT_PORT, path);
+            let url = Url::parse(&callback_url).context("Failed to parse callback URL")?;
+
+            let code = url
+                .query_pairs()
+                .find(|(key, _)| key == "code")
+                .map(|(_, value)| value.to_string())
+                .ok_or_else(|| anyhow!("Authorization code not found in callback URL"))?;
+
+            Ok::<AuthorizationCode, anyhow::Error>(AuthorizationCode::new(code))
+        } => result?,
+        _ = close_rx => {
+            return Err(anyhow!("OAuth canceled: window was closed"));
+        }
+    };
+
+    // Close the OAuth popup window (if it's still open)
+    let _ = window.close();
 
     // Exchange the authorization code for an access token
     let token_result = client

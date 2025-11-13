@@ -5,7 +5,7 @@ mod google_oauth;
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn greet(name: String) -> String;
-    async fn start_google_oauth() -> Result<String, String>;
+    async fn start_google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<String, String>;
     async fn create_popup<R: Runtime>(app_handle: AppHandle<R>) -> Result<(), String>;
 }
 
@@ -35,8 +35,8 @@ impl Api for ApiImpl {
         Ok(())
     }
 
-    async fn start_google_oauth(self) -> Result<String, String> {
-        let access_token = google_oauth::get_access_token()
+    async fn start_google_oauth<R: Runtime>(self, app: AppHandle<R>) -> Result<String, String> {
+        let access_token = google_oauth::get_access_token(app)
             .await
             .map_err(|e| e.to_string())?;
 

@@ -3560,6 +3560,7 @@ dependencies = [
  "reqwest 0.12.24",
  "serde",
  "serde_json",
+ "socket2 0.5.10",
  "specta",
  "tauri",
  "tauri-build",
