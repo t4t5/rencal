@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 
 import { rpc } from "@/rpc"
 
+import CalendarCard from "./components/calendar-card"
+
 function App() {
   const [greetMsg, setGreetMsg] = useState("")
   const [name, setName] = useState("")
@@ -32,8 +34,10 @@ function App() {
   }
 
   return (
-    <main className="container">
+    <main>
       <h1 className="font-bold">Welcome to Sequence</h1>
+
+      <CalendarCard />
 
       <div>
         <h2>Google Calendar Integration</h2>
