@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import "./App.css"
+import "@/global.css"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
