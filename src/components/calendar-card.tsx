@@ -6,7 +6,6 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
-import { Card, CardContent, CardFooter } from "@/components/ui/card"
 
 const events = [
   {
@@ -30,11 +29,9 @@ export default function CalendarCard() {
   const [date, setDate] = React.useState<Date | undefined>(new Date(2025, 5, 12))
 
   return (
-    <Card className="w-full py-4 h-auto!">
-      <CardContent className="px-2">
-        <Calendar mode="single" selected={date} onSelect={setDate} className="bg-transparent p-0" required />
-      </CardContent>
-      <CardFooter className="flex flex-col items-start gap-3 border-t px-4 pt-4!">
+    <div className="w-full py-4 h-auto!">
+      <Calendar mode="single" selected={date} onSelect={setDate} className="bg-transparent p-0" required />
+      <div className="flex flex-col items-start gap-3 border-t px-4 pt-4!">
         <div className="flex w-full items-center justify-between px-1">
           <div className="text-sm font-medium">
             {date?.toLocaleDateString("en-US", {
@@ -59,7 +56,7 @@ export default function CalendarCard() {
             </div>
           ))}
         </div>
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   )
 }

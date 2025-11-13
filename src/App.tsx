@@ -35,9 +35,13 @@ function App() {
 
   return (
     <main>
-      <h1 className="font-bold">Welcome to Sequence</h1>
+      <div className="flex">
+        <div className="w-full lg:w-[300px]">
+          <CalendarCard />
+        </div>
 
-      <CalendarCard />
+        <div className="hidden lg:block">BIG VIEW</div>
+      </div>
 
       <div>
         <h2>Google Calendar Integration</h2>
