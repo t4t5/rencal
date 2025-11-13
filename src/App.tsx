@@ -2,6 +2,9 @@ import { useState } from "react";
 import "./App.css";
 
 import { createTauRPCProxy } from "./rpc/bindings";
+import { Button } from "./components/ui/button";
+import { Input } from "./components/ui/input";
+
 const taurpc = createTauRPCProxy();
 
 function App() {
@@ -30,28 +33,14 @@ function App() {
 
   return (
     <main className="container">
-      <h1>Welcome to Sequence</h1>
+      <h1 className="font-bold">Welcome to Sequence</h1>
 
-      <div style={{ marginBottom: "2rem" }}>
+      <div>
         <h2>Google Calendar Integration</h2>
-        <button
-          onClick={connectGoogleCalendar}
-          disabled={isConnecting}
-          style={{ padding: "10px 20px", fontSize: "16px" }}
-        >
+        <Button onClick={connectGoogleCalendar} disabled={isConnecting}>
           {isConnecting ? "Connecting..." : "Connect Google Calendar"}
-        </button>
-        {calendarResult && (
-          <pre style={{
-            marginTop: "1rem",
-            padding: "1rem",
-            background: "#f4f4f4",
-            borderRadius: "4px",
-            whiteSpace: "pre-wrap"
-          }}>
-            {calendarResult}
-          </pre>
-        )}
+        </Button>
+        {calendarResult && <pre>{calendarResult}</pre>}
       </div>
 
       <hr />
@@ -63,12 +52,11 @@ function App() {
           greet();
         }}
       >
-        <input
-          id="greet-input"
+        <Input
           onChange={(e) => setName(e.currentTarget.value)}
           placeholder="Enter a name..."
         />
-        <button type="submit">Greet</button>
+        <Button type="submit">Greet</Button>
       </form>
       <p>{greetMsg}</p>
     </main>
