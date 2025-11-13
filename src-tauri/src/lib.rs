@@ -1,5 +1,6 @@
 use tauri::{AppHandle, Runtime};
 
+mod oauth;
 mod google_oauth;
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
