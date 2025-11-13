@@ -1,6 +1,10 @@
 install:
   pnpm install
 
+[working-directory: 'src-tauri']
+build:
+  cargo build
+
 dev:
   pnpm tauri dev
 

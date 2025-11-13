@@ -33,6 +33,10 @@ function App() {
     }
   }
 
+  async function openPopup() {
+    await rpc.create_popup()
+  }
+
   return (
     <main>
       <div className="flex">
@@ -49,6 +53,11 @@ function App() {
           {isConnecting ? "Connecting..." : "Connect Google Calendar"}
         </Button>
         {calendarResult && <pre>{calendarResult}</pre>}
+      </div>
+
+      <div>
+        <h2>Popup Window Demo</h2>
+        <Button onClick={openPopup}>Open Popup</Button>
       </div>
 
       <hr />

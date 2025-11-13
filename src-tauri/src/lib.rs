@@ -1,9 +1,12 @@
+use tauri::{AppHandle, Runtime};
+
 mod google_oauth;
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn greet(name: String) -> String;
     async fn start_google_oauth() -> Result<String, String>;
+    async fn create_popup<R: Runtime>(app_handle: AppHandle<R>) -> Result<(), String>;
 }
 
 #[derive(Clone)]
@@ -13,6 +16,23 @@ struct ApiImpl;
 impl Api for ApiImpl {
     async fn greet(self, name: String) -> String {
         format!("Hello {}!", name)
+    }
+
+    async fn create_popup<R: Runtime>(self, app: AppHandle<R>) -> Result<(), String> {
+        tauri::WebviewWindowBuilder::new(
+            &app,
+            "popup",
+            tauri::WebviewUrl::App("popup.html".into()),
+        )
+        .title("Popup")
+        .inner_size(400.0, 300.0)
+        .center()
+        .decorations(false)
+        .resizable(false)
+        .build()
+        .map_err(|e| e.to_string())?;
+
+        Ok(())
     }
 
     async fn start_google_oauth(self) -> Result<String, String> {
