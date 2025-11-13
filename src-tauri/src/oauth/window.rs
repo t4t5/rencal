@@ -20,6 +20,7 @@ pub fn create_oauth_popup<R: Runtime>(
             .title(window_title)
             .inner_size(600.0, 700.0)
             .center()
+            .decorations(false)
             .resizable(false)
             .build()
             .context("Failed to create OAuth popup window")?;
