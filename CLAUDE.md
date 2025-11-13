@@ -26,3 +26,7 @@ Uses standalone OAuth 2.0 authentication - no central Sequence server required:
 4. Google redirects back to localhost with authorization code
 5. App exchanges code for access token using PKCE
 6. App fetches calendar data directly from Google Calendar API
+
+### OAuth Security Model
+
+The OAuth client ID and secret are embedded in `src-tauri/src/google_oauth.rs`. This is standard for desktop apps (similar to Thunderbird) and is not a security vulnerability. The embedded credentials just identify the app to Google, while PKCE provides the actual security against token theft.

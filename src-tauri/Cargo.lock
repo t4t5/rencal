@@ -3554,6 +3554,7 @@ dependencies = [
 name = "sequence"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "oauth2",
  "open",
  "reqwest 0.12.24",

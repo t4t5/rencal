@@ -16,14 +16,15 @@ impl Api for ApiImpl {
     }
 
     async fn start_google_oauth(self) -> Result<String, String> {
-        // Run the OAuth flow to get an access token
-        let access_token = google_oauth::run_oauth_flow().await?;
+        let access_token = google_oauth::get_access_token()
+            .await
+            .map_err(|e| e.to_string())?;
 
-        // Use the access token to fetch the user's calendar list
+        // Use access token to fetch user's calendar list
         let client = reqwest::Client::new();
         let response = client
             .get("https://www.googleapis.com/calendar/v3/users/me/calendarList")
-            .bearer_auth(&access_token)
+            .bearer_auth(access_token.secret())
             .send()
             .await
             .map_err(|e| format!("Failed to fetch calendars: {}", e))?;
