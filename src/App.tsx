@@ -1,9 +1,12 @@
-import { useState } from "react"
+import Database from "@tauri-apps/plugin-sql"
+import { useState, useEffect } from "react"
 
 import "@/global.css"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+
+import { Calendar } from "@/rpc/bindings"
 
 import { rpc } from "@/rpc"
 
@@ -14,6 +17,22 @@ function App() {
   const [name, setName] = useState("")
   const [calendarResult, setCalendarResult] = useState("")
   const [isConnecting, setIsConnecting] = useState(false)
+  const [storedCalendars, setStoredCalendars] = useState<Calendar[]>([])
+
+  // Load calendars from database on mount
+  useEffect(() => {
+    loadCalendars()
+  }, [])
+
+  async function loadCalendars() {
+    try {
+      const db = await Database.load("sqlite:sequence.db")
+      const result = await db.select<Calendar[]>("SELECT * FROM calendars")
+      setStoredCalendars(result)
+    } catch (error) {
+      console.error("Failed to load calendars:", error)
+    }
+  }
 
   async function greet() {
     const msg = await rpc.greet(name)
@@ -24,8 +43,25 @@ function App() {
     setIsConnecting(true)
     setCalendarResult("Starting OAuth flow...")
     try {
-      const result = await rpc.start_google_oauth()
-      setCalendarResult(result)
+      // Fetch calendars from Google via OAuth
+      const calendars = await rpc.start_google_oauth()
+
+      // Store calendars in SQLite database
+      const db = await Database.load("sqlite:sequence.db")
+
+      for (const calendar of calendars) {
+        await db.execute("INSERT OR REPLACE INTO calendars (id, name, color, selected) VALUES ($1, $2, $3, $4)", [
+          calendar.id,
+          calendar.name,
+          calendar.color || "",
+          calendar.selected ? 1 : 0,
+        ])
+      }
+
+      setCalendarResult(`Connected! Stored ${calendars.length} calendars:\n${calendars.map((c) => c.name).join("\n")}`)
+
+      // Reload calendars from database to update UI
+      await loadCalendars()
     } catch (error) {
       setCalendarResult(`Error: ${error}`)
     } finally {
@@ -49,6 +85,19 @@ function App() {
           {isConnecting ? "Connecting..." : "Connect Google Calendar"}
         </Button>
         {calendarResult && <pre>{calendarResult}</pre>}
+
+        {storedCalendars.length > 0 && (
+          <div>
+            <h3>Stored Calendars ({storedCalendars.length})</h3>
+            <ul>
+              {storedCalendars.map((calendar) => (
+                <li key={calendar.id}>
+                  {calendar.name} {calendar.color && `(${calendar.color})`} {calendar.selected ? "✓" : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <hr />

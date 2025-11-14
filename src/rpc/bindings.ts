@@ -3,8 +3,10 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from "taurp
 
 type TAURI_CHANNEL<T> = (response: T) => void
 
+export type Calendar = { id: string; name: string; color: string | null; selected: boolean }
+
 const ARGS_MAP = { "": '{"greet":["name"],"start_google_oauth":[]}' }
-export type Router = { "": { greet: (name: string) => Promise<string>; start_google_oauth: () => Promise<string> } }
+export type Router = { "": { greet: (name: string) => Promise<string>; start_google_oauth: () => Promise<Calendar[]> } }
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)
 export type { InferCommandOutput }

@@ -2,11 +2,17 @@ use tauri::{AppHandle, Runtime};
 
 mod google_oauth;
 mod oauth;
+mod storage;
+
+// Re-export Calendar type for taurpc macro visibility
+pub use storage::Calendar;
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn greet(name: String) -> String;
-    async fn start_google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<String, String>;
+    async fn start_google_oauth<R: Runtime>(
+        app_handle: AppHandle<R>,
+    ) -> Result<Vec<Calendar>, String>;
 }
 
 #[derive(Clone)]
@@ -18,8 +24,11 @@ impl Api for ApiImpl {
         format!("Hello {}!", name)
     }
 
-    async fn start_google_oauth<R: Runtime>(self, app: AppHandle<R>) -> Result<String, String> {
-        let access_token = google_oauth::get_access_token(app)
+    async fn start_google_oauth<R: Runtime>(
+        self,
+        app: AppHandle<R>,
+    ) -> Result<Vec<storage::Calendar>, String> {
+        let access_token = google_oauth::get_access_token(app.clone())
             .await
             .map_err(|e| e.to_string())?;
 
@@ -41,19 +50,26 @@ impl Api for ApiImpl {
             .await
             .map_err(|e| format!("Failed to parse calendar response: {}", e))?;
 
-        // Extract calendar names for display
+        // Parse calendars and extract data for storage
         let calendars = calendar_data["items"]
             .as_array()
             .ok_or("No calendars found")?
             .iter()
-            .filter_map(|cal| cal["summary"].as_str().map(|s| s.to_string()))
+            .filter_map(|cal| {
+                let id = cal["id"].as_str()?.to_string();
+                let name = cal["summary"].as_str()?.to_string();
+                let color = cal["backgroundColor"].as_str().map(|s| s.to_string());
+
+                Some(Calendar {
+                    id,
+                    name,
+                    color,
+                    selected: true,
+                })
+            })
             .collect::<Vec<_>>();
 
-        Ok(format!(
-            "Connected! Found {} calendars:\n{}",
-            calendars.len(),
-            calendars.join("\n")
-        ))
+        Ok(calendars)
     }
 }
 
@@ -61,6 +77,11 @@ impl Api for ApiImpl {
 pub async fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())
+        .plugin(
+            tauri_plugin_sql::Builder::new()
+                .add_migrations("sqlite:sequence.db", storage::get_migrations())
+                .build(),
+        )
         .invoke_handler(taurpc::create_ipc_handler(ApiImpl.into_handler()))
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
