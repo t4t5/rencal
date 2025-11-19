@@ -121,6 +121,13 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
+
+  /* Omarchy theme */
+  --background: #1a1b26; /* bg-primary */
+
+  --primary: #0094c6; /* button-primary-bg */
+  --primary-foreground: white;
+  --accent: #d9d9d930 /* active-bg */;
 }
 
 @layer base {
