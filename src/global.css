@@ -87,6 +87,12 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Figma: */
+  --color-activeBg: var(--activeBg);
+  --color-bgPrimary: var(--bgPrimary);
+  --color-buttonPrimaryBg: var(--buttonPrimaryBg);
+  --color-active: var(--active);
 }
 
 .dark {
@@ -122,12 +128,17 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.552 0.016 285.938);
 
-  /* Omarchy theme */
-  --background: #1a1b26; /* bg-primary */
+  /* Figma variables: */
+  --activeBg: #d9d9d930;
+  --bgPrimary: #1a1b26;
+  --buttonPrimaryBg: #0094c6;
+  --active: #36c3f3;
 
-  --primary: #0094c6; /* button-primary-bg */
+  /* shadcn variable adjustments */
+  --background: var(--bgPrimary);
+  --primary: var(--buttonPrimaryBg);
   --primary-foreground: white;
-  --accent: #d9d9d930 /* active-bg */;
+  --accent: var(--activeBg);
 }
 
 @layer base {
@@ -136,5 +147,6 @@
   }
   body {
     @apply bg-background text-foreground;
+    min-height: 100vh;
   }
 }
