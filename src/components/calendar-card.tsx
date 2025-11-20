@@ -28,9 +28,22 @@ const events = [
 export default function CalendarCard() {
   const [activeDate, setActiveDate] = React.useState<Date | undefined>(new Date())
 
+  const handleMonthChange = React.useCallback((newMonth: Date) => {
+    // When navigating months, update activeDate to the first day of the new month
+    setActiveDate(newMonth)
+  }, [])
+
   return (
     <div className="w-full py-4 h-auto!">
-      <Calendar mode="single" selected={activeDate} onSelect={setActiveDate} month={activeDate} className="bg-transparent p-0" required />
+      <Calendar
+        mode="single"
+        selected={activeDate}
+        onSelect={setActiveDate}
+        month={activeDate}
+        onMonthChange={handleMonthChange}
+        className="bg-transparent p-0"
+        required
+      />
       <div className="flex flex-col items-start gap-3 border-t px-4 pt-4!">
         <div className="flex w-full items-center justify-between px-1">
           <div className="text-sm font-medium">
