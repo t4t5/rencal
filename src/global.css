@@ -133,6 +133,7 @@
   --activeBg: #d9d9d930;
   --bgPrimary: #1a1b26;
   --buttonPrimaryBg: #0094c6;
+  --buttonSecondaryBg: #ffffff08;
   --active: #36c3f3;
   --weekendBg: #ffffff05;
 
@@ -140,6 +141,7 @@
   --background: var(--bgPrimary);
   --primary: var(--buttonPrimaryBg);
   --primary-foreground: white;
+  --secondary: var(--buttonSecondaryBg);
   --accent: var(--activeBg);
 }
 

@@ -2,11 +2,10 @@ import { useCallback, useState } from "react"
 
 import "@/global.css"
 
+import { ActionBar } from "@/components/ActionBar"
+import { CalendarConnector } from "@/components/CalendarConnector"
+import { Events } from "@/components/Events"
 import { Calendar } from "@/components/ui/calendar"
-
-import { ActionBar } from "./components/ActionBar"
-import { CalendarConnector } from "./components/CalendarConnector"
-import { Events } from "./components/Events"
 
 function App() {
   const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
