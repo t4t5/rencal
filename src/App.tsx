@@ -4,6 +4,7 @@ import "@/global.css"
 
 import { Calendar } from "@/components/ui/calendar"
 
+import { ActionBar } from "./components/ActionBar"
 import { CalendarConnector } from "./components/CalendarConnector"
 import { Events } from "./components/Events"
 
@@ -17,6 +18,7 @@ function App() {
   return (
     <main className="flex h-screen">
       <div className="w-full lg:w-[300px] flex flex-col">
+        <ActionBar />
         <Calendar
           mode="single"
           selected={activeDate}
@@ -27,7 +29,7 @@ function App() {
           required
         />
 
-        <div className="grow bg-red-200 overflow-auto flex-col gap-6">
+        <div className="grow overflow-auto flex-col gap-6">
           <Events />
           <CalendarConnector />
         </div>

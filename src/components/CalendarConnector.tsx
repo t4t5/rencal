@@ -58,7 +58,7 @@ export function CalendarConnector() {
   }
 
   return (
-    <div className="bg-green-200">
+    <div className="bg-slate-900">
       <h2>Google Calendar Integration</h2>
       <Button onClick={connectGoogleCalendar} disabled={isConnecting}>
         {isConnecting ? "Connecting..." : "Connect Google Calendar"}
