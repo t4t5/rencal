@@ -93,6 +93,7 @@
   --color-bgPrimary: var(--bgPrimary);
   --color-buttonPrimaryBg: var(--buttonPrimaryBg);
   --color-active: var(--active);
+  --color-weekendBg: var(--weekendBg);
 }
 
 .dark {
@@ -133,6 +134,7 @@
   --bgPrimary: #1a1b26;
   --buttonPrimaryBg: #0094c6;
   --active: #36c3f3;
+  --weekendBg: #ffffff05;
 
   /* shadcn variable adjustments */
   --background: var(--bgPrimary);
