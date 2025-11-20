@@ -4,7 +4,7 @@ import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
 import { CalendarConnector } from "@/components/CalendarConnector"
-import { Events } from "@/components/Events"
+import { EventList } from "@/components/Events"
 import { Calendar } from "@/components/ui/calendar"
 
 function App() {
@@ -29,7 +29,7 @@ function App() {
         />
 
         <div className="grow overflow-auto flex-col gap-6">
-          <Events />
+          <EventList />
           <CalendarConnector />
         </div>
       </div>
