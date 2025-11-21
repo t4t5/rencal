@@ -1,7 +1,7 @@
 use anyhow::Result;
 use tauri::{AppHandle, Runtime};
 
-use crate::oauth::{handle_oauth, OAuthConfig, OAuthTokenData};
+use crate::oauth::{handle_oauth, OAuthConfig, SessionData};
 
 // Google OAuth endpoints
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -23,7 +23,7 @@ const LOCAL_OAUTH_REDIRECT_PORT: u16 = 8080;
 /// and exchanges the code for access token and refresh token with calendar.readonly scope.
 ///
 /// Returns an error if the user closes the window or if authentication fails.
-pub async fn get_oauth_token<R: Runtime>(app: AppHandle<R>) -> Result<OAuthTokenData> {
+pub async fn get_oauth_token<R: Runtime>(app: AppHandle<R>) -> Result<SessionData> {
     let config = OAuthConfig {
         client_id: APP_CLIENT_ID.to_string(),
         client_secret: APP_CLIENT_SECRET.to_string(),

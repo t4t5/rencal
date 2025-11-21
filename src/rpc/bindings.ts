@@ -7,7 +7,7 @@ export type Calendar = { id: string; name: string; color: string | null; selecte
 
 export type OAuthProvider = "Google"
 
-export type OAuthToken = {
+export type Session = {
   access_token: string
   refresh_token: string | null
   expires_at: string
@@ -21,7 +21,7 @@ const ARGS_MAP = {
 export type Router = {
   "": {
     fetch_google_calendars: (accessToken: string) => Promise<Calendar[]>
-    google_oauth: () => Promise<OAuthToken>
+    google_oauth: () => Promise<Session>
     greet: (name: string) => Promise<string>
   }
 }

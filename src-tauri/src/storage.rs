@@ -15,8 +15,8 @@ pub fn get_migrations() -> Vec<Migration> {
         },
         Migration {
             version: 2,
-            description: "create oauth_tokens table",
-            sql: "CREATE TABLE oauth_tokens (
+            description: "create sessions table",
+            sql: "CREATE TABLE sessions (
                 access_token TEXT PRIMARY KEY,
                 refresh_token TEXT,
                 expires_at INTEGER NOT NULL,
@@ -42,7 +42,7 @@ pub enum OAuthProvider {
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
-pub struct OAuthToken {
+pub struct Session {
     pub access_token: String,
     pub refresh_token: Option<String>,
     #[serde(serialize_with = "serialize_i64_as_string")]

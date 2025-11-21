@@ -6,6 +6,7 @@ A calendar app crafted especially for Omarchy.
 
 - `just build`: build the app and generate tauRPC bindings
 - `just check`: check for errors
+- `just generate`: to regenerate `src/rpc/bindings.ts`
 
 ## Architecture
 

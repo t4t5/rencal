@@ -5,12 +5,12 @@ mod oauth;
 mod storage;
 
 // Re-export types for taurpc macro visibility
-pub use storage::{Calendar, OAuthProvider, OAuthToken};
+pub use storage::{Calendar, OAuthProvider, Session};
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn greet(name: String) -> String;
-    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<OAuthToken, String>;
+    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Session, String>;
     async fn fetch_google_calendars(access_token: String) -> Result<Vec<Calendar>, String>;
 }
 
@@ -26,12 +26,12 @@ impl Api for ApiImpl {
     async fn google_oauth<R: Runtime>(
         self,
         app: AppHandle<R>,
-    ) -> Result<storage::OAuthToken, String> {
+    ) -> Result<storage::Session, String> {
         let token_data = google_oauth::get_oauth_token(app.clone())
             .await
             .map_err(|e| e.to_string())?;
 
-        Ok(storage::OAuthToken {
+        Ok(storage::Session {
             access_token: token_data.access_token,
             refresh_token: token_data.refresh_token,
             expires_at: token_data.expires_at,

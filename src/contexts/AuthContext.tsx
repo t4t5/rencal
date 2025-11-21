@@ -1,6 +1,6 @@
 import { ReactNode, createContext, useContext, useState } from "react"
 
-import { OAuthToken } from "@/rpc/bindings"
+import { Session } from "@/rpc/bindings"
 
 import { getDb } from "@/lib/db"
 import { logger } from "@/lib/logger"
@@ -8,7 +8,7 @@ import { logger } from "@/lib/logger"
 interface AuthContextType {
   accessToken: string | null
   resumeSession: () => Promise<void>
-  saveSession: (session: OAuthToken) => Promise<void>
+  saveSession: (session: Session) => Promise<void>
   clearSession: () => Promise<void>
   loggedIn: boolean
 }
@@ -20,7 +20,7 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<OAuthToken | null>(null)
+  const [session, setSession] = useState<Session | null>(null)
 
   async function resumeSession() {
     logger.info("Resuming session from database...")
@@ -28,8 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       const db = await getDb()
 
-      const [firstResult] = await db.select<OAuthToken[]>(
-        "SELECT * FROM oauth_tokens WHERE provider = $1 LIMIT 1",
+      const [firstResult] = await db.select<Session[]>(
+        "SELECT * FROM sessions WHERE provider = $1 LIMIT 1",
         ["Google"],
       )
 
@@ -45,7 +45,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
-  async function saveSession(session: OAuthToken) {
+  async function saveSession(session: Session) {
     logger.info("Saving session to database:", session)
 
     const db = await getDb()
@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const { access_token, refresh_token, expires_at, provider, created_at } = session
 
     await db.execute(
-      "INSERT OR REPLACE INTO oauth_tokens (access_token, refresh_token, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)",
+      "INSERT OR REPLACE INTO sessions (access_token, refresh_token, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)",
       [access_token, refresh_token || "", expires_at, provider, created_at],
     )
 
@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Clearing session from database and state.")
 
     const db = await getDb()
-    await db.execute("DELETE FROM oauth_tokens WHERE provider = $1", ["GOOGLE"])
+    await db.execute("DELETE FROM sessions WHERE provider = $1", ["GOOGLE"])
     setSession(null)
 
     logger.info("Session cleared.")

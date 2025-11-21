@@ -24,7 +24,7 @@ pub struct OAuthConfig {
 }
 
 /// OAuth token response data
-pub struct OAuthTokenData {
+pub struct SessionData {
     pub access_token: String,
     pub refresh_token: Option<String>,
     pub expires_at: i64,
@@ -39,7 +39,7 @@ pub struct OAuthTokenData {
 pub async fn handle_oauth<R: Runtime>(
     app: AppHandle<R>,
     config: OAuthConfig,
-) -> Result<OAuthTokenData> {
+) -> Result<SessionData> {
     // Create OAuth client
     let client = BasicClient::new(
         ClientId::new(config.client_id),
@@ -118,7 +118,7 @@ pub async fn handle_oauth<R: Runtime>(
         now + 3600
     };
 
-    Ok(OAuthTokenData {
+    Ok(SessionData {
         access_token,
         refresh_token,
         expires_at,
