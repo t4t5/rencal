@@ -4,15 +4,14 @@ mod google_oauth;
 mod oauth;
 mod storage;
 
-// Re-export Calendar type for taurpc macro visibility
-pub use storage::Calendar;
+// Re-export types for taurpc macro visibility
+pub use storage::{Calendar, OAuthProvider, OAuthToken};
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn greet(name: String) -> String;
-    async fn start_google_oauth<R: Runtime>(
-        app_handle: AppHandle<R>,
-    ) -> Result<Vec<Calendar>, String>;
+    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<OAuthToken, String>;
+    async fn fetch_google_calendars(access_token: String) -> Result<Vec<Calendar>, String>;
 }
 
 #[derive(Clone)]
@@ -24,19 +23,32 @@ impl Api for ApiImpl {
         format!("Hello {}!", name)
     }
 
-    async fn start_google_oauth<R: Runtime>(
+    async fn google_oauth<R: Runtime>(
         self,
         app: AppHandle<R>,
-    ) -> Result<Vec<storage::Calendar>, String> {
-        let access_token = google_oauth::get_access_token(app.clone())
+    ) -> Result<storage::OAuthToken, String> {
+        let token_data = google_oauth::get_oauth_token(app.clone())
             .await
             .map_err(|e| e.to_string())?;
 
+        Ok(storage::OAuthToken {
+            access_token: token_data.access_token,
+            refresh_token: token_data.refresh_token,
+            expires_at: token_data.expires_at,
+            provider: storage::OAuthProvider::Google,
+            created_at: token_data.created_at,
+        })
+    }
+
+    async fn fetch_google_calendars(
+        self,
+        access_token: String,
+    ) -> Result<Vec<storage::Calendar>, String> {
         // Use access token to fetch user's calendar list
         let client = reqwest::Client::new();
         let response = client
             .get("https://www.googleapis.com/calendar/v3/users/me/calendarList")
-            .bearer_auth(access_token.secret())
+            .bearer_auth(access_token)
             .send()
             .await
             .map_err(|e| format!("Failed to fetch calendars: {}", e))?;

@@ -2,6 +2,11 @@
 
 A calendar app crafted especially for Omarchy.
 
+## Commands
+
+- `just build`: build the app and generate tauRPC bindings
+- `just check`: check for errors
+
 ## Architecture
 
 This is a Tauri application with a Rust backend and React frontend.

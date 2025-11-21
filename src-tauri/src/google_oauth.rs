@@ -1,8 +1,7 @@
 use anyhow::Result;
-use oauth2::AccessToken;
 use tauri::{AppHandle, Runtime};
 
-use crate::oauth::{handle_oauth, OAuthConfig};
+use crate::oauth::{handle_oauth, OAuthConfig, OAuthTokenData};
 
 // Google OAuth endpoints
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -21,10 +20,10 @@ const LOCAL_OAUTH_REDIRECT_PORT: u16 = 8080;
 /// Performs Google Calendar OAuth 2.0 authentication flow
 ///
 /// Opens a popup window with Google's OAuth consent page, waits for authorization,
-/// and exchanges the code for an access token with calendar.readonly scope.
+/// and exchanges the code for access token and refresh token with calendar.readonly scope.
 ///
 /// Returns an error if the user closes the window or if authentication fails.
-pub async fn get_access_token<R: Runtime>(app: AppHandle<R>) -> Result<AccessToken> {
+pub async fn get_oauth_token<R: Runtime>(app: AppHandle<R>) -> Result<OAuthTokenData> {
     let config = OAuthConfig {
         client_id: APP_CLIENT_ID.to_string(),
         client_secret: APP_CLIENT_SECRET.to_string(),
@@ -33,6 +32,10 @@ pub async fn get_access_token<R: Runtime>(app: AppHandle<R>) -> Result<AccessTok
         redirect_port: LOCAL_OAUTH_REDIRECT_PORT,
         scopes: vec!["https://www.googleapis.com/auth/calendar.readonly".to_string()],
         window_title: "Sign in with Google".to_string(),
+        extra_params: vec![
+            ("access_type".to_string(), "offline".to_string()),
+            ("prompt".to_string(), "consent".to_string()),
+        ],
     };
 
     handle_oauth(app, config).await

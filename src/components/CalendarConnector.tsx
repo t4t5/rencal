@@ -30,13 +30,23 @@ export function CalendarConnector() {
   async function connectGoogleCalendar() {
     setIsConnecting(true)
     setCalendarResult("Starting OAuth flow...")
-    try {
-      // Fetch calendars from Google via OAuth
-      const calendars = await rpc.start_google_oauth()
 
-      // Store calendars in SQLite database
+    try {
       const db = await Database.load("sqlite:sequence.db")
 
+      // Step 1: Perform OAuth and get tokens
+      const oauthToken = await rpc.google_oauth()
+
+      // Step 2: Store OAuth token in database
+      await db.execute(
+        "INSERT OR REPLACE INTO oauth_tokens (access_token, refresh_token, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)",
+        [oauthToken.access_token, oauthToken.refresh_token || "", oauthToken.expires_at, "GOOGLE", oauthToken.created_at],
+      )
+
+      // Step 3: Fetch calendars using the access token
+      const calendars = await rpc.fetch_google_calendars(oauthToken.access_token)
+
+      // Step 4: Store calendars in database
       for (const calendar of calendars) {
         await db.execute("INSERT OR REPLACE INTO calendars (id, name, color, selected) VALUES ($1, $2, $3, $4)", [
           calendar.id,

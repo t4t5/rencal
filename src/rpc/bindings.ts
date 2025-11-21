@@ -5,8 +5,24 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { id: string; name: string; color: string | null; selected: boolean }
 
-const ARGS_MAP = { "": '{"greet":["name"],"start_google_oauth":[]}' }
-export type Router = { "": { greet: (name: string) => Promise<string>; start_google_oauth: () => Promise<Calendar[]> } }
+export type OAuthProvider = "Google"
+
+export type OAuthToken = {
+  access_token: string
+  refresh_token: string | null
+  expires_at: string
+  provider: OAuthProvider
+  created_at: string
+}
+
+const ARGS_MAP = { "": '{"fetch_google_calendars":["access_token"],"google_oauth":[],"greet":["name"]}' }
+export type Router = {
+  "": {
+    fetch_google_calendars: (accessToken: string) => Promise<Calendar[]>
+    google_oauth: () => Promise<OAuthToken>
+    greet: (name: string) => Promise<string>
+  }
+}
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)
 export type { InferCommandOutput }

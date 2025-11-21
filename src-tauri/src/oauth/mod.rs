@@ -5,9 +5,10 @@ use anyhow::{Context, Result};
 use oauth2::basic::BasicClient;
 use oauth2::reqwest::async_http_client;
 use oauth2::{
-    AccessToken, AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge, RedirectUrl, Scope,
+    AuthUrl, ClientId, ClientSecret, CsrfToken, PkceCodeChallenge, RedirectUrl, Scope,
     TokenResponse, TokenUrl,
 };
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri::{AppHandle, Runtime};
 
 /// Configuration for an OAuth 2.0 flow
@@ -19,17 +20,26 @@ pub struct OAuthConfig {
     pub redirect_port: u16,
     pub scopes: Vec<String>,
     pub window_title: String,
+    pub extra_params: Vec<(String, String)>,
+}
+
+/// OAuth token response data
+pub struct OAuthTokenData {
+    pub access_token: String,
+    pub refresh_token: Option<String>,
+    pub expires_at: i64,
+    pub created_at: i64,
 }
 
 /// Runs a complete OAuth 2.0 PKCE flow with popup window and localhost callback
 /// 1. Creates a localhost HTTP server for OAuth callback
 /// 2. Opens a popup window with the OAuth provider's authorization page
 /// 3. Waits for either callback success or window close (cancellation)
-/// 4. Exchanges authorization code for access token
+/// 4. Exchanges authorization code for access token and refresh token
 pub async fn handle_oauth<R: Runtime>(
     app: AppHandle<R>,
     config: OAuthConfig,
-) -> Result<AccessToken> {
+) -> Result<OAuthTokenData> {
     // Create OAuth client
     let client = BasicClient::new(
         ClientId::new(config.client_id),
@@ -55,6 +65,11 @@ pub async fn handle_oauth<R: Runtime>(
 
     for scope in config.scopes {
         auth_url_builder = auth_url_builder.add_scope(Scope::new(scope));
+    }
+
+    // Add extra parameters (e.g., access_type=offline for Google)
+    for (key, value) in config.extra_params {
+        auth_url_builder = auth_url_builder.add_extra_param(key, value);
     }
 
     let (auth_url, _csrf_token) = auth_url_builder.url();
@@ -86,7 +101,27 @@ pub async fn handle_oauth<R: Runtime>(
         .await
         .context("Token exchange failed")?;
 
-    let access_token = token_result.access_token();
+    // Extract token data
+    let access_token = token_result.access_token().secret().to_string();
+    let refresh_token = token_result.refresh_token().map(|t| t.secret().to_string());
 
-    Ok(access_token.clone())
+    // Calculate expiry time
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .context("Failed to get current time")?
+        .as_secs() as i64;
+
+    let expires_at = if let Some(expires_in) = token_result.expires_in() {
+        now + expires_in.as_secs() as i64
+    } else {
+        // Default to 1 hour if not provided
+        now + 3600
+    };
+
+    Ok(OAuthTokenData {
+        access_token,
+        refresh_token,
+        expires_at,
+        created_at: now,
+    })
 }
