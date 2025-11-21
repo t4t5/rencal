@@ -2,8 +2,9 @@ import { ReactNode, createContext, useContext, useState } from "react"
 
 import { Session } from "@/rpc/bindings"
 
-import { getDb } from "@/lib/db"
 import { logger } from "@/lib/logger"
+
+import { getDb } from "@/db/connection"
 
 interface AuthContextType {
   accessToken: string | null
@@ -27,16 +28,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const db = await getDb()
+      const session = await db.session.get()
 
-      const [firstResult] = await db.select<Session[]>(
-        "SELECT * FROM sessions WHERE provider = $1 LIMIT 1",
-        ["Google"],
-      )
+      if (session) {
+        logger.info("Loaded session from database:", session)
 
-      if (firstResult) {
-        logger.info("Loaded session from database:", firstResult)
-
-        setSession(firstResult)
+        setSession(session)
       } else {
         logger.info("No session found in database.")
       }
@@ -49,13 +46,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Saving session to database:", session)
 
     const db = await getDb()
-
-    const { access_token, refresh_token, expires_at, provider, created_at } = session
-
-    await db.execute(
-      "INSERT OR REPLACE INTO sessions (access_token, refresh_token, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)",
-      [access_token, refresh_token || "", expires_at, provider, created_at],
-    )
+    await db.session.insert(session)
 
     logger.info("Session saved to database.")
 
@@ -66,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Clearing session from database and state.")
 
     const db = await getDb()
-    await db.execute("DELETE FROM sessions WHERE provider = $1", ["GOOGLE"])
+    await db.session.delete()
     setSession(null)
 
     logger.info("Session cleared.")
