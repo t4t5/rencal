@@ -10,4 +10,7 @@ dev:
 
 check:
   cargo check --manifest-path src-tauri/Cargo.toml
+  @just typecheck
+
+typecheck:
   pnpm typecheck

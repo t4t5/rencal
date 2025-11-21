@@ -2,45 +2,21 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
-import { Calendar, OAuthToken } from "@/rpc/bindings"
-
-import { getDb } from "@/lib/db"
-
 import { rpc } from "@/rpc"
+import { Calendar } from "@/rpc/bindings"
+
+import { useAuth } from "@/contexts/AuthContext"
 
 export function CalendarConnector() {
   const [calendarResult, setCalendarResult] = useState("")
   const [isConnecting, setIsConnecting] = useState(false)
   const [storedCalendars, setStoredCalendars] = useState<Calendar[]>([])
 
-  const [accessToken, setAccessToken] = useState<string | null>(null)
+  const { loggedIn, resumeSession, clearSession, saveSession } = useAuth()
 
-  // Load calendars from database on mount
   useEffect(() => {
-    void loadAccessToken()
+    void resumeSession()
   }, [])
-
-  async function loadAccessToken() {
-    try {
-      const db = await getDb()
-      const result = await db.select<OAuthToken[]>("SELECT * FROM oauth_tokens WHERE provider = $1 LIMIT 1", ["GOOGLE"])
-      if (result.length > 0) {
-        setAccessToken(result[0].access_token)
-      }
-    } catch (error) {
-      console.error("Failed to load access token:", error)
-    }
-  }
-
-  async function saveOauthToken(oauthToken: OAuthToken) {
-    const db = await getDb()
-
-    // Step 2: Store OAuth token in database
-    await db.execute(
-      "INSERT OR REPLACE INTO oauth_tokens (access_token, refresh_token, expires_at, provider, created_at) VALUES ($1, $2, $3, $4, $5)",
-      [oauthToken.access_token, oauthToken.refresh_token || "", oauthToken.expires_at, "GOOGLE", oauthToken.created_at],
-    )
-  }
 
   // async function fetchCalendars(accessToken: string) {
   //   const calendars = await rpc.fetch_google_calendars(accessToken)
@@ -58,9 +34,7 @@ export function CalendarConnector() {
 
   async function disconnectGoogle() {
     try {
-      const db = await getDb()
-      await db.execute("DELETE FROM oauth_tokens WHERE provider = $1", ["GOOGLE"])
-      setAccessToken(null)
+      await clearSession()
     } catch (error) {
       console.error("Failed to disconnect Google:", error)
     }
@@ -70,12 +44,9 @@ export function CalendarConnector() {
     setIsConnecting(true)
 
     try {
-      // const db = await Database.load("sqlite:sequence.db")
+      const session = await rpc.google_oauth()
 
-      const oauthToken = await rpc.google_oauth()
-
-      await saveOauthToken(oauthToken)
-      await loadAccessToken()
+      await saveSession(session)
 
       // Step 4: Store calendars in database
       // for (const calendar of calendars) {
@@ -102,7 +73,7 @@ export function CalendarConnector() {
     <div className="bg-slate-900">
       <h2>Google Calendar Integration</h2>
 
-      {accessToken ? (
+      {loggedIn ? (
         <Button variant="destructive" onClick={disconnectGoogle}>
           Sign out
         </Button>
@@ -120,7 +91,8 @@ export function CalendarConnector() {
           <ul>
             {storedCalendars.map((calendar) => (
               <li key={calendar.id}>
-                {calendar.name} {calendar.color && `(${calendar.color})`} {calendar.selected ? "✓" : ""}
+                {calendar.name} {calendar.color && `(${calendar.color})`}{" "}
+                {calendar.selected ? "✓" : ""}
               </li>
             ))}
           </ul>

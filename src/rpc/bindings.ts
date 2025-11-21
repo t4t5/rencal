@@ -15,7 +15,9 @@ export type OAuthToken = {
   created_at: string
 }
 
-const ARGS_MAP = { "": '{"fetch_google_calendars":["access_token"],"google_oauth":[],"greet":["name"]}' }
+const ARGS_MAP = {
+  "": '{"fetch_google_calendars":["access_token"],"google_oauth":[],"greet":["name"]}',
+}
 export type Router = {
   "": {
     fetch_google_calendars: (accessToken: string) => Promise<Calendar[]>
