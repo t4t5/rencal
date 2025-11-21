@@ -1,9 +1,10 @@
-import Database from "@tauri-apps/plugin-sql"
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
 import { Calendar, OAuthToken } from "@/rpc/bindings"
+
+import { getDb } from "@/lib/db"
 
 import { rpc } from "@/rpc"
 
@@ -21,7 +22,7 @@ export function CalendarConnector() {
 
   async function loadAccessToken() {
     try {
-      const db = await Database.load("sqlite:sequence.db")
+      const db = await getDb()
       const result = await db.select<OAuthToken[]>("SELECT * FROM oauth_tokens WHERE provider = $1 LIMIT 1", ["GOOGLE"])
       if (result.length > 0) {
         setAccessToken(result[0].access_token)
@@ -32,7 +33,7 @@ export function CalendarConnector() {
   }
 
   async function saveOauthToken(oauthToken: OAuthToken) {
-    const db = await Database.load("sqlite:sequence.db")
+    const db = await getDb()
 
     // Step 2: Store OAuth token in database
     await db.execute(
@@ -57,7 +58,7 @@ export function CalendarConnector() {
 
   async function disconnectGoogle() {
     try {
-      const db = await Database.load("sqlite:sequence.db")
+      const db = await getDb()
       await db.execute("DELETE FROM oauth_tokens WHERE provider = $1", ["GOOGLE"])
       setAccessToken(null)
     } catch (error) {
