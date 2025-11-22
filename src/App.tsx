@@ -3,9 +3,11 @@ import { useCallback, useState } from "react"
 import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
-import { CalendarConnector } from "@/components/CalendarConnector"
+import { ConnectGoogle } from "@/components/ConnectGoogle"
 import { EventList } from "@/components/Events"
 import { Calendar } from "@/components/ui/calendar"
+
+import { GoogleEvents } from "./components/GoogleEvents"
 
 function App() {
   const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
@@ -29,8 +31,9 @@ function App() {
         />
 
         <div className="grow overflow-auto flex-col gap-6">
+          <ConnectGoogle />
+          <GoogleEvents />
           <EventList />
-          <CalendarConnector />
         </div>
       </div>
 
