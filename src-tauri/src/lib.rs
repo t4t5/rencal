@@ -5,7 +5,7 @@ mod oauth;
 mod storage;
 
 // Re-export types for taurpc macro visibility
-pub use storage::{Calendar, OAuthProvider, Session};
+pub use storage::{Calendar, Event, OAuthProvider, Session};
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
@@ -13,6 +13,12 @@ trait Api {
     async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Session, String>;
     async fn refresh_google_token(refresh_token: String) -> Result<Session, String>;
     async fn fetch_google_calendars(access_token: String) -> Result<Vec<Calendar>, String>;
+    async fn fetch_google_events(
+        access_token: String,
+        calendar_id: String,
+        time_min: String,
+        time_max: String,
+    ) -> Result<Vec<Event>, String>;
 }
 
 #[derive(Clone)]
@@ -98,6 +104,81 @@ impl Api for ApiImpl {
             .collect::<Vec<_>>();
 
         Ok(calendars)
+    }
+
+    async fn fetch_google_events(
+        self,
+        access_token: String,
+        calendar_id: String,
+        time_min: String,
+        time_max: String,
+    ) -> Result<Vec<storage::Event>, String> {
+        let client = reqwest::Client::new();
+        let url = format!(
+            "https://www.googleapis.com/calendar/v3/calendars/{}/events",
+            urlencoding::encode(&calendar_id)
+        );
+
+        let response = client
+            .get(&url)
+            .bearer_auth(access_token)
+            .query(&[
+                ("timeMin", &time_min),
+                ("timeMax", &time_max),
+                ("singleEvents", &"true".to_string()),
+                ("orderBy", &"startTime".to_string()),
+            ])
+            .send()
+            .await
+            .map_err(|e| format!("Failed to fetch events: {}", e))?;
+
+        if !response.status().is_success() {
+            let status = response.status();
+            let body = response.text().await.unwrap_or_default();
+            return Err(format!("Google Calendar API error: {} - {}", status, body));
+        }
+
+        let events_data: serde_json::Value = response
+            .json()
+            .await
+            .map_err(|e| format!("Failed to parse events response: {}", e))?;
+
+        let events = events_data["items"]
+            .as_array()
+            .unwrap_or(&vec![])
+            .iter()
+            .filter_map(|event| {
+                let id = event["id"].as_str()?.to_string();
+                let summary = event["summary"].as_str().unwrap_or("(No title)").to_string();
+
+                // Handle all-day events (date) vs timed events (dateTime)
+                let (start, all_day) = if let Some(date) = event["start"]["date"].as_str() {
+                    (date.to_string(), true)
+                } else {
+                    (
+                        event["start"]["dateTime"].as_str()?.to_string(),
+                        false,
+                    )
+                };
+
+                let end = if let Some(date) = event["end"]["date"].as_str() {
+                    date.to_string()
+                } else {
+                    event["end"]["dateTime"].as_str()?.to_string()
+                };
+
+                Some(storage::Event {
+                    id,
+                    calendar_id: calendar_id.clone(),
+                    summary,
+                    start,
+                    end,
+                    all_day,
+                })
+            })
+            .collect::<Vec<_>>();
+
+        Ok(events)
     }
 }
 

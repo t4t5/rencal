@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 
 import { rpc } from "@/rpc"
 import { Calendar } from "@/rpc/bindings"
@@ -7,20 +7,26 @@ import { logger } from "@/lib/logger"
 
 import { useAuth } from "@/contexts/AuthContext"
 
-export function GoogleEvents() {
+interface GoogleEventsProps {
+  calendars: Calendar[]
+  onCalendarsChange: (calendars: Calendar[]) => void
+}
+
+export function GoogleEvents({ calendars, onCalendarsChange }: GoogleEventsProps) {
   const { accessToken, refreshSession } = useAuth()
-  const [calendars, setCalendars] = useState<Calendar[]>([])
 
   useEffect(() => {
     if (accessToken) {
       void fetchCalendars(accessToken)
+    } else {
+      onCalendarsChange([])
     }
   }, [accessToken])
 
   async function fetchCalendars(token: string, retries = 0) {
     try {
       const calendars = await rpc.fetch_google_calendars(token)
-      setCalendars(calendars)
+      onCalendarsChange(calendars)
     } catch (errorMsg) {
       if (retries >= 1) {
         logger.warn("Session retries exhausted!")

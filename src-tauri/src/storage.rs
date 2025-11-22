@@ -37,6 +37,16 @@ pub struct Calendar {
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
+pub struct Event {
+    pub id: String,
+    pub calendar_id: String,
+    pub summary: String,
+    pub start: String,
+    pub end: String,
+    pub all_day: bool,
+}
+
+#[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub enum OAuthProvider {
     Google,
 }

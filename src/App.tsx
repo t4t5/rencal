@@ -7,14 +7,19 @@ import { ConnectGoogle } from "@/components/ConnectGoogle"
 import { EventList } from "@/components/Events"
 import { Calendar } from "@/components/ui/calendar"
 
+import { Calendar as CalendarType } from "@/rpc/bindings"
+
 import { GoogleEvents } from "./components/GoogleEvents"
 
 function App() {
   const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
+  const [calendars, setCalendars] = useState<CalendarType[]>([])
 
   const handleMonthChange = useCallback((newMonth: Date) => {
     setActiveDate(newMonth)
   }, [])
+
+  const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
 
   return (
     <main className="flex h-screen">
@@ -32,8 +37,8 @@ function App() {
 
         <div className="grow overflow-auto flex-col gap-6">
           <ConnectGoogle />
-          <GoogleEvents />
-          <EventList />
+          <GoogleEvents calendars={calendars} onCalendarsChange={setCalendars} />
+          <EventList activeDate={activeDate ?? new Date()} calendarIds={selectedCalendarIds} />
         </div>
       </div>
 

@@ -6,7 +6,6 @@ A calendar app crafted especially for Omarchy.
 
 - `just build`: build the app and generate tauRPC bindings
 - `just check`: check for errors
-- `just generate`: to regenerate `src/rpc/bindings.ts`
 
 ## Architecture
 
@@ -17,7 +16,7 @@ This is a Tauri application with a Rust backend and React frontend.
 - `src-tauri/src/lib.rs` - Defines RPC procedures using taurpc
 - `src-tauri/src/oauth.rs` - Google Calendar OAuth 2.0 authentication flow
 - API methods are defined in the `Api` trait and implemented in `ApiImpl`
-- TypeScript bindings are auto-generated to `src/rpc/bindings.ts`
+- TypeScript bindings are auto-generated to `src/rpc/bindings.ts` (dn't try to generate these)
 
 ### Frontend (React)
 
