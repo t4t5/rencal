@@ -1,7 +1,7 @@
 use anyhow::Result;
 use tauri::{AppHandle, Runtime};
 
-use crate::oauth::{handle_oauth, OAuthConfig, SessionData};
+use crate::oauth::{handle_oauth, refresh_access_token, OAuthConfig, RefreshConfig, SessionData};
 
 // Google OAuth endpoints
 const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
@@ -39,4 +39,16 @@ pub async fn get_oauth_token<R: Runtime>(app: AppHandle<R>) -> Result<SessionDat
     };
 
     handle_oauth(app, config).await
+}
+
+/// Refreshes a Google OAuth access token using a refresh token
+pub async fn refresh_oauth_token(refresh_token: String) -> Result<SessionData> {
+    let config = RefreshConfig {
+        client_id: APP_CLIENT_ID.to_string(),
+        client_secret: APP_CLIENT_SECRET.to_string(),
+        token_url: GOOGLE_TOKEN_URL.to_string(),
+        refresh_token,
+    };
+
+    refresh_access_token(config).await
 }

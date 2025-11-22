@@ -1,5 +1,6 @@
 import { ReactNode, createContext, useContext, useState } from "react"
 
+import { rpc } from "@/rpc"
 import { Session } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
@@ -8,8 +9,10 @@ import { getDb } from "@/db/connection"
 
 interface AuthContextType {
   accessToken: string | null
+  refreshToken: string | null
   resumeSession: () => Promise<void>
   saveSession: (session: Session) => Promise<void>
+  refreshSession: () => Promise<string | null>
   clearSession: () => Promise<void>
   loggedIn: boolean
 }
@@ -63,10 +66,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Session cleared.")
   }
 
+  async function refreshSession(): Promise<string | null> {
+    if (!session?.refresh_token) {
+      logger.error("No refresh token available")
+      return null
+    }
+
+    logger.info("Refreshing access token...")
+
+    try {
+      const newSession = await rpc.refresh_google_token(session.refresh_token)
+
+      await saveSession(newSession)
+
+      logger.info("Access token refreshed successfully")
+      return newSession.access_token
+    } catch (error) {
+      logger.error("Failed to refresh access token:", error)
+      // If refresh fails, clear the session so user can re-authenticate
+      await clearSession()
+      return null
+    }
+  }
+
   const value = {
     accessToken: session?.access_token ?? null,
+    refreshToken: session?.refresh_token ?? null,
     resumeSession,
     saveSession,
+    refreshSession,
     clearSession,
     loggedIn: session !== null,
   }

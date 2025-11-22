@@ -10,10 +10,11 @@ export type OAuthProvider = "Google"
 
 export type Session = { access_token: string; refresh_token: string | null; expires_at: string; provider: OAuthProvider; created_at: string }
 
-const ARGS_MAP = { '':'{"fetch_google_calendars":["access_token"],"google_oauth":[],"greet":["name"]}' }
+const ARGS_MAP = { '':'{"fetch_google_calendars":["access_token"],"google_oauth":[],"greet":["name"],"refresh_google_token":["refresh_token"]}' }
 export type Router = { "": {fetch_google_calendars: (accessToken: string) => Promise<Calendar[]>, 
 google_oauth: () => Promise<Session>, 
-greet: (name: string) => Promise<string>} };
+greet: (name: string) => Promise<string>, 
+refresh_google_token: (refreshToken: string) => Promise<Session>} };
 
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)
