@@ -12,7 +12,7 @@ interface GoogleEventsProps {
   onCalendarsChange: (calendars: Calendar[]) => void
 }
 
-export function GoogleEvents({ calendars, onCalendarsChange }: GoogleEventsProps) {
+export function GoogleCalendars({ calendars, onCalendarsChange }: GoogleEventsProps) {
   const { accessToken, refreshSession } = useAuth()
 
   useEffect(() => {

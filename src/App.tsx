@@ -4,12 +4,11 @@ import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
 import { ConnectGoogle } from "@/components/ConnectGoogle"
-import { EventList } from "@/components/Events"
+import { EventList } from "@/components/EventList"
+import { GoogleCalendars } from "@/components/GoogleCalendars"
 import { Calendar } from "@/components/ui/calendar"
 
 import { Calendar as CalendarType } from "@/rpc/bindings"
-
-import { GoogleEvents } from "./components/GoogleEvents"
 
 function App() {
   const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
@@ -37,7 +36,7 @@ function App() {
 
         <div className="grow overflow-auto flex-col gap-6">
           <ConnectGoogle />
-          <GoogleEvents calendars={calendars} onCalendarsChange={setCalendars} />
+          <GoogleCalendars calendars={calendars} onCalendarsChange={setCalendars} />
           <EventList activeDate={activeDate ?? new Date()} calendarIds={selectedCalendarIds} />
         </div>
       </div>

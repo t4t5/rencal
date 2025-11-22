@@ -1,4 +1,4 @@
-import { formatDateRange } from "little-date"
+import { startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns"
 import { useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
@@ -7,6 +7,8 @@ import { Event } from "@/rpc/bindings"
 import { logger } from "@/lib/logger"
 
 import { useAuth } from "@/contexts/AuthContext"
+
+import { DaySection } from "./events/DaySection"
 
 interface EventListProps {
   activeDate: Date
@@ -29,19 +31,10 @@ export function EventList({ activeDate, calendarIds }: EventListProps) {
   async function fetchEvents(token: string, retries = 0) {
     setLoading(true)
 
-    // Calculate time range: activeDate ± 1 month
-    const timeMin = new Date(activeDate)
-    timeMin.setMonth(timeMin.getMonth() - 1)
-    timeMin.setDate(1)
-    timeMin.setHours(0, 0, 0, 0)
-
-    const timeMax = new Date(activeDate)
-    timeMax.setMonth(timeMax.getMonth() + 2)
-    timeMax.setDate(0)
-    timeMax.setHours(23, 59, 59, 999)
+    const timeMin = startOfMonth(subMonths(activeDate, 1))
+    const timeMax = endOfMonth(addMonths(activeDate, 1))
 
     try {
-      // Fetch events from all calendars
       const allEvents: Event[] = []
 
       for (const calendarId of calendarIds) {
@@ -91,23 +84,8 @@ export function EventList({ activeDate, calendarIds }: EventListProps) {
 
   return (
     <div>
-      {events.map((event) => (
-        <EventRow key={event.id} event={event} />
-      ))}
-    </div>
-  )
-}
-
-function EventRow({ event }: { event: Event }) {
-  const from = new Date(event.start)
-  const to = new Date(event.end)
-
-  return (
-    <div className="after:bg-primary/70 relative rounded-md p-2 pl-6 text-sm after:absolute after:inset-y-2 after:left-2 after:w-1 after:rounded-full">
-      <div className="font-medium">{event.summary}</div>
-      <div className="text-muted-foreground text-xs">
-        {event.all_day ? "All day" : formatDateRange(from, to)}
-      </div>
+      <DaySection events={events.slice(0, 15)} />
+      <DaySection events={events.slice(0, 15)} />
     </div>
   )
 }
