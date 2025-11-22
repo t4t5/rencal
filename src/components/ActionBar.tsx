@@ -3,6 +3,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
 
+import { Settings } from "./settings/Settings"
+
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
 
@@ -13,7 +15,7 @@ export function ActionBar() {
       <div className="flex gap-2">
         {showModal && (
           <Modal onClose={() => setShowModal(false)}>
-            <h1>Test</h1>
+            <Settings />
           </Modal>
         )}
 

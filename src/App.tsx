@@ -3,22 +3,15 @@ import { useCallback, useState } from "react"
 import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
-import { ConnectGoogle } from "@/components/ConnectGoogle"
 import { EventList } from "@/components/EventList"
-import { GoogleCalendars } from "@/components/GoogleCalendars"
 import { Calendar } from "@/components/ui/calendar"
-
-import { Calendar as CalendarType } from "@/rpc/bindings"
 
 function App() {
   const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
-  const [calendars, setCalendars] = useState<CalendarType[]>([])
 
   const handleMonthChange = useCallback((newMonth: Date) => {
     setActiveDate(newMonth)
   }, [])
-
-  const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
 
   return (
     <main className="flex h-screen">
@@ -35,9 +28,7 @@ function App() {
         />
 
         <div className="grow overflow-auto flex-col gap-6">
-          <ConnectGoogle />
-          <GoogleCalendars calendars={calendars} onCalendarsChange={setCalendars} />
-          <EventList activeDate={activeDate ?? new Date()} calendarIds={selectedCalendarIds} />
+          <EventList activeDate={activeDate ?? new Date()} />
         </div>
       </div>
 

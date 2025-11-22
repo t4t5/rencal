@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
@@ -10,11 +10,7 @@ import { useAuth } from "@/contexts/AuthContext"
 
 export function ConnectGoogle() {
   const [isConnecting, setIsConnecting] = useState(false)
-  const { loggedIn, resumeSession, clearSession, saveSession } = useAuth()
-
-  useEffect(() => {
-    void resumeSession()
-  }, [])
+  const { loggedIn, clearSession, saveSession } = useAuth()
 
   async function disconnectGoogle() {
     try {

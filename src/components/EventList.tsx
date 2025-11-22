@@ -1,24 +1,24 @@
 import { startOfMonth, endOfMonth, subMonths, addMonths } from "date-fns"
 import { useEffect, useState } from "react"
 
+import { DaySection } from "@/components/events/DaySection"
+
 import { rpc } from "@/rpc"
 import { Event } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 
 import { useAuth } from "@/contexts/AuthContext"
+import { useCalendar } from "@/contexts/CalendarContext"
 
-import { DaySection } from "./events/DaySection"
-
-interface EventListProps {
-  activeDate: Date
-  calendarIds: string[]
-}
-
-export function EventList({ activeDate, calendarIds }: EventListProps) {
+export function EventList({ activeDate }: { activeDate: Date }) {
   const { accessToken, refreshSession } = useAuth()
   const [events, setEvents] = useState<Event[]>([])
   const [loading, setLoading] = useState(false)
+
+  const { calendars } = useCalendar()
+
+  const calendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
 
   useEffect(() => {
     if (accessToken && calendarIds.length > 0) {
@@ -26,7 +26,7 @@ export function EventList({ activeDate, calendarIds }: EventListProps) {
     } else {
       setEvents([])
     }
-  }, [accessToken, activeDate, calendarIds])
+  }, [accessToken, calendarIds.length])
 
   async function fetchEvents(token: string, retries = 0) {
     setLoading(true)

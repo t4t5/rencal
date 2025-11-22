@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useState } from "react"
+import { ReactNode, createContext, useContext, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import { Session } from "@/rpc/bindings"
@@ -44,6 +44,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logger.error("Failed to load access token:", error)
     }
   }
+
+  useEffect(() => {
+    void resumeSession()
+  }, [])
 
   async function saveSession(session: Session) {
     logger.info("Saving session to database:", session)
