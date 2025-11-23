@@ -47,5 +47,6 @@ export function useJumpToScrolledDate({
   return {
     scrollContainerRef,
     addSectionRef,
+    sectionRefs,
   }
 }

@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import { useEffect, useMemo, useRef } from "react"
+import { useEffect, useMemo } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
@@ -12,7 +12,6 @@ import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
   const { activeDate, setActiveDate } = useCalendar()
-  const activeDateRef = useRef<HTMLDivElement>(null)
 
   const { events, isLoading } = useFetchGoogleEvents({
     activeDate,
@@ -39,16 +38,19 @@ export function EventList() {
     return eventsByDate.map(({ date }) => format(date, "yyyy-MM-dd"))
   }, [eventsByDate])
 
-  useEffect(() => {
-    if (activeDateRef.current) {
-      activeDateRef.current.scrollIntoView({ behavior: "instant", block: "start" })
-    }
-  }, [eventsByDate])
-
-  const { scrollContainerRef, addSectionRef } = useJumpToScrolledDate({
+  const { scrollContainerRef, addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: setActiveDate,
     datesWithEvents,
   })
+
+  useEffect(() => {
+    if (!sectionRefs.current) return
+
+    const section = sectionRefs.current.get(format(activeDate, "yyyy-MM-dd"))
+    if (!section) return
+
+    section.scrollIntoView({ behavior: "instant", block: "start" })
+  }, [eventsByDate])
 
   if (isLoading) {
     return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
@@ -61,10 +63,7 @@ export function EventList() {
   return (
     <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6">
       {eventsByDate.map(({ date, events }) => {
-        const activeDateStr = format(activeDate, "yyyy-MM-dd")
         const dateStr = format(date, "yyyy-MM-dd")
-
-        const isActiveDate = activeDateStr === dateStr
 
         return (
           <DaySection
@@ -73,12 +72,7 @@ export function EventList() {
               if (!el) return
 
               addSectionRef(dateStr, el)
-
-              if (isActiveDate) {
-                activeDateRef.current = el
-              }
             }}
-            data-date={dateStr}
             events={events}
             date={date}
           />
