@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { format, isSameYear } from "date-fns"
 import { forwardRef } from "react"
 
 import { Event } from "@/rpc/bindings"
@@ -18,7 +18,7 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
       className="relative border-b border-b-divider"
     >
       <div className="sticky top-0 z-10 font-bold text-sm bg-bgPrimary uppercase px-4 py-1.5">
-        {format(date, "dd MMM")}
+        {format(date, isSameYear(date, new Date()) ? "dd MMM" : "dd MMM yyyy")}
       </div>
       {events.map((event) => (
         <EventRow key={event.id} event={event} />
