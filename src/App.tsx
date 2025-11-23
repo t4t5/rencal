@@ -10,10 +10,7 @@ function App() {
       <div className="w-full lg:w-[300px] flex flex-col">
         <ActionBar />
         <StatefulCalendar />
-
-        <div className="grow overflow-auto flex-col gap-6">
-          <EventList />
-        </div>
+        <EventList />
       </div>
 
       <div className="hidden lg:block">BIG VIEW</div>
