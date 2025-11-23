@@ -41,3 +41,7 @@ Uses standalone OAuth 2.0 authentication - no central Sequence server required:
 ### OAuth Security Model
 
 The OAuth client ID and secret are embedded in `src-tauri/src/google_oauth.rs`. This is standard for desktop apps (similar to Thunderbird) and is not a security vulnerability. The embedded credentials just identify the app to Google, while PKCE provides the actual security against token theft.
+
+### Event Sync
+
+Events are synced from Google Calendar to a local SQLite database for offline access and fast reads. The sync uses Google's incremental sync API with sync tokens - after the initial full sync, subsequent syncs only fetch changed/deleted events. The `useSyncEvents` hook triggers sync on mount and every 30 seconds, while `useLocalEvents` reads from SQLite for instant UI. All entities use our own UUIDs as primary keys with optional `google_calendar_id`/`google_event_id` fields for provider mapping.

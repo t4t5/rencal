@@ -25,25 +25,83 @@ pub fn get_migrations() -> Vec<Migration> {
             );",
             kind: MigrationKind::Up,
         },
+        Migration {
+            version: 3,
+            description: "add google_calendar_id and sync columns to calendars",
+            sql: "
+                -- Create new table with correct structure
+                CREATE TABLE calendars_new (
+                    id TEXT PRIMARY KEY,
+                    google_calendar_id TEXT,
+                    name TEXT NOT NULL,
+                    color TEXT,
+                    selected INTEGER NOT NULL DEFAULT 1,
+                    sync_token TEXT,
+                    last_synced_at INTEGER
+                );
+
+                -- Migrate existing data: use existing id as google_calendar_id, generate new UUID as id
+                INSERT INTO calendars_new (id, google_calendar_id, name, color, selected)
+                SELECT
+                    lower(hex(randomblob(16))),
+                    id,
+                    name,
+                    color,
+                    selected
+                FROM calendars;
+
+                -- Drop old table
+                DROP TABLE calendars;
+
+                -- Rename new table
+                ALTER TABLE calendars_new RENAME TO calendars;
+            ",
+            kind: MigrationKind::Up,
+        },
+        Migration {
+            version: 4,
+            description: "create events table",
+            sql: "CREATE TABLE events (
+                id TEXT PRIMARY KEY,
+                google_event_id TEXT,
+                calendar_id TEXT NOT NULL,
+                summary TEXT,
+                start TEXT NOT NULL,
+                end TEXT NOT NULL,
+                all_day INTEGER NOT NULL,
+                updated_at TEXT,
+                FOREIGN KEY (calendar_id) REFERENCES calendars(id)
+            );
+
+            CREATE INDEX idx_events_calendar_id ON events(calendar_id);
+            CREATE INDEX idx_events_google_event_id ON events(google_event_id);
+            CREATE INDEX idx_events_start ON events(start);",
+            kind: MigrationKind::Up,
+        },
     ]
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct Calendar {
     pub id: String,
+    pub google_calendar_id: Option<String>,
     pub name: String,
     pub color: Option<String>,
     pub selected: bool,
+    pub sync_token: Option<String>,
+    pub last_synced_at: Option<String>,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
 pub struct Event {
     pub id: String,
+    pub google_event_id: Option<String>,
     pub calendar_id: String,
     pub summary: String,
     pub start: String,
     pub end: String,
     pub all_day: bool,
+    pub updated_at: Option<String>,
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]

@@ -4,7 +4,8 @@ import { useEffect } from "react"
 import { DaySection } from "@/components/events/DaySection"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { useFetchGoogleEvents } from "@/hooks/useFetchGoogleEvents"
+import { useLocalEvents } from "@/hooks/useLocalEvents"
+import { useSyncEvents } from "@/hooks/useSyncEvents"
 
 import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
@@ -12,9 +13,11 @@ import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 export function EventList() {
   const { activeDate, setActiveDate, registerScrollToDate, isNavigating } = useCalendar()
 
-  const { events, isLoading } = useFetchGoogleEvents({
-    activeDate,
-  })
+  // Load events from local SQLite
+  const { events, isLoading, refreshEvents } = useLocalEvents()
+
+  // Sync events from Google in background, refresh local events when sync completes
+  useSyncEvents({ onSyncComplete: refreshEvents })
 
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
