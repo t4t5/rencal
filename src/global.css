@@ -136,6 +136,7 @@
   --buttonSecondaryBg: #ffffff08;
   --active: #36c3f3;
   --weekendBg: #ffffff05;
+  --divider: #ffffff10;
 
   /* shadcn variable adjustments */
   --background: var(--bgPrimary);

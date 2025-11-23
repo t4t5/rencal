@@ -34,9 +34,6 @@ importers:
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
-      little-date:
-        specifier: ^1.0.0
-        version: 1.0.0
       lucide-react:
         specifier: ^0.553.0
         version: 0.553.0(react@19.2.0)
@@ -215,13 +212,6 @@ packages:
     engines: { node: ">=6.9.0" }
     peerDependencies:
       "@babel/core": ^7.0.0-0
-
-  "@babel/runtime@7.28.4":
-    resolution:
-      {
-        integrity: sha512-Q/N6JNWvIvPnLDvjlE1OUBLPQHH6l3CltCEsHIujp45zQUSSh8K+gHnaEX45yAT1nyngnINhvWtzN+Nb9D8RAQ==,
-      }
-    engines: { node: ">=6.9.0" }
 
   "@babel/template@7.27.2":
     resolution:
@@ -1398,13 +1388,6 @@ packages:
         integrity: sha512-hTIP/z+t+qKwBDcmmsnmjWTduxCg+5KfdqWQvb2X/8C9+knYY6epN/pfxdDuyVlSVeFz0sM5eEfwIUQ70U4ckg==,
       }
 
-  date-fns@2.30.0:
-    resolution:
-      {
-        integrity: sha512-fnULvOpxnC5/Vg3NCiWelDsLiUc9bRwAPs/+LfTLNvetFCtCTN+yQz15C/fs4AwX1R9K5GLtLfn8QW+dWisaAw==,
-      }
-    engines: { node: ">=0.11" }
-
   date-fns@4.1.0:
     resolution:
       {
@@ -1714,13 +1697,6 @@ packages:
         integrity: sha512-ME4Fb83LgEgwNw96RKNvKV4VTLuXfoKudAmm2lP8Kk87KaMK0/Xrx/aAkMWmT8mDb+3MlFDspfbCs7adjRxA2g==,
       }
     engines: { node: ">=20.0.0" }
-
-  little-date@1.0.0:
-    resolution:
-      {
-        integrity: sha512-41T/ktcwPzxC0OJ8E3wmaK0E1DL/QNR3n30kB9Dw6Ni6Eud24It8LZm70jK8lvDd+Mg+961fzKDcF6SQRL25cQ==,
-      }
-    engines: { node: ">=10" }
 
   lodash-es@4.17.21:
     resolution:
@@ -2271,8 +2247,6 @@ snapshots:
     dependencies:
       "@babel/core": 7.28.5
       "@babel/helper-plugin-utils": 7.27.1
-
-  "@babel/runtime@7.28.4": {}
 
   "@babel/template@7.27.2":
     dependencies:
@@ -2859,10 +2833,6 @@ snapshots:
 
   date-fns-jalali@4.1.0-0: {}
 
-  date-fns@2.30.0:
-    dependencies:
-      "@babel/runtime": 7.28.4
-
   date-fns@4.1.0: {}
 
   debug@4.4.3:
@@ -3021,10 +2991,6 @@ snapshots:
       log-update: 6.1.0
       rfdc: 1.4.1
       wrap-ansi: 9.0.2
-
-  little-date@1.0.0:
-    dependencies:
-      date-fns: 2.30.0
 
   lodash-es@4.17.21: {}
 
