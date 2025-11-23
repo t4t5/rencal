@@ -22,7 +22,7 @@ interface LoadedRange {
 
 /**
  * Hook that reads events from local SQLite database with infinite scroll.
- * Loads a sliding window of events around the activeDate.
+ * Uses append-only loading - events are only added, never removed during a session.
  * Use together with useSyncEvents to keep events up-to-date.
  */
 export const useLocalEvents = () => {
@@ -31,8 +31,10 @@ export const useLocalEvents = () => {
   const [isLoading, setLoading] = useState(true)
   const loadedRangeRef = useRef<LoadedRange | null>(null)
   const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const selectedCalendarIdsRef = useRef<string[]>([])
 
   const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
+  const selectedCalendarIdsKey = selectedCalendarIds.join(",")
 
   /**
    * Calculate the date range to load based on a center date
@@ -45,20 +47,49 @@ export const useLocalEvents = () => {
   }, [])
 
   /**
-   * Check if a date is within the "safe zone" of the loaded range
-   * (at least BUFFER_MONTHS away from edges)
+   * Check if a date is within the loaded range (with buffer)
    */
-  const isWithinSafeZone = useCallback((date: Date, range: LoadedRange): boolean => {
+  const isWithinLoadedRange = useCallback((date: Date, range: LoadedRange): boolean => {
     const bufferStart = addMonths(range.start, BUFFER_MONTHS)
     const bufferEnd = subMonths(range.end, BUFFER_MONTHS)
     return date >= bufferStart && date <= bufferEnd
   }, [])
 
   /**
-   * Load events for a specific date range
+   * Merge new events with existing events (append-only, dedupe by ID)
+   */
+  const mergeEvents = useCallback((existing: Event[], newEvents: Event[]): Event[] => {
+    const existingIds = new Set(existing.map((e) => e.id))
+    const uniqueNewEvents = newEvents.filter((e) => !existingIds.has(e.id))
+
+    if (uniqueNewEvents.length === 0) {
+      return existing
+    }
+
+    return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.localeCompare(b.start))
+  }, [])
+
+  /**
+   * Expand the loaded range to include a new range
+   */
+  const expandLoadedRange = useCallback(
+    (current: LoadedRange | null, newRange: LoadedRange): LoadedRange => {
+      if (!current) {
+        return newRange
+      }
+      return {
+        start: current.start < newRange.start ? current.start : newRange.start,
+        end: current.end > newRange.end ? current.end : newRange.end,
+      }
+    },
+    [],
+  )
+
+  /**
+   * Load and append events for a specific date range
    */
   const loadEventsForRange = useCallback(
-    async (range: LoadedRange) => {
+    async (range: LoadedRange, replace = false) => {
       if (selectedCalendarIds.length === 0) {
         setEvents([])
         setLoading(false)
@@ -77,8 +108,16 @@ export const useLocalEvents = () => {
         logger.info(
           `Loaded ${localEvents.length} events for range ${range.start.toISOString().slice(0, 10)} to ${range.end.toISOString().slice(0, 10)}`,
         )
-        setEvents(localEvents)
-        loadedRangeRef.current = range
+
+        if (replace) {
+          // Full replace (used for initial load or calendar selection change)
+          setEvents(localEvents)
+          loadedRangeRef.current = range
+        } else {
+          // Append-only merge
+          setEvents((prev) => mergeEvents(prev, localEvents))
+          loadedRangeRef.current = expandLoadedRange(loadedRangeRef.current, range)
+        }
       } catch (error) {
         logger.error("Failed to load events from local DB:", error)
         setEvents([])
@@ -86,7 +125,7 @@ export const useLocalEvents = () => {
         setLoading(false)
       }
     },
-    [selectedCalendarIds.join(",")],
+    [selectedCalendarIdsKey, mergeEvents, expandLoadedRange],
   )
 
   /**
@@ -99,12 +138,12 @@ export const useLocalEvents = () => {
       // If no range loaded yet, load immediately
       if (!currentRange) {
         const newRange = calculateRange(date)
-        void loadEventsForRange(newRange)
+        void loadEventsForRange(newRange, true)
         return
       }
 
-      // If within safe zone, no need to load
-      if (isWithinSafeZone(date, currentRange)) {
+      // If within loaded range (with buffer), no need to load
+      if (isWithinLoadedRange(date, currentRange)) {
         return
       }
 
@@ -115,8 +154,8 @@ export const useLocalEvents = () => {
 
       const doLoad = () => {
         const newRange = calculateRange(date)
-        logger.info(`Loading new range centered on ${date.toISOString().slice(0, 10)}`)
-        void loadEventsForRange(newRange)
+        logger.info(`Loading more events centered on ${date.toISOString().slice(0, 10)}`)
+        void loadEventsForRange(newRange, false) // append, don't replace
       }
 
       if (immediate) {
@@ -125,20 +164,27 @@ export const useLocalEvents = () => {
         debounceTimeoutRef.current = setTimeout(doLoad, DEBOUNCE_MS)
       }
     },
-    [calculateRange, isWithinSafeZone, loadEventsForRange],
+    [calculateRange, isWithinLoadedRange, loadEventsForRange],
   )
 
-  // Initial load
+  // Initial load or when selected calendars change
   useEffect(() => {
+    // Reset everything when calendar selection changes
+    const prevIds = selectedCalendarIdsRef.current.join(",")
+    if (prevIds !== selectedCalendarIdsKey) {
+      loadedRangeRef.current = null
+      selectedCalendarIdsRef.current = selectedCalendarIds
+    }
+
     const range = calculateRange(activeDate)
-    void loadEventsForRange(range)
+    void loadEventsForRange(range, true) // replace on initial load
 
     return () => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current)
       }
     }
-  }, [selectedCalendarIds.join(",")])
+  }, [selectedCalendarIdsKey])
 
   // Watch activeDate changes and load more if needed
   useEffect(() => {
@@ -150,10 +196,17 @@ export const useLocalEvents = () => {
    */
   const loadEventsForDate = useCallback(
     async (date: Date) => {
+      const currentRange = loadedRangeRef.current
+
+      // If already within loaded range, no need to load
+      if (currentRange && isWithinLoadedRange(date, currentRange)) {
+        return
+      }
+
       const range = calculateRange(date)
-      await loadEventsForRange(range)
+      await loadEventsForRange(range, false) // append, don't replace
     },
-    [calculateRange, loadEventsForRange],
+    [calculateRange, isWithinLoadedRange, loadEventsForRange],
   )
 
   /**
@@ -161,7 +214,7 @@ export const useLocalEvents = () => {
    */
   const refreshEvents = useCallback(() => {
     const range = loadedRangeRef.current ?? calculateRange(activeDate)
-    void loadEventsForRange(range)
+    void loadEventsForRange(range, true) // replace to get fresh data
   }, [activeDate, calculateRange, loadEventsForRange])
 
   return {
