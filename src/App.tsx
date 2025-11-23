@@ -3,7 +3,7 @@ import { useCallback, useState } from "react"
 import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
-import { EventList } from "@/components/EventList"
+import { EventList } from "@/components/events/EventList"
 import { Calendar } from "@/components/ui/calendar"
 
 function App() {
@@ -13,6 +13,10 @@ function App() {
     setActiveDate(newMonth)
   }, [])
 
+  const handleDateSelect = useCallback((date: Date) => {
+    setActiveDate(date)
+  }, [])
+
   return (
     <main className="flex h-screen">
       <div className="w-full lg:w-[300px] flex flex-col">
@@ -20,7 +24,7 @@ function App() {
         <Calendar
           mode="single"
           selected={activeDate}
-          onSelect={setActiveDate}
+          onSelect={handleDateSelect}
           month={activeDate}
           onMonthChange={handleMonthChange}
           className="bg-transparent p-0"

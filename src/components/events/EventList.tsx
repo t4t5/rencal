@@ -1,4 +1,4 @@
-import { useMemo } from "react"
+import { useEffect, useMemo, useRef } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
@@ -7,6 +7,8 @@ import type { Event } from "@/rpc/bindings"
 import { useFetchGoogleEvents } from "@/hooks/useFetchGoogleEvents"
 
 export function EventList({ activeDate }: { activeDate: Date }) {
+  const activeDateRef = useRef<HTMLDivElement>(null)
+
   const { events, isLoading } = useFetchGoogleEvents({
     activeDate,
   })
@@ -28,6 +30,14 @@ export function EventList({ activeDate }: { activeDate: Date }) {
       }))
   }, [events])
 
+  useEffect(() => {
+    if (activeDateRef.current) {
+      activeDateRef.current.scrollIntoView({ behavior: "instant", block: "start" })
+    }
+  }, [eventsByDate])
+
+  const activeDateStr = activeDate.toISOString().split("T")[0]
+
   if (isLoading) {
     return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
   }
@@ -38,9 +48,19 @@ export function EventList({ activeDate }: { activeDate: Date }) {
 
   return (
     <div>
-      {eventsByDate.map(({ date, events }) => (
-        <DaySection key={date.toISOString()} events={events} date={date} />
-      ))}
+      {eventsByDate.map(({ date, events }) => {
+        const dateStr = date.toISOString().split("T")[0]
+        const isActiveDate = dateStr === activeDateStr
+
+        return (
+          <DaySection
+            key={date.toISOString()}
+            ref={isActiveDate ? activeDateRef : null}
+            events={events}
+            date={date}
+          />
+        )
+      })}
     </div>
   )
 }
