@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns"
+import { format } from "date-fns"
 import { useEffect, useMemo, useRef } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
@@ -8,11 +8,11 @@ import type { Event } from "@/rpc/bindings"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useFetchGoogleEvents } from "@/hooks/useFetchGoogleEvents"
 
+import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
+
 export function EventList() {
   const { activeDate, setActiveDate } = useCalendar()
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
   const activeDateRef = useRef<HTMLDivElement>(null)
-  const sectionRefs = useRef(new Map<string, HTMLDivElement>())
 
   const { events, isLoading } = useFetchGoogleEvents({
     activeDate,
@@ -35,38 +35,20 @@ export function EventList() {
       }))
   }, [events])
 
+  const datesWithEvents = useMemo(() => {
+    return eventsByDate.map(({ date }) => format(date, "yyyy-MM-dd"))
+  }, [eventsByDate])
+
   useEffect(() => {
     if (activeDateRef.current) {
       activeDateRef.current.scrollIntoView({ behavior: "instant", block: "start" })
     }
   }, [eventsByDate])
 
-  useEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const dateStr = entry.target.getAttribute("data-date")
-            if (dateStr) {
-              setActiveDate(parse(dateStr, "yyyy-MM-dd", new Date()))
-            }
-          }
-        }
-      },
-      {
-        root: container,
-        rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
-        threshold: 0,
-      },
-    )
-
-    sectionRefs.current.forEach((el) => observer.observe(el))
-
-    return () => observer.disconnect()
-  }, [eventsByDate, setActiveDate])
+  const { scrollContainerRef, addSectionRef } = useJumpToScrolledDate({
+    onSetActiveDate: setActiveDate,
+    datesWithEvents,
+  })
 
   if (isLoading) {
     return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
@@ -90,7 +72,7 @@ export function EventList() {
             ref={(el) => {
               if (!el) return
 
-              sectionRefs.current.set(dateStr, el)
+              addSectionRef(dateStr, el)
 
               if (isActiveDate) {
                 activeDateRef.current = el
