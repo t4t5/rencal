@@ -7,13 +7,13 @@ import { EventList } from "@/components/events/EventList"
 function App() {
   return (
     <main className="flex h-screen">
-      <div className="w-full lg:w-[300px] flex flex-col">
+      <div className="w-full md:w-[300px] flex flex-col">
         <ActionBar />
         <StatefulCalendar />
         <EventList />
       </div>
 
-      <div className="hidden lg:block">BIG VIEW</div>
+      <div className="hidden md:block">BIG VIEW</div>
     </main>
   )
 }
