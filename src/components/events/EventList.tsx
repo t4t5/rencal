@@ -11,10 +11,16 @@ import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
-  const { activeDate, setActiveDate, registerScrollToDate, isNavigating } = useCalendar()
+  const {
+    activeDate,
+    setActiveDate,
+    registerScrollToDate,
+    registerLoadEventsForDate,
+    isNavigating,
+  } = useCalendar()
 
   // Load events from local SQLite
-  const { events, isLoading, refreshEvents } = useLocalEvents()
+  const { events, isLoading, refreshEvents, loadEventsForDate } = useLocalEvents()
 
   // Sync events from Google in background, refresh local events when sync completes
   useSyncEvents({ onSyncComplete: refreshEvents })
@@ -26,6 +32,11 @@ export function EventList() {
     datesWithEvents,
     isNavigating,
   })
+
+  // Register loadEventsForDate so navigation can load events before scrolling:
+  useEffect(() => {
+    registerLoadEventsForDate(loadEventsForDate)
+  }, [registerLoadEventsForDate, loadEventsForDate])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   useEffect(() => {
@@ -61,7 +72,8 @@ export function EventList() {
     section.scrollIntoView({ behavior: "instant", block: "start" })
   }, [eventsByDate])
 
-  if (isLoading) {
+  // Only show loading state on initial load (when we have no events yet)
+  if (isLoading && events.length === 0) {
     return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
   }
 

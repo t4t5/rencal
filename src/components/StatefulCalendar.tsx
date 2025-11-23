@@ -9,7 +9,8 @@ export function StatefulCalendar() {
 
   const handleMonthChange = useCallback(
     (newMonth: Date) => {
-      setActiveDate(newMonth)
+      // setActiveDate(newMonth)
+      navigateToDate(newMonth)
     },
     [setActiveDate],
   )
