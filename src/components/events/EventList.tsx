@@ -4,9 +4,11 @@ import { DaySection } from "@/components/events/DaySection"
 
 import type { Event } from "@/rpc/bindings"
 
+import { useCalendar } from "@/contexts/CalendarContext"
 import { useFetchGoogleEvents } from "@/hooks/useFetchGoogleEvents"
 
-export function EventList({ activeDate }: { activeDate: Date }) {
+export function EventList() {
+  const { activeDate } = useCalendar()
   const activeDateRef = useRef<HTMLDivElement>(null)
 
   const { events, isLoading } = useFetchGoogleEvents({

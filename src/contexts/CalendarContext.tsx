@@ -9,6 +9,8 @@ import { getDb } from "@/db/connection"
 interface CalendarContextType {
   calendars: CalendarType[]
   updateCalendars: (calendars: CalendarType[]) => void
+  activeDate: Date
+  setActiveDate: (date: Date) => void
 }
 
 const CalendarContext = createContext({} as CalendarContextType)
@@ -18,6 +20,8 @@ export function useCalendar() {
 }
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
+  const [activeDate, setActiveDate] = useState<Date>(new Date())
+
   const [calendars, setCalendars] = useState<CalendarType[]>([])
 
   const loadCalendarsFromDb = async () => {
@@ -49,6 +53,8 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const value = {
     calendars,
     updateCalendars,
+    activeDate,
+    setActiveDate,
   }
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>

@@ -1,38 +1,18 @@
-import { useCallback, useState } from "react"
-
 import "@/global.css"
 
 import { ActionBar } from "@/components/ActionBar"
+import { StatefulCalendar } from "@/components/StatefulCalendar"
 import { EventList } from "@/components/events/EventList"
-import { Calendar } from "@/components/ui/calendar"
 
 function App() {
-  const [activeDate, setActiveDate] = useState<Date | undefined>(new Date())
-
-  const handleMonthChange = useCallback((newMonth: Date) => {
-    setActiveDate(newMonth)
-  }, [])
-
-  const handleDateSelect = useCallback((date: Date) => {
-    setActiveDate(date)
-  }, [])
-
   return (
     <main className="flex h-screen">
       <div className="w-full lg:w-[300px] flex flex-col">
         <ActionBar />
-        <Calendar
-          mode="single"
-          selected={activeDate}
-          onSelect={handleDateSelect}
-          month={activeDate}
-          onMonthChange={handleMonthChange}
-          className="bg-transparent p-0"
-          required
-        />
+        <StatefulCalendar />
 
         <div className="grow overflow-auto flex-col gap-6">
-          <EventList activeDate={activeDate ?? new Date()} />
+          <EventList />
         </div>
       </div>
 
