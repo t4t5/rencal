@@ -20,24 +20,28 @@ export function useCalendar() {
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const [calendars, setCalendars] = useState<CalendarType[]>([])
 
-  // const loadCalendarsFromDb = async () => {
-  //   logger.info("Load calendars from DB...")
-  //   const db = await getDb()
-  //   const calendars = await db.calendar.list()
-  //   logger.info("Setting calendars:", calendars)
-  //   setCalendars(calendars)
-  // }
-  //
-  // useEffect(() => {
-  //   void loadCalendarsFromDb()
-  // }, [])
+  const loadCalendarsFromDb = async () => {
+    logger.info("Load calendars from DB...")
+    const db = await getDb()
+    const calendars = await db.calendar.list()
+    logger.info("Setting calendars:", calendars)
+    setCalendars(calendars)
+  }
+
+  useEffect(() => {
+    void loadCalendarsFromDb()
+  }, [])
 
   const updateCalendars = async (calendars: CalendarType[]) => {
-    // const db = await getDb()
+    const db = await getDb()
 
-    // for (const calendar of calendars) {
-    //   await db.calendar.add(calendar)
-    // }
+    logger.info("Saving calendars to DB...")
+
+    for (const calendar of calendars) {
+      await db.calendar.add(calendar)
+    }
+
+    logger.info(`Saved ${calendars.length} calendars to DB!`)
 
     setCalendars(calendars)
   }
