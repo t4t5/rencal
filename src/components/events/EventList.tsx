@@ -1,13 +1,12 @@
 import { format } from "date-fns"
-import { useEffect, useMemo } from "react"
+import { useEffect } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
-
-import type { Event } from "@/rpc/bindings"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useFetchGoogleEvents } from "@/hooks/useFetchGoogleEvents"
 
+import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
@@ -17,32 +16,14 @@ export function EventList() {
     activeDate,
   })
 
-  const eventsByDate = useMemo(() => {
-    const grouped = new Map<string, Event[]>()
-
-    for (const event of events) {
-      const dateKey = event.start.split("T")[0]
-      const existing = grouped.get(dateKey) || []
-      grouped.set(dateKey, [...existing, event])
-    }
-
-    return Array.from(grouped.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([dateStr, dayEvents]) => ({
-        date: new Date(dateStr),
-        events: dayEvents,
-      }))
-  }, [events])
-
-  const datesWithEvents = useMemo(() => {
-    return eventsByDate.map(({ date }) => format(date, "yyyy-MM-dd"))
-  }, [eventsByDate])
+  const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
   const { scrollContainerRef, addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: setActiveDate,
     datesWithEvents,
   })
 
+  // Scroll to currently active date as soon as events have loaded:
   useEffect(() => {
     if (!sectionRefs.current) return
 
@@ -70,7 +51,6 @@ export function EventList() {
             key={date.toISOString()}
             ref={(el) => {
               if (!el) return
-
               addSectionRef(dateStr, el)
             }}
             events={events}
