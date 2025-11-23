@@ -1,4 +1,12 @@
-import { ReactNode, createContext, useContext, useEffect, useState } from "react"
+import {
+  ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react"
 
 import { Calendar as CalendarType } from "@/rpc/bindings"
 
@@ -11,6 +19,9 @@ interface CalendarContextType {
   updateCalendars: (calendars: CalendarType[]) => void
   activeDate: Date
   setActiveDate: (date: Date) => void
+  navigateToDate: (date: Date) => void
+  registerScrollToDate: (fn: (date: Date) => void) => void
+  isNavigating: () => boolean
 }
 
 const CalendarContext = createContext({} as CalendarContextType)
@@ -21,6 +32,9 @@ export function useCalendar() {
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
+  const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
+  const isNavigatingRef = useRef(false)
+  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [calendars, setCalendars] = useState<CalendarType[]>([])
 
@@ -50,11 +64,36 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setCalendars(calendars)
   }
 
+  const registerScrollToDate = useCallback((fn: (date: Date) => void) => {
+    scrollToDateRef.current = fn
+  }, [])
+
+  const isNavigating = useCallback(() => isNavigatingRef.current, [])
+
+  const navigateToDate = useCallback((date: Date) => {
+    // Cancel any pending timeout from a previous navigation
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current)
+    }
+
+    isNavigatingRef.current = true
+    setActiveDate(date)
+    scrollToDateRef.current?.(date)
+
+    // Clear flag after scroll animation completes
+    navigationTimeoutRef.current = setTimeout(() => {
+      isNavigatingRef.current = false
+    }, 500)
+  }, [])
+
   const value = {
     calendars,
     updateCalendars,
     activeDate,
     setActiveDate,
+    navigateToDate,
+    registerScrollToDate,
+    isNavigating,
   }
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>

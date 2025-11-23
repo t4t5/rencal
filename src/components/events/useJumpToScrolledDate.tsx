@@ -4,9 +4,11 @@ import { useEffect, useRef } from "react"
 export function useJumpToScrolledDate({
   onSetActiveDate,
   datesWithEvents,
+  isNavigating,
 }: {
   onSetActiveDate: (date: Date) => void
   datesWithEvents: string[]
+  isNavigating: () => boolean
 }) {
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -23,6 +25,9 @@ export function useJumpToScrolledDate({
 
     const observer = new IntersectionObserver(
       (entries) => {
+        // Skip if we're currently doing a programmatic navigation
+        if (isNavigating()) return
+
         for (const entry of entries) {
           if (entry.isIntersecting) {
             const dateStr = entry.target.getAttribute("data-date")

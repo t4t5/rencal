@@ -5,15 +5,21 @@ import { Calendar } from "@/components/ui/calendar"
 import { useCalendar } from "@/contexts/CalendarContext"
 
 export function StatefulCalendar() {
-  const { activeDate, setActiveDate } = useCalendar()
+  const { activeDate, setActiveDate, navigateToDate } = useCalendar()
 
-  const handleMonthChange = useCallback((newMonth: Date) => {
-    setActiveDate(newMonth)
-  }, [])
+  const handleMonthChange = useCallback(
+    (newMonth: Date) => {
+      setActiveDate(newMonth)
+    },
+    [setActiveDate],
+  )
 
-  const handleDateSelect = useCallback((date: Date) => {
-    setActiveDate(date)
-  }, [])
+  const handleDateSelect = useCallback(
+    (date: Date) => {
+      navigateToDate(date)
+    },
+    [navigateToDate],
+  )
 
   return (
     <Calendar

@@ -10,7 +10,7 @@ import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
-  const { activeDate, setActiveDate } = useCalendar()
+  const { activeDate, setActiveDate, registerScrollToDate, isNavigating } = useCalendar()
 
   const { events, isLoading } = useFetchGoogleEvents({
     activeDate,
@@ -21,7 +21,32 @@ export function EventList() {
   const { scrollContainerRef, addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: setActiveDate,
     datesWithEvents,
+    isNavigating,
   })
+
+  // Register scroll function so calendar can trigger scrolling when a date is clicked:
+  useEffect(() => {
+    registerScrollToDate((date: Date) => {
+      if (!sectionRefs.current) return
+
+      const targetDateStr = format(date, "yyyy-MM-dd")
+
+      // Try exact date first
+      let section = sectionRefs.current.get(targetDateStr)
+
+      // If no events on that date, find the closest previous date with events
+      if (!section) {
+        const availableDates = [...sectionRefs.current.keys()].sort()
+        const closestPrevDate = availableDates.filter((d) => d <= targetDateStr).pop()
+
+        if (closestPrevDate) {
+          section = sectionRefs.current.get(closestPrevDate)
+        }
+      }
+
+      section?.scrollIntoView({ behavior: "smooth", block: "start" })
+    })
+  }, [registerScrollToDate, sectionRefs])
 
   // Scroll to currently active date as soon as events have loaded:
   useEffect(() => {
