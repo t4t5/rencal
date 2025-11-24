@@ -20,9 +20,12 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
       <div className="sticky top-0 z-10 font-bold text-sm bg-bgPrimary uppercase px-4 py-1.5">
         {format(date, isSameYear(date, new Date()) ? "dd MMM" : "dd MMM yyyy")}
       </div>
-      {events.map((event) => (
-        <EventRow key={event.id} event={event} />
-      ))}
+
+      <div className="flex flex-col gap-3 pb-2">
+        {events.map((event) => (
+          <EventRow key={event.id} event={event} />
+        ))}
+      </div>
     </div>
   )
 })
