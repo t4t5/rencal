@@ -1,7 +1,8 @@
 import { Google, generateState, generateCodeVerifier } from "arctic"
 
 import { rpc } from "@/rpc"
-import type { Account } from "@/rpc/bindings"
+
+import type { Account } from "@/types/account"
 
 const GOOGLE_CLIENT_ID = "988213795701-e04kh9dmf8dl8cjp1lour13g7fpp0cpp.apps.googleusercontent.com"
 const GOOGLE_CLIENT_SECRET = "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"
@@ -24,6 +25,26 @@ async function fetchGoogleEmail(accessToken: string): Promise<string | null> {
 
   const data = await response.json()
   return data.email ?? null
+}
+
+export async function refreshGoogleToken(refreshToken: string): Promise<{
+  access_token: string
+  refresh_token: string | null
+  expires_at: string
+}> {
+  const google = new Google(GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, REDIRECT_URI)
+  const tokens = await google.refreshAccessToken(refreshToken)
+
+  const now = new Date()
+  const expiresInSeconds = tokens.accessTokenExpiresInSeconds() ?? 3600
+  const expiresAt = new Date(now.getTime() + expiresInSeconds * 1000)
+
+  return {
+    access_token: tokens.accessToken(),
+    // Google doesn't return new refresh token on refresh
+    refresh_token: tokens.refreshToken() ?? null,
+    expires_at: expiresAt.toISOString(),
+  }
 }
 
 export async function googleOAuth(): Promise<Account> {

@@ -1,8 +1,7 @@
 use uuid::Uuid;
 
-use crate::google_oauth;
 use crate::storage;
-use crate::storage::{Account, Calendar, Event};
+use crate::storage::{Calendar, Event};
 
 /// Result of a sync operation - contains events to upsert, IDs to delete, and new sync token
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
@@ -15,10 +14,6 @@ pub struct SyncResult {
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 pub trait Api {
-    async fn refresh_google_token(
-        account_id: String,
-        refresh_token: String,
-    ) -> Result<Account, String>;
     async fn fetch_google_calendars(
         account_id: String,
         access_token: String,
@@ -36,27 +31,6 @@ pub struct ApiImpl;
 
 #[taurpc::resolvers]
 impl Api for ApiImpl {
-    async fn refresh_google_token(
-        self,
-        account_id: String,
-        refresh_token: String,
-    ) -> Result<storage::Account, String> {
-        let token_data = google_oauth::refresh_oauth_token(refresh_token.clone())
-            .await
-            .map_err(|e| e.to_string())?;
-
-        Ok(storage::Account {
-            id: account_id,
-            provider: storage::Provider::Google,
-            email: None, // Email doesn't change on refresh
-            access_token: Some(token_data.access_token),
-            // Keep the original refresh token if Google doesn't return a new one
-            refresh_token: token_data.refresh_token.or(Some(refresh_token)),
-            expires_at: Some(token_data.expires_at),
-            created_at: token_data.created_at,
-        })
-    }
-
     async fn fetch_google_calendars(
         self,
         account_id: String,

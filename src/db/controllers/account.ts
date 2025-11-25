@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql"
 
-import { Account } from "@/rpc/bindings"
+import { Account } from "@/types/account"
 
 export const accountController = (db: Database) => ({
   async getAll() {
