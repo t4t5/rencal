@@ -13,29 +13,31 @@ const LOAD_RANGE_MONTHS = 2
 // Buffer zone - only reload when activeDate is within this many months of the edge
 const BUFFER_MONTHS = 1
 
-interface LoadedRange {
+interface DateRange {
   start: Date
   end: Date
 }
 
 export const useLocalEvents = () => {
   const { calendars, activeDate } = useCalendar()
+
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setLoading] = useState(true)
-  const loadedRangeRef = useRef<LoadedRange | null>(null)
-  const selectedCalendarIdsRef = useRef<string[]>([])
 
+  const dateRangeRef = useRef<DateRange | null>(null)
+
+  const selectedCalendarIdsRef = useRef<string[]>([])
   const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
   const selectedCalendarIdsKey = selectedCalendarIds.join(",")
 
-  const calculateRange = useCallback((centerDate: Date): LoadedRange => {
+  const calculateRange = useCallback((centerDate: Date): DateRange => {
     return {
       start: startOfMonth(subMonths(centerDate, LOAD_RANGE_MONTHS)),
       end: endOfMonth(addMonths(centerDate, LOAD_RANGE_MONTHS)),
     }
   }, [])
 
-  const isWithinLoadedRange = useCallback((date: Date, range: LoadedRange): boolean => {
+  const isWithinLoadedRange = useCallback((date: Date, range: DateRange): boolean => {
     const bufferStart = addMonths(range.start, BUFFER_MONTHS)
     const bufferEnd = subMonths(range.end, BUFFER_MONTHS)
     return date >= bufferStart && date <= bufferEnd
@@ -53,7 +55,7 @@ export const useLocalEvents = () => {
   }, [])
 
   const expandLoadedRange = useCallback(
-    (current: LoadedRange | null, newRange: LoadedRange): LoadedRange => {
+    (current: DateRange | null, newRange: DateRange): DateRange => {
       if (!current) {
         return newRange
       }
@@ -66,7 +68,7 @@ export const useLocalEvents = () => {
   )
 
   const loadEventsForRange = useCallback(
-    async (range: LoadedRange, replace = false) => {
+    async (range: DateRange, replace = false) => {
       if (selectedCalendarIds.length === 0) {
         setEvents([])
         setLoading(false)
@@ -89,11 +91,11 @@ export const useLocalEvents = () => {
         if (replace) {
           // Full replace (used for initial load or calendar selection change)
           setEvents(localEvents)
-          loadedRangeRef.current = range
+          dateRangeRef.current = range
         } else {
           // Append-only merge
           setEvents((prev) => mergeEvents(prev, localEvents))
-          loadedRangeRef.current = expandLoadedRange(loadedRangeRef.current, range)
+          dateRangeRef.current = expandLoadedRange(dateRangeRef.current, range)
         }
       } catch (error) {
         logger.error("Failed to load events from local DB:", error)
@@ -106,7 +108,7 @@ export const useLocalEvents = () => {
   )
 
   const maybeLoadMore = useEffectEvent((date: Date) => {
-    const currentRange = loadedRangeRef.current
+    const currentRange = dateRangeRef.current
 
     // If no range loaded yet, load immediately
     if (!currentRange) {
@@ -129,7 +131,7 @@ export const useLocalEvents = () => {
     // Reset everything when calendar selection changes
     const prevIds = selectedCalendarIdsRef.current.join(",")
     if (prevIds !== selectedCalendarIdsKey) {
-      loadedRangeRef.current = null
+      dateRangeRef.current = null
       selectedCalendarIdsRef.current = selectedCalendarIds
     }
 
@@ -148,7 +150,7 @@ export const useLocalEvents = () => {
 
   const loadEventsForDate = useCallback(
     async (date: Date) => {
-      const currentRange = loadedRangeRef.current
+      const currentRange = dateRangeRef.current
 
       // If already within loaded range, no need to load
       if (currentRange && isWithinLoadedRange(date, currentRange)) {
@@ -162,7 +164,7 @@ export const useLocalEvents = () => {
   )
 
   const refreshEvents = useCallback(() => {
-    const range = loadedRangeRef.current ?? calculateRange(activeDate)
+    const range = dateRangeRef.current ?? calculateRange(activeDate)
     void loadEventsForRange(range, true) // replace to get fresh data
   }, [activeDate, calculateRange, loadEventsForRange])
 
