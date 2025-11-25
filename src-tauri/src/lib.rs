@@ -6,7 +6,7 @@ mod oauth;
 mod storage;
 
 // Re-export types for taurpc macro visibility
-pub use storage::{Calendar, Event, OAuthProvider, Session};
+pub use storage::{Account, Calendar, Event, Provider};
 
 /// Result of a sync operation - contains events to upsert, IDs to delete, and new sync token
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
@@ -19,12 +19,12 @@ pub struct SyncResult {
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
-    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Session, String>;
-    async fn refresh_google_token(refresh_token: String) -> Result<Session, String>;
-    async fn fetch_google_calendars(access_token: String) -> Result<Vec<Calendar>, String>;
+    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Account, String>;
+    async fn refresh_google_token(account_id: String, refresh_token: String) -> Result<Account, String>;
+    async fn fetch_google_calendars(account_id: String, access_token: String) -> Result<Vec<Calendar>, String>;
     async fn sync_google_events(
         access_token: String,
-        google_calendar_id: String,
+        provider_calendar_id: String,
         calendar_id: String,
         sync_token: Option<String>,
     ) -> Result<SyncResult, String>;
@@ -38,37 +38,42 @@ impl Api for ApiImpl {
     async fn google_oauth<R: Runtime>(
         self,
         app: AppHandle<R>,
-    ) -> Result<storage::Session, String> {
+    ) -> Result<storage::Account, String> {
         let token_data = google_oauth::get_oauth_token(app.clone())
             .await
             .map_err(|e| e.to_string())?;
 
-        Ok(storage::Session {
-            access_token: token_data.access_token,
+        Ok(storage::Account {
+            id: Uuid::new_v4().to_string(),
+            provider: storage::Provider::Google,
+            email: token_data.email,
+            access_token: Some(token_data.access_token),
             refresh_token: token_data.refresh_token,
-            expires_at: token_data.expires_at,
-            provider: storage::OAuthProvider::Google,
+            expires_at: Some(token_data.expires_at),
             created_at: token_data.created_at,
         })
     }
 
-    async fn refresh_google_token(self, refresh_token: String) -> Result<storage::Session, String> {
+    async fn refresh_google_token(self, account_id: String, refresh_token: String) -> Result<storage::Account, String> {
         let token_data = google_oauth::refresh_oauth_token(refresh_token.clone())
             .await
             .map_err(|e| e.to_string())?;
 
-        Ok(storage::Session {
-            access_token: token_data.access_token,
+        Ok(storage::Account {
+            id: account_id,
+            provider: storage::Provider::Google,
+            email: None, // Email doesn't change on refresh
+            access_token: Some(token_data.access_token),
             // Keep the original refresh token if Google doesn't return a new one
             refresh_token: token_data.refresh_token.or(Some(refresh_token)),
-            expires_at: token_data.expires_at,
-            provider: storage::OAuthProvider::Google,
+            expires_at: Some(token_data.expires_at),
             created_at: token_data.created_at,
         })
     }
 
     async fn fetch_google_calendars(
         self,
+        account_id: String,
         access_token: String,
     ) -> Result<Vec<storage::Calendar>, String> {
         // Use access token to fetch user's calendar list
@@ -95,13 +100,14 @@ impl Api for ApiImpl {
             .ok_or("No calendars found")?
             .iter()
             .filter_map(|cal| {
-                let google_calendar_id = cal["id"].as_str()?.to_string();
+                let provider_calendar_id = cal["id"].as_str()?.to_string();
                 let name = cal["summary"].as_str()?.to_string();
                 let color = cal["backgroundColor"].as_str().map(|s| s.to_string());
 
                 Some(Calendar {
                     id: Uuid::new_v4().to_string(),
-                    google_calendar_id: Some(google_calendar_id),
+                    account_id: account_id.clone(),
+                    provider_calendar_id: Some(provider_calendar_id),
                     name,
                     color,
                     selected: true,
@@ -117,14 +123,14 @@ impl Api for ApiImpl {
     async fn sync_google_events(
         self,
         access_token: String,
-        google_calendar_id: String,
+        provider_calendar_id: String,
         calendar_id: String,
         sync_token: Option<String>,
     ) -> Result<SyncResult, String> {
         let client = reqwest::Client::new();
         let url = format!(
             "https://www.googleapis.com/calendar/v3/calendars/{}/events",
-            urlencoding::encode(&google_calendar_id)
+            urlencoding::encode(&provider_calendar_id)
         );
 
         // Build query parameters based on whether we have a sync token
@@ -179,14 +185,14 @@ impl Api for ApiImpl {
         // Parse events from response
         if let Some(items) = events_data["items"].as_array() {
             for event in items {
-                let google_event_id = match event["id"].as_str() {
+                let provider_event_id = match event["id"].as_str() {
                     Some(id) => id.to_string(),
                     None => continue,
                 };
 
                 // Check if event was deleted (cancelled)
                 if event["status"].as_str() == Some("cancelled") {
-                    deleted_event_ids.push(google_event_id);
+                    deleted_event_ids.push(provider_event_id);
                     continue;
                 }
 
@@ -212,7 +218,7 @@ impl Api for ApiImpl {
 
                 events.push(storage::Event {
                     id: Uuid::new_v4().to_string(),
-                    google_event_id: Some(google_event_id),
+                    provider_event_id: Some(provider_event_id),
                     calendar_id: calendar_id.clone(),
                     summary,
                     start,

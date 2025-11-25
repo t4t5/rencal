@@ -29,6 +29,7 @@ pub struct SessionData {
     pub refresh_token: Option<String>,
     pub expires_at: i64,
     pub created_at: i64,
+    pub email: Option<String>,
 }
 
 /// Runs a complete OAuth 2.0 PKCE flow with popup window and localhost callback
@@ -123,6 +124,7 @@ pub async fn handle_oauth<R: Runtime>(
         refresh_token,
         expires_at,
         created_at: now,
+        email: None, // Caller should fetch email separately if needed
     })
 }
 
@@ -171,5 +173,6 @@ pub async fn refresh_access_token(config: RefreshConfig) -> Result<SessionData> 
         refresh_token,
         expires_at,
         created_at: now,
+        email: None, // Email doesn't change on refresh
     })
 }

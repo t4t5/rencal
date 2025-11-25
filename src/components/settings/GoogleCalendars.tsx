@@ -6,19 +6,27 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 
 export function GoogleCalendars() {
-  const { accessToken, withAuthRetry } = useAuth()
+  const { accounts, withAuthRetry } = useAuth()
 
   const { calendars, saveCalendars } = useCalendar()
 
   const fetchCalendars = useEffectEvent(async () => {
-    if (!accessToken) return
-    const calendars = await withAuthRetry((token) => rpc.fetch_google_calendars(token))
-    saveCalendars(calendars)
+    if (accounts.length === 0) return
+
+    // Fetch calendars for all accounts
+    for (const account of accounts) {
+      if (!account.access_token) continue
+
+      const accountCalendars = await withAuthRetry(account, (token) =>
+        rpc.fetch_google_calendars(account.id, token),
+      )
+      saveCalendars(accountCalendars)
+    }
   })
 
   useEffect(() => {
     void fetchCalendars()
-  }, [accessToken])
+  }, [accounts])
 
   return (
     <div>

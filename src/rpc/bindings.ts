@@ -4,24 +4,24 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from 'taurp
 type TAURI_CHANNEL<T> = (response: T) => void
 
 
-export type Calendar = { id: string; google_calendar_id: string | null; name: string; color: string | null; selected: boolean; sync_token: string | null; last_synced_at: string | null }
+export type Account = { id: string; provider: Provider; email: string | null; access_token: string | null; refresh_token: string | null; expires_at: string | null; created_at: string }
 
-export type Event = { id: string; google_event_id: string | null; calendar_id: string; summary: string; start: string; end: string; all_day: boolean; updated_at: string | null }
+export type Calendar = { id: string; account_id: string; provider_calendar_id: string | null; name: string; color: string | null; selected: boolean; sync_token: string | null; last_synced_at: string | null }
 
-export type OAuthProvider = "Google"
+export type Event = { id: string; provider_event_id: string | null; calendar_id: string; summary: string; start: string; end: string; all_day: boolean; updated_at: string | null }
 
-export type Session = { access_token: string; refresh_token: string | null; expires_at: string; provider: OAuthProvider; created_at: string }
+export type Provider = "Google"
 
 /**
  * Result of a sync operation - contains events to upsert, IDs to delete, and new sync token
  */
 export type SyncResult = { events: Event[]; deleted_event_ids: string[]; sync_token: string | null; full_sync_required: boolean }
 
-const ARGS_MAP = { '':'{"fetch_google_calendars":["access_token"],"google_oauth":[],"refresh_google_token":["refresh_token"],"sync_google_events":["access_token","google_calendar_id","calendar_id","sync_token"]}' }
-export type Router = { "": {fetch_google_calendars: (accessToken: string) => Promise<Calendar[]>, 
-google_oauth: () => Promise<Session>, 
-refresh_google_token: (refreshToken: string) => Promise<Session>, 
-sync_google_events: (accessToken: string, googleCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>} };
+const ARGS_MAP = { '':'{"fetch_google_calendars":["account_id","access_token"],"google_oauth":[],"refresh_google_token":["account_id","refresh_token"],"sync_google_events":["access_token","provider_calendar_id","calendar_id","sync_token"]}' }
+export type Router = { "": {fetch_google_calendars: (accountId: string, accessToken: string) => Promise<Calendar[]>, 
+google_oauth: () => Promise<Account>, 
+refresh_google_token: (accountId: string, refreshToken: string) => Promise<Account>, 
+sync_google_events: (accessToken: string, providerCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>} };
 
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)

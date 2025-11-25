@@ -1,21 +1,20 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
-import { Session } from "@/rpc/bindings"
+import { Account } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 
 import { getDb } from "@/db/connection"
 
 interface AuthContextType {
-  accessToken: string | null
-  refreshToken: string | null
-  resumeSession: () => Promise<void>
-  saveSession: (session: Session) => Promise<void>
-  refreshSession: () => Promise<string | null>
-  clearSession: () => Promise<void>
-  loggedIn: boolean
-  withAuthRetry: <T>(operation: (token: string) => Promise<T>) => Promise<T>
+  accounts: Account[]
+  loadAccounts: () => Promise<void>
+  saveAccount: (account: Account) => Promise<void>
+  refreshAccount: (account: Account) => Promise<Account | null>
+  deleteAccount: (accountId: string) => Promise<void>
+  hasAccounts: boolean
+  withAuthRetry: <T>(account: Account, operation: (token: string) => Promise<T>) => Promise<T>
 }
 
 const AuthContext = createContext({} as AuthContextType)
@@ -25,81 +24,82 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
+  const [accounts, setAccounts] = useState<Account[]>([])
 
-  async function resumeSession() {
-    logger.info("Resuming session from database...")
+  async function loadAccounts() {
+    logger.info("Loading accounts from database...")
 
     try {
       const db = await getDb()
-      const session = await db.session.get()
+      const loadedAccounts = await db.account.getAll()
 
-      if (session) {
-        logger.info("Loaded session from database:", session)
-
-        setSession(session)
-      } else {
-        logger.info("No session found in database.")
-      }
+      logger.info(`Loaded ${loadedAccounts.length} account(s) from database`)
+      setAccounts(loadedAccounts)
     } catch (error) {
-      logger.error("Failed to load access token:", error)
+      logger.error("Failed to load accounts:", error)
     }
   }
 
   useEffect(() => {
-    void resumeSession()
+    void loadAccounts()
   }, [])
 
-  async function saveSession(session: Session) {
-    logger.info("Saving session to database:", session)
+  async function saveAccount(account: Account) {
+    logger.info("Saving account to database:", account.email)
 
     const db = await getDb()
-    await db.session.insert(session)
+    await db.account.insert(account)
 
-    logger.info("Session saved to database.")
+    logger.info("Account saved to database.")
 
-    setSession(session)
+    // Reload accounts to get fresh state
+    await loadAccounts()
   }
 
-  async function clearSession() {
-    logger.info("Clearing session from database and state.")
+  async function deleteAccount(accountId: string) {
+    logger.info("Deleting account:", accountId)
 
     const db = await getDb()
-    await db.session.delete()
-    setSession(null)
+    await db.account.delete(accountId)
 
-    logger.info("Session cleared.")
+    logger.info("Account deleted.")
+
+    // Reload accounts to get fresh state
+    await loadAccounts()
   }
 
-  async function refreshSession(): Promise<string | null> {
-    if (!session?.refresh_token) {
-      logger.error("No refresh token available")
+  async function refreshAccount(account: Account): Promise<Account | null> {
+    if (!account.refresh_token) {
+      logger.error("No refresh token available for account:", account.id)
       return null
     }
 
-    logger.info("Refreshing access token...")
+    logger.info("Refreshing access token for account:", account.email)
 
     try {
-      const newSession = await rpc.refresh_google_token(session.refresh_token)
+      const refreshedAccount = await rpc.refresh_google_token(account.id, account.refresh_token)
 
-      await saveSession(newSession)
+      // Preserve email from original account (refresh doesn't return it)
+      refreshedAccount.email = account.email
+
+      await saveAccount(refreshedAccount)
 
       logger.info("Access token refreshed successfully")
-      return newSession.access_token
+      return refreshedAccount
     } catch (error) {
       logger.error("Failed to refresh access token:", error)
-      // If refresh fails, clear the session so user can re-authenticate
-      await clearSession()
+      // If refresh fails, delete the account so user can re-authenticate
+      await deleteAccount(account.id)
       return null
     }
   }
 
   const withAuthRetry = useCallback(
-    async <T,>(operation: (token: string) => Promise<T>): Promise<T> => {
-      const token = session?.access_token
+    async <T,>(account: Account, operation: (token: string) => Promise<T>): Promise<T> => {
+      const token = account.access_token
 
       if (!token) {
-        throw new Error("No access token available")
+        throw new Error("No access token available for account")
       }
 
       try {
@@ -109,11 +109,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (typeof error === "string" && error.includes("401")) {
           logger.warn("Token expired, attempting to refresh...")
 
-          const newToken = await refreshSession()
+          const refreshedAccount = await refreshAccount(account)
 
-          if (newToken) {
+          if (refreshedAccount?.access_token) {
             logger.info("Token refreshed, retrying operation...")
-            return await operation(newToken)
+            return await operation(refreshedAccount.access_token)
           } else {
             logger.error("Failed to refresh token")
             throw error
@@ -124,17 +124,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         throw error
       }
     },
-    [session?.access_token],
+    [],
   )
 
   const value = {
-    accessToken: session?.access_token ?? null,
-    refreshToken: session?.refresh_token ?? null,
-    resumeSession,
-    saveSession,
-    refreshSession,
-    clearSession,
-    loggedIn: session !== null,
+    accounts,
+    loadAccounts,
+    saveAccount,
+    refreshAccount,
+    deleteAccount,
+    hasAccounts: accounts.length > 0,
     withAuthRetry,
   }
 

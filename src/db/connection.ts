@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql"
 
-import { sessionController } from "@/db/controllers/session"
+import { accountController } from "@/db/controllers/account"
 
 import { calendarController } from "./controllers/calendar"
 import { eventController } from "./controllers/events"
@@ -8,12 +8,12 @@ import { eventController } from "./controllers/events"
 const DATABASE_NAME = "sequence.db"
 
 export class Db {
-  session: ReturnType<typeof sessionController>
+  account: ReturnType<typeof accountController>
   calendar: ReturnType<typeof calendarController>
   event: ReturnType<typeof eventController>
 
   constructor(db: Database) {
-    this.session = sessionController(db)
+    this.account = accountController(db)
     this.calendar = calendarController(db)
     this.event = eventController(db)
   }

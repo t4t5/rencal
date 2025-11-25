@@ -10,11 +10,14 @@ import { useAuth } from "@/contexts/AuthContext"
 
 export function ConnectGoogle() {
   const [isConnecting, setIsConnecting] = useState(false)
-  const { loggedIn, clearSession, saveSession } = useAuth()
+  const { accounts, hasAccounts, deleteAccount, saveAccount } = useAuth()
 
-  async function disconnectGoogle() {
+  // Get Google accounts only
+  const googleAccounts = accounts.filter((a) => a.provider === "Google")
+
+  async function disconnectGoogle(accountId: string) {
     try {
-      await clearSession()
+      await deleteAccount(accountId)
     } catch (error) {
       logger.error("Failed to disconnect Google:", error)
     }
@@ -24,8 +27,8 @@ export function ConnectGoogle() {
     setIsConnecting(true)
 
     try {
-      const session = await rpc.google_oauth()
-      await saveSession(session)
+      const account = await rpc.google_oauth()
+      await saveAccount(account)
     } catch (error) {
       logger.error("Failed to connect Google:", error)
     } finally {
@@ -34,18 +37,26 @@ export function ConnectGoogle() {
   }
 
   return (
-    <div className="bg-slate-900">
-      <h2>Connect Google account</h2>
-
-      {loggedIn ? (
-        <Button variant="destructive" onClick={disconnectGoogle}>
-          Sign out
-        </Button>
+    <div className="flex flex-col gap-2">
+      {googleAccounts.length > 0 ? (
+        <>
+          <h2>Connected Google accounts</h2>
+          {googleAccounts.map((account) => (
+            <div key={account.id} className="flex items-center justify-between gap-2">
+              <span>{account.email ?? "Unknown email"}</span>
+              <Button variant="destructive" size="sm" onClick={() => disconnectGoogle(account.id)}>
+                Disconnect
+              </Button>
+            </div>
+          ))}
+        </>
       ) : (
-        <Button onClick={connectGoogle} disabled={isConnecting}>
-          {isConnecting ? "Connecting..." : "Connect Google"}
-        </Button>
+        <h2>Connect Google account</h2>
       )}
+
+      <Button onClick={connectGoogle} disabled={isConnecting}>
+        {isConnecting ? "Connecting..." : hasAccounts ? "Add another account" : "Connect Google"}
+      </Button>
     </div>
   )
 }

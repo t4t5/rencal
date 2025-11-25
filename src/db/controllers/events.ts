@@ -5,7 +5,7 @@ import { Event } from "@/rpc/bindings"
 // Raw DB row type - SQLite returns integers for booleans
 type EventRow = {
   id: string
-  google_event_id: string | null
+  provider_event_id: string | null
   calendar_id: string
   summary: string | null
   start: string
@@ -16,7 +16,7 @@ type EventRow = {
 
 const rowToEvent = (row: EventRow): Event => ({
   id: row.id,
-  google_event_id: row.google_event_id,
+  provider_event_id: row.provider_event_id,
   calendar_id: row.calendar_id,
   summary: row.summary ?? "(No title)",
   start: row.start,
@@ -27,14 +27,14 @@ const rowToEvent = (row: EventRow): Event => ({
 
 export const eventController = (db: Database) => ({
   /**
-   * Upsert an event - insert or update based on google_event_id
+   * Upsert an event - insert or update based on provider_event_id
    */
   async upsert(event: Event) {
-    // Check if event with this google_event_id already exists
-    if (event.google_event_id) {
+    // Check if event with this provider_event_id already exists
+    if (event.provider_event_id) {
       const existing = await db.select<EventRow[]>(
-        "SELECT id FROM events WHERE google_event_id = $1 AND calendar_id = $2",
-        [event.google_event_id, event.calendar_id],
+        "SELECT id FROM events WHERE provider_event_id = $1 AND calendar_id = $2",
+        [event.provider_event_id, event.calendar_id],
       )
 
       if (existing.length > 0) {
@@ -46,14 +46,14 @@ export const eventController = (db: Database) => ({
             end = $3,
             all_day = $4,
             updated_at = $5
-          WHERE google_event_id = $6 AND calendar_id = $7`,
+          WHERE provider_event_id = $6 AND calendar_id = $7`,
           [
             event.summary,
             event.start,
             event.end,
             event.all_day ? 1 : 0,
             event.updated_at,
-            event.google_event_id,
+            event.provider_event_id,
             event.calendar_id,
           ],
         )
@@ -64,11 +64,11 @@ export const eventController = (db: Database) => ({
     // Insert new event
     await db.execute(
       `INSERT INTO events
-        (id, google_event_id, calendar_id, summary, start, end, all_day, updated_at)
+        (id, provider_event_id, calendar_id, summary, start, end, all_day, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
         event.id,
-        event.google_event_id,
+        event.provider_event_id,
         event.calendar_id,
         event.summary,
         event.start,
@@ -89,15 +89,15 @@ export const eventController = (db: Database) => ({
   },
 
   /**
-   * Delete events by their Google event IDs
+   * Delete events by their provider event IDs
    */
-  async deleteByGoogleEventIds(googleEventIds: string[], calendarId: string) {
-    if (googleEventIds.length === 0) return
+  async deleteByProviderEventIds(providerEventIds: string[], calendarId: string) {
+    if (providerEventIds.length === 0) return
 
-    const placeholders = googleEventIds.map((_, i) => `$${i + 1}`).join(", ")
+    const placeholders = providerEventIds.map((_, i) => `$${i + 1}`).join(", ")
     await db.execute(
-      `DELETE FROM events WHERE google_event_id IN (${placeholders}) AND calendar_id = $${googleEventIds.length + 1}`,
-      [...googleEventIds, calendarId],
+      `DELETE FROM events WHERE provider_event_id IN (${placeholders}) AND calendar_id = $${providerEventIds.length + 1}`,
+      [...providerEventIds, calendarId],
     )
   },
 

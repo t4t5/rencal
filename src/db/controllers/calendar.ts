@@ -5,7 +5,8 @@ import { Calendar } from "@/rpc/bindings"
 // Raw DB row type - SQLite returns integers for booleans
 type CalendarRow = {
   id: string
-  google_calendar_id: string | null
+  account_id: string
+  provider_calendar_id: string | null
   name: string
   color: string | null
   selected: number
@@ -15,7 +16,8 @@ type CalendarRow = {
 
 const rowToCalendar = (row: CalendarRow): Calendar => ({
   id: row.id,
-  google_calendar_id: row.google_calendar_id,
+  account_id: row.account_id,
+  provider_calendar_id: row.provider_calendar_id,
   name: row.name,
   color: row.color,
   selected: row.selected === 1,
@@ -26,12 +28,16 @@ const rowToCalendar = (row: CalendarRow): Calendar => ({
 export const calendarController = (db: Database) => ({
   async add(calendar: Calendar) {
     await db.execute(
-      `INSERT OR REPLACE INTO calendars
-        (id, google_calendar_id, name, color, selected, sync_token, last_synced_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+      `INSERT INTO calendars
+        (id, account_id, provider_calendar_id, name, color, selected, sync_token, last_synced_at)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        ON CONFLICT(account_id, provider_calendar_id) DO UPDATE SET
+          name = excluded.name,
+          color = excluded.color`,
       [
         calendar.id,
-        calendar.google_calendar_id,
+        calendar.account_id,
+        calendar.provider_calendar_id,
         calendar.name,
         calendar.color || "",
         calendar.selected ? 1 : 0,
@@ -51,24 +57,24 @@ export const calendarController = (db: Database) => ({
     return rows.map(rowToCalendar)
   },
 
-  async findByGoogleCalendarId(googleCalendarId: string): Promise<Calendar | null> {
+  async findByProviderCalendarId(providerCalendarId: string): Promise<Calendar | null> {
     const rows = await db.select<CalendarRow[]>(
-      "SELECT * FROM calendars WHERE google_calendar_id = $1",
-      [googleCalendarId],
+      "SELECT * FROM calendars WHERE provider_calendar_id = $1",
+      [providerCalendarId],
     )
     return rows.length > 0 ? rowToCalendar(rows[0]) : null
   },
 
-  async updateGoogleSyncToken({
-    googleCalendarId,
+  async updateSyncToken({
+    providerCalendarId,
     syncToken,
   }: {
-    googleCalendarId: string
+    providerCalendarId: string
     syncToken: string
   }) {
     await db.execute(
-      `UPDATE calendars SET sync_token = $1, last_synced_at = $2 WHERE google_calendar_id = $3`,
-      [syncToken, Date.now(), googleCalendarId],
+      `UPDATE calendars SET sync_token = $1, last_synced_at = $2 WHERE provider_calendar_id = $3`,
+      [syncToken, Date.now(), providerCalendarId],
     )
   },
 })
