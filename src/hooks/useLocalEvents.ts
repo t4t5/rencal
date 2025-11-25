@@ -12,8 +12,6 @@ import { getDb } from "@/db/connection"
 const LOAD_RANGE_MONTHS = 2
 // Buffer zone - only reload when activeDate is within this many months of the edge
 const BUFFER_MONTHS = 1
-// Debounce delay for scroll-triggered loads (ms)
-const DEBOUNCE_MS = 300
 
 interface LoadedRange {
   start: Date
@@ -25,15 +23,11 @@ export const useLocalEvents = () => {
   const [events, setEvents] = useState<Event[]>([])
   const [isLoading, setLoading] = useState(true)
   const loadedRangeRef = useRef<LoadedRange | null>(null)
-  const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const selectedCalendarIdsRef = useRef<string[]>([])
 
   const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
   const selectedCalendarIdsKey = selectedCalendarIds.join(",")
 
-  /**
-   * Calculate the date range to load based on a center date
-   */
   const calculateRange = useCallback((centerDate: Date): LoadedRange => {
     return {
       start: startOfMonth(subMonths(centerDate, LOAD_RANGE_MONTHS)),
@@ -41,18 +35,12 @@ export const useLocalEvents = () => {
     }
   }, [])
 
-  /**
-   * Check if a date is within the loaded range (with buffer)
-   */
   const isWithinLoadedRange = useCallback((date: Date, range: LoadedRange): boolean => {
     const bufferStart = addMonths(range.start, BUFFER_MONTHS)
     const bufferEnd = subMonths(range.end, BUFFER_MONTHS)
     return date >= bufferStart && date <= bufferEnd
   }, [])
 
-  /**
-   * Merge new events with existing events (append-only, dedupe by ID)
-   */
   const mergeEvents = useCallback((existing: Event[], newEvents: Event[]): Event[] => {
     const existingIds = new Set(existing.map((e) => e.id))
     const uniqueNewEvents = newEvents.filter((e) => !existingIds.has(e.id))
@@ -64,9 +52,6 @@ export const useLocalEvents = () => {
     return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.localeCompare(b.start))
   }, [])
 
-  /**
-   * Expand the loaded range to include a new range
-   */
   const expandLoadedRange = useCallback(
     (current: LoadedRange | null, newRange: LoadedRange): LoadedRange => {
       if (!current) {
@@ -80,9 +65,6 @@ export const useLocalEvents = () => {
     [],
   )
 
-  /**
-   * Load and append events for a specific date range
-   */
   const loadEventsForRange = useCallback(
     async (range: LoadedRange, replace = false) => {
       if (selectedCalendarIds.length === 0) {
@@ -123,10 +105,7 @@ export const useLocalEvents = () => {
     [selectedCalendarIdsKey, mergeEvents, expandLoadedRange],
   )
 
-  /**
-   * Check if we need to load more events based on activeDate
-   */
-  const maybeLoadMore = useEffectEvent((date: Date, immediate = false) => {
+  const maybeLoadMore = useEffectEvent((date: Date) => {
     const currentRange = loadedRangeRef.current
 
     // If no range loaded yet, load immediately
@@ -141,21 +120,8 @@ export const useLocalEvents = () => {
       return
     }
 
-    // Need to load new range - debounce unless immediate
-    if (debounceTimeoutRef.current) {
-      clearTimeout(debounceTimeoutRef.current)
-    }
-
-    const doLoad = () => {
-      const newRange = calculateRange(date)
-      void loadEventsForRange(newRange, false) // append, don't replace
-    }
-
-    if (immediate) {
-      doLoad()
-    } else {
-      debounceTimeoutRef.current = setTimeout(doLoad, DEBOUNCE_MS)
-    }
+    const newRange = calculateRange(date)
+    void loadEventsForRange(newRange, false) // append, don't replace
   })
 
   // Initial load or when selected calendars change
@@ -173,12 +139,6 @@ export const useLocalEvents = () => {
 
   useEffect(() => {
     onCalendarSelectionChange()
-
-    return () => {
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current)
-      }
-    }
   }, [selectedCalendarIdsKey])
 
   // Watch activeDate changes and load more if needed
@@ -186,9 +146,6 @@ export const useLocalEvents = () => {
     maybeLoadMore(activeDate)
   }, [activeDate])
 
-  /**
-   * Force load events for a specific date (used for navigation to distant dates)
-   */
   const loadEventsForDate = useCallback(
     async (date: Date) => {
       const currentRange = loadedRangeRef.current
@@ -204,9 +161,6 @@ export const useLocalEvents = () => {
     [calculateRange, isWithinLoadedRange, loadEventsForRange],
   )
 
-  /**
-   * Refresh events within the current loaded range
-   */
   const refreshEvents = useCallback(() => {
     const range = loadedRangeRef.current ?? calculateRange(activeDate)
     void loadEventsForRange(range, true) // replace to get fresh data
