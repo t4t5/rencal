@@ -20,11 +20,6 @@ interface LoadedRange {
   end: Date
 }
 
-/**
- * Hook that reads events from local SQLite database with infinite scroll.
- * Uses append-only loading - events are only added, never removed during a session.
- * Use together with useSyncEvents to keep events up-to-date.
- */
 export const useLocalEvents = () => {
   const { calendars, activeDate } = useCalendar()
   const [events, setEvents] = useState<Event[]>([])
@@ -131,40 +126,37 @@ export const useLocalEvents = () => {
   /**
    * Check if we need to load more events based on activeDate
    */
-  const maybeLoadMore = useCallback(
-    (date: Date, immediate = false) => {
-      const currentRange = loadedRangeRef.current
+  const maybeLoadMore = useEffectEvent((date: Date, immediate = false) => {
+    const currentRange = loadedRangeRef.current
 
-      // If no range loaded yet, load immediately
-      if (!currentRange) {
-        const newRange = calculateRange(date)
-        void loadEventsForRange(newRange, true)
-        return
-      }
+    // If no range loaded yet, load immediately
+    if (!currentRange) {
+      const newRange = calculateRange(date)
+      void loadEventsForRange(newRange, true)
+      return
+    }
 
-      // If within loaded range (with buffer), no need to load
-      if (isWithinLoadedRange(date, currentRange)) {
-        return
-      }
+    // If within loaded range (with buffer), no need to load
+    if (isWithinLoadedRange(date, currentRange)) {
+      return
+    }
 
-      // Need to load new range - debounce unless immediate
-      if (debounceTimeoutRef.current) {
-        clearTimeout(debounceTimeoutRef.current)
-      }
+    // Need to load new range - debounce unless immediate
+    if (debounceTimeoutRef.current) {
+      clearTimeout(debounceTimeoutRef.current)
+    }
 
-      const doLoad = () => {
-        const newRange = calculateRange(date)
-        void loadEventsForRange(newRange, false) // append, don't replace
-      }
+    const doLoad = () => {
+      const newRange = calculateRange(date)
+      void loadEventsForRange(newRange, false) // append, don't replace
+    }
 
-      if (immediate) {
-        doLoad()
-      } else {
-        debounceTimeoutRef.current = setTimeout(doLoad, DEBOUNCE_MS)
-      }
-    },
-    [calculateRange, isWithinLoadedRange, loadEventsForRange],
-  )
+    if (immediate) {
+      doLoad()
+    } else {
+      debounceTimeoutRef.current = setTimeout(doLoad, DEBOUNCE_MS)
+    }
+  })
 
   // Initial load or when selected calendars change
   const onCalendarSelectionChange = useEffectEvent(() => {
@@ -192,7 +184,7 @@ export const useLocalEvents = () => {
   // Watch activeDate changes and load more if needed
   useEffect(() => {
     maybeLoadMore(activeDate)
-  }, [activeDate, maybeLoadMore])
+  }, [activeDate])
 
   /**
    * Force load events for a specific date (used for navigation to distant dates)
