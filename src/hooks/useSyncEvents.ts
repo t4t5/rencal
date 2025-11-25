@@ -1,13 +1,36 @@
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
-import { rpc } from "@/rpc"
-import { Account, Calendar } from "@/rpc/bindings"
-
 import { logger } from "@/lib/logger"
+import { GoogleEvent, syncGoogleEvents } from "@/lib/oauth/google"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
+import { Account } from "@/types/account"
+import { Calendar } from "@/types/calendar"
+import { Event } from "@/types/event"
+
+/** Convert Google Calendar event to our Event type */
+function googleEventToEvent(googleEvent: GoogleEvent, calendarId: string): Event | null {
+  // Handle all-day events (date) vs timed events (dateTime)
+  const start = googleEvent.start.date ?? googleEvent.start.dateTime
+  const end = googleEvent.end.date ?? googleEvent.end.dateTime
+
+  if (!start || !end) {
+    return null
+  }
+
+  return {
+    id: crypto.randomUUID(),
+    provider_event_id: googleEvent.id,
+    calendar_id: calendarId,
+    summary: googleEvent.summary ?? "(No title)",
+    start,
+    end,
+    all_day: !!googleEvent.start.date,
+    updated_at: googleEvent.updated ?? null,
+  }
+}
 
 // const SYNC_INTERVAL_MS = 60_000 // 60s
 
@@ -43,21 +66,21 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     const db = await getDb()
 
     // Retry with no sync token (full sync)
-    const fullResult = await rpc.sync_google_events(
-      token,
-      calendar.provider_calendar_id,
-      calendar.id,
-      null,
-    )
+    const fullResult = await syncGoogleEvents(token, calendar.provider_calendar_id, null)
 
-    if (fullResult.events.length > 0) {
-      await db.event.upsertMany(fullResult.events)
+    // Convert Google events to our Event type
+    const events = fullResult.events
+      .map((ge) => googleEventToEvent(ge, calendar.id))
+      .filter((e): e is Event => e !== null)
+
+    if (events.length > 0) {
+      await db.event.upsertMany(events)
     }
 
-    if (fullResult.sync_token) {
+    if (fullResult.syncToken) {
       await db.calendar.updateSyncToken({
         providerCalendarId: calendar.provider_calendar_id,
-        syncToken: fullResult.sync_token,
+        syncToken: fullResult.syncToken,
       })
     }
   }
@@ -73,38 +96,38 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       throw new Error("Calendar does not have a provider calendar ID")
     }
 
-    const result = await rpc.sync_google_events(
-      token,
-      calendar.provider_calendar_id,
-      calendar.id,
-      calendar.sync_token,
-    )
+    const result = await syncGoogleEvents(token, calendar.provider_calendar_id, calendar.sync_token)
 
     // Handle 410 Gone - need full re-sync
-    if (result.full_sync_required) {
+    if (result.fullSyncRequired) {
       await doFullSync({
         token,
         calendar,
       })
+      return
     }
 
     // Handle deleted events
-    if (result.deleted_event_ids.length > 0) {
-      logger.info(`Deleting ${result.deleted_event_ids.length} events from ${calendar.name}`)
-      await db.event.deleteByProviderEventIds(result.deleted_event_ids, calendar.id)
+    if (result.deletedEventIds.length > 0) {
+      logger.info(`Deleting ${result.deletedEventIds.length} events from ${calendar.name}`)
+      await db.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
     }
 
-    // Upsert new/updated events
-    if (result.events.length > 0) {
-      logger.info(`Upserting ${result.events.length} events to ${calendar.name}`)
-      await db.event.upsertMany(result.events)
+    // Convert Google events to our Event type and upsert
+    const events = result.events
+      .map((ge) => googleEventToEvent(ge, calendar.id))
+      .filter((e): e is Event => e !== null)
+
+    if (events.length > 0) {
+      logger.info(`Upserting ${events.length} events to ${calendar.name}`)
+      await db.event.upsertMany(events)
     }
 
     // Update sync token
-    if (result.sync_token) {
+    if (result.syncToken) {
       await db.calendar.updateSyncToken({
         providerCalendarId: calendar.provider_calendar_id,
-        syncToken: result.sync_token,
+        syncToken: result.syncToken,
       })
     }
 

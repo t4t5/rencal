@@ -1,11 +1,10 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
-import { rpc } from "@/rpc"
-import { Account } from "@/rpc/bindings"
-
 import { logger } from "@/lib/logger"
+import { refreshGoogleToken } from "@/lib/oauth/google"
 
 import { getDb } from "@/db/connection"
+import { Account } from "@/types/account"
 
 interface AuthContextType {
   accounts: Account[]
@@ -77,10 +76,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Refreshing access token for account:", account.email)
 
     try {
-      const refreshedAccount = await rpc.refresh_google_token(account.id, account.refresh_token)
-
-      // Preserve email from original account (refresh doesn't return it)
-      refreshedAccount.email = account.email
+      const tokenData = await refreshGoogleToken(account.refresh_token)
+      const refreshedAccount: Account = {
+        ...account,
+        access_token: tokenData.access_token,
+        refresh_token: tokenData.refresh_token ?? account.refresh_token,
+        expires_at: tokenData.expires_at,
+      }
 
       await saveAccount(refreshedAccount)
 

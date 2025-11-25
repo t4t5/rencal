@@ -2,9 +2,8 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
-import { rpc } from "@/rpc"
-
 import { logger } from "@/lib/logger"
+import { googleOAuth } from "@/lib/oauth/google"
 
 import { useAuth } from "@/contexts/AuthContext"
 
@@ -27,7 +26,7 @@ export function ConnectGoogle() {
     setIsConnecting(true)
 
     try {
-      const account = await rpc.google_oauth()
+      const account = await googleOAuth()
       await saveAccount(account)
     } catch (error) {
       logger.error("Failed to connect Google:", error)

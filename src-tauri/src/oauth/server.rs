@@ -25,7 +25,7 @@ Content-Type: text/html; charset=utf-8
 <body>
     <div class="message">
         <h1>✓ Authentication Successful</h1>
-        <p>You can close this window and return to the application.</p>
+        <p>This window will close automatically...</p>
     </div>
 </body>
 </html>
