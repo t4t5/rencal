@@ -38,7 +38,7 @@ export function EventList() {
   }, [])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
-  const scrollToDate = useEffectEvent((date: Date) => {
+  const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
     if (!sectionRefs.current) return
 
     const targetDateStr = format(date, "yyyy-MM-dd")
@@ -56,25 +56,16 @@ export function EventList() {
       }
     }
 
-    section?.scrollIntoView({ behavior: "smooth", block: "start" })
+    section?.scrollIntoView({ behavior, block: "start" })
   })
 
   useEffect(() => {
     registerScrollToDate(scrollToDate)
   }, [])
 
-  // Scroll to currently active date as soon as events have loaded:
-  const scrollToActiveDateOnLoad = useEffectEvent(() => {
-    if (!sectionRefs.current) return
-
-    const section = sectionRefs.current.get(format(activeDate, "yyyy-MM-dd"))
-    if (!section) return
-
-    section.scrollIntoView({ behavior: "instant", block: "start" })
-  })
-
   useEffect(() => {
-    scrollToActiveDateOnLoad()
+    // Scroll to currently active date as soon as events have loaded:
+    scrollToDate(activeDate, "instant")
   }, [eventsByDate])
 
   if (isLoading && events.length === 0) {
