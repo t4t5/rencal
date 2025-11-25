@@ -46,6 +46,11 @@ export const calendarController = (db: Database) => ({
     return rows.map(rowToCalendar)
   },
 
+  async listActive(): Promise<Calendar[]> {
+    const rows = await db.select<CalendarRow[]>("SELECT * FROM calendars WHERE selected = 1")
+    return rows.map(rowToCalendar)
+  },
+
   async findByGoogleCalendarId(googleCalendarId: string): Promise<Calendar | null> {
     const rows = await db.select<CalendarRow[]>(
       "SELECT * FROM calendars WHERE google_calendar_id = $1",
@@ -54,17 +59,16 @@ export const calendarController = (db: Database) => ({
     return rows.length > 0 ? rowToCalendar(rows[0]) : null
   },
 
-  async updateSyncState(calendarId: string, syncToken: string | null) {
-    const now = Date.now()
-    await db.execute("UPDATE calendars SET sync_token = $1, last_synced_at = $2 WHERE id = $3", [
-      syncToken,
-      now,
-      calendarId,
-    ])
-  },
-
-  async getSelectedCalendars(): Promise<Calendar[]> {
-    const rows = await db.select<CalendarRow[]>("SELECT * FROM calendars WHERE selected = 1")
-    return rows.map(rowToCalendar)
+  async updateGoogleSyncToken({
+    googleCalendarId,
+    syncToken,
+  }: {
+    googleCalendarId: string
+    syncToken: string
+  }) {
+    await db.execute(
+      `UPDATE calendars SET sync_token = $1, last_synced_at = $2 WHERE google_calendar_id = $3`,
+      [syncToken, Date.now(), googleCalendarId],
+    )
   },
 })

@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
 
-const SYNC_INTERVAL_MS = 30_000 // 30 seconds
+const SYNC_INTERVAL_MS = 60_000 // 60s
 
 /**
  * Hook that handles syncing events from Google Calendar to local SQLite.
@@ -20,22 +20,51 @@ const SYNC_INTERVAL_MS = 30_000 // 30 seconds
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { accessToken, refreshSession } = useAuth()
-  const { calendars, updateCalendars } = useCalendar()
+  const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const selectedCalendars = calendars.filter((c) => c.selected && c.google_calendar_id)
 
-  const syncCalendar = useCallback(async (calendar: Calendar, token: string): Promise<Calendar> => {
+  const doFullSync = async ({ calendar, token }: { calendar: Calendar; token: string }) => {
+    logger.warn(`Sync token expired for ${calendar.name}, doing full sync...`)
+
     if (!calendar.google_calendar_id) {
-      return calendar
+      throw new Error("Calendar does not have a Google Calendar ID")
     }
 
+    const db = await getDb()
+
+    // Retry with no sync token (full sync)
+    const fullResult = await rpc.sync_google_events(
+      token,
+      calendar.google_calendar_id,
+      calendar.id,
+      null,
+    )
+
+    if (fullResult.events.length > 0) {
+      await db.event.upsertMany(fullResult.events)
+    }
+
+    if (fullResult.sync_token) {
+      await db.calendar.updateGoogleSyncToken({
+        googleCalendarId: calendar.google_calendar_id,
+        syncToken: fullResult.sync_token,
+      })
+    }
+  }
+
+  const syncCalendar = useCallback(async (calendar: Calendar, token: string) => {
     const db = await getDb()
 
     logger.info(`Syncing calendar: ${calendar.name}`, {
       hasToken: !!calendar.sync_token,
     })
+
+    if (!calendar.google_calendar_id) {
+      throw new Error("Calendar does not have a Google Calendar ID")
+    }
 
     const result = await rpc.sync_google_events(
       token,
@@ -46,32 +75,10 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     // Handle 410 Gone - need full re-sync
     if (result.full_sync_required) {
-      logger.warn(`Sync token expired for ${calendar.name}, doing full sync...`)
-      // Clear events and sync token, then retry
-      await db.event.deleteByCalendarId(calendar.id)
-      await db.calendar.updateSyncState(calendar.id, null)
-
-      // Retry with no sync token (full sync)
-      const fullResult = await rpc.sync_google_events(
+      await doFullSync({
         token,
-        calendar.google_calendar_id,
-        calendar.id,
-        null,
-      )
-
-      if (fullResult.events.length > 0) {
-        await db.event.upsertMany(fullResult.events)
-      }
-
-      if (fullResult.sync_token) {
-        await db.calendar.updateSyncState(calendar.id, fullResult.sync_token)
-      }
-
-      return {
-        ...calendar,
-        sync_token: fullResult.sync_token,
-        last_synced_at: String(Date.now()),
-      }
+        calendar,
+      })
     }
 
     // Handle deleted events
@@ -88,27 +95,22 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     // Update sync token
     if (result.sync_token) {
-      await db.calendar.updateSyncState(calendar.id, result.sync_token)
+      await db.calendar.updateGoogleSyncToken({
+        googleCalendarId: calendar.google_calendar_id,
+        syncToken: result.sync_token,
+      })
     }
 
     logger.info(`Sync complete for ${calendar.name}`)
-
-    return {
-      ...calendar,
-      sync_token: result.sync_token ?? calendar.sync_token,
-      last_synced_at: String(Date.now()),
-    }
   }, [])
 
   const syncAllCalendars = useCallback(
     async (token: string, retries = 0) => {
       if (isSyncingRef.current) {
-        logger.info("Sync already in progress, skipping...")
         return
       }
 
       if (selectedCalendars.length === 0) {
-        logger.info("No calendars selected, skipping sync")
         return
       }
 
@@ -117,12 +119,9 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       try {
         logger.info(`Starting sync for ${selectedCalendars.length} calendars...`)
 
-        const updatedCalendars: Calendar[] = []
-
         for (const calendar of selectedCalendars) {
           try {
-            const updated = await syncCalendar(calendar, token)
-            updatedCalendars.push(updated)
+            await syncCalendar(calendar, token)
           } catch (error) {
             logger.error(`Failed to sync calendar ${calendar.name}:`, error)
 
@@ -135,18 +134,8 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
                 return syncAllCalendars(newToken, retries + 1)
               }
             }
-
-            // Keep calendar unchanged on error
-            updatedCalendars.push(calendar)
           }
         }
-
-        // Update calendars in context with new sync states
-        const allCalendars = calendars.map((c) => {
-          const updated = updatedCalendars.find((u) => u.id === c.id)
-          return updated ?? c
-        })
-        await updateCalendars(allCalendars)
 
         logger.info("All calendars synced successfully")
         options?.onSyncComplete?.()
@@ -156,7 +145,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         isSyncingRef.current = false
       }
     },
-    [selectedCalendars, calendars, syncCalendar, refreshSession, updateCalendars, options],
+    [selectedCalendars, calendars, syncCalendar, refreshSession, options],
   )
 
   // Initial sync and setup interval

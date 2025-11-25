@@ -16,10 +16,10 @@ import { getDb } from "@/db/connection"
 
 interface CalendarContextType {
   calendars: CalendarType[]
-  updateCalendars: (calendars: CalendarType[]) => void
+  saveCalendars: (calendars: CalendarType[]) => Promise<void>
   activeDate: Date
   setActiveDate: (date: Date) => void
-  navigateToDate: (date: Date) => void
+  navigateToDate: (date: Date) => Promise<void>
   registerScrollToDate: (fn: (date: Date) => void) => void
   registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
   isNavigating: () => boolean
@@ -52,7 +52,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     void loadCalendarsFromDb()
   }, [])
 
-  const updateCalendars = async (calendars: CalendarType[]) => {
+  const saveCalendars = async (calendars: CalendarType[]) => {
     const db = await getDb()
 
     logger.info("Saving calendars to DB...")
@@ -105,7 +105,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const value = {
     calendars,
-    updateCalendars,
+    saveCalendars,
     activeDate,
     setActiveDate,
     navigateToDate,

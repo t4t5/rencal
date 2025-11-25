@@ -10,20 +10,18 @@ import { useCalendar } from "@/contexts/CalendarContext"
 export function GoogleCalendars() {
   const { accessToken, refreshSession } = useAuth()
 
-  const { calendars, updateCalendars } = useCalendar()
+  const { calendars, saveCalendars } = useCalendar()
 
   useEffect(() => {
     if (accessToken) {
       void fetchCalendars(accessToken)
-    } else {
-      updateCalendars([])
     }
   }, [accessToken])
 
   async function fetchCalendars(token: string, retries = 0) {
     try {
       const calendars = await rpc.fetch_google_calendars(token)
-      updateCalendars(calendars)
+      saveCalendars(calendars)
     } catch (errorMsg) {
       if (retries >= 1) {
         logger.warn("Session retries exhausted!")
