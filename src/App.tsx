@@ -1,7 +1,7 @@
 import "@/global.css"
 
-import { ActionBar } from "@/components/ActionBar"
 import { StatefulCalendar } from "@/components/StatefulCalendar"
+import { ActionBar } from "@/components/action-bar/ActionBar"
 import { EventList } from "@/components/events/EventList"
 
 function App() {

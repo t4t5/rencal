@@ -5,7 +5,6 @@ import { DaySection } from "@/components/events/DaySection"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useLocalEvents } from "@/hooks/useLocalEvents"
-import { useSyncEvents } from "@/hooks/useSyncEvents"
 
 import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
@@ -19,11 +18,7 @@ export function EventList() {
     isNavigating,
   } = useCalendar()
 
-  // Load events from local SQLite
-  const { events, isLoading, refreshEvents, loadEventsForDate } = useLocalEvents()
-
-  // Sync events from Google in background, refresh local events when sync completes
-  useSyncEvents({ onSyncComplete: refreshEvents })
+  const { events, isLoading, loadEventsForDate } = useLocalEvents()
 
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
@@ -66,19 +61,22 @@ export function EventList() {
   useEffect(() => {
     if (!sectionRefs.current) return
 
+    console.log("INIT", eventsByDate)
+
     const section = sectionRefs.current.get(format(activeDate, "yyyy-MM-dd"))
     if (!section) return
+
+    console.log("Scroll to", activeDate)
 
     section.scrollIntoView({ behavior: "instant", block: "start" })
   }, [eventsByDate])
 
-  // Only show loading state on initial load (when we have no events yet)
   if (isLoading && events.length === 0) {
     return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
   }
 
   if (events.length === 0) {
-    return null
+    return <div className="p-2 text-sm text-muted-foreground">No events</div>
   }
 
   return (
