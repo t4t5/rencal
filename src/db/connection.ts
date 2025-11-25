@@ -5,7 +5,7 @@ import { accountController } from "@/db/controllers/account"
 import { calendarController } from "./controllers/calendar"
 import { eventController } from "./controllers/events"
 
-const DATABASE_NAME = "sequence.db"
+const DATABASE_NAME = "rencal.db"
 
 export class Db {
   account: ReturnType<typeof accountController>

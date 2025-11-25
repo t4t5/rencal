@@ -20,8 +20,14 @@ pub struct SyncResult {
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 trait Api {
     async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Account, String>;
-    async fn refresh_google_token(account_id: String, refresh_token: String) -> Result<Account, String>;
-    async fn fetch_google_calendars(account_id: String, access_token: String) -> Result<Vec<Calendar>, String>;
+    async fn refresh_google_token(
+        account_id: String,
+        refresh_token: String,
+    ) -> Result<Account, String>;
+    async fn fetch_google_calendars(
+        account_id: String,
+        access_token: String,
+    ) -> Result<Vec<Calendar>, String>;
     async fn sync_google_events(
         access_token: String,
         provider_calendar_id: String,
@@ -35,10 +41,7 @@ struct ApiImpl;
 
 #[taurpc::resolvers]
 impl Api for ApiImpl {
-    async fn google_oauth<R: Runtime>(
-        self,
-        app: AppHandle<R>,
-    ) -> Result<storage::Account, String> {
+    async fn google_oauth<R: Runtime>(self, app: AppHandle<R>) -> Result<storage::Account, String> {
         let token_data = google_oauth::get_oauth_token(app.clone())
             .await
             .map_err(|e| e.to_string())?;
@@ -54,7 +57,11 @@ impl Api for ApiImpl {
         })
     }
 
-    async fn refresh_google_token(self, account_id: String, refresh_token: String) -> Result<storage::Account, String> {
+    async fn refresh_google_token(
+        self,
+        account_id: String,
+        refresh_token: String,
+    ) -> Result<storage::Account, String> {
         let token_data = google_oauth::refresh_oauth_token(refresh_token.clone())
             .await
             .map_err(|e| e.to_string())?;
@@ -196,7 +203,10 @@ impl Api for ApiImpl {
                     continue;
                 }
 
-                let summary = event["summary"].as_str().unwrap_or("(No title)").to_string();
+                let summary = event["summary"]
+                    .as_str()
+                    .unwrap_or("(No title)")
+                    .to_string();
                 let updated_at = event["updated"].as_str().map(|s| s.to_string());
 
                 // Handle all-day events (date) vs timed events (dateTime)
@@ -230,9 +240,7 @@ impl Api for ApiImpl {
         }
 
         // Extract new sync token for next incremental sync
-        let new_sync_token = events_data["nextSyncToken"]
-            .as_str()
-            .map(|s| s.to_string());
+        let new_sync_token = events_data["nextSyncToken"].as_str().map(|s| s.to_string());
 
         Ok(SyncResult {
             events,
@@ -249,7 +257,7 @@ pub async fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations("sqlite:sequence.db", storage::get_migrations())
+                .add_migrations("sqlite:rencal.db", storage::get_migrations())
                 .build(),
         )
         .invoke_handler(taurpc::create_ipc_handler(ApiImpl.into_handler()))

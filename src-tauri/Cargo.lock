@@ -3477,6 +3477,30 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7a2d987857b319362043e95f5353c0535c1f58eec5336fdfcf626430af7def58"
 
 [[package]]
+name = "rencal"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "oauth2",
+ "open",
+ "reqwest 0.12.24",
+ "serde",
+ "serde_json",
+ "socket2 0.5.10",
+ "specta",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-opener",
+ "tauri-plugin-sql",
+ "taurpc",
+ "tokio",
+ "url",
+ "urlencoding",
+ "uuid",
+]
+
+[[package]]
 name = "reqwest"
 version = "0.11.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3826,30 +3850,6 @@ checksum = "d767eb0aabc880b29956c35734170f26ed551a859dbd361d140cdbeca61ab1e2"
 dependencies = [
  "serde",
  "serde_core",
-]
-
-[[package]]
-name = "sequence"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "chrono",
- "oauth2",
- "open",
- "reqwest 0.12.24",
- "serde",
- "serde_json",
- "socket2 0.5.10",
- "specta",
- "tauri",
- "tauri-build",
- "tauri-plugin-opener",
- "tauri-plugin-sql",
- "taurpc",
- "tokio",
- "url",
- "urlencoding",
- "uuid",
 ]
 
 [[package]]

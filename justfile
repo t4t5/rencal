@@ -19,4 +19,4 @@ typecheck:
   pnpm typecheck
 
 reset:
-  rm $HOME/.config/sequence/sequence.db
+  rm $HOME/.config/rencal/rencal.db

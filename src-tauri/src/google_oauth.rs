@@ -8,7 +8,7 @@ const GOOGLE_AUTH_URL: &str = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN_URL: &str = "https://oauth2.googleapis.com/token";
 const GOOGLE_USERINFO_URL: &str = "https://www.googleapis.com/oauth2/v2/userinfo";
 
-// Sequence desktop app credentials
+// Rencal desktop app credentials
 // Note: These are embedded in the app (standard for desktop apps like Thunderbird).
 // PKCE provides security against token theft, not the client secret.
 const APP_CLIENT_ID: &str =
@@ -32,10 +32,8 @@ async fn fetch_google_email(access_token: &str) -> Result<Option<String>> {
         return Ok(None);
     }
 
-    let user_info: serde_json::Value = response
-        .json()
-        .await
-        .context("Failed to parse user info")?;
+    let user_info: serde_json::Value =
+        response.json().await.context("Failed to parse user info")?;
 
     Ok(user_info["email"].as_str().map(|s| s.to_string()))
 }

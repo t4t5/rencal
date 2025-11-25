@@ -1,4 +1,4 @@
-# Sequence
+# Rencal
 
 A calendar app crafted especially for Omarchy.
 
@@ -33,7 +33,7 @@ This is a Tauri application with a Rust backend and React frontend.
 
 ## Google Calendar Integration
 
-Uses standalone OAuth 2.0 authentication - no central Sequence server required:
+Uses standalone OAuth 2.0 authentication - no central Rencal server required:
 
 1. User clicks "Connect Google Calendar"
 2. Temporary HTTP server spawns on `localhost:8080`
