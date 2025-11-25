@@ -1,38 +1,13 @@
 use tauri_plugin_sql::{Migration, MigrationKind};
 
 pub fn get_migrations() -> Vec<Migration> {
-    vec![
-        Migration {
-            version: 1,
-            description: "create calendars table",
-            sql: "CREATE TABLE calendars (
-                id TEXT PRIMARY KEY,
-                name TEXT NOT NULL,
-                color TEXT,
-                selected INTEGER NOT NULL DEFAULT 1
-            );",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 2,
-            description: "create sessions table",
-            sql: "CREATE TABLE sessions (
-                access_token TEXT PRIMARY KEY,
-                refresh_token TEXT,
-                expires_at INTEGER NOT NULL,
-                provider TEXT NOT NULL,
-                created_at INTEGER NOT NULL
-            );",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 3,
-            description: "add google_calendar_id and sync columns to calendars",
-            sql: "
-                -- Create new table with correct structure
-                CREATE TABLE calendars_new (
+    vec![Migration {
+        version: 1,
+        description: "initialize database schema",
+        sql: "
+                CREATE TABLE calendars (
                     id TEXT PRIMARY KEY,
-                    google_calendar_id TEXT,
+                    google_calendar_id TEXT UNIQUE,
                     name TEXT NOT NULL,
                     color TEXT,
                     selected INTEGER NOT NULL DEFAULT 1,
@@ -40,45 +15,32 @@ pub fn get_migrations() -> Vec<Migration> {
                     last_synced_at INTEGER
                 );
 
-                -- Migrate existing data: use existing id as google_calendar_id, generate new UUID as id
-                INSERT INTO calendars_new (id, google_calendar_id, name, color, selected)
-                SELECT
-                    lower(hex(randomblob(16))),
-                    id,
-                    name,
-                    color,
-                    selected
-                FROM calendars;
+                CREATE TABLE sessions (
+                    access_token TEXT PRIMARY KEY,
+                    refresh_token TEXT,
+                    expires_at INTEGER NOT NULL,
+                    provider TEXT NOT NULL,
+                    created_at INTEGER NOT NULL
+                );
 
-                -- Drop old table
-                DROP TABLE calendars;
+                CREATE TABLE events (
+                    id TEXT PRIMARY KEY,
+                    google_event_id TEXT UNIQUE,
+                    calendar_id TEXT NOT NULL,
+                    summary TEXT,
+                    start TEXT NOT NULL,
+                    end TEXT NOT NULL,
+                    all_day INTEGER NOT NULL,
+                    updated_at TEXT,
+                    FOREIGN KEY (calendar_id) REFERENCES calendars(id)
+                );
 
-                -- Rename new table
-                ALTER TABLE calendars_new RENAME TO calendars;
+                CREATE INDEX idx_events_calendar_id ON events(calendar_id);
+                CREATE INDEX idx_events_google_event_id ON events(google_event_id);
+                CREATE INDEX idx_events_start ON events(start);
             ",
-            kind: MigrationKind::Up,
-        },
-        Migration {
-            version: 4,
-            description: "create events table",
-            sql: "CREATE TABLE events (
-                id TEXT PRIMARY KEY,
-                google_event_id TEXT,
-                calendar_id TEXT NOT NULL,
-                summary TEXT,
-                start TEXT NOT NULL,
-                end TEXT NOT NULL,
-                all_day INTEGER NOT NULL,
-                updated_at TEXT,
-                FOREIGN KEY (calendar_id) REFERENCES calendars(id)
-            );
-
-            CREATE INDEX idx_events_calendar_id ON events(calendar_id);
-            CREATE INDEX idx_events_google_event_id ON events(google_event_id);
-            CREATE INDEX idx_events_start ON events(start);",
-            kind: MigrationKind::Up,
-        },
-    ]
+        kind: MigrationKind::Up,
+    }]
 }
 
 #[derive(Clone, serde::Serialize, serde::Deserialize, specta::Type)]
