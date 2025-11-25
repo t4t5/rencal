@@ -3,7 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
 import { logger } from "@/lib/logger"
-import { googleOAuth } from "@/lib/oauth/google"
+import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
 

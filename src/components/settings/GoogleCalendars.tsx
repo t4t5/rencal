@@ -1,6 +1,6 @@
 import { useEffect, useEffectEvent } from "react"
 
-import { fetchGoogleCalendars } from "@/lib/oauth/google"
+import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"

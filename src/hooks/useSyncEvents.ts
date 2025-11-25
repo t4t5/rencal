@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
 import { logger } from "@/lib/logger"
-import { GoogleEvent, syncGoogleEvents } from "@/lib/oauth/google"
+import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"

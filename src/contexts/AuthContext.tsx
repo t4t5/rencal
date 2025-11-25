@@ -1,7 +1,7 @@
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
 import { logger } from "@/lib/logger"
-import { refreshGoogleToken } from "@/lib/oauth/google"
+import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
 import { getDb } from "@/db/connection"
 import { Account } from "@/types/account"
