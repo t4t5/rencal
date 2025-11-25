@@ -1,29 +1,26 @@
 import Database from "@tauri-apps/plugin-sql"
+import { z } from "zod"
 
 import { Calendar } from "@/types/calendar"
 
-// Raw DB row type - SQLite returns integers for booleans
-type CalendarRow = {
-  id: string
-  account_id: string
-  provider_calendar_id: string | null
-  name: string
-  color: string | null
-  selected: number
-  sync_token: string | null
-  last_synced_at: number | null
-}
-
-const rowToCalendar = (row: CalendarRow): Calendar => ({
-  id: row.id,
-  account_id: row.account_id,
-  provider_calendar_id: row.provider_calendar_id,
-  name: row.name,
-  color: row.color,
-  selected: row.selected === 1,
-  sync_token: row.sync_token,
-  last_synced_at: row.last_synced_at ? String(row.last_synced_at) : null,
-})
+const CalendarRowSchema = z
+  .object({
+    id: z.string(),
+    account_id: z.string(),
+    provider_calendar_id: z.string().nullable(),
+    name: z.string(),
+    color: z.string().nullable(),
+    selected: z.number(),
+    sync_token: z.string().nullable(),
+    last_synced_at: z.number().nullable(),
+  })
+  .transform(
+    (row): Calendar => ({
+      ...row,
+      selected: row.selected === 1,
+      last_synced_at: row.last_synced_at ? String(row.last_synced_at) : null,
+    }),
+  )
 
 export const calendarController = (db: Database) => ({
   async add(calendar: Calendar) {
@@ -48,21 +45,21 @@ export const calendarController = (db: Database) => ({
   },
 
   async list(): Promise<Calendar[]> {
-    const rows = await db.select<CalendarRow[]>("SELECT * FROM calendars")
-    return rows.map(rowToCalendar)
+    const rows = await db.select<unknown[]>("SELECT * FROM calendars")
+    return rows.map((row) => CalendarRowSchema.parse(row))
   },
 
   async listActive(): Promise<Calendar[]> {
-    const rows = await db.select<CalendarRow[]>("SELECT * FROM calendars WHERE selected = 1")
-    return rows.map(rowToCalendar)
+    const rows = await db.select<unknown[]>("SELECT * FROM calendars WHERE selected = 1")
+    return rows.map((row) => CalendarRowSchema.parse(row))
   },
 
   async findByProviderCalendarId(providerCalendarId: string): Promise<Calendar | null> {
-    const rows = await db.select<CalendarRow[]>(
+    const [row] = await db.select<unknown[]>(
       "SELECT * FROM calendars WHERE provider_calendar_id = $1",
       [providerCalendarId],
     )
-    return rows.length > 0 ? rowToCalendar(rows[0]) : null
+    return row ? CalendarRowSchema.parse(row) : null
   },
 
   async updateSyncToken({

@@ -1,29 +1,26 @@
 import Database from "@tauri-apps/plugin-sql"
+import { z } from "zod"
 
 import { Event } from "@/types/event"
 
-// Raw DB row type - SQLite returns integers for booleans
-type EventRow = {
-  id: string
-  provider_event_id: string | null
-  calendar_id: string
-  summary: string | null
-  start: string
-  end: string
-  all_day: number
-  updated_at: string | null
-}
-
-const rowToEvent = (row: EventRow): Event => ({
-  id: row.id,
-  provider_event_id: row.provider_event_id,
-  calendar_id: row.calendar_id,
-  summary: row.summary ?? "(No title)",
-  start: row.start,
-  end: row.end,
-  all_day: row.all_day === 1,
-  updated_at: row.updated_at,
-})
+const EventRowSchema = z
+  .object({
+    id: z.string(),
+    provider_event_id: z.string().nullable(),
+    calendar_id: z.string(),
+    summary: z.string().nullable(),
+    start: z.string(),
+    end: z.string(),
+    all_day: z.number(),
+    updated_at: z.string().nullable(),
+  })
+  .transform(
+    (row): Event => ({
+      ...row,
+      summary: row.summary ?? "(No title)",
+      all_day: row.all_day === 1,
+    }),
+  )
 
 export const eventController = (db: Database) => ({
   /**
@@ -32,7 +29,7 @@ export const eventController = (db: Database) => ({
   async upsert(event: Event) {
     // Check if event with this provider_event_id already exists
     if (event.provider_event_id) {
-      const existing = await db.select<EventRow[]>(
+      const existing = await db.select<unknown[]>(
         "SELECT id FROM events WHERE provider_event_id = $1 AND calendar_id = $2",
         [event.provider_event_id, event.calendar_id],
       )
@@ -119,7 +116,7 @@ export const eventController = (db: Database) => ({
     if (calendarIds.length === 0) return []
 
     const placeholders = calendarIds.map((_, i) => `$${i + 1}`).join(", ")
-    const rows = await db.select<EventRow[]>(
+    const rows = await db.select<unknown[]>(
       `SELECT * FROM events
         WHERE calendar_id IN (${placeholders})
         AND start >= $${calendarIds.length + 1}
@@ -128,7 +125,7 @@ export const eventController = (db: Database) => ({
       [...calendarIds, startDate, endDate],
     )
 
-    return rows.map(rowToEvent)
+    return rows.map((row) => EventRowSchema.parse(row))
   },
 
   /**
@@ -138,13 +135,13 @@ export const eventController = (db: Database) => ({
     if (calendarIds.length === 0) return []
 
     const placeholders = calendarIds.map((_, i) => `$${i + 1}`).join(", ")
-    const rows = await db.select<EventRow[]>(
+    const rows = await db.select<unknown[]>(
       `SELECT * FROM events
         WHERE calendar_id IN (${placeholders})
         ORDER BY start ASC`,
       calendarIds,
     )
 
-    return rows.map(rowToEvent)
+    return rows.map((row) => EventRowSchema.parse(row))
   },
 })
