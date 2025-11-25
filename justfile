@@ -1,15 +1,16 @@
 install:
   pnpm install
 
-[working-directory: 'src-tauri']
 build:
-  cargo build
+  pnpm tauri build
+
+# Build without bundling (just the binary)
+build-bin:
+  pnpm build
+  cargo build --release --manifest-path src-tauri/Cargo.toml
 
 dev:
   pnpm tauri dev
-
-generate:
-  pnpm tauri build
 
 check:
   cargo check --manifest-path src-tauri/Cargo.toml

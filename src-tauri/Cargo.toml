@@ -26,12 +26,7 @@ taurpc = "0.5.2"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
 oauth2 = "4.4"
-reqwest = { version = "0.12", features = ["json"] }
 url = "2.5"
-open = "5.0"
 anyhow = "1.0.100"
 socket2 = "0.5"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
-urlencoding = "2.1"
-uuid = { version = "1", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
