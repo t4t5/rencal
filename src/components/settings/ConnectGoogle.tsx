@@ -37,21 +37,14 @@ export function ConnectGoogle() {
 
   return (
     <div className="flex flex-col gap-2">
-      {googleAccounts.length > 0 ? (
-        <>
-          <h2>Connected Google accounts</h2>
-          {googleAccounts.map((account) => (
-            <div key={account.id} className="flex items-center justify-between gap-2">
-              <span>{account.email ?? "Unknown email"}</span>
-              <Button variant="destructive" size="sm" onClick={() => disconnectGoogle(account.id)}>
-                Disconnect
-              </Button>
-            </div>
-          ))}
-        </>
-      ) : (
-        <h2>Connect Google account</h2>
-      )}
+      {googleAccounts.map((account) => (
+        <div key={account.id} className="flex items-center justify-between gap-2">
+          <span>{account.email ?? "Unknown email"}</span>
+          <Button variant="destructive" size="sm" onClick={() => disconnectGoogle(account.id)}>
+            Disconnect
+          </Button>
+        </div>
+      ))}
 
       <Button onClick={connectGoogle} disabled={isConnecting}>
         {isConnecting ? "Connecting..." : hasAccounts ? "Add another account" : "Connect Google"}

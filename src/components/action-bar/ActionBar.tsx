@@ -1,3 +1,4 @@
+import { Description, DialogTitle } from "@radix-ui/react-dialog"
 import { useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
@@ -34,6 +35,8 @@ export function ActionBar() {
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
+          <DialogTitle>Settings</DialogTitle>
+          <Description>Connect Calendar providers</Description>
           <Settings />
         </Modal>
       )}

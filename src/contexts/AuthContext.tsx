@@ -108,7 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return await operation(token)
       } catch (error) {
         // Check if it's a 401 error (expired token)
-        if (typeof error === "string" && error.includes("401")) {
+        if (error instanceof Error && error.message.includes("401")) {
           logger.warn("Token expired, attempting to refresh...")
 
           const refreshedAccount = await refreshAccount(account)

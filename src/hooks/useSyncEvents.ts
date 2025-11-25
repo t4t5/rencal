@@ -56,17 +56,21 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     [accounts],
   )
 
-  const doFullSync = async ({ calendar, token }: { calendar: Calendar; token: string }) => {
+  const doFullSync = async (calendar: Calendar, account: Account) => {
     logger.warn(`Sync token expired for ${calendar.name}, doing full sync...`)
 
-    if (!calendar.provider_calendar_id) {
+    const { provider_calendar_id } = calendar
+
+    if (!provider_calendar_id) {
       throw new Error("Calendar does not have a provider calendar ID")
     }
 
     const db = await getDb()
 
     // Retry with no sync token (full sync)
-    const fullResult = await syncGoogleEvents(token, calendar.provider_calendar_id, null)
+    const fullResult = await withAuthRetry(account, (token) =>
+      syncGoogleEvents(token, provider_calendar_id, null),
+    )
 
     // Convert Google events to our Event type
     const events = fullResult.events
@@ -79,60 +83,64 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     if (fullResult.syncToken) {
       await db.calendar.updateSyncToken({
-        providerCalendarId: calendar.provider_calendar_id,
+        providerCalendarId: provider_calendar_id,
         syncToken: fullResult.syncToken,
       })
     }
   }
 
-  const syncCalendar = useCallback(async (calendar: Calendar, token: string) => {
-    const db = await getDb()
+  const syncCalendar = useCallback(
+    async (calendar: Calendar, account: Account) => {
+      const db = await getDb()
 
-    logger.info(`Syncing calendar: ${calendar.name}`, {
-      hasToken: !!calendar.sync_token,
-    })
-
-    if (!calendar.provider_calendar_id) {
-      throw new Error("Calendar does not have a provider calendar ID")
-    }
-
-    const result = await syncGoogleEvents(token, calendar.provider_calendar_id, calendar.sync_token)
-
-    // Handle 410 Gone - need full re-sync
-    if (result.fullSyncRequired) {
-      await doFullSync({
-        token,
-        calendar,
+      logger.info(`Syncing calendar: ${calendar.name}`, {
+        hasToken: !!calendar.sync_token,
       })
-      return
-    }
 
-    // Handle deleted events
-    if (result.deletedEventIds.length > 0) {
-      logger.info(`Deleting ${result.deletedEventIds.length} events from ${calendar.name}`)
-      await db.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
-    }
+      const { provider_calendar_id, sync_token } = calendar
 
-    // Convert Google events to our Event type and upsert
-    const events = result.events
-      .map((ge) => googleEventToEvent(ge, calendar.id))
-      .filter((e): e is Event => e !== null)
+      if (!provider_calendar_id) {
+        throw new Error("Calendar does not have a provider calendar ID")
+      }
 
-    if (events.length > 0) {
-      logger.info(`Upserting ${events.length} events to ${calendar.name}`)
-      await db.event.upsertMany(events)
-    }
+      const result = await withAuthRetry(account, (token) =>
+        syncGoogleEvents(token, provider_calendar_id, sync_token),
+      )
 
-    // Update sync token
-    if (result.syncToken) {
-      await db.calendar.updateSyncToken({
-        providerCalendarId: calendar.provider_calendar_id,
-        syncToken: result.syncToken,
-      })
-    }
+      // Handle 410 Gone - need full re-sync
+      if (result.fullSyncRequired) {
+        await doFullSync(calendar, account)
+        return
+      }
 
-    logger.info(`Sync complete for ${calendar.name}`)
-  }, [])
+      // Handle deleted events
+      if (result.deletedEventIds.length > 0) {
+        logger.info(`Deleting ${result.deletedEventIds.length} events from ${calendar.name}`)
+        await db.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
+      }
+
+      // Convert Google events to our Event type and upsert
+      const events = result.events
+        .map((ge) => googleEventToEvent(ge, calendar.id))
+        .filter((e): e is Event => e !== null)
+
+      if (events.length > 0) {
+        logger.info(`Upserting ${events.length} events to ${calendar.name}`)
+        await db.event.upsertMany(events)
+      }
+
+      // Update sync token
+      if (result.syncToken) {
+        await db.calendar.updateSyncToken({
+          providerCalendarId: provider_calendar_id,
+          syncToken: result.syncToken,
+        })
+      }
+
+      logger.info(`Sync complete for ${calendar.name}`)
+    },
+    [doFullSync, withAuthRetry],
+  )
 
   const onSync = useEffectEvent(async () => {
     if (isSyncingRef.current) {
@@ -155,7 +163,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
           continue
         }
 
-        await withAuthRetry(account, (token) => syncCalendar(calendar, token))
+        await syncCalendar(calendar, account)
       }
 
       logger.info("All calendars synced successfully")
