@@ -1,4 +1,4 @@
-import { ReactNode, createContext, useContext, useEffect, useState } from "react"
+import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import { Session } from "@/rpc/bindings"
@@ -15,6 +15,7 @@ interface AuthContextType {
   refreshSession: () => Promise<string | null>
   clearSession: () => Promise<void>
   loggedIn: boolean
+  withAuthRetry: <T>(operation: (token: string) => Promise<T>) => Promise<T>
 }
 
 const AuthContext = createContext({} as AuthContextType)
@@ -93,6 +94,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const withAuthRetry = useCallback(
+    async <T,>(operation: (token: string) => Promise<T>): Promise<T> => {
+      const token = session?.access_token
+
+      if (!token) {
+        throw new Error("No access token available")
+      }
+
+      try {
+        return await operation(token)
+      } catch (error) {
+        // Check if it's a 401 error (expired token)
+        if (typeof error === "string" && error.includes("401")) {
+          logger.warn("Token expired, attempting to refresh...")
+
+          const newToken = await refreshSession()
+
+          if (newToken) {
+            logger.info("Token refreshed, retrying operation...")
+            return await operation(newToken)
+          } else {
+            logger.error("Failed to refresh token")
+            throw error
+          }
+        }
+
+        // Re-throw non-401 errors
+        throw error
+      }
+    },
+    [session?.access_token],
+  )
+
   const value = {
     accessToken: session?.access_token ?? null,
     refreshToken: session?.refresh_token ?? null,
@@ -101,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refreshSession,
     clearSession,
     loggedIn: session !== null,
+    withAuthRetry,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

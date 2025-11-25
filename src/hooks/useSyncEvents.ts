@@ -19,7 +19,7 @@ const SYNC_INTERVAL_MS = 60_000 // 60s
  * - Falls back to full sync when sync token expires
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
-  const { accessToken, refreshSession } = useAuth()
+  const { accessToken, withAuthRetry } = useAuth()
   const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -104,49 +104,32 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     logger.info(`Sync complete for ${calendar.name}`)
   }, [])
 
-  const syncAllCalendars = useCallback(
-    async (token: string, retries = 0) => {
-      if (isSyncingRef.current) {
-        return
+  const syncAllCalendars = useCallback(async () => {
+    if (isSyncingRef.current) {
+      return
+    }
+
+    if (selectedCalendars.length === 0) {
+      return
+    }
+
+    isSyncingRef.current = true
+
+    try {
+      logger.info(`Starting sync for ${selectedCalendars.length} calendars...`)
+
+      for (const calendar of selectedCalendars) {
+        await withAuthRetry((token) => syncCalendar(calendar, token))
       }
 
-      if (selectedCalendars.length === 0) {
-        return
-      }
-
-      isSyncingRef.current = true
-
-      try {
-        logger.info(`Starting sync for ${selectedCalendars.length} calendars...`)
-
-        for (const calendar of selectedCalendars) {
-          try {
-            await syncCalendar(calendar, token)
-          } catch (error) {
-            logger.error(`Failed to sync calendar ${calendar.name}:`, error)
-
-            // Check for 401 - token expired
-            if (typeof error === "string" && error.includes("401") && retries < 1) {
-              logger.warn("Token expired during sync, refreshing...")
-              const newToken = await refreshSession()
-              if (newToken) {
-                isSyncingRef.current = false
-                return syncAllCalendars(newToken, retries + 1)
-              }
-            }
-          }
-        }
-
-        logger.info("All calendars synced successfully")
-        options?.onSyncComplete?.()
-      } catch (error) {
-        logger.error("Sync failed:", error)
-      } finally {
-        isSyncingRef.current = false
-      }
-    },
-    [selectedCalendars, calendars, syncCalendar, refreshSession, options],
-  )
+      logger.info("All calendars synced successfully")
+      options?.onSyncComplete?.()
+    } catch (error) {
+      logger.error("Sync failed:", error)
+    } finally {
+      isSyncingRef.current = false
+    }
+  }, [selectedCalendars, syncCalendar, accessToken, options])
 
   // Initial sync and setup interval
   useEffect(() => {
@@ -155,12 +138,12 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     }
 
     // Sync immediately
-    void syncAllCalendars(accessToken)
+    void syncAllCalendars()
 
     // Set up periodic sync
     intervalRef.current = setInterval(() => {
       if (accessToken) {
-        void syncAllCalendars(accessToken)
+        void syncAllCalendars()
       }
     }, SYNC_INTERVAL_MS)
 
@@ -170,12 +153,12 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         intervalRef.current = null
       }
     }
-  }, [accessToken, selectedCalendars.length])
+  }, [accessToken, selectedCalendars.length, syncAllCalendars])
 
   // Manual sync trigger
   const triggerSync = useCallback(() => {
     if (accessToken) {
-      void syncAllCalendars(accessToken)
+      void syncAllCalendars()
     }
   }, [accessToken, syncAllCalendars])
 
