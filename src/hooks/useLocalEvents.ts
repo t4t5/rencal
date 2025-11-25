@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
 import { Event } from "@/rpc/bindings"
 
@@ -168,7 +168,7 @@ export const useLocalEvents = () => {
   )
 
   // Initial load or when selected calendars change
-  useEffect(() => {
+  const onCalendarSelectionChange = useEffectEvent(() => {
     // Reset everything when calendar selection changes
     const prevIds = selectedCalendarIdsRef.current.join(",")
     if (prevIds !== selectedCalendarIdsKey) {
@@ -178,6 +178,10 @@ export const useLocalEvents = () => {
 
     const range = calculateRange(activeDate)
     void loadEventsForRange(range, true) // replace on initial load
+  })
+
+  useEffect(() => {
+    onCalendarSelectionChange()
 
     return () => {
       if (debounceTimeoutRef.current) {

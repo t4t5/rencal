@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import { useEffect } from "react"
+import { useEffect, useEffectEvent } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
@@ -29,46 +29,52 @@ export function EventList() {
   })
 
   // Register loadEventsForDate so navigation can load events before scrolling:
-  useEffect(() => {
+  const onRegisterLoadEvents = useEffectEvent(() => {
     registerLoadEventsForDate(loadEventsForDate)
-  }, [registerLoadEventsForDate, loadEventsForDate])
+  })
+
+  useEffect(() => {
+    onRegisterLoadEvents()
+  }, [])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
-  useEffect(() => {
-    registerScrollToDate((date: Date) => {
-      if (!sectionRefs.current) return
-
-      const targetDateStr = format(date, "yyyy-MM-dd")
-
-      // Try exact date first
-      let section = sectionRefs.current.get(targetDateStr)
-
-      // If no events on that date, find the closest previous date with events
-      if (!section) {
-        const availableDates = [...sectionRefs.current.keys()].sort()
-        const closestPrevDate = availableDates.filter((d) => d <= targetDateStr).pop()
-
-        if (closestPrevDate) {
-          section = sectionRefs.current.get(closestPrevDate)
-        }
-      }
-
-      section?.scrollIntoView({ behavior: "smooth", block: "start" })
-    })
-  }, [registerScrollToDate, sectionRefs])
-
-  // Scroll to currently active date as soon as events have loaded:
-  useEffect(() => {
+  const scrollToDate = useEffectEvent((date: Date) => {
     if (!sectionRefs.current) return
 
-    console.log("INIT", eventsByDate)
+    const targetDateStr = format(date, "yyyy-MM-dd")
+
+    // Try exact date first
+    let section = sectionRefs.current.get(targetDateStr)
+
+    // If no events on that date, find the closest previous date with events
+    if (!section) {
+      const availableDates = [...sectionRefs.current.keys()].sort()
+      const closestPrevDate = availableDates.filter((d) => d <= targetDateStr).pop()
+
+      if (closestPrevDate) {
+        section = sectionRefs.current.get(closestPrevDate)
+      }
+    }
+
+    section?.scrollIntoView({ behavior: "smooth", block: "start" })
+  })
+
+  useEffect(() => {
+    registerScrollToDate(scrollToDate)
+  }, [])
+
+  // Scroll to currently active date as soon as events have loaded:
+  const scrollToActiveDateOnLoad = useEffectEvent(() => {
+    if (!sectionRefs.current) return
 
     const section = sectionRefs.current.get(format(activeDate, "yyyy-MM-dd"))
     if (!section) return
 
-    console.log("Scroll to", activeDate)
-
     section.scrollIntoView({ behavior: "instant", block: "start" })
+  })
+
+  useEffect(() => {
+    scrollToActiveDateOnLoad()
   }, [eventsByDate])
 
   if (isLoading && events.length === 0) {

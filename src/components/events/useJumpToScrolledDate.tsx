@@ -1,5 +1,5 @@
 import { parse } from "date-fns"
-import { useEffect, useRef } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 
 export function useJumpToScrolledDate({
   onSetActiveDate,
@@ -18,36 +18,35 @@ export function useJumpToScrolledDate({
     sectionRefs.current.set(dateStr, el)
   }
 
+  const handleIntersection = useEffectEvent((entries: IntersectionObserverEntry[]) => {
+    // Skip if we're currently doing a programmatic navigation
+    if (isNavigating()) return
+
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const dateStr = entry.target.getAttribute("data-date")
+        if (dateStr) {
+          onSetActiveDate(parse(dateStr, "yyyy-MM-dd", new Date()))
+        }
+      }
+    }
+  })
+
   useEffect(() => {
     const container = scrollContainerRef.current
 
     if (!container) return
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Skip if we're currently doing a programmatic navigation
-        if (isNavigating()) return
-
-        for (const entry of entries) {
-          if (entry.isIntersecting) {
-            const dateStr = entry.target.getAttribute("data-date")
-            if (dateStr) {
-              onSetActiveDate(parse(dateStr, "yyyy-MM-dd", new Date()))
-            }
-          }
-        }
-      },
-      {
-        root: container,
-        rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
-        threshold: 0,
-      },
-    )
+    const observer = new IntersectionObserver((entries) => handleIntersection(entries), {
+      root: container,
+      rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
+      threshold: 0,
+    })
 
     sectionRefs.current.forEach((el) => observer.observe(el))
 
     return () => observer.disconnect()
-  }, [onSetActiveDate, datesWithEvents])
+  }, [datesWithEvents])
 
   return {
     scrollContainerRef,

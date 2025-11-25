@@ -1,4 +1,4 @@
-import { useEffect } from "react"
+import { useEffect, useEffectEvent } from "react"
 
 import { rpc } from "@/rpc"
 
@@ -10,16 +10,15 @@ export function GoogleCalendars() {
 
   const { calendars, saveCalendars } = useCalendar()
 
-  useEffect(() => {
-    if (accessToken) {
-      void fetchCalendars()
-    }
-  }, [accessToken])
-
-  async function fetchCalendars() {
+  const fetchCalendars = useEffectEvent(async () => {
+    if (!accessToken) return
     const calendars = await withAuthRetry((token) => rpc.fetch_google_calendars(token))
     saveCalendars(calendars)
-  }
+  })
+
+  useEffect(() => {
+    void fetchCalendars()
+  }, [accessToken])
 
   return (
     <div>

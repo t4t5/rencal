@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
 import { rpc } from "@/rpc"
 import { Calendar } from "@/rpc/bindings"
@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
 
-const SYNC_INTERVAL_MS = 60_000 // 60s
+// const SYNC_INTERVAL_MS = 60_000 // 60s
 
 /**
  * Hook that handles syncing events from Google Calendar to local SQLite.
@@ -19,10 +19,9 @@ const SYNC_INTERVAL_MS = 60_000 // 60s
  * - Falls back to full sync when sync token expires
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
-  const { accessToken, withAuthRetry } = useAuth()
+  const { withAuthRetry } = useAuth()
   const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   const selectedCalendars = calendars.filter((c) => c.selected && c.google_calendar_id)
 
@@ -104,7 +103,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     logger.info(`Sync complete for ${calendar.name}`)
   }, [])
 
-  const syncAllCalendars = useCallback(async () => {
+  const onSync = useEffectEvent(async () => {
     if (isSyncingRef.current) {
       return
     }
@@ -129,38 +128,17 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     } finally {
       isSyncingRef.current = false
     }
-  }, [selectedCalendars, syncCalendar, accessToken, options])
+  })
 
-  // Initial sync and setup interval
+  // Sync once on mount
   useEffect(() => {
-    if (!accessToken || selectedCalendars.length === 0) {
-      return
-    }
-
-    // Sync immediately
-    void syncAllCalendars()
-
-    // Set up periodic sync
-    intervalRef.current = setInterval(() => {
-      if (accessToken) {
-        void syncAllCalendars()
-      }
-    }, SYNC_INTERVAL_MS)
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-        intervalRef.current = null
-      }
-    }
-  }, [accessToken, selectedCalendars.length, syncAllCalendars])
+    void onSync()
+  }, [])
 
   // Manual sync trigger
   const triggerSync = useCallback(() => {
-    if (accessToken) {
-      void syncAllCalendars()
-    }
-  }, [accessToken, syncAllCalendars])
+    void onSync()
+  }, [onSync])
 
   return { triggerSync, isSyncing: isSyncingRef.current }
 }
