@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
-import { Event } from "@/types/event"
+import { CalendarEvent } from "@/types/calendar-event"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2
@@ -20,7 +20,7 @@ interface DateRange {
 export const useLocalEvents = () => {
   const { calendars, activeDate } = useCalendar()
 
-  const [events, setEvents] = useState<Event[]>([])
+  const [events, setEvents] = useState<CalendarEvent[]>([])
   const [isLoading, setLoading] = useState(true)
 
   const dateRangeRef = useRef<DateRange | null>(null)
@@ -42,16 +42,19 @@ export const useLocalEvents = () => {
     return date >= bufferStart && date <= bufferEnd
   }, [])
 
-  const mergeEvents = useCallback((existing: Event[], newEvents: Event[]): Event[] => {
-    const existingIds = new Set(existing.map((e) => e.id))
-    const uniqueNewEvents = newEvents.filter((e) => !existingIds.has(e.id))
+  const mergeEvents = useCallback(
+    (existing: CalendarEvent[], newEvents: CalendarEvent[]): CalendarEvent[] => {
+      const existingIds = new Set(existing.map((e) => e.id))
+      const uniqueNewEvents = newEvents.filter((e) => !existingIds.has(e.id))
 
-    if (uniqueNewEvents.length === 0) {
-      return existing
-    }
+      if (uniqueNewEvents.length === 0) {
+        return existing
+      }
 
-    return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.localeCompare(b.start))
-  }, [])
+      return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.localeCompare(b.start))
+    },
+    [],
+  )
 
   const expandLoadedRange = useCallback(
     (current: DateRange | null, newRange: DateRange): DateRange => {

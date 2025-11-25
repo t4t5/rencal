@@ -1,3 +1,6 @@
+default:
+  @just --list
+
 install:
   pnpm install
 

@@ -1,13 +1,13 @@
 import { format, isSameYear } from "date-fns"
 import { forwardRef } from "react"
 
-import { Event } from "@/types/event"
+import { CalendarEvent } from "@/types/calendar-event"
 
 import { EventRow } from "./EventRow"
 
 type DaySectionProps = {
   date: Date
-  events: Event[]
+  events: CalendarEvent[]
 }
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, events }, ref) => {

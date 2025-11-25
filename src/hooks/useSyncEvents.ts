@@ -8,10 +8,10 @@ import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
 import { Account } from "@/types/account"
 import { Calendar } from "@/types/calendar"
-import { Event } from "@/types/event"
+import { CalendarEvent } from "@/types/calendar-event"
 
 /** Convert Google Calendar event to our Event type */
-function googleEventToEvent(googleEvent: GoogleEvent, calendarId: string): Event | null {
+function googleEventToEvent(googleEvent: GoogleEvent, calendarId: string): CalendarEvent | null {
   // Handle all-day events (date) vs timed events (dateTime)
   const start = googleEvent.start.date ?? googleEvent.start.dateTime
   const end = googleEvent.end.date ?? googleEvent.end.dateTime
@@ -75,7 +75,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     // Convert Google events to our Event type
     const events = fullResult.events
       .map((ge) => googleEventToEvent(ge, calendar.id))
-      .filter((e): e is Event => e !== null)
+      .filter((e): e is CalendarEvent => e !== null)
 
     if (events.length > 0) {
       await db.event.upsertMany(events)
@@ -122,7 +122,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       // Convert Google events to our Event type and upsert
       const events = result.events
         .map((ge) => googleEventToEvent(ge, calendar.id))
-        .filter((e): e is Event => e !== null)
+        .filter((e): e is CalendarEvent => e !== null)
 
       if (events.length > 0) {
         logger.info(`Upserting ${events.length} events to ${calendar.name}`)

@@ -1,7 +1,7 @@
 import Database from "@tauri-apps/plugin-sql"
 import { z } from "zod"
 
-import { Event } from "@/types/event"
+import { CalendarEvent } from "@/types/calendar-event"
 
 const EventRowSchema = z
   .object({
@@ -15,7 +15,7 @@ const EventRowSchema = z
     updated_at: z.string().nullable(),
   })
   .transform(
-    (row): Event => ({
+    (row): CalendarEvent => ({
       ...row,
       summary: row.summary ?? "(No title)",
       all_day: row.all_day === 1,
@@ -26,7 +26,7 @@ export const eventController = (db: Database) => ({
   /**
    * Upsert an event - insert or update based on provider_event_id
    */
-  async upsert(event: Event) {
+  async upsert(event: CalendarEvent) {
     // Check if event with this provider_event_id already exists
     if (event.provider_event_id) {
       const existing = await db.select<unknown[]>(
@@ -79,7 +79,7 @@ export const eventController = (db: Database) => ({
   /**
    * Upsert multiple events in a batch
    */
-  async upsertMany(events: Event[]) {
+  async upsertMany(events: CalendarEvent[]) {
     for (const event of events) {
       await this.upsert(event)
     }
@@ -112,7 +112,7 @@ export const eventController = (db: Database) => ({
     calendarIds: string[],
     startDate: string,
     endDate: string,
-  ): Promise<Event[]> {
+  ): Promise<CalendarEvent[]> {
     if (calendarIds.length === 0) return []
 
     const placeholders = calendarIds.map((_, i) => `$${i + 1}`).join(", ")
@@ -131,7 +131,7 @@ export const eventController = (db: Database) => ({
   /**
    * Get all events for selected calendars (for initial load)
    */
-  async getByCalendarIds(calendarIds: string[]): Promise<Event[]> {
+  async getByCalendarIds(calendarIds: string[]): Promise<CalendarEvent[]> {
     if (calendarIds.length === 0) return []
 
     const placeholders = calendarIds.map((_, i) => `$${i + 1}`).join(", ")

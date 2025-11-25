@@ -2,9 +2,9 @@ import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { Event } from "@/types/event"
+import { CalendarEvent } from "@/types/calendar-event"
 
-export function EventRow({ event }: { event: Event }) {
+export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendar()
   const calendar = calendars.find((c) => c.id === event.calendar_id)
   const calendarColor = calendar?.color
