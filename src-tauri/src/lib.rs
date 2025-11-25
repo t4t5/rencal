@@ -6,7 +6,7 @@ mod storage;
 // Re-export types for taurpc macro visibility
 pub use storage::{Account, Calendar, Event, Provider};
 
-use routes::providers::{Api, ApiImpl};
+use routes::providers::google::{Api, ApiImpl};
 
 #[tokio::main]
 pub async fn run() {
