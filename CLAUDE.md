@@ -13,15 +13,16 @@ This is a Tauri application with a Rust backend and React frontend.
 
 ### Backend (Rust)
 
-- `src-tauri/src/lib.rs` - Defines RPC procedures using taurpc
-- `src-tauri/src/oauth.rs` - Google Calendar OAuth 2.0 authentication flow
-- API methods are defined in the `Api` trait and implemented in `ApiImpl`
-- TypeScript bindings are auto-generated to `src/rpc/bindings.ts` (dn't try to generate these)
+- `src-tauri/src/lib.rs` - Registers taurpc routers
+- `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost server, native popup window)
+- `src-tauri/src/routes/` - taurpc API procedures
+- TypeScript bindings are auto-generated to `src/rpc/bindings.ts` (don't try to generate these)
 
 ### Frontend (React)
 
 - `src/App.tsx` - Main React application entry point
 - Communicates with Rust backend via taurpc generated bindings
+- Always use pnpm for frontend dependencies
 
 ## Rules
 
@@ -36,15 +37,17 @@ This is a Tauri application with a Rust backend and React frontend.
 Uses standalone OAuth 2.0 authentication - no central Rencal server required:
 
 1. User clicks "Connect Google Calendar"
-2. Temporary HTTP server spawns on `localhost:8080`
-3. Browser opens Google's OAuth consent page
+2. Rust spawns temporary HTTP server on `localhost:8080` and opens native popup window
+3. User authenticates with Google in the popup
 4. Google redirects back to localhost with authorization code
-5. App exchanges code for access token using PKCE
+5. TypeScript (using Arctic library) exchanges code for tokens via PKCE
 6. App fetches calendar data directly from Google Calendar API
+
+OAuth logic lives in `src/lib/oauth/google.ts` using the Arctic library. Rust only provides two primitives: `start_oauth_callback_server` and `open_oauth_window`.
 
 ### OAuth Security Model
 
-The OAuth client ID and secret are embedded in `src-tauri/src/google_oauth.rs`. This is standard for desktop apps (similar to Thunderbird) and is not a security vulnerability. The embedded credentials just identify the app to Google, while PKCE provides the actual security against token theft.
+The OAuth client ID and secret are embedded in `src/lib/oauth/google.ts`. This is standard for desktop apps (similar to Thunderbird) and is not a security vulnerability. The embedded credentials just identify the app to Google, while PKCE provides the actual security against token theft.
 
 ### Event Sync
 

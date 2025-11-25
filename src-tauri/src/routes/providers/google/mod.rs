@@ -1,4 +1,3 @@
-use tauri::{AppHandle, Runtime};
 use uuid::Uuid;
 
 use crate::google_oauth;
@@ -16,7 +15,6 @@ pub struct SyncResult {
 
 #[taurpc::procedures(export_to = "../src/rpc/bindings.ts")]
 pub trait Api {
-    async fn google_oauth<R: Runtime>(app_handle: AppHandle<R>) -> Result<Account, String>;
     async fn refresh_google_token(
         account_id: String,
         refresh_token: String,
@@ -38,22 +36,6 @@ pub struct ApiImpl;
 
 #[taurpc::resolvers]
 impl Api for ApiImpl {
-    async fn google_oauth<R: Runtime>(self, app: AppHandle<R>) -> Result<storage::Account, String> {
-        let token_data = google_oauth::get_oauth_token(app.clone())
-            .await
-            .map_err(|e| e.to_string())?;
-
-        Ok(storage::Account {
-            id: Uuid::new_v4().to_string(),
-            provider: storage::Provider::Google,
-            email: token_data.email,
-            access_token: Some(token_data.access_token),
-            refresh_token: token_data.refresh_token,
-            expires_at: Some(token_data.expires_at),
-            created_at: token_data.created_at,
-        })
-    }
-
     async fn refresh_google_token(
         self,
         account_id: String,

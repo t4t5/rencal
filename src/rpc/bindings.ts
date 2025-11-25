@@ -17,11 +17,13 @@ export type Provider = "Google"
  */
 export type SyncResult = { events: Event[]; deleted_event_ids: string[]; sync_token: string | null; full_sync_required: boolean }
 
-const ARGS_MAP = { '':'{"fetch_google_calendars":["account_id","access_token"],"google_oauth":[],"refresh_google_token":["account_id","refresh_token"],"sync_google_events":["access_token","provider_calendar_id","calendar_id","sync_token"]}' }
+const ARGS_MAP = { '':'{"fetch_google_calendars":["account_id","access_token"],"refresh_google_token":["account_id","refresh_token"],"sync_google_events":["access_token","provider_calendar_id","calendar_id","sync_token"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
 export type Router = { "": {fetch_google_calendars: (accountId: string, accessToken: string) => Promise<Calendar[]>, 
-google_oauth: () => Promise<Account>, 
 refresh_google_token: (accountId: string, refreshToken: string) => Promise<Account>, 
-sync_google_events: (accessToken: string, providerCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>} };
+sync_google_events: (accessToken: string, providerCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>},
+"oauth": {close_oauth_window: () => Promise<null>, 
+open_oauth_window: (url: string, title: string) => Promise<null>, 
+start_oauth_callback_server: (port: number) => Promise<string>} };
 
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)
