@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql"
 
-import { Event } from "@/rpc/bindings"
+import { Event } from "@/types/event"
 
 // Raw DB row type - SQLite returns integers for booleans
 type EventRow = {

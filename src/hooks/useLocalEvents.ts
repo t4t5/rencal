@@ -1,12 +1,11 @@
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
-import { Event } from "@/rpc/bindings"
-
 import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
+import { Event } from "@/types/event"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2

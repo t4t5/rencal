@@ -1,7 +1,7 @@
 import { format, isSameYear } from "date-fns"
 import { forwardRef } from "react"
 
-import { Event } from "@/rpc/bindings"
+import { Event } from "@/types/event"
 
 import { EventRow } from "./EventRow"
 

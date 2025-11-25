@@ -2,18 +2,12 @@ mod oauth;
 mod routes;
 mod storage;
 
-// Re-export types for taurpc macro visibility
-pub use storage::{Account, Calendar, Event, Provider};
-
 use routes::oauth::{OAuthApi, OAuthApiImpl};
-use routes::providers::google::{Api, ApiImpl};
 use taurpc::Router;
 
 #[tokio::main]
 pub async fn run() {
-    let router = Router::new()
-        .merge(ApiImpl.into_handler())
-        .merge(OAuthApiImpl.into_handler());
+    let router = Router::new().merge(OAuthApiImpl.into_handler());
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

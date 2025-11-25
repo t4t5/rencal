@@ -1,9 +1,8 @@
 import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
-import { Event } from "@/rpc/bindings"
-
 import { useCalendar } from "@/contexts/CalendarContext"
+import { Event } from "@/types/event"
 
 export function EventRow({ event }: { event: Event }) {
   const { calendars } = useCalendar()
