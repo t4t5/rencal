@@ -33,12 +33,12 @@ export function useCalendar() {
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
+  const [calendars, setCalendars] = useState<CalendarType[]>([])
+
   const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
   const isNavigatingRef = useRef(false)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const [calendars, setCalendars] = useState<CalendarType[]>([])
 
   const loadCalendarsFromDb = async () => {
     logger.info("Load calendars from DB...")
@@ -92,8 +92,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     if (loadEventsForDateRef.current) {
       await loadEventsForDateRef.current(date)
     }
-
-    // setActiveDate(date)
 
     // Use requestAnimationFrame to ensure DOM has updated before scrolling
     requestAnimationFrame(() => {

@@ -1,16 +1,16 @@
 import Database from "@tauri-apps/plugin-sql"
 
-import { Account, AccountSchema } from "@/types/account"
+import { Account, accountSchema } from "@/types/account"
 
 export const accountController = (db: Database) => ({
   async getAll(): Promise<Account[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM accounts")
-    return rows.map((row) => AccountSchema.parse(row))
+    return rows.map((row) => accountSchema.parse(row))
   },
 
   async getById(id: string): Promise<Account | undefined> {
     const [row] = await db.select<unknown[]>("SELECT * FROM accounts WHERE id = $1", [id])
-    return row ? AccountSchema.parse(row) : undefined
+    return row ? accountSchema.parse(row) : undefined
   },
 
   async insert(account: Account) {

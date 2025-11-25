@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { Calendar } from "@/types/calendar"
 
-const CalendarRowSchema = z
+const dbCalendarSchema = z
   .object({
     id: z.string(),
     account_id: z.string(),
@@ -15,6 +15,7 @@ const CalendarRowSchema = z
     last_synced_at: z.number().nullable(),
   })
   .transform(
+    // Transform DB row to Calendar type
     (row): Calendar => ({
       ...row,
       selected: row.selected === 1,
@@ -24,6 +25,17 @@ const CalendarRowSchema = z
 
 export const calendarController = (db: Database) => ({
   async add(calendar: Calendar) {
+    const {
+      id,
+      account_id,
+      provider_calendar_id,
+      name,
+      color,
+      selected,
+      sync_token,
+      last_synced_at,
+    } = calendar
+
     await db.execute(
       `INSERT INTO calendars
         (id, account_id, provider_calendar_id, name, color, selected, sync_token, last_synced_at)
@@ -32,26 +44,26 @@ export const calendarController = (db: Database) => ({
           name = excluded.name,
           color = excluded.color`,
       [
-        calendar.id,
-        calendar.account_id,
-        calendar.provider_calendar_id,
-        calendar.name,
-        calendar.color || "",
-        calendar.selected ? 1 : 0,
-        calendar.sync_token,
-        calendar.last_synced_at ? Number(calendar.last_synced_at) : null,
+        id,
+        account_id,
+        provider_calendar_id,
+        name,
+        color || "",
+        selected ? 1 : 0,
+        sync_token,
+        last_synced_at ? Number(last_synced_at) : null,
       ],
     )
   },
 
   async list(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars")
-    return rows.map((row) => CalendarRowSchema.parse(row))
+    return rows.map((row) => dbCalendarSchema.parse(row))
   },
 
   async listActive(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars WHERE selected = 1")
-    return rows.map((row) => CalendarRowSchema.parse(row))
+    return rows.map((row) => dbCalendarSchema.parse(row))
   },
 
   async findByProviderCalendarId(providerCalendarId: string): Promise<Calendar | null> {
@@ -59,7 +71,7 @@ export const calendarController = (db: Database) => ({
       "SELECT * FROM calendars WHERE provider_calendar_id = $1",
       [providerCalendarId],
     )
-    return row ? CalendarRowSchema.parse(row) : null
+    return row ? dbCalendarSchema.parse(row) : null
   },
 
   async updateSyncToken({

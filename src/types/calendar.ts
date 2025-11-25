@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const CalendarSchema = z.object({
+export const calendarSchema = z.object({
   id: z.string(),
   account_id: z.string(),
   provider_calendar_id: z.string().nullable(),
@@ -11,4 +11,4 @@ export const CalendarSchema = z.object({
   last_synced_at: z.string().nullable(),
 })
 
-export type Calendar = z.infer<typeof CalendarSchema>
+export type Calendar = z.infer<typeof calendarSchema>

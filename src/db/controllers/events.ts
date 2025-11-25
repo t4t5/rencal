@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { CalendarEvent } from "@/types/calendar-event"
 
-const EventRowSchema = z
+const dbCalendarEventSchema = z
   .object({
     id: z.string(),
     provider_event_id: z.string().nullable(),
@@ -15,6 +15,7 @@ const EventRowSchema = z
     updated_at: z.string().nullable(),
   })
   .transform(
+    // Transform DB row to CalendarEvent type
     (row): CalendarEvent => ({
       ...row,
       summary: row.summary ?? "(No title)",
@@ -125,7 +126,7 @@ export const eventController = (db: Database) => ({
       [...calendarIds, startDate, endDate],
     )
 
-    return rows.map((row) => EventRowSchema.parse(row))
+    return rows.map((row) => dbCalendarEventSchema.parse(row))
   },
 
   /**
@@ -142,6 +143,6 @@ export const eventController = (db: Database) => ({
       calendarIds,
     )
 
-    return rows.map((row) => EventRowSchema.parse(row))
+    return rows.map((row) => dbCalendarEventSchema.parse(row))
   },
 })

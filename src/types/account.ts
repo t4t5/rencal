@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const AccountSchema = z.object({
+export const accountSchema = z.object({
   id: z.string(),
   provider: z.literal("Google"), // Future: z.enum(["Google", "ICloud", "CalDAV"])
   email: z.string().nullable(),
@@ -10,4 +10,4 @@ export const AccountSchema = z.object({
   created_at: z.string(),
 })
 
-export type Account = z.infer<typeof AccountSchema>
+export type Account = z.infer<typeof accountSchema>
