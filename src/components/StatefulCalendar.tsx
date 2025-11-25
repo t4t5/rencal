@@ -5,15 +5,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { useCalendar } from "@/contexts/CalendarContext"
 
 export function StatefulCalendar() {
-  const { activeDate, setActiveDate, navigateToDate } = useCalendar()
-
-  const handleMonthChange = useCallback(
-    (newMonth: Date) => {
-      // setActiveDate(newMonth)
-      navigateToDate(newMonth)
-    },
-    [setActiveDate],
-  )
+  const { activeDate, navigateToDate } = useCalendar()
 
   const handleDateSelect = useCallback(
     (date: Date) => {
@@ -28,7 +20,7 @@ export function StatefulCalendar() {
       selected={activeDate}
       onSelect={handleDateSelect}
       month={activeDate}
-      onMonthChange={handleMonthChange}
+      onMonthChange={handleDateSelect}
       className="bg-transparent p-0"
       required
     />
