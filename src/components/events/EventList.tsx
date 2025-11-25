@@ -16,6 +16,7 @@ export function EventList() {
     registerScrollToDate,
     registerLoadEventsForDate,
     isNavigating,
+    setIsNavigating,
   } = useCalendar()
 
   const { events, isLoading, loadEventsForDate } = useLocalEvents()
@@ -65,7 +66,17 @@ export function EventList() {
 
   useEffect(() => {
     // Scroll to currently active date as soon as events have loaded:
+    setIsNavigating(true)
     scrollToDate(activeDate, "instant")
+
+    // Wait for intersection observers to process before clearing flag
+    // 1: browser paints scroll position:
+    requestAnimationFrame(() => {
+      // 2: intersectionObserver callbacks are processed:
+      requestAnimationFrame(() => {
+        setIsNavigating(false)
+      })
+    })
   }, [eventsByDate])
 
   if (isLoading && events.length === 0) {

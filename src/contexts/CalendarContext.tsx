@@ -23,6 +23,7 @@ interface CalendarContextType {
   registerScrollToDate: (fn: (date: Date) => void) => void
   registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
   isNavigating: () => boolean
+  setIsNavigating: (value: boolean) => void
 }
 
 const CalendarContext = createContext({} as CalendarContextType)
@@ -76,6 +77,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const isNavigating = useCallback(() => isNavigatingRef.current, [])
 
+  const setIsNavigating = useCallback((value: boolean) => {
+    isNavigatingRef.current = value
+  }, [])
+
   const navigateToDate = useCallback(async (date: Date) => {
     // Cancel any pending timeout from a previous navigation
     if (navigationTimeoutRef.current) {
@@ -112,6 +117,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     registerScrollToDate,
     registerLoadEventsForDate,
     isNavigating,
+    setIsNavigating,
   }
 
   return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>
