@@ -25,7 +25,11 @@ This is a Tauri application with a Rust backend and React frontend.
 
 ## Rules
 
-- After implementing a new feature, **ALWAYS** run "just check" to make sure the app compiles!
+- If implementing a frontend feature, run "just typecheck" in the end to make sure the TypeScript
+  compiled.
+- If implementing a feature in Rust (`src-tauri`), run "just check" to make sure the app compiles!
+- If formatting a date, always use the date-fns `format` function instead of something like
+  `.toISOString()`
 
 ## Google Calendar Integration
 

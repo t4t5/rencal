@@ -1,4 +1,4 @@
-import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
+import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
 import { Event } from "@/rpc/bindings"
@@ -106,7 +106,7 @@ export const useLocalEvents = () => {
         )
 
         logger.info(
-          `Loaded ${localEvents.length} events for range ${range.start.toISOString().slice(0, 10)} to ${range.end.toISOString().slice(0, 10)}`,
+          `Loaded events for ${format(range.start, "yyyy-MM-dd")}-${format(range.end, "yyyy-MM-dd")}`,
         )
 
         if (replace) {
@@ -154,7 +154,6 @@ export const useLocalEvents = () => {
 
       const doLoad = () => {
         const newRange = calculateRange(date)
-        logger.info(`Loading more events centered on ${date.toISOString().slice(0, 10)}`)
         void loadEventsForRange(newRange, false) // append, don't replace
       }
 
