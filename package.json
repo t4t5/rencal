@@ -29,7 +29,8 @@
     "react-icons": "^5.5.0",
     "tailwind-merge": "^3.4.0",
     "tailwindcss": "^4.1.17",
-    "taurpc": "^1.8.1"
+    "taurpc": "^1.8.1",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

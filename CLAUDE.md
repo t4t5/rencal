@@ -31,6 +31,8 @@ This is a Tauri application with a Rust backend and React frontend.
 - If implementing a feature in Rust (`src-tauri`), run "just check" to make sure the app compiles!
 - If formatting a date, always use the date-fns `format` function instead of something like
   `.toISOString()`
+- _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
+  you're using `any`, you're doing something wrong.
 
 ## Google Calendar Integration
 

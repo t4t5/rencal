@@ -1,9 +1,10 @@
 import { useEffect, useEffectEvent } from "react"
 
-import { rpc } from "@/rpc"
+import { fetchGoogleCalendars } from "@/lib/oauth/google"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
+import { Calendar } from "@/types/calendar"
 
 export function GoogleCalendars() {
   const { accounts, withAuthRetry } = useAuth()
@@ -17,9 +18,20 @@ export function GoogleCalendars() {
     for (const account of accounts) {
       if (!account.access_token) continue
 
-      const accountCalendars = await withAuthRetry(account, (token) =>
-        rpc.fetch_google_calendars(account.id, token),
-      )
+      const googleCalendars = await withAuthRetry(account, (token) => fetchGoogleCalendars(token))
+
+      // Convert Google Calendar response to our Calendar type
+      const accountCalendars: Calendar[] = googleCalendars.map((gc) => ({
+        id: crypto.randomUUID(),
+        account_id: account.id,
+        provider_calendar_id: gc.id,
+        name: gc.summary,
+        color: gc.backgroundColor ?? null,
+        selected: true,
+        sync_token: null,
+        last_synced_at: null,
+      }))
+
       saveCalendars(accountCalendars)
     }
   })

@@ -8,11 +8,10 @@ import {
   useState,
 } from "react"
 
-import { Calendar as CalendarType } from "@/rpc/bindings"
-
 import { logger } from "@/lib/logger"
 
 import { getDb } from "@/db/connection"
+import { Calendar as CalendarType } from "@/types/calendar"
 
 interface CalendarContextType {
   calendars: CalendarType[]

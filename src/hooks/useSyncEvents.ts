@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
 import { rpc } from "@/rpc"
-import { Calendar } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 
@@ -9,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { getDb } from "@/db/connection"
 import { Account } from "@/types/account"
+import { Calendar } from "@/types/calendar"
 
 // const SYNC_INTERVAL_MS = 60_000 // 60s
 

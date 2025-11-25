@@ -1,6 +1,6 @@
 import Database from "@tauri-apps/plugin-sql"
 
-import { Calendar } from "@/rpc/bindings"
+import { Calendar } from "@/types/calendar"
 
 // Raw DB row type - SQLite returns integers for booleans
 type CalendarRow = {

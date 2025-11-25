@@ -1,8 +1,27 @@
 import { Google, generateState, generateCodeVerifier } from "arctic"
+import { z } from "zod"
 
 import { rpc } from "@/rpc"
 
 import type { Account } from "@/types/account"
+
+// Zod schema for Google userinfo API response
+const GoogleUserInfoResponseSchema = z.object({
+  email: z.string().optional(),
+})
+
+// Zod schema for Google Calendar API response
+const GoogleCalendarSchema = z.object({
+  id: z.string(),
+  summary: z.string(),
+  backgroundColor: z.string().optional(),
+})
+
+const GoogleCalendarListResponseSchema = z.object({
+  items: z.array(GoogleCalendarSchema).optional(),
+})
+
+export type GoogleCalendar = z.infer<typeof GoogleCalendarSchema>
 
 const GOOGLE_CLIENT_ID = "988213795701-e04kh9dmf8dl8cjp1lour13g7fpp0cpp.apps.googleusercontent.com"
 const GOOGLE_CLIENT_SECRET = "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"
@@ -23,8 +42,22 @@ async function fetchGoogleEmail(accessToken: string): Promise<string | null> {
     return null
   }
 
-  const data = await response.json()
+  const data = GoogleUserInfoResponseSchema.parse(await response.json())
   return data.email ?? null
+}
+
+export async function fetchGoogleCalendars(accessToken: string): Promise<GoogleCalendar[]> {
+  const response = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  })
+
+  if (!response.ok) {
+    throw new Error(`Google Calendar API error: ${response.status}`)
+  }
+
+  const data = GoogleCalendarListResponseSchema.parse(await response.json())
+
+  return data.items ?? []
 }
 
 export async function refreshGoogleToken(refreshToken: string): Promise<{

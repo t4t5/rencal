@@ -4,8 +4,6 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from 'taurp
 type TAURI_CHANNEL<T> = (response: T) => void
 
 
-export type Calendar = { id: string; account_id: string; provider_calendar_id: string | null; name: string; color: string | null; selected: boolean; sync_token: string | null; last_synced_at: string | null }
-
 export type Event = { id: string; provider_event_id: string | null; calendar_id: string; summary: string; start: string; end: string; all_day: boolean; updated_at: string | null }
 
 /**
@@ -13,9 +11,8 @@ export type Event = { id: string; provider_event_id: string | null; calendar_id:
  */
 export type SyncResult = { events: Event[]; deleted_event_ids: string[]; sync_token: string | null; full_sync_required: boolean }
 
-const ARGS_MAP = { '':'{"fetch_google_calendars":["account_id","access_token"],"sync_google_events":["access_token","provider_calendar_id","calendar_id","sync_token"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
-export type Router = { "": {fetch_google_calendars: (accountId: string, accessToken: string) => Promise<Calendar[]>, 
-sync_google_events: (accessToken: string, providerCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>},
+const ARGS_MAP = { '':'{"sync_google_events":["access_token","provider_calendar_id","calendar_id","sync_token"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
+export type Router = { "": {sync_google_events: (accessToken: string, providerCalendarId: string, calendarId: string, syncToken: string | null) => Promise<SyncResult>},
 "oauth": {close_oauth_window: () => Promise<null>, 
 open_oauth_window: (url: string, title: string) => Promise<null>, 
 start_oauth_callback_server: (port: number) => Promise<string>} };
