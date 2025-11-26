@@ -24,7 +24,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([])
 
   async function loadAccounts() {
-    logger.debug("👥 Loading accounts from store...")
     const accounts = await store.account.getAll()
     logger.debug("👥 Accounts loaded from store:", accounts.length)
     setAccounts(accounts)

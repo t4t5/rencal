@@ -42,7 +42,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
-    logger.debug("🗓️ Loading calendars from store...")
     const calendars = await store.calendar.list()
     logger.debug("🗓️ Calendars loaded from store:", calendars.length)
     setCalendars(calendars)

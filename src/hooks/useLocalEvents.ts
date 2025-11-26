@@ -87,7 +87,7 @@ export const useLocalEvents = () => {
         )
 
         logger.debug(
-          `📅 Loaded events for ${format(range.start, "yyyy-MM-dd")}-${format(range.end, "yyyy-MM-dd")}`,
+          `📅 Events loaded: ${format(range.start, "yyyy-MM-dd")} to ${format(range.end, "yyyy-MM-dd")}`,
         )
 
         if (replace) {

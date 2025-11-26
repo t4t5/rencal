@@ -1,5 +1,7 @@
 import { z } from "zod"
 
+import { fetchWithLog } from "@/lib/fetch"
+
 const GoogleCalendarSchema = z.object({
   id: z.string(),
   summary: z.string(),
@@ -24,10 +26,18 @@ const GoogleEventSchema = z.object({
   start: GoogleEventDateTimeSchema,
   end: GoogleEventDateTimeSchema,
   updated: z.string().optional(),
+  recurringEventId: z.string().optional(),
+  organizer: z
+    .object({
+      email: z.string(),
+      self: z.boolean().optional(),
+    })
+    .optional(),
 })
 
 const GoogleEventsListResponseSchema = z.object({
   items: z.array(GoogleEventSchema).optional(),
+  nextPageToken: z.string().optional(),
   nextSyncToken: z.string().optional(),
 })
 
@@ -41,15 +51,19 @@ type GoogleEventsSyncResult = {
 }
 
 export async function fetchGoogleCalendars(accessToken: string): Promise<GoogleCalendar[]> {
-  const response = await fetch("https://www.googleapis.com/calendar/v3/users/me/calendarList", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+  const { rsp, json } = await fetchWithLog(
+    "https://www.googleapis.com/calendar/v3/users/me/calendarList",
+    "get-google-calendars",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
 
-  if (!response.ok) {
-    throw new Error(`Google Calendar API error: ${response.status}`)
+  if (!rsp.ok) {
+    throw new Error(`Google Calendar API error: ${rsp.status}`)
   }
 
-  const data = GoogleCalendarListResponseSchema.parse(await response.json())
+  const data = GoogleCalendarListResponseSchema.parse(json)
 
   return data.items ?? []
 }
@@ -59,59 +73,72 @@ export async function syncGoogleEvents(
   providerCalendarId: string,
   syncToken: string | null,
 ): Promise<GoogleEventsSyncResult> {
-  const url = new URL(
-    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(providerCalendarId)}/events`,
-  )
-
-  if (syncToken) {
-    // Incremental sync - just send the sync token
-    url.searchParams.set("syncToken", syncToken)
-  } else {
-    // Full sync - fetch events from 1 year ago to 1 year ahead
-    const now = new Date()
-    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
-    const oneYearAhead = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
-    url.searchParams.set("timeMin", oneYearAgo.toISOString())
-    url.searchParams.set("timeMax", oneYearAhead.toISOString())
-    url.searchParams.set("singleEvents", "true")
-  }
-
-  const response = await fetch(url.toString(), {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
-
-  // Handle 410 Gone - sync token expired, need full sync
-  if (response.status === 410) {
-    return {
-      events: [],
-      deletedEventIds: [],
-      syncToken: null,
-      fullSyncRequired: true,
-    }
-  }
-
-  if (!response.ok) {
-    const body = await response.text()
-    throw new Error(`Google Calendar API error: ${response.status} - ${body}`)
-  }
-
-  const data = GoogleEventsListResponseSchema.parse(await response.json())
-
   const events: GoogleEvent[] = []
   const deletedEventIds: string[] = []
+  let pageToken: string | undefined
+  let newSyncToken: string | null = null
 
-  for (const event of data.items ?? []) {
-    if (event.status === "cancelled") {
-      deletedEventIds.push(event.id)
+  do {
+    const url = new URL(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(providerCalendarId)}/events`,
+    )
+
+    if (syncToken) {
+      // Incremental sync - just send the sync token
+      url.searchParams.set("syncToken", syncToken)
     } else {
-      events.push(event)
+      // Full sync - fetch events from 1 year ago to 1 year ahead
+      const now = new Date()
+      const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
+      const oneYearAhead = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
+      url.searchParams.set("timeMin", oneYearAgo.toISOString())
+      url.searchParams.set("timeMax", oneYearAhead.toISOString())
+      url.searchParams.set("singleEvents", "true")
     }
-  }
+
+    if (pageToken) {
+      url.searchParams.set("pageToken", pageToken)
+    }
+
+    const { rsp, json } = await fetchWithLog(url.toString(), "sync-google-events", {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+
+    // Handle 410 Gone - sync token expired, need full sync
+    if (rsp.status === 410) {
+      return {
+        events: [],
+        deletedEventIds: [],
+        syncToken: null,
+        fullSyncRequired: true,
+      }
+    }
+
+    if (!rsp.ok) {
+      const body = await rsp.text()
+      throw new Error(`Google Calendar API error: ${rsp.status} - ${body}`)
+    }
+
+    const data = GoogleEventsListResponseSchema.parse(json)
+
+    for (const event of data.items ?? []) {
+      if (event.status === "cancelled") {
+        deletedEventIds.push(event.id)
+      } else {
+        events.push(event)
+      }
+    }
+
+    pageToken = data.nextPageToken
+    if (data.nextSyncToken) {
+      newSyncToken = data.nextSyncToken
+    }
+  } while (pageToken)
 
   return {
     events,
     deletedEventIds,
-    syncToken: data.nextSyncToken ?? null,
+    syncToken: newSyncToken,
     fullSyncRequired: false,
   }
 }

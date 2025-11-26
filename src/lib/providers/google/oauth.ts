@@ -3,6 +3,8 @@ import { z } from "zod"
 
 import { rpc } from "@/rpc"
 
+import { fetchWithLog } from "@/lib/fetch"
+
 const GOOGLE_CLIENT_ID = "988213795701-e04kh9dmf8dl8cjp1lour13g7fpp0cpp.apps.googleusercontent.com"
 const GOOGLE_CLIENT_SECRET = "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"
 const OAUTH_PORT = 8080
@@ -60,14 +62,18 @@ const GoogleUserInfoResponseSchema = z.object({
 })
 
 async function fetchGoogleEmail(accessToken: string): Promise<string | null> {
-  const response = await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
-    headers: { Authorization: `Bearer ${accessToken}` },
-  })
+  const { rsp, json } = await fetchWithLog(
+    "https://www.googleapis.com/oauth2/v2/userinfo",
+    "get-google-email",
+    {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    },
+  )
 
-  if (!response.ok) {
+  if (!rsp.ok) {
     return null
   }
 
-  const data = GoogleUserInfoResponseSchema.parse(await response.json())
+  const data = GoogleUserInfoResponseSchema.parse(json)
   return data.email ?? null
 }
