@@ -46,10 +46,10 @@ export const events = sqliteTable(
       .notNull()
       .references(() => calendars.id, { onDelete: "cascade" }),
     summary: text("summary"),
-    start: text("start").notNull(),
-    end: text("end").notNull(),
+    start: integer("start", { mode: "timestamp" }).notNull(),
+    end: integer("end", { mode: "timestamp" }).notNull(),
     all_day: integer("all_day", { mode: "boolean" }).notNull(),
-    updated_at: text("updated_at"),
+    updated_at: integer("updated_at", { mode: "timestamp" }),
   },
   (table) => [
     index("idx_events_calendar_id").on(table.calendar_id),

@@ -2,7 +2,7 @@ import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { CalendarEvent } from "@/storage/db"
+import { CalendarEvent } from "@/db/database"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendar()

@@ -1,3 +1,4 @@
+import { and, eq, inArray } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
 import { logger } from "@/lib/logger"
@@ -5,13 +6,12 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { useStorage } from "@/contexts/StorageContext"
-import { Account, Calendar, CalendarEvent, CalendarEventInsertData } from "@/storage/db"
+import { Account, Calendar, CalendarEventInsert, calendars, db, events } from "@/db/database"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
   calendarId: string,
-): CalendarEventInsertData | null {
+): CalendarEventInsert | null {
   const { start: _start, end: _end } = googleEvent
 
   // Handle all-day events (date) vs timed events (dateTime)
@@ -32,8 +32,6 @@ function googleEventToCalendarEvent(
   }
 }
 
-// const SYNC_INTERVAL_MS = 60_000 // 60s
-
 /**
  * Hook that handles syncing events from Google Calendar to local SQLite.
  * - Syncs on mount and when auth/calendars change
@@ -42,12 +40,11 @@ function googleEventToCalendarEvent(
  * - Falls back to full sync when sync token expires
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
-  const { store } = useStorage()
   const { accounts, withAuthRetry } = useAuth()
-  const { calendars } = useCalendar()
+  const { calendars: calendarList } = useCalendar()
   const isSyncingRef = useRef(false)
 
-  const selectedCalendars = calendars.filter((c) => c.selected && c.provider_calendar_id)
+  const selectedCalendars = calendarList.filter((c) => c.selected && c.provider_calendar_id)
 
   const getAccountForCalendar = useCallback(
     (calendar: Calendar): Account | undefined => {
@@ -55,6 +52,70 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     },
     [accounts],
   )
+
+  const upsertEvent = async (event: CalendarEventInsert) => {
+    if (event.provider_event_id) {
+      const [existing] = await db
+        .select({ id: events.id })
+        .from(events)
+        .where(
+          and(
+            eq(events.provider_event_id, event.provider_event_id),
+            eq(events.calendar_id, event.calendar_id),
+          ),
+        )
+
+      if (existing) {
+        await db
+          .update(events)
+          .set({
+            summary: event.summary,
+            start: event.start,
+            end: event.end,
+            all_day: event.all_day,
+            updated_at: new Date(),
+          })
+          .where(
+            and(
+              eq(events.provider_event_id, event.provider_event_id),
+              eq(events.calendar_id, event.calendar_id),
+            ),
+          )
+        return
+      }
+    }
+
+    await db.insert(events).values({
+      ...event,
+      updated_at: new Date(),
+    })
+  }
+
+  const upsertMany = async (eventsToUpsert: CalendarEventInsert[]) => {
+    for (const event of eventsToUpsert) {
+      await upsertEvent(event)
+    }
+  }
+
+  const deleteByProviderEventIds = async (providerEventIds: string[], calendarId: string) => {
+    if (providerEventIds.length === 0) return
+
+    await db
+      .delete(events)
+      .where(
+        and(
+          inArray(events.provider_event_id, providerEventIds),
+          eq(events.calendar_id, calendarId),
+        ),
+      )
+  }
+
+  const updateSyncToken = async (providerCalendarId: string, syncToken: string) => {
+    await db
+      .update(calendars)
+      .set({ sync_token: syncToken, last_synced_at: new Date() })
+      .where(eq(calendars.provider_calendar_id, providerCalendarId))
+  }
 
   const doFullSync = async (calendar: Calendar, account: Account) => {
     logger.warn(`🔁 Sync token expired for ${calendar.name}, doing full sync...`)
@@ -71,19 +132,16 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     )
 
     // Convert Google events to our Event type
-    const events = fullResult.events
+    const syncedEvents = fullResult.events
       .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
-      .filter((e): e is CalendarEvent => e !== null)
+      .filter((e): e is CalendarEventInsert => e !== null)
 
-    if (events.length > 0) {
-      await store.event.upsertMany(events)
+    if (syncedEvents.length > 0) {
+      await upsertMany(syncedEvents)
     }
 
     if (fullResult.syncToken) {
-      await store.calendar.updateSyncToken({
-        providerCalendarId: provider_calendar_id,
-        syncToken: fullResult.syncToken,
-      })
+      await updateSyncToken(provider_calendar_id, fullResult.syncToken)
     }
   }
 
@@ -112,30 +170,27 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       // Handle deleted events
       if (result.deletedEventIds.length > 0) {
         logger.debug(`🔁 Deleting ${result.deletedEventIds.length} events from "${calendar.name}"`)
-        await store.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
+        await deleteByProviderEventIds(result.deletedEventIds, calendar.id)
       }
 
       // Convert Google events to our Event type and upsert
-      const events = result.events
+      const syncedEvents = result.events
         .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
-        .filter((e): e is CalendarEvent => e !== null)
+        .filter((e): e is CalendarEventInsert => e !== null)
 
-      if (events.length > 0) {
-        logger.debug(`🔁 Upserting ${events.length} events to "${calendar.name}"`)
-        await store.event.upsertMany(events)
+      if (syncedEvents.length > 0) {
+        logger.debug(`🔁 Upserting ${syncedEvents.length} events to "${calendar.name}"`)
+        await upsertMany(syncedEvents)
       }
 
       // Update sync token
       if (result.syncToken) {
-        await store.calendar.updateSyncToken({
-          providerCalendarId: provider_calendar_id,
-          syncToken: result.syncToken,
-        })
+        await updateSyncToken(provider_calendar_id, result.syncToken)
       }
 
       logger.debug(`🔁 Sync complete for "${calendar.name}"`)
     },
-    [doFullSync, withAuthRetry, store],
+    [doFullSync, withAuthRetry, db],
   )
 
   const onSync = useEffectEvent(async () => {

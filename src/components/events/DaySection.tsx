@@ -1,7 +1,7 @@
 import { format, isSameYear } from "date-fns"
 import { forwardRef } from "react"
 
-import { CalendarEvent } from "@/storage/db"
+import { CalendarEvent } from "@/db/database"
 
 import { EventRow } from "./EventRow"
 

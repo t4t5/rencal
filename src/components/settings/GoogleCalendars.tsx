@@ -1,17 +1,14 @@
 import { useEffect, useEffectEvent } from "react"
 
-import { logger } from "@/lib/logger"
 import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { useStorage } from "@/contexts/StorageContext"
-import { CalendarInsertData } from "@/storage/db"
+import { calendars, db } from "@/db/database"
 
 export function GoogleCalendars() {
   const { accounts, withAuthRetry } = useAuth()
-  const { store } = useStorage()
-  const { calendars, reloadCalendars } = useCalendar()
+  const { calendars: calendarList, reloadCalendars } = useCalendar()
 
   const fetchCalendars = useEffectEvent(async () => {
     if (accounts.length === 0) return
@@ -19,21 +16,25 @@ export function GoogleCalendars() {
     for (const account of accounts) {
       if (!account.access_token) continue
 
-      const googleCalendars = await withAuthRetry(account, (token) => fetchGoogleCalendars(token))
+      const items = await withAuthRetry(account, (token) => fetchGoogleCalendars(token))
 
-      const calendars: CalendarInsertData[] = googleCalendars.map((gc) => ({
-        account_id: account.id,
-        provider_calendar_id: gc.id,
-        name: gc.summary,
-        color: gc.backgroundColor ?? null,
-        selected: true,
-        sync_token: null,
-        last_synced_at: null,
-      }))
-
-      for (const cal of calendars) {
-        logger.debug("📅 Adding calendar to store", cal)
-        await store.calendar.add(cal)
+      for (const item of items) {
+        await db
+          .insert(calendars)
+          .values({
+            account_id: account.id,
+            provider_calendar_id: item.id,
+            name: item.summary,
+            color: item.backgroundColor ?? null,
+            selected: true,
+          })
+          .onConflictDoUpdate({
+            target: [calendars.account_id, calendars.provider_calendar_id],
+            set: {
+              name: item.summary,
+              color: item.backgroundColor,
+            },
+          })
       }
 
       reloadCalendars()
@@ -46,11 +47,11 @@ export function GoogleCalendars() {
 
   return (
     <div>
-      <h3>Calendars ({calendars.length})</h3>
+      <h3>Calendars ({calendarList.length})</h3>
       <ul>
-        {calendars.map((calendar) => (
+        {calendarList.map((calendar) => (
           <li key={calendar.id}>
-            {calendar.name} {calendar.color && `(${calendar.color})`} {calendar.selected ? "✓" : ""}
+            {calendar.name} {calendar.color && `(${calendar.color})`} {calendar.selected ? "y" : ""}
           </li>
         ))}
       </ul>

@@ -10,11 +10,10 @@ import {
 
 import { logger } from "@/lib/logger"
 
-import { useStorage } from "@/contexts/StorageContext"
-import { Calendar as CalendarType } from "@/storage/db"
+import { Calendar, calendars, db } from "@/db/database"
 
 interface CalendarContextType {
-  calendars: CalendarType[]
+  calendars: Calendar[]
   reloadCalendars: () => Promise<void>
   activeDate: Date
   setActiveDate: (date: Date) => void
@@ -32,9 +31,8 @@ export function useCalendar() {
 }
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
-  const { store } = useStorage()
   const [activeDate, setActiveDate] = useState<Date>(new Date())
-  const [calendars, setCalendars] = useState<CalendarType[]>([])
+  const [calendarList, setCalendarList] = useState<Calendar[]>([])
 
   const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -42,9 +40,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
-    const calendars = await store.calendar.list()
-    logger.debug("🗓️ Calendars loaded from store:", calendars.length)
-    setCalendars(calendars)
+    const result = await db.select().from(calendars)
+    logger.debug("Calendars loaded from store:", result.length)
+    setCalendarList(result)
   }
 
   useEffect(() => {
@@ -91,7 +89,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = {
-    calendars,
+    calendars: calendarList,
     reloadCalendars: loadCalendarsFromStore,
     activeDate,
     setActiveDate,

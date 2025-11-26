@@ -1,7 +1,18 @@
 import TauriDatabase from "@tauri-apps/plugin-sql"
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/sqlite-proxy"
 
 import * as schema from "./schema"
+
+// Re-export schema tables for use in queries
+export { accounts, calendars, events } from "./schema"
+
+export type Account = InferSelectModel<typeof schema.accounts>
+
+export type Calendar = InferSelectModel<typeof schema.calendars>
+
+export type CalendarEvent = InferSelectModel<typeof schema.events>
+export type CalendarEventInsert = InferInsertModel<typeof schema.events>
 
 const DATABASE_NAME = "rencal.db"
 

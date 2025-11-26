@@ -1,3 +1,4 @@
+import { eq } from "drizzle-orm"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -6,20 +7,18 @@ import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { useStorage } from "@/contexts/StorageContext"
-import { AccountInsertData } from "@/storage/db"
+import { accounts, db } from "@/db/database"
 
 export function ConnectGoogle() {
-  const { store } = useStorage()
   const [isConnecting, setIsConnecting] = useState(false)
-  const { accounts, reloadAccounts } = useAuth()
+  const { accounts: accountList, reloadAccounts } = useAuth()
 
   // Get Google accounts only
-  const googleAccounts = accounts.filter((a) => a.provider === "Google")
+  const googleAccounts = accountList.filter((a) => a.provider === "Google")
 
   async function disconnectGoogle(accountId: string) {
     try {
-      await store.account.delete(accountId)
+      await db.delete(accounts).where(eq(accounts.id, accountId))
       await reloadAccounts()
     } catch (error) {
       logger.error("Failed to disconnect Google:", error)
@@ -32,15 +31,14 @@ export function ConnectGoogle() {
     try {
       const { email, accessToken, refreshToken, expiresAt } = await googleOAuth()
 
-      const newAccount: AccountInsertData = {
+      await db.insert(accounts).values({
         provider: "Google",
         email,
         access_token: accessToken,
         refresh_token: refreshToken,
         expires_at: expiresAt,
-      }
-
-      await store.account.insert(newAccount)
+        created_at: new Date(),
+      })
       await reloadAccounts()
     } catch (error) {
       logger.error("Failed to connect Google:", error)
@@ -63,7 +61,7 @@ export function ConnectGoogle() {
       <Button onClick={connectGoogle} disabled={isConnecting}>
         {isConnecting
           ? "Connecting..."
-          : accounts.length
+          : accountList.length
             ? "Add another account"
             : "Connect Google"}
       </Button>

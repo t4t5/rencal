@@ -1,10 +1,10 @@
+import { eq } from "drizzle-orm"
 import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
 import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
-import { useStorage } from "@/contexts/StorageContext"
-import { Account } from "@/storage/db"
+import { Account, accounts, db } from "@/db/database"
 
 interface AuthContextType {
   accounts: Account[]
@@ -20,13 +20,12 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const { store } = useStorage()
-  const [accounts, setAccounts] = useState<Account[]>([])
+  const [accountList, setAccountList] = useState<Account[]>([])
 
   async function loadAccounts() {
-    const accounts = await store.account.getAll()
-    logger.debug("👥 Accounts loaded from store:", accounts.length)
-    setAccounts(accounts)
+    const result = await db.select().from(accounts)
+    logger.debug("Accounts loaded from store:", result.length)
+    setAccountList(result)
   }
 
   useEffect(() => {
@@ -53,14 +52,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expires_at: expiresAt,
       }
 
-      await store.account.update(refreshedAccount)
+      await db.update(accounts).set(refreshedAccount).where(eq(accounts.id, account.id))
 
       logger.info("Access token refreshed successfully")
       return refreshedAccount
     } catch (error) {
       logger.error("Failed to refresh access token:", error)
-      // If refresh fails, delete the account so user can re-authenticate
-      // await deleteAccount(account.id)
       return null
     }
   }
@@ -99,7 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = {
-    accounts,
+    accounts: accountList,
     reloadAccounts: loadAccounts,
     refreshAccountAuth,
     withAuthRetry,

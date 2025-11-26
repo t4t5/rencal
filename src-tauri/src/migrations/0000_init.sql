@@ -27,10 +27,10 @@ CREATE TABLE `events` (
 	`provider_event_id` text,
 	`calendar_id` text NOT NULL,
 	`summary` text,
-	`start` text NOT NULL,
-	`end` text NOT NULL,
+	`start` integer NOT NULL,
+	`end` integer NOT NULL,
 	`all_day` integer NOT NULL,
-	`updated_at` text,
+	`updated_at` integer,
 	FOREIGN KEY (`calendar_id`) REFERENCES `calendars`(`id`) ON UPDATE no action ON DELETE cascade
 );
 --> statement-breakpoint
