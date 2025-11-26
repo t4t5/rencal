@@ -10,6 +10,9 @@ A calendar app crafted especially for Omarchy.
 
 This is a Tauri application with a Rust backend and React frontend.
 
+The Rust backend is kept as minimal as possible and only used when absolutely necessary. All
+actions, including SQLite operations are handled in the frontend.
+
 ### Backend (Rust)
 
 - `src-tauri/src/lib.rs` - Registers taurpc routers

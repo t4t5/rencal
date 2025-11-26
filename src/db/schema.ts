@@ -1,7 +1,10 @@
 import { index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
+import { v4 as uuidv4 } from "uuid"
 
 export const accounts = sqliteTable("accounts", {
-  id: text("id").primaryKey(),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => uuidv4()),
   provider: text("provider").notNull().$type<"Google">(),
   email: text("email"),
   access_token: text("access_token"),
@@ -13,7 +16,9 @@ export const accounts = sqliteTable("accounts", {
 export const calendars = sqliteTable(
   "calendars",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     account_id: text("account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "cascade" }),
@@ -33,7 +38,9 @@ export const calendars = sqliteTable(
 export const events = sqliteTable(
   "events",
   {
-    id: text("id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
     provider_event_id: text("provider_event_id"),
     calendar_id: text("calendar_id")
       .notNull()
