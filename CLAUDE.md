@@ -25,6 +25,9 @@ actions, including SQLite operations are handled in the frontend.
 - `src/App.tsx` - Main React application entry point
 - Communicates with Rust backend via taurpc generated bindings
 - Always use pnpm for frontend dependencies
+- Use tailwind and shadcn for components
+- Use `react-icons` for all icons
+- When applying a class conditionally, use the `cn` utility function
 
 ## Rules
 

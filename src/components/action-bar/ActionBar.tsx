@@ -35,8 +35,8 @@ export function ActionBar() {
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
-          <DialogTitle>Settings</DialogTitle>
-          <Description>Connect Calendar providers</Description>
+          <DialogTitle className="font-bold text-lg">Accounts</DialogTitle>
+          <Description className="hidden">Connect Calendar providers</Description>
           <Settings />
         </Modal>
       )}
