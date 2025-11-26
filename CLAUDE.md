@@ -28,6 +28,7 @@ actions, including SQLite operations are handled in the frontend.
 - Use tailwind and shadcn for components
 - Use `react-icons` for all icons
 - When applying a class conditionally, use the `cn` utility function
+- Avoid using margins, instead use paddings and flex-gaps
 
 ## Rules
 

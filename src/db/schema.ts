@@ -1,11 +1,13 @@
 import { index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
 import { v4 as uuidv4 } from "uuid"
 
+import { EmailProvider } from "./types"
+
 export const accounts = sqliteTable("accounts", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => uuidv4()),
-  provider: text("provider").notNull().$type<"Google">(),
+  provider: text("provider").notNull().$type<EmailProvider>(),
   email: text("email"),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
