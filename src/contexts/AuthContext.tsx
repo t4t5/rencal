@@ -24,16 +24,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [accounts, setAccounts] = useState<Account[]>([])
 
   async function loadAccounts() {
-    logger.info("Loading accounts from database...")
-
-    try {
-      const loadedAccounts = await store.account.getAll()
-
-      logger.info(`Loaded ${loadedAccounts.length} account(s) from database`)
-      setAccounts(loadedAccounts)
-    } catch (error) {
-      logger.error("Failed to load accounts:", error)
-    }
+    logger.debug("👥 Loading accounts from store...")
+    const accounts = await store.account.getAll()
+    logger.debug("👥 Accounts loaded from store:", accounts.length)
+    setAccounts(accounts)
   }
 
   useEffect(() => {

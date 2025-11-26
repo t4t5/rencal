@@ -60,7 +60,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   )
 
   const doFullSync = async (calendar: Calendar, account: Account) => {
-    logger.warn(`Sync token expired for ${calendar.name}, doing full sync...`)
+    logger.warn(`🔁 Sync token expired for ${calendar.name}, doing full sync...`)
 
     const { provider_calendar_id } = calendar
 
@@ -92,7 +92,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
   const syncCalendar = useCallback(
     async (calendar: Calendar, account: Account) => {
-      logger.info(`Syncing calendar: ${calendar.name}`, {
+      logger.debug(`🔁 Syncing calendar "${calendar.name}"...`, {
         hasToken: !!calendar.sync_token,
       })
 
@@ -114,7 +114,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
       // Handle deleted events
       if (result.deletedEventIds.length > 0) {
-        logger.info(`Deleting ${result.deletedEventIds.length} events from ${calendar.name}`)
+        logger.debug(`🔁 Deleting ${result.deletedEventIds.length} events from "${calendar.name}"`)
         await store.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
       }
 
@@ -124,7 +124,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         .filter((e): e is CalendarEvent => e !== null)
 
       if (events.length > 0) {
-        logger.info(`Upserting ${events.length} events to ${calendar.name}`)
+        logger.debug(`🔁 Upserting ${events.length} events to "${calendar.name}"`)
         await store.event.upsertMany(events)
       }
 
@@ -136,7 +136,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         })
       }
 
-      logger.info(`Sync complete for ${calendar.name}`)
+      logger.debug(`🔁 Sync complete for "${calendar.name}"`)
     },
     [doFullSync, withAuthRetry, store],
   )
@@ -153,10 +153,9 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     isSyncingRef.current = true
 
     try {
-      logger.info(`Starting sync for ${selectedCalendars.length} calendars...`)
-
       for (const calendar of selectedCalendars) {
         const account = getAccountForCalendar(calendar)
+
         if (!account) {
           logger.warn(`No account found for calendar ${calendar.name}, skipping sync`)
           continue
@@ -165,10 +164,9 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         await syncCalendar(calendar, account)
       }
 
-      logger.info("All calendars synced successfully")
       options?.onSyncComplete?.()
     } catch (error) {
-      logger.error("Sync failed:", error)
+      logger.error("🔁 Sync failed:", error)
     } finally {
       isSyncingRef.current = false
     }

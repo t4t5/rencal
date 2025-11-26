@@ -22,9 +22,9 @@ export function StorageProvider({ children }: { children: ReactNode }) {
       try {
         const db = await getDb()
         setStore(db)
-        logger.info("Connected to DB!")
+        logger.debug("🫙 Connected to DB!")
       } catch (error) {
-        logger.error("Failed to connect to DB:", error)
+        logger.error("🫙 Failed to connect to DB:", error)
       }
     }
 

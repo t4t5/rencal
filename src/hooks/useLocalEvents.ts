@@ -86,8 +86,8 @@ export const useLocalEvents = () => {
           range.end.toISOString(),
         )
 
-        logger.info(
-          `Loaded events for ${format(range.start, "yyyy-MM-dd")}-${format(range.end, "yyyy-MM-dd")}`,
+        logger.debug(
+          `📅 Loaded events for ${format(range.start, "yyyy-MM-dd")}-${format(range.end, "yyyy-MM-dd")}`,
         )
 
         if (replace) {
@@ -100,7 +100,7 @@ export const useLocalEvents = () => {
           dateRangeRef.current = expandLoadedRange(dateRangeRef.current, range)
         }
       } catch (error) {
-        logger.error("Failed to load events from local DB:", error)
+        logger.error("📅 Failed to load events from local DB:", error)
         setEvents([])
       } finally {
         setLoading(false)

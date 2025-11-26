@@ -1,5 +1,6 @@
 import { useEffect, useEffectEvent } from "react"
 
+import { logger } from "@/lib/logger"
 import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
@@ -31,6 +32,7 @@ export function GoogleCalendars() {
       }))
 
       for (const cal of calendars) {
+        logger.debug("📅 Adding calendar to store", cal)
         await store.calendar.add(cal)
       }
 

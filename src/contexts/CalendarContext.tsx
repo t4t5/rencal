@@ -41,15 +41,15 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const isNavigatingRef = useRef(false)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const loadCalendarsFromDb = async () => {
-    logger.info("Load calendars from DB...")
+  const loadCalendarsFromStore = async () => {
+    logger.debug("🗓️ Loading calendars from store...")
     const calendars = await store.calendar.list()
-    logger.info("Setting calendars:", calendars)
+    logger.debug("🗓️ Calendars loaded from store:", calendars.length)
     setCalendars(calendars)
   }
 
   useEffect(() => {
-    void loadCalendarsFromDb()
+    void loadCalendarsFromStore()
   }, [])
 
   const registerScrollToDate = useCallback((fn: (date: Date) => void) => {
@@ -93,7 +93,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const value = {
     calendars,
-    reloadCalendars: loadCalendarsFromDb,
+    reloadCalendars: loadCalendarsFromStore,
     activeDate,
     setActiveDate,
     navigateToDate,
