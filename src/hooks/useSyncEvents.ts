@@ -1,12 +1,14 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useRef } from "react"
 
+import { useAuth } from "@/contexts/AuthContext"
+import { useCalendar } from "@/contexts/CalendarContext"
+
 import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
-import { useAuth } from "@/contexts/AuthContext"
-import { useCalendar } from "@/contexts/CalendarContext"
-import { Account, Calendar, CalendarEventInsert, db, schema } from "@/db/database"
+import { db, schema } from "@/db/database"
+import type { Account, Calendar, CalendarEventInsert } from "@/db/types"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,

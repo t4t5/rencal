@@ -4,7 +4,8 @@ import { ReactNode, createContext, useCallback, useContext, useEffect, useState 
 import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
-import { Account, schema, db } from "@/db/database"
+import { schema, db } from "@/db/database"
+import type { Account } from "@/db/types"
 
 interface AuthContextType {
   accounts: Account[]

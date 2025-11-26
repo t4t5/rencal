@@ -10,7 +10,8 @@ import {
 
 import { logger } from "@/lib/logger"
 
-import { Calendar, schema, db } from "@/db/database"
+import { schema, db } from "@/db/database"
+import type { Calendar } from "@/db/types"
 
 interface CalendarContextType {
   calendars: Calendar[]

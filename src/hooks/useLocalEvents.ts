@@ -2,10 +2,12 @@ import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns
 import { and, gte, inArray, lte } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
+import { useCalendar } from "@/contexts/CalendarContext"
+
 import { logger } from "@/lib/logger"
 
-import { useCalendar } from "@/contexts/CalendarContext"
-import { CalendarEvent, db, schema } from "@/db/database"
+import { db, schema } from "@/db/database"
+import type { CalendarEvent } from "@/db/types"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2
