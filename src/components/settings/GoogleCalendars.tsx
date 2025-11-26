@@ -6,7 +6,7 @@ import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
-import { CalendarInsertData } from "@/storage/models/calendar"
+import { CalendarInsertData } from "@/storage/db"
 
 export function GoogleCalendars() {
   const { accounts, withAuthRetry } = useAuth()

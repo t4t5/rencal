@@ -7,7 +7,7 @@ import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useStorage } from "@/contexts/StorageContext"
-import { AccountInsertData } from "@/storage/models/account"
+import { AccountInsertData } from "@/storage/db"
 
 export function ConnectGoogle() {
   const { store } = useStorage()

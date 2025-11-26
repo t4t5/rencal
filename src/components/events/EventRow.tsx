@@ -2,15 +2,15 @@ import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { CalendarEvent } from "@/storage/models/calendarEvent"
+import { CalendarEvent } from "@/storage/db"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendar()
   const calendar = calendars.find((c) => c.id === event.calendar_id)
   const calendarColor = calendar?.color
 
-  const from = new Date(event.start)
-  const to = new Date(event.end)
+  const from = event.start
+  const to = event.end
 
   if (event.all_day) {
     return (

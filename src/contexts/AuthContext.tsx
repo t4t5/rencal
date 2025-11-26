@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
 import { useStorage } from "@/contexts/StorageContext"
-import { Account } from "@/storage/models/account"
+import { Account } from "@/storage/db"
 
 interface AuthContextType {
   accounts: Account[]

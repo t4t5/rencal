@@ -15,6 +15,9 @@ build-bin:
 dev:
   pnpm tauri dev
 
+migrate name:
+  pnpm drizzle-kit generate --name {{name}}
+
 check:
   cargo check --manifest-path src-tauri/Cargo.toml
   @just typecheck

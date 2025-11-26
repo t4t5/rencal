@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
-import { CalendarEvent } from "@/storage/models/calendarEvent"
+import { CalendarEvent } from "@/storage/db"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2

@@ -6,10 +6,7 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
-import { Account } from "@/storage/models/account"
-import { Calendar } from "@/storage/models/calendar"
-import { CalendarEventInsertData } from "@/storage/models/calendarEvent"
-import { CalendarEvent } from "@/storage/models/calendarEvent"
+import { Account, Calendar, CalendarEvent, CalendarEventInsertData } from "@/storage/db"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
