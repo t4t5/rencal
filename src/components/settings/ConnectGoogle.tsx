@@ -6,10 +6,11 @@ import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { getDb } from "@/storage/db"
+import { useStorage } from "@/contexts/StorageContext"
 import { AccountInsertData } from "@/storage/models/account"
 
 export function ConnectGoogle() {
+  const { store } = useStorage()
   const [isConnecting, setIsConnecting] = useState(false)
   const { accounts, reloadAccounts } = useAuth()
 
@@ -18,9 +19,7 @@ export function ConnectGoogle() {
 
   async function disconnectGoogle(accountId: string) {
     try {
-      const db = await getDb()
-      await db.account.delete(accountId)
-
+      await store.account.delete(accountId)
       await reloadAccounts()
     } catch (error) {
       logger.error("Failed to disconnect Google:", error)
@@ -41,9 +40,7 @@ export function ConnectGoogle() {
         expires_at: expiresAt.toISOString(),
       }
 
-      const db = await getDb()
-      await db.account.insert(newAccount)
-
+      await store.account.insert(newAccount)
       await reloadAccounts()
     } catch (error) {
       logger.error("Failed to connect Google:", error)

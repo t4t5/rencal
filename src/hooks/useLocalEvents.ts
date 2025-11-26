@@ -4,7 +4,7 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { getDb } from "@/storage/db"
+import { useStorage } from "@/contexts/StorageContext"
 import { CalendarEvent } from "@/types/calendar-event"
 
 // How many months before/after activeDate to load
@@ -18,6 +18,7 @@ interface DateRange {
 }
 
 export const useLocalEvents = () => {
+  const { store } = useStorage()
   const { calendars, activeDate } = useCalendar()
 
   const [events, setEvents] = useState<CalendarEvent[]>([])
@@ -79,8 +80,7 @@ export const useLocalEvents = () => {
 
       try {
         setLoading(true)
-        const db = await getDb()
-        const localEvents = await db.event.getByDateRange(
+        const localEvents = await store.event.getByDateRange(
           selectedCalendarIds,
           range.start.toISOString(),
           range.end.toISOString(),
@@ -106,7 +106,7 @@ export const useLocalEvents = () => {
         setLoading(false)
       }
     },
-    [selectedCalendarIdsKey, mergeEvents, expandLoadedRange],
+    [selectedCalendarIdsKey, store, mergeEvents, expandLoadedRange],
   )
 
   const maybeLoadMore = useEffectEvent((date: Date) => {

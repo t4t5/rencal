@@ -5,7 +5,7 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { getDb } from "@/storage/db"
+import { useStorage } from "@/contexts/StorageContext"
 import { Account } from "@/types/account"
 import { Calendar } from "@/types/calendar"
 import { CalendarEvent } from "@/types/calendar-event"
@@ -42,6 +42,7 @@ function googleEventToEvent(googleEvent: GoogleEvent, calendarId: string): Calen
  * - Falls back to full sync when sync token expires
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
+  const { store } = useStorage()
   const { accounts, withAuthRetry } = useAuth()
   const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
@@ -65,8 +66,6 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       throw new Error("Calendar does not have a provider calendar ID")
     }
 
-    const db = await getDb()
-
     // Retry with no sync token (full sync)
     const fullResult = await withAuthRetry(account, (token) =>
       syncGoogleEvents(token, provider_calendar_id, null),
@@ -78,11 +77,11 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       .filter((e): e is CalendarEvent => e !== null)
 
     if (events.length > 0) {
-      await db.event.upsertMany(events)
+      await store.event.upsertMany(events)
     }
 
     if (fullResult.syncToken) {
-      await db.calendar.updateSyncToken({
+      await store.calendar.updateSyncToken({
         providerCalendarId: provider_calendar_id,
         syncToken: fullResult.syncToken,
       })
@@ -91,8 +90,6 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
   const syncCalendar = useCallback(
     async (calendar: Calendar, account: Account) => {
-      const db = await getDb()
-
       logger.info(`Syncing calendar: ${calendar.name}`, {
         hasToken: !!calendar.sync_token,
       })
@@ -116,7 +113,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       // Handle deleted events
       if (result.deletedEventIds.length > 0) {
         logger.info(`Deleting ${result.deletedEventIds.length} events from ${calendar.name}`)
-        await db.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
+        await store.event.deleteByProviderEventIds(result.deletedEventIds, calendar.id)
       }
 
       // Convert Google events to our Event type and upsert
@@ -126,12 +123,12 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
       if (events.length > 0) {
         logger.info(`Upserting ${events.length} events to ${calendar.name}`)
-        await db.event.upsertMany(events)
+        await store.event.upsertMany(events)
       }
 
       // Update sync token
       if (result.syncToken) {
-        await db.calendar.updateSyncToken({
+        await store.calendar.updateSyncToken({
           providerCalendarId: provider_calendar_id,
           syncToken: result.syncToken,
         })
@@ -139,7 +136,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
       logger.info(`Sync complete for ${calendar.name}`)
     },
-    [doFullSync, withAuthRetry],
+    [doFullSync, withAuthRetry, store],
   )
 
   const onSync = useEffectEvent(async () => {

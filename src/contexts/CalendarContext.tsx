@@ -10,7 +10,7 @@ import {
 
 import { logger } from "@/lib/logger"
 
-import { getDb } from "@/storage/db"
+import { useStorage } from "@/contexts/StorageContext"
 import { Calendar as CalendarType } from "@/types/calendar"
 
 interface CalendarContextType {
@@ -32,6 +32,7 @@ export function useCalendar() {
 }
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
+  const { store } = useStorage()
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<CalendarType[]>([])
 
@@ -42,8 +43,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const loadCalendarsFromDb = async () => {
     logger.info("Load calendars from DB...")
-    const db = await getDb()
-    const calendars = await db.calendar.list()
+    const calendars = await store.calendar.list()
     logger.info("Setting calendars:", calendars)
     setCalendars(calendars)
   }
@@ -53,12 +53,10 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const saveCalendars = async (calendars: CalendarType[]) => {
-    const db = await getDb()
-
     logger.info("Saving calendars to DB...")
 
     for (const calendar of calendars) {
-      await db.calendar.add(calendar)
+      await store.calendar.add(calendar)
     }
 
     logger.info(`Saved ${calendars.length} calendars to DB!`)
