@@ -30,7 +30,7 @@ export const calendars = sqliteTable(
     providerCalendarId: text("provider_calendar_id"),
     name: text("name").notNull(),
     color: text("color"),
-    selected: integer("selected", { mode: "boolean" }).notNull().default(true),
+    isVisible: integer("is_visible", { mode: "boolean" }).notNull().default(true),
     syncToken: text("sync_token"),
     lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }),
   },

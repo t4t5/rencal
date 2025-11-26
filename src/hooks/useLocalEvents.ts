@@ -27,9 +27,9 @@ export const useLocalEvents = () => {
 
   const dateRangeRef = useRef<DateRange | null>(null)
 
-  const selectedCalendarIdsRef = useRef<string[]>([])
-  const selectedCalendarIds = calendars.filter((c) => c.selected).map((c) => c.id)
-  const selectedCalendarIdsKey = selectedCalendarIds.join(",")
+  const visibleCalendarIdsRef = useRef<string[]>([])
+  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  const visibleCalendarIdsKey = visibleCalendarIds.join(",")
 
   const calculateRange = useCallback((centerDate: Date): DateRange => {
     return {
@@ -73,7 +73,7 @@ export const useLocalEvents = () => {
 
   const loadEventsForRange = useCallback(
     async (range: DateRange, replace = false) => {
-      if (selectedCalendarIds.length === 0) {
+      if (visibleCalendarIds.length === 0) {
         setCalendarEvents([])
         setLoading(false)
         return
@@ -86,7 +86,7 @@ export const useLocalEvents = () => {
           .from(schema.events)
           .where(
             and(
-              inArray(schema.events.calendarId, selectedCalendarIds),
+              inArray(schema.events.calendarId, visibleCalendarIds),
               gte(schema.events.start, range.start),
               lte(schema.events.start, range.end),
             ),
@@ -113,7 +113,7 @@ export const useLocalEvents = () => {
         setLoading(false)
       }
     },
-    [selectedCalendarIdsKey, db, mergeEvents, expandLoadedRange],
+    [visibleCalendarIdsKey, db, mergeEvents, expandLoadedRange],
   )
 
   const maybeLoadMore = useEffectEvent((date: Date) => {
@@ -138,10 +138,10 @@ export const useLocalEvents = () => {
   // Initial load or when selected calendars change
   const onCalendarSelectionChange = useEffectEvent(() => {
     // Reset everything when calendar selection changes
-    const prevIds = selectedCalendarIdsRef.current.join(",")
-    if (prevIds !== selectedCalendarIdsKey) {
+    const prevIds = visibleCalendarIdsRef.current.join(",")
+    if (prevIds !== visibleCalendarIdsKey) {
       dateRangeRef.current = null
-      selectedCalendarIdsRef.current = selectedCalendarIds
+      visibleCalendarIdsRef.current = visibleCalendarIds
     }
 
     const range = calculateRange(activeDate)
@@ -150,7 +150,7 @@ export const useLocalEvents = () => {
 
   useEffect(() => {
     onCalendarSelectionChange()
-  }, [selectedCalendarIdsKey])
+  }, [visibleCalendarIdsKey])
 
   // Watch activeDate changes and load more if needed
   useEffect(() => {

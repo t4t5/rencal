@@ -47,7 +47,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
   const [isSyncing, setIsSyncing] = useState(false)
 
-  const selectedCalendars = calendars.filter((c) => c.selected && c.providerCalendarId)
+  const visibleCalendars = calendars.filter((c) => c.isVisible && c.providerCalendarId)
 
   const getAccountForCalendar = useCallback(
     (calendar: Calendar): Account | undefined => {
@@ -201,14 +201,14 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       return
     }
 
-    if (selectedCalendars.length === 0) {
+    if (visibleCalendars.length === 0) {
       return
     }
 
     setIsSyncing(true)
 
     try {
-      for (const calendar of selectedCalendars) {
+      for (const calendar of visibleCalendars) {
         const account = getAccountForCalendar(calendar)
 
         if (!account) {
@@ -230,7 +230,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   // Sync when calendars or accounts change
   useEffect(() => {
     void onSync()
-  }, [selectedCalendars.length, accounts.length])
+  }, [visibleCalendars.length, accounts.length])
 
   // Manual sync trigger
   const triggerSync = useCallback(() => {

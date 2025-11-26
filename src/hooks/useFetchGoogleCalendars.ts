@@ -31,7 +31,6 @@ export const useFetchGoogleCalendars = () => {
             providerCalendarId: cal.id,
             name: cal.summary,
             color: cal.backgroundColor ?? null,
-            selected: true,
           })
           .onConflictDoUpdate({
             target: [schema.calendars.accountId, schema.calendars.providerCalendarId],

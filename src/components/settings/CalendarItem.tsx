@@ -9,13 +9,13 @@ import { db, schema } from "@/db/database"
 import { Calendar } from "@/db/types"
 
 export function CalendarItem({ calendar }: { calendar: Calendar }) {
-  const { name, color, selected } = calendar
+  const { name, color, isVisible } = calendar
   const { reloadCalendars } = useCalendar()
 
   const onToggleVisibility = async () => {
     await db
       .update(schema.calendars)
-      .set({ selected: !selected })
+      .set({ isVisible: !isVisible })
       .where(eq(schema.calendars.id, calendar.id))
 
     await reloadCalendars()
@@ -24,7 +24,7 @@ export function CalendarItem({ calendar }: { calendar: Calendar }) {
   return (
     <div
       className={cn("flex items-center justify-between py-1.5 group", {
-        "opacity-40": !selected,
+        "opacity-40": !isVisible,
       })}
     >
       <div className="flex items-center gap-3">
@@ -41,7 +41,7 @@ export function CalendarItem({ calendar }: { calendar: Calendar }) {
       </div>
 
       <div className="cursor-pointer" onClick={onToggleVisibility}>
-        {selected ? (
+        {isVisible ? (
           <EyeIcon className="size-4 opacity-0 group-hover:opacity-50" />
         ) : (
           <EyeClosedIcon className="size-4 text-muted-foreground" />

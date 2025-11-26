@@ -4,6 +4,7 @@ import { useEffect, useEffectEvent } from "react"
 import { DaySection } from "@/components/events/DaySection"
 
 import { useCalendar } from "@/contexts/CalendarContext"
+
 import { useLocalEvents } from "@/hooks/useLocalEvents"
 
 import { useGroupedEvents } from "./useGroupedEvents"
@@ -94,7 +95,7 @@ export function EventList() {
 
         return (
           <DaySection
-            key={date.toISOString()}
+            key={dateStr}
             ref={(el) => {
               if (!el) return
               addSectionRef(dateStr, el)
