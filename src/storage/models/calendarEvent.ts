@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { CalendarEvent } from "@/types/calendar-event"
 
-const dbCalendarEventSchema = z
+const storedCalendarEventSchema = z
   .object({
     id: z.string(),
     provider_event_id: z.string().nullable(),
@@ -23,7 +23,7 @@ const dbCalendarEventSchema = z
     }),
   )
 
-export const eventController = (db: Database) => ({
+export const calendarEventStorage = (db: Database) => ({
   /**
    * Upsert an event - insert or update based on provider_event_id
    */
@@ -126,7 +126,7 @@ export const eventController = (db: Database) => ({
       [...calendarIds, startDate, endDate],
     )
 
-    return rows.map((row) => dbCalendarEventSchema.parse(row))
+    return rows.map((row) => storedCalendarEventSchema.parse(row))
   },
 
   /**
@@ -143,6 +143,6 @@ export const eventController = (db: Database) => ({
       calendarIds,
     )
 
-    return rows.map((row) => dbCalendarEventSchema.parse(row))
+    return rows.map((row) => storedCalendarEventSchema.parse(row))
   },
 })

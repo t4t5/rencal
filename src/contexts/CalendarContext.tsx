@@ -10,7 +10,7 @@ import {
 
 import { logger } from "@/lib/logger"
 
-import { getDb } from "@/db/connection"
+import { getDb } from "@/storage/connection"
 import { Calendar as CalendarType } from "@/types/calendar"
 
 interface CalendarContextType {

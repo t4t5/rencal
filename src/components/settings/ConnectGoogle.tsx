@@ -6,8 +6,8 @@ import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { getDb } from "@/db/connection"
-import { AccountInsertData } from "@/db/controllers/account"
+import { getDb } from "@/storage/connection"
+import { AccountInsertData } from "@/storage/models/account"
 
 export function ConnectGoogle() {
   const [isConnecting, setIsConnecting] = useState(false)

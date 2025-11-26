@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { Calendar } from "@/types/calendar"
 
-const dbCalendarSchema = z
+const storedCalendarSchema = z
   .object({
     id: z.string(),
     account_id: z.string(),
@@ -23,7 +23,7 @@ const dbCalendarSchema = z
     }),
   )
 
-export const calendarController = (db: Database) => ({
+export const calendarStorage = (db: Database) => ({
   async add(calendar: Calendar) {
     const {
       id,
@@ -58,12 +58,12 @@ export const calendarController = (db: Database) => ({
 
   async list(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars")
-    return rows.map((row) => dbCalendarSchema.parse(row))
+    return rows.map((row) => storedCalendarSchema.parse(row))
   },
 
   async listActive(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars WHERE selected = 1")
-    return rows.map((row) => dbCalendarSchema.parse(row))
+    return rows.map((row) => storedCalendarSchema.parse(row))
   },
 
   async findByProviderCalendarId(providerCalendarId: string): Promise<Calendar | null> {
@@ -71,7 +71,7 @@ export const calendarController = (db: Database) => ({
       "SELECT * FROM calendars WHERE provider_calendar_id = $1",
       [providerCalendarId],
     )
-    return row ? dbCalendarSchema.parse(row) : null
+    return row ? storedCalendarSchema.parse(row) : null
   },
 
   async updateSyncToken({

@@ -5,7 +5,7 @@ import { Account, accountSchema } from "@/types/account"
 
 export type AccountInsertData = Omit<Account, "id" | "created_at">
 
-export const accountController = (db: Database) => ({
+export const accountStorage = (db: Database) => ({
   async getAll(): Promise<Account[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM accounts")
     return rows.map((row) => accountSchema.parse(row))

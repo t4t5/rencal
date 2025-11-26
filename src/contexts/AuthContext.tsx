@@ -3,7 +3,7 @@ import { ReactNode, createContext, useCallback, useContext, useEffect, useState 
 import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
-import { getDb } from "@/db/connection"
+import { getDb } from "@/storage/connection"
 import { Account } from "@/types/account"
 
 interface AuthContextType {

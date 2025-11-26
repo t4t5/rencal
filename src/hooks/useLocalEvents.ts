@@ -4,7 +4,7 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { getDb } from "@/db/connection"
+import { getDb } from "@/storage/connection"
 import { CalendarEvent } from "@/types/calendar-event"
 
 // How many months before/after activeDate to load
