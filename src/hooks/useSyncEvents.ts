@@ -2,7 +2,7 @@ import { and, eq, inArray } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useState } from "react"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
@@ -43,7 +43,7 @@ function googleEventToCalendarEvent(
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { accounts, withAuthRetry } = useAuth()
-  const { calendars } = useCalendar()
+  const { calendars } = useCalendarState()
 
   const [isSyncing, setIsSyncing] = useState(false)
 

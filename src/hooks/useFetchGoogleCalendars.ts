@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
@@ -10,7 +10,7 @@ import { Account } from "@/db/types"
 
 export const useFetchGoogleCalendars = () => {
   const [isLoading, setIsLoading] = useState(false)
-  const { reloadCalendars } = useCalendar()
+  const { reloadCalendars } = useCalendarState()
 
   async function fetchCalendars(account: Account) {
     setIsLoading(true)

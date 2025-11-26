@@ -1,12 +1,12 @@
 import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { CalendarEvent } from "@/db/types"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
-  const { calendars } = useCalendar()
+  const { calendars } = useCalendarState()
   const calendar = calendars.find((c) => c.id === event.calendarId)
   const calendarColor = calendar?.color
 

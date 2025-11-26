@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm"
 import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { cn } from "@/lib/utils"
 
@@ -10,7 +10,7 @@ import { Calendar } from "@/db/types"
 
 export function CalendarItem({ calendar }: { calendar: Calendar }) {
   const { name, color, isVisible } = calendar
-  const { reloadCalendars } = useCalendar()
+  const { reloadCalendars } = useCalendarState()
 
   const onToggleVisibility = async () => {
     await db

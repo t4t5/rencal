@@ -2,7 +2,7 @@ import { addMonths, endOfMonth, format, startOfMonth, subMonths } from "date-fns
 import { and, gte, inArray, lte } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 
@@ -20,7 +20,7 @@ interface DateRange {
 }
 
 export const useLocalEvents = () => {
-  const { calendars, activeDate } = useCalendar()
+  const { calendars, activeDate } = useCalendarState()
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [isLoading, setLoading] = useState(true)

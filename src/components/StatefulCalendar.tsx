@@ -2,10 +2,10 @@ import { useCallback } from "react"
 
 import { Calendar } from "@/components/ui/calendar"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 export function StatefulCalendar() {
-  const { activeDate, navigateToDate } = useCalendar()
+  const { activeDate, navigateToDate } = useCalendarState()
 
   const handleDateSelect = useCallback(
     (date: Date) => {

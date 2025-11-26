@@ -1,7 +1,7 @@
 import { FaGoogle as GoogleIcon, FaApple as AppleIcon } from "react-icons/fa"
 import { IconType } from "react-icons/lib"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { Account, EmailProvider } from "@/db/types"
 
@@ -13,7 +13,7 @@ const providerToIcon: Record<EmailProvider, IconType> = {
 }
 
 export function AccountSection({ account }: { account: Account }) {
-  const { calendars } = useCalendar()
+  const { calendars } = useCalendarState()
   const accountCalendars = calendars.filter((c) => c.accountId === account.id)
 
   const ProviderIcon = providerToIcon[account.provider]

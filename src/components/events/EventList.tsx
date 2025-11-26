@@ -3,7 +3,7 @@ import { useEffect, useEffectEvent } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
-import { useCalendar } from "@/contexts/CalendarContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useLocalEvents } from "@/hooks/useLocalEvents"
 
@@ -18,7 +18,7 @@ export function EventList() {
     registerLoadEventsForDate,
     isNavigating,
     setIsNavigating,
-  } = useCalendar()
+  } = useCalendarState()
 
   const { events, isLoading, loadEventsForDate } = useLocalEvents()
 

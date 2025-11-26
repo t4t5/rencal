@@ -13,7 +13,7 @@ import { logger } from "@/lib/logger"
 import { schema, db } from "@/db/database"
 import type { Calendar } from "@/db/types"
 
-interface CalendarContextType {
+interface CalendarStateContextType {
   calendars: Calendar[]
   reloadCalendars: () => Promise<void>
   activeDate: Date
@@ -25,13 +25,13 @@ interface CalendarContextType {
   setIsNavigating: (value: boolean) => void
 }
 
-const CalendarContext = createContext({} as CalendarContextType)
+const CalendarStateContext = createContext({} as CalendarStateContextType)
 
-export function useCalendar() {
-  return useContext(CalendarContext)
+export function useCalendarState() {
+  return useContext(CalendarStateContext)
 }
 
-export function CalendarProvider({ children }: { children: ReactNode }) {
+export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<Calendar[]>([])
 
@@ -101,5 +101,5 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
     setIsNavigating,
   }
 
-  return <CalendarContext.Provider value={value}>{children}</CalendarContext.Provider>
+  return <CalendarStateContext.Provider value={value}>{children}</CalendarStateContext.Provider>
 }
