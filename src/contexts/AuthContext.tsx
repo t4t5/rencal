@@ -8,11 +8,8 @@ import { Account } from "@/types/account"
 
 interface AuthContextType {
   accounts: Account[]
-  loadAccounts: () => Promise<void>
-  saveAccount: (account: Account) => Promise<void>
-  refreshAccount: (account: Account) => Promise<Account | null>
-  deleteAccount: (accountId: string) => Promise<void>
-  hasAccounts: boolean
+  reloadAccounts: () => Promise<void>
+  refreshAccountAuth: (account: Account) => Promise<Account | null>
   withAuthRetry: <T>(account: Account, operation: (token: string) => Promise<T>) => Promise<T>
 }
 
@@ -43,31 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     void loadAccounts()
   }, [])
 
-  async function saveAccount(account: Account) {
-    logger.info("Saving account to database:", account.email)
-
-    const db = await getDb()
-    await db.account.insert(account)
-
-    logger.info("Account saved to database.")
-
-    // Reload accounts to get fresh state
-    await loadAccounts()
-  }
-
-  async function deleteAccount(accountId: string) {
-    logger.info("Deleting account:", accountId)
-
-    const db = await getDb()
-    await db.account.delete(accountId)
-
-    logger.info("Account deleted.")
-
-    // Reload accounts to get fresh state
-    await loadAccounts()
-  }
-
-  async function refreshAccount(account: Account): Promise<Account | null> {
+  async function refreshAccountAuth(account: Account): Promise<Account | null> {
     if (!account.refresh_token) {
       logger.error("No refresh token available for account:", account.id)
       return null
@@ -76,22 +49,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logger.info("Refreshing access token for account:", account.email)
 
     try {
-      const tokenData = await refreshGoogleToken(account.refresh_token)
+      const { accessToken, refreshToken, expiresAt } = await refreshGoogleToken(
+        account.refresh_token,
+      )
+      const db = await getDb()
+
       const refreshedAccount: Account = {
         ...account,
-        access_token: tokenData.access_token,
-        refresh_token: tokenData.refresh_token ?? account.refresh_token,
-        expires_at: tokenData.expires_at,
+        access_token: accessToken,
+        refresh_token: refreshToken ?? account.refresh_token,
+        expires_at: expiresAt.toISOString(),
       }
 
-      await saveAccount(refreshedAccount)
+      await db.account.update(refreshedAccount)
 
       logger.info("Access token refreshed successfully")
       return refreshedAccount
     } catch (error) {
       logger.error("Failed to refresh access token:", error)
       // If refresh fails, delete the account so user can re-authenticate
-      await deleteAccount(account.id)
+      // await deleteAccount(account.id)
       return null
     }
   }
@@ -111,7 +88,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (error instanceof Error && error.message.includes("401")) {
           logger.warn("Token expired, attempting to refresh...")
 
-          const refreshedAccount = await refreshAccount(account)
+          const refreshedAccount = await refreshAccountAuth(account)
 
           if (refreshedAccount?.access_token) {
             logger.info("Token refreshed, retrying operation...")
@@ -131,11 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     accounts,
-    loadAccounts,
-    saveAccount,
-    refreshAccount,
-    deleteAccount,
-    hasAccounts: accounts.length > 0,
+    reloadAccounts: loadAccounts,
+    refreshAccountAuth,
     withAuthRetry,
   }
 
