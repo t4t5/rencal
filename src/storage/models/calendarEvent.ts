@@ -1,4 +1,5 @@
 import Database from "@tauri-apps/plugin-sql"
+import { v4 as uuidv4 } from "uuid"
 import { z } from "zod"
 
 import { CalendarEvent } from "@/types/calendar-event"
@@ -18,16 +19,17 @@ const storedCalendarEventSchema = z
     // Transform DB row to CalendarEvent type
     (row): CalendarEvent => ({
       ...row,
-      summary: row.summary ?? "(No title)",
       all_day: row.all_day === 1,
     }),
   )
+
+export type CalendarEventInsertData = Omit<CalendarEvent, "id" | "updated_at">
 
 export const calendarEventStorage = (db: Database) => ({
   /**
    * Upsert an event - insert or update based on provider_event_id
    */
-  async upsert(event: CalendarEvent) {
+  async upsert(event: CalendarEventInsertData) {
     // Check if event with this provider_event_id already exists
     if (event.provider_event_id) {
       const existing = await db.select<unknown[]>(
@@ -50,7 +52,7 @@ export const calendarEventStorage = (db: Database) => ({
             event.start,
             event.end,
             event.all_day ? 1 : 0,
-            event.updated_at,
+            new Date(),
             event.provider_event_id,
             event.calendar_id,
           ],
@@ -65,30 +67,24 @@ export const calendarEventStorage = (db: Database) => ({
         (id, provider_event_id, calendar_id, summary, start, end, all_day, updated_at)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
       [
-        event.id,
+        uuidv4(),
         event.provider_event_id,
         event.calendar_id,
         event.summary,
         event.start,
         event.end,
         event.all_day ? 1 : 0,
-        event.updated_at,
+        new Date(),
       ],
     )
   },
 
-  /**
-   * Upsert multiple events in a batch
-   */
   async upsertMany(events: CalendarEvent[]) {
     for (const event of events) {
       await this.upsert(event)
     }
   },
 
-  /**
-   * Delete events by their provider event IDs
-   */
   async deleteByProviderEventIds(providerEventIds: string[], calendarId: string) {
     if (providerEventIds.length === 0) return
 
@@ -99,16 +95,10 @@ export const calendarEventStorage = (db: Database) => ({
     )
   },
 
-  /**
-   * Delete all events for a calendar (used before full sync)
-   */
   async deleteByCalendarId(calendarId: string) {
     await db.execute("DELETE FROM events WHERE calendar_id = $1", [calendarId])
   },
 
-  /**
-   * Get events within a date range for selected calendars
-   */
   async getByDateRange(
     calendarIds: string[],
     startDate: string,
@@ -129,9 +119,6 @@ export const calendarEventStorage = (db: Database) => ({
     return rows.map((row) => storedCalendarEventSchema.parse(row))
   },
 
-  /**
-   * Get all events for selected calendars (for initial load)
-   */
   async getByCalendarIds(calendarIds: string[]): Promise<CalendarEvent[]> {
     if (calendarIds.length === 0) return []
 

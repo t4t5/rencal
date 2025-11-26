@@ -4,7 +4,7 @@ export const calendarEventSchema = z.object({
   id: z.string(),
   provider_event_id: z.string().nullable(),
   calendar_id: z.string(),
-  summary: z.string(),
+  summary: z.string().nullable(),
   start: z.string(),
   end: z.string(),
   all_day: z.boolean(),

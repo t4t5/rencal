@@ -6,29 +6,32 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
+import { CalendarEventInsertData } from "@/storage/models/calendarEvent"
 import { Account } from "@/types/account"
 import { Calendar } from "@/types/calendar"
 import { CalendarEvent } from "@/types/calendar-event"
 
-/** Convert Google Calendar event to our Event type */
-function googleEventToEvent(googleEvent: GoogleEvent, calendarId: string): CalendarEvent | null {
+function googleEventToCalendarEvent(
+  googleEvent: GoogleEvent,
+  calendarId: string,
+): CalendarEventInsertData | null {
+  const { start: _start, end: _end } = googleEvent
+
   // Handle all-day events (date) vs timed events (dateTime)
-  const start = googleEvent.start.date ?? googleEvent.start.dateTime
-  const end = googleEvent.end.date ?? googleEvent.end.dateTime
+  const start = _start.date ?? _start.dateTime
+  const end = _end.date ?? _end.dateTime
 
   if (!start || !end) {
     return null
   }
 
   return {
-    id: crypto.randomUUID(),
     provider_event_id: googleEvent.id,
     calendar_id: calendarId,
-    summary: googleEvent.summary ?? "(No title)",
+    summary: googleEvent.summary ?? null,
     start,
     end,
     all_day: !!googleEvent.start.date,
-    updated_at: googleEvent.updated ?? null,
   }
 }
 
@@ -49,7 +52,6 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
   const selectedCalendars = calendars.filter((c) => c.selected && c.provider_calendar_id)
 
-  // Get the account for a calendar
   const getAccountForCalendar = useCallback(
     (calendar: Calendar): Account | undefined => {
       return accounts.find((a) => a.id === calendar.account_id)
@@ -73,7 +75,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     // Convert Google events to our Event type
     const events = fullResult.events
-      .map((ge) => googleEventToEvent(ge, calendar.id))
+      .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
       .filter((e): e is CalendarEvent => e !== null)
 
     if (events.length > 0) {
@@ -118,7 +120,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
       // Convert Google events to our Event type and upsert
       const events = result.events
-        .map((ge) => googleEventToEvent(ge, calendar.id))
+        .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
         .filter((e): e is CalendarEvent => e !== null)
 
       if (events.length > 0) {

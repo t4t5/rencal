@@ -15,7 +15,7 @@ import { Calendar as CalendarType } from "@/types/calendar"
 
 interface CalendarContextType {
   calendars: CalendarType[]
-  saveCalendars: (calendars: CalendarType[]) => Promise<void>
+  reloadCalendars: () => Promise<void>
   activeDate: Date
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
@@ -51,18 +51,6 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void loadCalendarsFromDb()
   }, [])
-
-  const saveCalendars = async (calendars: CalendarType[]) => {
-    logger.info("Saving calendars to DB...")
-
-    for (const calendar of calendars) {
-      await store.calendar.add(calendar)
-    }
-
-    logger.info(`Saved ${calendars.length} calendars to DB!`)
-
-    setCalendars(calendars)
-  }
 
   const registerScrollToDate = useCallback((fn: (date: Date) => void) => {
     scrollToDateRef.current = fn
@@ -105,7 +93,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
 
   const value = {
     calendars,
-    saveCalendars,
+    reloadCalendars: loadCalendarsFromDb,
     activeDate,
     setActiveDate,
     navigateToDate,

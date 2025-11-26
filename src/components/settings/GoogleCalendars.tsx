@@ -4,25 +4,23 @@ import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { Calendar } from "@/types/calendar"
+import { useStorage } from "@/contexts/StorageContext"
+import { CalendarInsertData } from "@/storage/models/calendar"
 
 export function GoogleCalendars() {
   const { accounts, withAuthRetry } = useAuth()
-
-  const { calendars, saveCalendars } = useCalendar()
+  const { store } = useStorage()
+  const { calendars, reloadCalendars } = useCalendar()
 
   const fetchCalendars = useEffectEvent(async () => {
     if (accounts.length === 0) return
 
-    // Fetch calendars for all accounts
     for (const account of accounts) {
       if (!account.access_token) continue
 
       const googleCalendars = await withAuthRetry(account, (token) => fetchGoogleCalendars(token))
 
-      // Convert Google Calendar response to our Calendar type
-      const accountCalendars: Calendar[] = googleCalendars.map((gc) => ({
-        id: crypto.randomUUID(),
+      const calendars: CalendarInsertData[] = googleCalendars.map((gc) => ({
         account_id: account.id,
         provider_calendar_id: gc.id,
         name: gc.summary,
@@ -32,7 +30,11 @@ export function GoogleCalendars() {
         last_synced_at: null,
       }))
 
-      saveCalendars(accountCalendars)
+      for (const cal of calendars) {
+        await store.calendar.add(cal)
+      }
+
+      reloadCalendars()
     }
   })
 

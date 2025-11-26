@@ -1,5 +1,5 @@
 import Database from "@tauri-apps/plugin-sql"
-import { z } from "zod"
+import { uuidv4, z } from "zod"
 
 import { Calendar } from "@/types/calendar"
 
@@ -19,43 +19,14 @@ const storedCalendarSchema = z
     (row): Calendar => ({
       ...row,
       selected: row.selected === 1,
+      // TODO: Use Date type:
       last_synced_at: row.last_synced_at ? String(row.last_synced_at) : null,
     }),
   )
 
+export type CalendarInsertData = Omit<Calendar, "id">
+
 export const calendarStorage = (db: Database) => ({
-  async add(calendar: Calendar) {
-    const {
-      id,
-      account_id,
-      provider_calendar_id,
-      name,
-      color,
-      selected,
-      sync_token,
-      last_synced_at,
-    } = calendar
-
-    await db.execute(
-      `INSERT INTO calendars
-        (id, account_id, provider_calendar_id, name, color, selected, sync_token, last_synced_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT(account_id, provider_calendar_id) DO UPDATE SET
-          name = excluded.name,
-          color = excluded.color`,
-      [
-        id,
-        account_id,
-        provider_calendar_id,
-        name,
-        color || "",
-        selected ? 1 : 0,
-        sync_token,
-        last_synced_at ? Number(last_synced_at) : null,
-      ],
-    )
-  },
-
   async list(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars")
     return rows.map((row) => storedCalendarSchema.parse(row))
@@ -82,8 +53,43 @@ export const calendarStorage = (db: Database) => ({
     syncToken: string
   }) {
     await db.execute(
-      `UPDATE calendars SET sync_token = $1, last_synced_at = $2 WHERE provider_calendar_id = $3`,
+      `UPDATE calendars
+      SET sync_token = $1, last_synced_at = $2
+      WHERE provider_calendar_id = $3`,
       [syncToken, Date.now(), providerCalendarId],
+    )
+  },
+
+  async add(calendar: CalendarInsertData) {
+    const { account_id, provider_calendar_id, name, color, selected, sync_token, last_synced_at } =
+      calendar
+
+    await db.execute(
+      `INSERT INTO calendars(
+          id,
+          account_id,
+          provider_calendar_id,
+          name,
+          color,
+          selected,
+          sync_token,
+          last_synced_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7, $8
+        ) ON CONFLICT(account_id, provider_calendar_id) 
+          DO UPDATE SET
+            name = excluded.name,
+            color = excluded.color`,
+      [
+        uuidv4(),
+        account_id,
+        provider_calendar_id,
+        name,
+        color || "",
+        selected ? 1 : 0,
+        sync_token,
+        last_synced_at ? Number(last_synced_at) : null,
+      ],
     )
   },
 })
