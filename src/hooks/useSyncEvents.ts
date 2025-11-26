@@ -5,7 +5,7 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { getDb } from "@/storage/connection"
+import { getDb } from "@/storage/db"
 import { Account } from "@/types/account"
 import { Calendar } from "@/types/calendar"
 import { CalendarEvent } from "@/types/calendar-event"

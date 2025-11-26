@@ -6,7 +6,7 @@ import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { getDb } from "@/storage/connection"
+import { getDb } from "@/storage/db"
 import { AccountInsertData } from "@/storage/models/account"
 
 export function ConnectGoogle() {
