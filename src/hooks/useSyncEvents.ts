@@ -6,7 +6,7 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { Account, Calendar, CalendarEventInsert, calendars, db, events } from "@/db/database"
+import { Account, Calendar, CalendarEventInsert, db, schema } from "@/db/database"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
@@ -41,10 +41,10 @@ function googleEventToCalendarEvent(
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { accounts, withAuthRetry } = useAuth()
-  const { calendars: calendarList } = useCalendar()
+  const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
 
-  const selectedCalendars = calendarList.filter((c) => c.selected && c.provider_calendar_id)
+  const selectedCalendars = calendars.filter((c) => c.selected && c.provider_calendar_id)
 
   const getAccountForCalendar = useCallback(
     (calendar: Calendar): Account | undefined => {
@@ -56,18 +56,18 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const upsertEvent = async (event: CalendarEventInsert) => {
     if (event.provider_event_id) {
       const [existing] = await db
-        .select({ id: events.id })
-        .from(events)
+        .select({ id: schema.events.id })
+        .from(schema.events)
         .where(
           and(
-            eq(events.provider_event_id, event.provider_event_id),
-            eq(events.calendar_id, event.calendar_id),
+            eq(schema.events.provider_event_id, event.provider_event_id),
+            eq(schema.events.calendar_id, event.calendar_id),
           ),
         )
 
       if (existing) {
         await db
-          .update(events)
+          .update(schema.events)
           .set({
             summary: event.summary,
             start: event.start,
@@ -77,15 +77,15 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
           })
           .where(
             and(
-              eq(events.provider_event_id, event.provider_event_id),
-              eq(events.calendar_id, event.calendar_id),
+              eq(schema.events.provider_event_id, event.provider_event_id),
+              eq(schema.events.calendar_id, event.calendar_id),
             ),
           )
         return
       }
     }
 
-    await db.insert(events).values({
+    await db.insert(schema.events).values({
       ...event,
       updated_at: new Date(),
     })
@@ -101,20 +101,20 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     if (providerEventIds.length === 0) return
 
     await db
-      .delete(events)
+      .delete(schema.events)
       .where(
         and(
-          inArray(events.provider_event_id, providerEventIds),
-          eq(events.calendar_id, calendarId),
+          inArray(schema.events.provider_event_id, providerEventIds),
+          eq(schema.events.calendar_id, calendarId),
         ),
       )
   }
 
   const updateSyncToken = async (providerCalendarId: string, syncToken: string) => {
     await db
-      .update(calendars)
+      .update(schema.calendars)
       .set({ sync_token: syncToken, last_synced_at: new Date() })
-      .where(eq(calendars.provider_calendar_id, providerCalendarId))
+      .where(eq(schema.calendars.provider_calendar_id, providerCalendarId))
   }
 
   const doFullSync = async (calendar: Calendar, account: Account) => {

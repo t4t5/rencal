@@ -4,11 +4,11 @@ import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
-import { calendars, db } from "@/db/database"
+import { schema, db } from "@/db/database"
 
 export function GoogleCalendars() {
   const { accounts, withAuthRetry } = useAuth()
-  const { calendars: calendarList, reloadCalendars } = useCalendar()
+  const { calendars, reloadCalendars } = useCalendar()
 
   const fetchCalendars = useEffectEvent(async () => {
     if (accounts.length === 0) return
@@ -20,7 +20,7 @@ export function GoogleCalendars() {
 
       for (const item of items) {
         await db
-          .insert(calendars)
+          .insert(schema.calendars)
           .values({
             account_id: account.id,
             provider_calendar_id: item.id,
@@ -29,7 +29,7 @@ export function GoogleCalendars() {
             selected: true,
           })
           .onConflictDoUpdate({
-            target: [calendars.account_id, calendars.provider_calendar_id],
+            target: [schema.calendars.account_id, schema.calendars.provider_calendar_id],
             set: {
               name: item.summary,
               color: item.backgroundColor,
@@ -47,9 +47,9 @@ export function GoogleCalendars() {
 
   return (
     <div>
-      <h3>Calendars ({calendarList.length})</h3>
+      <h3>Calendars ({calendars.length})</h3>
       <ul>
-        {calendarList.map((calendar) => (
+        {calendars.map((calendar) => (
           <li key={calendar.id}>
             {calendar.name} {calendar.color && `(${calendar.color})`} {calendar.selected ? "y" : ""}
           </li>

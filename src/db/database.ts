@@ -4,13 +4,10 @@ import { drizzle } from "drizzle-orm/sqlite-proxy"
 
 import * as schema from "./schema"
 
-// Re-export schema tables for use in queries
-export { accounts, calendars, events } from "./schema"
+export { schema }
 
 export type Account = InferSelectModel<typeof schema.accounts>
-
 export type Calendar = InferSelectModel<typeof schema.calendars>
-
 export type CalendarEvent = InferSelectModel<typeof schema.events>
 export type CalendarEventInsert = InferInsertModel<typeof schema.events>
 

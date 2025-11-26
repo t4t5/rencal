@@ -4,7 +4,7 @@ import { ReactNode, createContext, useCallback, useContext, useEffect, useState 
 import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
-import { Account, accounts, db } from "@/db/database"
+import { Account, schema, db } from "@/db/database"
 
 interface AuthContextType {
   accounts: Account[]
@@ -20,12 +20,12 @@ export function useAuth() {
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [accountList, setAccountList] = useState<Account[]>([])
+  const [accounts, setAccounts] = useState<Account[]>([])
 
   async function loadAccounts() {
-    const result = await db.select().from(accounts)
+    const result = await db.select().from(schema.accounts)
     logger.debug("Accounts loaded from store:", result.length)
-    setAccountList(result)
+    setAccounts(result)
   }
 
   useEffect(() => {
@@ -52,7 +52,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         expires_at: expiresAt,
       }
 
-      await db.update(accounts).set(refreshedAccount).where(eq(accounts.id, account.id))
+      await db
+        .update(schema.accounts)
+        .set(refreshedAccount)
+        .where(eq(schema.accounts.id, account.id))
 
       logger.info("Access token refreshed successfully")
       return refreshedAccount
@@ -96,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 
   const value = {
-    accounts: accountList,
+    accounts,
     reloadAccounts: loadAccounts,
     refreshAccountAuth,
     withAuthRetry,

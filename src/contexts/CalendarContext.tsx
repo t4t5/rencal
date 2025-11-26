@@ -10,7 +10,7 @@ import {
 
 import { logger } from "@/lib/logger"
 
-import { Calendar, calendars, db } from "@/db/database"
+import { Calendar, schema, db } from "@/db/database"
 
 interface CalendarContextType {
   calendars: Calendar[]
@@ -32,7 +32,7 @@ export function useCalendar() {
 
 export function CalendarProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
-  const [calendarList, setCalendarList] = useState<Calendar[]>([])
+  const [calendars, setCalendars] = useState<Calendar[]>([])
 
   const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -40,9 +40,9 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
-    const result = await db.select().from(calendars)
+    const result = await db.select().from(schema.calendars)
     logger.debug("Calendars loaded from store:", result.length)
-    setCalendarList(result)
+    setCalendars(result)
   }
 
   useEffect(() => {
@@ -89,7 +89,7 @@ export function CalendarProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = {
-    calendars: calendarList,
+    calendars,
     reloadCalendars: loadCalendarsFromStore,
     activeDate,
     setActiveDate,

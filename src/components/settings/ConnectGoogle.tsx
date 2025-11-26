@@ -7,18 +7,18 @@ import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { accounts, db } from "@/db/database"
+import { schema, db } from "@/db/database"
 
 export function ConnectGoogle() {
   const [isConnecting, setIsConnecting] = useState(false)
-  const { accounts: accountList, reloadAccounts } = useAuth()
+  const { accounts, reloadAccounts } = useAuth()
 
   // Get Google accounts only
-  const googleAccounts = accountList.filter((a) => a.provider === "Google")
+  const googleAccounts = accounts.filter((a) => a.provider === "Google")
 
   async function disconnectGoogle(accountId: string) {
     try {
-      await db.delete(accounts).where(eq(accounts.id, accountId))
+      await db.delete(schema.accounts).where(eq(schema.accounts.id, accountId))
       await reloadAccounts()
     } catch (error) {
       logger.error("Failed to disconnect Google:", error)
@@ -31,7 +31,7 @@ export function ConnectGoogle() {
     try {
       const { email, accessToken, refreshToken, expiresAt } = await googleOAuth()
 
-      await db.insert(accounts).values({
+      await db.insert(schema.accounts).values({
         provider: "Google",
         email,
         access_token: accessToken,
@@ -61,7 +61,7 @@ export function ConnectGoogle() {
       <Button onClick={connectGoogle} disabled={isConnecting}>
         {isConnecting
           ? "Connecting..."
-          : accountList.length
+          : accounts.length
             ? "Add another account"
             : "Connect Google"}
       </Button>

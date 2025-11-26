@@ -5,7 +5,7 @@ import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
-import { CalendarEvent, db, events } from "@/db/database"
+import { CalendarEvent, db, schema } from "@/db/database"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2
@@ -20,7 +20,7 @@ interface DateRange {
 export const useLocalEvents = () => {
   const { calendars, activeDate } = useCalendar()
 
-  const [eventList, setEventList] = useState<CalendarEvent[]>([])
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [isLoading, setLoading] = useState(true)
 
   const dateRangeRef = useRef<DateRange | null>(null)
@@ -72,7 +72,7 @@ export const useLocalEvents = () => {
   const loadEventsForRange = useCallback(
     async (range: DateRange, replace = false) => {
       if (selectedCalendarIds.length === 0) {
-        setEventList([])
+        setCalendarEvents([])
         setLoading(false)
         return
       }
@@ -81,15 +81,15 @@ export const useLocalEvents = () => {
         setLoading(true)
         const localEvents = await db
           .select()
-          .from(events)
+          .from(schema.events)
           .where(
             and(
-              inArray(events.calendar_id, selectedCalendarIds),
-              gte(events.start, range.start),
-              lte(events.start, range.end),
+              inArray(schema.events.calendar_id, selectedCalendarIds),
+              gte(schema.events.start, range.start),
+              lte(schema.events.start, range.end),
             ),
           )
-          .orderBy(events.start)
+          .orderBy(schema.events.start)
 
         logger.debug(
           `📅 Events loaded: ${format(range.start, "yyyy-MM-dd")} to ${format(range.end, "yyyy-MM-dd")}`,
@@ -97,16 +97,16 @@ export const useLocalEvents = () => {
 
         if (replace) {
           // Full replace (used for initial load or calendar selection change)
-          setEventList(localEvents)
+          setCalendarEvents(localEvents)
           dateRangeRef.current = range
         } else {
           // Append-only merge
-          setEventList((prev) => mergeEvents(prev, localEvents))
+          setCalendarEvents((prev) => mergeEvents(prev, localEvents))
           dateRangeRef.current = expandLoadedRange(dateRangeRef.current, range)
         }
       } catch (error) {
         logger.error("📅 Failed to load events from local DB:", error)
-        setEventList([])
+        setCalendarEvents([])
       } finally {
         setLoading(false)
       }
@@ -176,7 +176,7 @@ export const useLocalEvents = () => {
   }, [activeDate, calculateRange, loadEventsForRange])
 
   return {
-    events: eventList,
+    events: calendarEvents,
     isLoading,
     refreshEvents,
     loadEventsForDate,
