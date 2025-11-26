@@ -3,10 +3,11 @@ import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
+import { useAuth } from "@/contexts/AuthContext"
+
 import { logger } from "@/lib/logger"
 import { googleOAuth } from "@/lib/providers/google/oauth"
 
-import { useAuth } from "@/contexts/AuthContext"
 import { schema, db } from "@/db/database"
 
 export function ConnectGoogle() {
@@ -34,10 +35,10 @@ export function ConnectGoogle() {
       await db.insert(schema.accounts).values({
         provider: "Google",
         email,
-        access_token: accessToken,
-        refresh_token: refreshToken,
-        expires_at: expiresAt,
-        created_at: new Date(),
+        accessToken,
+        refreshToken,
+        expiresAt,
+        createdAt: new Date(),
       })
       await reloadAccounts()
     } catch (error) {

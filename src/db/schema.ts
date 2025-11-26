@@ -7,10 +7,10 @@ export const accounts = sqliteTable("accounts", {
     .$defaultFn(() => uuidv4()),
   provider: text("provider").notNull().$type<"Google">(),
   email: text("email"),
-  access_token: text("access_token"),
-  refresh_token: text("refresh_token"),
-  expires_at: integer("expires_at", { mode: "timestamp" }),
-  created_at: integer("created_at", { mode: "timestamp" }).notNull(),
+  accessToken: text("access_token"),
+  refreshToken: text("refresh_token"),
+  expiresAt: integer("expires_at", { mode: "timestamp" }),
+  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
 })
 
 export const calendars = sqliteTable(
@@ -19,19 +19,19 @@ export const calendars = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    account_id: text("account_id")
+    accountId: text("account_id")
       .notNull()
       .references(() => accounts.id, { onDelete: "cascade" }),
-    provider_calendar_id: text("provider_calendar_id"),
+    providerCalendarId: text("provider_calendar_id"),
     name: text("name").notNull(),
     color: text("color"),
     selected: integer("selected", { mode: "boolean" }).notNull().default(true),
-    sync_token: text("sync_token"),
-    last_synced_at: integer("last_synced_at", { mode: "timestamp" }),
+    syncToken: text("sync_token"),
+    lastSyncedAt: integer("last_synced_at", { mode: "timestamp" }),
   },
   (table) => [
-    index("idx_calendars_account_id").on(table.account_id),
-    unique().on(table.account_id, table.provider_calendar_id),
+    index("idx_calendars_account_id").on(table.accountId),
+    unique().on(table.accountId, table.providerCalendarId),
   ],
 )
 
@@ -41,19 +41,19 @@ export const events = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => uuidv4()),
-    provider_event_id: text("provider_event_id"),
-    calendar_id: text("calendar_id")
+    providerEventId: text("provider_event_id"),
+    calendarId: text("calendar_id")
       .notNull()
       .references(() => calendars.id, { onDelete: "cascade" }),
     summary: text("summary"),
     start: integer("start", { mode: "timestamp" }).notNull(),
     end: integer("end", { mode: "timestamp" }).notNull(),
-    all_day: integer("all_day", { mode: "boolean" }).notNull(),
-    updated_at: integer("updated_at", { mode: "timestamp" }),
+    allDay: integer("all_day", { mode: "boolean" }).notNull(),
+    updatedAt: integer("updated_at", { mode: "timestamp" }),
   },
   (table) => [
-    index("idx_events_calendar_id").on(table.calendar_id),
-    index("idx_events_provider_event_id").on(table.provider_event_id),
+    index("idx_events_calendar_id").on(table.calendarId),
+    index("idx_events_provider_event_id").on(table.providerEventId),
     index("idx_events_start").on(table.start),
   ],
 )

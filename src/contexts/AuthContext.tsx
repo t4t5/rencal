@@ -34,7 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function refreshAccountAuth(account: Account): Promise<Account | null> {
-    if (!account.refresh_token) {
+    if (!account.refreshToken) {
       logger.error("No refresh token available for account:", account.id)
       return null
     }
@@ -43,14 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     try {
       const { accessToken, refreshToken, expiresAt } = await refreshGoogleToken(
-        account.refresh_token,
+        account.refreshToken,
       )
 
       const refreshedAccount: Account = {
         ...account,
-        access_token: accessToken,
-        refresh_token: refreshToken ?? account.refresh_token,
-        expires_at: expiresAt,
+        accessToken,
+        refreshToken: refreshToken ?? account.refreshToken,
+        expiresAt,
       }
 
       await db
@@ -68,7 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const withAuthRetry = useCallback(
     async <T,>(account: Account, operation: (token: string) => Promise<T>): Promise<T> => {
-      const token = account.access_token
+      const token = account.accessToken
 
       if (!token) {
         throw new Error("No access token available for account")
@@ -83,9 +83,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           const refreshedAccount = await refreshAccountAuth(account)
 
-          if (refreshedAccount?.access_token) {
+          if (refreshedAccount?.accessToken) {
             logger.info("Token refreshed, retrying operation...")
-            return await operation(refreshedAccount.access_token)
+            return await operation(refreshedAccount.accessToken)
           } else {
             logger.error("Failed to refresh token")
             throw error

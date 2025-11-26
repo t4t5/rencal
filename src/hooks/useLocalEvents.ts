@@ -86,7 +86,7 @@ export const useLocalEvents = () => {
           .from(schema.events)
           .where(
             and(
-              inArray(schema.events.calendar_id, selectedCalendarIds),
+              inArray(schema.events.calendarId, selectedCalendarIds),
               gte(schema.events.start, range.start),
               lte(schema.events.start, range.end),
             ),

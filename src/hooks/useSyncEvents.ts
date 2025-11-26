@@ -25,12 +25,12 @@ function googleEventToCalendarEvent(
   }
 
   return {
-    provider_event_id: googleEvent.id,
-    calendar_id: calendarId,
+    providerEventId: googleEvent.id,
+    calendarId: calendarId,
     summary: googleEvent.summary ?? null,
     start: new Date(start),
     end: new Date(end),
-    all_day: !!googleEvent.start.date,
+    allDay: !!googleEvent.start.date,
   }
 }
 
@@ -46,24 +46,24 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { calendars } = useCalendar()
   const isSyncingRef = useRef(false)
 
-  const selectedCalendars = calendars.filter((c) => c.selected && c.provider_calendar_id)
+  const selectedCalendars = calendars.filter((c) => c.selected && c.providerCalendarId)
 
   const getAccountForCalendar = useCallback(
     (calendar: Calendar): Account | undefined => {
-      return accounts.find((a) => a.id === calendar.account_id)
+      return accounts.find((a) => a.id === calendar.accountId)
     },
     [accounts],
   )
 
   const upsertEvent = async (event: CalendarEventInsert) => {
-    if (event.provider_event_id) {
+    if (event.providerEventId) {
       const [existing] = await db
         .select({ id: schema.events.id })
         .from(schema.events)
         .where(
           and(
-            eq(schema.events.provider_event_id, event.provider_event_id),
-            eq(schema.events.calendar_id, event.calendar_id),
+            eq(schema.events.providerEventId, event.providerEventId),
+            eq(schema.events.calendarId, event.calendarId),
           ),
         )
 
@@ -74,13 +74,13 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
             summary: event.summary,
             start: event.start,
             end: event.end,
-            all_day: event.all_day,
-            updated_at: new Date(),
+            allDay: event.allDay,
+            updatedAt: new Date(),
           })
           .where(
             and(
-              eq(schema.events.provider_event_id, event.provider_event_id),
-              eq(schema.events.calendar_id, event.calendar_id),
+              eq(schema.events.providerEventId, event.providerEventId),
+              eq(schema.events.calendarId, event.calendarId),
             ),
           )
         return
@@ -89,7 +89,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     await db.insert(schema.events).values({
       ...event,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     })
   }
 
@@ -106,8 +106,8 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       .delete(schema.events)
       .where(
         and(
-          inArray(schema.events.provider_event_id, providerEventIds),
-          eq(schema.events.calendar_id, calendarId),
+          inArray(schema.events.providerEventId, providerEventIds),
+          eq(schema.events.calendarId, calendarId),
         ),
       )
   }
@@ -115,22 +115,22 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const updateSyncToken = async (providerCalendarId: string, syncToken: string) => {
     await db
       .update(schema.calendars)
-      .set({ sync_token: syncToken, last_synced_at: new Date() })
-      .where(eq(schema.calendars.provider_calendar_id, providerCalendarId))
+      .set({ syncToken: syncToken, lastSyncedAt: new Date() })
+      .where(eq(schema.calendars.providerCalendarId, providerCalendarId))
   }
 
   const doFullSync = async (calendar: Calendar, account: Account) => {
     logger.warn(`🔁 Sync token expired for ${calendar.name}, doing full sync...`)
 
-    const { provider_calendar_id } = calendar
+    const { providerCalendarId } = calendar
 
-    if (!provider_calendar_id) {
+    if (!providerCalendarId) {
       throw new Error("Calendar does not have a provider calendar ID")
     }
 
     // Retry with no sync token (full sync)
     const fullResult = await withAuthRetry(account, (token) =>
-      syncGoogleEvents(token, provider_calendar_id, null),
+      syncGoogleEvents(token, providerCalendarId, null),
     )
 
     // Convert Google events to our Event type
@@ -143,24 +143,24 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     }
 
     if (fullResult.syncToken) {
-      await updateSyncToken(provider_calendar_id, fullResult.syncToken)
+      await updateSyncToken(providerCalendarId, fullResult.syncToken)
     }
   }
 
   const syncCalendar = useCallback(
     async (calendar: Calendar, account: Account) => {
       logger.debug(`🔁 Syncing calendar "${calendar.name}"...`, {
-        hasToken: !!calendar.sync_token,
+        hasToken: !!calendar.syncToken,
       })
 
-      const { provider_calendar_id, sync_token } = calendar
+      const { providerCalendarId, syncToken } = calendar
 
-      if (!provider_calendar_id) {
+      if (!providerCalendarId) {
         throw new Error("Calendar does not have a provider calendar ID")
       }
 
       const result = await withAuthRetry(account, (token) =>
-        syncGoogleEvents(token, provider_calendar_id, sync_token),
+        syncGoogleEvents(token, providerCalendarId, syncToken),
       )
 
       // Handle 410 Gone - need full re-sync
@@ -187,7 +187,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
       // Update sync token
       if (result.syncToken) {
-        await updateSyncToken(provider_calendar_id, result.syncToken)
+        await updateSyncToken(providerCalendarId, result.syncToken)
       }
 
       logger.debug(`🔁 Sync complete for "${calendar.name}"`)

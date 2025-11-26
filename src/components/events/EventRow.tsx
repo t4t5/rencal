@@ -7,13 +7,13 @@ import type { CalendarEvent } from "@/db/types"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendar()
-  const calendar = calendars.find((c) => c.id === event.calendar_id)
+  const calendar = calendars.find((c) => c.id === event.calendarId)
   const calendarColor = calendar?.color
 
   const from = event.start
   const to = event.end
 
-  if (event.all_day) {
+  if (event.allDay) {
     return (
       <div className="flex gap-2 pl-3 pr-2 items-center">
         <div

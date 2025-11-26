@@ -1,9 +1,10 @@
 import { useEffect, useEffectEvent } from "react"
 
-import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
-
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
+
+import { fetchGoogleCalendars } from "@/lib/providers/google/calendar"
+
 import { schema, db } from "@/db/database"
 
 export function GoogleCalendars() {
@@ -14,7 +15,7 @@ export function GoogleCalendars() {
     if (accounts.length === 0) return
 
     for (const account of accounts) {
-      if (!account.access_token) continue
+      if (!account.accessToken) continue
 
       const items = await withAuthRetry(account, (token) => fetchGoogleCalendars(token))
 
@@ -22,14 +23,14 @@ export function GoogleCalendars() {
         await db
           .insert(schema.calendars)
           .values({
-            account_id: account.id,
-            provider_calendar_id: item.id,
+            accountId: account.id,
+            providerCalendarId: item.id,
             name: item.summary,
             color: item.backgroundColor ?? null,
             selected: true,
           })
           .onConflictDoUpdate({
-            target: [schema.calendars.account_id, schema.calendars.provider_calendar_id],
+            target: [schema.calendars.accountId, schema.calendars.providerCalendarId],
             set: {
               name: item.summary,
               color: item.backgroundColor,
