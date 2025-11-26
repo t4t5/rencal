@@ -1,7 +1,9 @@
+import { eq } from "drizzle-orm"
 import { FaGoogle as GoogleIcon, FaApple as AppleIcon } from "react-icons/fa"
 import { IconType } from "react-icons/lib"
 import {
   PiEyeClosed as EyeClosedIcon,
+  PiEye as EyeIcon,
   /*PiRss as RssIcon,*/ PiPlus as PlusIcon,
 } from "react-icons/pi"
 
@@ -12,6 +14,7 @@ import { useCalendar } from "@/contexts/CalendarContext"
 
 import { cn } from "@/lib/utils"
 
+import { db, schema } from "@/db/database"
 import { Account, Calendar, EmailProvider } from "@/db/types"
 
 const providerToIcon: Record<EmailProvider, IconType> = {
@@ -21,6 +24,16 @@ const providerToIcon: Record<EmailProvider, IconType> = {
 
 function CalendarItem({ calendar }: { calendar: Calendar }) {
   const { name, color, selected } = calendar
+  const { reloadCalendars } = useCalendar()
+
+  const onToggleVisibility = async () => {
+    await db
+      .update(schema.calendars)
+      .set({ selected: !selected })
+      .where(eq(schema.calendars.id, calendar.id))
+
+    await reloadCalendars()
+  }
 
   return (
     <div
@@ -40,7 +53,14 @@ function CalendarItem({ calendar }: { calendar: Calendar }) {
         )*/}
         <span className="text-sm">{name}</span>
       </div>
-      {!selected && <EyeClosedIcon className="size-5 text-muted-foreground" />}
+
+      <div className="cursor-pointer" onClick={onToggleVisibility}>
+        {selected ? (
+          <EyeIcon className="size-4 opacity-0 group-hover:opacity-50" />
+        ) : (
+          <EyeClosedIcon className="size-4 text-muted-foreground" />
+        )}
+      </div>
     </div>
   )
 }
