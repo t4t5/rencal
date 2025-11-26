@@ -1,3 +1,4 @@
+import { sql } from "drizzle-orm"
 import { index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
 import { v4 as uuidv4 } from "uuid"
 
@@ -12,7 +13,9 @@ export const accounts = sqliteTable("accounts", {
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   expiresAt: integer("expires_at", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" })
+    .notNull()
+    .default(sql`(unixepoch())`),
 })
 
 export const calendars = sqliteTable(

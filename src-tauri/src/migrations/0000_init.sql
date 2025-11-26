@@ -5,7 +5,7 @@ CREATE TABLE `accounts` (
 	`access_token` text,
 	`refresh_token` text,
 	`expires_at` integer,
-	`created_at` integer NOT NULL
+	`created_at` integer DEFAULT (unixepoch()) NOT NULL
 );
 --> statement-breakpoint
 CREATE TABLE `calendars` (
