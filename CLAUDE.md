@@ -56,6 +56,10 @@ Events are synced from Google Calendar to a local SQLite database for offline ac
 
 ## Migrations
 
-If you want to update the DB schema, add a `sql` file to `src-tauri/src/migrations`.
-This will automatically update the auto-generated `src-tauri/src/migrations.rs` file when the app is built, and apply the migration on the next
-app run.
+We use Drizzle for our SQLite database schema.
+
+To create a migration, change the schema in `src/db/schema.ts` and run `just migrate
+{your_description}`. This will generate a `sql` file in `src-tauri/src/migrations/`.
+
+When the app gets built, everything in `src-tauri/src/migrations/` get auto-generated into an updated `src-tauri/src/migrations.rs`.
+When the app runs, migrations in `src-tauri/src/migrations.rs` get applied.
