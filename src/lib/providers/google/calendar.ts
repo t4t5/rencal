@@ -115,8 +115,7 @@ export async function syncGoogleEvents(
     }
 
     if (!rsp.ok) {
-      const body = await rsp.text()
-      throw new Error(`Google Calendar API error: ${rsp.status} - ${body}`)
+      throw new Error(`Google Calendar API error: ${rsp.status} - ${JSON.stringify(json)}`)
     }
 
     const data = GoogleEventsListResponseSchema.parse(json)

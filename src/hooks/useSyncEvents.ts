@@ -1,5 +1,5 @@
 import { and, eq, inArray } from "drizzle-orm"
-import { useCallback, useEffect, useEffectEvent, useRef } from "react"
+import { useCallback, useEffect, useEffectEvent, useRef, useState } from "react"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
@@ -44,7 +44,8 @@ function googleEventToCalendarEvent(
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { accounts, withAuthRetry } = useAuth()
   const { calendars } = useCalendar()
-  const isSyncingRef = useRef(false)
+
+  const [isSyncing, setIsSyncing] = useState(false)
 
   const selectedCalendars = calendars.filter((c) => c.selected && c.providerCalendarId)
 
@@ -196,7 +197,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   )
 
   const onSync = useEffectEvent(async () => {
-    if (isSyncingRef.current) {
+    if (isSyncing) {
       return
     }
 
@@ -204,7 +205,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       return
     }
 
-    isSyncingRef.current = true
+    setIsSyncing(true)
 
     try {
       for (const calendar of selectedCalendars) {
@@ -222,7 +223,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     } catch (error) {
       logger.error("🔁 Sync failed:", error)
     } finally {
-      isSyncingRef.current = false
+      setIsSyncing(false)
     }
   })
 
@@ -236,5 +237,5 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     void onSync()
   }, [onSync])
 
-  return { triggerSync, isSyncing: isSyncingRef.current }
+  return { triggerSync, isSyncing }
 }
