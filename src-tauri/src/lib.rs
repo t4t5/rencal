@@ -1,6 +1,6 @@
+mod migrations;
 mod oauth;
 mod routes;
-mod storage;
 
 use routes::oauth::{OAuthApi, OAuthApiImpl};
 use taurpc::Router;
@@ -13,7 +13,7 @@ pub async fn run() {
         .plugin(tauri_plugin_opener::init())
         .plugin(
             tauri_plugin_sql::Builder::new()
-                .add_migrations("sqlite:rencal.db", storage::get_migrations())
+                .add_migrations("sqlite:rencal.db", migrations::get_migrations())
                 .build(),
         )
         .invoke_handler(router.into_handler())

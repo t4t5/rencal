@@ -53,3 +53,9 @@ The OAuth client ID and secret are embedded in `src/lib/oauth/google.ts`. This i
 ### Event Sync
 
 Events are synced from Google Calendar to a local SQLite database for offline access and fast reads. The sync uses Google's incremental sync API with sync tokens - after the initial full sync, subsequent syncs only fetch changed/deleted events. The `useSyncEvents` hook triggers sync on mount and every 30 seconds, while `useLocalEvents` reads from SQLite for instant UI. All entities use our own UUIDs as primary keys with optional `google_calendar_id`/`google_event_id` fields for provider mapping.
+
+## Migrations
+
+If you want to update the DB schema, add a `sql` file to `src-tauri/src/migrations`.
+This will automatically update the auto-generated `src-tauri/src/migrations.rs` file when the app is built, and apply the migration on the next
+app run.
