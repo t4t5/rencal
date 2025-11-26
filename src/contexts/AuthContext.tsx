@@ -4,7 +4,7 @@ import { logger } from "@/lib/logger"
 import { refreshGoogleToken } from "@/lib/providers/google/oauth"
 
 import { useStorage } from "@/contexts/StorageContext"
-import { Account } from "@/types/account"
+import { Account } from "@/storage/models/account"
 
 interface AuthContextType {
   accounts: Account[]
@@ -50,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ...account,
         access_token: accessToken,
         refresh_token: refreshToken ?? account.refresh_token,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expiresAt,
       }
 
       await store.account.update(refreshedAccount)

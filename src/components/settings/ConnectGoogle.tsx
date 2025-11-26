@@ -37,7 +37,7 @@ export function ConnectGoogle() {
         email,
         access_token: accessToken,
         refresh_token: refreshToken,
-        expires_at: expiresAt.toISOString(),
+        expires_at: expiresAt,
       }
 
       await store.account.insert(newAccount)

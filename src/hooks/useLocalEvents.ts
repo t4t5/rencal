@@ -5,7 +5,7 @@ import { logger } from "@/lib/logger"
 
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
-import { CalendarEvent } from "@/types/calendar-event"
+import { CalendarEvent } from "@/storage/models/calendarEvent"
 
 // How many months before/after activeDate to load
 const LOAD_RANGE_MONTHS = 2
@@ -52,7 +52,7 @@ export const useLocalEvents = () => {
         return existing
       }
 
-      return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.localeCompare(b.start))
+      return [...existing, ...uniqueNewEvents].sort((a, b) => a.start.getTime() - b.start.getTime())
     },
     [],
   )

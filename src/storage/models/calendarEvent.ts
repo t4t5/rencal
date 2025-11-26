@@ -2,27 +2,20 @@ import Database from "@tauri-apps/plugin-sql"
 import { v4 as uuidv4 } from "uuid"
 import { z } from "zod"
 
-import { CalendarEvent } from "@/types/calendar-event"
+import { sqliteBool, sqliteDate } from "@/lib/sqlite-schema"
 
-const storedCalendarEventSchema = z
-  .object({
-    id: z.string(),
-    provider_event_id: z.string().nullable(),
-    calendar_id: z.string(),
-    summary: z.string().nullable(),
-    start: z.string(),
-    end: z.string(),
-    all_day: z.number(),
-    updated_at: z.string().nullable(),
-  })
-  .transform(
-    // Transform DB row to CalendarEvent type
-    (row): CalendarEvent => ({
-      ...row,
-      all_day: row.all_day === 1,
-    }),
-  )
+const calendarEventSchema = z.object({
+  id: z.string(),
+  provider_event_id: z.string().nullable(),
+  calendar_id: z.string(),
+  summary: z.string().nullable(),
+  start: sqliteDate,
+  end: sqliteDate,
+  all_day: sqliteBool,
+  updated_at: sqliteDate,
+})
 
+export type CalendarEvent = z.output<typeof calendarEventSchema>
 export type CalendarEventInsertData = Omit<CalendarEvent, "id" | "updated_at">
 
 export const calendarEventStorage = (db: Database) => ({
@@ -49,10 +42,10 @@ export const calendarEventStorage = (db: Database) => ({
           WHERE provider_event_id = $6 AND calendar_id = $7`,
           [
             event.summary,
-            event.start,
-            event.end,
+            event.start.toISOString(),
+            event.end.toISOString(),
             event.all_day ? 1 : 0,
-            new Date(),
+            new Date().toISOString(),
             event.provider_event_id,
             event.calendar_id,
           ],
@@ -71,10 +64,10 @@ export const calendarEventStorage = (db: Database) => ({
         event.provider_event_id,
         event.calendar_id,
         event.summary,
-        event.start,
-        event.end,
+        event.start.toISOString(),
+        event.end.toISOString(),
         event.all_day ? 1 : 0,
-        new Date(),
+        new Date().toISOString(),
       ],
     )
   },
@@ -116,7 +109,7 @@ export const calendarEventStorage = (db: Database) => ({
       [...calendarIds, startDate, endDate],
     )
 
-    return rows.map((row) => storedCalendarEventSchema.parse(row))
+    return rows.map((row) => calendarEventSchema.parse(row))
   },
 
   async getByCalendarIds(calendarIds: string[]): Promise<CalendarEvent[]> {
@@ -130,6 +123,6 @@ export const calendarEventStorage = (db: Database) => ({
       calendarIds,
     )
 
-    return rows.map((row) => storedCalendarEventSchema.parse(row))
+    return rows.map((row) => calendarEventSchema.parse(row))
   },
 })

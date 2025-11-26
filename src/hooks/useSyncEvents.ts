@@ -6,10 +6,10 @@ import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendar } from "@/contexts/CalendarContext"
 import { useStorage } from "@/contexts/StorageContext"
+import { Account } from "@/storage/models/account"
+import { Calendar } from "@/storage/models/calendar"
 import { CalendarEventInsertData } from "@/storage/models/calendarEvent"
-import { Account } from "@/types/account"
-import { Calendar } from "@/types/calendar"
-import { CalendarEvent } from "@/types/calendar-event"
+import { CalendarEvent } from "@/storage/models/calendarEvent"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
@@ -29,8 +29,8 @@ function googleEventToCalendarEvent(
     provider_event_id: googleEvent.id,
     calendar_id: calendarId,
     summary: googleEvent.summary ?? null,
-    start,
-    end,
+    start: new Date(start),
+    end: new Date(end),
     all_day: !!googleEvent.start.date,
   }
 }

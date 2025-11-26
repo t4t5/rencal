@@ -1,14 +1,14 @@
 import { format } from "date-fns"
 import { useMemo } from "react"
 
-import type { CalendarEvent } from "@/types/calendar-event"
+import type { CalendarEvent } from "@/storage/models/calendarEvent"
 
 export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, CalendarEvent[]>()
 
     for (const event of events) {
-      const dateKey = event.start.split("T")[0]
+      const dateKey = format(event.start, "yyyy-MM-dd")
       const existing = grouped.get(dateKey) || []
       grouped.set(dateKey, [...existing, event])
     }

@@ -11,7 +11,7 @@ import {
 import { logger } from "@/lib/logger"
 
 import { useStorage } from "@/contexts/StorageContext"
-import { Calendar as CalendarType } from "@/types/calendar"
+import { Calendar as CalendarType } from "@/storage/models/calendar"
 
 interface CalendarContextType {
   calendars: CalendarType[]

@@ -2,40 +2,31 @@ import Database from "@tauri-apps/plugin-sql"
 import { v4 as uuidv4 } from "uuid"
 import { z } from "zod"
 
-import { Calendar } from "@/types/calendar"
+import { sqliteBool, sqliteDateNullable } from "@/lib/sqlite-schema"
 
-const storedCalendarSchema = z
-  .object({
-    id: z.string(),
-    account_id: z.string(),
-    provider_calendar_id: z.string().nullable(),
-    name: z.string(),
-    color: z.string().nullable(),
-    selected: z.number(),
-    sync_token: z.string().nullable(),
-    last_synced_at: z.number().nullable(),
-  })
-  .transform(
-    // Transform DB row to Calendar type
-    (row): Calendar => ({
-      ...row,
-      selected: row.selected === 1,
-      // TODO: Use Date type:
-      last_synced_at: row.last_synced_at ? String(row.last_synced_at) : null,
-    }),
-  )
+const calendarSchema = z.object({
+  id: z.string(),
+  account_id: z.string(),
+  provider_calendar_id: z.string().nullable(),
+  name: z.string(),
+  color: z.string().nullable(),
+  selected: sqliteBool,
+  sync_token: z.string().nullable(),
+  last_synced_at: sqliteDateNullable,
+})
 
+export type Calendar = z.output<typeof calendarSchema>
 export type CalendarInsertData = Omit<Calendar, "id">
 
 export const calendarStorage = (db: Database) => ({
   async list(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars")
-    return rows.map((row) => storedCalendarSchema.parse(row))
+    return rows.map((row) => calendarSchema.parse(row))
   },
 
   async listActive(): Promise<Calendar[]> {
     const rows = await db.select<unknown[]>("SELECT * FROM calendars WHERE selected = 1")
-    return rows.map((row) => storedCalendarSchema.parse(row))
+    return rows.map((row) => calendarSchema.parse(row))
   },
 
   async findByProviderCalendarId(providerCalendarId: string): Promise<Calendar | null> {
@@ -43,7 +34,7 @@ export const calendarStorage = (db: Database) => ({
       "SELECT * FROM calendars WHERE provider_calendar_id = $1",
       [providerCalendarId],
     )
-    return row ? storedCalendarSchema.parse(row) : null
+    return row ? calendarSchema.parse(row) : null
   },
 
   async updateSyncToken({
@@ -57,7 +48,7 @@ export const calendarStorage = (db: Database) => ({
       `UPDATE calendars
       SET sync_token = $1, last_synced_at = $2
       WHERE provider_calendar_id = $3`,
-      [syncToken, Date.now(), providerCalendarId],
+      [syncToken, new Date().toISOString(), providerCalendarId],
     )
   },
 
@@ -89,7 +80,7 @@ export const calendarStorage = (db: Database) => ({
         color || "",
         selected ? 1 : 0,
         sync_token,
-        last_synced_at ? Number(last_synced_at) : null,
+        last_synced_at?.toISOString() ?? null,
       ],
     )
   },

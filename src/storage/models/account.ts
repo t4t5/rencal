@@ -1,8 +1,20 @@
 import Database from "@tauri-apps/plugin-sql"
 import { v4 as uuidv4 } from "uuid"
+import { z } from "zod"
 
-import { Account, accountSchema } from "@/types/account"
+import { sqliteDate, sqliteDateNullable } from "@/lib/sqlite-schema"
 
+const accountSchema = z.object({
+  id: z.string(),
+  provider: z.literal("Google"),
+  email: z.string().nullable(),
+  access_token: z.string().nullable(),
+  refresh_token: z.string().nullable(),
+  expires_at: sqliteDateNullable,
+  created_at: sqliteDate,
+})
+
+export type Account = z.output<typeof accountSchema>
 export type AccountInsertData = Omit<Account, "id" | "created_at">
 
 export const accountStorage = (db: Database) => ({
@@ -23,7 +35,15 @@ export const accountStorage = (db: Database) => ({
       `INSERT OR REPLACE INTO accounts (
         id, provider, email, access_token, refresh_token, expires_at, created_at
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [uuidv4(), provider, email, access_token, refresh_token, expires_at, new Date()],
+      [
+        uuidv4(),
+        provider,
+        email,
+        access_token,
+        refresh_token,
+        expires_at?.toISOString() ?? null,
+        new Date().toISOString(),
+      ],
     )
   },
 
@@ -38,7 +58,7 @@ export const accountStorage = (db: Database) => ({
         refresh_token = $5,
         expires_at = $6,
       WHERE id = $1`,
-      [id, provider, email, access_token, refresh_token, expires_at],
+      [id, provider, email, access_token, refresh_token, expires_at?.toISOString() ?? null],
     )
   },
 
