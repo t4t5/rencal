@@ -65,6 +65,7 @@ export const TimeSection = ({
             placeholder={formattedStartDate}
             className="w-[85px]"
             value={formattedStartDate}
+            readOnly
           />
           {allDay && (
             <>
@@ -73,6 +74,7 @@ export const TimeSection = ({
                 placeholder={formattedEndDate}
                 className="pl-4"
                 value={formattedEndDate}
+                readOnly
               />
             </>
           )}

@@ -11,12 +11,18 @@ import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
-  const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
-    useCalendarState()
+  const {
+    activeDate,
+    setActiveDate,
+    registerScrollToDate,
+    isNavigating,
+    setIsNavigating,
+    calendarEvents: events,
+  } = useCalendarState()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  const { calendarEvents: events } = useRollingEvents({
+  useRollingEvents({
     scrollContainerRef,
   })
 

@@ -9,7 +9,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 
 export function AddEventButton() {
-  const { text, setText, isDrafting, setIsDrafting } = useEventDraft()
+  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -18,6 +18,11 @@ export function AddEventButton() {
       setIsDrafting(false)
     }
   })
+
+  const onNew = () => {
+    setDefaultDraftEvent()
+    setIsDrafting(true)
+  }
 
   return (
     <div ref={containerRef} className="grow">
@@ -29,7 +34,7 @@ export function AddEventButton() {
           className="border-none ring-transparent! text-sm"
         />
       ) : (
-        <Button variant="secondary" onClick={() => setIsDrafting(true)}>
+        <Button variant="secondary" onClick={onNew}>
           <PlusIcon />
         </Button>
       )}

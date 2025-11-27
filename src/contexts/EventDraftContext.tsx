@@ -12,6 +12,8 @@ interface EventDraftContextType {
 
   draftEvent: DraftEvent
   setDraftEvent: (event: DraftEvent) => void
+
+  setDefaultDraftEvent: () => void
 }
 
 const EventDraftContext = createContext({} as EventDraftContextType)
@@ -27,12 +29,16 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const [text, _setText] = useState("")
 
-  const [draftEvent, setDraftEvent] = useState<DraftEvent>({
-    summary: "",
-    allDay: false,
-    start: getClosestNextHour(),
-    end: addMinutes(getClosestNextHour(), 30),
-  })
+  const generateDefaultDraftEvent = (): DraftEvent => {
+    return {
+      summary: "",
+      allDay: false,
+      start: getClosestNextHour(),
+      end: addMinutes(getClosestNextHour(), 30),
+    }
+  }
+
+  const [draftEvent, setDraftEvent] = useState<DraftEvent>(generateDefaultDraftEvent())
 
   const setText = (newText: string) => {
     _setText(newText)
@@ -46,6 +52,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setText,
     draftEvent,
     setDraftEvent,
+    setDefaultDraftEvent: () => setDraftEvent(generateDefaultDraftEvent()),
   }
 
   return <EventDraftContext.Provider value={value}>{children}</EventDraftContext.Provider>

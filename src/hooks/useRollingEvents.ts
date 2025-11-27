@@ -1,13 +1,12 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 import { gte, and, inArray, lte } from "drizzle-orm"
-import { RefObject, useCallback, useEffect, useRef, useState } from "react"
+import { RefObject, useCallback, useEffect, useEffectEvent, useRef } from "react"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 
 import { db, schema } from "@/db/database"
-import { CalendarEvent } from "@/db/types"
 
 interface DateRange {
   start: Date
@@ -42,7 +41,7 @@ export const useRollingEvents = ({
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }) => {
-  const { calendars, activeDate, calendarEvents, setCalendarEvents } = useCalendarState()
+  const { calendars, activeDate, setCalendarEvents } = useCalendarState()
 
   const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
@@ -115,7 +114,7 @@ export const useRollingEvents = ({
     onNearBottom,
   })
 
-  useEffect(() => {
+  const initEvents = useEffectEvent(() => {
     const currentRange = currentDateRangeRef.current
     const activeRange = getStartRangeForDate(activeDate)
 
@@ -129,7 +128,11 @@ export const useRollingEvents = ({
       currentDateRangeRef.current = activeRange
       void fetchEventsForRange(activeRange)
     }
+  })
+
+  useEffect(() => {
+    initEvents()
   }, [activeDate, visibleCalendarIds])
 
-  return { calendarEvents }
+  return { initEvents }
 }
