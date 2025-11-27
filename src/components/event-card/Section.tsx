@@ -6,8 +6,14 @@ export const Section = ({ children }: { children: ReactNode }) => {
   return <div className="flex gap-3 text-sm text-muted-foreground">{children}</div>
 }
 
-export const SectionIcon = ({ children }: { children: ReactNode }) => {
-  return <div className="size-4 pt-0.5">{children}</div>
+export const SectionIcon = ({
+  children,
+  className,
+}: {
+  children: ReactNode
+  className?: string
+}) => {
+  return <div className={cn("size-4 pt-0.5", className)}>{children}</div>
 }
 
 export function SectionInput({ className, type, ...props }: ComponentProps<"input">) {

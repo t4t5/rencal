@@ -5,6 +5,8 @@ import { Card } from "@/components/ui/card"
 
 import { useEventComposer } from "@/contexts/EventComposerContext"
 
+import { AllDaySection } from "./event-card/AllDaySection"
+
 export function Header() {
   const { isComposing, text } = useEventComposer()
 
@@ -20,6 +22,7 @@ export function Header() {
 
           <div className="flex flex-col gap-3">
             <TimeSection />
+            <AllDaySection />
             <LocationSection />
           </div>
         </Card>
