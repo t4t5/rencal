@@ -1,7 +1,6 @@
 import { Description, DialogTitle } from "@radix-ui/react-dialog"
 import { useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
-import { FaPlus as PlusIcon } from "react-icons/fa6"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { IoSearch as SearchIcon } from "react-icons/io5"
 
@@ -12,14 +11,14 @@ import { Modal } from "@/components/ui/dialog"
 import { useSyncEvents } from "@/hooks/useSyncEvents"
 import { cn } from "@/lib/utils"
 
+import { AddEventButton } from "./AddEventButton"
+
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
 
   return (
     <div className="p-4 flex justify-between items-center">
-      <Button variant="secondary">
-        <PlusIcon />
-      </Button>
+      <AddEventButton />
 
       <div className="flex gap-2 items-center">
         {/*<SyncStatus />*/}
