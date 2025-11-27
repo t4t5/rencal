@@ -157,4 +157,17 @@
     @apply bg-background text-foreground;
     min-height: 100vh;
   }
+
+  input[disabled]::-webkit-datetime-edit-year-field,
+  input[disabled]::-webkit-datetime-edit-month-field,
+  input[disabled]::-webkit-datetime-edit-day-field,
+  input[disabled]::-webkit-datetime-edit-hour-field,
+  input[disabled]::-webkit-datetime-edit-minute-field,
+  input[disabled]::-webkit-datetime-edit-second-field,
+  input[disabled]::-webkit-datetime-edit-millisecond-field,
+  input[disabled]::-webkit-datetime-edit-meridiem-field,
+  input[disabled]::-webkit-datetime-edit-text {
+    color: inherit;
+    -webkit-text-fill-color: inherit;
+  }
 }

@@ -20,7 +20,7 @@ export function SectionInput({ className, type, ...props }: ComponentProps<"inpu
   return (
     <input
       className={cn(
-        "placeholder:text-muted-foreground outline-none! text-primary-foreground",
+        "placeholder:text-muted-foreground outline-none! text-primary-foreground disabled:text-muted-foreground",
         className,
       )}
       type={type}
