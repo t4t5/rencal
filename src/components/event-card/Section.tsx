@@ -1,0 +1,24 @@
+import { ComponentProps, ReactNode } from "react"
+
+import { cn } from "@/lib/utils"
+
+export const Section = ({ children }: { children: ReactNode }) => {
+  return <div className="flex gap-3 text-sm text-muted-foreground">{children}</div>
+}
+
+export const SectionIcon = ({ children }: { children: ReactNode }) => {
+  return <div className="size-4 pt-0.5">{children}</div>
+}
+
+export function SectionInput({ className, type, ...props }: ComponentProps<"input">) {
+  return (
+    <input
+      className={cn(
+        "placeholder:text-muted-foreground outline-none! text-primary-foreground",
+        className,
+      )}
+      type={type}
+      {...props}
+    />
+  )
+}

@@ -1,4 +1,6 @@
 import { ActionBar } from "@/components/action-bar/ActionBar"
+import { LocationSection } from "@/components/event-card/LocationSection"
+import { TimeSection } from "@/components/event-card/TimeSection"
 import { Card } from "@/components/ui/card"
 
 import { useEventComposer } from "@/contexts/EventComposerContext"
@@ -12,7 +14,16 @@ export function Header() {
     <div className="flex flex-col gap-3 p-4 pb-0">
       <ActionBar />
 
-      {showPreview && <Card>Test</Card>}
+      {showPreview && (
+        <Card className="gap-4">
+          <input readOnly value={text} className="text-base" />
+
+          <div className="flex flex-col gap-3">
+            <TimeSection />
+            <LocationSection />
+          </div>
+        </Card>
+      )}
     </div>
   )
 }
