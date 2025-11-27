@@ -19,6 +19,8 @@ export const useScrollBoundary = ({
     const container = scrollContainerRef.current
     if (!container) return
 
+    console.log("CHANGED")
+
     const checkBoundaries = () => {
       const { scrollTop, scrollHeight, clientHeight } = container
 
@@ -35,6 +37,7 @@ export const useScrollBoundary = ({
     }
 
     const handleScroll = () => {
+      console.log("handle")
       const now = Date.now()
 
       // Throttle: run immediately on first call, then at most once per throttleMs
@@ -44,9 +47,11 @@ export const useScrollBoundary = ({
       }
     }
 
+    console.log("add listener")
     container.addEventListener("scroll", handleScroll, { passive: true })
 
     return () => {
+      console.log("remove listener")
       container.removeEventListener("scroll", handleScroll)
     }
   }, [scrollContainerRef, threshold, throttleMs, onNearTop, onNearBottom])

@@ -59,7 +59,7 @@ export const useRollingEvents = ({
     [visibleCalendarIds],
   )
 
-  const onNearTop = async () => {
+  const onNearTop = useCallback(async () => {
     console.log("NEAR TOP")
     const currentRange = currentDateRangeRef.current
     if (!currentRange) return
@@ -85,9 +85,9 @@ export const useRollingEvents = ({
       start: prevStart,
       end: currentRange.end,
     }
-  }
+  }, [visibleCalendarIds])
 
-  const onNearBottom = async () => {
+  const onNearBottom = useCallback(async () => {
     const currentRange = currentDateRangeRef.current
     if (!currentRange) return
 
@@ -112,7 +112,7 @@ export const useRollingEvents = ({
       start: currentRange.start,
       end: nextEnd,
     }
-  }
+  }, [visibleCalendarIds])
 
   useScrollBoundary({
     scrollContainerRef,
