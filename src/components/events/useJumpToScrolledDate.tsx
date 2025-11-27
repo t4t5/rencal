@@ -1,17 +1,17 @@
 import { parse } from "date-fns"
-import { useEffect, useEffectEvent, useRef } from "react"
+import { RefObject, useEffect, useEffectEvent, useRef } from "react"
 
 export function useJumpToScrolledDate({
   onSetActiveDate,
   datesWithEvents,
   isNavigating,
+  scrollContainerRef,
 }: {
   onSetActiveDate: (date: Date) => void
   datesWithEvents: string[]
   isNavigating: () => boolean
+  scrollContainerRef: RefObject<HTMLDivElement | null>
 }) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
-
   const sectionRefs = useRef(new Map<string, HTMLDivElement>())
 
   const addSectionRef = (dateStr: string, el: HTMLDivElement) => {
@@ -49,7 +49,6 @@ export function useJumpToScrolledDate({
   }, [datesWithEvents])
 
   return {
-    scrollContainerRef,
     addSectionRef,
     sectionRefs,
   }

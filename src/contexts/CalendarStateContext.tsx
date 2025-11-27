@@ -20,7 +20,6 @@ interface CalendarStateContextType {
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
   registerScrollToDate: (fn: (date: Date) => void) => void
-  registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
   isNavigating: () => boolean
   setIsNavigating: (value: boolean) => void
 }
@@ -54,10 +53,6 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     scrollToDateRef.current = fn
   }, [])
 
-  const registerLoadEventsForDate = useCallback((fn: (date: Date) => Promise<void>) => {
-    loadEventsForDateRef.current = fn
-  }, [])
-
   const isNavigating = useCallback(() => isNavigatingRef.current, [])
 
   const setIsNavigating = useCallback((value: boolean) => {
@@ -79,7 +74,7 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
 
     // Use requestAnimationFrame to ensure DOM has updated before scrolling
     requestAnimationFrame(() => {
-      setActiveDate(date) // moved it to here. seems to work.
+      setActiveDate(date)
       scrollToDateRef.current?.(date)
     })
 
@@ -96,7 +91,6 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     setActiveDate,
     navigateToDate,
     registerScrollToDate,
-    registerLoadEventsForDate,
     isNavigating,
     setIsNavigating,
   }

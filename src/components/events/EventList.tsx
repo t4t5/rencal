@@ -1,43 +1,33 @@
 import { format } from "date-fns"
-import { useEffect, useEffectEvent } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useLocalEvents } from "@/hooks/useLocalEvents"
+import { useRollingEvents } from "@/hooks/useRollingEvents"
 
 import { useGroupedEvents } from "./useGroupedEvents"
 import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
-  const {
-    activeDate,
-    setActiveDate,
-    registerScrollToDate,
-    registerLoadEventsForDate,
-    isNavigating,
-    setIsNavigating,
-  } = useCalendarState()
+  const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
+    useCalendarState()
 
-  const { events, isLoading, loadEventsForDate } = useLocalEvents()
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  const { calendarEvents: events } = useRollingEvents({
+    scrollContainerRef,
+  })
 
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
-  const { scrollContainerRef, addSectionRef, sectionRefs } = useJumpToScrolledDate({
+  const { addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: setActiveDate,
     datesWithEvents,
     isNavigating,
+    scrollContainerRef,
   })
-
-  // Register loadEventsForDate so navigation can load events before scrolling:
-  const onRegisterLoadEvents = useEffectEvent(() => {
-    registerLoadEventsForDate(loadEventsForDate)
-  })
-
-  useEffect(() => {
-    onRegisterLoadEvents()
-  }, [])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
@@ -79,10 +69,6 @@ export function EventList() {
       })
     })
   }, [eventsByDate])
-
-  if (isLoading && events.length === 0) {
-    return <div className="p-2 text-sm text-muted-foreground">Loading events...</div>
-  }
 
   if (events.length === 0) {
     return <div className="p-2 text-sm text-muted-foreground">No events</div>
