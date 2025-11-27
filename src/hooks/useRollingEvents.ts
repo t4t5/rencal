@@ -4,6 +4,8 @@ import { RefObject, useCallback, useEffect, useRef, useState } from "react"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useScrollBoundary } from "@/hooks/useScrollBoundary"
+
 import { db, schema } from "@/db/database"
 import { CalendarEvent } from "@/db/types"
 
@@ -21,10 +23,24 @@ const getStartRangeForDate = (date: Date): DateRange => {
   }
 }
 
+const getCalendarEventsForRange = async (range: DateRange, calendarIds: string[]) => {
+  return db
+    .select()
+    .from(schema.events)
+    .where(
+      and(
+        inArray(schema.events.calendarId, calendarIds),
+        gte(schema.events.start, range.start),
+        lte(schema.events.start, range.end),
+      ),
+    )
+    .orderBy(schema.events.start)
+}
+
 export const useRollingEvents = ({
   scrollContainerRef,
 }: {
-  scrollContainerRef?: RefObject<HTMLDivElement | null>
+  scrollContainerRef: RefObject<HTMLDivElement | null>
 }) => {
   const { calendars, activeDate } = useCalendarState()
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
@@ -37,27 +53,25 @@ export const useRollingEvents = ({
 
   const fetchEventsForRange = useCallback(
     async (range: DateRange) => {
-      const events = await db
-        .select()
-        .from(schema.events)
-        .where(
-          and(
-            inArray(schema.events.calendarId, visibleCalendarIds),
-            gte(schema.events.start, range.start),
-            lte(schema.events.start, range.end),
-          ),
-        )
-        .orderBy(schema.events.start)
-
+      const events = await getCalendarEventsForRange(range, visibleCalendarIds)
       setCalendarEvents(events)
     },
     [visibleCalendarIds],
   )
 
+  useScrollBoundary({
+    scrollContainerRef,
+    threshold: 100,
+    throttleMs: 150,
+    onNearTop: () => console.log("Near top!"),
+    onNearBottom: () => console.log("Near bottom!"),
+  })
+
   useEffect(() => {
     const currentRange = currentDateRangeRef.current
     const activeRange = getStartRangeForDate(activeDate)
 
+    // Core data hasn't loaded yet:
     if (!visibleCalendarIds.length || !activeDate) {
       return
     }
