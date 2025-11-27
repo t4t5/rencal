@@ -49,8 +49,6 @@ export const useRollingEvents = ({
 
   const currentDateRangeRef = useRef<DateRange | null>(null)
 
-  // console.log("ACTIVE", activeDate)
-
   const fetchEventsForRange = useCallback(
     async (range: DateRange) => {
       const events = await getCalendarEventsForRange(range, visibleCalendarIds)
@@ -60,7 +58,6 @@ export const useRollingEvents = ({
   )
 
   const onNearTop = useCallback(async () => {
-    console.log("NEAR TOP")
     const currentRange = currentDateRangeRef.current
     if (!currentRange) return
 
@@ -80,7 +77,6 @@ export const useRollingEvents = ({
       }
     })
 
-    // Update current range:
     currentDateRangeRef.current = {
       start: prevStart,
       end: currentRange.end,
@@ -107,7 +103,6 @@ export const useRollingEvents = ({
       }
     })
 
-    // Update current range:
     currentDateRangeRef.current = {
       start: currentRange.start,
       end: nextEnd,
