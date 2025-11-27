@@ -59,12 +59,67 @@ export const useRollingEvents = ({
     [visibleCalendarIds],
   )
 
+  const onNearTop = async () => {
+    console.log("NEAR TOP")
+    const currentRange = currentDateRangeRef.current
+    if (!currentRange) return
+
+    // Load events for prev range and append them:
+    const prevStart = startOfMonth(subMonths(currentRange.start, MONTHS_TO_LOAD))
+    const prevRange = { start: prevStart, end: currentRange.start }
+    const prevEvents = await getCalendarEventsForRange(prevRange, visibleCalendarIds)
+
+    setCalendarEvents((prev) => {
+      const existingIds = new Set(prev.map((e) => e.id))
+      const newEvents = prevEvents.filter((e) => !existingIds.has(e.id))
+
+      if (newEvents.length) {
+        return [...newEvents, ...prev]
+      } else {
+        return prev
+      }
+    })
+
+    // Update current range:
+    currentDateRangeRef.current = {
+      start: prevStart,
+      end: currentRange.end,
+    }
+  }
+
+  const onNearBottom = async () => {
+    const currentRange = currentDateRangeRef.current
+    if (!currentRange) return
+
+    // Load events for next range and append them:
+    const nextEnd = endOfMonth(addMonths(currentRange.end, MONTHS_TO_LOAD))
+    const nextRange = { start: currentRange.end, end: nextEnd }
+    const nextEvents = await getCalendarEventsForRange(nextRange, visibleCalendarIds)
+
+    setCalendarEvents((prev) => {
+      const existingIds = new Set(prev.map((e) => e.id))
+      const newEvents = nextEvents.filter((e) => !existingIds.has(e.id))
+
+      if (newEvents.length) {
+        return [...prev, ...newEvents]
+      } else {
+        return prev
+      }
+    })
+
+    // Update current range:
+    currentDateRangeRef.current = {
+      start: currentRange.start,
+      end: nextEnd,
+    }
+  }
+
   useScrollBoundary({
     scrollContainerRef,
-    threshold: 100,
+    threshold: 200,
     throttleMs: 150,
-    onNearTop: () => console.log("Near top!"),
-    onNearBottom: () => console.log("Near bottom!"),
+    onNearTop,
+    onNearBottom,
   })
 
   useEffect(() => {
