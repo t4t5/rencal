@@ -3,9 +3,9 @@ import { ReactNode, createContext, useContext, useState } from "react"
 
 import { DraftEvent } from "@/db/types"
 
-interface EventComposerContextType {
-  isComposing: boolean
-  setIsComposing: (isComposing: boolean) => void
+interface EventDraftContextType {
+  isDrafting: boolean
+  setIsDrafting: (isDrafting: boolean) => void
 
   text: string
   setText: (text: string) => void
@@ -14,16 +14,16 @@ interface EventComposerContextType {
   setDraftEvent: (event: DraftEvent) => void
 }
 
-const EventComposerContext = createContext({} as EventComposerContextType)
+const EventDraftContext = createContext({} as EventDraftContextType)
 
-export function useEventComposer() {
-  return useContext(EventComposerContext)
+export function useEventDraft() {
+  return useContext(EventDraftContext)
 }
 
 const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 
-export function EventComposerProvider({ children }: { children: ReactNode }) {
-  const [isComposing, setIsComposing] = useState(false)
+export function EventDraftProvider({ children }: { children: ReactNode }) {
+  const [isDrafting, setIsDrafting] = useState(false)
 
   const [text, _setText] = useState("")
 
@@ -40,13 +40,13 @@ export function EventComposerProvider({ children }: { children: ReactNode }) {
   }
 
   const value = {
-    isComposing,
-    setIsComposing,
+    isDrafting,
+    setIsDrafting,
     text,
     setText,
     draftEvent,
     setDraftEvent,
   }
 
-  return <EventComposerContext.Provider value={value}>{children}</EventComposerContext.Provider>
+  return <EventDraftContext.Provider value={value}>{children}</EventDraftContext.Provider>
 }

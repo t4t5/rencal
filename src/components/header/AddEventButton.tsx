@@ -4,24 +4,24 @@ import { FaPlus as PlusIcon } from "react-icons/fa6"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import { useEventComposer } from "@/contexts/EventComposerContext"
+import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 
 export function AddEventButton() {
-  const { text, setText, isComposing, setIsComposing } = useEventComposer()
+  const { text, setText, isDrafting, setIsDrafting } = useEventDraft()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   useOnClickOutside(containerRef, () => {
     if (text === "") {
-      setIsComposing(false)
+      setIsDrafting(false)
     }
   })
 
   return (
     <div ref={containerRef} className="grow">
-      {isComposing ? (
+      {isDrafting ? (
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -29,7 +29,7 @@ export function AddEventButton() {
           className="border-none ring-transparent! text-sm"
         />
       ) : (
-        <Button variant="secondary" onClick={() => setIsComposing(true)}>
+        <Button variant="secondary" onClick={() => setIsDrafting(true)}>
           <PlusIcon />
         </Button>
       )}

@@ -1,12 +1,12 @@
 import { EventCard } from "@/components/event-card/EventCard"
 import { ActionBar } from "@/components/header/ActionBar"
 
-import { useEventComposer } from "@/contexts/EventComposerContext"
+import { useEventDraft } from "@/contexts/EventDraftContext"
 
 export function Header() {
-  const { isComposing, text } = useEventComposer()
+  const { isDrafting, text } = useEventDraft()
 
-  const showDraftEvent = isComposing && text.length > 0
+  const showDraftEvent = isDrafting && text.length > 0
 
   return (
     <div className="flex flex-col gap-3 p-4 pb-0">
@@ -18,7 +18,8 @@ export function Header() {
 }
 
 const EventDraft = () => {
-  const { draftEvent, setDraftEvent } = useEventComposer()
+  const { draftEvent, setDraftEvent } = useEventDraft()
+
   const { summary, start, end, allDay } = draftEvent
 
   return (
