@@ -1,8 +1,8 @@
 import "@/global.css"
 
-import { Header } from "@/components/Header"
 import { StatefulCalendar } from "@/components/StatefulCalendar"
 import { EventList } from "@/components/events/EventList"
+import { Header } from "@/components/header/Header"
 
 function App() {
   return (
