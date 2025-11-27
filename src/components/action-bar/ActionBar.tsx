@@ -17,7 +17,7 @@ export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
 
   return (
-    <div className="p-4 flex justify-between items-center">
+    <div className="p-4 flex justify-between items-center gap-3">
       <AddEventButton />
 
       <div className="flex gap-2 items-center">

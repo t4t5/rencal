@@ -1,29 +1,35 @@
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+import { useEventComposer } from "@/contexts/EventComposerContext"
+
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 
 export function AddEventButton() {
-  const [isAdding, setIsAdding] = useState(false)
-  const [text, setText] = useState("")
+  const { text, setText, isComposing, setIsComposing } = useEventComposer()
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   useOnClickOutside(containerRef, () => {
     if (text === "") {
-      setIsAdding(false)
+      setIsComposing(false)
     }
   })
 
   return (
-    <div ref={containerRef}>
-      {isAdding ? (
-        <Input value={text} onChange={(e) => setText(e.target.value)} />
+    <div ref={containerRef} className="grow">
+      {isComposing ? (
+        <Input
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          autoFocus
+          className="border-none ring-transparent! text-sm"
+        />
       ) : (
-        <Button variant="secondary" onClick={() => setIsAdding(true)}>
+        <Button variant="secondary" onClick={() => setIsComposing(true)}>
           <PlusIcon />
         </Button>
       )}

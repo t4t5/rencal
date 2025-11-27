@@ -1,14 +1,18 @@
 import "@/global.css"
 
+import { Header } from "@/components/Header"
 import { StatefulCalendar } from "@/components/StatefulCalendar"
-import { ActionBar } from "@/components/action-bar/ActionBar"
 import { EventList } from "@/components/events/EventList"
+
+import { EventComposerProvider } from "./contexts/EventComposerContext"
 
 function App() {
   return (
     <main className="flex h-screen">
       <div className="w-full md:w-[300px] flex flex-col">
-        <ActionBar />
+        <EventComposerProvider>
+          <Header />
+        </EventComposerProvider>
         <StatefulCalendar />
         <EventList />
       </div>
