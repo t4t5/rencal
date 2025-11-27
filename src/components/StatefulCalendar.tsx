@@ -21,7 +21,7 @@ export function StatefulCalendar() {
       onSelect={handleDateSelect}
       month={activeDate}
       onMonthChange={handleDateSelect}
-      className="bg-transparent p-0"
+      className="bg-transparent p-0 pt-4"
       required
     />
   )

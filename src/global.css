@@ -144,6 +144,7 @@
   --primary-foreground: white;
   --secondary: var(--buttonSecondaryBg);
   --accent: var(--activeBg);
+  --card: var(--buttonSecondaryBg);
 }
 
 @layer base {
