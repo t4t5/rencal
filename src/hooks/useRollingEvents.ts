@@ -42,8 +42,7 @@ export const useRollingEvents = ({
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }) => {
-  const { calendars, activeDate } = useCalendarState()
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
+  const { calendars, activeDate, calendarEvents, setCalendarEvents } = useCalendarState()
 
   const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
@@ -112,7 +111,6 @@ export const useRollingEvents = ({
   useScrollBoundary({
     scrollContainerRef,
     threshold: 200,
-    throttleMs: 150,
     onNearTop,
     onNearBottom,
   })

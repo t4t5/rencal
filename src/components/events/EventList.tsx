@@ -38,13 +38,13 @@ export function EventList() {
     // Try exact date first
     let section = sectionRefs.current.get(targetDateStr)
 
-    // If no events on that date, find the closest previous date with events
+    // If no events on that date, find the closest next date with events
     if (!section) {
       const availableDates = [...sectionRefs.current.keys()].sort()
-      const closestPrevDate = availableDates.filter((d) => d <= targetDateStr).pop()
+      const closestNextDate = availableDates.find((d) => d >= targetDateStr)
 
-      if (closestPrevDate) {
-        section = sectionRefs.current.get(closestPrevDate)
+      if (closestNextDate) {
+        section = sectionRefs.current.get(closestNextDate)
       }
     }
 
