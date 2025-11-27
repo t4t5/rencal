@@ -1,14 +1,16 @@
-import { useState } from "react"
-
 import { Section, SectionIcon } from "@/components/event-card/Section"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
 import { cn } from "@/lib/utils"
 
-export const AllDaySection = () => {
-  const [checked, setChecked] = useState(false)
-
+export const AllDaySection = ({
+  checked,
+  onCheckedChange,
+}: {
+  checked: boolean
+  onCheckedChange: (checked: boolean) => void
+}) => {
   return (
     <Section>
       <SectionIcon className="pt-0">
@@ -17,7 +19,7 @@ export const AllDaySection = () => {
           checked={checked}
           className="cursor-pointer"
           onCheckedChange={() => {
-            setChecked(!checked)
+            onCheckedChange(!checked)
           }}
           defaultChecked={false}
         />
