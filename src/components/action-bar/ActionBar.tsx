@@ -9,10 +9,9 @@ import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
 
-import { cn } from "@/lib/utils"
-
 import { useLocalEvents } from "@/hooks/useLocalEvents"
 import { useSyncEvents } from "@/hooks/useSyncEvents"
+import { cn } from "@/lib/utils"
 
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
@@ -24,7 +23,7 @@ export function ActionBar() {
       </Button>
 
       <div className="flex gap-2 items-center">
-        <SyncStatus />
+        {/*<SyncStatus />*/}
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>
