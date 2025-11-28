@@ -3,6 +3,7 @@ import { useEffect, useEffectEvent, useRef } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useRollingEvents } from "@/hooks/useRollingEvents"
@@ -12,13 +13,17 @@ import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
 
 export function EventList() {
   const {
+    calendars,
     activeDate,
     setActiveDate,
     registerScrollToDate,
     isNavigating,
     setIsNavigating,
-    calendarEvents: events,
   } = useCalendarState()
+  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+
+  const { calendarEvents: events, reloadEvents, currentDateRangeRef } = useCalEvents()
+  const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
@@ -26,14 +31,19 @@ export function EventList() {
     scrollContainerRef,
   })
 
-  const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
-
   const { addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: setActiveDate,
     datesWithEvents,
     isNavigating,
     scrollContainerRef,
   })
+
+  useEffect(() => {
+    // Initialize on first run:
+    if (!currentDateRangeRef.current) {
+      reloadEvents()
+    }
+  }, [activeDate, visibleCalendarIds])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {

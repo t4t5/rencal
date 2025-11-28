@@ -7,13 +7,17 @@ import { EventDraftProvider } from "@/contexts/EventDraftContext"
 
 import App from "@/App"
 
+import { CalEventsProvider } from "./contexts/CalEventsContext"
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <AuthProvider>
       <CalendarStateProvider>
-        <EventDraftProvider>
-          <App />
-        </EventDraftProvider>
+        <CalEventsProvider>
+          <EventDraftProvider>
+            <App />
+          </EventDraftProvider>
+        </CalEventsProvider>
       </CalendarStateProvider>
     </AuthProvider>
   </React.StrictMode>,

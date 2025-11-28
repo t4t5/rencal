@@ -10,3 +10,8 @@ export type CalendarEvent = InferSelectModel<typeof schema.events>
 export type CalendarEventInsert = InferInsertModel<typeof schema.events>
 
 export type DraftEvent = Omit<CalendarEventInsert, "calendarId">
+
+export interface DateRange {
+  start: Date
+  end: Date
+}

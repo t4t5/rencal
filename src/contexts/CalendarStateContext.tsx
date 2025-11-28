@@ -1,7 +1,5 @@
 import {
-  Dispatch,
   ReactNode,
-  SetStateAction,
   createContext,
   useCallback,
   useContext,
@@ -13,15 +11,13 @@ import {
 import { logger } from "@/lib/logger"
 
 import { schema, db } from "@/db/database"
-import type { Calendar, CalendarEvent } from "@/db/types"
+import type { Calendar } from "@/db/types"
 
 interface CalendarStateContextType {
   calendars: Calendar[]
   reloadCalendars: () => Promise<void>
   activeDate: Date
   setActiveDate: (date: Date) => void
-  calendarEvents: CalendarEvent[]
-  setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
   navigateToDate: (date: Date) => Promise<void>
   registerScrollToDate: (fn: (date: Date) => void) => void
   isNavigating: () => boolean
@@ -37,7 +33,6 @@ export function useCalendarState() {
 export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<Calendar[]>([])
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
 
   const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -94,8 +89,6 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     reloadCalendars: loadCalendarsFromStore,
     activeDate,
     setActiveDate,
-    calendarEvents,
-    setCalendarEvents,
 
     navigateToDate,
     registerScrollToDate,

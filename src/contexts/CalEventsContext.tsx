@@ -1,0 +1,61 @@
+import {
+  Dispatch,
+  ReactNode,
+  RefObject,
+  SetStateAction,
+  createContext,
+  useContext,
+  useEffectEvent,
+  useRef,
+  useState,
+} from "react"
+
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
+import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
+
+import { CalendarEvent, DateRange } from "@/db/types"
+
+interface CalEventsContextType {
+  calendarEvents: CalendarEvent[]
+  setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
+  reloadEvents: () => Promise<void>
+  currentDateRangeRef: RefObject<DateRange | null>
+}
+
+const CalEventsContext = createContext({} as CalEventsContextType)
+
+export function useCalEvents() {
+  return useContext(CalEventsContext)
+}
+
+export function CalEventsProvider({ children }: { children: ReactNode }) {
+  const { calendars, activeDate } = useCalendarState()
+  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+
+  const currentDateRangeRef = useRef<DateRange | null>(null)
+
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
+
+  const reloadEvents = useEffectEvent(async () => {
+    const activeRange = getStartRangeForDate(activeDate)
+
+    // Core data hasn't loaded yet:
+    if (!visibleCalendarIds.length || !activeDate) {
+      return
+    }
+
+    currentDateRangeRef.current = activeRange
+    const events = await getCalendarEventsForRange(activeRange, visibleCalendarIds)
+    setCalendarEvents(events)
+  })
+
+  const value: CalEventsContextType = {
+    calendarEvents,
+    setCalendarEvents,
+    reloadEvents,
+    currentDateRangeRef,
+  }
+
+  return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>
+}
