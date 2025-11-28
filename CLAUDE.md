@@ -26,6 +26,7 @@ actions, including SQLite operations are handled in the frontend.
 - Communicates with Rust backend via taurpc generated bindings
 - Always use pnpm for frontend dependencies
 - Use tailwind and shadcn for components
+- We use tailwind v4 with the config at `src/global.css`
 - Use `react-icons` for all icons
 - When applying a class conditionally, use the `cn` utility function
 - Avoid using margins, instead use paddings and flex-gaps

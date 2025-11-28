@@ -29,7 +29,7 @@ export function EventInfo({
     <div className="flex flex-col gap-4">
       <input
         value={summary ?? ""}
-        className="text-base outline-none!"
+        className="text-lg outline-none!"
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 
