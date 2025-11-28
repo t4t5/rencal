@@ -1,8 +1,9 @@
 import { parse } from "date-fns"
 import { useCallback } from "react"
 
-import { EventCard } from "@/components/event-card/EventCard"
+import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -34,27 +35,29 @@ export const NewEvent = () => {
   }, [draftEvent])
 
   return (
-    <EventCard
-      summary={summary}
-      start={start}
-      end={end}
-      allDay={allDay}
-      onChangeSummary={(newSummary) => {
-        setDraftEvent({ ...draftEvent, summary: newSummary })
-      }}
-      onAllDayChange={(checked) => {
-        setDraftEvent({ ...draftEvent, allDay: checked })
-      }}
-      onChangeStartTime={(time) => {
-        const newStart = parse(time, "HH:mm", start)
-        setDraftEvent({ ...draftEvent, start: newStart })
-      }}
-      onChangeEndTime={(time) => {
-        const newEnd = parse(time, "HH:mm", end)
-        setDraftEvent({ ...draftEvent, end: newEnd })
-      }}
-    >
-      <Button onClick={onCreate}>Add Event</Button>
-    </EventCard>
+    <Card>
+      <EventInfo
+        summary={summary}
+        start={start}
+        end={end}
+        allDay={allDay}
+        onChangeSummary={(newSummary) => {
+          setDraftEvent({ ...draftEvent, summary: newSummary })
+        }}
+        onAllDayChange={(checked) => {
+          setDraftEvent({ ...draftEvent, allDay: checked })
+        }}
+        onChangeStartTime={(time) => {
+          const newStart = parse(time, "HH:mm", start)
+          setDraftEvent({ ...draftEvent, start: newStart })
+        }}
+        onChangeEndTime={(time) => {
+          const newEnd = parse(time, "HH:mm", end)
+          setDraftEvent({ ...draftEvent, end: newEnd })
+        }}
+      >
+        <Button onClick={onCreate}>Add Event</Button>
+      </EventInfo>
+    </Card>
   )
 }

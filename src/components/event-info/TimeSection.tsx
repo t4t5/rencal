@@ -2,7 +2,7 @@ import { format } from "date-fns"
 import { GoClock as ClockIcon } from "react-icons/go"
 import { IoIosArrowRoundForward as ArrowIcon } from "react-icons/io"
 
-import { Section, SectionIcon, SectionInput } from "@/components/event-card/Section"
+import { Section, SectionIcon, SectionInput } from "@/components/event-info/Section"
 
 import { cn } from "@/lib/utils"
 

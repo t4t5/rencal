@@ -1,6 +1,8 @@
 import { format, isSameYear } from "date-fns"
 import { forwardRef } from "react"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
+
 import type { CalendarEvent } from "@/db/types"
 
 import { EventRow } from "./EventRow"
@@ -11,6 +13,8 @@ type DaySectionProps = {
 }
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, events }, ref) => {
+  const { openEvent } = useCalEvents()
+
   return (
     <div
       ref={ref}
@@ -23,7 +27,9 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
 
       <div className="flex flex-col gap-3 pb-2">
         {events.map((event) => (
-          <EventRow key={event.id} event={event} />
+          <div onClick={() => openEvent(event.id)} className="cursor-default hover:bg-secondary">
+            <EventRow key={event.id} event={event} />
+          </div>
         ))}
       </div>
     </div>

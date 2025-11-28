@@ -10,6 +10,8 @@ import {
   useState,
 } from "react"
 
+import { Sheet, SheetContent } from "@/components/ui/sheet"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
@@ -21,6 +23,7 @@ interface CalEventsContextType {
   setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
   reloadEvents: () => Promise<void>
   currentDateRangeRef: RefObject<DateRange | null>
+  openEvent: (eventId: string) => void
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -36,6 +39,10 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
   const currentDateRangeRef = useRef<DateRange | null>(null)
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
+  const [activeEventId, setActiveEventId] = useState<string | null>(null)
+  const [showSheet, setShowSheet] = useState(false)
+
+  const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
 
   const reloadEvents = useEffectEvent(async () => {
     const activeRange = getStartRangeForDate(activeDate)
@@ -50,12 +57,27 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     setCalendarEvents(events)
   })
 
+  const openEvent = (eventId: string) => {
+    setActiveEventId(eventId)
+    setShowSheet(true)
+  }
+
   const value: CalEventsContextType = {
     calendarEvents,
     setCalendarEvents,
     reloadEvents,
     currentDateRangeRef,
+    openEvent,
   }
 
-  return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>
+  return (
+    <CalEventsContext.Provider value={value}>
+      {children}
+      <Sheet open={showSheet} onOpenChange={setShowSheet}>
+        <SheetContent>
+          <p>{activeEvent?.summary}</p>
+        </SheetContent>
+      </Sheet>
+    </CalEventsContext.Provider>
+  )
 }

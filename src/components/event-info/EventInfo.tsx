@@ -1,11 +1,10 @@
 import { ReactNode } from "react"
 
-import { AllDaySection } from "@/components/event-card/AllDaySection"
-import { LocationSection } from "@/components/event-card/LocationSection"
-import { TimeSection } from "@/components/event-card/TimeSection"
-import { Card } from "@/components/ui/card"
+import { AllDaySection } from "@/components/event-info/AllDaySection"
+import { LocationSection } from "@/components/event-info/LocationSection"
+import { TimeSection } from "@/components/event-info/TimeSection"
 
-export function EventCard({
+export function EventInfo({
   summary,
   onChangeSummary,
   start,
@@ -27,7 +26,7 @@ export function EventCard({
   children?: ReactNode
 }) {
   return (
-    <Card className="gap-4">
+    <div className="gap-4">
       <input
         value={summary ?? ""}
         className="text-base outline-none!"
@@ -47,6 +46,6 @@ export function EventCard({
       </div>
 
       {children}
-    </Card>
+    </div>
   )
 }

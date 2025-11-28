@@ -1,6 +1,6 @@
 import { LuMapPin as LocationIcon } from "react-icons/lu"
 
-import { Section, SectionIcon, SectionInput } from "@/components/event-card/Section"
+import { Section, SectionIcon, SectionInput } from "@/components/event-info/Section"
 
 export const LocationSection = () => {
   return (

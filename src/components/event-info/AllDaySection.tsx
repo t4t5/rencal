@@ -1,4 +1,4 @@
-import { Section, SectionIcon } from "@/components/event-card/Section"
+import { Section, SectionIcon } from "@/components/event-info/Section"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
