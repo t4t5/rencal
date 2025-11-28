@@ -13,7 +13,7 @@ type DaySectionProps = {
 }
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, events }, ref) => {
-  const { openEvent } = useCalEvents()
+  const { setActiveEventId } = useCalEvents()
 
   return (
     <div
@@ -25,10 +25,14 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
         {format(date, isSameYear(date, new Date()) ? "dd MMM" : "dd MMM yyyy")}
       </div>
 
-      <div className="flex flex-col gap-3 pb-2">
+      <div className="flex flex-col gap-1 pb-2">
         {events.map((event) => (
-          <div onClick={() => openEvent(event.id)} className="cursor-default hover:bg-secondary">
-            <EventRow key={event.id} event={event} />
+          <div
+            key={event.id}
+            onClick={() => setActiveEventId(event.id)}
+            className="cursor-default hover:bg-secondary py-1"
+          >
+            <EventRow event={event} />
           </div>
         ))}
       </div>
