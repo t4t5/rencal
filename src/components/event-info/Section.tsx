@@ -3,7 +3,7 @@ import { ComponentProps, ReactNode } from "react"
 import { cn } from "@/lib/utils"
 
 export const Section = ({ children }: { children: ReactNode }) => {
-  return <div className="flex gap-3 text-sm text-muted-foreground">{children}</div>
+  return <div className="flex gap-3 text-sm text-muted-foreground px-3">{children}</div>
 }
 
 export const SectionIcon = ({

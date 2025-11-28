@@ -25,7 +25,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const calendar = calendars.find((c) => c.id === calendarId)
 
   return (
-    <div className="px-4 py-5">
+    <div className="px-2 py-5">
       <EventInfo
         summary={summary}
         start={start}

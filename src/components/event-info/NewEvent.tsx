@@ -33,34 +33,40 @@ export const NewEvent = () => {
   const calendar = calendars.find((cal) => cal.id === calendarId)
 
   return (
-    <Card>
-      <EventInfo
-        summary={summary}
-        start={start}
-        end={end}
-        allDay={allDay}
-        location={location}
-        calendar={calendar}
-        onLocationChange={(newLocation) => {
-          setDraftEvent({ ...draftEvent, location: newLocation })
-        }}
-        onChangeSummary={(newSummary) => {
-          setDraftEvent({ ...draftEvent, summary: newSummary })
-        }}
-        onAllDayChange={(checked) => {
-          setDraftEvent({ ...draftEvent, allDay: checked })
-        }}
-        onChangeStartTime={(time) => {
-          const newStart = parse(time, "HH:mm", start)
-          setDraftEvent({ ...draftEvent, start: newStart })
-        }}
-        onChangeEndTime={(time) => {
-          const newEnd = parse(time, "HH:mm", end)
-          setDraftEvent({ ...draftEvent, end: newEnd })
-        }}
-      >
-        <Button onClick={onCreate}>Add Event</Button>
-      </EventInfo>
+    <Card className="p-0 flex flex-col gap-0">
+      <div className="p-2">
+        <EventInfo
+          summary={summary}
+          start={start}
+          end={end}
+          allDay={allDay}
+          location={location}
+          calendar={calendar}
+          onLocationChange={(newLocation) => {
+            setDraftEvent({ ...draftEvent, location: newLocation })
+          }}
+          onChangeSummary={(newSummary) => {
+            setDraftEvent({ ...draftEvent, summary: newSummary })
+          }}
+          onAllDayChange={(checked) => {
+            setDraftEvent({ ...draftEvent, allDay: checked })
+          }}
+          onChangeStartTime={(time) => {
+            const newStart = parse(time, "HH:mm", start)
+            setDraftEvent({ ...draftEvent, start: newStart })
+          }}
+          onChangeEndTime={(time) => {
+            const newEnd = parse(time, "HH:mm", end)
+            setDraftEvent({ ...draftEvent, end: newEnd })
+          }}
+        />
+      </div>
+
+      <div className="p-4 pt-0">
+        <Button onClick={onCreate} className="w-full">
+          Add Event
+        </Button>
+      </div>
     </Card>
   )
 }

@@ -1,3 +1,5 @@
+import { useId } from "react"
+
 import { Section, SectionIcon } from "@/components/event-info/Section"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
@@ -11,11 +13,13 @@ export const AllDaySection = ({
   checked: boolean
   onCheckedChange: (checked: boolean) => void
 }) => {
+  const id = useId()
+
   return (
     <Section>
       <SectionIcon className="pt-0">
         <Checkbox
-          id="all-day"
+          id={id}
           checked={checked}
           className="cursor-pointer"
           onCheckedChange={() => {
@@ -26,7 +30,7 @@ export const AllDaySection = ({
       </SectionIcon>
 
       <Label
-        htmlFor="all-day"
+        htmlFor={id}
         className={cn("cursor-pointer", {
           "text-sidebar-primary-foreground": checked,
         })}

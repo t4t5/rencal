@@ -1,12 +1,9 @@
-import { ReactNode } from "react"
-
 import { AllDaySection } from "@/components/event-info/AllDaySection"
+import { CalendarSection } from "@/components/event-info/CalendarSection"
 import { LocationSection } from "@/components/event-info/LocationSection"
 import { TimeSection } from "@/components/event-info/TimeSection"
 
 import { Calendar } from "@/db/types"
-
-import { CalendarItem } from "../settings/CalendarItem"
 
 export function EventInfo({
   summary,
@@ -17,7 +14,6 @@ export function EventInfo({
   onChangeEndTime,
   allDay,
   onAllDayChange,
-  children,
   location,
   onLocationChange,
   calendar,
@@ -30,16 +26,15 @@ export function EventInfo({
   onChangeEndTime: (time: string) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
-  children?: ReactNode
   location?: string | null
   onLocationChange: (location: string) => void
   calendar?: Calendar
 }) {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-2">
       <input
         value={summary ?? ""}
-        className="text-lg outline-none!"
+        className="text-lg outline-none! px-3 py-1 border border-transparent hover:border-border rounded-md"
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 
@@ -53,14 +48,14 @@ export function EventInfo({
         />
         <AllDaySection checked={allDay} onCheckedChange={onAllDayChange} />
 
-        <hr />
+        <div className="px-3">
+          <hr />
+        </div>
 
         <LocationSection value={location} onChange={onLocationChange} />
 
-        {!!calendar && <CalendarItem calendar={calendar} />}
+        <CalendarSection calendar={calendar} />
       </div>
-
-      {children}
     </div>
   )
 }
