@@ -17,7 +17,7 @@ export const NewEvent = () => {
   const { draftEvent, setDraftEvent, setIsDrafting } = useEventDraft()
   const { reloadEvents } = useCalEvents()
 
-  const { summary, start, end, allDay } = draftEvent
+  const { summary, start, end, allDay, location } = draftEvent
 
   // FIXME: this shouldn't be needed:
   const { calendars } = useCalendarState()
@@ -41,6 +41,10 @@ export const NewEvent = () => {
         start={start}
         end={end}
         allDay={allDay}
+        location={location}
+        onLocationChange={(newLocation) => {
+          setDraftEvent({ ...draftEvent, location: newLocation })
+        }}
         onChangeSummary={(newSummary) => {
           setDraftEvent({ ...draftEvent, summary: newSummary })
         }}

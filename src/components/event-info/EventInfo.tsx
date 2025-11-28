@@ -14,6 +14,8 @@ export function EventInfo({
   allDay,
   onAllDayChange,
   children,
+  location,
+  onLocationChange,
 }: {
   summary?: string | null
   onChangeSummary: (summary: string) => void
@@ -24,6 +26,8 @@ export function EventInfo({
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
   children?: ReactNode
+  location?: string | null
+  onLocationChange: (location: string) => void
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -42,7 +46,7 @@ export function EventInfo({
           onChangeEndTime={onChangeEndTime}
         />
         <AllDaySection checked={allDay} onCheckedChange={onAllDayChange} />
-        <LocationSection />
+        <LocationSection value={location} onChange={onLocationChange} />
       </div>
 
       {children}

@@ -16,7 +16,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   if (!dirtyEvent) return null
 
-  const { summary, start, end, allDay } = dirtyEvent
+  const { summary, start, end, allDay, location } = dirtyEvent
 
   return (
     <div className="px-4 py-5">
@@ -25,6 +25,10 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         start={start}
         end={end}
         allDay={allDay}
+        location={location}
+        onLocationChange={(newLocation) => {
+          setDirtyEvent({ ...dirtyEvent, location: newLocation })
+        }}
         onChangeSummary={(newSummary) => {
           setDirtyEvent({ ...dirtyEvent, summary: newSummary })
         }}
