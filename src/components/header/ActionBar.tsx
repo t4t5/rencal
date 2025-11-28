@@ -8,6 +8,8 @@ import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
+
 import { useSyncEvents } from "@/hooks/useSyncEvents"
 import { cn } from "@/lib/utils"
 
@@ -21,7 +23,7 @@ export function ActionBar() {
       <AddEventButton />
 
       <div className="flex gap-2 items-center">
-        {/*<SyncStatus />*/}
+        <SyncStatus />
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>
@@ -42,13 +44,17 @@ export function ActionBar() {
 }
 
 const SyncStatus = () => {
-  const { isSyncing } = useSyncEvents()
+  const { reloadEvents } = useCalEvents()
+
+  const { isSyncing } = useSyncEvents({
+    onSyncComplete: reloadEvents,
+  })
 
   return (
     <div className="flex justify-between pr-2">
       <SyncIcon
-        className={cn({
-          "animate-spin text-primary": isSyncing,
+        className={cn("text-muted-foreground opacity-0 transition-opacity", {
+          "animate-spin text-primary opacity-100": isSyncing,
         })}
       />
     </div>

@@ -21,16 +21,30 @@ const GoogleEventDateTimeSchema = z.object({
 
 const GoogleEventSchema = z.object({
   id: z.string(),
-  status: z.string().optional(),
+  status: z.enum(["confirmed", "tentative", "cancelled"]),
   summary: z.string().optional(),
   start: GoogleEventDateTimeSchema,
   end: GoogleEventDateTimeSchema,
+  location: z.string().optional(),
   updated: z.string().optional(),
   recurringEventId: z.string().optional(),
   organizer: z
     .object({
       email: z.string(),
       self: z.boolean().optional(),
+    })
+    .optional(),
+  reminders: z
+    .object({
+      overrides: z
+        .array(
+          z.object({
+            method: z.enum(["email", "popup", "sms"]),
+            minutes: z.number(),
+          }),
+        )
+        .optional(),
+      useDefault: z.boolean(),
     })
     .optional(),
 })
@@ -129,6 +143,7 @@ export async function syncGoogleEvents(
     }
 
     pageToken = data.nextPageToken
+
     if (data.nextSyncToken) {
       newSyncToken = data.nextSyncToken
     }
