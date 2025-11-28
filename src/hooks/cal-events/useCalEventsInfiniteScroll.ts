@@ -7,7 +7,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 
-export const useRollingEvents = ({
+export const useCalEventsInfiniteScroll = ({
   scrollContainerRef,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>

@@ -6,10 +6,9 @@ import { DaySection } from "@/components/events/DaySection"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useRollingEvents } from "@/hooks/useRollingEvents"
-
-import { useGroupedEvents } from "./useGroupedEvents"
-import { useJumpToScrolledDate } from "./useJumpToScrolledDate"
+import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfiniteScroll"
+import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
+import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
 
 export function EventList() {
   const {
@@ -27,7 +26,7 @@ export function EventList() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
 
-  useRollingEvents({
+  useCalEventsInfiniteScroll({
     scrollContainerRef,
   })
 
