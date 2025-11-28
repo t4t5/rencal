@@ -10,6 +10,7 @@ import {
   useState,
 } from "react"
 
+import { EditEvent } from "@/components/event-info/EditEvent"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -75,7 +76,7 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
       {children}
       <Sheet open={showSheet} onOpenChange={setShowSheet}>
         <SheetContent>
-          <p>{activeEvent?.summary}</p>
+          <EditEvent event={activeEvent} />
         </SheetContent>
       </Sheet>
     </CalEventsContext.Provider>

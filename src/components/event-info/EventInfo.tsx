@@ -26,7 +26,7 @@ export function EventInfo({
   children?: ReactNode
 }) {
   return (
-    <div className="gap-4">
+    <div className="flex flex-col gap-4">
       <input
         value={summary ?? ""}
         className="text-base outline-none!"

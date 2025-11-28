@@ -1,5 +1,5 @@
+import { NewEvent } from "@/components/event-info/NewEvent"
 import { ActionBar } from "@/components/header/ActionBar"
-import { NewEvent } from "@/components/header/NewEvent"
 
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
