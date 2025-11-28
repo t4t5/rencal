@@ -1,5 +1,6 @@
 import { and, eq, inArray } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useState } from "react"
+import { v4 as uuidv4 } from "uuid"
 
 import { useAuth } from "@/contexts/AuthContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -8,7 +9,7 @@ import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { db, schema } from "@/db/database"
-import type { Account, Calendar, CalendarEventInsert } from "@/db/types"
+import type { Account, Calendar, CalendarEventInsert, ReminderInsert } from "@/db/types"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
@@ -31,7 +32,17 @@ function googleEventToCalendarEvent(
     start: new Date(start),
     end: new Date(end),
     allDay: !!googleEvent.start.date,
+    location: googleEvent.location ?? null,
+    status: googleEvent.status,
+    organizerEmail: googleEvent.organizer?.self ? null : (googleEvent.organizer?.email ?? null),
   }
+}
+
+function googleEventToReminders(googleEvent: GoogleEvent): number[] {
+  if (!googleEvent.reminders || googleEvent.reminders.useDefault) {
+    return []
+  }
+  return googleEvent.reminders.overrides?.map((r) => r.minutes) ?? []
 }
 
 /**
@@ -56,7 +67,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     [accounts],
   )
 
-  const upsertEvent = async (event: CalendarEventInsert) => {
+  const upsertEvent = async (event: CalendarEventInsert): Promise<string> => {
     if (event.providerEventId) {
       const [existing] = await db
         .select({ id: schema.events.id })
@@ -76,6 +87,9 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
             start: event.start,
             end: event.end,
             allDay: event.allDay,
+            location: event.location,
+            status: event.status,
+            organizerEmail: event.organizerEmail,
             updatedAt: new Date(),
           })
           .where(
@@ -84,19 +98,49 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
               eq(schema.events.calendarId, event.calendarId),
             ),
           )
-        return
+        return existing.id
       }
     }
 
+    const id = uuidv4()
     await db.insert(schema.events).values({
       ...event,
+      id,
       updatedAt: new Date(),
     })
+
+    return id
   }
 
-  const upsertMany = async (eventsToUpsert: CalendarEventInsert[]) => {
-    for (const event of eventsToUpsert) {
-      await upsertEvent(event)
+  const syncReminders = async (eventId: string, reminderMinutes: number[]) => {
+    // Delete existing reminders for this event
+    await db.delete(schema.reminders).where(eq(schema.reminders.eventId, eventId))
+
+    // Insert new reminders
+    if (reminderMinutes.length > 0) {
+      const reminders: ReminderInsert[] = reminderMinutes.map((minutes) => ({
+        eventId,
+        minutes,
+      }))
+      await db.insert(schema.reminders).values(reminders)
+    }
+  }
+
+  const upsertEventWithReminders = async (
+    googleEvent: GoogleEvent,
+    calendarId: string,
+  ): Promise<void> => {
+    const event = googleEventToCalendarEvent(googleEvent, calendarId)
+    if (!event) return
+
+    const eventId = await upsertEvent(event)
+    const reminderMinutes = googleEventToReminders(googleEvent)
+    await syncReminders(eventId, reminderMinutes)
+  }
+
+  const upsertMany = async (googleEvents: GoogleEvent[], calendarId: string) => {
+    for (const googleEvent of googleEvents) {
+      await upsertEventWithReminders(googleEvent, calendarId)
     }
   }
 
@@ -134,13 +178,8 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       syncGoogleEvents(token, providerCalendarId, null),
     )
 
-    // Convert Google events to our Event type
-    const syncedEvents = fullResult.events
-      .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
-      .filter((e): e is CalendarEventInsert => e !== null)
-
-    if (syncedEvents.length > 0) {
-      await upsertMany(syncedEvents)
+    if (fullResult.events.length > 0) {
+      await upsertMany(fullResult.events, calendar.id)
     }
 
     if (fullResult.syncToken) {
@@ -176,14 +215,10 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         await deleteByProviderEventIds(result.deletedEventIds, calendar.id)
       }
 
-      // Convert Google events to our Event type and upsert
-      const syncedEvents = result.events
-        .map((ge) => googleEventToCalendarEvent(ge, calendar.id))
-        .filter((e): e is CalendarEventInsert => e !== null)
-
-      if (syncedEvents.length > 0) {
-        logger.debug(`🔁 Upserting ${syncedEvents.length} events to "${calendar.name}"`)
-        await upsertMany(syncedEvents)
+      // Upsert events with reminders
+      if (result.events.length > 0) {
+        logger.debug(`🔁 Upserting ${result.events.length} events to "${calendar.name}"`)
+        await upsertMany(result.events, calendar.id)
       }
 
       // Update sync token

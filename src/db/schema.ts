@@ -54,6 +54,9 @@ export const events = sqliteTable(
     start: integer("start", { mode: "timestamp" }).notNull(),
     end: integer("end", { mode: "timestamp" }).notNull(),
     allDay: integer("all_day", { mode: "boolean" }).notNull(),
+    location: text("location"),
+    status: text("status", { enum: ["confirmed", "tentative", "cancelled"] }),
+    organizerEmail: text("organizer_email"),
     updatedAt: integer("updated_at", { mode: "timestamp" }),
   },
   (table) => [
@@ -61,4 +64,18 @@ export const events = sqliteTable(
     index("idx_events_provider_event_id").on(table.providerEventId),
     index("idx_events_start").on(table.start),
   ],
+)
+
+export const reminders = sqliteTable(
+  "reminders",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => uuidv4()),
+    eventId: text("event_id")
+      .notNull()
+      .references(() => events.id, { onDelete: "cascade" }),
+    minutes: integer("minutes").notNull(),
+  },
+  (table) => [index("idx_reminders_event_id").on(table.eventId)],
 )

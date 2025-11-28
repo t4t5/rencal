@@ -15,6 +15,13 @@
       "when": 1764186052390,
       "tag": "0001_update_active_to_is_visible",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1764342894003,
+      "tag": "0002_add_event_details",
+      "breakpoints": true
     }
   ]
 }
