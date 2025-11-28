@@ -4,13 +4,17 @@ import { useCallback } from "react"
 import { EventCard } from "@/components/event-card/EventCard"
 import { Button } from "@/components/ui/button"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
+
+import { logger } from "@/lib/logger"
 
 import { db, schema } from "@/db/database"
 
 export const NewEvent = () => {
   const { draftEvent, setDraftEvent, setIsDrafting } = useEventDraft()
+  const { reloadEvents } = useCalEvents()
 
   const { summary, start, end, allDay } = draftEvent
 
@@ -24,8 +28,9 @@ export const NewEvent = () => {
       calendarId: defaultCalendar.id, // FIXME
     })
 
-    console.log("Create event:", draftEvent)
+    logger.info("Create event:", draftEvent)
     setIsDrafting(false)
+    reloadEvents()
   }, [draftEvent])
 
   return (
