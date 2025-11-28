@@ -59,6 +59,9 @@ export const NewEvent = () => {
             const newEnd = parse(time, "HH:mm", end)
             setDraftEvent({ ...draftEvent, end: newEnd })
           }}
+          onCalendarChange={(newCalendarId) => {
+            setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
+          }}
         />
       </div>
 

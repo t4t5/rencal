@@ -17,6 +17,7 @@ export function EventInfo({
   location,
   onLocationChange,
   calendar,
+  onCalendarChange,
 }: {
   summary?: string | null
   onChangeSummary: (summary: string) => void
@@ -29,6 +30,7 @@ export function EventInfo({
   location?: string | null
   onLocationChange: (location: string) => void
   calendar?: Calendar
+  onCalendarChange: (calendarId: string) => void
 }) {
   return (
     <div className="flex flex-col gap-2">
@@ -54,7 +56,7 @@ export function EventInfo({
 
         <LocationSection value={location} onChange={onLocationChange} />
 
-        <CalendarSection calendar={calendar} />
+        <CalendarSection calendar={calendar} onChange={onCalendarChange} />
       </div>
     </div>
   )

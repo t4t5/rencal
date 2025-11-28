@@ -50,6 +50,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           const newEnd = parse(time, "HH:mm", end)
           setDirtyEvent({ ...dirtyEvent, end: newEnd })
         }}
+        onCalendarChange={(newCalendarId) => {
+          setDirtyEvent({ ...dirtyEvent, calendarId: newCalendarId })
+        }}
       />
     </div>
   )

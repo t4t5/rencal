@@ -5,11 +5,17 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { Calendar } from "@/db/types"
 
-export const CalendarSection = ({ calendar }: { calendar?: Calendar }) => {
+export const CalendarSection = ({
+  calendar,
+  onChange,
+}: {
+  calendar?: Calendar
+  onChange: (calendarId: string) => void
+}) => {
   const { calendars } = useCalendarState()
 
   return (
-    <Select>
+    <Select onValueChange={onChange}>
       <SelectTrigger className="w-full">
         {calendar ? <CalendarItem calendar={calendar} /> : <span>Select Calendar</span>}
       </SelectTrigger>

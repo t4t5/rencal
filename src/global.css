@@ -147,6 +147,7 @@
   --accent: var(--activeBg);
   --card: var(--buttonSecondaryBg);
   --muted-foreground: var(--textSecondary);
+  --popover: var(--bgPrimary);
 }
 
 @layer base {
