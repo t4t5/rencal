@@ -11,7 +11,7 @@ export type CalendarEventInsert = InferInsertModel<typeof schema.events>
 export type Reminder = InferSelectModel<typeof schema.reminders>
 export type ReminderInsert = InferInsertModel<typeof schema.reminders>
 
-export type DraftEvent = Omit<CalendarEventInsert, "calendarId">
+export type DraftEvent = CalendarEventInsert
 
 export interface DateRange {
   start: Date

@@ -5,7 +5,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { Account, EmailProvider } from "@/db/types"
 
-import { CalendarItem } from "./CalendarItem"
+import { CalendarItemWithVisibilityToggle } from "./CalendarItem"
 
 const providerToIcon: Record<EmailProvider, IconType> = {
   Google: GoogleIcon,
@@ -19,15 +19,16 @@ export function AccountSection({ account }: { account: Account }) {
   const ProviderIcon = providerToIcon[account.provider]
 
   return (
-    <div className="p-3 flex flex-col gap-2">
+    <div className="p-3 flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <ProviderIcon className="size-4 text-muted-foreground" />
         <span className="text-sm text-muted-foreground">{account.email}</span>
       </div>
-      <div className="flex flex-col">
-        {accountCalendars.map((calendar) => (
-          <CalendarItem key={calendar.id} calendar={calendar} />
-        ))}
+
+      <div className="flex flex-col gap-3">
+        {accountCalendars.map((calendar) => {
+          return <CalendarItemWithVisibilityToggle key={calendar.id} calendar={calendar} />
+        })}
       </div>
     </div>
   )

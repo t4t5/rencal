@@ -4,6 +4,10 @@ import { AllDaySection } from "@/components/event-info/AllDaySection"
 import { LocationSection } from "@/components/event-info/LocationSection"
 import { TimeSection } from "@/components/event-info/TimeSection"
 
+import { Calendar } from "@/db/types"
+
+import { CalendarItem } from "../settings/CalendarItem"
+
 export function EventInfo({
   summary,
   onChangeSummary,
@@ -16,6 +20,7 @@ export function EventInfo({
   children,
   location,
   onLocationChange,
+  calendar,
 }: {
   summary?: string | null
   onChangeSummary: (summary: string) => void
@@ -28,6 +33,7 @@ export function EventInfo({
   children?: ReactNode
   location?: string | null
   onLocationChange: (location: string) => void
+  calendar?: Calendar
 }) {
   return (
     <div className="flex flex-col gap-4">
@@ -46,7 +52,12 @@ export function EventInfo({
           onChangeEndTime={onChangeEndTime}
         />
         <AllDaySection checked={allDay} onCheckedChange={onAllDayChange} />
+
+        <hr />
+
         <LocationSection value={location} onChange={onLocationChange} />
+
+        {!!calendar && <CalendarItem calendar={calendar} />}
       </div>
 
       {children}

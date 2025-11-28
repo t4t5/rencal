@@ -3,9 +3,13 @@ import { useEffect, useState } from "react"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
 import { CalendarEvent } from "@/db/types"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
+  const { calendars } = useCalendarState()
+
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
 
   useEffect(() => {
@@ -16,7 +20,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   if (!dirtyEvent) return null
 
-  const { summary, start, end, allDay, location } = dirtyEvent
+  const { summary, start, end, allDay, location, calendarId } = dirtyEvent
+
+  const calendar = calendars.find((c) => c.id === calendarId)
 
   return (
     <div className="px-4 py-5">
@@ -26,6 +32,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         end={end}
         allDay={allDay}
         location={location}
+        calendar={calendar}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation })
         }}

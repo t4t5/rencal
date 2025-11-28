@@ -1,7 +1,9 @@
 import { addHours, addMinutes, startOfHour } from "date-fns"
-import { ReactNode, createContext, useContext, useState } from "react"
+import { ReactNode, createContext, useCallback, useContext, useState } from "react"
 
 import { DraftEvent } from "@/db/types"
+
+import { useCalendarState } from "./CalendarStateContext"
 
 interface EventDraftContextType {
   isDrafting: boolean
@@ -25,18 +27,22 @@ export function useEventDraft() {
 const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 
 export function EventDraftProvider({ children }: { children: ReactNode }) {
+  const { calendars } = useCalendarState()
   const [isDrafting, setIsDrafting] = useState(false)
+
+  const defaultCalendarId = calendars[0]?.id ?? null
 
   const [text, _setText] = useState("")
 
-  const generateDefaultDraftEvent = (): DraftEvent => {
+  const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     return {
       summary: "",
       allDay: false,
       start: getClosestNextHour(),
       end: addMinutes(getClosestNextHour(), 30),
+      calendarId: defaultCalendarId,
     }
-  }
+  }, [defaultCalendarId])
 
   const [draftEvent, setDraftEvent] = useState<DraftEvent>(generateDefaultDraftEvent())
 

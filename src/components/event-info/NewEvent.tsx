@@ -14,25 +14,23 @@ import { logger } from "@/lib/logger"
 import { db, schema } from "@/db/database"
 
 export const NewEvent = () => {
+  const { calendars } = useCalendarState()
   const { draftEvent, setDraftEvent, setIsDrafting } = useEventDraft()
   const { reloadEvents } = useCalEvents()
 
-  const { summary, start, end, allDay, location } = draftEvent
-
-  // FIXME: this shouldn't be needed:
-  const { calendars } = useCalendarState()
-  const defaultCalendar = calendars[0]
+  const { summary, start, end, allDay, location, calendarId } = draftEvent
 
   const onCreate = useCallback(async () => {
     await db.insert(schema.events).values({
       ...draftEvent,
-      calendarId: defaultCalendar.id, // FIXME
     })
 
     logger.info("Create event:", draftEvent)
     setIsDrafting(false)
     reloadEvents()
   }, [draftEvent])
+
+  const calendar = calendars.find((cal) => cal.id === calendarId)
 
   return (
     <Card>
@@ -42,6 +40,7 @@ export const NewEvent = () => {
         end={end}
         allDay={allDay}
         location={location}
+        calendar={calendar}
         onLocationChange={(newLocation) => {
           setDraftEvent({ ...draftEvent, location: newLocation })
         }}
