@@ -40,7 +40,7 @@ export function EventInfo({
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-2">
         <DateTimeSection
           start={start}
           end={end}
