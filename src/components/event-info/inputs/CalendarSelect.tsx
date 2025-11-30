@@ -5,7 +5,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { Calendar } from "@/db/types"
 
-export const CalendarSection = ({
+export const CalendarSelect = ({
   calendar,
   onChange,
 }: {

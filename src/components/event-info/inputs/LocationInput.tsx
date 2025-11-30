@@ -2,7 +2,7 @@ import { LuMapPin as LocationIcon } from "react-icons/lu"
 
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
-export const LocationSection = ({
+export const LocationInput = ({
   value,
   onChange,
 }: {

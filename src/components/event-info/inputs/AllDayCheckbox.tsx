@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label"
 
 import { cn } from "@/lib/utils"
 
-export const AllDaySection = ({
+export const AllDayCheckbox = ({
   checked,
   onCheckedChange,
 }: {

@@ -7,7 +7,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/in
 
 import { cn } from "@/lib/utils"
 
-export const DateTimeSection = ({
+export const DateTimeSelect = ({
   start,
   end,
   allDay,
@@ -22,19 +22,19 @@ export const DateTimeSection = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <TimeSelector
+      <TimeSelect
         start={start}
         end={end}
         allDay={allDay}
         onChangeStartTime={onChangeStartTime}
         onChangeEndTime={onChangeEndTime}
       />
-      <DateSelector start={start} end={end} allDay={allDay} />
+      <DateSelect start={start} end={end} allDay={allDay} />
     </div>
   )
 }
 
-const TimeSelector = ({
+const TimeSelect = ({
   start,
   end,
   allDay,
@@ -83,7 +83,7 @@ const TimeSelector = ({
   )
 }
 
-const DateSelector = ({ start, end, allDay }: { start: Date; end: Date; allDay: boolean }) => {
+const DateSelect = ({ start, end, allDay }: { start: Date; end: Date; allDay: boolean }) => {
   const formattedStartDate = format(start, "EEE d MMM")
   const formattedEndDate = format(end, "EEE d MMM")
 
