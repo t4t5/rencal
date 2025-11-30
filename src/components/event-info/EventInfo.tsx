@@ -1,7 +1,7 @@
 import { AllDaySection } from "@/components/event-info/AllDaySection"
 import { CalendarSection } from "@/components/event-info/CalendarSection"
+import { DateTimeSection } from "@/components/event-info/DateTimeSection"
 import { LocationSection } from "@/components/event-info/LocationSection"
-import { TimeSection } from "@/components/event-info/TimeSection"
 
 import { Calendar } from "@/db/types"
 
@@ -41,7 +41,7 @@ export function EventInfo({
       />
 
       <div className="flex flex-col gap-4">
-        <TimeSection
+        <DateTimeSection
           start={start}
           end={end}
           allDay={allDay}
