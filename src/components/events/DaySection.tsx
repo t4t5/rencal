@@ -3,6 +3,8 @@ import { forwardRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { cn } from "@/lib/utils"
+
 import type { CalendarEvent } from "@/db/types"
 
 import { EventRow } from "./EventRow"
@@ -13,7 +15,7 @@ type DaySectionProps = {
 }
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, events }, ref) => {
-  const { setActiveEventId } = useCalEvents()
+  const { activeEvent, setActiveEventId } = useCalEvents()
 
   return (
     <div
@@ -26,15 +28,21 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
       </div>
 
       <div className="flex flex-col gap-1 pb-2">
-        {events.map((event) => (
-          <div
-            key={event.id}
-            onClick={() => setActiveEventId(event.id)}
-            className="cursor-default hover:bg-secondary py-1"
-          >
-            <EventRow event={event} />
-          </div>
-        ))}
+        {events.map((event) => {
+          const isActive = event.id === activeEvent?.id
+
+          return (
+            <div
+              key={event.id}
+              onClick={() => setActiveEventId(event.id)}
+              className={cn("cursor-default hover:bg-secondary py-1", {
+                "bg-accent!": isActive,
+              })}
+            >
+              <EventRow event={event} />
+            </div>
+          )
+        })}
       </div>
     </div>
   )

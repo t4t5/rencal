@@ -94,6 +94,7 @@
   --color-buttonPrimaryBg: var(--buttonPrimaryBg);
   --color-active: var(--active);
   --color-weekendBg: var(--weekendBg);
+  --color-hoverBg: var(--hoverBg);
 }
 
 .dark {
@@ -131,6 +132,7 @@
 
   /* Figma variables: */
   --activeBg: #d9d9d930;
+  --hoverBg: #d9d9d915;
   --bgPrimary: #1a1b26;
   --buttonPrimaryBg: #0094c6;
   --buttonSecondaryBg: #ffffff08;
@@ -145,6 +147,7 @@
   --primary-foreground: white;
   --secondary: var(--buttonSecondaryBg);
   --accent: var(--activeBg);
+  --hover: var(--hoverBg);
   --card: var(--buttonSecondaryBg);
   --muted-foreground: var(--textSecondary);
   --popover: var(--bgPrimary);
