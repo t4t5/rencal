@@ -1,7 +1,7 @@
-import { AllDaySection } from "@/components/event-info/AllDaySection"
-import { CalendarSection } from "@/components/event-info/CalendarSection"
-import { LocationSection } from "@/components/event-info/LocationSection"
-import { TimeSection } from "@/components/event-info/TimeSection"
+import { AllDayCheckbox } from "@/components/event-info/inputs/AllDayCheckbox"
+import { CalendarSelect } from "@/components/event-info/inputs/CalendarSelect"
+import { DateTimeSelect } from "@/components/event-info/inputs/DateTimeSelect"
+import { LocationInput } from "@/components/event-info/inputs/LocationInput"
 
 import { Calendar } from "@/db/types"
 
@@ -40,23 +40,23 @@ export function EventInfo({
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 
-      <div className="flex flex-col gap-4">
-        <TimeSection
+      <div className="flex flex-col gap-2">
+        <DateTimeSelect
           start={start}
           end={end}
           allDay={allDay}
           onChangeStartTime={onChangeStartTime}
           onChangeEndTime={onChangeEndTime}
         />
-        <AllDaySection checked={allDay} onCheckedChange={onAllDayChange} />
+        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} />
 
         <div className="px-3">
           <hr />
         </div>
 
-        <LocationSection value={location} onChange={onLocationChange} />
+        <LocationInput value={location} onChange={onLocationChange} />
 
-        <CalendarSection calendar={calendar} onChange={onCalendarChange} />
+        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
       </div>
     </div>
   )
