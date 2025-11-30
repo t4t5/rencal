@@ -1,6 +1,6 @@
 import { LuMapPin as LocationIcon } from "react-icons/lu"
 
-import { Section, SectionIcon, SectionInput } from "@/components/event-info/Section"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
 export const LocationSection = ({
   value,
@@ -10,15 +10,15 @@ export const LocationSection = ({
   onChange: (location: string) => void
 }) => {
   return (
-    <Section>
-      <SectionIcon>
-        <LocationIcon className="size-4" />
-      </SectionIcon>
-      <SectionInput
+    <InputGroup>
+      <InputGroupAddon>
+        <LocationIcon />
+      </InputGroupAddon>
+      <InputGroupInput
         placeholder="Location"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
       />
-    </Section>
+    </InputGroup>
   )
 }
