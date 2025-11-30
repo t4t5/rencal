@@ -9,8 +9,10 @@ export function EventInfo({
   summary,
   onChangeSummary,
   start,
+  onChangeStartDate,
   onChangeStartTime,
   end,
+  onChangeEndDate,
   onChangeEndTime,
   allDay,
   onAllDayChange,
@@ -22,8 +24,10 @@ export function EventInfo({
   summary?: string | null
   onChangeSummary: (summary: string) => void
   start: Date
+  onChangeStartDate: (date: Date | null) => void
   onChangeStartTime: (time: string) => void
   end: Date
+  onChangeEndDate: (date: Date | null) => void
   onChangeEndTime: (time: string) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
@@ -35,6 +39,7 @@ export function EventInfo({
   return (
     <div className="flex flex-col gap-2">
       <input
+        placeholder="Event Title"
         value={summary ?? ""}
         className="text-lg outline-none! px-3 py-1 border border-transparent hover:border-border rounded-md"
         onChange={(e) => onChangeSummary(e.target.value)}
@@ -45,7 +50,9 @@ export function EventInfo({
           start={start}
           end={end}
           allDay={allDay}
+          onChangeStartDate={onChangeStartDate}
           onChangeStartTime={onChangeStartTime}
+          onChangeEndDate={onChangeEndDate}
           onChangeEndTime={onChangeEndTime}
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} />

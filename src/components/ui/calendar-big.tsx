@@ -1,12 +1,35 @@
+import { format, getWeek } from "date-fns"
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
-import * as React from "react"
-import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
+import { ComponentProps, useEffect, useRef } from "react"
+import {
+  Day,
+  DayButton,
+  DayPicker,
+  getDefaultClassNames,
+  Month,
+  MonthCaption,
+  Nav,
+  Week,
+  Weekday,
+} from "react-day-picker"
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
 
-function Calendar({
+// Map weekday abbreviations to day numbers (0=Sunday, 1=Monday, etc.)
+// Adjust based on your formatWeekdayName formatter
+const WEEKDAY_MAP: Record<string, number> = {
+  SUN: 0,
+  MON: 1,
+  TUE: 2,
+  WED: 3,
+  THU: 4,
+  FRI: 5,
+  SAT: 6,
+}
+
+function CalendarBig({
   className,
   classNames,
   showOutsideDays = true,
@@ -15,29 +38,33 @@ function Calendar({
   formatters,
   components,
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
-  buttonVariant?: React.ComponentProps<typeof Button>["variant"]
+}: ComponentProps<typeof DayPicker> & {
+  buttonVariant?: ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      fixedWeeks
       className={cn(
-        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
+        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
       )}
+      weekStartsOn={1}
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        formatWeekdayName: (date) =>
+          date.toLocaleString("default", { weekday: "short" }).toUpperCase(),
         ...formatters,
       }}
       classNames={{
-        root: cn("w-fit", defaultClassNames.root),
+        root: cn("w-full"),
         months: cn("flex gap-4 flex-col md:flex-row relative", defaultClassNames.months),
-        month: cn("flex flex-col w-full gap-4", defaultClassNames.month),
+        month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden!"),
         nav: cn(
           "flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between",
           defaultClassNames.nav,
@@ -69,23 +96,23 @@ function Calendar({
           "select-none font-medium",
           captionLayout === "label"
             ? "text-sm"
-            : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5",
+            : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm [&>svg]:text-muted-foreground [&>svg]:size-3.5",
           defaultClassNames.caption_label,
         ),
         table: "w-full border-collapse",
         weekdays: cn("flex", defaultClassNames.weekdays),
         weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal text-[0.8rem] select-none",
+          "text-muted-foreground rounded-md flex-1 font-normal select-none text-[11px]",
           defaultClassNames.weekday,
         ),
-        week: cn("flex w-full mt-2", defaultClassNames.week),
+        week: cn("flex w-full", defaultClassNames.week),
         week_number_header: cn("select-none w-(--cell-size)", defaultClassNames.week_number_header),
         week_number: cn(
           "text-[0.8rem] select-none text-muted-foreground",
           defaultClassNames.week_number,
         ),
         day: cn(
-          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day aspect-square select-none",
+          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
           props.showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
             : "[&:first-child[data-selected=true]_button]:rounded-l-md",
@@ -94,16 +121,13 @@ function Calendar({
         range_start: cn("rounded-l-md bg-accent", defaultClassNames.range_start),
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn("rounded-r-md bg-accent", defaultClassNames.range_end),
-        today: cn(
-          "bg-accent text-accent-foreground rounded-md data-[selected=true]:rounded-none",
-          defaultClassNames.today,
-        ),
+        // today: cn("text-active", defaultClassNames.today),
         outside: cn(
           "text-muted-foreground aria-selected:text-muted-foreground",
           defaultClassNames.outside,
         ),
         disabled: cn("text-muted-foreground opacity-50", defaultClassNames.disabled),
-        hidden: cn("invisible", defaultClassNames.hidden),
+        hidden: cn("invisible"),
         ...classNames,
       }}
       components={{
@@ -121,7 +145,40 @@ function Calendar({
 
           return <ChevronDownIcon className={cn("size-4", className)} {...props} />
         },
-        DayButton: CalendarDayButton,
+        Month: ({ className, ...monthProps }) => {
+          return <Month className={cn(className, "w-full")} {...monthProps} />
+        },
+        MonthCaption: ({ className, ...captionProps }) => {
+          return (
+            <MonthCaption {...captionProps} className="text-2xl font-bold pl-4">
+              {format(captionProps.calendarMonth.date, "MMMM yyyy")}
+            </MonthCaption>
+          )
+        },
+        Nav: ({ className, ...props }) => {
+          return <Nav className={cn(className, "w-auto left-auto right-0 pr-4")} {...props} />
+        },
+        PreviousMonthButton: ({ className, ...props }) => {
+          return <Button variant="secondary" className={className} {...props} />
+        },
+        NextMonthButton: ({ className, ...props }) => {
+          return <Button variant="secondary" className={className} {...props} />
+        },
+        Week: ({ className, ...weekProps }) => {
+          const { week } = weekProps
+
+          const currentWeekNumber = getWeek(new Date())
+          const isCurrentWeek = week.weekNumber === currentWeekNumber
+
+          return (
+            <Week
+              className={cn(className, {
+                "bg-white/8": isCurrentWeek,
+              })}
+              {...weekProps}
+            />
+          )
+        },
         WeekNumber: ({ children, ...props }) => {
           return (
             <td {...props}>
@@ -129,6 +186,38 @@ function Calendar({
                 {children}
               </div>
             </td>
+          )
+        },
+        Weekday: ({ className, children, ...weekdayProps }) => {
+          const weekdayName = typeof children === "string" ? children : ""
+          const weekdayNumber = WEEKDAY_MAP[weekdayName]
+          const isCurrentWeekday = weekdayNumber === new Date().getDay()
+          const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
+
+          return (
+            <Weekday
+              {...weekdayProps}
+              className={cn(className, "rounded-none", {
+                "text-active": isCurrentWeekday,
+                "bg-weekendBg": isWeekend,
+              })}
+            >
+              {children}
+            </Weekday>
+          )
+        },
+        DayButton: CalendarDayButton,
+        Day: ({ className, ...dayProps }) => {
+          const weekdayNumber = dayProps.day.date.getDay()
+          const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
+
+          return (
+            <Day
+              {...dayProps}
+              className={cn(className, "flex justify-center bg-transparent!", {
+                "bg-weekendBg!": isWeekend,
+              })}
+            />
           )
         },
         ...components,
@@ -143,11 +232,12 @@ function CalendarDayButton({
   day,
   modifiers,
   ...props
-}: React.ComponentProps<typeof DayButton>) {
+}: ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
 
-  const ref = React.useRef<HTMLButtonElement>(null)
-  React.useEffect(() => {
+  const ref = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
@@ -166,9 +256,12 @@ function CalendarDayButton({
       data-range-start={modifiers.range_start}
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
+      data-today={modifiers.today}
       className={cn(
-        "data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 dark:hover:text-accent-foreground flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70",
+        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-full! text-sm",
         defaultClassNames.day,
+        "data-[selected-single=true]:bg-activeBg! data-[selected-single=true]:font-bold! data-[selected-single=true]:text-lg!", // selected day
+        "data-[today=true]:text-active data-[today=true]:data-[selected-single=true]:bg-primary! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today
         className,
       )}
       {...props}
@@ -176,4 +269,4 @@ function CalendarDayButton({
   )
 }
 
-export { Calendar, CalendarDayButton }
+export { CalendarBig, CalendarDayButton }

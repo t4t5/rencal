@@ -1,6 +1,6 @@
 import { useCallback } from "react"
 
-import { Calendar } from "@/components/ui/calendar"
+import { CalendarBig } from "@/components/ui/calendar-big"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
@@ -15,7 +15,7 @@ export function StatefulCalendar() {
   )
 
   return (
-    <Calendar
+    <CalendarBig
       mode="single"
       selected={activeDate}
       onSelect={handleDateSelect}

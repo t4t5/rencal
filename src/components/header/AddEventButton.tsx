@@ -31,7 +31,7 @@ export function AddEventButton() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           autoFocus
-          className="border-none ring-transparent! text-sm"
+          className="border-none text-sm bg-secondary"
         />
       ) : (
         <Button variant="secondary" onClick={onNew}>

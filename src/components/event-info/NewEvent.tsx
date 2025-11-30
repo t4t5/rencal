@@ -1,4 +1,4 @@
-import { parse } from "date-fns"
+import { format, parse } from "date-fns"
 import { useCallback } from "react"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
@@ -51,9 +51,19 @@ export const NewEvent = () => {
           onAllDayChange={(checked) => {
             setDraftEvent({ ...draftEvent, allDay: checked })
           }}
+          onChangeStartDate={(date) => {
+            if (!date) return
+            const newStart = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", start)
+            setDraftEvent({ ...draftEvent, start: newStart })
+          }}
           onChangeStartTime={(time) => {
             const newStart = parse(time, "HH:mm", start)
             setDraftEvent({ ...draftEvent, start: newStart })
+          }}
+          onChangeEndDate={(date) => {
+            if (!date) return
+            const newEnd = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", end)
+            setDraftEvent({ ...draftEvent, end: newEnd })
           }}
           onChangeEndTime={(time) => {
             const newEnd = parse(time, "HH:mm", end)
