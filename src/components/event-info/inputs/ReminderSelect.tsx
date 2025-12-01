@@ -1,6 +1,6 @@
 import { useState } from "react"
 import { GoBell as BellIcon } from "react-icons/go"
-import { GoX as XIcon } from "react-icons/go"
+import { IoCloseOutline as CloseIcon } from "react-icons/io5"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
@@ -31,7 +31,7 @@ export function ReminderSelect({ reminders, onSelect, onRemove }: ReminderSelect
   const filtered = options.filter((opt) => opt.label.toLowerCase().includes(query.toLowerCase()))
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-1">
       <Combobox
         placeholder="Reminders"
         query={query}
@@ -63,25 +63,27 @@ export function ReminderSelect({ reminders, onSelect, onRemove }: ReminderSelect
         )}
       </Combobox>
 
-      {reminders.length > 0 && (
-        <div className="flex flex-col gap-1 px-3">
-          {reminders.map((mins) => (
-            <div
-              key={mins}
-              className="flex items-center justify-between text-sm text-muted-foreground"
-            >
-              <span>{getLabelForMinutes(mins)}</span>
-              <button
-                type="button"
-                onClick={() => onRemove(mins)}
-                className="p-1 hover:text-foreground"
-              >
-                <XIcon className="h-3 w-3" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {reminders.map((mins) => (
+        <ReminderRow mins={mins} onRemove={() => onRemove(mins)} />
+      ))}
+    </div>
+  )
+}
+
+const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove: () => void }) => {
+  return (
+    <div
+      key={mins}
+      className="flex items-center justify-between text-sm pl-9 hover:bg-secondary rounded-md p-1.5 group"
+    >
+      <span>{getLabelForMinutes(mins)}</span>
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+      >
+        <CloseIcon className="size-4" />
+      </button>
     </div>
   )
 }
