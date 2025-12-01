@@ -2,10 +2,10 @@ import { AllDayCheckbox } from "@/components/event-info/inputs/AllDayCheckbox"
 import { CalendarSelect } from "@/components/event-info/inputs/CalendarSelect"
 import { DateTimeSelect } from "@/components/event-info/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-info/inputs/LocationInput"
+import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
+import { Input } from "@/components/ui/input"
 
 import { Calendar } from "@/db/types"
-
-import { Input } from "../ui/input"
 
 export function EventInfo({
   summary,
@@ -65,6 +65,8 @@ export function EventInfo({
         </div>
 
         <LocationInput value={location} onChange={onLocationChange} />
+
+        <ReminderSelect />
 
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
       </div>
