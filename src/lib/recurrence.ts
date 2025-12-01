@@ -1,7 +1,8 @@
 import { addYears } from "date-fns"
 import { eq } from "drizzle-orm"
-import { rrulestr } from "rrule"
 import { v4 as uuidv4 } from "uuid"
+
+import { createRRuleWithDtstart } from "@/lib/rrule-utils"
 
 import { db, schema } from "@/db/database"
 import type { CalendarEventInsert } from "@/db/types"
@@ -24,14 +25,11 @@ export function generateInstances(
   },
   existingExceptionDates: Date[] = [],
 ): CalendarEventInsert[] {
-  const rruleSet = rrulestr(parentEvent.recurrence, {
-    forceset: true,
-    dtstart: parentEvent.start,
-  })
+  const rrule = createRRuleWithDtstart(parentEvent.recurrence, parentEvent.start)
   const horizon = addYears(new Date(), 1)
 
   // Get all occurrence dates within the horizon
-  const dates = rruleSet.between(parentEvent.start, horizon, true)
+  const dates = rrule.between(parentEvent.start, horizon, true)
 
   // Get set of exception dates to skip
   const exceptionDateTimes = new Set(existingExceptionDates.map((d) => d.getTime()))

@@ -1,7 +1,6 @@
 import { addYears } from "date-fns"
 import { and, eq, inArray, isNull } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useState } from "react"
-import { rrulestr } from "rrule"
 import { v4 as uuidv4 } from "uuid"
 
 import { useAuth } from "@/contexts/AuthContext"
@@ -9,6 +8,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
+import { createRRuleWithDtstart } from "@/lib/rrule-utils"
 
 import { db, schema } from "@/db/database"
 import type {
@@ -71,11 +71,11 @@ function expandRecurringEvent(
 ): CalendarEventInsert[] {
   if (!parentEvent.recurrence) return []
 
-  const rruleSet = rrulestr(parentEvent.recurrence, { forceset: true, dtstart: parentEvent.start })
+  const rrule = createRRuleWithDtstart(parentEvent.recurrence, parentEvent.start)
   const horizon = addYears(new Date(), 1)
 
   // Get all occurrence dates within the horizon
-  const dates = rruleSet.between(parentEvent.start, horizon, true)
+  const dates = rrule.between(parentEvent.start, horizon, true)
 
   // Get set of exception dates (originalStart) to skip
   const exceptionDates = new Set(
@@ -288,6 +288,10 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
 
     // If this is a parent recurring event, expand it into instances
     if (event.recurrence && !event.recurringEventId) {
+      logger.debug(`Expanding recurring event: "${event.summary}"`, {
+        recurrence: event.recurrence,
+        start: event.start.toISOString(),
+      })
       await expandAndInsertInstances(eventId)
     }
   }
