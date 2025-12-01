@@ -1,33 +1,30 @@
-import { Check, ChevronDownIcon } from "lucide-react"
-import { useState, useRef } from "react"
-import { GoClock as ClockIcon } from "react-icons/go"
+import { ChevronDownIcon } from "lucide-react"
+import { useRef, ReactNode } from "react"
 
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { Command, CommandList } from "@/components/ui/command"
+import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
-const options = [
-  { value: "react", label: "React" },
-  { value: "vue", label: "Vue" },
-  { value: "svelte", label: "Svelte" },
-  { value: "angular", label: "Angular" },
-]
-
-export function Combobox() {
-  const [open, setOpen] = useState(false)
-  const [value, setValue] = useState("")
-  const [query, setQuery] = useState("")
+export function Combobox({
+  addon,
+  children,
+  placeholder,
+  query,
+  setQuery,
+  open,
+  setOpen,
+}: {
+  addon: ReactNode
+  children: ReactNode
+  placeholder?: string
+  query: string
+  setQuery: (query: string) => void
+  open: boolean
+  setOpen: (open: boolean) => void
+}) {
   const anchorRef = useRef<HTMLDivElement>(null)
-
-  const filtered = options.filter((opt) => opt.label.toLowerCase().includes(query.toLowerCase()))
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -37,17 +34,18 @@ export function Combobox() {
           className={cn(
             "flex items-center border border-transparent hover:border-input rounded-md pr-3 group",
             "focus-within:bg-secondary focus-within:border-transparent! cursor-text",
+            {
+              "bg-secondary border-transparent!": open,
+            },
           )}
           onClick={() => setOpen(true)}
         >
           <InputGroup className="border-none! bg-transparent!">
-            <InputGroupAddon>
-              <ClockIcon />
-            </InputGroupAddon>
+            {addon}
             <InputGroupInput
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search framework..."
+              placeholder={placeholder}
               className="bg-transparent! border-transparent!"
               onFocus={() => setOpen(true)}
             />
@@ -64,7 +62,7 @@ export function Combobox() {
         </div>
       </PopoverAnchor>
       <PopoverContent
-        className="p-0 w-64"
+        className="p-0 w-(--radix-popover-trigger-width)"
         align="start"
         onOpenAutoFocus={(e) => e.preventDefault()}
         onInteractOutside={(e) => {
@@ -74,32 +72,7 @@ export function Combobox() {
         }}
       >
         <Command>
-          <CommandList>
-            {filtered.length > 0 ? (
-              <CommandGroup>
-                {filtered.map((opt) => (
-                  <CommandItem
-                    key={opt.value}
-                    onSelect={() => {
-                      setValue(opt.value)
-                      setQuery(opt.label) // set selected label into input
-                      setOpen(false)
-                    }}
-                  >
-                    <Check
-                      className={cn(
-                        "mr-2 h-4 w-4",
-                        value === opt.value ? "opacity-100" : "opacity-0",
-                      )}
-                    />
-                    {opt.label}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : (
-              <CommandEmpty>No results found.</CommandEmpty>
-            )}
-          </CommandList>
+          <CommandList>{children}</CommandList>
         </Command>
       </PopoverContent>
     </Popover>
