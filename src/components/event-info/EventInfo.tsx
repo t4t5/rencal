@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 
 import { Calendar } from "@/db/types"
 
+import { RepeatSelect } from "./inputs/RepeatSelect"
+
 export function EventInfo({
   summary,
   onChangeSummary,
@@ -64,6 +66,8 @@ export function EventInfo({
           onChangeEndTime={onChangeEndTime}
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} />
+
+        <RepeatSelect value={null} onChange={() => {}} />
 
         <div className="px-3">
           <hr />

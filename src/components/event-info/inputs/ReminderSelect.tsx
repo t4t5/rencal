@@ -99,7 +99,7 @@ const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove: () => void })
   return (
     <div
       key={mins}
-      className="flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group"
+      className="flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default"
     >
       <span>
         <HumanDuration mins={mins} />
