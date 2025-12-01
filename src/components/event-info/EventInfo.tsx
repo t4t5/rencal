@@ -1,13 +1,14 @@
+import { RRule } from "rrule"
+
 import { AllDayCheckbox } from "@/components/event-info/inputs/AllDayCheckbox"
 import { CalendarSelect } from "@/components/event-info/inputs/CalendarSelect"
 import { DateTimeSelect } from "@/components/event-info/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-info/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
+import { RepeatSelect } from "@/components/event-info/inputs/RepeatSelect"
 import { Input } from "@/components/ui/input"
 
 import { Calendar } from "@/db/types"
-
-import { RepeatSelect } from "./inputs/RepeatSelect"
 
 export function EventInfo({
   summary,
@@ -24,6 +25,8 @@ export function EventInfo({
   onLocationChange,
   calendar,
   onCalendarChange,
+  recurrence,
+  onRecurrenceChange,
   reminders,
   onReminderAdd,
   onReminderRemove,
@@ -40,6 +43,8 @@ export function EventInfo({
   onAllDayChange: (checked: boolean) => void
   location?: string | null
   onLocationChange: (location: string) => void
+  recurrence: RRule | null
+  onRecurrenceChange: (rrule: RRule | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
   reminders?: number[]
@@ -67,7 +72,7 @@ export function EventInfo({
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} />
 
-        <RepeatSelect value={null} onChange={() => {}} />
+        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} />
 
         <div className="px-3">
           <hr />

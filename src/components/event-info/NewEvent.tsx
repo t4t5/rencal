@@ -1,5 +1,6 @@
 import { format, parse } from "date-fns"
 import { useCallback } from "react"
+import { RRule } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
@@ -19,7 +20,9 @@ export const NewEvent = () => {
     useEventDraft()
   const { reloadEvents } = useCalEvents()
 
-  const { summary, start, end, allDay, location, calendarId } = draftEvent
+  const { summary, start, end, allDay, location, calendarId, recurrence } = draftEvent
+
+  const recurrenceRRule = recurrence ? RRule.fromString(recurrence) : null
 
   const onCreate = useCallback(async () => {
     const [inserted] = await db.insert(schema.events).values(draftEvent).returning()
@@ -76,6 +79,10 @@ export const NewEvent = () => {
           }}
           onCalendarChange={(newCalendarId) => {
             setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
+          }}
+          recurrence={recurrenceRRule}
+          onRecurrenceChange={(rrule) => {
+            setDraftEvent({ ...draftEvent, recurrence: rrule?.toString() ?? null })
           }}
           reminders={draftReminders}
           onReminderAdd={(mins) => setDraftReminders([...draftReminders, mins])}

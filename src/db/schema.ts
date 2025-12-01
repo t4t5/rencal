@@ -55,6 +55,7 @@ export const events = sqliteTable(
     end: integer("end", { mode: "timestamp" }).notNull(),
     allDay: integer("all_day", { mode: "boolean" }).notNull(),
     location: text("location"),
+    recurrence: text("recurrence"),
     status: text("status", { enum: ["confirmed", "tentative", "cancelled"] }),
     organizerEmail: text("organizer_email"),
     updatedAt: integer("updated_at", { mode: "timestamp" }),
