@@ -8,11 +8,25 @@ import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command
 import { InputGroupAddon } from "@/components/ui/input-group"
 
 const DEFAULT_REMINDER_VALUES = [
-  { value: 0, label: "At time of event" },
-  { value: 10, label: "10 mins" },
-  { value: 30, label: "30 mins" },
-  { value: 60, label: "1 hour" },
+  0, // At time of event
+  10, // 10 mins before
+  30, // 30 mins before
+  60, // 1 hour before
 ]
+
+function getQueryValues(query: string): number[] {
+  const match = query.match(/^(\d+)/)
+  if (!match) return []
+
+  const num = parseInt(match[1], 10)
+  if (num <= 0) return []
+
+  return [
+    num, // minutes
+    num * 60, // hours
+    num * 60 * 24, // days
+  ]
+}
 
 function humanDuration(mins: number): string {
   if (mins === 0) return "At time of event"
@@ -36,6 +50,8 @@ export function ReminderSelect({
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
 
+  const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
+
   return (
     <div className="flex flex-col gap-1">
       <Combobox
@@ -50,17 +66,18 @@ export function ReminderSelect({
           </InputGroupAddon>
         }
       >
-        {DEFAULT_REMINDER_VALUES.length > 0 ? (
+        {values.length ? (
           <CommandGroup>
-            {DEFAULT_REMINDER_VALUES.map((opt) => (
+            {values.map((mins) => (
               <CommandItem
-                key={opt.value}
+                key={mins}
                 onSelect={() => {
-                  onSelect(opt.value)
+                  onSelect(mins)
                   setOpen(false)
+                  setQuery("")
                 }}
               >
-                <HumanDuration mins={opt.value} />
+                <HumanDuration mins={mins} />
               </CommandItem>
             ))}
           </CommandGroup>
