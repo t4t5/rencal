@@ -1,6 +1,6 @@
 import { format, parse } from "date-fns"
 import { and, eq } from "drizzle-orm"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 
@@ -30,17 +30,26 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     }
   }, [event?.id])
 
-  const handleReminderAdd = async (mins: number) => {
-    if (!event) return
-    await db.insert(schema.reminders).values({
-      eventId: event.id,
-      minutes: mins,
-    })
-    setReminders([...reminders, mins])
-  }
+  const handleReminderAdd = useCallback(
+    async (mins: number) => {
+      if (!event) return
+
+      // Skip duplicates:
+      if (reminders.includes(mins)) return
+
+      await db.insert(schema.reminders).values({
+        eventId: event.id,
+        minutes: mins,
+      })
+
+      setReminders([...reminders, mins])
+    },
+    [reminders.length],
+  )
 
   const handleReminderRemove = async (mins: number) => {
     if (!event) return
+
     await db
       .delete(schema.reminders)
       .where(and(eq(schema.reminders.eventId, event.id), eq(schema.reminders.minutes, mins)))

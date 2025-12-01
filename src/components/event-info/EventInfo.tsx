@@ -71,13 +71,13 @@ export function EventInfo({
 
         <LocationInput value={location} onChange={onLocationChange} />
 
+        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
+
         <ReminderSelect
           reminders={reminders ?? []}
           onSelect={onReminderAdd}
           onRemove={onReminderRemove}
         />
-
-        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
       </div>
     </div>
   )
