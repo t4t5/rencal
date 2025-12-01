@@ -15,20 +15,25 @@ import { db, schema } from "@/db/database"
 
 export const NewEvent = () => {
   const { calendars } = useCalendarState()
-  const { draftEvent, setDraftEvent, setIsDrafting } = useEventDraft()
+  const { draftEvent, setDraftEvent, setIsDrafting, draftReminders, setDraftReminders } =
+    useEventDraft()
   const { reloadEvents } = useCalEvents()
 
   const { summary, start, end, allDay, location, calendarId } = draftEvent
 
   const onCreate = useCallback(async () => {
-    await db.insert(schema.events).values({
-      ...draftEvent,
-    })
+    const [inserted] = await db.insert(schema.events).values(draftEvent).returning()
+
+    if (draftReminders.length > 0) {
+      await db
+        .insert(schema.reminders)
+        .values(draftReminders.map((mins) => ({ eventId: inserted.id, minutes: mins })))
+    }
 
     logger.info("Create event:", draftEvent)
     setIsDrafting(false)
     reloadEvents()
-  }, [draftEvent])
+  }, [draftEvent, draftReminders])
 
   const calendar = calendars.find((cal) => cal.id === calendarId)
 
@@ -72,6 +77,9 @@ export const NewEvent = () => {
           onCalendarChange={(newCalendarId) => {
             setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
           }}
+          reminders={draftReminders}
+          onReminderAdd={(mins) => setDraftReminders([...draftReminders, mins])}
+          onReminderRemove={(mins) => setDraftReminders(draftReminders.filter((m) => m !== mins))}
         />
       </div>
 

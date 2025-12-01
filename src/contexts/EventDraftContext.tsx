@@ -15,6 +15,9 @@ interface EventDraftContextType {
   draftEvent: DraftEvent
   setDraftEvent: (event: DraftEvent) => void
 
+  draftReminders: number[]
+  setDraftReminders: (reminders: number[]) => void
+
   setDefaultDraftEvent: () => void
 }
 
@@ -33,6 +36,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const defaultCalendarId = calendars[0]?.id ?? null
 
   const [text, _setText] = useState("")
+  const [draftReminders, setDraftReminders] = useState<number[]>([])
 
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     return {
@@ -51,6 +55,11 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setDraftEvent({ ...draftEvent, summary: newText })
   }
 
+  const setDefaultDraftEvent = () => {
+    setDraftEvent(generateDefaultDraftEvent())
+    setDraftReminders([])
+  }
+
   const value = {
     isDrafting,
     setIsDrafting,
@@ -58,7 +67,9 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setText,
     draftEvent,
     setDraftEvent,
-    setDefaultDraftEvent: () => setDraftEvent(generateDefaultDraftEvent()),
+    draftReminders,
+    setDraftReminders,
+    setDefaultDraftEvent,
   }
 
   return <EventDraftContext.Provider value={value}>{children}</EventDraftContext.Provider>

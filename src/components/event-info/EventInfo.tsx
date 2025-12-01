@@ -22,6 +22,9 @@ export function EventInfo({
   onLocationChange,
   calendar,
   onCalendarChange,
+  reminders,
+  onReminderAdd,
+  onReminderRemove,
 }: {
   summary?: string | null
   onChangeSummary: (summary: string) => void
@@ -37,8 +40,10 @@ export function EventInfo({
   onLocationChange: (location: string) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
+  reminders?: number[]
+  onReminderAdd: (mins: number) => void
+  onReminderRemove: (mins: number) => void
 }) {
-  // className="text-lg outline-none! px-3 py-1 border border-transparent hover:border-border rounded-md"
   return (
     <div className="flex flex-col gap-2">
       <Input
@@ -66,7 +71,11 @@ export function EventInfo({
 
         <LocationInput value={location} onChange={onLocationChange} />
 
-        <ReminderSelect />
+        <ReminderSelect
+          reminders={reminders ?? []}
+          onSelect={onReminderAdd}
+          onRemove={onReminderRemove}
+        />
 
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
       </div>

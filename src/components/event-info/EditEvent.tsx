@@ -1,22 +1,51 @@
 import { format, parse } from "date-fns"
+import { and, eq } from "drizzle-orm"
 import { useEffect, useState } from "react"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { db, schema } from "@/db/database"
 import { CalendarEvent } from "@/db/types"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const { calendars } = useCalendarState()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
+  const [reminders, setReminders] = useState<number[]>([])
+
+  const loadReminders = async (eventId: string) => {
+    const rows = await db
+      .select()
+      .from(schema.reminders)
+      .where(eq(schema.reminders.eventId, eventId))
+    setReminders(rows.map((r) => r.minutes))
+  }
 
   useEffect(() => {
     if (event) {
       setDirtyEvent(event)
+      loadReminders(event.id)
     }
   }, [event?.id])
+
+  const handleReminderAdd = async (mins: number) => {
+    if (!event) return
+    await db.insert(schema.reminders).values({
+      eventId: event.id,
+      minutes: mins,
+    })
+    setReminders([...reminders, mins])
+  }
+
+  const handleReminderRemove = async (mins: number) => {
+    if (!event) return
+    await db
+      .delete(schema.reminders)
+      .where(and(eq(schema.reminders.eventId, event.id), eq(schema.reminders.minutes, mins)))
+    setReminders(reminders.filter((m) => m !== mins))
+  }
 
   if (!dirtyEvent) return null
 
@@ -63,6 +92,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         onCalendarChange={(newCalendarId) => {
           setDirtyEvent({ ...dirtyEvent, calendarId: newCalendarId })
         }}
+        reminders={reminders}
+        onReminderAdd={handleReminderAdd}
+        onReminderRemove={handleReminderRemove}
       />
     </div>
   )
