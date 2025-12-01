@@ -5,6 +5,8 @@ import { LocationInput } from "@/components/event-info/inputs/LocationInput"
 
 import { Calendar } from "@/db/types"
 
+import { Input } from "../ui/input"
+
 export function EventInfo({
   summary,
   onChangeSummary,
@@ -36,12 +38,13 @@ export function EventInfo({
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
 }) {
+  // className="text-lg outline-none! px-3 py-1 border border-transparent hover:border-border rounded-md"
   return (
     <div className="flex flex-col gap-2">
-      <input
+      <Input
         placeholder="Event Title"
         value={summary ?? ""}
-        className="text-lg outline-none! px-3 py-1 border border-transparent hover:border-border rounded-md"
+        className="text-lg"
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 

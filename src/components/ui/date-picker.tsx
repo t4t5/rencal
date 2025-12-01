@@ -29,7 +29,7 @@ export const DatePicker = ({
           className={cn("w-48 justify-between group cursor-default!", className)}
         >
           {date ? formattedDate : "Select date"}
-          <ChevronDownIcon className="opacity-0 group-hover:opacity-100 transition text-muted-foreground" />
+          <ChevronDownIcon className="opacity-0 group-hover:opacity-100 transition text-muted-foreground group-data-[state=open]:opacity-100" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
