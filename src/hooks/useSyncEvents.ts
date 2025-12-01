@@ -1,5 +1,7 @@
-import { and, eq, inArray } from "drizzle-orm"
+import { addYears } from "date-fns"
+import { and, eq, inArray, isNull } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useState } from "react"
+import { rrulestr } from "rrule"
 import { v4 as uuidv4 } from "uuid"
 
 import { useAuth } from "@/contexts/AuthContext"
@@ -9,11 +11,18 @@ import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
 
 import { db, schema } from "@/db/database"
-import type { Account, Calendar, CalendarEventInsert, ReminderInsert } from "@/db/types"
+import type {
+  Account,
+  Calendar,
+  CalendarEvent,
+  CalendarEventInsert,
+  ReminderInsert,
+} from "@/db/types"
 
 function googleEventToCalendarEvent(
   googleEvent: GoogleEvent,
   calendarId: string,
+  recurringEventId: string | null,
 ): CalendarEventInsert | null {
   const { start: _start, end: _end } = googleEvent
 
@@ -25,6 +34,9 @@ function googleEventToCalendarEvent(
     return null
   }
 
+  // Google returns recurrence as an array of RRULE strings, join them
+  const recurrence = googleEvent.recurrence?.join("\n") ?? null
+
   return {
     providerEventId: googleEvent.id,
     calendarId: calendarId,
@@ -33,6 +45,8 @@ function googleEventToCalendarEvent(
     end: new Date(end),
     allDay: !!googleEvent.start.date,
     location: googleEvent.location ?? null,
+    recurrence,
+    recurringEventId,
     status: googleEvent.status,
     organizerEmail: googleEvent.organizer?.self ? null : (googleEvent.organizer?.email ?? null),
   }
@@ -43,6 +57,50 @@ function googleEventToReminders(googleEvent: GoogleEvent): number[] {
     return []
   }
   return googleEvent.reminders.overrides?.map((r) => r.minutes) ?? []
+}
+
+/**
+ * Expand a recurring event into individual instances
+ * @param parentEvent The parent event with recurrence rule
+ * @param existingExceptions Existing exception instances (modified single occurrences) to preserve
+ * @returns Array of instance events to insert
+ */
+function expandRecurringEvent(
+  parentEvent: CalendarEvent,
+  existingExceptions: CalendarEvent[],
+): CalendarEventInsert[] {
+  if (!parentEvent.recurrence) return []
+
+  const rruleSet = rrulestr(parentEvent.recurrence, { forceset: true, dtstart: parentEvent.start })
+  const horizon = addYears(new Date(), 1)
+
+  // Get all occurrence dates within the horizon
+  const dates = rruleSet.between(parentEvent.start, horizon, true)
+
+  // Get set of exception dates (originalStart) to skip
+  const exceptionDates = new Set(
+    existingExceptions.filter((e) => e.originalStart).map((e) => e.originalStart!.getTime()),
+  )
+
+  // Calculate duration of the event
+  const durationMs = parentEvent.end.getTime() - parentEvent.start.getTime()
+
+  return dates
+    .filter((date) => !exceptionDates.has(date.getTime()))
+    .map((date) => ({
+      calendarId: parentEvent.calendarId,
+      providerEventId: null, // Local instances don't have provider IDs
+      summary: parentEvent.summary,
+      start: date,
+      end: new Date(date.getTime() + durationMs),
+      allDay: parentEvent.allDay,
+      location: parentEvent.location,
+      recurrence: null, // Instances don't have recurrence
+      recurringEventId: parentEvent.id,
+      originalStart: date, // Track which occurrence this represents
+      status: parentEvent.status,
+      organizerEmail: parentEvent.organizerEmail,
+    }))
 }
 
 /**
@@ -88,6 +146,8 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
             end: event.end,
             allDay: event.allDay,
             location: event.location,
+            recurrence: event.recurrence,
+            recurringEventId: event.recurringEventId,
             status: event.status,
             organizerEmail: event.organizerEmail,
             updatedAt: new Date(),
@@ -106,6 +166,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     await db.insert(schema.events).values({
       ...event,
       id,
+      recurringEventId: event.recurringEventId || null,
       updatedAt: new Date(),
     })
 
@@ -126,20 +187,124 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     }
   }
 
+  /**
+   * Expand a recurring parent event into instances
+   * Preserves existing exceptions (instances with modified data)
+   */
+  const expandAndInsertInstances = async (parentEventId: string) => {
+    // Fetch the parent event
+    const [parentEvent] = await db
+      .select()
+      .from(schema.events)
+      .where(eq(schema.events.id, parentEventId))
+
+    if (!parentEvent || !parentEvent.recurrence) return
+
+    // Fetch existing exceptions (instances that have been modified - they have originalStart set and different data)
+    const existingExceptions = await db
+      .select()
+      .from(schema.events)
+      .where(
+        and(
+          eq(schema.events.recurringEventId, parentEventId),
+          // Exceptions are instances where start differs from originalStart (they were moved)
+          // For now, we'll preserve all existing instances that have originalStart set
+        ),
+      )
+
+    // Find exceptions: instances that were modified (we detect by checking if they have originalStart)
+    const exceptions = existingExceptions.filter((e) => e.originalStart !== null)
+
+    // Delete non-exception instances (they'll be regenerated)
+    await db
+      .delete(schema.events)
+      .where(
+        and(eq(schema.events.recurringEventId, parentEventId), isNull(schema.events.originalStart)),
+      )
+
+    // Also delete instances that aren't exceptions (originalStart equals start)
+    const nonExceptionIds = existingExceptions
+      .filter((e) => e.originalStart && e.originalStart.getTime() === e.start.getTime())
+      .map((e) => e.id)
+
+    if (nonExceptionIds.length > 0) {
+      await db.delete(schema.events).where(inArray(schema.events.id, nonExceptionIds))
+    }
+
+    // Generate new instances
+    const instances = expandRecurringEvent(parentEvent, exceptions)
+
+    if (instances.length > 0) {
+      logger.debug(`🔁 Expanding ${instances.length} instances for recurring event`)
+      for (const instance of instances) {
+        await db.insert(schema.events).values({
+          ...instance,
+          id: uuidv4(),
+          updatedAt: new Date(),
+        })
+      }
+    }
+  }
+
+  const lookupRecurringEventId = async (
+    providerRecurringEventId: string | undefined,
+    calendarId: string,
+  ): Promise<string | null> => {
+    if (!providerRecurringEventId) return null
+
+    // Look up our internal ID for the parent recurring event
+    const [parent] = await db
+      .select({ id: schema.events.id })
+      .from(schema.events)
+      .where(
+        and(
+          eq(schema.events.providerEventId, providerRecurringEventId),
+          eq(schema.events.calendarId, calendarId),
+        ),
+      )
+
+    return parent?.id ?? null
+  }
+
   const upsertEventWithReminders = async (
     googleEvent: GoogleEvent,
     calendarId: string,
   ): Promise<void> => {
-    const event = googleEventToCalendarEvent(googleEvent, calendarId)
+    const recurringEventId = await lookupRecurringEventId(googleEvent.recurringEventId, calendarId)
+
+    // Skip instances whose parent recurring event isn't in our DB
+    // (e.g., parent is outside our sync window or from a special calendar)
+    if (googleEvent.recurringEventId && !recurringEventId) {
+      logger.debug(`Skipping orphaned instance ${googleEvent.id} - parent not found`)
+      return
+    }
+
+    const event = googleEventToCalendarEvent(googleEvent, calendarId, recurringEventId)
     if (!event) return
 
     const eventId = await upsertEvent(event)
     const reminderMinutes = googleEventToReminders(googleEvent)
     await syncReminders(eventId, reminderMinutes)
+
+    // If this is a parent recurring event, expand it into instances
+    if (event.recurrence && !event.recurringEventId) {
+      await expandAndInsertInstances(eventId)
+    }
   }
 
   const upsertMany = async (googleEvents: GoogleEvent[], calendarId: string) => {
-    for (const googleEvent of googleEvents) {
+    // Sort events so parent recurring events come before their instances
+    // Parent events have recurrence but no recurringEventId
+    // Instances have recurringEventId but no recurrence
+    const sorted = [...googleEvents].sort((a, b) => {
+      const aIsParent = a.recurrence && !a.recurringEventId
+      const bIsParent = b.recurrence && !b.recurringEventId
+      if (aIsParent && !bIsParent) return -1
+      if (!aIsParent && bIsParent) return 1
+      return 0
+    })
+
+    for (const googleEvent of sorted) {
       await upsertEventWithReminders(googleEvent, calendarId)
     }
   }

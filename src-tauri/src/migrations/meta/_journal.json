@@ -29,6 +29,20 @@
       "when": 1764601987647,
       "tag": "0003_add_recurrence",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1764602730369,
+      "tag": "0004_add_recurring_event_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1764604186832,
+      "tag": "0005_add_original_start",
+      "breakpoints": true
     }
   ]
 }

@@ -1,6 +1,6 @@
 import { format, parse } from "date-fns"
 import { useCallback } from "react"
-import { RRule } from "rrule"
+import { rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
@@ -11,6 +11,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
+import { expandRecurringEventInstances } from "@/lib/recurrence"
 
 import { db, schema } from "@/db/database"
 
@@ -22,7 +23,7 @@ export const NewEvent = () => {
 
   const { summary, start, end, allDay, location, calendarId, recurrence } = draftEvent
 
-  const recurrenceRRule = recurrence ? RRule.fromString(recurrence) : null
+  const recurrenceRRule = recurrence ? rrulestr(recurrence) : null
 
   const onCreate = useCallback(async () => {
     const [inserted] = await db.insert(schema.events).values(draftEvent).returning()
@@ -31,6 +32,11 @@ export const NewEvent = () => {
       await db
         .insert(schema.reminders)
         .values(draftReminders.map((mins) => ({ eventId: inserted.id, minutes: mins })))
+    }
+
+    // If this is a recurring event, expand it into instances
+    if (draftEvent.recurrence) {
+      await expandRecurringEventInstances(inserted.id)
     }
 
     logger.info("Create event:", draftEvent)

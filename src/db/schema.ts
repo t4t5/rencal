@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm"
-import { index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
+import { AnySQLiteColumn, index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
 import { v4 as uuidv4 } from "uuid"
 
 import { EmailProvider } from "./types"
@@ -56,6 +56,10 @@ export const events = sqliteTable(
     allDay: integer("all_day", { mode: "boolean" }).notNull(),
     location: text("location"),
     recurrence: text("recurrence"),
+    recurringEventId: text("recurring_event_id").references((): AnySQLiteColumn => events.id, {
+      onDelete: "cascade",
+    }), // Self-reference to parent recurring event
+    originalStart: integer("original_start", { mode: "timestamp" }), // For exceptions: the original occurrence date
     status: text("status", { enum: ["confirmed", "tentative", "cancelled"] }),
     organizerEmail: text("organizer_email"),
     updatedAt: integer("updated_at", { mode: "timestamp" }),
@@ -64,6 +68,7 @@ export const events = sqliteTable(
     index("idx_events_calendar_id").on(table.calendarId),
     index("idx_events_provider_event_id").on(table.providerEventId),
     index("idx_events_start").on(table.start),
+    index("idx_events_recurring_event_id").on(table.recurringEventId),
   ],
 )
 

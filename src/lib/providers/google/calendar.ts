@@ -27,6 +27,7 @@ const GoogleEventSchema = z.object({
   end: GoogleEventDateTimeSchema,
   location: z.string().optional(),
   updated: z.string().optional(),
+  recurrence: z.array(z.string()).optional(),
   recurringEventId: z.string().optional(),
   organizer: z
     .object({
@@ -102,12 +103,13 @@ export async function syncGoogleEvents(
       url.searchParams.set("syncToken", syncToken)
     } else {
       // Full sync - fetch events from 1 year ago to 1 year ahead
+      // Note: Without singleEvents=true, we get parent recurring events with their RRULE
+      // and need to expand them locally
       const now = new Date()
       const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000)
       const oneYearAhead = new Date(now.getTime() + 365 * 24 * 60 * 60 * 1000)
       url.searchParams.set("timeMin", oneYearAgo.toISOString())
       url.searchParams.set("timeMax", oneYearAhead.toISOString())
-      url.searchParams.set("singleEvents", "true")
     }
 
     if (pageToken) {

@@ -1,4 +1,4 @@
-import { RRule } from "rrule"
+import { RRule, RRuleSet } from "rrule"
 
 import { AllDayCheckbox } from "@/components/event-info/inputs/AllDayCheckbox"
 import { CalendarSelect } from "@/components/event-info/inputs/CalendarSelect"
@@ -43,8 +43,8 @@ export function EventInfo({
   onAllDayChange: (checked: boolean) => void
   location?: string | null
   onLocationChange: (location: string) => void
-  recurrence: RRule | null
-  onRecurrenceChange: (rrule: RRule | null) => void
+  recurrence: RRule | RRuleSet | null
+  onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
   reminders?: number[]

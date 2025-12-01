@@ -1,7 +1,7 @@
 import { format, parse } from "date-fns"
 import { and, eq } from "drizzle-orm"
 import { useCallback, useEffect, useState } from "react"
-import { RRule } from "rrule"
+import { rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 
@@ -61,7 +61,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const { summary, start, end, allDay, location, calendarId, recurrence } = dirtyEvent
 
-  const recurrenceRRule = recurrence ? RRule.fromString(recurrence) : null
+  const recurrenceRRule = recurrence ? rrulestr(recurrence) : null
   const calendar = calendars.find((c) => c.id === calendarId)
 
   return (

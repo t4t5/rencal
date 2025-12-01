@@ -1,7 +1,9 @@
 import { IoSync as RepeatIcon } from "react-icons/io5"
-import { RRule } from "rrule"
+import { RRule, RRuleSet } from "rrule"
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+
+type Recurrence = RRule | RRuleSet
 
 const INTERVALS = [
   {
@@ -30,8 +32,8 @@ export const RepeatSelect = ({
   value,
   onChange,
 }: {
-  value: RRule | null
-  onChange: (value: RRule | null) => void
+  value: Recurrence | null
+  onChange: (value: Recurrence | null) => void
 }) => {
   const handleChange = (selectedValue: string) => {
     if (selectedValue === "none") {
@@ -51,7 +53,7 @@ export const RepeatSelect = ({
           <RepeatIcon />
         </div>
         <div className="grow text-left">
-          {value ? <HumanInterval rrule={value} /> : <span>Repeat</span>}
+          {value ? <HumanInterval recurrence={value} /> : <span>Repeat</span>}
         </div>
       </SelectTrigger>
       <SelectContent>
@@ -66,8 +68,22 @@ export const RepeatSelect = ({
   )
 }
 
-const HumanInterval = ({ rrule }: { rrule: RRule }) => {
-  const interval = INTERVALS.find((i) => i.rrule.toString() === rrule.toString())
+const HumanInterval = ({ recurrence }: { recurrence: Recurrence }) => {
+  const interval = INTERVALS.find((i) => i.rrule.toString() === recurrence.toString())
 
-  return <div>{interval?.label ?? rrule.toText()}</div>
+  if (interval) {
+    return <div>{interval.label}</div>
+  }
+
+  // For complex recurrence (RRuleSet), use toText() for human-readable output
+  if (recurrence instanceof RRuleSet) {
+    // RRuleSet doesn't have toText(), get the first rrule's text
+    const rrules = recurrence.rrules()
+    if (rrules.length > 0) {
+      return <div>{rrules[0].toText()}</div>
+    }
+    return <div>Custom recurrence</div>
+  }
+
+  return <div>{recurrence.toText()}</div>
 }
