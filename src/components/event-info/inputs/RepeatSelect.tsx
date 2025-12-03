@@ -53,7 +53,11 @@ export const RepeatSelect = ({
           <RepeatIcon />
         </div>
         <div className="grow text-left">
-          {value ? <HumanInterval recurrence={value} /> : <span>Repeat</span>}
+          {value ? (
+            <HumanInterval recurrence={value} />
+          ) : (
+            <span className="text-muted-foreground">Repeat</span>
+          )}
         </div>
       </SelectTrigger>
       <SelectContent>
