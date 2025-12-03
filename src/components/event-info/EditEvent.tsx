@@ -1,19 +1,23 @@
 import { format, parse } from "date-fns"
-import { and, eq } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import { useCallback, useEffect, useState } from "react"
 import { RRule, RRuleSet, rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { db, schema } from "@/db/database"
 import { CalendarEvent } from "@/db/types"
 
+import { Button } from "../ui/button"
+import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const { calendars } = useCalendarState()
+  const { setActiveEventId, reloadEvents } = useCalEvents()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
 
@@ -21,6 +25,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const [parentRecurrence, setParentRecurrence] = useState<string | null>(null)
   const [pendingRecurrence, setPendingRecurrence] = useState<RRule | RRuleSet | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     if (event) {
@@ -91,6 +96,32 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     setReminders(reminders.filter((m) => m !== mins))
   }
 
+  const handleDeleteThis = async () => {
+    if (!dirtyEvent) return
+
+    await db.delete(schema.events).where(eq(schema.events.id, dirtyEvent.id))
+
+    setShowDeleteDialog(false)
+    setActiveEventId(null)
+    await reloadEvents()
+  }
+
+  const handleDeleteAll = async () => {
+    if (!dirtyEvent) return
+
+    // Get the parent event ID (either this event's recurringEventId or its own id if it's the parent)
+    const parentId = dirtyEvent.recurringEventId ?? dirtyEvent.id
+
+    // Delete the parent and all instances (cascade will handle instances via recurringEventId)
+    await db
+      .delete(schema.events)
+      .where(or(eq(schema.events.id, parentId), eq(schema.events.recurringEventId, parentId)))
+
+    setShowDeleteDialog(false)
+    setActiveEventId(null)
+    await reloadEvents()
+  }
+
   if (!dirtyEvent) return null
 
   const { summary, start, end, allDay, location, calendarId, recurrence } = dirtyEvent
@@ -100,7 +131,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const calendar = calendars.find((c) => c.id === calendarId)
 
   return (
-    <div className="px-2 py-5">
+    <div className="px-2 py-5 flex flex-col grow">
       <EventInfo
         summary={summary}
         start={start}
@@ -143,6 +174,18 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         reminders={reminders}
         onReminderAdd={handleReminderAdd}
         onReminderRemove={handleReminderRemove}
+      />
+
+      <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+        Delete event
+      </Button>
+
+      <DeleteConfirmDialog
+        open={showDeleteDialog}
+        isRecurring={!!(dirtyEvent.recurringEventId || dirtyEvent.recurrence)}
+        onClose={() => setShowDeleteDialog(false)}
+        onDeleteThis={handleDeleteThis}
+        onDeleteAll={handleDeleteAll}
       />
 
       {!!pendingRecurrence && (

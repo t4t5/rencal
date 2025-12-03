@@ -52,7 +52,7 @@ export function EventInfo({
   onReminderRemove: (mins: number) => void
 }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2 grow">
       <Input
         placeholder="Event Title"
         value={summary ?? ""}
