@@ -40,6 +40,7 @@ actions, including SQLite operations are handled in the frontend.
   `.toISOString()`
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
+- _NEVER_ use Drizzle's `returning()` method. It does not working with SQLite.
 
 ## Google Calendar Integration
 
