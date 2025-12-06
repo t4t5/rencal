@@ -1,6 +1,8 @@
 import TauriDatabase from "@tauri-apps/plugin-sql"
 import { drizzle } from "drizzle-orm/sqlite-proxy"
 
+import { logger } from "@/lib/logger"
+
 import * as schema from "./schema"
 
 const DATABASE_NAME = "rencal.db"
@@ -20,6 +22,8 @@ function isSelectQuery(sql: string): boolean {
 
 export const db = drizzle<typeof schema>(
   async (sql, params, method) => {
+    logger.info("[DB]", sql, params)
+
     const sqlite = await getSqlite()
 
     if (isSelectQuery(sql)) {

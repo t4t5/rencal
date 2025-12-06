@@ -4,14 +4,16 @@ import { useCallback, useEffect, useState } from "react"
 import { RRule, RRuleSet, rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
+import { Button } from "@/components/ui/button"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
+
 import { db, schema } from "@/db/database"
 import { CalendarEvent } from "@/db/types"
 
-import { Button } from "../ui/button"
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
@@ -34,6 +36,33 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
       loadParentRecurrence(event.recurringEventId)
     }
   }, [event?.id])
+
+  // Auto-save to database when dirtyEvent changes
+  useDebouncedEffect(
+    async () => {
+      if (!dirtyEvent || !event) return
+      // Skip if nothing actually changed
+      if (JSON.stringify(dirtyEvent) === JSON.stringify(event)) return
+
+      await db
+        .update(schema.events)
+        .set({
+          summary: dirtyEvent.summary,
+          start: dirtyEvent.start,
+          end: dirtyEvent.end,
+          allDay: dirtyEvent.allDay,
+          location: dirtyEvent.location,
+          calendarId: dirtyEvent.calendarId,
+          recurrence: dirtyEvent.recurrence,
+          recurringEventId: dirtyEvent.recurringEventId,
+        })
+        .where(eq(schema.events.id, dirtyEvent.id))
+
+      await reloadEvents()
+    },
+    [dirtyEvent],
+    500,
+  )
 
   const loadReminders = async (eventId: string) => {
     const rows = await db
