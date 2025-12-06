@@ -1,6 +1,7 @@
 import { addYears } from "date-fns"
 import { and, eq, inArray, isNull } from "drizzle-orm"
 import { useCallback, useEffect, useEffectEvent, useState } from "react"
+import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 
 import { useAuth } from "@/contexts/AuthContext"
@@ -426,6 +427,9 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
       options?.onSyncComplete?.()
     } catch (error) {
       logger.error("🔁 Sync failed:", error)
+      toast.error("Sync failed", {
+        description: error instanceof Error ? error.message : "Failed to sync with Google Calendar",
+      })
     } finally {
       setIsSyncing(false)
     }

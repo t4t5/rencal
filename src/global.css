@@ -153,6 +153,13 @@
   --popover: var(--bgPrimary);
 }
 
+/* Move sonner close button to top right */
+[data-sonner-toast] [data-close-button] {
+  left: unset !important;
+  right: -16px !important;
+  top: -2px !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

@@ -1,6 +1,8 @@
 import React from "react"
 import ReactDOM from "react-dom/client"
 
+import { Toaster } from "@/components/ui/sonner"
+
 import { AuthProvider } from "@/contexts/AuthContext"
 import { CalendarStateProvider } from "@/contexts/CalendarStateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
@@ -16,6 +18,7 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <CalEventsProvider>
           <EventDraftProvider>
             <App />
+            <Toaster />
           </EventDraftProvider>
         </CalEventsProvider>
       </CalendarStateProvider>
