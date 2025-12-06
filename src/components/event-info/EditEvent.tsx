@@ -131,7 +131,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const calendar = calendars.find((c) => c.id === calendarId)
 
   return (
-    <div className="px-2 py-5 flex flex-col grow">
+    <div className="px-2 pt-5 pb-2 flex flex-col grow">
       <EventInfo
         summary={summary}
         start={start}

@@ -23,7 +23,7 @@ function App() {
         <EventList />
       </div>
 
-      <div className="hidden sm:block border-l border-l-border grow">
+      <div className="hidden border-l border-l-border grow sm:flex flex-col">
         <EditEvent event={activeEvent} />
       </div>
 
