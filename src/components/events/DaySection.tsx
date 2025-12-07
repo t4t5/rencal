@@ -1,8 +1,9 @@
-import { format, isSameYear } from "date-fns"
+import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import type { CalendarEvent } from "@/db/types"
@@ -23,8 +24,19 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
       data-date={format(date, "yyyy-MM-dd")}
       className="relative border-b border-b-divider"
     >
-      <div className="sticky top-0 z-10 font-bold text-sm bg-bgPrimary uppercase px-3 py-1.5">
-        {format(date, isSameYear(date, new Date()) ? "dd MMM" : "dd MMM yyyy")}
+      <div
+        className={cn("sticky top-0 z-10 text-sm bg-bgPrimary px-3 py-1.5 flex gap-2", {
+          "text-active": isToday(date),
+        })}
+      >
+        <span className="font-bold uppercase">{getRelativeDayLabel(date)}</span>
+        <span
+          className={cn("text-muted-foreground", {
+            "text-active": isToday(date),
+          })}
+        >
+          {format(date, isSameYear(date, new Date()) ? "d MMM" : "d MMM yyyy")}
+        </span>
       </div>
 
       <div className="flex flex-col gap-1 pb-2">
