@@ -13,7 +13,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
+        "group/input-group border-transparent hover:border-input relative flex w-full items-start rounded-md border transition-[color,box-shadow] outline-none",
         "h-9 min-w-0 has-[>textarea]:h-auto",
 
         // Variants based on alignment.
@@ -66,7 +66,7 @@ function InputGroupAddon({
       role="group"
       data-slot="input-group-addon"
       data-align={align}
-      className={cn(inputGroupAddonVariants({ align }), className)}
+      className={cn(inputGroupAddonVariants({ align }), "pt-2.5 h-full items-start", className)}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) {
           return
@@ -136,12 +136,17 @@ function InputGroupInput({ className, ...props }: React.ComponentProps<"input">)
   )
 }
 
-function InputGroupTextarea({ className, ...props }: React.ComponentProps<"textarea">) {
+function InputGroupTextarea({
+  autosize = true,
+  className,
+  ...props
+}: React.ComponentProps<"textarea"> & { autosize?: boolean }) {
   return (
     <Textarea
       data-slot="input-group-control"
+      autosize={autosize}
       className={cn(
-        "flex-1 resize-none rounded-none border-0 bg-transparent py-3 shadow-none focus-visible:ring-0 dark:bg-transparent",
+        "flex-1 resize-none rounded-none border-0 bg-transparent py-3 shadow-none focus-visible:ring-0 dark:bg-transparent py-2",
         className,
       )}
       {...props}

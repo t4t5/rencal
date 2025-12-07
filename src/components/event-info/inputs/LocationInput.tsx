@@ -1,6 +1,6 @@
 import { LuMapPin as LocationIcon } from "react-icons/lu"
 
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 
 export const LocationInput = ({
   value,
@@ -14,7 +14,7 @@ export const LocationInput = ({
       <InputGroupAddon>
         <LocationIcon />
       </InputGroupAddon>
-      <InputGroupInput
+      <InputGroupTextarea
         placeholder="Location"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
