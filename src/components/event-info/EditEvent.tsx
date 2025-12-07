@@ -205,9 +205,11 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         onReminderRemove={handleReminderRemove}
       />
 
-      <Button variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-        Delete event
-      </Button>
+      <div className="p-2">
+        <Button className="w-full" variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+          Delete event
+        </Button>
+      </div>
 
       <DeleteConfirmDialog
         open={showDeleteDialog}
