@@ -116,6 +116,7 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { calendars } = useCalendarState()
 
   const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
 
   const visibleCalendars = calendars.filter((c) => c.isVisible && c.providerCalendarId)
 
@@ -424,11 +425,15 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
         await syncCalendar(calendar, account)
       }
 
+      setSyncError(null)
       options?.onSyncComplete?.()
     } catch (error) {
       logger.error("🔁 Sync failed:", error)
+      const errorMessage =
+        error instanceof Error ? error.message : "Failed to sync with Google Calendar"
+      setSyncError(errorMessage)
       toast.error("Sync failed", {
-        description: error instanceof Error ? error.message : "Failed to sync with Google Calendar",
+        description: errorMessage,
       })
     } finally {
       setIsSyncing(false)
@@ -445,5 +450,5 @@ export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
     void onSync()
   }, [onSync])
 
-  return { triggerSync, isSyncing }
+  return { triggerSync, isSyncing, syncError }
 }

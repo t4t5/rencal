@@ -3,10 +3,12 @@ import { useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { IoSearch as SearchIcon } from "react-icons/io5"
+import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
 import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
@@ -46,9 +48,22 @@ export function ActionBar() {
 const SyncStatus = () => {
   const { reloadEvents } = useCalEvents()
 
-  const { isSyncing } = useSyncEvents({
+  const { isSyncing, syncError } = useSyncEvents({
     onSyncComplete: reloadEvents,
   })
+
+  if (syncError) {
+    return (
+      <div className="flex justify-between pr-2">
+        <Tooltip>
+          <TooltipTrigger>
+            <WarningIcon className="text-destructive" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64 break-words">{syncError}</TooltipContent>
+        </Tooltip>
+      </div>
+    )
+  }
 
   return (
     <div className="flex justify-between pr-2">
