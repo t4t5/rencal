@@ -6,7 +6,7 @@ import { DateTimeSelect } from "@/components/event-info/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-info/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-info/inputs/RepeatSelect"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 
 import { Calendar } from "@/db/types"
 
@@ -53,7 +53,7 @@ export function EventInfo({
 }) {
   return (
     <div className="flex flex-col gap-2 grow">
-      <Input
+      <Textarea
         placeholder="Event Title"
         value={summary ?? ""}
         className="text-lg"
