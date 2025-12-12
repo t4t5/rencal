@@ -2,17 +2,39 @@ import type { Plugin } from "vite"
 
 const VIRTUAL_ID = "\0vortex-jsx-runtime"
 
-// Minimal JSX runtime that just logs to prove interception works
+// JSX runtime that attaches source info to DOM nodes
 const jsxRuntimeCode = `
-import * as React from "react";
 import * as Original from "react/jsx-dev-runtime";
 
-console.log("[Vortex] JSX runtime intercepted!");
+const SOURCE_KEY = Symbol.for("__vortexSource__");
 
 export const Fragment = Original.Fragment;
 
 export function jsxDEV(type, props, key, isStatic, source, self) {
-  // Just pass through for now
+  // Only attach source to host elements (div, button, etc.)
+  if (source?.fileName && typeof type === "string") {
+    const sourceInfo = {
+      fileName: source.fileName,
+      lineNumber: source.lineNumber,
+      columnNumber: source.columnNumber,
+    };
+
+    const originalRef = props?.ref;
+    const enhancedProps = {
+      ...props,
+      ref: (node) => {
+        if (node) {
+          node[SOURCE_KEY] = sourceInfo;
+        }
+        // Call original ref if exists
+        if (typeof originalRef === "function") originalRef(node);
+        else if (originalRef) originalRef.current = node;
+      },
+    };
+
+    return Original.jsxDEV(type, enhancedProps, key, isStatic, source, self);
+  }
+
   return Original.jsxDEV(type, props, key, isStatic, source, self);
 }
 `
