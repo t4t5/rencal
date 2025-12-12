@@ -32,7 +32,7 @@ export default function App() {
             <h2 className="text-sm font-medium text-muted-foreground mb-3">{variant.name}</h2>
             <div className="flex flex-wrap gap-4">
               {variant.values.map((value) => (
-                <button
+                <div
                   key={value.name}
                   onClick={() =>
                     setSelectedVariant({
@@ -55,7 +55,7 @@ export default function App() {
                   >
                     {value.name}
                   </Button>
-                </button>
+                </div>
               ))}
             </div>
           </section>
