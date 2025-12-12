@@ -90,12 +90,22 @@ export default function App() {
                 className="w-full font-mono text-xs bg-muted p-2 rounded mt-1 min-h-24 resize-y"
               />
               <button
-                onClick={() => {
-                  console.log("[Vortex] Save:", {
-                    file: config.filePath,
-                    line: selectedVariant.line,
-                    classes: selectedVariant.classes,
+                onClick={async () => {
+                  const res = await fetch("/api/update-classes", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      file: config.filePath,
+                      line: selectedVariant.line,
+                      classes: selectedVariant.classes,
+                    }),
                   })
+                  if (res.ok) {
+                    console.log("[Vortex] Saved!")
+                  } else {
+                    const error = await res.json()
+                    console.error("[Vortex] Save failed:", error)
+                  }
                 }}
                 className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
               >

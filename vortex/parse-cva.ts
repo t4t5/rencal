@@ -111,11 +111,14 @@ function extractVariants(obj: ts.ObjectLiteralExpression, sourceFile: ts.SourceF
                 ? valueProp.name.text
                 : ""
 
-            const line = sourceFile.getLineAndCharacterOfPosition(valueProp.getStart()).line + 1
             let classes = ""
+            let line = sourceFile.getLineAndCharacterOfPosition(valueProp.getStart()).line + 1
 
             if (ts.isStringLiteral(valueProp.initializer)) {
               classes = valueProp.initializer.text
+              // Use the line of the string literal, not the property name
+              line =
+                sourceFile.getLineAndCharacterOfPosition(valueProp.initializer.getStart()).line + 1
             }
 
             if (valueName) {

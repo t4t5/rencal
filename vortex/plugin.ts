@@ -1,3 +1,4 @@
+import fs from "fs"
 import type { Plugin } from "vite"
 
 import { parseCvaConfig } from "./parse-cva"
@@ -61,6 +62,43 @@ export function vortex(): Plugin {
 
     configureServer(server) {
       server.middlewares.use((req, res, next) => {
+        // API endpoint to update classes in source file
+        if (req.url === "/api/update-classes" && req.method === "POST") {
+          let body = ""
+          req.on("data", (chunk) => (body += chunk))
+          req.on("end", () => {
+            try {
+              const { file, line, classes } = JSON.parse(body)
+
+              const content = fs.readFileSync(file, "utf-8")
+              const lines = content.split("\n")
+              const targetLine = lines[line - 1]
+
+              // Replace the string value in the line (handles both single and double quotes)
+              const updated = targetLine.replace(
+                /(['"`])([^'"`]*)(['"`])\s*,?\s*$/,
+                `$1${classes}$3,`,
+              )
+
+              if (updated === targetLine) {
+                res.statusCode = 400
+                res.end(JSON.stringify({ error: "Could not find string to replace on line" }))
+                return
+              }
+
+              lines[line - 1] = updated
+              fs.writeFileSync(file, lines.join("\n"))
+
+              res.setHeader("Content-Type", "application/json")
+              res.end(JSON.stringify({ success: true }))
+            } catch (e) {
+              res.statusCode = 500
+              res.end(JSON.stringify({ error: String(e) }))
+            }
+          })
+          return
+        }
+
         // API endpoint for CVA config
         if (req.url?.startsWith("/api/cva-config")) {
           const url = new URL(req.url, "http://localhost")
