@@ -2,6 +2,10 @@
 
 A visual design tool for CVA (Class Variance Authority) components, implemented as a Vite plugin.
 
+## Commands
+
+- `just vortex`: Run Vortex to verify changes work
+
 ## Concept
 
 Vortex provides a visual interface for browsing and editing Tailwind classes in CVA-based components. Instead of manually editing class strings in code, designers and developers can see live previews of all component variants and modify their styles through a UI, with changes written back to the source files.
