@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
 import { PropertiesPanel, VariantData } from "./components/PropertiesPanel"
+import { Selector } from "./components/Selector"
 import type { CvaConfig } from "./parse-cva"
 
 export default function App() {
@@ -50,22 +51,20 @@ export default function App() {
             <h2 className="text-sm font-medium text-muted-foreground mb-3">{variant.name}</h2>
             <div className="flex flex-wrap gap-4">
               {variant.values.map((value) => (
-                <div
+                <Selector
                   key={value.name}
-                  onClick={() =>
+                  isActive={
+                    selectedVariant?.valueName === value.name &&
+                    selectedVariant?.variantName === variant.name
+                  }
+                  onClick={() => {
                     setSelectedVariant({
                       variantName: variant.name,
                       valueName: value.name,
                       classes: value.classes,
                       line: value.line,
                     })
-                  }
-                  className={`p-4 rounded-lg border-2 transition-colors ${
-                    selectedVariant?.valueName === value.name &&
-                    selectedVariant?.variantName === variant.name
-                      ? "border-blue-500 bg-blue-500/10"
-                      : "border-transparent hover:border-muted"
-                  }`}
+                  }}
                 >
                   <Button
                     variant={variant.name === "variant" ? (value.name as "default") : undefined}
@@ -73,7 +72,7 @@ export default function App() {
                   >
                     {value.name}
                   </Button>
-                </div>
+                </Selector>
               ))}
             </div>
           </section>
