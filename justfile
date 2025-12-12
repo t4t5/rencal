@@ -40,3 +40,6 @@ storybook:
 
 vortex:
   pnpm vortex
+
+cosmos:
+  pnpm cosmos
