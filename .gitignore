@@ -28,3 +28,6 @@ target
 
 # Generated migrations module
 src-tauri/src/migrations.rs
+
+*storybook.log
+storybook-static

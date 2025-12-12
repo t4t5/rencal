@@ -34,3 +34,6 @@ typecheck:
 # Reset the database completely
 reset:
   rm $HOME/.config/rencal/rencal.db
+
+storybook:
+  pnpm storybook
