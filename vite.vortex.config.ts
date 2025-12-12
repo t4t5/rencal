@@ -1,22 +1,12 @@
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import path from "path"
-import { defineConfig, Plugin } from "vite"
+import { defineConfig } from "vite"
 
-function serveVortex(): Plugin {
-  return {
-    name: "serve-vortex",
-    configureServer(server) {
-      server.middlewares.use((req, _res, next) => {
-        if (req.url === "/") req.url = "/vortex.html"
-        next()
-      })
-    },
-  }
-}
+import { vortex } from "./vortex/plugin"
 
 export default defineConfig({
-  plugins: [serveVortex(), react(), tailwindcss()],
+  plugins: [vortex(), react(), tailwindcss()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
