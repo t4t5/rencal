@@ -2,22 +2,40 @@ import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
+import { PropertiesPanel, VariantData } from "./components/PropertiesPanel"
 import type { CvaConfig } from "./parse-cva"
 
 export default function App() {
   const [config, setConfig] = useState<CvaConfig | null>(null)
-  const [selectedVariant, setSelectedVariant] = useState<{
-    variantName: string
-    valueName: string
-    classes: string
-    line: number
-  } | null>(null)
+
+  const [selectedVariant, setSelectedVariant] = useState<VariantData | null>(null)
 
   useEffect(() => {
     fetch("/api/cva-config?file=./src/components/ui/button.tsx")
       .then((res) => res.json())
       .then((data) => setConfig(data[0]))
   }, [])
+
+  const onSave = async () => {
+    if (!selectedVariant) return
+    if (!config) return
+
+    const res = await fetch("/api/update-classes", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        file: config.filePath,
+        line: selectedVariant.line,
+        classes: selectedVariant.classes,
+      }),
+    })
+    if (res.ok) {
+      console.log("[Vortex] Saved!")
+    } else {
+      const error = await res.json()
+      console.error("[Vortex] Save failed:", error)
+    }
+  }
 
   if (!config) return <div className="p-8">Loading...</div>
 
@@ -62,61 +80,13 @@ export default function App() {
         ))}
       </div>
 
-      {/* Properties panel */}
-      <div className="w-80 border-l border-border p-4 overflow-auto">
-        <h2 className="font-semibold mb-4">Properties</h2>
-
-        {selectedVariant ? (
-          <div className="flex flex-col gap-4">
-            <div>
-              <label className="text-sm text-muted-foreground">Variant</label>
-              <div className="font-mono text-sm">
-                {selectedVariant.variantName}.{selectedVariant.valueName}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground">Line</label>
-              <div className="font-mono text-sm">{selectedVariant.line}</div>
-            </div>
-
-            <div>
-              <label className="text-sm text-muted-foreground">Classes</label>
-              <textarea
-                value={selectedVariant.classes}
-                onChange={(e) =>
-                  setSelectedVariant({ ...selectedVariant, classes: e.target.value })
-                }
-                className="w-full font-mono text-xs bg-muted p-2 rounded mt-1 min-h-24 resize-y"
-              />
-              <button
-                onClick={async () => {
-                  const res = await fetch("/api/update-classes", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      file: config.filePath,
-                      line: selectedVariant.line,
-                      classes: selectedVariant.classes,
-                    }),
-                  })
-                  if (res.ok) {
-                    console.log("[Vortex] Saved!")
-                  } else {
-                    const error = await res.json()
-                    console.error("[Vortex] Save failed:", error)
-                  }
-                }}
-                className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-              >
-                Save
-              </button>
-            </div>
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">Select a variant to view its properties</p>
-        )}
-      </div>
+      {!!selectedVariant && (
+        <PropertiesPanel
+          selectedVariant={selectedVariant}
+          onChange={setSelectedVariant}
+          onSave={onSave}
+        />
+      )}
     </div>
   )
 }
