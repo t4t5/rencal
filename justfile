@@ -37,3 +37,6 @@ reset:
 
 storybook:
   pnpm storybook
+
+vortex:
+  pnpm vortex
