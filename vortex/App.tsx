@@ -82,9 +82,25 @@ export default function App() {
 
             <div>
               <label className="text-sm text-muted-foreground">Classes</label>
-              <div className="font-mono text-xs bg-muted p-2 rounded mt-1 break-all">
-                {selectedVariant.classes}
-              </div>
+              <textarea
+                value={selectedVariant.classes}
+                onChange={(e) =>
+                  setSelectedVariant({ ...selectedVariant, classes: e.target.value })
+                }
+                className="w-full font-mono text-xs bg-muted p-2 rounded mt-1 min-h-24 resize-y"
+              />
+              <button
+                onClick={() => {
+                  console.log("[Vortex] Save:", {
+                    file: config.filePath,
+                    line: selectedVariant.line,
+                    classes: selectedVariant.classes,
+                  })
+                }}
+                className="mt-2 px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              >
+                Save
+              </button>
             </div>
           </div>
         ) : (
