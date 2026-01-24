@@ -5,7 +5,6 @@ import { toast } from "sonner"
 import { v4 as uuidv4 } from "uuid"
 
 import { useAuth } from "@/contexts/AuthContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 import { GoogleEvent, syncGoogleEvents } from "@/lib/providers/google/calendar"
@@ -14,8 +13,8 @@ import { createRRuleWithDtstart } from "@/lib/rrule-utils"
 import { db, schema } from "@/db/database"
 import type {
   Account,
-  Calendar,
-  CalendarEvent,
+  LegacyCalendar as Calendar,
+  LegacyCalendarEvent as CalendarEvent,
   CalendarEventInsert,
   ReminderInsert,
 } from "@/db/types"
@@ -113,10 +112,19 @@ function expandRecurringEvent(
  */
 export const useSyncEvents = (options?: { onSyncComplete?: () => void }) => {
   const { accounts, withAuthRetry } = useAuth()
-  const { calendars } = useCalendarState()
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const [calendars, setCalendars] = useState<Calendar[]>([])
+
+  // Load SQLite calendars directly (not from caldir context)
+  useEffect(() => {
+    const loadCalendars = async () => {
+      const result = await db.select().from(schema.calendars)
+      setCalendars(result)
+    }
+    loadCalendars()
+  }, [])
 
   const visibleCalendars = calendars.filter((c) => c.isVisible && c.providerCalendarId)
 

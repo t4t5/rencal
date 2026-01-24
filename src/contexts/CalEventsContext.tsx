@@ -10,11 +10,13 @@ import {
   useState,
 } from "react"
 
+import { rpc } from "@/rpc"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
+import { logger } from "@/lib/logger"
 
-import { CalendarEvent, DateRange } from "@/db/types"
+import { CalendarEvent, DateRange, eventDtoToCalendarEvent } from "@/db/types"
 
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]
@@ -32,8 +34,8 @@ export function useCalEvents() {
 }
 
 export function CalEventsProvider({ children }: { children: ReactNode }) {
-  const { calendars, activeDate } = useCalendarState()
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  const { calendars } = useCalendarState()
+  const visibleCalendarSlugs = calendars.filter((c) => c.isVisible).map((c) => c.slug)
 
   const currentDateRangeRef = useRef<DateRange | null>(null)
 
@@ -43,16 +45,24 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
   const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
 
   const reloadEvents = useEffectEvent(async () => {
-    const activeRange = getStartRangeForDate(activeDate)
-
     // Core data hasn't loaded yet:
-    if (!visibleCalendarIds.length || !activeDate) {
+    if (!visibleCalendarSlugs.length) {
       return
     }
 
-    currentDateRangeRef.current = activeRange
-    const events = await getCalendarEventsForRange(activeRange, visibleCalendarIds)
-    setCalendarEvents(events)
+    try {
+      const eventDtos = await rpc.caldir.list_all_events()
+
+      // Convert to CalendarEvent and filter by visible calendars
+      const events = eventDtos
+        .map(eventDtoToCalendarEvent)
+        .filter((e) => visibleCalendarSlugs.includes(e.calendarSlug))
+
+      logger.debug("Events loaded from caldir:", events.length)
+      setCalendarEvents(events)
+    } catch (error) {
+      logger.error("Failed to load events from caldir:", error)
+    }
   })
 
   const value: CalEventsContextType = {

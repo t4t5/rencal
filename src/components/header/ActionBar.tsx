@@ -3,16 +3,13 @@ import { useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { IoSearch as SearchIcon } from "react-icons/io5"
-import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
 import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
-import { useSyncEvents } from "@/hooks/useSyncEvents"
 import { cn } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
@@ -36,8 +33,8 @@ export function ActionBar() {
 
       {showModal && (
         <Modal onClose={() => setShowModal(false)}>
-          <DialogTitle className="font-bold text-lg">Accounts</DialogTitle>
-          <Description className="hidden">Connect Calendar providers</Description>
+          <DialogTitle className="font-bold text-lg">Calendars</DialogTitle>
+          <Description className="hidden">Manage calendar visibility</Description>
           <Settings />
         </Modal>
       )}
@@ -48,30 +45,19 @@ export function ActionBar() {
 const SyncStatus = () => {
   const { reloadEvents } = useCalEvents()
 
-  const { isSyncing, syncError } = useSyncEvents({
-    onSyncComplete: reloadEvents,
-  })
-
-  if (syncError) {
-    return (
-      <div className="flex justify-between pr-2">
-        <Tooltip>
-          <TooltipTrigger>
-            <WarningIcon className="text-destructive" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 break-words">{syncError}</TooltipContent>
-        </Tooltip>
-      </div>
-    )
-  }
+  // For the caldir PoC, sync is handled via caldir-core's pull/push commands
+  // The useSyncEvents hook (Google sync) will be removed after migration
+  const isSyncing = false
 
   return (
     <div className="flex justify-between pr-2">
-      <SyncIcon
-        className={cn("text-muted-foreground opacity-0 transition-opacity", {
-          "animate-spin text-primary opacity-100": isSyncing,
-        })}
-      />
+      <Button variant="ghost" size="icon" onClick={() => reloadEvents()}>
+        <SyncIcon
+          className={cn("text-muted-foreground", {
+            "animate-spin text-primary": isSyncing,
+          })}
+        />
+      </Button>
     </div>
   )
 }

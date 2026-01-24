@@ -4,8 +4,29 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from 'taurp
 type TAURI_CHANNEL<T> = (response: T) => void
 
 
-const ARGS_MAP = { 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
-export type Router = { "oauth": {close_oauth_window: () => Promise<null>, 
+/**
+ * Calendar DTO for TypeScript consumption.
+ */
+export type CalendarDto = { slug: string; name: string; color: string | null }
+
+/**
+ * Input DTO for creating events
+ */
+export type CreateEventInput = { calendarSlug: string; summary: string; description: string | null; location: string | null; start: string; end: string; allDay: boolean }
+
+/**
+ * Event DTO for TypeScript consumption.
+ * Flattens EventTime enum into start/end strings + allDay boolean.
+ */
+export type EventDto = { id: string; calendarSlug: string; summary: string; description: string | null; location: string | null; start: string; end: string; allDay: boolean; status: string; isRecurring: boolean; organizerEmail: string | null }
+
+const ARGS_MAP = { 'caldir':'{"create_event":["input"],"delete_event":["calendar_slug","event_id"],"list_all_events":[],"list_calendars":[],"list_events":["calendar_slug"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
+export type Router = { "caldir": {create_event: (input: CreateEventInput) => Promise<EventDto>, 
+delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
+list_all_events: () => Promise<EventDto[]>, 
+list_calendars: () => Promise<CalendarDto[]>, 
+list_events: (calendarSlug: string) => Promise<EventDto[]>},
+"oauth": {close_oauth_window: () => Promise<null>, 
 open_oauth_window: (url: string, title: string) => Promise<null>, 
 start_oauth_callback_server: (port: number) => Promise<string>} };
 

@@ -33,7 +33,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendarState()
   const [isDrafting, setIsDrafting] = useState(false)
 
-  const defaultCalendarId = calendars[0]?.id ?? null
+  const defaultCalendarSlug = calendars[0]?.slug ?? ""
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])
@@ -41,12 +41,15 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     return {
       summary: "",
+      description: null,
+      location: null,
       allDay: false,
       start: getClosestNextHour(),
       end: addMinutes(getClosestNextHour(), 30),
-      calendarId: defaultCalendarId,
+      calendarSlug: defaultCalendarSlug,
+      recurrence: null,
     }
-  }, [defaultCalendarId])
+  }, [defaultCalendarSlug])
 
   const [draftEvent, setDraftEvent] = useState<DraftEvent>(generateDefaultDraftEvent())
 

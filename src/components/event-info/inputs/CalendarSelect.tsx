@@ -10,7 +10,7 @@ export const CalendarSelect = ({
   onChange,
 }: {
   calendar?: Calendar
-  onChange: (calendarId: string) => void
+  onChange: (calendarSlug: string) => void
 }) => {
   const { calendars } = useCalendarState()
 
@@ -21,7 +21,7 @@ export const CalendarSelect = ({
       </SelectTrigger>
       <SelectContent>
         {calendars.map((cal) => (
-          <SelectItem key={cal.id} value={cal.id}>
+          <SelectItem key={cal.slug} value={cal.slug}>
             <CalendarItem calendar={cal} />
           </SelectItem>
         ))}

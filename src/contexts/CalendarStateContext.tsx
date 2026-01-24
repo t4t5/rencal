@@ -8,14 +8,16 @@ import {
   useState,
 } from "react"
 
+import { rpc } from "@/rpc"
+
 import { logger } from "@/lib/logger"
 
-import { schema, db } from "@/db/database"
 import type { Calendar } from "@/db/types"
 
 interface CalendarStateContextType {
   calendars: Calendar[]
   reloadCalendars: () => Promise<void>
+  toggleCalendarVisibility: (slug: string) => void
   activeDate: Date
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
@@ -30,6 +32,9 @@ export function useCalendarState() {
   return useContext(CalendarStateContext)
 }
 
+// Simple in-memory visibility state (for PoC - later will use SQLite)
+const visibilityCache = new Map<string, boolean>()
+
 export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<Calendar[]>([])
@@ -39,14 +44,38 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const isNavigatingRef = useRef(false)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const loadCalendarsFromStore = async () => {
-    const result = await db.select().from(schema.calendars)
-    logger.debug("Calendars loaded from store:", result.length)
-    setCalendars(result)
+  const loadCalendarsFromCaldir = async () => {
+    try {
+      const caldirCalendars = await rpc.caldir.list_calendars()
+      logger.debug("Calendars loaded from caldir:", caldirCalendars.length)
+
+      // Merge with visibility state (default to visible)
+      const calendarsWithVisibility: Calendar[] = caldirCalendars.map((cal) => ({
+        ...cal,
+        isVisible: visibilityCache.get(cal.slug) ?? true,
+      }))
+
+      setCalendars(calendarsWithVisibility)
+    } catch (error) {
+      logger.error("Failed to load calendars from caldir:", error)
+    }
   }
 
+  const toggleCalendarVisibility = useCallback((slug: string) => {
+    setCalendars((prev) =>
+      prev.map((cal) => {
+        if (cal.slug === slug) {
+          const newVisibility = !cal.isVisible
+          visibilityCache.set(slug, newVisibility)
+          return { ...cal, isVisible: newVisibility }
+        }
+        return cal
+      }),
+    )
+  }, [])
+
   useEffect(() => {
-    void loadCalendarsFromStore()
+    void loadCalendarsFromCaldir()
   }, [])
 
   const registerScrollToDate = useCallback((fn: (date: Date) => void) => {
@@ -86,7 +115,8 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
 
   const value = {
     calendars,
-    reloadCalendars: loadCalendarsFromStore,
+    reloadCalendars: loadCalendarsFromCaldir,
+    toggleCalendarVisibility,
     activeDate,
     setActiveDate,
 

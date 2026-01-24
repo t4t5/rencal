@@ -1,4 +1,3 @@
-import { eq } from "drizzle-orm"
 import { ReactNode } from "react"
 import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
@@ -6,7 +5,6 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { cn } from "@/lib/utils"
 
-import { db, schema } from "@/db/database"
 import { Calendar } from "@/db/types"
 
 export function CalendarItem({ calendar, children }: { calendar: Calendar; children?: ReactNode }) {
@@ -23,11 +21,6 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 rounded-[3px] shrink-0"
           style={{ backgroundColor: color ?? undefined }}
         />
-        {/*isSubscription ? (
-          <RssIcon className="size-3 shrink-0" style={{ color }} />
-        ) : (
-          <div className="size-3 rounded-[3px] shrink-0" style={{ backgroundColor: color }} />
-        )*/}
         <span className="text-sm">{name}</span>
       </div>
 
@@ -37,22 +30,17 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
 }
 
 export function CalendarItemWithVisibilityToggle({ calendar }: { calendar: Calendar }) {
-  const { reloadCalendars } = useCalendarState()
+  const { toggleCalendarVisibility } = useCalendarState()
 
   const { isVisible } = calendar
 
-  const onToggleVisibility = async (calendarId: string) => {
-    await db
-      .update(schema.calendars)
-      .set({ isVisible: !isVisible })
-      .where(eq(schema.calendars.id, calendarId))
-
-    await reloadCalendars()
+  const onToggleVisibility = () => {
+    toggleCalendarVisibility(calendar.slug)
   }
 
   return (
-    <CalendarItem key={calendar.id} calendar={calendar}>
-      <div className="cursor-pointer" onClick={() => onToggleVisibility(calendar.id)}>
+    <CalendarItem key={calendar.slug} calendar={calendar}>
+      <div className="cursor-pointer" onClick={onToggleVisibility}>
         {isVisible ? (
           <EyeIcon className="size-4 opacity-0 group-hover:opacity-50" />
         ) : (

@@ -1,39 +1,25 @@
-import { PiPlus as PlusIcon } from "react-icons/pi"
+import { PiArrowsClockwise as SyncIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
-import { useAuth } from "@/contexts/AuthContext"
-
-import { useConnectGoogle } from "@/hooks/useConnectGoogle"
-import { useFetchGoogleCalendars } from "@/hooks/useFetchGoogleCalendars"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { AccountSection } from "./AccountSection"
 
 export function Settings() {
-  const { accounts } = useAuth()
-
-  const { fetchCalendars, isLoading } = useFetchGoogleCalendars()
-
-  const { connect, isConnecting } = useConnectGoogle({
-    onConnect: async (account) => {
-      await fetchCalendars(account)
-    },
-  })
+  const { reloadCalendars } = useCalendarState()
 
   return (
     <div className="flex flex-col">
-      {accounts.map((account) => (
-        <AccountSection key={account.id} account={account} />
-      ))}
+      <AccountSection />
 
       <Button
         variant="ghost"
         className="justify-start text-muted-foreground"
-        disabled={isConnecting || isLoading}
-        onClick={connect}
+        onClick={() => reloadCalendars()}
       >
-        <PlusIcon className="size-4" />
-        Add calendar account
+        <SyncIcon className="size-4" />
+        Refresh calendars
       </Button>
     </div>
   )

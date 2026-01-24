@@ -1,20 +1,18 @@
 import { format, parse } from "date-fns"
 import { useCallback } from "react"
 import { rrulestr } from "rrule"
-import { v4 as uuidv4 } from "uuid"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+
+import { rpc } from "@/rpc"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
-import { expandRecurringEventInstances } from "@/lib/recurrence"
-
-import { db, schema } from "@/db/database"
 
 export const NewEvent = () => {
   const { calendars } = useCalendarState()
@@ -22,31 +20,32 @@ export const NewEvent = () => {
     useEventDraft()
   const { reloadEvents } = useCalEvents()
 
-  const { summary, start, end, allDay, location, calendarId, recurrence } = draftEvent
+  const { summary, start, end, allDay, location, calendarSlug, recurrence, description } =
+    draftEvent
 
   const recurrenceRRule = recurrence ? rrulestr(recurrence) : null
 
   const onCreate = useCallback(async () => {
-    const eventId = uuidv4()
-    await db.insert(schema.events).values({ ...draftEvent, id: eventId })
+    try {
+      await rpc.caldir.create_event({
+        calendarSlug,
+        summary: summary || "Untitled Event",
+        description,
+        location,
+        start: allDay ? format(start, "yyyy-MM-dd") : start.toISOString(),
+        end: allDay ? format(end, "yyyy-MM-dd") : end.toISOString(),
+        allDay,
+      })
 
-    if (draftReminders.length > 0) {
-      await db
-        .insert(schema.reminders)
-        .values(draftReminders.map((mins) => ({ eventId, minutes: mins })))
+      logger.info("Created event via caldir:", draftEvent)
+      setIsDrafting(false)
+      await reloadEvents()
+    } catch (error) {
+      logger.error("Failed to create event:", error)
     }
-
-    // If this is a recurring event, expand it into instances
-    if (draftEvent.recurrence) {
-      await expandRecurringEventInstances(eventId)
-    }
-
-    logger.info("Create event:", draftEvent)
-    setIsDrafting(false)
-    reloadEvents()
   }, [draftEvent, draftReminders])
 
-  const calendar = calendars.find((cal) => cal.id === calendarId)
+  const calendar = calendars.find((cal) => cal.slug === calendarSlug)
 
   return (
     <Card className="p-0 flex flex-col gap-0">
@@ -85,8 +84,8 @@ export const NewEvent = () => {
             const newEnd = parse(time, "HH:mm", end)
             setDraftEvent({ ...draftEvent, end: newEnd })
           }}
-          onCalendarChange={(newCalendarId) => {
-            setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
+          onCalendarChange={(newCalendarSlug) => {
+            setDraftEvent({ ...draftEvent, calendarSlug: newCalendarSlug })
           }}
           recurrence={recurrenceRRule}
           onRecurrenceChange={(rrule) => {

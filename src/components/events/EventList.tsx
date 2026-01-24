@@ -19,7 +19,7 @@ export function EventList() {
     isNavigating,
     setIsNavigating,
   } = useCalendarState()
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  const visibleCalendarSlugs = calendars.filter((c) => c.isVisible).map((c) => c.slug)
 
   const { calendarEvents: events, reloadEvents, currentDateRangeRef } = useCalEvents()
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
@@ -42,7 +42,7 @@ export function EventList() {
     if (!currentDateRangeRef.current) {
       reloadEvents()
     }
-  }, [activeDate, visibleCalendarIds])
+  }, [activeDate, visibleCalendarSlugs])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {

@@ -46,7 +46,7 @@ export function EventInfo({
   recurrence: RRule | RRuleSet | null
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
-  onCalendarChange: (calendarId: string) => void
+  onCalendarChange: (calendarSlug: string) => void
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
