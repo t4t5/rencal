@@ -15,7 +15,9 @@ export const useCalEventsInfiniteScroll = ({
   const { calendars } = useCalendarState()
   const { currentDateRangeRef, setCalendarEvents } = useCalEvents()
 
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  // TODO: respect calendar visibility
+  const visibleCalendarIds = calendars.map((c) => c.slug)
+  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
   const onNearTop = useCallback(async () => {
     const currentRange = currentDateRangeRef.current

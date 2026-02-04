@@ -8,7 +8,7 @@ import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-info/inputs/RepeatSelect"
 import { Textarea } from "@/components/ui/textarea"
 
-import { Calendar } from "@/db/types"
+import { Calendar } from "@/rpc/bindings"
 
 export function EventInfo({
   summary,

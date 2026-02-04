@@ -14,7 +14,10 @@ const providerToIcon: Record<EmailProvider, IconType> = {
 
 export function AccountSection({ account }: { account: Account }) {
   const { calendars } = useCalendarState()
-  const accountCalendars = calendars.filter((c) => c.accountId === account.id)
+
+  // TODO: Filter calendars by account ID
+  // const accountCalendars = calendars.filter((c) => c.accountId === account.id)
+  const accountCalendars = calendars
 
   const ProviderIcon = providerToIcon[account.provider]
 
@@ -27,7 +30,7 @@ export function AccountSection({ account }: { account: Account }) {
 
       <div className="flex flex-col gap-3">
         {accountCalendars.map((calendar) => {
-          return <CalendarItemWithVisibilityToggle key={calendar.id} calendar={calendar} />
+          return <CalendarItemWithVisibilityToggle key={calendar.slug} calendar={calendar} />
         })}
       </div>
     </div>

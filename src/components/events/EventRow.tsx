@@ -7,7 +7,7 @@ import type { CalendarEvent } from "@/db/types"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendarState()
-  const calendar = calendars.find((c) => c.id === event.calendarId)
+  const calendar = calendars.find((c) => c.slug === event.calendarId)
   const calendarColor = calendar?.color
 
   const from = event.start

@@ -33,7 +33,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendarState()
   const [isDrafting, setIsDrafting] = useState(false)
 
-  const defaultCalendarId = calendars[0]?.id ?? null
+  const defaultCalendarId = calendars[0]?.slug ?? null
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])

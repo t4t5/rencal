@@ -19,7 +19,9 @@ export function EventList() {
     isNavigating,
     setIsNavigating,
   } = useCalendarState()
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  // TODO: respect calendar visibility
+  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  const visibleCalendarIds = calendars.map((c) => c.slug)
 
   const { calendarEvents: events, reloadEvents, currentDateRangeRef } = useCalEvents()
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })

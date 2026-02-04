@@ -8,6 +8,7 @@ pub struct Calendar {
     pub slug: String,
     pub name: Option<String>,
     pub color: Option<String>,
+    pub provider: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Type)]
@@ -30,6 +31,11 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
             slug: c.slug.clone(),
             name: c.config.name.clone(),
             color: c.config.color.clone(),
+            provider: c
+                .config
+                .remote
+                .as_ref()
+                .map(|r| r.provider.name().to_string()),
         }
     }
 }
@@ -69,15 +75,7 @@ impl CaldirApi for CaldirApiImpl {
     async fn list_calendars(self) -> Result<Vec<Calendar>, String> {
         let caldir = Caldir::load().map_err(|e| e.to_string())?;
 
-        let calendars = caldir
-            .calendars()
-            .into_iter()
-            .map(|c| Calendar {
-                slug: c.slug.clone(),
-                name: c.config.name.clone(),
-                color: c.config.color.clone(),
-            })
-            .collect();
+        let calendars = caldir.calendars().iter().map(Calendar::from).collect();
 
         Ok(calendars)
     }

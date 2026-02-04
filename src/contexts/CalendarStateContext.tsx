@@ -8,10 +8,10 @@ import {
   useState,
 } from "react"
 
-import { logger } from "@/lib/logger"
+import { rpc } from "@/rpc"
+import type { Calendar } from "@/rpc/bindings"
 
-import { schema, db } from "@/db/database"
-import type { Calendar } from "@/db/types"
+import { logger } from "@/lib/logger"
 
 interface CalendarStateContextType {
   calendars: Calendar[]
@@ -40,7 +40,7 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
-    const result = await db.select().from(schema.calendars)
+    const result = await rpc.caldir.list_calendars()
     logger.debug("Calendars loaded from store:", result.length)
     setCalendars(result)
   }

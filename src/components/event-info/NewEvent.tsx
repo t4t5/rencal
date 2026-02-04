@@ -46,7 +46,7 @@ export const NewEvent = () => {
     reloadEvents()
   }, [draftEvent, draftReminders])
 
-  const calendar = calendars.find((cal) => cal.id === calendarId)
+  const calendar = calendars.find((cal) => cal.slug === calendarId)
 
   return (
     <Card className="p-0 flex flex-col gap-0">

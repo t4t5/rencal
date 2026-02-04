@@ -157,7 +157,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const effectiveRecurrence = recurrence ?? parentRecurrence
   const recurrenceRRule = effectiveRecurrence ? rrulestr(effectiveRecurrence) : null
-  const calendar = calendars.find((c) => c.id === calendarId)
+  const calendar = calendars.find((c) => c.slug === calendarId)
 
   return (
     <div className="px-2 pt-5 pb-2 flex flex-col grow">

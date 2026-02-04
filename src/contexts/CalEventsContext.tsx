@@ -33,7 +33,10 @@ export function useCalEvents() {
 
 export function CalEventsProvider({ children }: { children: ReactNode }) {
   const { calendars, activeDate } = useCalendarState()
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+
+  // TODO: respect calendar visibility
+  const visibleCalendarIds = calendars.map((c) => c.slug)
+  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
   const currentDateRangeRef = useRef<DateRange | null>(null)
 
