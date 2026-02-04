@@ -1,5 +1,7 @@
+use crate::routes::TauResult;
 use caldir_core::caldir::Caldir;
 use caldir_core::event::EventStatus;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -63,8 +65,12 @@ impl From<&caldir_core::event::Event> for Event {
 
 #[taurpc::procedures(path = "caldir", export_to = "../src/rpc/bindings.ts")]
 pub trait CaldirApi {
-    async fn list_calendars() -> Result<Vec<Calendar>, String>;
-    async fn list_events(calendar_slug: String) -> Result<Vec<Event>, String>;
+    async fn list_calendars() -> TauResult<Vec<Calendar>>;
+    async fn list_events(
+        calendar_slugs: Vec<String>,
+        start: String,
+        end: String,
+    ) -> TauResult<Vec<Event>>;
 }
 
 #[derive(Clone)]
@@ -72,7 +78,7 @@ pub struct CaldirApiImpl;
 
 #[taurpc::resolvers]
 impl CaldirApi for CaldirApiImpl {
-    async fn list_calendars(self) -> Result<Vec<Calendar>, String> {
+    async fn list_calendars(self) -> TauResult<Vec<Calendar>> {
         let caldir = Caldir::load().map_err(|e| e.to_string())?;
 
         let calendars = caldir.calendars().iter().map(Calendar::from).collect();
@@ -80,16 +86,35 @@ impl CaldirApi for CaldirApiImpl {
         Ok(calendars)
     }
 
-    async fn list_events(self, calendar_slug: String) -> Result<Vec<Event>, String> {
-        let calendar =
-            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+    async fn list_events(
+        self,
+        calendar_slugs: Vec<String>,
+        start: String,
+        end: String,
+    ) -> TauResult<Vec<Event>> {
+        let range_start: DateTime<Utc> = start
+            .parse()
+            .map_err(|e: chrono::ParseError| e.to_string())?;
 
-        let events = calendar
-            .events()
-            .map_err(|e| e.to_string())?
-            .iter()
-            .map(|ce| Event::from(&ce.event))
-            .collect();
+        let range_end: DateTime<Utc> =
+            end.parse().map_err(|e: chrono::ParseError| e.to_string())?;
+
+        let mut events = Vec::new();
+
+        for slug in &calendar_slugs {
+            let calendar =
+                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+
+            for ce in calendar.events().map_err(|e| e.to_string())? {
+                if let Some(event_start) = ce.event.start.to_utc() {
+                    if event_start >= range_start && event_start <= range_end {
+                        events.push(Event::from(&ce.event));
+                    }
+                }
+            }
+        }
+
+        events.sort_by(|a, b| a.start.cmp(&b.start));
 
         Ok(events)
     }

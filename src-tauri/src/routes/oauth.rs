@@ -1,3 +1,4 @@
+use crate::routes::TauResult;
 use tauri::{AppHandle, Manager, Runtime};
 
 use crate::oauth;
@@ -6,15 +7,15 @@ const OAUTH_WINDOW_LABEL: &str = "oauth-popup";
 
 #[taurpc::procedures(path = "oauth", export_to = "../src/rpc/bindings.ts")]
 pub trait OAuthApi {
-    async fn start_oauth_callback_server(port: u16) -> Result<String, String>;
+    async fn start_oauth_callback_server(port: u16) -> TauResult<String>;
 
     async fn open_oauth_window<R: Runtime>(
         app_handle: AppHandle<R>,
         url: String,
         title: String,
-    ) -> Result<(), String>;
+    ) -> TauResult<()>;
 
-    async fn close_oauth_window<R: Runtime>(app_handle: AppHandle<R>) -> Result<(), String>;
+    async fn close_oauth_window<R: Runtime>(app_handle: AppHandle<R>) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -22,7 +23,7 @@ pub struct OAuthApiImpl;
 
 #[taurpc::resolvers]
 impl OAuthApi for OAuthApiImpl {
-    async fn start_oauth_callback_server(self, port: u16) -> Result<String, String> {
+    async fn start_oauth_callback_server(self, port: u16) -> TauResult<String> {
         let listener = oauth::server::create_localhost_listener(port)
             .map_err(|e| format!("Failed to create OAuth callback server: {}", e))?;
 
@@ -38,7 +39,7 @@ impl OAuthApi for OAuthApiImpl {
         app: AppHandle<R>,
         url: String,
         title: String,
-    ) -> Result<(), String> {
+    ) -> TauResult<()> {
         let parsed_url = url::Url::parse(&url).map_err(|e| format!("Invalid URL: {}", e))?;
 
         // Just open the window and return immediately
@@ -48,7 +49,7 @@ impl OAuthApi for OAuthApiImpl {
         Ok(())
     }
 
-    async fn close_oauth_window<R: Runtime>(self, app: AppHandle<R>) -> Result<(), String> {
+    async fn close_oauth_window<R: Runtime>(self, app: AppHandle<R>) -> TauResult<()> {
         if let Some(window) = app.get_webview_window(OAUTH_WINDOW_LABEL) {
             window
                 .close()
