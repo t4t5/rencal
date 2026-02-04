@@ -5,6 +5,7 @@ A calendar app crafted especially for Omarchy.
 ## Commands
 
 - `just check`: check for errors
+- `just gen-types`: generate typescript bidnings from rust
 
 ## Architecture
 
@@ -41,6 +42,8 @@ actions, including SQLite operations are handled in the frontend.
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
 - _NEVER_ use Drizzle's `returning()` method. It does not working with SQLite.
+- Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use
+  `i32`/`u32` instead.
 
 ## Google Calendar Integration
 

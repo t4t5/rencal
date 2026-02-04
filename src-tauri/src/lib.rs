@@ -6,11 +6,16 @@ use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::oauth::{OAuthApi, OAuthApiImpl};
 use taurpc::Router;
 
+/// Creates the taurpc router. Exposed for type generation.
+pub fn create_router() -> Router<tauri::Wry> {
+    Router::new()
+        .merge(OAuthApiImpl.into_handler())
+        .merge(CaldirApiImpl.into_handler())
+}
+
 #[tokio::main]
 pub async fn run() {
-    let router = Router::new()
-        .merge(OAuthApiImpl.into_handler())
-        .merge(CaldirApiImpl.into_handler());
+    let router = create_router();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

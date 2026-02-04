@@ -25,7 +25,7 @@ pub struct EventInfo {
     pub all_day: bool,
     pub status: String,
     pub recurrence: Option<Vec<String>>,
-    pub reminders: Vec<i64>,
+    pub reminders: Vec<i32>,
 }
 
 impl From<&caldir_core::event::Event> for EventInfo {
@@ -44,7 +44,7 @@ impl From<&caldir_core::event::Event> for EventInfo {
                 EventStatus::Cancelled => "cancelled".to_string(),
             },
             recurrence: e.recurrence.clone(),
-            reminders: e.reminders.iter().map(|r| r.minutes).collect(),
+            reminders: e.reminders.iter().map(|r| r.minutes as i32).collect(),
         }
     }
 }
