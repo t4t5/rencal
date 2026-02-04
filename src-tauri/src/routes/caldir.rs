@@ -1,21 +1,17 @@
 use caldir_core::caldir::Caldir;
-use caldir_core::calendar::Calendar;
 use caldir_core::event::EventStatus;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-// Bridge types for taurpc/specta serialization
-// (caldir-core types don't derive specta::Type)
-
 #[derive(Serialize, Deserialize, Type)]
-pub struct CalendarInfo {
+pub struct Calendar {
     pub slug: String,
     pub name: Option<String>,
     pub color: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Type)]
-pub struct EventInfo {
+pub struct Event {
     pub id: String,
     pub summary: String,
     pub description: Option<String>,
@@ -28,9 +24,19 @@ pub struct EventInfo {
     pub reminders: Vec<i32>,
 }
 
-impl From<&caldir_core::event::Event> for EventInfo {
+impl From<&caldir_core::calendar::Calendar> for Calendar {
+    fn from(c: &caldir_core::calendar::Calendar) -> Self {
+        Calendar {
+            slug: c.slug.clone(),
+            name: c.config.name.clone(),
+            color: c.config.color.clone(),
+        }
+    }
+}
+
+impl From<&caldir_core::event::Event> for Event {
     fn from(e: &caldir_core::event::Event) -> Self {
-        EventInfo {
+        Event {
             id: e.id.clone(),
             summary: e.summary.clone(),
             description: e.description.clone(),
@@ -51,8 +57,8 @@ impl From<&caldir_core::event::Event> for EventInfo {
 
 #[taurpc::procedures(path = "caldir", export_to = "../src/rpc/bindings.ts")]
 pub trait CaldirApi {
-    async fn list_calendars() -> Result<Vec<CalendarInfo>, String>;
-    async fn list_events(calendar_slug: String) -> Result<Vec<EventInfo>, String>;
+    async fn list_calendars() -> Result<Vec<Calendar>, String>;
+    async fn list_events(calendar_slug: String) -> Result<Vec<Event>, String>;
 }
 
 #[derive(Clone)]
@@ -60,13 +66,13 @@ pub struct CaldirApiImpl;
 
 #[taurpc::resolvers]
 impl CaldirApi for CaldirApiImpl {
-    async fn list_calendars(self) -> Result<Vec<CalendarInfo>, String> {
+    async fn list_calendars(self) -> Result<Vec<Calendar>, String> {
         let caldir = Caldir::load().map_err(|e| e.to_string())?;
 
         let calendars = caldir
             .calendars()
             .into_iter()
-            .map(|c| CalendarInfo {
+            .map(|c| Calendar {
                 slug: c.slug.clone(),
                 name: c.config.name.clone(),
                 color: c.config.color.clone(),
@@ -76,14 +82,15 @@ impl CaldirApi for CaldirApiImpl {
         Ok(calendars)
     }
 
-    async fn list_events(self, calendar_slug: String) -> Result<Vec<EventInfo>, String> {
-        let calendar = Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+    async fn list_events(self, calendar_slug: String) -> Result<Vec<Event>, String> {
+        let calendar =
+            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
 
         let events = calendar
             .events()
             .map_err(|e| e.to_string())?
             .iter()
-            .map(|ce| EventInfo::from(&ce.event))
+            .map(|ce| Event::from(&ce.event))
             .collect();
 
         Ok(events)
