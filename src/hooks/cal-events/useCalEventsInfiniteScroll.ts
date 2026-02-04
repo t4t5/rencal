@@ -26,7 +26,11 @@ export const useCalEventsInfiniteScroll = ({
     // Load events for prev range and append them:
     const prevStart = startOfMonth(subMonths(currentRange.start, MONTHS_TO_LOAD))
     const prevRange = { start: prevStart, end: currentRange.start }
-    const prevEvents = await getCalendarEventsForRange(prevRange, visibleCalendarIds)
+    const prevEvents = await getCalendarEventsForRange(
+      visibleCalendarIds,
+      prevRange.start,
+      prevRange.end,
+    )
 
     setCalendarEvents((prev) => {
       const existingIds = new Set(prev.map((e) => e.id))
@@ -52,7 +56,11 @@ export const useCalEventsInfiniteScroll = ({
     // Load events for next range and append them:
     const nextEnd = endOfMonth(addMonths(currentRange.end, MONTHS_TO_LOAD))
     const nextRange = { start: currentRange.end, end: nextEnd }
-    const nextEvents = await getCalendarEventsForRange(nextRange, visibleCalendarIds)
+    const nextEvents = await getCalendarEventsForRange(
+      visibleCalendarIds,
+      nextRange.start,
+      nextRange.end,
+    )
 
     setCalendarEvents((prev) => {
       const existingIds = new Set(prev.map((e) => e.id))

@@ -1,7 +1,7 @@
 import { format } from "date-fns"
 import { useMemo } from "react"
 
-import type { CalendarEvent } from "@/db/types"
+import { CalendarEvent } from "@/rpc/bindings"
 
 export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const eventsByDate = useMemo(() => {

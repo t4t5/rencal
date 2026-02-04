@@ -14,7 +14,7 @@ pub struct Calendar {
 }
 
 #[derive(Serialize, Deserialize, Type)]
-pub struct Event {
+pub struct CalendarEvent {
     pub id: String,
     pub summary: String,
     pub description: Option<String>,
@@ -25,6 +25,7 @@ pub struct Event {
     pub status: String,
     pub recurrence: Option<Vec<String>>,
     pub reminders: Vec<i32>,
+    pub calendar_slug: String,
 }
 
 impl From<&caldir_core::calendar::Calendar> for Calendar {
@@ -42,9 +43,9 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
     }
 }
 
-impl From<&caldir_core::event::Event> for Event {
-    fn from(e: &caldir_core::event::Event) -> Self {
-        Event {
+impl CalendarEvent {
+    fn from_event(e: &caldir_core::event::Event, calendar_slug: &str) -> Self {
+        CalendarEvent {
             id: e.id.clone(),
             summary: e.summary.clone(),
             description: e.description.clone(),
@@ -59,6 +60,7 @@ impl From<&caldir_core::event::Event> for Event {
             },
             recurrence: e.recurrence.clone(),
             reminders: e.reminders.iter().map(|r| r.minutes as i32).collect(),
+            calendar_slug: calendar_slug.to_string(),
         }
     }
 }
@@ -70,7 +72,7 @@ pub trait CaldirApi {
         calendar_slugs: Vec<String>,
         start: String,
         end: String,
-    ) -> TauResult<Vec<Event>>;
+    ) -> TauResult<Vec<CalendarEvent>>;
 }
 
 #[derive(Clone)]
@@ -91,7 +93,7 @@ impl CaldirApi for CaldirApiImpl {
         calendar_slugs: Vec<String>,
         start: String,
         end: String,
-    ) -> TauResult<Vec<Event>> {
+    ) -> TauResult<Vec<CalendarEvent>> {
         let range_start: DateTime<Utc> = start
             .parse()
             .map_err(|e: chrono::ParseError| e.to_string())?;
@@ -108,7 +110,7 @@ impl CaldirApi for CaldirApiImpl {
             for ce in calendar.events().map_err(|e| e.to_string())? {
                 if let Some(event_start) = ce.event.start.to_utc() {
                     if event_start >= range_start && event_start <= range_end {
-                        events.push(Event::from(&ce.event));
+                        events.push(CalendarEvent::from_event(&ce.event, slug));
                     }
                 }
             }

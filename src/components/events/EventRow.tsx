@@ -1,19 +1,19 @@
 import { format, isSameDay } from "date-fns"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { CalendarEvent } from "@/rpc/bindings"
 
-import type { CalendarEvent } from "@/db/types"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 export function EventRow({ event }: { event: CalendarEvent }) {
   const { calendars } = useCalendarState()
-  const calendar = calendars.find((c) => c.slug === event.calendarId)
+  const calendar = calendars.find((c) => c.slug === event.calendar_slug)
   const calendarColor = calendar?.color
 
   const from = event.start
   const to = event.end
 
-  if (event.allDay) {
+  if (event.all_day) {
     return (
       <div className="flex gap-2 pl-3 pr-2 items-center">
         <div
