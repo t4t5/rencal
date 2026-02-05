@@ -22,6 +22,7 @@ pub struct Recurrence {
 #[derive(Serialize, Deserialize, Type)]
 pub struct CalendarEvent {
     pub id: String,
+    pub recurring_event_id: Option<String>,
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
@@ -51,8 +52,13 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
 
 impl CalendarEvent {
     fn from_event(e: &caldir_core::event::Event, calendar_slug: &str) -> Self {
+        // If event has a recurrence_id, it's an instance of a recurring event
+        // and the uid is the parent recurring event's ID
+        let recurring_event_id = e.recurrence_id.as_ref().map(|_| e.uid.clone());
+
         CalendarEvent {
-            id: e.id.clone(),
+            id: e.unique_id(),
+            recurring_event_id,
             summary: e.summary.clone(),
             description: e.description.clone(),
             location: e.location.clone(),

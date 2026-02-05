@@ -219,7 +219,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
       <DeleteConfirmDialog
         open={showDeleteDialog}
-        isRecurring={!!(dirtyEvent.recurringEventId || dirtyEvent.recurrence)}
+        isRecurring={!!(dirtyEvent.recurring_event_id || dirtyEvent.recurrence)}
         onClose={() => setShowDeleteDialog(false)}
         onDeleteThis={handleDeleteThis}
         onDeleteAll={handleDeleteAll}
@@ -230,13 +230,13 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           pendingRecurrence={pendingRecurrence}
           onClose={() => setPendingRecurrence(null)}
           onApplyToAll={async () => {
-            if (!dirtyEvent?.recurringEventId) return
+            if (!dirtyEvent?.recurring_event_id) return
 
             // Update parent event's recurrence
             await db
               .update(schema.events)
               .set({ recurrence: pendingRecurrence?.toString() ?? null })
-              .where(eq(schema.events.id, dirtyEvent.recurringEventId))
+              .where(eq(schema.events.id, dirtyEvent.recurring_event_id))
 
             setParentRecurrence(pendingRecurrence?.toString() ?? null)
             setPendingRecurrence(null)
@@ -247,8 +247,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
             // Detach from series and set own recurrence
             setDirtyEvent({
               ...dirtyEvent,
-              recurringEventId: null,
-              recurrence: pendingRecurrence?.toString() ?? null,
+              recurring_event_id: null,
+              recurrence: pendingRecurrence ? rruleToRecurrence(pendingRecurrence) : null,
             })
             setParentRecurrence(null)
             setPendingRecurrence(null)

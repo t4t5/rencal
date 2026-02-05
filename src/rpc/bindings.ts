@@ -6,7 +6,7 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null }
 
-export type CalendarEvent = { id: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
 
 export type Recurrence = { rrule: string; exdates: string[] }
 
