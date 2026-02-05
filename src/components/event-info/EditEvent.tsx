@@ -6,6 +6,7 @@ import { RRule, RRuleSet } from "rrule"
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 
+import { rpc } from "@/rpc"
 import { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -35,32 +36,28 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     if (event) {
       setDirtyEvent(event)
       loadReminders(event.id)
-      // loadParentRecurrence(event.recurringEventId) // TODO: Handle recurrence
+      loadParentRecurrence(event.calendar_slug, event.recurring_event_id)
     }
   }, [event?.id])
 
-  // Auto-save to database when dirtyEvent changes
+  // Auto-save to caldir when dirtyEvent changes
   useDebouncedEffect(
     async () => {
       if (!dirtyEvent || !event) return
       // Skip if nothing actually changed
       if (JSON.stringify(dirtyEvent) === JSON.stringify(event)) return
 
-      // TODO: SAVE TO CALDIR FILE
-
-      // await db
-      //   .update(schema.events)
-      //   .set({
-      //     summary: dirtyEvent.summary,
-      //     start: dirtyEvent.start,
-      //     end: dirtyEvent.end,
-      //     allDay: dirtyEvent.allDay,
-      //     location: dirtyEvent.location,
-      //     calendarId: dirtyEvent.calendarId,
-      //     recurrence: dirtyEvent.recurrence,
-      //     recurringEventId: dirtyEvent.recurringEventId,
-      //   })
-      //   .where(eq(schema.events.id, dirtyEvent.id))
+      await rpc.caldir.update_event({
+        id: dirtyEvent.id,
+        calendar_slug: dirtyEvent.calendar_slug,
+        summary: dirtyEvent.summary,
+        description: dirtyEvent.description,
+        location: dirtyEvent.location,
+        start: dirtyEvent.start,
+        end: dirtyEvent.end,
+        all_day: dirtyEvent.all_day,
+        recurrence: dirtyEvent.recurrence,
+      })
 
       await reloadEvents()
     },
@@ -77,29 +74,24 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     setReminders(rows.map((r) => r.minutes))
   }
 
-  // const loadParentRecurrence = async (recurringEventId: string | null) => {
-  //   if (recurringEventId) {
-  //     const parent = await db
-  //       .select({ recurrence: schema.events.recurrence })
-  //       .from(schema.events)
-  //       .where(eq(schema.events.id, recurringEventId))
-  //       .get()
-  //
-  //     setParentRecurrence(parent?.recurrence ?? null)
-  //   } else {
-  //     setParentRecurrence(null)
-  //   }
-  // }
+  const loadParentRecurrence = async (calendarSlug: string, recurringEventId: string | null) => {
+    if (recurringEventId) {
+      const parent = await rpc.caldir.get_event(calendarSlug, recurringEventId)
+      setParentRecurrence(parent?.recurrence?.rrule ?? null)
+    } else {
+      setParentRecurrence(null)
+    }
+  }
 
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
 
     // If this is an instance of a recurring event, show dialog
-    // TODO: HANDLE RECURRING PARENT
-    // if (dirtyEvent.recurringEventId) {
-    //   setPendingRecurrence(rrule)
-    //   return
-    // }
+    if (dirtyEvent.recurring_event_id) {
+      setPendingRecurrence(rrule)
+      return
+    }
+
     // Otherwise, just update normally
     const recurrence = rruleToRecurrence(rrule)
     setDirtyEvent({ ...dirtyEvent, recurrence })
@@ -134,7 +126,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const handleDeleteThis = async () => {
     if (!dirtyEvent) return
 
-    await db.delete(schema.events).where(eq(schema.events.id, dirtyEvent.id))
+    await rpc.caldir.delete_event(dirtyEvent.calendar_slug, dirtyEvent.id)
 
     setShowDeleteDialog(false)
     setActiveEventId(null)
@@ -144,14 +136,12 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const handleDeleteAll = async () => {
     if (!dirtyEvent) return
 
-    // Get the parent event ID (either this event's recurringEventId or its own id if it's the parent)
-    // const parentId = dirtyEvent.recurringEventId ?? dirtyEvent.id
+    // Get the parent event to find the shared UID
+    const parentId = dirtyEvent.recurring_event_id ?? dirtyEvent.id
 
-    // Delete the parent and all instances (cascade will handle instances via recurringEventId)
-    // TODO: DELETE PARENT
-    // await db
-    //   .delete(schema.events)
-    //   .where(or(eq(schema.events.id, parentId), eq(schema.events.recurringEventId, parentId)))
+    if (parent) {
+      await rpc.caldir.delete_recurring_series(dirtyEvent.calendar_slug, parentId)
+    }
 
     setShowDeleteDialog(false)
     setActiveEventId(null)

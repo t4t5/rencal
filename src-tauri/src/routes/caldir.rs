@@ -1,7 +1,7 @@
 use crate::routes::TauResult;
-use caldir_core::event::EventStatus;
 use caldir_core::caldir::Caldir;
-use chrono::{DateTime, Utc};
+use caldir_core::event::{EventStatus, EventTime};
+use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -13,7 +13,7 @@ pub struct Calendar {
     pub provider: Option<String>,
 }
 
-#[derive(Serialize, Deserialize, Type)]
+#[derive(Clone, Serialize, Deserialize, Type)]
 pub struct Recurrence {
     pub rrule: String,
     pub exdates: Vec<String>,
@@ -47,6 +47,35 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
                 .as_ref()
                 .map(|r| r.provider.name().to_string()),
         }
+    }
+}
+
+/// Input for updating an event
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct UpdateEventInput {
+    pub id: String,
+    pub calendar_slug: String,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub start: String,
+    pub end: String,
+    pub all_day: bool,
+    pub recurrence: Option<Recurrence>,
+}
+
+/// Parse an ISO datetime string to EventTime
+fn parse_event_time(s: &str, all_day: bool) -> Result<EventTime, String> {
+    if all_day {
+        // Parse as date only (take first 10 chars: YYYY-MM-DD)
+        let date_str = &s[..10];
+        let date = NaiveDate::parse_from_str(date_str, "%Y-%m-%d")
+            .map_err(|e| format!("Invalid date: {}", e))?;
+        Ok(EventTime::Date(date))
+    } else {
+        // Parse as UTC datetime
+        let dt: DateTime<Utc> = s.parse().map_err(|e: chrono::ParseError| e.to_string())?;
+        Ok(EventTime::DateTimeUtc(dt))
     }
 }
 
@@ -88,6 +117,11 @@ pub trait CaldirApi {
         start: String,
         end: String,
     ) -> TauResult<Vec<CalendarEvent>>;
+    async fn get_event(calendar_slug: String, event_id: String)
+        -> TauResult<Option<CalendarEvent>>;
+    async fn update_event(input: UpdateEventInput) -> TauResult<()>;
+    async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
+    async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -134,5 +168,122 @@ impl CaldirApi for CaldirApiImpl {
         events.sort_by(|a, b| a.start.cmp(&b.start));
 
         Ok(events)
+    }
+
+    async fn get_event(
+        self,
+        calendar_slug: String,
+        event_id: String,
+    ) -> TauResult<Option<CalendarEvent>> {
+        let calendar =
+            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+
+        let event = calendar
+            .events()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|ce| ce.event.unique_id() == event_id)
+            .map(|ce| CalendarEvent::from_event(&ce.event, &calendar_slug));
+
+        Ok(event)
+    }
+
+    async fn update_event(self, input: UpdateEventInput) -> TauResult<()> {
+        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+            .map_err(|e| e.to_string())?;
+
+        // Find the existing event by unique_id
+        let existing = calendar
+            .events()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|ce| ce.event.unique_id() == input.id)
+            .ok_or_else(|| format!("Event not found: {}", input.id))?;
+
+        let start = parse_event_time(&input.start, input.all_day)?;
+        let end = parse_event_time(&input.end, input.all_day)?;
+
+        // Parse recurrence if provided
+        let recurrence = match input.recurrence {
+            Some(r) => {
+                let exdates: Result<Vec<EventTime>, String> = r
+                    .exdates
+                    .iter()
+                    .map(|s| parse_event_time(s, false))
+                    .collect();
+                Some(caldir_core::event::Recurrence {
+                    rrule: r.rrule,
+                    exdates: exdates?,
+                })
+            }
+            None => None,
+        };
+
+        // Build updated event, preserving fields we don't modify
+        let updated_event = caldir_core::event::Event {
+            uid: existing.event.uid.clone(),
+            summary: input.summary,
+            description: input.description,
+            location: input.location,
+            start,
+            end,
+            status: existing.event.status.clone(),
+            recurrence,
+            recurrence_id: existing.event.recurrence_id.clone(),
+            reminders: existing.event.reminders.clone(),
+            transparency: existing.event.transparency.clone(),
+            organizer: existing.event.organizer.clone(),
+            attendees: existing.event.attendees.clone(),
+            conference_url: existing.event.conference_url.clone(),
+            updated: Some(Utc::now()),
+            sequence: existing.event.sequence.map(|s| s + 1).or(Some(1)),
+            custom_properties: existing.event.custom_properties.clone(),
+        };
+
+        calendar
+            .update_event(&existing.event.uid, &updated_event)
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn delete_event(self, calendar_slug: String, event_id: String) -> TauResult<()> {
+        let calendar =
+            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+
+        // Find the event to get its uid and recurrence_id
+        let event = calendar
+            .events()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|ce| ce.event.unique_id() == event_id)
+            .ok_or_else(|| format!("Event not found: {}", event_id))?;
+
+        calendar
+            .delete_event(&event.event.uid, event.event.recurrence_id.as_ref())
+            .map_err(|e| e.to_string())?;
+
+        Ok(())
+    }
+
+    async fn delete_recurring_series(self, calendar_slug: String, uid: String) -> TauResult<()> {
+        let calendar =
+            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+
+        // Find all events with this uid (parent + instances)
+        let events_to_delete: Vec<_> = calendar
+            .events()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .filter(|ce| ce.event.uid == uid)
+            .collect();
+
+        for ce in events_to_delete {
+            calendar
+                .delete_event(&ce.event.uid, ce.event.recurrence_id.as_ref())
+                .map_err(|e| e.to_string())?;
+        }
+
+        Ok(())
     }
 }

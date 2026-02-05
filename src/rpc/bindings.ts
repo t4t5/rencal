@@ -10,9 +10,18 @@ export type CalendarEvent = { id: string; recurring_event_id: string | null; sum
 
 export type Recurrence = { rrule: string; exdates: string[] }
 
-const ARGS_MAP = { 'caldir':'{"list_calendars":[],"list_events":["calendar_slugs","start","end"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
-export type Router = { "caldir": {list_calendars: () => Promise<Calendar[]>, 
-list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>},
+/**
+ * Input for updating an event
+ */
+export type UpdateEventInput = { id: string; calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null }
+
+const ARGS_MAP = { 'caldir':'{"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"update_event":["input"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
+export type Router = { "caldir": {delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
+delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
+get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
+list_calendars: () => Promise<Calendar[]>, 
+list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
+update_event: (input: UpdateEventInput) => Promise<null>},
 "oauth": {close_oauth_window: () => Promise<null>, 
 open_oauth_window: (url: string, title: string) => Promise<null>, 
 start_oauth_callback_server: (port: number) => Promise<string>} };
