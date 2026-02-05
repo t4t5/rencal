@@ -1,7 +1,7 @@
 import { format, parse } from "date-fns"
-import { and, eq, or } from "drizzle-orm"
+import { and, eq } from "drizzle-orm"
 import { useCallback, useEffect, useState } from "react"
-import { RRule, RRuleSet, rrulestr } from "rrule"
+import { RRule, RRuleSet } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
+import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { db, schema } from "@/db/database"
 
@@ -100,7 +101,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     //   return
     // }
     // Otherwise, just update normally
-    setDirtyEvent({ ...dirtyEvent, recurrence: rrule.toString() ?? null })
+    const recurrence = rruleToRecurrence(rrule)
+    setDirtyEvent({ ...dirtyEvent, recurrence })
   }
 
   const handleReminderAdd = useCallback(
@@ -160,8 +162,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const { summary, start, end, all_day, location, calendar_slug, recurrence } = dirtyEvent
 
-  const effectiveRecurrence = recurrence ?? parentRecurrence
-  const recurrenceRRule = effectiveRecurrence ? rrulestr(effectiveRecurrence) : null
+  const recurrenceRRule = recurrence ? recurrenceToRRuleSet(recurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
   return (
@@ -180,28 +181,28 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           setDirtyEvent({ ...dirtyEvent, summary: newSummary })
         }}
         onAllDayChange={(checked) => {
-          setDirtyEvent({ ...dirtyEvent, allDay: checked })
+          setDirtyEvent({ ...dirtyEvent, all_day: checked })
         }}
         onChangeStartDate={(date) => {
           if (!date) return
           const newStart = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", start)
-          setDirtyEvent({ ...dirtyEvent, start: newStart })
+          setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
         }}
         onChangeStartTime={(time) => {
           const newStart = parse(time, "HH:mm", start)
-          setDirtyEvent({ ...dirtyEvent, start: newStart })
+          setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
         }}
         onChangeEndDate={(date) => {
           if (!date) return
           const newEnd = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", end)
-          setDirtyEvent({ ...dirtyEvent, end: newEnd })
+          setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
         onChangeEndTime={(time) => {
           const newEnd = parse(time, "HH:mm", end)
-          setDirtyEvent({ ...dirtyEvent, end: newEnd })
+          setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
         onCalendarChange={(newCalendarId) => {
-          setDirtyEvent({ ...dirtyEvent, calendarId: newCalendarId })
+          setDirtyEvent({ ...dirtyEvent, calendar_slug: newCalendarId })
         }}
         recurrence={recurrenceRRule}
         onRecurrenceChange={handleRecurrenceChange}

@@ -1,4 +1,6 @@
-import { RRule, rrulestr } from "rrule"
+import { RRule, RRuleSet, rrulestr } from "rrule"
+
+import type { Recurrence } from "@/rpc/bindings"
 
 /**
  * Parse an RRULE string and create an RRule with the correct dtstart.
@@ -31,4 +33,38 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
     // dtstart controls the base date for recurrence
     dtstart,
   })
+}
+
+/**
+ * Convert a Recurrence object (from caldir) into an RRuleSet.
+ */
+export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
+  const rruleSet = new RRuleSet()
+  rruleSet.rrule(rrulestr(recurrence.rrule) as RRule)
+  for (const exdate of recurrence.exdates) {
+    rruleSet.exdate(new Date(exdate))
+  }
+  return rruleSet
+}
+
+/**
+ * Convert an RRule or RRuleSet back to a Recurrence object.
+ */
+export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | null {
+  if (!rrule) return null
+
+  if (rrule instanceof RRuleSet) {
+    const rrules = rrule.rrules()
+    if (rrules.length === 0) return null
+
+    return {
+      rrule: rrules[0].toString(),
+      exdates: rrule.exdates().map((d) => d.toISOString()),
+    }
+  }
+
+  return {
+    rrule: rrule.toString(),
+    exdates: [],
+  }
 }

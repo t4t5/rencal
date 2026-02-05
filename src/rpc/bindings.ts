@@ -6,7 +6,9 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null }
 
-export type CalendarEvent = { id: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: string[] | null; reminders: number[]; calendar_slug: string }
+export type CalendarEvent = { id: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
+
+export type Recurrence = { rrule: string; exdates: string[] }
 
 const ARGS_MAP = { 'caldir':'{"list_calendars":[],"list_events":["calendar_slugs","start","end"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
 export type Router = { "caldir": {list_calendars: () => Promise<Calendar[]>, 

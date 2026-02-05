@@ -1,6 +1,6 @@
 use crate::routes::TauResult;
-use caldir_core::caldir::Caldir;
 use caldir_core::event::EventStatus;
+use caldir_core::caldir::Caldir;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -14,6 +14,12 @@ pub struct Calendar {
 }
 
 #[derive(Serialize, Deserialize, Type)]
+pub struct Recurrence {
+    pub rrule: String,
+    pub exdates: Vec<String>,
+}
+
+#[derive(Serialize, Deserialize, Type)]
 pub struct CalendarEvent {
     pub id: String,
     pub summary: String,
@@ -23,7 +29,7 @@ pub struct CalendarEvent {
     pub end: String,
     pub all_day: bool,
     pub status: String,
-    pub recurrence: Option<Vec<String>>,
+    pub recurrence: Option<Recurrence>,
     pub reminders: Vec<i32>,
     pub calendar_slug: String,
 }
@@ -58,7 +64,10 @@ impl CalendarEvent {
                 EventStatus::Tentative => "tentative".to_string(),
                 EventStatus::Cancelled => "cancelled".to_string(),
             },
-            recurrence: e.recurrence.clone(),
+            recurrence: e.recurrence.as_ref().map(|r| Recurrence {
+                rrule: r.rrule.clone(),
+                exdates: r.exdates.iter().map(|d| d.to_string()).collect(),
+            }),
             reminders: e.reminders.iter().map(|r| r.minutes as i32).collect(),
             calendar_slug: calendar_slug.to_string(),
         }
