@@ -104,8 +104,8 @@ impl CalendarEvent {
             summary: e.summary.clone(),
             description: e.description.clone(),
             location: e.location.clone(),
-            start: e.start.to_string(),
-            end: e.end.to_string(),
+            start: e.start.to_iso_string(),
+            end: e.end.to_iso_string(),
             all_day: e.start.is_date(),
             status: match e.status {
                 EventStatus::Confirmed => "confirmed".to_string(),
@@ -233,9 +233,7 @@ impl CaldirApi for CaldirApiImpl {
             ..event
         };
 
-        calendar
-            .create_event(&event)
-            .map_err(|e| e.to_string())?;
+        calendar.create_event(&event).map_err(|e| e.to_string())?;
 
         Ok(CalendarEvent::from_event(&event, &input.calendar_slug))
     }
