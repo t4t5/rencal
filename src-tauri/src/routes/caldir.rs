@@ -50,6 +50,19 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
     }
 }
 
+/// Input for creating an event
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct CreateEventInput {
+    pub calendar_slug: String,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub start: String,
+    pub end: String,
+    pub all_day: bool,
+    pub recurrence: Option<Recurrence>,
+}
+
 /// Input for updating an event
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct UpdateEventInput {
@@ -119,6 +132,7 @@ pub trait CaldirApi {
     ) -> TauResult<Vec<CalendarEvent>>;
     async fn get_event(calendar_slug: String, event_id: String)
         -> TauResult<Option<CalendarEvent>>;
+    async fn create_event(input: CreateEventInput) -> TauResult<CalendarEvent>;
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
@@ -186,6 +200,44 @@ impl CaldirApi for CaldirApiImpl {
             .map(|ce| CalendarEvent::from_event(&ce.event, &calendar_slug));
 
         Ok(event)
+    }
+
+    async fn create_event(self, input: CreateEventInput) -> TauResult<CalendarEvent> {
+        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+            .map_err(|e| e.to_string())?;
+
+        let start = parse_event_time(&input.start, input.all_day)?;
+        let end = parse_event_time(&input.end, input.all_day)?;
+
+        // Parse recurrence if provided
+        let recurrence = match input.recurrence {
+            Some(r) => {
+                let exdates: Result<Vec<EventTime>, String> = r
+                    .exdates
+                    .iter()
+                    .map(|s| parse_event_time(s, false))
+                    .collect();
+                Some(caldir_core::event::Recurrence {
+                    rrule: r.rrule,
+                    exdates: exdates?,
+                })
+            }
+            None => None,
+        };
+
+        let event = caldir_core::event::Event::new(input.summary, start.clone(), end.clone());
+        let event = caldir_core::event::Event {
+            description: input.description,
+            location: input.location,
+            recurrence,
+            ..event
+        };
+
+        calendar
+            .create_event(&event)
+            .map_err(|e| e.to_string())?;
+
+        Ok(CalendarEvent::from_event(&event, &input.calendar_slug))
     }
 
     async fn update_event(self, input: UpdateEventInput) -> TauResult<()> {

@@ -1,18 +1,18 @@
 import { format, parse } from "date-fns"
 import { useCallback } from "react"
 import { rrulestr } from "rrule"
-import { v4 as uuidv4 } from "uuid"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+
+import { rpc } from "@/rpc"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
-import { expandRecurringEventInstances } from "@/lib/recurrence"
 
 import { db, schema } from "@/db/database"
 
@@ -27,23 +27,28 @@ export const NewEvent = () => {
   const recurrenceRRule = recurrence ? rrulestr(recurrence) : null
 
   const onCreate = useCallback(async () => {
-    const eventId = uuidv4()
-    await db.insert(schema.events).values({ ...draftEvent, id: eventId })
+    if (!draftEvent.calendarId) return
+
+    const createdEvent = await rpc.caldir.create_event({
+      calendar_slug: draftEvent.calendarId,
+      summary: draftEvent.summary ?? "",
+      description: null,
+      location: draftEvent.location ?? null,
+      start: draftEvent.start.toISOString(),
+      end: draftEvent.end.toISOString(),
+      all_day: draftEvent.allDay,
+      recurrence: draftEvent.recurrence ? { rrule: draftEvent.recurrence, exdates: [] } : null,
+    })
 
     if (draftReminders.length > 0) {
       await db
         .insert(schema.reminders)
-        .values(draftReminders.map((mins) => ({ eventId, minutes: mins })))
-    }
-
-    // If this is a recurring event, expand it into instances
-    if (draftEvent.recurrence) {
-      await expandRecurringEventInstances(eventId)
+        .values(draftReminders.map((mins) => ({ eventId: createdEvent.id, minutes: mins })))
     }
 
     logger.info("Create event:", draftEvent)
     setIsDrafting(false)
-    reloadEvents()
+    await reloadEvents()
   }, [draftEvent, draftReminders])
 
   const calendar = calendars.find((cal) => cal.slug === calendarId)

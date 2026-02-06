@@ -8,6 +8,11 @@ export type Calendar = { slug: string; name: string | null; color: string | null
 
 export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
 
+/**
+ * Input for creating an event
+ */
+export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null }
+
 export type Recurrence = { rrule: string; exdates: string[] }
 
 /**
@@ -15,8 +20,9 @@ export type Recurrence = { rrule: string; exdates: string[] }
  */
 export type UpdateEventInput = { id: string; calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null }
 
-const ARGS_MAP = { 'caldir':'{"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"update_event":["input"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
-export type Router = { "caldir": {delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
+const ARGS_MAP = { 'caldir':'{"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"update_event":["input"]}', 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
+export type Router = { "caldir": {create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
+delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
 delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
 list_calendars: () => Promise<Calendar[]>, 
