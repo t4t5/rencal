@@ -61,6 +61,7 @@ pub struct CreateEventInput {
     pub end: String,
     pub all_day: bool,
     pub recurrence: Option<Recurrence>,
+    pub reminders: Vec<i32>,
 }
 
 /// Input for updating an event
@@ -75,6 +76,7 @@ pub struct UpdateEventInput {
     pub end: String,
     pub all_day: bool,
     pub recurrence: Option<Recurrence>,
+    pub reminders: Vec<i32>,
 }
 
 /// Parse an ISO datetime string to EventTime
@@ -225,11 +227,18 @@ impl CaldirApi for CaldirApiImpl {
             None => None,
         };
 
+        let reminders = input
+            .reminders
+            .iter()
+            .map(|&m| caldir_core::event::Reminder { minutes: m as i64 })
+            .collect();
+
         let event = caldir_core::event::Event::new(input.summary, start.clone(), end.clone());
         let event = caldir_core::event::Event {
             description: input.description,
             location: input.location,
             recurrence,
+            reminders,
             ..event
         };
 
@@ -269,6 +278,12 @@ impl CaldirApi for CaldirApiImpl {
             None => None,
         };
 
+        let reminders = input
+            .reminders
+            .iter()
+            .map(|&m| caldir_core::event::Reminder { minutes: m as i64 })
+            .collect();
+
         // Build updated event, preserving fields we don't modify
         let updated_event = caldir_core::event::Event {
             uid: existing.event.uid.clone(),
@@ -280,7 +295,7 @@ impl CaldirApi for CaldirApiImpl {
             status: existing.event.status.clone(),
             recurrence,
             recurrence_id: existing.event.recurrence_id.clone(),
-            reminders: existing.event.reminders.clone(),
+            reminders,
             transparency: existing.event.transparency.clone(),
             organizer: existing.event.organizer.clone(),
             attendees: existing.event.attendees.clone(),

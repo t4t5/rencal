@@ -1,6 +1,5 @@
 import { format, parse } from "date-fns"
-import { and, eq } from "drizzle-orm"
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
@@ -15,8 +14,6 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
-import { db, schema } from "@/db/database"
-
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
@@ -26,8 +23,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
 
-  const [reminders, setReminders] = useState<number[]>([])
-
   const [parentRecurrence, setParentRecurrence] = useState<Recurrence | null>(null)
   const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -35,7 +30,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   useEffect(() => {
     if (event) {
       setDirtyEvent(event)
-      loadReminders(event.id)
       loadParentRecurrence(event.calendar_slug, event.recurring_event_id)
     }
   }, [event?.id])
@@ -57,6 +51,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         end: dirtyEvent.end,
         all_day: dirtyEvent.all_day,
         recurrence: dirtyEvent.recurrence,
+        reminders: dirtyEvent.reminders,
       })
 
       await reloadEvents()
@@ -64,15 +59,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     [dirtyEvent],
     500,
   )
-
-  const loadReminders = async (eventId: string) => {
-    const rows = await db
-      .select()
-      .from(schema.reminders)
-      .where(eq(schema.reminders.eventId, eventId))
-
-    setReminders(rows.map((r) => r.minutes))
-  }
 
   const loadParentRecurrence = async (calendarSlug: string, recurringEventId: string | null) => {
     if (recurringEventId) {
@@ -98,30 +84,17 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     setDirtyEvent({ ...dirtyEvent, recurrence })
   }
 
-  const handleReminderAdd = useCallback(
-    async (mins: number) => {
-      if (!event) return
+  const handleReminderAdd = (mins: number) => {
+    if (!dirtyEvent) return
+    if (dirtyEvent.reminders.includes(mins)) return
 
-      // Skip duplicates:
-      if (reminders.includes(mins)) return
+    setDirtyEvent({ ...dirtyEvent, reminders: [...dirtyEvent.reminders, mins] })
+  }
 
-      await db.insert(schema.reminders).values({
-        eventId: event.id,
-        minutes: mins,
-      })
+  const handleReminderRemove = (mins: number) => {
+    if (!dirtyEvent) return
 
-      setReminders([...reminders, mins])
-    },
-    [reminders.length],
-  )
-
-  const handleReminderRemove = async (mins: number) => {
-    if (!event) return
-
-    await db
-      .delete(schema.reminders)
-      .where(and(eq(schema.reminders.eventId, event.id), eq(schema.reminders.minutes, mins)))
-    setReminders(reminders.filter((m) => m !== mins))
+    setDirtyEvent({ ...dirtyEvent, reminders: dirtyEvent.reminders.filter((m) => m !== mins) })
   }
 
   const handleDeleteThis = async () => {
@@ -198,7 +171,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         }}
         recurrence={recurrenceRRule}
         onRecurrenceChange={handleRecurrenceChange}
-        reminders={reminders}
+        reminders={dirtyEvent.reminders}
         onReminderAdd={handleReminderAdd}
         onReminderRemove={handleReminderRemove}
       />

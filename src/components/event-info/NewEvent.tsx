@@ -14,8 +14,6 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
 
-import { db, schema } from "@/db/database"
-
 export const NewEvent = () => {
   const { calendars } = useCalendarState()
   const { draftEvent, setDraftEvent, setIsDrafting, draftReminders, setDraftReminders } =
@@ -29,7 +27,7 @@ export const NewEvent = () => {
   const onCreate = useCallback(async () => {
     if (!draftEvent.calendarId) return
 
-    const createdEvent = await rpc.caldir.create_event({
+    await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
       summary: draftEvent.summary ?? "",
       description: null,
@@ -38,13 +36,8 @@ export const NewEvent = () => {
       end: draftEvent.end.toISOString(),
       all_day: draftEvent.allDay,
       recurrence: draftEvent.recurrence ? { rrule: draftEvent.recurrence, exdates: [] } : null,
+      reminders: draftReminders,
     })
-
-    if (draftReminders.length > 0) {
-      await db
-        .insert(schema.reminders)
-        .values(draftReminders.map((mins) => ({ eventId: createdEvent.id, minutes: mins })))
-    }
 
     logger.info("Create event:", draftEvent)
     setIsDrafting(false)
