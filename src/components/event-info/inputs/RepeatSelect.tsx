@@ -3,8 +3,6 @@ import { RRule, RRuleSet } from "rrule"
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
-type Recurrence = RRule | RRuleSet
-
 const INTERVALS = [
   {
     rrule: new RRule({ freq: RRule.DAILY }),
@@ -32,8 +30,8 @@ export const RepeatSelect = ({
   value,
   onChange,
 }: {
-  value: Recurrence | null
-  onChange: (value: Recurrence | null) => void
+  value: RRule | RRuleSet | null
+  onChange: (value: RRule | RRuleSet | null) => void
 }) => {
   const handleChange = (selectedValue: string) => {
     if (selectedValue === "none") {
@@ -72,7 +70,7 @@ export const RepeatSelect = ({
   )
 }
 
-const HumanInterval = ({ recurrence }: { recurrence: Recurrence }) => {
+const HumanInterval = ({ recurrence }: { recurrence: RRule | RRuleSet }) => {
   const interval = INTERVALS.find((i) => i.rrule.toString() === recurrence.toString())
 
   if (interval) {

@@ -7,7 +7,7 @@ import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 
 import { rpc } from "@/rpc"
-import { CalendarEvent } from "@/rpc/bindings"
+import { CalendarEvent, Recurrence } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -28,8 +28,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const [reminders, setReminders] = useState<number[]>([])
 
-  const [parentRecurrence, setParentRecurrence] = useState<string | null>(null)
-  const [pendingRecurrence, setPendingRecurrence] = useState<RRule | RRuleSet | null>(null)
+  const [parentRecurrence, setParentRecurrence] = useState<Recurrence | null>(null)
+  const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
@@ -77,7 +77,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const loadParentRecurrence = async (calendarSlug: string, recurringEventId: string | null) => {
     if (recurringEventId) {
       const parent = await rpc.caldir.get_event(calendarSlug, recurringEventId)
-      setParentRecurrence(parent?.recurrence?.rrule ?? null)
+      setParentRecurrence(parent?.recurrence ?? null)
     } else {
       setParentRecurrence(null)
     }
@@ -86,14 +86,15 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
 
+    const recurrence = rruleToRecurrence(rrule)
+
     // If this is an instance of a recurring event, show dialog
     if (dirtyEvent.recurring_event_id) {
-      setPendingRecurrence(rrule)
+      setPendingRecurrence(recurrence)
       return
     }
 
     // Otherwise, just update normally
-    const recurrence = rruleToRecurrence(rrule)
     setDirtyEvent({ ...dirtyEvent, recurrence })
   }
 
@@ -152,7 +153,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const { summary, start, end, all_day, location, calendar_slug, recurrence } = dirtyEvent
 
-  const recurrenceRRule = recurrence ? recurrenceToRRuleSet(recurrence) : null
+  const effectiveRecurrence = recurrence ?? parentRecurrence
+  const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
   return (
@@ -217,19 +219,26 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
       {!!pendingRecurrence && (
         <RecurrenceConfirmDialog
-          pendingRecurrence={pendingRecurrence}
+          isOpen={!!pendingRecurrence}
           onClose={() => setPendingRecurrence(null)}
           onApplyToAll={async () => {
             if (!dirtyEvent?.recurring_event_id) return
 
-            // Update parent event's recurrence
-            await db
-              .update(schema.events)
-              .set({ recurrence: pendingRecurrence?.toString() ?? null })
-              .where(eq(schema.events.id, dirtyEvent.recurring_event_id))
+            // Fetch parent event and update its recurrence
+            const parent = await rpc.caldir.get_event(
+              dirtyEvent.calendar_slug,
+              dirtyEvent.recurring_event_id,
+            )
+            if (!parent) return
 
-            setParentRecurrence(pendingRecurrence?.toString() ?? null)
+            await rpc.caldir.update_event({
+              ...parent,
+              recurrence: pendingRecurrence,
+            })
+
+            setParentRecurrence(pendingRecurrence ?? null)
             setPendingRecurrence(null)
+            await reloadEvents()
           }}
           onApplyToThis={async () => {
             if (!dirtyEvent) return
@@ -238,7 +247,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
             setDirtyEvent({
               ...dirtyEvent,
               recurring_event_id: null,
-              recurrence: pendingRecurrence ? rruleToRecurrence(pendingRecurrence) : null,
+              recurrence: pendingRecurrence ?? null,
             })
             setParentRecurrence(null)
             setPendingRecurrence(null)
