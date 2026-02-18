@@ -2,7 +2,7 @@ import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useConnectGoogle } from "@/hooks/useConnectGoogle"
 import { useFetchGoogleCalendars } from "@/hooks/useFetchGoogleCalendars"
@@ -10,7 +10,7 @@ import { useFetchGoogleCalendars } from "@/hooks/useFetchGoogleCalendars"
 import { AccountSection } from "./AccountSection"
 
 export function Settings() {
-  const { accounts } = useAuth()
+  const { calendars } = useCalendarState()
 
   const { fetchCalendars, isLoading } = useFetchGoogleCalendars()
 
@@ -20,10 +20,12 @@ export function Settings() {
     },
   })
 
+  const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local")
+
   return (
     <div className="flex flex-col">
-      {accounts.map((account) => (
-        <AccountSection key={account.id} account={account} />
+      {Object.entries(calendarsByProvider).map(([provider, calendars]) => (
+        <AccountSection key={provider} provider={provider} calendars={calendars ?? []} />
       ))}
 
       <Button
