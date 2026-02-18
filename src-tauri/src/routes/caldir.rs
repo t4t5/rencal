@@ -4,6 +4,7 @@ use caldir_core::event::{EventStatus, EventTime};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
+use tauri::{AppHandle, Runtime};
 
 #[derive(Serialize, Deserialize, Type)]
 pub struct Calendar {
@@ -144,6 +145,11 @@ pub trait CaldirApi {
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
+
+    async fn connect_provider<R: Runtime>(
+        app_handle: AppHandle<R>,
+        provider_name: String,
+    ) -> TauResult<Vec<Calendar>>;
 }
 
 #[derive(Clone)]
@@ -356,5 +362,95 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         Ok(())
+    }
+
+    async fn connect_provider<R: Runtime>(
+        self,
+        app: AppHandle<R>,
+        provider_name: String,
+    ) -> TauResult<Vec<Calendar>> {
+        use caldir_core::remote::protocol::{AuthType, OAuthData};
+        use caldir_core::remote::provider::Provider;
+        use crate::oauth;
+
+        let provider = Provider::from_name(&provider_name);
+        let port: u16 = 8080;
+        let redirect_uri = format!("http://localhost:{}/callback", port);
+
+        // Step 1: Initialize auth — get OAuth URL and state from provider
+        let auth_response = provider
+            .auth_init(Some(redirect_uri.clone()))
+            .await
+            .map_err(|e| format!("Auth init failed: {}", e))?;
+
+        match auth_response.auth_type {
+            AuthType::OAuthRedirect => {
+                let oauth_data: OAuthData = serde_json::from_value(auth_response.data)
+                    .map_err(|e| format!("Failed to parse OAuth data: {}", e))?;
+
+                let auth_url = url::Url::parse(&oauth_data.authorization_url)
+                    .map_err(|e| format!("Invalid auth URL: {}", e))?;
+
+                // Step 2: Bind callback server BEFORE opening the popup so it's
+                // ready when the browser redirects back
+                let listener = oauth::server::create_localhost_listener(port)
+                    .map_err(|e| format!("Failed to start callback server: {}", e))?;
+
+                // Step 3: Open OAuth popup window
+                let (popup, _close_rx) =
+                    oauth::window::create_oauth_popup(&app, auth_url, "Sign in")
+                        .map_err(|e| format!("Failed to open OAuth popup: {}", e))?;
+
+                // Helper to ensure popup is closed on any error from here on
+                let run = async {
+                    // Step 4: Wait for the OAuth redirect callback
+                    let callback = oauth::server::handle_oauth_callback(listener, port)
+                        .await
+                        .map_err(|e| format!("OAuth callback failed: {}", e))?;
+
+                    // Step 5: Submit credentials to provider
+                    let mut credentials = serde_json::Map::new();
+                    credentials
+                        .insert("code".into(), serde_json::Value::String(callback.code));
+                    credentials
+                        .insert("state".into(), serde_json::Value::String(callback.state));
+                    credentials.insert(
+                        "redirect_uri".into(),
+                        serde_json::Value::String(redirect_uri),
+                    );
+
+                    let provider_account = provider
+                        .auth_submit(credentials)
+                        .await
+                        .map_err(|e| format!("Auth submit failed: {}", e))?;
+
+                    // Step 6: List calendars from provider
+                    let calendar_configs = provider_account
+                        .list_calendars()
+                        .await
+                        .map_err(|e| format!("Failed to list calendars: {}", e))?;
+
+                    // Step 7: Save each calendar config locally
+                    let mut calendars = Vec::new();
+                    for config in calendar_configs {
+                        let slug = caldir_core::calendar::Calendar::unique_slug_for(
+                            config.name.as_deref(),
+                        )
+                        .map_err(|e| e.to_string())?;
+
+                        let cal = caldir_core::calendar::Calendar { slug, config };
+                        cal.save_config().map_err(|e| e.to_string())?;
+                        calendars.push(Calendar::from(&cal));
+                    }
+
+                    Ok(calendars)
+                };
+
+                let result = run.await;
+                let _ = popup.close();
+                result
+            }
+            _ => Err("Only OAuth providers are currently supported".to_string()),
+        }
     }
 }

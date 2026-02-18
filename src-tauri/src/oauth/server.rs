@@ -1,10 +1,14 @@
 use anyhow::{anyhow, Context, Result};
-use oauth2::AuthorizationCode;
 use socket2::{Domain, Socket, Type};
 use std::net::SocketAddr;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
 use url::Url;
+
+pub struct OAuthCallbackParams {
+    pub code: String,
+    pub state: String,
+}
 
 const SUCCESS_RESPONSE: &str = r#"HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
@@ -67,7 +71,7 @@ pub fn create_localhost_listener(port: u16) -> Result<TcpListener> {
 /// 2. Reads the HTTP request line (e.g., "GET /callback?code=... HTTP/1.1")
 /// 3. Sends a success HTML response to the browser
 /// 4. Extracts and returns the authorization code from the URL
-pub async fn handle_oauth_callback(listener: TcpListener, port: u16) -> Result<AuthorizationCode> {
+pub async fn handle_oauth_callback(listener: TcpListener, port: u16) -> Result<OAuthCallbackParams> {
     // Wait for the OAuth callback
     let (mut stream, _) = listener
         .accept()
@@ -106,5 +110,11 @@ pub async fn handle_oauth_callback(listener: TcpListener, port: u16) -> Result<A
         .map(|(_, value)| value.to_string())
         .ok_or_else(|| anyhow!("Authorization code not found in callback URL"))?;
 
-    Ok(AuthorizationCode::new(code))
+    let state = url
+        .query_pairs()
+        .find(|(key, _)| key == "state")
+        .map(|(_, value)| value.to_string())
+        .ok_or_else(|| anyhow!("State not found in callback URL"))?;
+
+    Ok(OAuthCallbackParams { code, state })
 }

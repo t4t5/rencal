@@ -3,14 +3,11 @@ mod oauth;
 mod routes;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
-use routes::oauth::{OAuthApi, OAuthApiImpl};
 use taurpc::Router;
 
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router() -> Router<tauri::Wry> {
-    Router::new()
-        .merge(OAuthApiImpl.into_handler())
-        .merge(CaldirApiImpl.into_handler())
+    Router::new().merge(CaldirApiImpl.into_handler())
 }
 
 #[tokio::main]

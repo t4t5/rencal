@@ -4,21 +4,14 @@ import { Button } from "@/components/ui/button"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useConnectGoogle } from "@/hooks/useConnectGoogle"
-import { useFetchGoogleCalendars } from "@/hooks/useFetchGoogleCalendars"
+import { useConnectProvider } from "@/hooks/useConnectProvider"
 
 import { AccountSection } from "./AccountSection"
 
 export function Settings() {
   const { calendars } = useCalendarState()
 
-  const { fetchCalendars, isLoading } = useFetchGoogleCalendars()
-
-  const { connect, isConnecting } = useConnectGoogle({
-    onConnect: async (account) => {
-      await fetchCalendars(account)
-    },
-  })
+  const { connect, isConnecting } = useConnectProvider()
 
   const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")
 
@@ -31,8 +24,8 @@ export function Settings() {
       <Button
         variant="ghost"
         className="justify-start text-muted-foreground"
-        disabled={isConnecting || isLoading}
-        onClick={connect}
+        disabled={isConnecting}
+        onClick={() => connect("google")}
       >
         <PlusIcon className="size-4" />
         Add calendar account

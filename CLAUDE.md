@@ -17,8 +17,10 @@ actions, including SQLite operations are handled in the frontend.
 ### Backend (Rust)
 
 - `src-tauri/src/lib.rs` - Registers taurpc routers
-- `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost server, native popup window)
-- `src-tauri/src/routes/` - taurpc API procedures
+- `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost callback server, native popup window)
+- `src-tauri/src/routes/caldir.rs` - taurpc API procedures, including `connect_provider` which
+  orchestrates the full caldir auth flow (auth_init → popup → callback → auth_submit →
+  list_calendars → save configs)
 - TypeScript bindings are auto-generated as `src/rpc/bindings.ts`
 
 ### Frontend (React)
