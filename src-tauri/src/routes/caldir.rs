@@ -146,6 +146,8 @@ pub trait CaldirApi {
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
 
+    async fn sync(calendar_slugs: Vec<String>) -> TauResult<()>;
+
     async fn connect_provider<R: Runtime>(
         app_handle: AppHandle<R>,
         provider_name: String,
@@ -358,6 +360,27 @@ impl CaldirApi for CaldirApiImpl {
             calendar
                 .delete_event(&ce.event.uid, ce.event.recurrence_id.as_ref())
                 .map_err(|e| e.to_string())?;
+        }
+
+        Ok(())
+    }
+
+    async fn sync(self, calendar_slugs: Vec<String>) -> TauResult<()> {
+        use caldir_core::date_range::DateRange;
+        use caldir_core::diff::CalendarDiff;
+
+        let range = DateRange::default();
+
+        for slug in &calendar_slugs {
+            let calendar =
+                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+
+            let diff = CalendarDiff::from_calendar(&calendar, &range)
+                .await
+                .map_err(|e| e.to_string())?;
+
+            diff.apply_pull().map_err(|e| e.to_string())?;
+            diff.apply_push().await.map_err(|e| e.to_string())?;
         }
 
         Ok(())
