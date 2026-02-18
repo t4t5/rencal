@@ -10,11 +10,13 @@ import {
   useState,
 } from "react"
 
+import type { CalendarEvent } from "@/rpc/bindings"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 
-import { CalendarEvent, DateRange } from "@/db/types"
+import { DateRange } from "@/db/types"
 
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]
@@ -33,7 +35,10 @@ export function useCalEvents() {
 
 export function CalEventsProvider({ children }: { children: ReactNode }) {
   const { calendars, activeDate } = useCalendarState()
-  const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+
+  // TODO: respect calendar visibility
+  const visibleCalendarIds = calendars.map((c) => c.slug)
+  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
   const currentDateRangeRef = useRef<DateRange | null>(null)
 
@@ -51,7 +56,13 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     }
 
     currentDateRangeRef.current = activeRange
-    const events = await getCalendarEventsForRange(activeRange, visibleCalendarIds)
+    // const events = await listEvents(visibleCalendarIds, activeRange.start, activeRange.end)
+    const events = await getCalendarEventsForRange(
+      visibleCalendarIds,
+      activeRange.start,
+      activeRange.end,
+    )
+    // const events = await getCalendarEventsForRange(activeRange, visibleCalendarIds)
     setCalendarEvents(events)
   })
 

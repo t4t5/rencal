@@ -1,7 +1,7 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
-import { gte, and, inArray, lte } from "drizzle-orm"
 
-import { db, schema } from "@/db/database"
+import { rpc } from "@/rpc"
+
 import { DateRange } from "@/db/types"
 
 export const MONTHS_TO_LOAD = 2
@@ -13,16 +13,6 @@ export const getStartRangeForDate = (date: Date): DateRange => {
   }
 }
 
-export const getCalendarEventsForRange = async (range: DateRange, calendarIds: string[]) => {
-  return db
-    .select()
-    .from(schema.events)
-    .where(
-      and(
-        inArray(schema.events.calendarId, calendarIds),
-        gte(schema.events.start, range.start),
-        lte(schema.events.start, range.end),
-      ),
-    )
-    .orderBy(schema.events.start)
+export async function getCalendarEventsForRange(calendarSlugs: string[], start: Date, end: Date) {
+  return rpc.caldir.list_events(calendarSlugs, start.toISOString(), end.toISOString())
 }

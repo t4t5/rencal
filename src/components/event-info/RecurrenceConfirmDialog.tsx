@@ -1,5 +1,3 @@
-import { RRule, RRuleSet } from "rrule"
-
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,18 +9,18 @@ import {
 } from "@/components/ui/dialog"
 
 export function RecurrenceConfirmDialog({
-  pendingRecurrence,
+  isOpen,
   onClose,
   onApplyToAll,
   onApplyToThis,
 }: {
-  pendingRecurrence: RRule | RRuleSet
+  isOpen: boolean
   onClose: () => void
   onApplyToAll: () => void
   onApplyToThis: () => void
 }) {
   return (
-    <Dialog open={!!pendingRecurrence} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Edit recurring event</DialogTitle>

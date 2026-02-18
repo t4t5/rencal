@@ -1,9 +1,19 @@
 import { addHours, addMinutes, startOfHour } from "date-fns"
 import { ReactNode, createContext, useCallback, useContext, useState } from "react"
 
-import { DraftEvent } from "@/db/types"
+import type { Recurrence } from "@/rpc/bindings"
 
 import { useCalendarState } from "./CalendarStateContext"
+
+interface DraftEvent {
+  summary: string
+  allDay: boolean
+  start: Date
+  end: Date
+  calendarId: string | null
+  location: string | null
+  recurrence: Recurrence | null
+}
 
 interface EventDraftContextType {
   isDrafting: boolean
@@ -33,7 +43,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendarState()
   const [isDrafting, setIsDrafting] = useState(false)
 
-  const defaultCalendarId = calendars[0]?.id ?? null
+  const defaultCalendarId = calendars[0]?.slug ?? null
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])
@@ -45,6 +55,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       start: getClosestNextHour(),
       end: addMinutes(getClosestNextHour(), 30),
       calendarId: defaultCalendarId,
+      location: null,
+      recurrence: null,
     }
   }, [defaultCalendarId])
 

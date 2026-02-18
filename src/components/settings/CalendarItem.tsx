@@ -1,16 +1,13 @@
-import { eq } from "drizzle-orm"
 import { ReactNode } from "react"
 import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { Calendar } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
 
-import { db, schema } from "@/db/database"
-import { Calendar } from "@/db/types"
-
 export function CalendarItem({ calendar, children }: { calendar: Calendar; children?: ReactNode }) {
-  const { name, color, isVisible } = calendar
+  const { name, color } = calendar
+  const isVisible = true // TODO: STORE THIS IN RENCAL'S OWN STORE
 
   return (
     <div
@@ -23,11 +20,6 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 rounded-[3px] shrink-0"
           style={{ backgroundColor: color ?? undefined }}
         />
-        {/*isSubscription ? (
-          <RssIcon className="size-3 shrink-0" style={{ color }} />
-        ) : (
-          <div className="size-3 rounded-[3px] shrink-0" style={{ backgroundColor: color }} />
-        )*/}
         <span className="text-sm">{name}</span>
       </div>
 
@@ -37,22 +29,15 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
 }
 
 export function CalendarItemWithVisibilityToggle({ calendar }: { calendar: Calendar }) {
-  const { reloadCalendars } = useCalendarState()
+  const isVisible = true // TODO: STORE THIS IN RENCAL'S OWN STORE
 
-  const { isVisible } = calendar
-
-  const onToggleVisibility = async (calendarId: string) => {
-    await db
-      .update(schema.calendars)
-      .set({ isVisible: !isVisible })
-      .where(eq(schema.calendars.id, calendarId))
-
-    await reloadCalendars()
+  const onToggleVisibility = async (_calendarSlug: string) => {
+    // TODO: Implement visibility toggle using local DB keyed by calendar slug
   }
 
   return (
-    <CalendarItem key={calendar.id} calendar={calendar}>
-      <div className="cursor-pointer" onClick={() => onToggleVisibility(calendar.id)}>
+    <CalendarItem key={calendar.slug} calendar={calendar}>
+      <div className="cursor-pointer" onClick={() => onToggleVisibility(calendar.slug)}>
         {isVisible ? (
           <EyeIcon className="size-4 opacity-0 group-hover:opacity-50" />
         ) : (

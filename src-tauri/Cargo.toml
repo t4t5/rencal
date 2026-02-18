@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Delightful Calendar app for Hyprland"
 authors = ["you"]
 edition = "2021"
+default-run = "rencal"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,6 +14,10 @@ edition = "2021"
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
 name = "rencal_lib"
 crate-type = ["rlib"]
+
+[[bin]]
+name = "gen_types"
+path = "src/bin/gen_types.rs"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -25,8 +30,9 @@ serde_json = "1"
 taurpc = "0.5.2"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
 tokio = { version = "1", features = ["full"] }
-oauth2 = "4.4"
 url = "2.5"
 anyhow = "1.0.100"
 socket2 = "0.5"
 tauri-plugin-sql = { version = "2", features = ["sqlite"] }
+caldir-core = { path = "../../caldir/caldir-core" }
+chrono = "0.4.43"

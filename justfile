@@ -14,6 +14,11 @@ dev:
 build:
   NO_STRIP=true pnpm tauri build
 
+# Generate TypeScript bindings from Rust types
+[working-directory: 'src-tauri']
+gen-types:
+  cargo run --bin gen_types
+
 # Test production version of app (needs build first)
 start:
   src-tauri/target/release/bundle/appimage/rencal_0.1.0_amd64.AppImage

@@ -5,6 +5,7 @@ A calendar app crafted especially for Omarchy.
 ## Commands
 
 - `just check`: check for errors
+- `just gen-types`: generate typescript bidnings from rust
 
 ## Architecture
 
@@ -16,8 +17,10 @@ actions, including SQLite operations are handled in the frontend.
 ### Backend (Rust)
 
 - `src-tauri/src/lib.rs` - Registers taurpc routers
-- `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost server, native popup window)
-- `src-tauri/src/routes/` - taurpc API procedures
+- `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost callback server, native popup window)
+- `src-tauri/src/routes/caldir.rs` - taurpc API procedures, including `connect_provider` which
+  orchestrates the full caldir auth flow (auth_init → popup → callback → auth_submit →
+  list_calendars → save configs)
 - TypeScript bindings are auto-generated as `src/rpc/bindings.ts`
 
 ### Frontend (React)
@@ -41,27 +44,18 @@ actions, including SQLite operations are handled in the frontend.
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
 - _NEVER_ use Drizzle's `returning()` method. It does not working with SQLite.
+- Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use
+  `i32`/`u32` instead.
 
-## Google Calendar Integration
+## Calendar Data (caldir)
 
-Uses standalone OAuth 2.0 authentication - no central Rencal server required:
+Rencal reads calendars and events from the local caldir directory (`~/calendar/`) via the
+`caldir-core` Rust crate. The Rust backend exposes caldir operations as taurpc procedures
+(`src-tauri/src/routes/caldir.rs`), and the frontend calls them via `rpc.caldir.*`.
 
-1. User clicks "Connect Google Calendar"
-2. Rust spawns temporary HTTP server on `localhost:8080` and opens native popup window
-3. User authenticates with Google in the popup
-4. Google redirects back to localhost with authorization code
-5. TypeScript (using Arctic library) exchanges code for tokens via PKCE
-6. App fetches calendar data directly from Google Calendar API
-
-OAuth logic lives in `src/lib/oauth/google.ts` using the Arctic library. Rust only provides two primitives: `start_oauth_callback_server` and `open_oauth_window`.
-
-### OAuth Security Model
-
-The OAuth client ID and secret are embedded in `src/lib/oauth/google.ts`. This is standard for desktop apps (similar to Thunderbird) and is not a security vulnerability. The embedded credentials just identify the app to Google, while PKCE provides the actual security against token theft.
-
-### Event Sync
-
-Events are synced from Google Calendar to a local SQLite database for offline access and fast reads. The sync uses Google's incremental sync API with sync tokens - after the initial full sync, subsequent syncs only fetch changed/deleted events. The `useSyncEvents` hook triggers sync on mount and every 30 seconds, while `useLocalEvents` reads from SQLite for instant UI. All entities use our own UUIDs as primary keys with optional `google_calendar_id`/`google_event_id` fields for provider mapping.
+Calendars are listed from caldir and grouped by account in the settings UI. The account identifier
+comes from the `{provider}_account` field in each calendar's `.caldir/config.toml` (e.g.,
+`google_account`, `icloud_account`). See the caldir CLAUDE.md for the account identifier convention.
 
 ## Migrations
 

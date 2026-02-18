@@ -1,5 +1,5 @@
 import { Description, DialogTitle } from "@radix-ui/react-dialog"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { IoSearch as SearchIcon } from "react-icons/io5"
@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
+import { rpc } from "@/rpc"
 
-import { useSyncEvents } from "@/hooks/useSyncEvents"
+import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
 import { cn } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
@@ -46,32 +48,49 @@ export function ActionBar() {
 }
 
 const SyncStatus = () => {
+  const { calendars } = useCalendarState()
   const { reloadEvents } = useCalEvents()
 
-  const { isSyncing, syncError } = useSyncEvents({
-    onSyncComplete: reloadEvents,
-  })
+  const [isSyncing, setIsSyncing] = useState(false)
+  const [syncError, setSyncError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const calendarSlugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
+
+    if (calendarSlugs.length === 0) return
+
+    const sync = async () => {
+      setIsSyncing(true)
+      setSyncError(null)
+      try {
+        await rpc.caldir.sync(calendarSlugs)
+        await reloadEvents()
+      } catch (e) {
+        setSyncError(e instanceof Error ? e.message : String(e))
+      } finally {
+        setIsSyncing(false)
+      }
+    }
+
+    void sync()
+  }, [calendars])
 
   if (syncError) {
     return (
-      <div className="flex justify-between pr-2">
-        <Tooltip>
-          <TooltipTrigger>
-            <WarningIcon className="text-destructive" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 break-words">{syncError}</TooltipContent>
-        </Tooltip>
-      </div>
+      <Tooltip>
+        <TooltipTrigger>
+          <WarningIcon className="text-destructive" />
+        </TooltipTrigger>
+        <TooltipContent className="max-w-64 break-words">{syncError}</TooltipContent>
+      </Tooltip>
     )
   }
 
   return (
-    <div className="flex justify-between pr-2">
-      <SyncIcon
-        className={cn("text-muted-foreground opacity-0 transition-opacity", {
-          "animate-spin text-primary opacity-100": isSyncing,
-        })}
-      />
-    </div>
+    <SyncIcon
+      className={cn("text-muted-foreground opacity-0 transition-opacity", {
+        "animate-spin text-primary opacity-100": isSyncing,
+      })}
+    />
   )
 }

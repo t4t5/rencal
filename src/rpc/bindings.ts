@@ -4,10 +4,32 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from 'taurp
 type TAURI_CHANNEL<T> = (response: T) => void
 
 
-const ARGS_MAP = { 'oauth':'{"close_oauth_window":[],"open_oauth_window":["url","title"],"start_oauth_callback_server":["port"]}' }
-export type Router = { "oauth": {close_oauth_window: () => Promise<null>, 
-open_oauth_window: (url: string, title: string) => Promise<null>, 
-start_oauth_callback_server: (port: number) => Promise<string>} };
+export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null }
+
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
+
+/**
+ * Input for creating an event
+ */
+export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
+
+export type Recurrence = { rrule: string; exdates: string[] }
+
+/**
+ * Input for updating an event
+ */
+export type UpdateEventInput = { id: string; calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
+
+const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"sync":["calendar_slugs"],"update_event":["input"]}' }
+export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 
+create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
+delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
+delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
+get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
+list_calendars: () => Promise<Calendar[]>, 
+list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
+sync: (calendarSlugs: string[]) => Promise<null>, 
+update_event: (input: UpdateEventInput) => Promise<null>} };
 
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)

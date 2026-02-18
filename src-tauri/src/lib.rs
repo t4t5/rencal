@@ -2,12 +2,17 @@ mod migrations;
 mod oauth;
 mod routes;
 
-use routes::oauth::{OAuthApi, OAuthApiImpl};
+use routes::caldir::{CaldirApi, CaldirApiImpl};
 use taurpc::Router;
+
+/// Creates the taurpc router. Exposed for type generation.
+pub fn create_router() -> Router<tauri::Wry> {
+    Router::new().merge(CaldirApiImpl.into_handler())
+}
 
 #[tokio::main]
 pub async fn run() {
-    let router = Router::new().merge(OAuthApiImpl.into_handler());
+    let router = create_router();
 
     tauri::Builder::default()
         .plugin(tauri_plugin_opener::init())

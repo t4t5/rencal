@@ -1,12 +1,12 @@
 import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef } from "react"
 
+import { CalendarEvent } from "@/rpc/bindings"
+
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
-
-import type { CalendarEvent } from "@/db/types"
 
 import { EventRow } from "./EventRow"
 

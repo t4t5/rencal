@@ -1,9 +1,9 @@
 import { CalendarItem } from "@/components/settings/CalendarItem"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { Calendar } from "@/rpc/bindings"
 
-import { Calendar } from "@/db/types"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 export const CalendarSelect = ({
   calendar,
@@ -21,7 +21,7 @@ export const CalendarSelect = ({
       </SelectTrigger>
       <SelectContent>
         {calendars.map((cal) => (
-          <SelectItem key={cal.id} value={cal.id}>
+          <SelectItem key={cal.slug} value={cal.slug}>
             <CalendarItem calendar={cal} />
           </SelectItem>
         ))}

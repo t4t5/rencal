@@ -2,35 +2,30 @@ import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
-import { useAuth } from "@/contexts/AuthContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useConnectGoogle } from "@/hooks/useConnectGoogle"
-import { useFetchGoogleCalendars } from "@/hooks/useFetchGoogleCalendars"
+import { useConnectProvider } from "@/hooks/useConnectProvider"
 
 import { AccountSection } from "./AccountSection"
 
 export function Settings() {
-  const { accounts } = useAuth()
+  const { calendars } = useCalendarState()
 
-  const { fetchCalendars, isLoading } = useFetchGoogleCalendars()
+  const { connect, isConnecting } = useConnectProvider()
 
-  const { connect, isConnecting } = useConnectGoogle({
-    onConnect: async (account) => {
-      await fetchCalendars(account)
-    },
-  })
+  const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")
 
   return (
     <div className="flex flex-col">
-      {accounts.map((account) => (
-        <AccountSection key={account.id} account={account} />
+      {Object.entries(calendarsByAccount).map(([account, calendars]) => (
+        <AccountSection key={account} account={account} calendars={calendars ?? []} />
       ))}
 
       <Button
         variant="ghost"
         className="justify-start text-muted-foreground"
-        disabled={isConnecting || isLoading}
-        onClick={connect}
+        disabled={isConnecting}
+        onClick={() => connect("google")}
       >
         <PlusIcon className="size-4" />
         Add calendar account
