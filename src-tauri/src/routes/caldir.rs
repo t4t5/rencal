@@ -11,6 +11,7 @@ pub struct Calendar {
     pub name: Option<String>,
     pub color: Option<String>,
     pub provider: Option<String>,
+    pub account: Option<String>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -46,6 +47,11 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
                 .remote
                 .as_ref()
                 .map(|r| r.provider.name().to_string()),
+            account: c
+                .config
+                .remote
+                .as_ref()
+                .and_then(|r| r.account_identifier().map(String::from)),
         }
     }
 }

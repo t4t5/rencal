@@ -20,12 +20,12 @@ export function Settings() {
     },
   })
 
-  const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local")
+  const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")
 
   return (
     <div className="flex flex-col">
-      {Object.entries(calendarsByProvider).map(([provider, calendars]) => (
-        <AccountSection key={provider} provider={provider} calendars={calendars ?? []} />
+      {Object.entries(calendarsByAccount).map(([account, calendars]) => (
+        <AccountSection key={account} account={account} calendars={calendars ?? []} />
       ))}
 
       <Button
