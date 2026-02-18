@@ -246,14 +246,15 @@ impl CaldirApi for CaldirApiImpl {
             .map(|&m| caldir_core::event::Reminder { minutes: m as i64 })
             .collect();
 
-        let event = caldir_core::event::Event::new(input.summary, start.clone(), end.clone());
-        let event = caldir_core::event::Event {
-            description: input.description,
-            location: input.location,
+        let event = caldir_core::event::Event::new(
+            input.summary,
+            start,
+            end,
+            input.description,
+            input.location,
             recurrence,
             reminders,
-            ..event
-        };
+        );
 
         calendar.create_event(&event).map_err(|e| e.to_string())?;
 
