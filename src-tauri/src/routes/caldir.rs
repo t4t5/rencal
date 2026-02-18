@@ -184,12 +184,11 @@ impl CaldirApi for CaldirApiImpl {
             let calendar =
                 caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
 
-            for ce in calendar.events().map_err(|e| e.to_string())? {
-                if let Some(event_start) = ce.event.start.to_utc() {
-                    if event_start >= range_start && event_start <= range_end {
-                        events.push(CalendarEvent::from_event(&ce.event, slug));
-                    }
-                }
+            for event in calendar
+                .events_in_range(range_start, range_end)
+                .map_err(|e| e.to_string())?
+            {
+                events.push(CalendarEvent::from_event(&event, slug));
             }
         }
 
