@@ -13,6 +13,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
+import { rruleToRecurrence } from "@/lib/rrule-utils"
 
 export const NewEvent = () => {
   const { calendars } = useCalendarState()
@@ -22,7 +23,7 @@ export const NewEvent = () => {
 
   const { summary, start, end, allDay, location, calendarId, recurrence } = draftEvent
 
-  const recurrenceRRule = recurrence ? rrulestr(recurrence) : null
+  const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
   const onCreate = useCallback(async () => {
     if (!draftEvent.calendarId) return
@@ -35,7 +36,7 @@ export const NewEvent = () => {
       start: draftEvent.start.toISOString(),
       end: draftEvent.end.toISOString(),
       all_day: draftEvent.allDay,
-      recurrence: draftEvent.recurrence ? { rrule: draftEvent.recurrence, exdates: [] } : null,
+      recurrence: draftEvent.recurrence,
       reminders: draftReminders,
     })
 
@@ -88,7 +89,7 @@ export const NewEvent = () => {
           }}
           recurrence={recurrenceRRule}
           onRecurrenceChange={(rrule) => {
-            setDraftEvent({ ...draftEvent, recurrence: rrule?.toString() ?? null })
+            setDraftEvent({ ...draftEvent, recurrence: rruleToRecurrence(rrule) })
           }}
           reminders={draftReminders}
           onReminderAdd={(mins) => setDraftReminders([...draftReminders, mins])}

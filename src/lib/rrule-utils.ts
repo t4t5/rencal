@@ -48,6 +48,14 @@ export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
 }
 
 /**
+ * Strip the "RRULE:" prefix that rrule.js adds, since caldir
+ * expects just the value (e.g. "FREQ=WEEKLY;BYDAY=MO").
+ */
+function stripRRulePrefix(s: string): string {
+  return s.replace(/^RRULE:/i, "")
+}
+
+/**
  * Convert an RRule or RRuleSet back to a Recurrence object.
  */
 export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | null {
@@ -58,13 +66,13 @@ export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | 
     if (rrules.length === 0) return null
 
     return {
-      rrule: rrules[0].toString(),
+      rrule: stripRRulePrefix(rrules[0].toString()),
       exdates: rrule.exdates().map((d) => d.toISOString()),
     }
   }
 
   return {
-    rrule: rrule.toString(),
+    rrule: stripRRulePrefix(rrule.toString()),
     exdates: [],
   }
 }

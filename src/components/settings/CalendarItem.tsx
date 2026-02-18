@@ -1,14 +1,9 @@
-import { eq } from "drizzle-orm"
 import { ReactNode } from "react"
 import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
 import { Calendar } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
-
 import { cn } from "@/lib/utils"
-
-import { db, schema } from "@/db/database"
 
 export function CalendarItem({ calendar, children }: { calendar: Calendar; children?: ReactNode }) {
   const { name, color } = calendar
@@ -25,11 +20,6 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 rounded-[3px] shrink-0"
           style={{ backgroundColor: color ?? undefined }}
         />
-        {/*isSubscription ? (
-          <RssIcon className="size-3 shrink-0" style={{ color }} />
-        ) : (
-          <div className="size-3 rounded-[3px] shrink-0" style={{ backgroundColor: color }} />
-        )*/}
         <span className="text-sm">{name}</span>
       </div>
 
@@ -39,18 +29,10 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
 }
 
 export function CalendarItemWithVisibilityToggle({ calendar }: { calendar: Calendar }) {
-  const { reloadCalendars } = useCalendarState()
+  const isVisible = true // TODO: STORE THIS IN RENCAL'S OWN STORE
 
-  const isVisible = true
-  // const { isVisible } = calendar
-
-  const onToggleVisibility = async (calendarId: string) => {
-    await db
-      .update(schema.calendars)
-      .set({ isVisible: !isVisible })
-      .where(eq(schema.calendars.id, calendarId))
-
-    await reloadCalendars()
+  const onToggleVisibility = async (_calendarSlug: string) => {
+    // TODO: Implement visibility toggle using local DB keyed by calendar slug
   }
 
   return (
