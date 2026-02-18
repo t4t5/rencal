@@ -11,8 +11,9 @@ A calendar app crafted especially for Omarchy.
 
 This is a Tauri application with a Rust backend and React frontend.
 
-The Rust backend is kept as minimal as possible and only used when absolutely necessary. All
-actions, including SQLite operations are handled in the frontend.
+The Rust backend is kept as minimal as possible. It handles caldir operations (reading/writing
+calendars and events from `~/calendar/`) and OAuth flows. The frontend handles UI state and
+communicates with the backend via taurpc.
 
 ### Backend (Rust)
 
@@ -43,7 +44,6 @@ actions, including SQLite operations are handled in the frontend.
   `.toISOString()`
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
-- _NEVER_ use Drizzle's `returning()` method. It does not working with SQLite.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use
   `i32`/`u32` instead.
 
@@ -57,12 +57,13 @@ Calendars are listed from caldir and grouped by account in the settings UI. The 
 comes from the `{provider}_account` field in each calendar's `.caldir/config.toml` (e.g.,
 `google_account`, `icloud_account`). See the caldir CLAUDE.md for the account identifier convention.
 
-## Migrations
+## Local Database
 
-We use Drizzle for our SQLite database schema.
+Rencal uses a local SQLite database (via Drizzle) only for app-specific state like calendar
+visibility preferences. All calendar and event data lives in caldir (`~/calendar/`).
 
-To create a migration, change the schema in `src/db/schema.ts` and run `just migrate
-{your_description}`. This will generate a `sql` file in `src-tauri/src/migrations/`.
+Schema is defined in `src/db/schema.ts`. To create a migration, change the schema and run
+`just migrate {your_description}`. This generates a `sql` file in `src-tauri/src/migrations/`.
 
-When the app gets built, everything in `src-tauri/src/migrations/` get auto-generated into an updated `src-tauri/src/migrations.rs`.
-When the app runs, migrations in `src-tauri/src/migrations.rs` get applied.
+When the app gets built, everything in `src-tauri/src/migrations/` get auto-generated into an
+updated `src-tauri/src/migrations.rs`. When the app runs, migrations get applied automatically.
