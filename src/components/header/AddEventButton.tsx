@@ -16,6 +16,7 @@ export function AddEventButton() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
+    setText("")
     setIsExiting(true)
   }
 
