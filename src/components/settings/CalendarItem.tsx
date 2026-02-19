@@ -20,7 +20,7 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 rounded-[3px] shrink-0"
           style={{ backgroundColor: color ?? undefined }}
         />
-        <span className="text-sm">{name}</span>
+        <span className="text-sm text-primary-foreground">{name}</span>
       </div>
 
       {children}
