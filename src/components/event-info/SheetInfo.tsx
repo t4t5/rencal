@@ -8,7 +8,7 @@ export function SheetEvent() {
 
   return (
     <Sheet open={!!activeEvent} onOpenChange={() => setActiveEventId(null)}>
-      <SheetContent>
+      <SheetContent onOpenAutoFocus={(e) => e.preventDefault()}>
         <SheetTitle className="hidden">{activeEvent?.summary}</SheetTitle>
         <SheetDescription className="hidden">{activeEvent?.summary}</SheetDescription>
         <EditEvent event={activeEvent} />
