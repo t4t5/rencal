@@ -1,6 +1,7 @@
 import { useState } from "react"
 
 import { rpc } from "@/rpc"
+import type { CredentialFieldInput } from "@/rpc/bindings"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
@@ -23,8 +24,23 @@ export const useConnectProvider = () => {
     }
   }
 
+  async function connectWithCredentials(providerName: string, credentials: CredentialFieldInput[]) {
+    setIsConnecting(true)
+
+    try {
+      await rpc.caldir.connect_provider_with_credentials(providerName, credentials)
+      await reloadCalendars()
+    } catch (error) {
+      logger.error("Failed to connect provider:", error)
+      throw error
+    } finally {
+      setIsConnecting(false)
+    }
+  }
+
   return {
     connect,
+    connectWithCredentials,
     isConnecting,
   }
 }

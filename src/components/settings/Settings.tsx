@@ -1,17 +1,16 @@
+import { useState } from "react"
 import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useConnectProvider } from "@/hooks/useConnectProvider"
-
 import { AccountSection } from "./AccountSection"
+import { AddAccountModal } from "./AddAccountModal"
 
 export function Settings() {
   const { calendars } = useCalendarState()
-
-  const { connect, isConnecting } = useConnectProvider()
+  const [showAddAccount, setShowAddAccount] = useState(false)
 
   const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")
 
@@ -24,12 +23,13 @@ export function Settings() {
       <Button
         variant="ghost"
         className="justify-start text-muted-foreground"
-        disabled={isConnecting}
-        onClick={() => connect("google")}
+        onClick={() => setShowAddAccount(true)}
       >
         <PlusIcon className="size-4" />
         Add calendar account
       </Button>
+
+      {showAddAccount && <AddAccountModal onClose={() => setShowAddAccount(false)} />}
     </div>
   )
 }

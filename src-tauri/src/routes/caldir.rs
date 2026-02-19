@@ -57,6 +57,12 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
     }
 }
 
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct CredentialFieldInput {
+    pub id: String,
+    pub value: String,
+}
+
 /// Input for creating an event
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct CreateEventInput {
@@ -151,6 +157,11 @@ pub trait CaldirApi {
     async fn connect_provider<R: Runtime>(
         app_handle: AppHandle<R>,
         provider_name: String,
+    ) -> TauResult<Vec<Calendar>>;
+
+    async fn connect_provider_with_credentials(
+        provider_name: String,
+        credentials: Vec<CredentialFieldInput>,
     ) -> TauResult<Vec<Calendar>>;
 }
 
@@ -442,31 +453,7 @@ impl CaldirApi for CaldirApiImpl {
                         serde_json::Value::String(redirect_uri),
                     );
 
-                    let provider_account = provider
-                        .auth_submit(credentials)
-                        .await
-                        .map_err(|e| format!("Auth submit failed: {}", e))?;
-
-                    // Step 6: List calendars from provider
-                    let calendar_configs = provider_account
-                        .list_calendars()
-                        .await
-                        .map_err(|e| format!("Failed to list calendars: {}", e))?;
-
-                    // Step 7: Save each calendar config locally
-                    let mut calendars = Vec::new();
-                    for config in calendar_configs {
-                        let slug = caldir_core::calendar::Calendar::unique_slug_for(
-                            config.name.as_deref(),
-                        )
-                        .map_err(|e| e.to_string())?;
-
-                        let cal = caldir_core::calendar::Calendar { slug, config };
-                        cal.save_config().map_err(|e| e.to_string())?;
-                        calendars.push(Calendar::from(&cal));
-                    }
-
-                    Ok(calendars)
+                    save_provider_calendars(&provider, credentials).await
                 };
 
                 let result = run.await;
@@ -476,4 +463,50 @@ impl CaldirApi for CaldirApiImpl {
             _ => Err("Only OAuth providers are currently supported".to_string()),
         }
     }
+
+    async fn connect_provider_with_credentials(
+        self,
+        provider_name: String,
+        credentials: Vec<CredentialFieldInput>,
+    ) -> TauResult<Vec<Calendar>> {
+        use caldir_core::remote::provider::Provider;
+
+        let provider = Provider::from_name(&provider_name);
+
+        let mut cred_map = serde_json::Map::new();
+        for field in credentials {
+            cred_map.insert(field.id, serde_json::Value::String(field.value));
+        }
+
+        save_provider_calendars(&provider, cred_map).await
+    }
+}
+
+/// Submit credentials to provider, list calendars, and save configs locally.
+async fn save_provider_calendars(
+    provider: &caldir_core::remote::provider::Provider,
+    credentials: serde_json::Map<String, serde_json::Value>,
+) -> TauResult<Vec<Calendar>> {
+    let provider_account = provider
+        .auth_submit(credentials)
+        .await
+        .map_err(|e| format!("Auth submit failed: {}", e))?;
+
+    let calendar_configs = provider_account
+        .list_calendars()
+        .await
+        .map_err(|e| format!("Failed to list calendars: {}", e))?;
+
+    let mut calendars = Vec::new();
+    for config in calendar_configs {
+        let slug =
+            caldir_core::calendar::Calendar::unique_slug_for(config.name.as_deref())
+                .map_err(|e| e.to_string())?;
+
+        let cal = caldir_core::calendar::Calendar { slug, config };
+        cal.save_config().map_err(|e| e.to_string())?;
+        calendars.push(Calendar::from(&cal));
+    }
+
+    Ok(calendars)
 }

@@ -13,6 +13,8 @@ export type CalendarEvent = { id: string; recurring_event_id: string | null; sum
  */
 export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
+export type CredentialFieldInput = { id: string; value: string }
+
 export type Recurrence = { rrule: string; exdates: string[] }
 
 /**
@@ -20,8 +22,9 @@ export type Recurrence = { rrule: string; exdates: string[] }
  */
 export type UpdateEventInput = { id: string; calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
-const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"sync":["calendar_slugs"],"update_event":["input"]}' }
+const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"sync":["calendar_slugs"],"update_event":["input"]}' }
 export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 
+connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
 delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
 delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
