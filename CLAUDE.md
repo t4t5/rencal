@@ -19,9 +19,8 @@ communicates with the backend via taurpc.
 
 - `src-tauri/src/lib.rs` - Registers taurpc routers
 - `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost callback server, native popup window)
-- `src-tauri/src/routes/caldir.rs` - taurpc API procedures, including `connect_provider` which
-  orchestrates the full caldir auth flow (auth_init → popup → callback → auth_submit →
-  list_calendars → save configs)
+- `src-tauri/src/routes/caldir.rs` - taurpc API procedures, including `connect_provider` (OAuth
+  flow) and `connect_provider_with_credentials` (credentials flow like iCloud)
 - TypeScript bindings are auto-generated as `src/rpc/bindings.ts`
 
 ### Frontend (React)
@@ -46,6 +45,9 @@ communicates with the backend via taurpc.
   you're using `any`, you're doing something wrong.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use
   `i32`/`u32` instead.
+- Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the
+  caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected
+  field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
 
 ## Calendar Data (caldir)
 
