@@ -113,7 +113,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   if (!dirtyEvent) return null
 
-  const { summary, start, end, all_day, location, calendar_slug, recurrence } = dirtyEvent
+  const { summary, description, start, end, all_day, location, calendar_slug, recurrence } =
+    dirtyEvent
 
   const effectiveRecurrence = recurrence ?? dirtyEvent.master_recurrence
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
@@ -123,11 +124,15 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     <div className="px-2 pt-4 pb-2 flex flex-col grow">
       <EventInfo
         summary={summary}
+        description={description}
         start={new Date(start)}
         end={new Date(end)}
         allDay={all_day}
         location={location}
         calendar={calendar}
+        onDescriptionChange={(newDescription) => {
+          setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
+        }}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
         }}

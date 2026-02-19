@@ -21,7 +21,7 @@ export const NewEvent = () => {
     useEventDraft()
   const { reloadEvents } = useCalEvents()
 
-  const { summary, start, end, allDay, location, calendarId, recurrence } = draftEvent
+  const { summary, description, start, end, allDay, location, calendarId, recurrence } = draftEvent
 
   const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
@@ -31,7 +31,7 @@ export const NewEvent = () => {
     await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
       summary: draftEvent.summary ?? "",
-      description: null,
+      description: draftEvent.description,
       location: draftEvent.location ?? null,
       start: draftEvent.start.toISOString(),
       end: draftEvent.end.toISOString(),
@@ -52,11 +52,15 @@ export const NewEvent = () => {
       <div className="p-2">
         <EventInfo
           summary={summary}
+          description={description}
           start={start}
           end={end}
           allDay={allDay}
           location={location}
           calendar={calendar}
+          onDescriptionChange={(newDescription) => {
+            setDraftEvent({ ...draftEvent, description: newDescription || null })
+          }}
           onLocationChange={(newLocation) => {
             setDraftEvent({ ...draftEvent, location: newLocation || null })
           }}

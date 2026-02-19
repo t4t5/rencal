@@ -7,6 +7,7 @@ import { useCalendarState } from "./CalendarStateContext"
 
 interface DraftEvent {
   summary: string
+  description: string | null
   allDay: boolean
   start: Date
   end: Date
@@ -51,6 +52,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     return {
       summary: "",
+      description: null,
       allDay: false,
       start: getClosestNextHour(),
       end: addMinutes(getClosestNextHour(), 30),

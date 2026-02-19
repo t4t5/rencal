@@ -10,6 +10,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { Calendar } from "@/rpc/bindings"
 
+import { NotesInput } from "./inputs/NotesInput"
+
 const Divider = () => (
   <div className="my-2 px-3">
     <hr />
@@ -33,6 +35,8 @@ export function EventInfo({
   onCalendarChange,
   recurrence,
   onRecurrenceChange,
+  description,
+  onDescriptionChange,
   reminders,
   onReminderAdd,
   onReminderRemove,
@@ -53,6 +57,8 @@ export function EventInfo({
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
+  description?: string | null
+  onDescriptionChange: (description: string) => void
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
@@ -93,6 +99,8 @@ export function EventInfo({
         <Divider />
 
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
+
+        <NotesInput value={description} onChange={onDescriptionChange} />
       </div>
     </div>
   )
