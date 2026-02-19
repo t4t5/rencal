@@ -8,7 +8,6 @@ const MAX_TIMED_VISIBLE = 2
 
 type MonthDayCellProps = {
   day: MonthDay
-  isCurrentMonth: boolean
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
   activeEventId: string | null
@@ -18,7 +17,6 @@ type MonthDayCellProps = {
 
 export function MonthDayCell({
   day,
-  isCurrentMonth,
   timedEvents,
   hiddenAllDayCount,
   activeEventId,
@@ -34,7 +32,6 @@ export function MonthDayCell({
       className={cn(
         "flex flex-col gap-px px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
         day.isWeekend && "bg-weekendBg",
-        !isCurrentMonth && "opacity-40",
       )}
       onClick={onClick}
     >

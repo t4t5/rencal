@@ -64,7 +64,6 @@ export function MonthView() {
       <MonthGrid
         weeks={weeks}
         weekLayouts={weekLayouts}
-        activeDate={activeDate}
         activeEventId={activeEvent?.id ?? null}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}

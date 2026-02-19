@@ -1,5 +1,5 @@
-import { format, getMonth, getYear } from "date-fns"
-import { RefObject, useCallback, useEffect, useRef } from "react"
+import { format } from "date-fns"
+import { RefObject, useEffect, useRef } from "react"
 
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
@@ -14,7 +14,6 @@ const SNAP_DELAY_MS = 100
 type MonthGridProps = {
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
-  activeDate: Date
   activeEventId: string | null
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
@@ -26,7 +25,6 @@ type MonthGridProps = {
 export function MonthGrid({
   weeks,
   weekLayouts,
-  activeDate,
   activeEventId,
   anchorWeekIndex,
   scrollRef,
@@ -37,14 +35,6 @@ export function MonthGrid({
   const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map())
   const isScrollingProgrammatically = useRef(false)
   const hasInitialized = useRef(false)
-
-  const activeMonth = getMonth(activeDate)
-  const activeYear = getYear(activeDate)
-
-  const isCurrentMonth = useCallback(
-    (day: MonthDay) => getMonth(day.date) === activeMonth && getYear(day.date) === activeYear,
-    [activeMonth, activeYear],
-  )
 
   // Scroll to anchor week on mount
   useEffect(() => {
@@ -146,7 +136,6 @@ export function MonthGrid({
                   className={cn(
                     "flex justify-end p-1 pb-0 cursor-default border-r border-border last:border-r-0",
                     day.isWeekend && "bg-weekendBg",
-                    !isCurrentMonth(day) && "opacity-40",
                   )}
                   onClick={() => onDayClick(day.date)}
                 >
@@ -176,7 +165,6 @@ export function MonthGrid({
                     className={cn(
                       colIndex < 6 && "border-r border-border",
                       day.isWeekend && "bg-weekendBg",
-                      !isCurrentMonth(day) && "opacity-40",
                     )}
                     style={{
                       gridColumn: colIndex + 1,
@@ -210,7 +198,6 @@ export function MonthGrid({
                   <MonthDayCell
                     key={day.dateKey}
                     day={day}
-                    isCurrentMonth={isCurrentMonth(day)}
                     timedEvents={layout.timedByCol[colIndex]}
                     hiddenAllDayCount={hiddenAllDay}
                     activeEventId={activeEventId}
