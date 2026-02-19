@@ -39,6 +39,15 @@ export function AddEventButton() {
           value={text}
           onChange={(e) => setText(e.target.value)}
           autoFocus={isDrafting && !isExiting}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              if (text) {
+                setText("")
+              } else {
+                exitDraft()
+              }
+            }
+          }}
           className={cn(
             "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
             isExiting ? "w-10" : "w-full starting:w-10",
