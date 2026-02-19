@@ -12,6 +12,7 @@ export const DateTimeSelect = ({
   start,
   end,
   allDay,
+  showTime = true,
   onChangeStartDate,
   onChangeStartTime,
   onChangeEndDate,
@@ -20,6 +21,7 @@ export const DateTimeSelect = ({
   start: Date
   end: Date
   allDay: boolean
+  showTime?: boolean
   onChangeStartDate: (start: Date | null) => void
   onChangeStartTime: (time: string) => void
   onChangeEndDate: (start: Date | null) => void
@@ -27,13 +29,15 @@ export const DateTimeSelect = ({
 }) => {
   return (
     <div className="flex flex-col gap-1">
-      <TimeSelect
-        start={start}
-        end={end}
-        allDay={allDay}
-        onChangeStartTime={onChangeStartTime}
-        onChangeEndTime={onChangeEndTime}
-      />
+      {showTime && (
+        <TimeSelect
+          start={start}
+          end={end}
+          allDay={allDay}
+          onChangeStartTime={onChangeStartTime}
+          onChangeEndTime={onChangeEndTime}
+        />
+      )}
       <DateSelect
         start={start}
         end={end}

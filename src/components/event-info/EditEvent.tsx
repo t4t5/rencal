@@ -1,5 +1,5 @@
 import { format, parse } from "date-fns"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
@@ -22,6 +22,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const { setActiveEventId, reloadEvents } = useCalEvents()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
+  const originalEventRef = useRef<CalendarEvent | null>(null)
 
   const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
@@ -29,8 +30,14 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   useEffect(() => {
     if (event) {
       setDirtyEvent(event)
+      originalEventRef.current = event
     }
   }, [event?.id])
+
+  const hasBeenEdited =
+    !!dirtyEvent &&
+    !!originalEventRef.current &&
+    JSON.stringify(dirtyEvent) !== JSON.stringify(originalEventRef.current)
 
   // Auto-save to caldir when dirtyEvent changes
   useDebouncedEffect(
@@ -128,6 +135,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         start={new Date(start)}
         end={new Date(end)}
         allDay={all_day}
+        showTime={!all_day || hasBeenEdited}
         location={location}
         calendar={calendar}
         onDescriptionChange={(newDescription) => {

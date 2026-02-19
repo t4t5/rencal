@@ -29,6 +29,7 @@ export function EventInfo({
   onChangeEndTime,
   allDay,
   onAllDayChange,
+  showTime,
   location,
   onLocationChange,
   calendar,
@@ -57,6 +58,7 @@ export function EventInfo({
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
+  showTime?: boolean
   description?: string | null
   onDescriptionChange: (description: string) => void
   reminders?: number[]
@@ -77,6 +79,7 @@ export function EventInfo({
           start={start}
           end={end}
           allDay={allDay}
+          showTime={showTime}
           onChangeStartDate={onChangeStartDate}
           onChangeStartTime={onChangeStartTime}
           onChangeEndDate={onChangeEndDate}
