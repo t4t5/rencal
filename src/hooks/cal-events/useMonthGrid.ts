@@ -1,40 +1,61 @@
-import { addDays, format, getMonth, getYear, isSameDay, startOfMonth, startOfWeek } from "date-fns"
+import {
+  addDays,
+  addMonths,
+  format,
+  isSameDay,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from "date-fns"
 import { useMemo } from "react"
 
 export type MonthDay = {
   date: Date
   dateKey: string
-  isCurrentMonth: boolean
   isToday: boolean
   isWeekend: boolean
 }
 
-export function useMonthGrid(activeDate: Date): MonthDay[][] {
+/**
+ * Generates a scrollable range of weeks centered on `anchorDate`.
+ * Returns the weeks array and the index of the first week containing
+ * the 1st of anchorDate's month (for initial scroll positioning).
+ */
+export function useMonthGrid(anchorDate: Date) {
   return useMemo(() => {
-    const monthStart = startOfMonth(activeDate)
-    const gridStart = startOfWeek(monthStart, { weekStartsOn: 1 })
-    const activeMonth = getMonth(activeDate)
-    const activeYear = getYear(activeDate)
+    const rangeStartMonth = startOfMonth(subMonths(anchorDate, 2))
+    const rangeEndMonth = startOfMonth(addMonths(anchorDate, 3))
+    const gridStart = startOfWeek(rangeStartMonth, { weekStartsOn: 1 })
+    const gridEnd = startOfWeek(rangeEndMonth, { weekStartsOn: 1 })
+
     const today = new Date()
+    const anchorFirst = startOfMonth(anchorDate)
 
     const weeks: MonthDay[][] = []
+    let anchorWeekIndex = 0
+    let current = gridStart
 
-    for (let w = 0; w < 6; w++) {
+    while (current < gridEnd) {
       const week: MonthDay[] = []
       for (let d = 0; d < 7; d++) {
-        const date = addDays(gridStart, w * 7 + d)
-        const dayOfWeek = date.getDay()
+        const date = addDays(current, d)
         week.push({
           date,
           dateKey: format(date, "yyyy-MM-dd"),
-          isCurrentMonth: getMonth(date) === activeMonth && getYear(date) === activeYear,
           isToday: isSameDay(date, today),
-          isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+          isWeekend: date.getDay() === 0 || date.getDay() === 6,
         })
       }
+
+      // Track the week that contains the 1st of the anchor month
+      if (week.some((d) => isSameDay(d.date, anchorFirst))) {
+        anchorWeekIndex = weeks.length
+      }
+
       weeks.push(week)
+      current = addDays(current, 7)
     }
 
-    return weeks
-  }, [activeDate])
+    return { weeks, anchorWeekIndex }
+  }, [anchorDate])
 }
