@@ -129,7 +129,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         location={location}
         calendar={calendar}
         onLocationChange={(newLocation) => {
-          setDirtyEvent({ ...dirtyEvent, location: newLocation })
+          setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
         }}
         onChangeSummary={(newSummary) => {
           setDirtyEvent({ ...dirtyEvent, summary: newSummary })

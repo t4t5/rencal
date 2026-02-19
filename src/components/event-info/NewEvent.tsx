@@ -58,7 +58,7 @@ export const NewEvent = () => {
           location={location}
           calendar={calendar}
           onLocationChange={(newLocation) => {
-            setDraftEvent({ ...draftEvent, location: newLocation })
+            setDraftEvent({ ...draftEvent, location: newLocation || null })
           }}
           onChangeSummary={(newSummary) => {
             setDraftEvent({ ...draftEvent, summary: newSummary })
