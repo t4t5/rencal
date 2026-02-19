@@ -10,6 +10,7 @@ type MonthDayCellProps = {
   day: MonthDay
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
+  activeEventId: string | null
   onClick: () => void
   onEventClick: (eventId: string) => void
 }
@@ -18,6 +19,7 @@ export function MonthDayCell({
   day,
   timedEvents,
   hiddenAllDayCount,
+  activeEventId,
   onClick,
   onEventClick,
 }: MonthDayCellProps) {
@@ -38,6 +40,7 @@ export function MonthDayCell({
         <MonthTimedEvent
           key={item.event.id}
           item={item}
+          isActive={item.event.id === activeEventId}
           onClick={() => onEventClick(item.event.id)}
         />
       ))}

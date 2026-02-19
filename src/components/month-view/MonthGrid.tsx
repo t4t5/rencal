@@ -12,11 +12,18 @@ const MAX_ALL_DAY_LANES = 3
 type MonthGridProps = {
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
+  activeEventId: string | null
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
 }
 
-export function MonthGrid({ weeks, weekLayouts, onDayClick, onEventClick }: MonthGridProps) {
+export function MonthGrid({
+  weeks,
+  weekLayouts,
+  activeEventId,
+  onDayClick,
+  onEventClick,
+}: MonthGridProps) {
   return (
     <div className="flex flex-col grow">
       {weeks.map((weekDays, weekIndex) => {
@@ -80,6 +87,7 @@ export function MonthGrid({ weeks, weekLayouts, onDayClick, onEventClick }: Mont
                   <MonthAllDayBar
                     key={`${item.event.id}-w${weekIndex}`}
                     item={item}
+                    isActive={item.event.id === activeEventId}
                     onClick={() => onEventClick(item.event.id)}
                   />
                 ))}
@@ -103,6 +111,7 @@ export function MonthGrid({ weeks, weekLayouts, onDayClick, onEventClick }: Mont
                     day={day}
                     timedEvents={layout.timedByCol[colIndex]}
                     hiddenAllDayCount={hiddenAllDay}
+                    activeEventId={activeEventId}
                     onClick={() => onDayClick(day.date)}
                     onEventClick={onEventClick}
                   />

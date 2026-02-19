@@ -1,15 +1,20 @@
 // import { format } from "date-fns"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
+import { cn } from "@/lib/utils"
 
 type MonthTimedEventProps = {
   item: TimedEventItem
+  isActive: boolean
   onClick: () => void
 }
 
-export function MonthTimedEvent({ item, onClick }: MonthTimedEventProps) {
+export function MonthTimedEvent({ item, isActive, onClick }: MonthTimedEventProps) {
   return (
     <div
-      className="flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded"
+      className={cn(
+        "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded",
+        isActive && "bg-accent!",
+      )}
       onClick={(e) => {
         e.stopPropagation()
         onClick()

@@ -11,7 +11,7 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function MonthView() {
   const { activeDate, calendars, navigateToDate } = useCalendarState()
-  const { calendarEvents, setActiveEventId } = useCalEvents()
+  const { calendarEvents, setActiveEventId, activeEvent } = useCalEvents()
 
   const weeks = useMonthGrid(activeDate)
   const weekLayouts = useMonthEventLayout(weeks, calendarEvents, calendars)
@@ -36,6 +36,7 @@ export function MonthView() {
         weeks={weeks}
         weekLayouts={weekLayouts}
         onDayClick={(date) => navigateToDate(date)}
+        activeEventId={activeEvent?.id ?? null}
         onEventClick={(eventId) => setActiveEventId(eventId)}
       />
     </div>
