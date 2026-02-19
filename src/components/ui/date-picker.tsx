@@ -1,5 +1,4 @@
 import { format } from "date-fns"
-import { ChevronDownIcon } from "lucide-react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -7,6 +6,8 @@ import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
+
+import { DropdownArrow } from "./select"
 
 export const DatePicker = ({
   date,
@@ -29,7 +30,8 @@ export const DatePicker = ({
           className={cn("w-48 justify-between group cursor-default!", className)}
         >
           {date ? formattedDate : "Select date"}
-          <ChevronDownIcon className="opacity-0 group-hover:opacity-100 transition text-muted-foreground group-data-[state=open]:opacity-100" />
+
+          <DropdownArrow forceVisible={open} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">

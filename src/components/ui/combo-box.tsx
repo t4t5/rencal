@@ -1,4 +1,3 @@
-import { ChevronDownIcon } from "lucide-react"
 import { useRef, ReactNode } from "react"
 
 import { Command, CommandList } from "@/components/ui/command"
@@ -6,6 +5,8 @@ import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
+
+import { DropdownArrow } from "./select"
 
 export function Combobox({
   addon,
@@ -51,14 +52,7 @@ export function Combobox({
             />
           </InputGroup>
 
-          <ChevronDownIcon
-            className={cn(
-              "opacity-0 group-hover:opacity-100 transition text-muted-foreground size-4",
-              {
-                "opacity-100": open,
-              },
-            )}
-          />
+          <DropdownArrow forceVisible={open} />
         </div>
       </PopoverAnchor>
       <PopoverContent
