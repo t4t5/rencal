@@ -60,7 +60,7 @@ export function EventInfo({
         onChange={(e) => onChangeSummary(e.target.value)}
       />
 
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-1">
         <DateTimeSelect
           start={start}
           end={end}
@@ -74,7 +74,7 @@ export function EventInfo({
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} />
 
-        <div className="px-3">
+        <div className="my-2">
           <hr />
         </div>
 

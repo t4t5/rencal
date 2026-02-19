@@ -108,7 +108,7 @@ const DateSelect = ({
   onChangeEnd: (date: Date | null) => void
 }) => {
   return (
-    <div className="flex pl-6">
+    <div className="flex pl-[26px]">
       <DatePicker date={start} setDate={onChangeStart} className="w-30" />
 
       {allDay && (

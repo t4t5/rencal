@@ -30,7 +30,7 @@ export const AllDayCheckbox = ({
 
       <Label
         htmlFor={id}
-        className={cn("cursor-pointer", {
+        className={cn("cursor-pointer text-muted-foreground", {
           "text-sidebar-primary-foreground": checked,
         })}
       >

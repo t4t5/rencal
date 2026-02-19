@@ -53,7 +53,7 @@ export function ReminderSelect({
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className="flex flex-col gap-0">
       <Combobox
         placeholder="Reminders"
         query={query}
