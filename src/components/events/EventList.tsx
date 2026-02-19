@@ -1,7 +1,9 @@
 import { format } from "date-fns"
-import { useEffect, useEffectEvent, useRef } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
+
+import { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -9,6 +11,12 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfiniteScroll"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
+
+type Section = {
+  date: Date
+  events: CalendarEvent[]
+  isGhost: boolean
+}
 
 export function EventList() {
   const {
@@ -27,13 +35,21 @@ export function EventList() {
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [ghostDate, setGhostDate] = useState<Date | null>(null)
+  const ghostDateRef = useRef<Date | null>(null)
+  ghostDateRef.current = ghostDate
+  const ghostRef = useRef<HTMLDivElement>(null)
+  const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
 
   useCalEventsInfiniteScroll({
     scrollContainerRef,
   })
 
   const { addSectionRef, sectionRefs } = useJumpToScrolledDate({
-    onSetActiveDate: setActiveDate,
+    onSetActiveDate: (date) => {
+      // Don't let the scroll observer change activeDate while a ghost section is showing:
+      if (!ghostDateRef.current) setActiveDate(date)
+    },
     datesWithEvents,
     isNavigating,
     scrollContainerRef,
@@ -46,27 +62,66 @@ export function EventList() {
     }
   }, [activeDate, visibleCalendarIds])
 
+  // Merge ghost date into the sections list:
+  const sectionsToRender = useMemo((): Section[] => {
+    const sections: Section[] = eventsByDate.map(({ date, events }) => ({
+      date,
+      events,
+      isGhost: false,
+    }))
+
+    if (ghostDate) {
+      const ghostDateStr = format(ghostDate, "yyyy-MM-dd")
+      const alreadyExists = sections.some(({ date }) => format(date, "yyyy-MM-dd") === ghostDateStr)
+      if (!alreadyExists) {
+        sections.push({ date: ghostDate, events: [], isGhost: true })
+        sections.sort((a, b) => a.date.getTime() - b.date.getTime())
+      }
+    }
+
+    return sections
+  }, [eventsByDate, ghostDate])
+
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
     if (!sectionRefs.current) return
 
     const targetDateStr = format(date, "yyyy-MM-dd")
+    const section = sectionRefs.current.get(targetDateStr)
 
-    // Try exact date first
-    let section = sectionRefs.current.get(targetDateStr)
-
-    // If no events on that date, find the closest next date with events
-    if (!section) {
-      const availableDates = [...sectionRefs.current.keys()].sort()
-      const closestNextDate = availableDates.find((d) => d >= targetDateStr)
-
-      if (closestNextDate) {
-        section = sectionRefs.current.get(closestNextDate)
-      }
+    if (section) {
+      setGhostDate(null)
+      section.scrollIntoView({ behavior, block: "start" })
+    } else {
+      // No events on this date — show a ghost section
+      ghostScrollBehaviorRef.current = behavior
+      setGhostDate(date)
     }
-
-    section?.scrollIntoView({ behavior, block: "start" })
   })
+
+  // Scroll to ghost section after it renders, and watch for it leaving the viewport:
+  useEffect(() => {
+    if (!ghostDate || !ghostRef.current || !scrollContainerRef.current) return
+
+    const el = ghostRef.current
+    el.scrollIntoView({ behavior: ghostScrollBehaviorRef.current, block: "start" })
+
+    // Remove ghost when user scrolls it out of view:
+    let hasBeenVisible = false
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          hasBeenVisible = true
+        } else if (hasBeenVisible) {
+          setGhostDate(null)
+        }
+      },
+      { root: scrollContainerRef.current, threshold: 0 },
+    )
+    observer.observe(el)
+
+    return () => observer.disconnect()
+  }, [ghostDate])
 
   useEffect(() => {
     registerScrollToDate(scrollToDate)
@@ -93,7 +148,7 @@ export function EventList() {
 
   return (
     <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6">
-      {eventsByDate.map(({ date, events }) => {
+      {sectionsToRender.map(({ date, events, isGhost }) => {
         const dateStr = format(date, "yyyy-MM-dd")
 
         return (
@@ -101,7 +156,11 @@ export function EventList() {
             key={dateStr}
             ref={(el) => {
               if (!el) return
-              addSectionRef(dateStr, el)
+              if (isGhost) {
+                ghostRef.current = el
+              } else {
+                addSectionRef(dateStr, el)
+              }
             }}
             events={events}
             date={date}

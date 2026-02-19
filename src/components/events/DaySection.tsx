@@ -40,21 +40,25 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
       </div>
 
       <div className="flex flex-col gap-1 pb-2">
-        {events.map((event) => {
-          const isActive = event.id === activeEvent?.id
+        {events.length === 0 ? (
+          <div className="px-3 py-1 text-sm text-muted-foreground">No events</div>
+        ) : (
+          events.map((event) => {
+            const isActive = event.id === activeEvent?.id
 
-          return (
-            <div
-              key={event.id}
-              onClick={() => setActiveEventId(event.id)}
-              className={cn("cursor-default hover:bg-secondary py-1", {
-                "bg-accent!": isActive,
-              })}
-            >
-              <EventRow event={event} />
-            </div>
-          )
-        })}
+            return (
+              <div
+                key={event.id}
+                onClick={() => setActiveEventId(event.id)}
+                className={cn("cursor-default hover:bg-secondary py-1", {
+                  "bg-accent!": isActive,
+                })}
+              >
+                <EventRow event={event} />
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )
