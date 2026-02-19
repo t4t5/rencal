@@ -1,5 +1,3 @@
-import { format } from "date-fns"
-
 import { MonthTimedEvent } from "@/components/month-view/MonthTimedEvent"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -30,23 +28,12 @@ export function MonthDayCell({
   return (
     <div
       className={cn(
-        "flex flex-col gap-px p-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
+        "flex flex-col gap-px px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
         day.isWeekend && "bg-weekendBg",
         !day.isCurrentMonth && "opacity-40",
       )}
       onClick={onClick}
     >
-      <div className="flex justify-end">
-        <span
-          className={cn(
-            "text-xs w-5 h-5 flex items-center justify-center",
-            day.isToday && "bg-primary text-primary-foreground rounded-full",
-          )}
-        >
-          {format(day.date, "d")}
-        </span>
-      </div>
-
       {visibleTimed.map((item) => (
         <MonthTimedEvent
           key={item.event.id}

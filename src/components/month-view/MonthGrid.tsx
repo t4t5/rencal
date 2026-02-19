@@ -1,8 +1,11 @@
+import { format } from "date-fns"
+
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
 
@@ -26,14 +29,53 @@ export function MonthGrid({ weeks, weekLayouts, onDayClick, onEventClick }: Mont
             key={weekIndex}
             className="flex flex-col grow border-b border-border last:border-b-0 min-h-0"
           >
+            {/* Day numbers row */}
+            <div className="grid grid-cols-7">
+              {weekDays.map((day) => (
+                <div
+                  key={day.dateKey}
+                  className={cn(
+                    "flex justify-end p-1 pb-0 cursor-default border-r border-border last:border-r-0",
+                    day.isWeekend && "bg-weekendBg",
+                    !day.isCurrentMonth && "opacity-40",
+                  )}
+                  onClick={() => onDayClick(day.date)}
+                >
+                  <span
+                    className={cn(
+                      "text-xs w-5 h-5 flex items-center justify-center",
+                      day.isToday && "bg-primary text-primary-foreground rounded-full",
+                    )}
+                  >
+                    {format(day.date, "d")}
+                  </span>
+                </div>
+              ))}
+            </div>
+
             {/* All-day spanning bars zone */}
             {visibleAllDay.length > 0 && (
               <div
-                className="grid grid-cols-7 gap-0.5"
+                className="grid grid-cols-7 gap-y-0.5"
                 style={{
                   gridTemplateRows: `repeat(${visibleLaneCount}, auto)`,
                 }}
               >
+                {/* Background cells for vertical borders */}
+                {weekDays.map((day, colIndex) => (
+                  <div
+                    key={`bg-${day.dateKey}`}
+                    className={cn(
+                      colIndex < 6 && "border-r border-border",
+                      day.isWeekend && "bg-weekendBg",
+                      !day.isCurrentMonth && "opacity-40",
+                    )}
+                    style={{
+                      gridColumn: colIndex + 1,
+                      gridRow: `1 / ${visibleLaneCount + 1}`,
+                    }}
+                  />
+                ))}
                 {visibleAllDay.map((item) => (
                   <MonthAllDayBar
                     key={`${item.event.id}-w${weekIndex}`}
