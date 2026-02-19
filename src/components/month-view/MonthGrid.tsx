@@ -63,13 +63,15 @@ export function MonthGrid({
       let closestIdx = 0
       let closestDist = Infinity
 
-      weekRefs.current.forEach((el, idx) => {
+      for (let idx = 0; idx < weeks.length; idx++) {
+        const el = weekRefs.current.get(idx)
+        if (!el) continue
         const dist = Math.abs(el.offsetTop - containerTop)
         if (dist < closestDist) {
           closestDist = dist
           closestIdx = idx
         }
-      })
+      }
 
       return closestIdx
     }
