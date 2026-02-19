@@ -1,6 +1,6 @@
 import { format, getWeek } from "date-fns"
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
-import { ComponentProps, useEffect, useRef } from "react"
+import { ComponentProps, createContext, useContext, useEffect, useRef } from "react"
 import {
   Day,
   DayButton,
@@ -16,6 +16,10 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button"
 
 import { cn } from "@/lib/utils"
+
+/** Maps date strings ("yyyy-MM-dd") to arrays of calendar hex colors for that date. */
+const EventDotsContext = createContext<Map<string, string[]>>(new Map())
+export const EventDotsProvider = EventDotsContext.Provider
 
 // Map weekday abbreviations to day numbers (0=Sunday, 1=Monday, etc.)
 // Adjust based on your formatWeekdayName formatter
@@ -231,15 +235,20 @@ function CalendarDayButton({
   className,
   day,
   modifiers,
+  children,
   ...props
 }: ComponentProps<typeof DayButton>) {
   const defaultClassNames = getDefaultClassNames()
+  const eventDotsByDate = useContext(EventDotsContext)
 
   const ref = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
+
+  const dateKey = format(day.date, "yyyy-MM-dd")
+  const dotColors = eventDotsByDate.get(dateKey)
 
   return (
     <Button
@@ -265,7 +274,16 @@ function CalendarDayButton({
         className,
       )}
       {...props}
-    />
+    >
+      {children}
+      {dotColors && dotColors.length > 0 && (
+        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
+          {dotColors.map((color, i) => (
+            <div key={i} className="size-1 rounded-full" style={{ backgroundColor: color }} />
+          ))}
+        </div>
+      )}
+    </Button>
   )
 }
 
