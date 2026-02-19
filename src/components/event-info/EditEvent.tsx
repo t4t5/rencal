@@ -23,14 +23,12 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
 
-  const [parentRecurrence, setParentRecurrence] = useState<Recurrence | null>(null)
   const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
 
   useEffect(() => {
     if (event) {
       setDirtyEvent(event)
-      loadParentRecurrence(event.calendar_slug, event.recurring_event_id)
     }
   }, [event?.id])
 
@@ -59,15 +57,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     [dirtyEvent],
     500,
   )
-
-  const loadParentRecurrence = async (calendarSlug: string, recurringEventId: string | null) => {
-    if (recurringEventId) {
-      const parent = await rpc.caldir.get_event(calendarSlug, recurringEventId)
-      setParentRecurrence(parent?.recurrence ?? null)
-    } else {
-      setParentRecurrence(null)
-    }
-  }
 
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
@@ -126,7 +115,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   const { summary, start, end, all_day, location, calendar_slug, recurrence } = dirtyEvent
 
-  const effectiveRecurrence = recurrence ?? parentRecurrence
+  const effectiveRecurrence = recurrence ?? dirtyEvent.master_recurrence
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
@@ -209,7 +198,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
               recurrence: pendingRecurrence,
             })
 
-            setParentRecurrence(pendingRecurrence ?? null)
+            setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
             setPendingRecurrence(null)
             await reloadEvents()
           }}
@@ -221,8 +210,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
               ...dirtyEvent,
               recurring_event_id: null,
               recurrence: pendingRecurrence ?? null,
+              master_recurrence: null,
             })
-            setParentRecurrence(null)
             setPendingRecurrence(null)
           }}
         />
