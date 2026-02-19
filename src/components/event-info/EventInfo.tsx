@@ -10,6 +10,12 @@ import { Textarea } from "@/components/ui/textarea"
 
 import { Calendar } from "@/rpc/bindings"
 
+const Divider = () => (
+  <div className="my-2 px-3">
+    <hr />
+  </div>
+)
+
 export function EventInfo({
   summary,
   onChangeSummary,
@@ -74,19 +80,19 @@ export function EventInfo({
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} />
 
-        <div className="my-2">
-          <hr />
-        </div>
+        <Divider />
 
         <LocationInput value={location} onChange={onLocationChange} />
-
-        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
 
         <ReminderSelect
           reminders={reminders ?? []}
           onSelect={onReminderAdd}
           onRemove={onReminderRemove}
         />
+
+        <Divider />
+
+        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
       </div>
     </div>
   )
