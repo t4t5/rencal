@@ -81,7 +81,7 @@ const SyncStatus = () => {
         <TooltipTrigger>
           <WarningIcon className="text-destructive" />
         </TooltipTrigger>
-        <TooltipContent className="max-w-64 break-words">{syncError}</TooltipContent>
+        <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
       </Tooltip>
     )
   }

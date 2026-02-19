@@ -1,4 +1,4 @@
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
@@ -7,15 +7,21 @@ import { Input } from "@/components/ui/input"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
+import { cn } from "@/lib/utils"
 
 export function AddEventButton() {
   const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const [isExiting, setIsExiting] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
 
+  const exitDraft = () => {
+    setIsExiting(true)
+  }
+
   useOnClickOutside(containerRef, () => {
-    if (text === "") {
-      setIsDrafting(false)
+    if (text === "" && isDrafting) {
+      exitDraft()
     }
   })
 
@@ -24,14 +30,25 @@ export function AddEventButton() {
     setIsDrafting(true)
   }
 
+  const showInput = isDrafting || isExiting
+
   return (
     <div ref={containerRef} className="grow">
-      {isDrafting ? (
+      {showInput ? (
         <Input
           value={text}
           onChange={(e) => setText(e.target.value)}
-          autoFocus
-          className="border-none text-sm bg-secondary"
+          autoFocus={isDrafting && !isExiting}
+          className={cn(
+            "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
+            isExiting ? "w-10" : "w-full starting:w-10",
+          )}
+          onTransitionEnd={() => {
+            if (isExiting) {
+              setIsExiting(false)
+              setIsDrafting(false)
+            }
+          }}
         />
       ) : (
         <Button variant="secondary" onClick={onNew}>
