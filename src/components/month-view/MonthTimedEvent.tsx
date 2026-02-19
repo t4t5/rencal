@@ -1,5 +1,4 @@
-import { format } from "date-fns"
-
+// import { format } from "date-fns"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 
 type MonthTimedEventProps = {
@@ -20,7 +19,7 @@ export function MonthTimedEvent({ item, onClick }: MonthTimedEventProps) {
         className="size-1.5 rounded-full shrink-0"
         style={{ backgroundColor: item.color ?? "var(--primary)" }}
       />
-      <span className="text-muted-foreground shrink-0">{format(item.event.start, "HH:mm")}</span>
+      {/*<span className="text-muted-foreground shrink-0">{format(item.event.start, "HH:mm")}</span>*/}
       <span className="truncate">{item.event.summary}</span>
     </div>
   )
