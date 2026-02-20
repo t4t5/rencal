@@ -15,11 +15,10 @@ import { cn } from "@/lib/utils"
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function MonthView() {
-  const { activeDate, setActiveDate, calendars, navigateToDate } = useCalendarState()
+  const { activeDate, calendars, navigateToDate } = useCalendarState()
   const { calendarEvents, setActiveEventId, activeEvent } = useCalEvents()
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
-  const isScrollUpdate = useRef(false)
 
   // Range of months to generate weeks for (only grows, never shrinks)
   const [rangeStart, setRangeStart] = useState(() => startOfMonth(subMonths(activeDate, 2)))
@@ -66,14 +65,6 @@ export function MonthView() {
     }
   })
 
-  const handleScrollDateChange = useCallback(
-    (date: Date) => {
-      isScrollUpdate.current = true
-      setActiveDate(date)
-    },
-    [setActiveDate],
-  )
-
   return (
     <div className="hidden lg:flex flex-col grow border-l border-l-border min-w-0">
       <div className="grid grid-cols-7 border-b border-border">
@@ -98,7 +89,6 @@ export function MonthView() {
         scrollRef={scrollRef}
         onDayClick={navigateToDate}
         onEventClick={setActiveEventId}
-        onScrollDateChange={handleScrollDateChange}
       />
     </div>
   )

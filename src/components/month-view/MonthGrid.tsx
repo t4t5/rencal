@@ -1,5 +1,6 @@
+import { useVirtualizer } from "@tanstack/react-virtual"
 import { format } from "date-fns"
-import { memo, RefObject, useEffect, useRef } from "react"
+import { memo, RefObject, useCallback, useEffect, useRef, useState } from "react"
 
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
@@ -9,7 +10,6 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
-const SNAP_DELAY_MS = 100
 
 type MonthWeekRowProps = {
   weekDays: MonthDay[]
@@ -120,7 +120,6 @@ type MonthGridProps = {
   scrollRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
-  onScrollDateChange: (date: Date) => void
 }
 
 export function MonthGrid({
@@ -131,114 +130,76 @@ export function MonthGrid({
   scrollRef,
   onDayClick,
   onEventClick,
-  onScrollDateChange,
 }: MonthGridProps) {
-  const weekRefs = useRef<Map<number, HTMLDivElement>>(new Map())
-  const isScrollingProgrammatically = useRef(false)
   const hasInitialized = useRef(false)
+  const [rowHeight, setRowHeight] = useState(150)
+
+  // Track container height to compute row height (1/6 of visible area)
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    const update = () => {
+      const h = el.clientHeight
+      if (h > 0) setRowHeight(Math.round(h / 6))
+    }
+
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [scrollRef])
+
+  const estimateSize = useCallback(() => rowHeight, [rowHeight])
+
+  const virtualizer = useVirtualizer({
+    count: weeks.length,
+    getScrollElement: () => scrollRef.current,
+    estimateSize,
+    overscan: 3,
+  })
 
   // Scroll to anchor week on mount
   useEffect(() => {
     if (hasInitialized.current) return
-    const el = weekRefs.current.get(anchorWeekIndex)
-    if (el) {
-      isScrollingProgrammatically.current = true
-      el.scrollIntoView({ block: "start" })
+    if (anchorWeekIndex >= 0) {
+      virtualizer.scrollToIndex(anchorWeekIndex, { align: "start" })
       hasInitialized.current = true
-      requestAnimationFrame(() => {
-        isScrollingProgrammatically.current = false
-      })
     }
-  }, [anchorWeekIndex])
-
-  // Handle scroll to detect which week is at the top
-  useEffect(() => {
-    const container = scrollRef.current
-    if (!container) return
-
-    let ticking = false
-    let snapTimeout: ReturnType<typeof setTimeout> | null = null
-
-    const findClosestWeek = () => {
-      const containerTop = container.scrollTop
-      let closestIdx = 0
-      let closestDist = Infinity
-
-      for (let idx = 0; idx < weeks.length; idx++) {
-        const el = weekRefs.current.get(idx)
-        if (!el) continue
-        const dist = Math.abs(el.offsetTop - containerTop)
-        if (dist < closestDist) {
-          closestDist = dist
-          closestIdx = idx
-        }
-      }
-
-      return closestIdx
-    }
-
-    const onScroll = () => {
-      if (isScrollingProgrammatically.current) return
-
-      // Always reset the snap timer on every scroll event
-      if (snapTimeout) clearTimeout(snapTimeout)
-      snapTimeout = setTimeout(() => {
-        const idx = findClosestWeek()
-        const el = weekRefs.current.get(idx)
-        if (el) {
-          isScrollingProgrammatically.current = true
-          container.scrollTo({ top: el.offsetTop, behavior: "smooth" })
-          setTimeout(() => {
-            isScrollingProgrammatically.current = false
-          }, 500)
-        }
-      }, SNAP_DELAY_MS)
-
-      // Throttled date tracking
-      if (ticking) return
-      ticking = true
-      requestAnimationFrame(() => {
-        ticking = false
-        const closestWeek = findClosestWeek()
-        const week = weeks[closestWeek]
-        if (week) {
-          const thursday = week[3]
-          onScrollDateChange(thursday.date)
-        }
-      })
-    }
-
-    container.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      container.removeEventListener("scroll", onScroll)
-      if (snapTimeout) clearTimeout(snapTimeout)
-    }
-  }, [weeks, onScrollDateChange])
+  }, [anchorWeekIndex, virtualizer])
 
   return (
-    <div ref={scrollRef} className="flex flex-col grow overflow-y-auto relative">
-      {weeks.map((weekDays, weekIndex) => (
-        <div
-          key={weekDays[0].dateKey}
-          ref={(el) => {
-            if (el) weekRefs.current.set(weekIndex, el)
-          }}
-          className="flex flex-col shrink-0 border-b border-border last:border-b-0"
-          style={{
-            minHeight: "calc(100% / 6)",
-            contentVisibility: "auto",
-            containIntrinsicSize: "auto 150px",
-          }}
-        >
-          <MonthWeekRow
-            weekDays={weekDays}
-            layout={weekLayouts[weekIndex]}
-            activeEventId={activeEventId}
-            onDayClick={onDayClick}
-            onEventClick={onEventClick}
-          />
-        </div>
-      ))}
+    <div ref={scrollRef} className="grow overflow-y-auto relative">
+      <div
+        style={{
+          height: `${virtualizer.getTotalSize()}px`,
+          width: "100%",
+          position: "relative",
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualRow) => (
+          <div
+            key={weeks[virtualRow.index][0].dateKey}
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: `${virtualRow.size}px`,
+              transform: `translateY(${virtualRow.start}px)`,
+            }}
+            className="flex flex-col border-b border-border"
+          >
+            <MonthWeekRow
+              weekDays={weeks[virtualRow.index]}
+              layout={weekLayouts[virtualRow.index]}
+              activeEventId={activeEventId}
+              onDayClick={onDayClick}
+              onEventClick={onEventClick}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
