@@ -96,8 +96,8 @@ export function MonthView() {
         activeEventId={activeEvent?.id ?? null}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
-        onDayClick={(date) => navigateToDate(date)}
-        onEventClick={(eventId) => setActiveEventId(eventId)}
+        onDayClick={navigateToDate}
+        onEventClick={setActiveEventId}
         onScrollDateChange={handleScrollDateChange}
       />
     </div>
