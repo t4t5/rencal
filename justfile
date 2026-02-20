@@ -39,3 +39,7 @@ typecheck:
 # Reset the database completely
 reset:
   rm $HOME/.config/rencal/rencal.db
+
+# Analyze which parts of app are slow based on ChromeDevTool recording:
+analyze path:
+  bun scripts/analyze-recording.ts {{path}}
