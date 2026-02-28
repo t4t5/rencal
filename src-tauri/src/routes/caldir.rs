@@ -457,22 +457,31 @@ impl CaldirApi for CaldirApiImpl {
         provider_name: String,
     ) -> TauResult<Vec<Calendar>> {
         use crate::oauth;
-        use caldir_core::remote::protocol::{AuthType, OAuthData};
+        use caldir_core::remote::protocol::{ConnectResponse, ConnectStepKind, OAuthData};
         use caldir_core::remote::provider::Provider;
 
         let provider = Provider::from_name(&provider_name);
         let port: u16 = 8080;
         let redirect_uri = format!("http://localhost:{}/callback", port);
 
-        // Step 1: Initialize auth — get OAuth URL and state from provider
-        let auth_response = provider
-            .auth_init(Some(redirect_uri.clone()))
-            .await
-            .map_err(|e| format!("Auth init failed: {}", e))?;
+        // Step 1: Initialize connect flow — get OAuth URL from provider
+        let mut options = serde_json::Map::new();
+        options.insert(
+            "redirect_uri".into(),
+            serde_json::Value::String(redirect_uri.clone()),
+        );
 
-        match auth_response.auth_type {
-            AuthType::OAuthRedirect => {
-                let oauth_data: OAuthData = serde_json::from_value(auth_response.data)
+        let connect_response = provider
+            .connect(options, serde_json::Map::new())
+            .await
+            .map_err(|e| format!("Connect init failed: {}", e))?;
+
+        match connect_response {
+            ConnectResponse::NeedsInput {
+                step: ConnectStepKind::OAuthRedirect,
+                data,
+            } => {
+                let oauth_data: OAuthData = serde_json::from_value(data)
                     .map_err(|e| format!("Failed to parse OAuth data: {}", e))?;
 
                 let auth_url = url::Url::parse(&oauth_data.authorization_url)
@@ -538,10 +547,21 @@ async fn save_provider_calendars(
     provider: &caldir_core::remote::provider::Provider,
     credentials: serde_json::Map<String, serde_json::Value>,
 ) -> TauResult<Vec<Calendar>> {
-    let provider_account = provider
-        .auth_submit(credentials)
+    use caldir_core::remote::protocol::ConnectResponse;
+
+    let connect_response = provider
+        .connect(serde_json::Map::new(), credentials)
         .await
-        .map_err(|e| format!("Auth submit failed: {}", e))?;
+        .map_err(|e| format!("Connect failed: {}", e))?;
+
+    let account_identifier = match connect_response {
+        ConnectResponse::Done {
+            account_identifier, ..
+        } => account_identifier,
+        _ => return Err("Provider did not complete authentication".to_string()),
+    };
+
+    let provider_account = provider.provider_account(account_identifier);
 
     let calendar_configs = provider_account
         .list_calendars()
