@@ -3,5 +3,12 @@
   "identifier": "default",
   "description": "Capability for the main window",
   "windows": ["main"],
-  "permissions": ["core:default", "opener:default", "sql:default", "sql:allow-execute", "sql:allow-load"]
+  "permissions": [
+    "core:default",
+    "opener:default",
+    "sql:default",
+    "sql:allow-execute",
+    "sql:allow-load",
+    "core:window:allow-start-dragging"
+  ]
 }

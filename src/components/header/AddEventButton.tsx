@@ -34,7 +34,7 @@ export function AddEventButton() {
   const showInput = isDrafting || isExiting
 
   return (
-    <div ref={containerRef} className="grow">
+    <div ref={containerRef}>
       {showInput ? (
         <Input
           value={text}

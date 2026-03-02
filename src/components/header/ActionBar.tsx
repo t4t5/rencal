@@ -26,6 +26,8 @@ export function ActionBar() {
     <div className="flex justify-between items-center gap-3">
       <AddEventButton />
 
+      <div className="grow h-full" data-tauri-drag-region />
+
       <div className="flex gap-2 items-center">
         <SyncStatus />
         <Button variant="secondary" onClick={() => setShowModal(true)}>

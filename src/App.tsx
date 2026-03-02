@@ -19,6 +19,8 @@ function App() {
 
   return (
     <main className="flex h-screen">
+      <div className="absolute h-4 w-full" data-tauri-drag-region />
+
       <div className="w-full sm:w-[300px] flex flex-col shrink-0">
         <Header />
         <StatefulCalendar />
