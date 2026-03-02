@@ -20,7 +20,13 @@
         "title": "renCal",
         "width": 800,
         "height": 600,
-        "decorations": false
+        "decorations": true,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": {
+          "x": 16,
+          "y": 30
+        }
       }
     ],
     "security": {

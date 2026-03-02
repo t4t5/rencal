@@ -11,7 +11,7 @@ export function Header() {
   const showDraftEvent = isDrafting && text.length > 0
 
   return (
-    <div className="flex flex-col gap-3 p-4 pb-0">
+    <div className="flex flex-col gap-3 pt-4 pr-4 pb-0 pl-[78px]">
       <ActionBar />
 
       <div
