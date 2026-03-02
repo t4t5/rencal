@@ -37,11 +37,14 @@ const MonthWeekRow = memo(function MonthWeekRow({
           <div
             key={day.dateKey}
             className={cn(
-              "flex justify-end p-1 pb-0 cursor-default border-r border-border last:border-r-0",
+              "flex items-center justify-end gap-1 p-1 pb-0 cursor-default border-r border-border last:border-r-0",
               day.isWeekend && "bg-weekendBg",
             )}
             onClick={() => onDayClick(day.date)}
           >
+            {day.date.getDate() === 1 && (
+              <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
+            )}
             <span
               className={cn(
                 "text-xs w-5 h-5 flex items-center justify-center",
