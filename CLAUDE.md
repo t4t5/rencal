@@ -9,7 +9,7 @@ A calendar app crafted especially for Omarchy.
 
 ## Architecture
 
-This is a Tauri application with a Rust backend and React frontend.
+This is a Tauri v2 application with a Rust backend and React frontend.
 
 The Rust backend is kept as minimal as possible. It handles caldir operations (reading/writing
 calendars and events from `~/calendar/`) and OAuth flows. The frontend handles UI state and
