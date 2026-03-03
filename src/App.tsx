@@ -15,29 +15,29 @@ import { useBreakpoint } from "./hooks/useBreakpoint"
 function App() {
   const { activeEvent } = useCalEvents()
 
-  const isSm = useBreakpoint("sm")
+  const isMd = useBreakpoint("md")
 
   return (
     <main className="flex h-screen">
       <div className="absolute h-4 w-full" data-tauri-drag-region />
 
-      <div className="w-full sm:w-[300px] flex flex-col shrink-0">
+      <div className="w-full md:w-[300px] flex flex-col shrink-0">
         <Header />
         <StatefulCalendar />
         <EventList />
       </div>
 
-      {isSm && <MonthView />}
+      {isMd && <MonthView />}
 
-      {!isSm && (
-        <div className="hidden sm:flex border-l border-l-border w-[350px] shrink-0 flex-col">
+      {!isMd && (
+        <div className="hidden md:flex border-l border-l-border w-[350px] shrink-0 flex-col">
           <EditEvent event={activeEvent} />
         </div>
       )}
 
-      {isSm && <PopoverEditEvent />}
+      {isMd && <PopoverEditEvent />}
 
-      {!isSm && <SheetEvent />}
+      {!isMd && <SheetEvent />}
     </main>
   )
 }
