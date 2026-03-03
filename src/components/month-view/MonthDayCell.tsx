@@ -48,7 +48,9 @@ export function MonthDayCell({
       ))}
 
       {totalHidden > 0 && (
-        <div className="text-xs text-muted-foreground px-0.5 truncate">+{totalHidden} more</div>
+        <div className="text-xs text-muted-foreground px-0.5 truncate shrink-0">
+          +{totalHidden} more
+        </div>
       )}
     </div>
   )

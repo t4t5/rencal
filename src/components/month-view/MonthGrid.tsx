@@ -100,7 +100,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
       )}
 
       {/* Day cells with timed events */}
-      <div className="grid grid-cols-7 grow">
+      <div className="grid grid-cols-7 grow min-h-0 overflow-hidden">
         {weekDays.map((day, colIndex) => {
           const allDayOnDay = layout.allDayItems.filter(
             (item) => item.startCol <= colIndex + 1 && item.endCol > colIndex + 1,
