@@ -11,7 +11,7 @@ import { EditEvent } from "./EditEvent"
 export function PopoverEditEvent() {
   const { activeEvent, setActiveEventId } = useCalEvents()
   const anchorRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0 })
+  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
 
   useLayoutEffect(() => {
     if (!activeEvent) return
@@ -20,7 +20,7 @@ export function PopoverEditEvent() {
     if (!el) return
 
     const rect = el.getBoundingClientRect()
-    setPos({ top: rect.top + rect.height / 2, left: rect.right })
+    setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
   }, [activeEvent])
 
   return (
@@ -33,7 +33,7 @@ export function PopoverEditEvent() {
       <PopoverAnchor
         ref={anchorRef}
         className="fixed pointer-events-none"
-        style={{ top: pos.top, left: pos.left, width: 0, height: 0 }}
+        style={{ top: pos.top, left: pos.left, width: pos.width, height: 0 }}
       />
       <PopoverContent
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
