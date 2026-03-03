@@ -282,7 +282,7 @@ export function MonthGrid({
   }, [scrollRef, isNavigating, onScrollMonthChange])
 
   return (
-    <div ref={scrollRef} className="grow overflow-y-auto relative">
+    <div ref={scrollRef} className="grow overflow-y-auto overflow-x-hidden relative">
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
