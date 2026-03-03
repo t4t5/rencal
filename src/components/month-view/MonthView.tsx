@@ -122,7 +122,7 @@ export function MonthView() {
   })
 
   return (
-    <div className="hidden sm:flex flex-col grow border-l border-l-border min-w-0">
+    <div className="flex flex-col grow min-h-0">
       <div className="grid grid-cols-7 border-b border-border">
         {WEEKDAY_LABELS.map((label, i) => (
           <div

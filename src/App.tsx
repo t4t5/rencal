@@ -27,7 +27,14 @@ function App() {
         <EventList />
       </div>
 
-      {isMd && <MonthView />}
+      {isMd && (
+        <div className="hidden sm:flex flex-col grow border-l border-l-border min-w-0">
+          <div className="h-18 shrink-0 items-center flex p-4">
+            <div>Test</div>
+          </div>
+          <MonthView />
+        </div>
+      )}
 
       {!isMd && (
         <div className="hidden md:flex border-l border-l-border w-[350px] shrink-0 flex-col">
