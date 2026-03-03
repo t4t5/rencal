@@ -131,8 +131,10 @@ type MonthGridProps = {
   activeDateKey: string
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
+  isNavigating: () => boolean
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
+  onScrollMonthChange: (date: Date) => void
 }
 
 export function MonthGrid({
@@ -142,10 +144,13 @@ export function MonthGrid({
   activeDateKey,
   anchorWeekIndex,
   scrollRef,
+  isNavigating,
   onDayClick,
   onEventClick,
+  onScrollMonthChange,
 }: MonthGridProps) {
   const hasInitialized = useRef(false)
+  const scrollDetectionReady = useRef(false)
   const [rowHeight, setRowHeight] = useState(150)
 
   // Track container height to compute row height (1/6 of visible area)
@@ -179,27 +184,92 @@ export function MonthGrid({
     if (anchorWeekIndex >= 0) {
       virtualizer.scrollToIndex(anchorWeekIndex, { align: "start" })
       hasInitialized.current = true
+      // Delay enabling scroll detection so the initial scroll settles
+      // and doesn't get misinterpreted as user scrolling
+      setTimeout(() => {
+        scrollDetectionReady.current = true
+      }, 200)
     }
   }, [anchorWeekIndex, virtualizer])
 
-  // Scroll to active date's week if it's not currently visible
+  // Scroll to active date's week during explicit navigation (e.g. mini-calendar click)
   useEffect(() => {
     if (!hasInitialized.current) return
-    const el = scrollRef.current
-    if (!el) return
+    if (!isNavigating()) return
 
     const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
     if (weekIndex < 0) return
 
-    const rowStart = weekIndex * rowHeight
-    const rowEnd = rowStart + rowHeight
-    const viewStart = el.scrollTop
-    const viewEnd = viewStart + el.clientHeight
+    virtualizer.scrollToIndex(weekIndex, { align: "start" })
+  }, [activeDateKey, weeks, virtualizer, isNavigating])
 
-    if (rowStart < viewStart || rowEnd > viewEnd) {
-      virtualizer.scrollToIndex(weekIndex, { align: "start" })
+  // Detect dominant visible month while scrolling and update active date
+  // Uses refs for frequently-changing values to avoid listener churn
+  const scrollStateRef = useRef({ weeks, activeDateKey, rowHeight })
+  scrollStateRef.current = { weeks, activeDateKey, rowHeight }
+
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (rafId !== null) return
+      rafId = requestAnimationFrame(() => {
+        rafId = null
+        if (!scrollDetectionReady.current || isNavigating()) return
+
+        const { weeks: w, activeDateKey: adk, rowHeight: rh } = scrollStateRef.current
+        if (rh <= 0 || w.length === 0) return
+
+        const viewTop = el.scrollTop
+        const viewBottom = viewTop + el.clientHeight
+
+        const firstRow = Math.max(0, Math.floor(viewTop / rh))
+        const lastRow = Math.min(Math.ceil(viewBottom / rh) - 1, w.length - 1)
+
+        // Count visible days per month
+        const monthCounts = new Map<string, number>()
+        for (let i = firstRow; i <= lastRow; i++) {
+          const week = w[i]
+          if (!week) continue
+          for (const day of week) {
+            const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
+            monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1)
+          }
+        }
+
+        // Find month with the most visible days
+        let maxCount = 0
+        let dominantYear = 0
+        let dominantMonth = 0
+        for (const [key, count] of monthCounts) {
+          if (count > maxCount) {
+            maxCount = count
+            const parts = key.split("-")
+            dominantYear = Number(parts[0])
+            dominantMonth = Number(parts[1])
+          }
+        }
+
+        if (maxCount === 0) return
+
+        // Only update if the dominant month differs from active date's month
+        const activeYear = parseInt(adk.slice(0, 4))
+        const activeMonth = parseInt(adk.slice(5, 7)) - 1 // 0-based
+        if (dominantYear !== activeYear || dominantMonth !== activeMonth) {
+          onScrollMonthChange(new Date(dominantYear, dominantMonth, 1))
+        }
+      })
     }
-  }, [activeDateKey, weeks, virtualizer, rowHeight, scrollRef])
+
+    el.addEventListener("scroll", handleScroll, { passive: true })
+    return () => {
+      el.removeEventListener("scroll", handleScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
+    }
+  }, [scrollRef, isNavigating, onScrollMonthChange])
 
   return (
     <div ref={scrollRef} className="grow overflow-y-auto relative">

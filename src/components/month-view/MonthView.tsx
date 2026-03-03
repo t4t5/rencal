@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils"
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function MonthView() {
-  const { activeDate, calendars, navigateToDate } = useCalendarState()
+  const { activeDate, setActiveDate, calendars, navigateToDate, isNavigating } = useCalendarState()
   const {
     calendarEvents,
     setCalendarEvents,
@@ -144,8 +144,10 @@ export function MonthView() {
         activeDateKey={format(activeDate, "yyyy-MM-dd")}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
+        isNavigating={isNavigating}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
+        onScrollMonthChange={setActiveDate}
       />
     </div>
   )
