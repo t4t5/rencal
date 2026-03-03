@@ -12,6 +12,7 @@ type MonthTimedEventProps = {
 export function MonthTimedEvent({ item, isActive, onClick }: MonthTimedEventProps) {
   return (
     <div
+      data-event-clickable
       className={cn(
         "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded",
         isActive && "bg-accent!",

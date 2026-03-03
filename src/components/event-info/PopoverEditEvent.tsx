@@ -42,6 +42,14 @@ export function PopoverEditEvent() {
         sideOffset={8}
         collisionPadding={16}
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onPointerDownOutside={(e) => {
+          // If the click landed on an event element, let that element's
+          // toggle handler manage the popover instead of auto-dismissing.
+          const target = e.target as HTMLElement
+          if (target.closest("[data-event-clickable]")) {
+            e.preventDefault()
+          }
+        }}
       >
         <EditEvent event={activeEvent} />
       </PopoverContent>

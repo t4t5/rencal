@@ -19,7 +19,7 @@ type DaySectionProps = {
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
   ({ date, events, calendars }, ref) => {
-    const { activeEvent, setActiveEventId } = useCalEvents()
+    const { activeEvent, toggleActiveEventId } = useCalEvents()
 
     return (
       <div
@@ -53,9 +53,10 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
               return (
                 <div
                   key={event.id}
+                  data-event-clickable
                   onClick={(e) => {
                     setEventAnchor(e.currentTarget)
-                    setActiveEventId(event.id)
+                    toggleActiveEventId(event.id)
                   }}
                   className={cn("cursor-default hover:bg-secondary py-1", {
                     "bg-accent!": isActive,

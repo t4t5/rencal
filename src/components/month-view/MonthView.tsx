@@ -16,8 +16,13 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function MonthView() {
   const { activeDate, calendars, navigateToDate } = useCalendarState()
-  const { calendarEvents, setCalendarEvents, setActiveEventId, activeEvent, currentDateRangeRef } =
-    useCalEvents()
+  const {
+    calendarEvents,
+    setCalendarEvents,
+    toggleActiveEventId,
+    activeEvent,
+    currentDateRangeRef,
+  } = useCalEvents()
 
   // TODO: respect calendar visibility
   const visibleCalendarIds = calendars.map((c) => c.slug)
@@ -139,7 +144,7 @@ export function MonthView() {
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
         onDayClick={navigateToDate}
-        onEventClick={setActiveEventId}
+        onEventClick={toggleActiveEventId}
       />
     </div>
   )

@@ -25,6 +25,7 @@ interface CalEventsContextType {
   currentDateRangeRef: RefObject<DateRange | null>
   activeEvent: CalendarEvent | null
   setActiveEventId: Dispatch<SetStateAction<string | null>>
+  toggleActiveEventId: (id: string) => void
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -46,6 +47,10 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
   const [activeEventId, setActiveEventId] = useState<string | null>(null)
 
   const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
+
+  const toggleActiveEventId = (id: string) => {
+    setActiveEventId((prev) => (prev === id ? null : id))
+  }
 
   const reloadEvents = useEffectEvent(async () => {
     const activeRange = getStartRangeForDate(activeDate)
@@ -73,6 +78,7 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     currentDateRangeRef,
     activeEvent,
     setActiveEventId,
+    toggleActiveEventId,
   }
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>

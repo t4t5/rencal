@@ -13,6 +13,7 @@ export function MonthAllDayBar({ item, isActive, onClick }: MonthAllDayBarProps)
 
   return (
     <div
+      data-event-clickable
       className={cn(
         "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
         isActive && "brightness-150",
