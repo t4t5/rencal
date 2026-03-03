@@ -1,4 +1,5 @@
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
+import { setEventAnchor } from "@/lib/event-anchor"
 import { cn } from "@/lib/utils"
 
 type MonthAllDayBarProps = {
@@ -30,6 +31,7 @@ export function MonthAllDayBar({ item, isActive, onClick }: MonthAllDayBarProps)
       }}
       onClick={(e) => {
         e.stopPropagation()
+        setEventAnchor(e.currentTarget)
         onClick()
       }}
     >

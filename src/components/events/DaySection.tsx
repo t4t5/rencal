@@ -5,6 +5,7 @@ import { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { setEventAnchor } from "@/lib/event-anchor"
 import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -49,7 +50,10 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(({ date, e
             return (
               <div
                 key={event.id}
-                onClick={() => setActiveEventId(event.id)}
+                onClick={(e) => {
+                  setEventAnchor(e.currentTarget)
+                  setActiveEventId(event.id)
+                }}
                 className={cn("cursor-default hover:bg-secondary py-1", {
                   "bg-accent!": isActive,
                 })}

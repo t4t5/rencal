@@ -1,5 +1,6 @@
 // import { format } from "date-fns"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
+import { setEventAnchor } from "@/lib/event-anchor"
 import { cn } from "@/lib/utils"
 
 type MonthTimedEventProps = {
@@ -17,6 +18,7 @@ export function MonthTimedEvent({ item, isActive, onClick }: MonthTimedEventProp
       )}
       onClick={(e) => {
         e.stopPropagation()
+        setEventAnchor(e.currentTarget)
         onClick()
       }}
     >

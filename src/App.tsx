@@ -2,6 +2,7 @@ import "@/global.css"
 
 import { StatefulCalendar } from "@/components/StatefulCalendar"
 import { EditEvent } from "@/components/event-info/EditEvent"
+import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"
 import { EventList } from "@/components/events/EventList"
 import { Header } from "@/components/header/Header"
@@ -29,9 +30,13 @@ function App() {
 
       {isLg && <MonthView />}
 
-      <div className="hidden border-l border-l-border w-[350px] shrink-0 sm:flex flex-col">
-        <EditEvent event={activeEvent} />
-      </div>
+      {isSm && !isLg && (
+        <div className="border-l border-l-border w-[350px] shrink-0 flex flex-col">
+          <EditEvent event={activeEvent} />
+        </div>
+      )}
+
+      {isLg && <PopoverEditEvent />}
 
       {!isSm && <SheetEvent />}
     </main>
