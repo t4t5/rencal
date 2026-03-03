@@ -43,7 +43,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               className={cn(
                 "flex items-center justify-end gap-1 p-1 pb-0 cursor-default border-r border-border last:border-r-0",
                 day.isWeekend && "bg-weekendBg",
-                isActive && "bg-white/5",
+                isActive && "bg-secondary",
               )}
               onClick={() => onDayClick(day.date)}
             >
@@ -54,7 +54,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
                 className={cn(
                   "text-xs w-5 h-5 flex items-center justify-center",
                   day.isToday && "bg-primary text-primary-foreground rounded-full",
-                  isActive && !day.isToday && "bg-white/5 rounded-full",
+                  isActive && !day.isToday && "bg-secondary rounded-full",
                 )}
               >
                 {format(day.date, "d")}
@@ -78,7 +78,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               className={cn(
                 colIndex < 6 && "border-r border-border",
                 day.isWeekend && "bg-weekendBg",
-                day.dateKey === activeDateKey && "bg-white/5",
+                day.dateKey === activeDateKey && "bg-secondary",
               )}
               style={{
                 gridColumn: colIndex + 1,
