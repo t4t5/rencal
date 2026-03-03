@@ -40,7 +40,8 @@ export function AttendeesDisplay({
   organizer?: EventAttendee | null
   attendees?: EventAttendee[]
 }) {
-  if (!organizer && (!attendees || attendees.length === 0)) return null
+  const hasAttendees = attendees && attendees.length > 0
+  if (!hasAttendees) return null
 
   return (
     <div className="flex flex-col">
