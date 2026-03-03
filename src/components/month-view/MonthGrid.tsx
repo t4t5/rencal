@@ -192,16 +192,26 @@ export function MonthGrid({
     }
   }, [anchorWeekIndex, virtualizer])
 
-  // Scroll to active date's week during explicit navigation (e.g. mini-calendar click)
+  // Scroll to active date's week during explicit navigation, but only if not already visible
   useEffect(() => {
     if (!hasInitialized.current) return
     if (!isNavigating()) return
+    const el = scrollRef.current
+    if (!el) return
 
     const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
     if (weekIndex < 0) return
 
+    // Use virtualizer's measured positions (not rowHeight estimate) for accurate check
+    const item = virtualizer.getVirtualItems().find((v) => v.index === weekIndex)
+    if (item) {
+      const viewStart = el.scrollTop
+      const viewEnd = viewStart + el.clientHeight
+      if (item.start >= viewStart && item.start + item.size <= viewEnd) return
+    }
+
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
-  }, [activeDateKey, weeks, virtualizer, isNavigating])
+  }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
   // Detect dominant visible month while scrolling and update active date
   // Uses refs for frequently-changing values to avoid listener churn
