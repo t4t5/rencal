@@ -36,7 +36,7 @@ export function PopoverEditEvent() {
         style={{ top: pos.top, left: pos.left, width: 0, height: 0 }}
       />
       <PopoverContent
-        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 bg-popover/90 backdrop-blur-xl shadow-2xl"
+        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 bg-secondary-solid/85 backdrop-blur-xl shadow-2xl"
         side="right"
         align="center"
         sideOffset={8}

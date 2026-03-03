@@ -68,6 +68,7 @@
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-secondary: var(--secondary);
+  --color-secondary-solid: var(--buttonSecondarySolidBg);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
@@ -139,6 +140,7 @@
   --bgPrimary: #1a1b26;
   --buttonPrimaryBg: #0094c6;
   --buttonSecondaryBg: #ffffff10;
+  --buttonSecondarySolidBg: #282934;
   --active: #36c3f3;
   --weekendBg: #ffffff05;
   --divider: #ffffff10;
