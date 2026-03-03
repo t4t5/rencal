@@ -170,6 +170,7 @@ export function EventList() {
             }}
             events={events}
             date={date}
+            calendars={calendars}
           />
         )
       })}

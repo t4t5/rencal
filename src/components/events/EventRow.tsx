@@ -1,15 +1,15 @@
 import { format, isSameDay } from "date-fns"
+import { memo } from "react"
 import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+type EventRowProps = {
+  event: CalendarEvent
+  calendarColor: string | null
+}
 
-export function EventRow({ event }: { event: CalendarEvent }) {
-  const { calendars } = useCalendarState()
-  const calendar = calendars.find((c) => c.slug === event.calendar_slug)
-  const calendarColor = calendar?.color
-
+export const EventRow = memo(function EventRow({ event, calendarColor }: EventRowProps) {
   const from = event.start
   const to = event.end
 
@@ -50,4 +50,4 @@ export function EventRow({ event }: { event: CalendarEvent }) {
       </div>
     )
   }
-}
+})
