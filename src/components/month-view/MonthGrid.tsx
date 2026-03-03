@@ -15,6 +15,7 @@ type MonthWeekRowProps = {
   weekDays: MonthDay[]
   layout: WeekLayout
   activeEventId: string | null
+  activeDateKey: string
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
 }
@@ -23,6 +24,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   weekDays,
   layout,
   activeEventId,
+  activeDateKey,
   onDayClick,
   onEventClick,
 }: MonthWeekRowProps) {
@@ -33,28 +35,33 @@ const MonthWeekRow = memo(function MonthWeekRow({
     <>
       {/* Day numbers row */}
       <div className="grid grid-cols-7">
-        {weekDays.map((day) => (
-          <div
-            key={day.dateKey}
-            className={cn(
-              "flex items-center justify-end gap-1 p-1 pb-0 cursor-default border-r border-border last:border-r-0",
-              day.isWeekend && "bg-weekendBg",
-            )}
-            onClick={() => onDayClick(day.date)}
-          >
-            {day.date.getDate() === 1 && (
-              <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
-            )}
-            <span
+        {weekDays.map((day) => {
+          const isActive = day.dateKey === activeDateKey
+          return (
+            <div
+              key={day.dateKey}
               className={cn(
-                "text-xs w-5 h-5 flex items-center justify-center",
-                day.isToday && "bg-primary text-primary-foreground rounded-full",
+                "flex items-center justify-end gap-1 p-1 pb-0 cursor-default border-r border-border last:border-r-0",
+                day.isWeekend && "bg-weekendBg",
+                isActive && "bg-white/5",
               )}
+              onClick={() => onDayClick(day.date)}
             >
-              {format(day.date, "d")}
-            </span>
-          </div>
-        ))}
+              {day.date.getDate() === 1 && (
+                <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
+              )}
+              <span
+                className={cn(
+                  "text-xs w-5 h-5 flex items-center justify-center",
+                  day.isToday && "bg-primary text-primary-foreground rounded-full",
+                  isActive && !day.isToday && "bg-white/5 rounded-full",
+                )}
+              >
+                {format(day.date, "d")}
+              </span>
+            </div>
+          )
+        })}
       </div>
 
       {/* All-day spanning bars zone */}
@@ -71,6 +78,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               className={cn(
                 colIndex < 6 && "border-r border-border",
                 day.isWeekend && "bg-weekendBg",
+                day.dateKey === activeDateKey && "bg-white/5",
               )}
               style={{
                 gridColumn: colIndex + 1,
@@ -105,6 +113,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               timedEvents={layout.timedByCol[colIndex]}
               hiddenAllDayCount={hiddenAllDay}
               activeEventId={activeEventId}
+              isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
               onEventClick={onEventClick}
             />
@@ -119,6 +128,7 @@ type MonthGridProps = {
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
   activeEventId: string | null
+  activeDateKey: string
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
@@ -129,6 +139,7 @@ export function MonthGrid({
   weeks,
   weekLayouts,
   activeEventId,
+  activeDateKey,
   anchorWeekIndex,
   scrollRef,
   onDayClick,
@@ -197,6 +208,7 @@ export function MonthGrid({
               weekDays={weeks[virtualRow.index]}
               layout={weekLayouts[virtualRow.index]}
               activeEventId={activeEventId}
+              activeDateKey={activeDateKey}
               onDayClick={onDayClick}
               onEventClick={onEventClick}
             />

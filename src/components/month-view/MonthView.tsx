@@ -1,4 +1,4 @@
-import { addMonths, endOfMonth, isSameDay, startOfMonth, subMonths } from "date-fns"
+import { addMonths, endOfMonth, format, isSameDay, startOfMonth, subMonths } from "date-fns"
 import { useCallback, useLayoutEffect, useRef, useState } from "react"
 
 import { MonthGrid } from "@/components/month-view/MonthGrid"
@@ -141,6 +141,7 @@ export function MonthView() {
         weeks={weeks}
         weekLayouts={weekLayouts}
         activeEventId={activeEvent?.id ?? null}
+        activeDateKey={format(activeDate, "yyyy-MM-dd")}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
         onDayClick={navigateToDate}

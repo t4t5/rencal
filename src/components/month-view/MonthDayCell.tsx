@@ -11,6 +11,7 @@ type MonthDayCellProps = {
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
   activeEventId: string | null
+  isActiveDay: boolean
   onClick: () => void
   onEventClick: (eventId: string) => void
 }
@@ -20,6 +21,7 @@ export function MonthDayCell({
   timedEvents,
   hiddenAllDayCount,
   activeEventId,
+  isActiveDay,
   onClick,
   onEventClick,
 }: MonthDayCellProps) {
@@ -32,6 +34,7 @@ export function MonthDayCell({
       className={cn(
         "flex flex-col gap-px px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
         day.isWeekend && "bg-weekendBg",
+        isActiveDay && "bg-white/5",
       )}
       onClick={onClick}
     >
