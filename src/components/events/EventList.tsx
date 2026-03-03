@@ -40,6 +40,7 @@ export function EventList() {
   ghostDateRef.current = ghostDate
   const ghostRef = useRef<HTMLDivElement>(null)
   const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
+  const hasInitiallyScrolledRef = useRef(false)
 
   useCalEventsInfiniteScroll({
     scrollContainerRef,
@@ -128,6 +129,11 @@ export function EventList() {
   }, [])
 
   useEffect(() => {
+    if (hasInitiallyScrolledRef.current) return
+    if (eventsByDate.length === 0) return
+
+    hasInitiallyScrolledRef.current = true
+
     // Scroll to currently active date as soon as events have loaded:
     setIsNavigating(true)
     scrollToDate(activeDate, "instant")
