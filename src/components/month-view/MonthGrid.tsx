@@ -182,6 +182,25 @@ export function MonthGrid({
     }
   }, [anchorWeekIndex, virtualizer])
 
+  // Scroll to active date's week if it's not currently visible
+  useEffect(() => {
+    if (!hasInitialized.current) return
+    const el = scrollRef.current
+    if (!el) return
+
+    const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
+    if (weekIndex < 0) return
+
+    const rowStart = weekIndex * rowHeight
+    const rowEnd = rowStart + rowHeight
+    const viewStart = el.scrollTop
+    const viewEnd = viewStart + el.clientHeight
+
+    if (rowStart < viewStart || rowEnd > viewEnd) {
+      virtualizer.scrollToIndex(weekIndex, { align: "start" })
+    }
+  }, [activeDateKey, weeks, virtualizer, rowHeight, scrollRef])
+
   return (
     <div ref={scrollRef} className="grow overflow-y-auto relative">
       <div
