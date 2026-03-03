@@ -217,8 +217,10 @@ export function MonthGrid({
 
   // Detect dominant visible month while scrolling and update active date
   // Uses refs for frequently-changing values to avoid listener churn
-  const scrollStateRef = useRef({ weeks, activeDateKey, rowHeight })
-  scrollStateRef.current = { weeks, activeDateKey, rowHeight }
+  const scrollStateRef = useRef({ weeks, activeDateKey })
+  scrollStateRef.current = { weeks, activeDateKey }
+  const virtualizerRef = useRef(virtualizer)
+  virtualizerRef.current = virtualizer
 
   useEffect(() => {
     const el = scrollRef.current
@@ -232,46 +234,48 @@ export function MonthGrid({
         rafId = null
         if (!scrollDetectionReady.current || isNavigating()) return
 
-        const { weeks: w, activeDateKey: adk, rowHeight: rh } = scrollStateRef.current
-        if (rh <= 0 || w.length === 0) return
+        const { weeks: w, activeDateKey: adk } = scrollStateRef.current
+        if (w.length === 0) return
 
         const viewTop = el.scrollTop
         const viewBottom = viewTop + el.clientHeight
+        const items = virtualizerRef.current.getVirtualItems()
 
-        const firstRow = Math.max(0, Math.floor(viewTop / rh))
-        const lastRow = Math.min(Math.ceil(viewBottom / rh) - 1, w.length - 1)
-
-        // Count visible days per month
+        // Count visible days per month, weighted by each row's visibility fraction
         const monthCounts = new Map<string, number>()
-        for (let i = firstRow; i <= lastRow; i++) {
-          const week = w[i]
+        for (const item of items) {
+          if (item.end <= viewTop || item.start >= viewBottom) continue
+          const week = w[item.index]
           if (!week) continue
+          const visibleTop = Math.max(item.start, viewTop)
+          const visibleBottom = Math.min(item.end, viewBottom)
+          const fraction = (visibleBottom - visibleTop) / item.size
           for (const day of week) {
             const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
-            monthCounts.set(key, (monthCounts.get(key) ?? 0) + 1)
+            monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
           }
         }
 
-        // Find month with the most visible days
-        let maxCount = 0
-        let dominantYear = 0
-        let dominantMonth = 0
-        for (const [key, count] of monthCounts) {
-          if (count > maxCount) {
-            maxCount = count
-            const parts = key.split("-")
-            dominantYear = Number(parts[0])
-            dominantMonth = Number(parts[1])
-          }
-        }
-
-        if (maxCount === 0) return
-
-        // Only update if the dominant month differs from active date's month
+        // Only switch away from the active month when another month exceeds it
         const activeYear = parseInt(adk.slice(0, 4))
         const activeMonth = parseInt(adk.slice(5, 7)) - 1 // 0-based
-        if (dominantYear !== activeYear || dominantMonth !== activeMonth) {
-          onScrollMonthChange(new Date(dominantYear, dominantMonth, 1))
+        const activeKey = `${activeYear}-${activeMonth}`
+        const activeCount = monthCounts.get(activeKey) ?? 0
+
+        let bestYear = activeYear
+        let bestMonth = activeMonth
+        let bestCount = activeCount
+        for (const [key, count] of monthCounts) {
+          if (count > bestCount) {
+            bestCount = count
+            const parts = key.split("-")
+            bestYear = Number(parts[0])
+            bestMonth = Number(parts[1])
+          }
+        }
+
+        if (bestYear !== activeYear || bestMonth !== activeMonth) {
+          onScrollMonthChange(new Date(bestYear, bestMonth, 1))
         }
       })
     }
