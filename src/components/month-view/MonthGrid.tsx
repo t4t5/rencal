@@ -76,6 +76,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
             <div
               key={`bg-${day.dateKey}`}
               className={cn(
+                "cursor-default",
                 colIndex < 6 && "border-r border-border",
                 day.isWeekend && "bg-weekendBg",
                 day.dateKey === activeDateKey && "bg-secondary",
@@ -84,6 +85,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
                 gridColumn: colIndex + 1,
                 gridRow: `1 / ${visibleLaneCount + 1}`,
               }}
+              onClick={() => onDayClick(day.date)}
             />
           ))}
           {visibleAllDay.map((item) => (
