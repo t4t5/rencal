@@ -48,6 +48,17 @@ export function PopoverEditEvent() {
           const target = e.target as HTMLElement
           if (target.closest("[data-event-clickable]")) {
             e.preventDefault()
+          } else {
+            // Swallow the click so it doesn't reach underlying elements
+            // (e.g. day cells in the month view that would trigger navigation).
+            window.addEventListener(
+              "click",
+              (ev) => {
+                ev.stopPropagation()
+                ev.preventDefault()
+              },
+              { capture: true, once: true },
+            )
           }
         }}
       >

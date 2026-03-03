@@ -16,7 +16,6 @@ function App() {
   const { activeEvent } = useCalEvents()
 
   const isSm = useBreakpoint("sm")
-  const isLg = useBreakpoint("lg")
 
   return (
     <main className="flex h-screen">
@@ -28,15 +27,15 @@ function App() {
         <EventList />
       </div>
 
-      {isLg && <MonthView />}
+      {isSm && <MonthView />}
 
-      {isSm && !isLg && (
-        <div className="border-l border-l-border w-[350px] shrink-0 flex flex-col">
+      {!isSm && (
+        <div className="hidden sm:flex border-l border-l-border w-[350px] shrink-0 flex-col">
           <EditEvent event={activeEvent} />
         </div>
       )}
 
-      {isLg && <PopoverEditEvent />}
+      {isSm && <PopoverEditEvent />}
 
       {!isSm && <SheetEvent />}
     </main>
