@@ -6,7 +6,7 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; calendar_slug: string }
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string }
 
 /**
  * Input for creating an event
@@ -14,6 +14,8 @@ export type CalendarEvent = { id: string; recurring_event_id: string | null; sum
 export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
 export type CredentialFieldInput = { id: string; value: string }
+
+export type EventAttendee = { name: string | null; email: string; response_status: string | null }
 
 export type Recurrence = { rrule: string; exdates: string[] }
 

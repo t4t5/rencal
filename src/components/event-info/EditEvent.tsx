@@ -171,6 +171,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         onCalendarChange={(newCalendarId) => {
           setDirtyEvent({ ...dirtyEvent, calendar_slug: newCalendarId })
         }}
+        organizer={dirtyEvent.organizer}
+        attendees={dirtyEvent.attendees}
+        conferenceUrl={dirtyEvent.conference_url}
         recurrence={recurrenceRRule}
         onRecurrenceChange={handleRecurrenceChange}
         reminders={dirtyEvent.reminders}

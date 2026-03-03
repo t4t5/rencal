@@ -1,14 +1,16 @@
 import { RRule, RRuleSet } from "rrule"
 
 import { AllDayCheckbox } from "@/components/event-info/inputs/AllDayCheckbox"
+import { AttendeesDisplay } from "@/components/event-info/inputs/AttendeesDisplay"
 import { CalendarSelect } from "@/components/event-info/inputs/CalendarSelect"
+import { ConferenceLink } from "@/components/event-info/inputs/ConferenceLink"
 import { DateTimeSelect } from "@/components/event-info/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-info/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-info/inputs/RepeatSelect"
 import { Textarea } from "@/components/ui/textarea"
 
-import { Calendar } from "@/rpc/bindings"
+import { Calendar, EventAttendee } from "@/rpc/bindings"
 
 import { NotesInput } from "./inputs/NotesInput"
 
@@ -38,6 +40,9 @@ export function EventInfo({
   onRecurrenceChange,
   description,
   onDescriptionChange,
+  organizer,
+  attendees,
+  conferenceUrl,
   reminders,
   onReminderAdd,
   onReminderRemove,
@@ -61,6 +66,9 @@ export function EventInfo({
   showTime?: boolean
   description?: string | null
   onDescriptionChange: (description: string) => void
+  organizer?: EventAttendee | null
+  attendees?: EventAttendee[]
+  conferenceUrl?: string | null
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
@@ -91,6 +99,8 @@ export function EventInfo({
 
         <Divider />
 
+        {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
+        <AttendeesDisplay organizer={organizer} attendees={attendees} />
         <LocationInput value={location} onChange={onLocationChange} />
 
         <ReminderSelect

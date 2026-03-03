@@ -1,6 +1,6 @@
 use crate::routes::TauResult;
 use caldir_core::caldir::Caldir;
-use caldir_core::event::{EventStatus, EventTime};
+use caldir_core::event::{EventStatus, EventTime, ParticipationStatus};
 use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
@@ -21,6 +21,28 @@ pub struct Recurrence {
     pub exdates: Vec<String>,
 }
 
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct EventAttendee {
+    pub name: Option<String>,
+    pub email: String,
+    pub response_status: Option<String>,
+}
+
+impl From<&caldir_core::event::Attendee> for EventAttendee {
+    fn from(a: &caldir_core::event::Attendee) -> Self {
+        EventAttendee {
+            name: a.name.clone(),
+            email: a.email.clone(),
+            response_status: a.response_status.map(|s| match s {
+                ParticipationStatus::Accepted => "accepted".to_string(),
+                ParticipationStatus::Declined => "declined".to_string(),
+                ParticipationStatus::Tentative => "tentative".to_string(),
+                ParticipationStatus::NeedsAction => "needs-action".to_string(),
+            }),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Type)]
 pub struct CalendarEvent {
     pub id: String,
@@ -35,6 +57,9 @@ pub struct CalendarEvent {
     pub recurrence: Option<Recurrence>,
     pub master_recurrence: Option<Recurrence>,
     pub reminders: Vec<i32>,
+    pub organizer: Option<EventAttendee>,
+    pub attendees: Vec<EventAttendee>,
+    pub conference_url: Option<String>,
     pub calendar_slug: String,
 }
 
@@ -138,6 +163,9 @@ impl CalendarEvent {
             }),
             master_recurrence,
             reminders: e.reminders.iter().map(|r| r.minutes as i32).collect(),
+            organizer: e.organizer.as_ref().map(EventAttendee::from),
+            attendees: e.attendees.iter().map(EventAttendee::from).collect(),
+            conference_url: e.conference_url.clone(),
             calendar_slug: calendar_slug.to_string(),
         }
     }
