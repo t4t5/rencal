@@ -134,26 +134,14 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     <div className="px-2 pt-4 pb-2 flex flex-col grow">
       <EventInfo
         summary={summary}
-        onClose={() => setActiveEventId(null)}
-        description={description}
-        start={new Date(start)}
-        end={new Date(end)}
-        allDay={all_day}
-        showTime={!all_day || hasBeenEdited}
-        location={location}
-        calendar={calendar}
-        onDescriptionChange={(newDescription) => {
-          setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
-        }}
-        onLocationChange={(newLocation) => {
-          setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
-        }}
         onChangeSummary={(newSummary) => {
           setDirtyEvent({ ...dirtyEvent, summary: newSummary })
         }}
-        onAllDayChange={(checked) => {
-          setDirtyEvent({ ...dirtyEvent, all_day: checked })
+        description={description}
+        onDescriptionChange={(newDescription) => {
+          setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
         }}
+        start={new Date(start)}
         onChangeStartDate={(date) => {
           if (!date) return
           const newStart = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", start)
@@ -163,6 +151,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           const newStart = parse(time, "HH:mm", start)
           setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
         }}
+        end={new Date(end)}
         onChangeEndDate={(date) => {
           if (!date) return
           const newEnd = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", end)
@@ -172,6 +161,16 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           const newEnd = parse(time, "HH:mm", end)
           setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
+        allDay={all_day}
+        onAllDayChange={(checked) => {
+          setDirtyEvent({ ...dirtyEvent, all_day: checked })
+        }}
+        showTime={!all_day || hasBeenEdited}
+        location={location}
+        onLocationChange={(newLocation) => {
+          setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
+        }}
+        calendar={calendar}
         onCalendarChange={(newCalendarId) => {
           setDirtyEvent({ ...dirtyEvent, calendar_slug: newCalendarId })
         }}
@@ -183,6 +182,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         reminders={dirtyEvent.reminders}
         onReminderAdd={handleReminderAdd}
         onReminderRemove={handleReminderRemove}
+        onClose={() => setActiveEventId(null)}
       />
 
       <div className="p-2">
