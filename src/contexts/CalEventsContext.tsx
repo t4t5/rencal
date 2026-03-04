@@ -5,6 +5,7 @@ import {
   SetStateAction,
   createContext,
   useContext,
+  useEffect,
   useEffectEvent,
   useRef,
   useState,
@@ -26,6 +27,7 @@ interface CalEventsContextType {
   activeEvent: CalendarEvent | null
   setActiveEventId: Dispatch<SetStateAction<string | null>>
   toggleActiveEventId: (id: string) => void
+  isInitialLoading: boolean
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -45,6 +47,7 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
   const [activeEventId, setActiveEventId] = useState<string | null>(null)
+  const [isInitialLoading, setIsInitialLoading] = useState(true)
 
   const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
 
@@ -69,6 +72,12 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     setCalendarEvents(events)
   })
 
+  useEffect(() => {
+    if (visibleCalendarIds.length > 0) {
+      reloadEvents().then(() => setIsInitialLoading(false))
+    }
+  }, [visibleCalendarIds.length > 0])
+
   const value: CalEventsContextType = {
     calendarEvents,
     setCalendarEvents,
@@ -77,6 +86,7 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     activeEvent,
     setActiveEventId,
     toggleActiveEventId,
+    isInitialLoading,
   }
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>

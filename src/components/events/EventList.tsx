@@ -31,7 +31,12 @@ export function EventList() {
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
   const visibleCalendarIds = calendars.map((c) => c.slug)
 
-  const { calendarEvents: events, reloadEvents, currentDateRangeRef } = useCalEvents()
+  const {
+    calendarEvents: events,
+    reloadEvents,
+    currentDateRangeRef,
+    isInitialLoading,
+  } = useCalEvents()
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -55,13 +60,6 @@ export function EventList() {
     isNavigating,
     scrollContainerRef,
   })
-
-  useEffect(() => {
-    // Initialize on first run:
-    if (!currentDateRangeRef.current) {
-      reloadEvents()
-    }
-  }, [activeDate, visibleCalendarIds])
 
   // Merge ghost date into the sections list:
   const sectionsToRender = useMemo((): Section[] => {
@@ -147,6 +145,10 @@ export function EventList() {
       })
     })
   }, [eventsByDate])
+
+  if (isInitialLoading) {
+    return <div className="grow" />
+  }
 
   if (events.length === 0) {
     return <div className="p-2 text-sm text-muted-foreground">No events</div>
