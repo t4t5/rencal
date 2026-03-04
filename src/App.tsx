@@ -7,13 +7,16 @@ import { SheetEvent } from "@/components/event-info/SheetInfo"
 import { EventList } from "@/components/events/EventList"
 import { Header } from "@/components/header/Header"
 import { MonthView } from "@/components/month-view/MonthView"
+import { Button } from "@/components/ui/button"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "./hooks/useBreakpoint"
 
 function App() {
   const { activeEvent } = useCalEvents()
+  const { navigateToDate } = useCalendarState()
 
   const isMd = useBreakpoint("md")
 
@@ -30,7 +33,9 @@ function App() {
       {isMd && (
         <div className="hidden sm:flex flex-col grow border-l border-l-border min-w-0">
           <div className="h-18 shrink-0 items-center flex p-4">
-            <div>Test</div>
+            <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
+              Today
+            </Button>
           </div>
           <MonthView />
         </div>
