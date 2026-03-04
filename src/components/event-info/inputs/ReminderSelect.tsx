@@ -31,6 +31,17 @@ function getQueryValues(query: string): number[] {
 function humanDuration(mins: number): string {
   if (mins === 0) return "At time of event"
 
+  if (mins < 0) {
+    // Negative means "after event start" — used for all-day event reminders
+    // e.g. -480 mins = 8 hours after midnight = 08:00 on day of event
+    const afterMins = -mins
+    const h = Math.floor(afterMins / 60)
+      .toString()
+      .padStart(2, "0")
+    const m = (afterMins % 60).toString().padStart(2, "0")
+    return `On day of event (${h}:${m})`
+  }
+
   const days = Math.floor(mins / 1440)
   const hours = Math.floor((mins % 1440) / 60)
   const minutes = mins % 60
@@ -119,7 +130,7 @@ const HumanDuration = ({ mins }: { mins: number }) => {
   return (
     <div className="flex gap-1.5 items-baseline">
       <span>{humanDuration(mins)}</span>
-      {!!mins && <span className="text-muted-foreground">before</span>}
+      {mins > 0 && <span className="text-muted-foreground">before</span>}
     </div>
   )
 }
