@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns"
+import { parse } from "date-fns"
 import { useCallback } from "react"
 import { rrulestr } from "rrule"
 
@@ -73,8 +73,11 @@ export const NewEvent = () => {
           }}
           onChangeStartDate={(date) => {
             if (!date) return
-            const newStart = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", start)
-            setDraftEvent({ ...draftEvent, start: newStart })
+            const newStart = new Date(start)
+            newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+            const delta = newStart.getTime() - start.getTime()
+            const newEnd = new Date(end.getTime() + delta)
+            setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
           }}
           onChangeStartTime={(time) => {
             const newStart = parse(time, "HH:mm", start)
@@ -82,11 +85,12 @@ export const NewEvent = () => {
           }}
           onChangeEndDate={(date) => {
             if (!date) return
-            const newEnd = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", end)
+            const newEnd = new Date(end)
+            newEnd.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
             setDraftEvent({ ...draftEvent, end: newEnd })
           }}
           onChangeEndTime={(time) => {
-            const newEnd = parse(time, "HH:mm", end)
+            const newEnd = parse(time, "HH:mm", start)
             setDraftEvent({ ...draftEvent, end: newEnd })
           }}
           onCalendarChange={(newCalendarId) => {

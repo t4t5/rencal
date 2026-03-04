@@ -119,7 +119,17 @@ const DateSelect = ({
         <>
           <div className="size-6 shrink-0" />
 
-          <DatePicker date={end} setDate={onChangeEnd} className="w-30" />
+          <DatePicker
+            date={end}
+            setDate={(date) => {
+              if (date && date < start) {
+                onChangeEnd(start)
+              } else {
+                onChangeEnd(date)
+              }
+            }}
+            className="w-30"
+          />
         </>
       )}
     </div>

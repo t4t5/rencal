@@ -1,4 +1,4 @@
-import { format, parse } from "date-fns"
+import { parse } from "date-fns"
 import { useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -11,7 +11,6 @@ import { CalendarEvent, Recurrence } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
@@ -39,34 +38,36 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     !!originalEventRef.current &&
     JSON.stringify(dirtyEvent) !== JSON.stringify(originalEventRef.current)
 
-  // Auto-save to caldir when dirtyEvent changes
-  useDebouncedEffect(
-    async () => {
-      if (!dirtyEvent || !event) return
-      // Skip if nothing actually changed
-      if (JSON.stringify(dirtyEvent) === JSON.stringify(event)) return
+  // Keep dirtyEvent in a ref so the unmount cleanup always has the latest value
+  const dirtyEventRef = useRef<CalendarEvent | null>(null)
+  useEffect(() => {
+    dirtyEventRef.current = dirtyEvent
+  }, [dirtyEvent])
 
-      await rpc.caldir.update_event({
-        id: dirtyEvent.id,
-        calendar_slug: dirtyEvent.calendar_slug,
-        summary: dirtyEvent.summary,
-        description: dirtyEvent.description,
-        location: dirtyEvent.location,
-        start: dirtyEvent.start,
-        end: dirtyEvent.end,
-        all_day: dirtyEvent.all_day,
-        recurrence: dirtyEvent.recurrence,
-        reminders: dirtyEvent.reminders,
+  // Save to caldir only when the popover/sheet closes (component unmounts)
+  useEffect(() => {
+    return () => {
+      const current = dirtyEventRef.current
+      const original = originalEventRef.current
+      if (!current || !original) return
+      if (JSON.stringify(current) === JSON.stringify(original)) return
+
+      rpc.caldir.update_event({
+        id: current.id,
+        calendar_slug: current.calendar_slug,
+        summary: current.summary,
+        description: current.description,
+        location: current.location,
+        start: current.start,
+        end: current.end,
+        all_day: current.all_day,
+        recurrence: current.recurrence,
+        reminders: current.reminders,
       })
 
-      // Update the event in-place instead of reloading all events from disk.
-      // A full reloadEvents() would cause the event list to re-render and
-      // the intersection observer to fire, jumping the view to a different month.
-      setCalendarEvents((prev) => prev.map((e) => (e.id === dirtyEvent.id ? dirtyEvent : e)))
-    },
-    [dirtyEvent],
-    500,
-  )
+      setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
+    }
+  }, [])
 
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
@@ -144,21 +145,30 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         start={new Date(start)}
         onChangeStartDate={(date) => {
           if (!date) return
-          const newStart = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", start)
-          setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
+          const oldStart = new Date(start)
+          const newStart = new Date(start)
+          newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+          const delta = newStart.getTime() - oldStart.getTime()
+          const newEnd = new Date(new Date(end).getTime() + delta)
+          setDirtyEvent({
+            ...dirtyEvent,
+            start: newStart.toISOString(),
+            end: newEnd.toISOString(),
+          })
         }}
         onChangeStartTime={(time) => {
-          const newStart = parse(time, "HH:mm", start)
+          const newStart = parse(time, "HH:mm", new Date(start))
           setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
         }}
         end={new Date(end)}
         onChangeEndDate={(date) => {
           if (!date) return
-          const newEnd = parse(format(date, "yyyy-MM-dd"), "yyyy-MM-dd", end)
+          const newEnd = new Date(end)
+          newEnd.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
           setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
         onChangeEndTime={(time) => {
-          const newEnd = parse(time, "HH:mm", end)
+          const newEnd = parse(time, "HH:mm", new Date(start))
           setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
         allDay={all_day}
