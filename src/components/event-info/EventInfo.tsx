@@ -109,7 +109,7 @@ export function EventInfo({
 
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
         <AttendeesDisplay organizer={organizer} attendees={attendees} />
-        <LocationInput value={location} onChange={onLocationChange} />
+        <LocationInput value={location} onChange={onLocationChange} onClose={onClose} />
 
         <ReminderSelect
           reminders={reminders ?? []}

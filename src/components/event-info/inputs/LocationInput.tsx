@@ -5,9 +5,11 @@ import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui
 export const LocationInput = ({
   value,
   onChange,
+  onClose,
 }: {
   value?: string | null
   onChange: (location: string) => void
+  onClose?: () => void
 }) => {
   return (
     <InputGroup>
@@ -18,6 +20,12 @@ export const LocationInput = ({
         placeholder="Location"
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            onClose?.()
+          }
+        }}
       />
     </InputGroup>
   )
