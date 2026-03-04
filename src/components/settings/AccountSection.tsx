@@ -1,4 +1,5 @@
 import { FaGoogle as GoogleIcon, FaApple as AppleIcon } from "react-icons/fa"
+import { FaMicrosoft as MicrosoftIcon } from "react-icons/fa"
 import { IconType } from "react-icons/lib"
 import { PiCalendarBlank as CalendarIcon } from "react-icons/pi"
 
@@ -9,6 +10,7 @@ import { CalendarItemWithVisibilityToggle } from "./CalendarItem"
 const providerToIcon: Record<string, IconType> = {
   google: GoogleIcon,
   icloud: AppleIcon,
+  outlook: MicrosoftIcon,
 }
 
 export function AccountSection({ account, calendars }: { account: string; calendars: Calendar[] }) {
@@ -18,7 +20,7 @@ export function AccountSection({ account, calendars }: { account: string; calend
   return (
     <div className="p-3 flex flex-col gap-3">
       <div className="flex items-center gap-2">
-        <ProviderIcon className="size-4 text-muted-foreground" />
+        <ProviderIcon className="size-4 text-muted-foreground ml-[-2px]" />
         <span className="text-sm text-muted-foreground">{account}</span>
       </div>
 
