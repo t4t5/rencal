@@ -35,7 +35,12 @@ export function DeleteConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
-          <Button variant="secondary" onClick={onClose}>
+          <Button
+            variant="secondary"
+            onClick={onClose}
+            autoFocus
+            className="focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
+          >
             Cancel
           </Button>
           {isRecurring ? (

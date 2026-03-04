@@ -5,6 +5,8 @@ import { Calendar } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
 
+const DEFAULT_CALENDAR_COLOR = "#888"
+
 export function CalendarItem({ calendar, children }: { calendar: Calendar; children?: ReactNode }) {
   const { name, color } = calendar
   const isVisible = true // TODO: STORE THIS IN RENCAL'S OWN STORE
@@ -18,7 +20,7 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
       <div className="flex items-center gap-3">
         <div
           className="size-3 rounded-[3px] shrink-0"
-          style={{ backgroundColor: color ?? undefined }}
+          style={{ backgroundColor: color ?? DEFAULT_CALENDAR_COLOR }}
         />
         <span className="text-sm text-primary-foreground">{name}</span>
       </div>
