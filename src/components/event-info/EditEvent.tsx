@@ -19,7 +19,7 @@ import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const { calendars } = useCalendarState()
-  const { setActiveEventId, reloadEvents } = useCalEvents()
+  const { setActiveEventId, reloadEvents, setCalendarEvents } = useCalEvents()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
@@ -59,7 +59,10 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         reminders: dirtyEvent.reminders,
       })
 
-      await reloadEvents()
+      // Update the event in-place instead of reloading all events from disk.
+      // A full reloadEvents() would cause the event list to re-render and
+      // the intersection observer to fire, jumping the view to a different month.
+      setCalendarEvents((prev) => prev.map((e) => (e.id === dirtyEvent.id ? dirtyEvent : e)))
     },
     [dirtyEvent],
     500,

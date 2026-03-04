@@ -1,5 +1,5 @@
 import { addDays, format, isBefore, startOfDay } from "date-fns"
-import { useMemo } from "react"
+import { useMemo, useRef } from "react"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
@@ -39,8 +39,18 @@ export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
       }))
   }, [events])
 
+  const prevDatesRef = useRef<string[]>([])
+
   const datesWithEvents = useMemo(() => {
-    return eventsByDate.map(({ date }) => format(date, "yyyy-MM-dd"))
+    const newDates = eventsByDate.map(({ date }) => format(date, "yyyy-MM-dd"))
+    const prev = prevDatesRef.current
+    // Keep the same reference if the dates haven't actually changed,
+    // so the intersection observer in useJumpToScrolledDate isn't needlessly recreated:
+    if (newDates.length === prev.length && newDates.every((d, i) => d === prev[i])) {
+      return prev
+    }
+    prevDatesRef.current = newDates
+    return newDates
   }, [eventsByDate])
 
   return {
