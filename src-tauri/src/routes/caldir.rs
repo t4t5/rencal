@@ -465,15 +465,18 @@ impl CaldirApi for CaldirApiImpl {
         let range = DateRange::default();
 
         for slug in &calendar_slugs {
-            let calendar =
-                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+            let calendar = caldir_core::calendar::Calendar::load(slug)
+                .map_err(|e| format!("[{}] {}", slug, e))?;
 
             let diff = CalendarDiff::from_calendar(&calendar, &range)
                 .await
-                .map_err(|e| e.to_string())?;
+                .map_err(|e| format!("[{}] {}", slug, e))?;
 
-            diff.apply_pull().map_err(|e| e.to_string())?;
-            diff.apply_push().await.map_err(|e| e.to_string())?;
+            diff.apply_pull()
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+            diff.apply_push()
+                .await
+                .map_err(|e| format!("[{}] {}", slug, e))?;
         }
 
         Ok(())
