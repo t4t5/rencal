@@ -56,20 +56,21 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
   }
 
   const reloadEvents = useEffectEvent(async () => {
-    const activeRange = getStartRangeForDate(activeDate)
-
     // Core data hasn't loaded yet:
     if (!visibleCalendarIds.length || !activeDate) {
       return
     }
 
-    currentDateRangeRef.current = activeRange
-    const events = await getCalendarEventsForRange(
-      visibleCalendarIds,
-      activeRange.start,
-      activeRange.end,
-    )
-    setCalendarEvents(events)
+    // Use the current (possibly infinite-scroll-expanded) range if available,
+    // otherwise compute the initial range from activeDate:
+    const range = currentDateRangeRef.current ?? getStartRangeForDate(activeDate)
+    currentDateRangeRef.current = range
+
+    const events = await getCalendarEventsForRange(visibleCalendarIds, range.start, range.end)
+    setCalendarEvents((prev) => {
+      if (JSON.stringify(prev) === JSON.stringify(events)) return prev
+      return events
+    })
   })
 
   useEffect(() => {
