@@ -37,11 +37,26 @@ export function useJumpToScrolledDate({
 
     if (!container) return
 
-    const observer = new IntersectionObserver((entries) => handleIntersection(entries), {
-      root: container,
-      rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
-      threshold: 0,
-    })
+    // Skip the initial batch of callbacks that IntersectionObserver fires
+    // when it first observes elements. Without this, re-creating the observer
+    // (e.g. after sync adds new events) would immediately set activeDate to
+    // whatever section happens to be at the top of the viewport.
+    let skipInitial = true
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (skipInitial) {
+          skipInitial = false
+          return
+        }
+        handleIntersection(entries)
+      },
+      {
+        root: container,
+        rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
+        threshold: 0,
+      },
+    )
 
     sectionRefs.current.forEach((el) => observer.observe(el))
 
