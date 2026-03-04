@@ -134,6 +134,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     <div className="px-2 pt-4 pb-2 flex flex-col grow">
       <EventInfo
         summary={summary}
+        onClose={() => setActiveEventId(null)}
         description={description}
         start={new Date(start)}
         end={new Date(end)}

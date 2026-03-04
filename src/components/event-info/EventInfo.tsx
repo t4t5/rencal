@@ -46,9 +46,11 @@ export function EventInfo({
   reminders,
   onReminderAdd,
   onReminderRemove,
+  onClose,
 }: {
   summary?: string | null
   onChangeSummary: (summary: string) => void
+  onClose?: () => void
   start: Date
   onChangeStartDate: (date: Date | null) => void
   onChangeStartTime: (time: string) => void
@@ -80,6 +82,12 @@ export function EventInfo({
         value={summary ?? ""}
         className="text-lg"
         onChange={(e) => onChangeSummary(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault()
+            onClose?.()
+          }
+        }}
       />
 
       <div className="flex flex-col gap-1">

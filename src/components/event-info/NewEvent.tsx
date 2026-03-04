@@ -52,6 +52,7 @@ export const NewEvent = () => {
       <div className="p-2">
         <EventInfo
           summary={summary}
+          onClose={onCreate}
           description={description}
           start={start}
           end={end}
