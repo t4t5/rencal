@@ -1,9 +1,16 @@
 import { parse } from "date-fns"
 import { useEffect, useRef, useState } from "react"
+import { HiEllipsisHorizontal } from "react-icons/hi2"
 import { RRule, RRuleSet } from "rrule"
 
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { rpc } from "@/rpc"
 import { CalendarEvent, Recurrence } from "@/rpc/bindings"
@@ -132,7 +139,22 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
   return (
-    <div className="px-2 pt-4 pb-2 flex flex-col grow">
+    <div className="px-2 pt-2 pb-2 flex flex-col grow">
+      <div className="flex justify-end px-1 pb-1">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-7 w-7">
+              <HiEllipsisHorizontal className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+              Delete event
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
       <EventInfo
         summary={summary}
         onChangeSummary={(newSummary) => {
@@ -194,12 +216,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         onReminderRemove={handleReminderRemove}
         onClose={() => setActiveEventId(null)}
       />
-
-      <div className="p-2">
-        <Button className="w-full" variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-          Delete event
-        </Button>
-      </div>
 
       <DeleteConfirmDialog
         open={showDeleteDialog}

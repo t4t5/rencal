@@ -155,7 +155,7 @@
   --hover: var(--hoverBg);
   --card: var(--buttonSecondaryBg);
   --muted-foreground: var(--textSecondary);
-  --popover: #282934d9;
+  --popover: #282934;
 }
 
 /* Move sonner close button to top right */
