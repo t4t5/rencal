@@ -61,13 +61,11 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     }
 
     currentDateRangeRef.current = activeRange
-    // const events = await listEvents(visibleCalendarIds, activeRange.start, activeRange.end)
     const events = await getCalendarEventsForRange(
       visibleCalendarIds,
       activeRange.start,
       activeRange.end,
     )
-    // const events = await getCalendarEventsForRange(activeRange, visibleCalendarIds)
     setCalendarEvents(events)
   })
 

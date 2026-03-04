@@ -36,7 +36,7 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
 
   const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
-  const isNavigatingRef = useRef(false)
+  const isNavigatingRef = useRef(true)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
