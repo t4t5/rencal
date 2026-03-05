@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, format, isSameDay, startOfMonth, subMonths } from "date-fns"
-import { useCallback, useLayoutEffect, useRef, useState } from "react"
+import { useCallback, useRef, useState } from "react"
 
 import { MonthGrid } from "@/components/month-view/MonthGrid"
 
@@ -32,10 +32,6 @@ export function MonthView() {
   // Range of months to generate weeks for (only grows, never shrinks)
   const [rangeStart, setRangeStart] = useState(() => startOfMonth(subMonths(activeDate, 2)))
   const [rangeEnd, setRangeEnd] = useState(() => startOfMonth(addMonths(activeDate, 3)))
-
-  // For scroll position preservation when prepending weeks
-  const prevScrollHeightRef = useRef(0)
-  const shouldAdjustScroll = useRef(false)
 
   const weeks = useMonthGrid(rangeStart, rangeEnd)
   const weekLayouts = useMonthEventLayout(weeks, calendarEvents, calendars)
@@ -76,10 +72,6 @@ export function MonthView() {
         currentDateRangeRef.current = { start: prevStart, end: currentRange.end }
 
         // Now extend the grid (events are already in state)
-        if (scrollRef.current) {
-          prevScrollHeightRef.current = scrollRef.current.scrollHeight
-          shouldAdjustScroll.current = true
-        }
         setRangeStart((prev) => startOfMonth(subMonths(prev, 2)))
       } finally {
         isLoadingRef.current = false
@@ -110,15 +102,6 @@ export function MonthView() {
         isLoadingRef.current = false
       }
     }, [visibleCalendarIds]),
-  })
-
-  // After prepending weeks, adjust scroll position to maintain visual position
-  useLayoutEffect(() => {
-    if (shouldAdjustScroll.current && scrollRef.current) {
-      const diff = scrollRef.current.scrollHeight - prevScrollHeightRef.current
-      scrollRef.current.scrollTop += diff
-      shouldAdjustScroll.current = false
-    }
   })
 
   return (

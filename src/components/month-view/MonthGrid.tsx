@@ -1,6 +1,6 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
 import { format } from "date-fns"
-import { memo, RefObject, useCallback, useEffect, useRef, useState } from "react"
+import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
@@ -178,6 +178,27 @@ export function MonthGrid({
     getScrollElement: () => scrollRef.current,
     estimateSize,
     overscan: 3,
+  })
+
+  // Compensate scroll position when weeks are prepended so the view stays in place.
+  // Track the first week's dateKey — if it changes with more weeks, items were prepended.
+  const prevFirstDateKeyRef = useRef(weeks[0]?.[0]?.dateKey)
+  const prevWeekCountRef = useRef(weeks.length)
+
+  useLayoutEffect(() => {
+    const curFirstKey = weeks[0]?.[0]?.dateKey
+    const prevFirstKey = prevFirstDateKeyRef.current
+    const prevCount = prevWeekCountRef.current
+
+    prevFirstDateKeyRef.current = curFirstKey
+    prevWeekCountRef.current = weeks.length
+
+    // Only adjust when weeks were prepended (first key changed & count grew)
+    if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
+
+    const addedWeeks = weeks.length - prevCount
+    const offset = addedWeeks * rowHeight
+    virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + offset, { align: "start" })
   })
 
   // Scroll to anchor week on mount, and re-scroll when rowHeight changes
