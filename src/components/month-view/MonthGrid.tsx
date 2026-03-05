@@ -180,19 +180,23 @@ export function MonthGrid({
     overscan: 3,
   })
 
-  // Scroll to anchor week on mount
+  // Scroll to anchor week on mount, and re-scroll when rowHeight changes
+  // (ResizeObserver may update rowHeight after mount, shifting virtualizer
+  // positions and leaving the view at the wrong offset).
   useEffect(() => {
-    if (hasInitialized.current) return
-    if (anchorWeekIndex >= 0) {
-      virtualizer.scrollToIndex(anchorWeekIndex, { align: "start" })
+    if (anchorWeekIndex < 0) return
+    virtualizer.scrollToIndex(anchorWeekIndex, { align: "start" })
+
+    if (!hasInitialized.current) {
       hasInitialized.current = true
-      // Delay enabling scroll detection so the initial scroll settles
-      // and doesn't get misinterpreted as user scrolling
-      setTimeout(() => {
-        scrollDetectionReady.current = true
-      }, 200)
     }
-  }, [anchorWeekIndex, virtualizer])
+
+    // Delay enabling scroll detection so the scroll settles
+    scrollDetectionReady.current = false
+    setTimeout(() => {
+      scrollDetectionReady.current = true
+    }, 200)
+  }, [anchorWeekIndex, virtualizer, rowHeight])
 
   // Scroll to active date's week during explicit navigation, but only if not already visible
   useEffect(() => {
