@@ -21,6 +21,7 @@ communicates with the backend via taurpc.
 - `src-tauri/src/oauth/` - Low-level OAuth primitives (localhost callback server, native popup window)
 - `src-tauri/src/routes/caldir.rs` - taurpc API procedures, including `connect_provider` (OAuth
   flow) and `connect_provider_with_credentials` (credentials flow like iCloud)
+- `src-tauri/src/notifications.rs` - Background reminder notifications
 - TypeScript bindings are auto-generated as `src/rpc/bindings.ts`
 
 ### Frontend (React)
@@ -58,6 +59,14 @@ Rencal reads calendars and events from the local caldir directory (`~/calendar/`
 Calendars are listed from caldir and grouped by account in the settings UI. The account identifier
 comes from the `{provider}_account` field in each calendar's `.caldir/config.toml` (e.g.,
 `google_account`, `icloud_account`). See the caldir CLAUDE.md for the account identifier convention.
+
+## Notifications
+
+Desktop notifications for calendar reminders run as a background tokio task spawned in
+`lib.rs::setup()`. Every 60 seconds it scans caldir for events with reminders whose trigger time
+(event start minus reminder minutes) falls within the last 60-second window, and fires a desktop
+notification via `notify-rust`. No frontend involvement or state DB needed. Test with
+`just test-notification`.
 
 ## Local Database
 
