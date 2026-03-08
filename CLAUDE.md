@@ -63,10 +63,10 @@ comes from the `{provider}_account` field in each calendar's `.caldir/config.tom
 ## Notifications
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in
-`lib.rs::setup()`. Every 60 seconds it scans caldir for events with reminders whose trigger time
-(event start minus reminder minutes) falls within the last 60-second window, and fires a desktop
-notification via `notify-rust`. No frontend involvement or state DB needed. Test with
-`just test-notification`.
+`lib.rs::setup()`. The loop aligns to minute boundaries, then scans caldir for events with
+reminders whose trigger time (event start minus reminder minutes) falls within the last 60-second
+window, and fires a desktop notification via `tauri-plugin-notification`. No frontend involvement
+or state DB needed. Test with `just test-notification`.
 
 ## Local Database
 
