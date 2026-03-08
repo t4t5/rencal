@@ -1,4 +1,5 @@
 mod migrations;
+mod notifications;
 mod oauth;
 mod routes;
 
@@ -21,6 +22,10 @@ pub async fn run() {
                 .add_migrations("sqlite:rencal.db", migrations::get_migrations())
                 .build(),
         )
+        .setup(|_app| {
+            tokio::spawn(notifications::run_reminder_loop());
+            Ok(())
+        })
         .invoke_handler(router.into_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
