@@ -6,13 +6,17 @@ use chrono::{Duration, Utc};
 use tauri::AppHandle;
 use tauri_plugin_notification::NotificationExt;
 
-/// Runs the reminder check loop every 60 seconds.
+/// Runs the reminder check loop aligned to minute boundaries.
 pub async fn run_reminder_loop(app: AppHandle) {
     loop {
+        // Sleep until the start of the next minute
+        let now = Utc::now();
+        let secs_remaining = 60 - now.timestamp() % 60;
+        tokio::time::sleep(StdDuration::from_secs(secs_remaining as u64)).await;
+
         if let Err(e) = check_and_notify(&app) {
             eprintln!("Reminder check error: {e}");
         }
-        tokio::time::sleep(StdDuration::from_secs(60)).await;
     }
 }
 
