@@ -43,3 +43,14 @@ reset:
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:
   bun scripts/analyze-recording.ts {{path}}
+
+# Create test event 1 min from now with 1m reminder, then run the app to see the notification
+test-notification:
+  #!/usr/bin/env bash
+  if date -d '+1 minute' +%H:%M &>/dev/null; then
+    in_1_min=$(date -d '+1 minute' +%H:%M)
+  else
+    in_1_min=$(date -v+1M +%H:%M)
+  fi
+  caldir new "Test notification" --start "today ${in_1_min}" --reminder 1m
+  echo "Event created at ${in_1_min} with 1m reminder. Run 'just dev' and wait ~1 minute for the notification."
