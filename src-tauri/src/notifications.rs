@@ -3,12 +3,13 @@ use std::time::Duration as StdDuration;
 use caldir_core::caldir::Caldir;
 use caldir_core::event::Event;
 use chrono::{Duration, Utc};
-use notify_rust::Notification;
+use tauri::AppHandle;
+use tauri_plugin_notification::NotificationExt;
 
 /// Runs the reminder check loop every 60 seconds.
-pub async fn run_reminder_loop() {
+pub async fn run_reminder_loop(app: AppHandle) {
     loop {
-        if let Err(e) = check_and_notify() {
+        if let Err(e) = check_and_notify(&app) {
             eprintln!("Reminder check error: {e}");
         }
         tokio::time::sleep(StdDuration::from_secs(60)).await;
@@ -16,7 +17,7 @@ pub async fn run_reminder_loop() {
 }
 
 /// Scan all calendars for reminders due in the last 60 seconds and fire notifications.
-fn check_and_notify() -> Result<(), Box<dyn std::error::Error>> {
+fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let caldir = Caldir::load()?;
     let now = Utc::now();
     let window_start = now - Duration::seconds(60);
@@ -35,7 +36,7 @@ fn check_and_notify() -> Result<(), Box<dyn std::error::Error>> {
             for reminder in event.reminders.iter() {
                 if let Some(trigger_time) = compute_trigger_time(event, reminder.minutes) {
                     if trigger_time >= window_start && trigger_time <= now {
-                        send_notification(event, reminder.minutes)?;
+                        send_notification(app, event, reminder.minutes)?;
                     }
                 }
             }
@@ -50,19 +51,19 @@ fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<chrono::Da
     Some(start_utc - Duration::minutes(minutes_before))
 }
 
-fn send_notification(event: &Event, minutes_before: i64) -> Result<(), Box<dyn std::error::Error>> {
+fn send_notification(
+    app: &AppHandle,
+    event: &Event,
+    minutes_before: i64,
+) -> Result<(), Box<dyn std::error::Error>> {
     let body = format_body(event, minutes_before);
 
-    let mut notification = Notification::new();
-    notification
-        .appname("renCal")
-        .summary(&event.summary)
-        .body(&body);
-
-    #[cfg(target_os = "macos")]
-    notification.sound_name("Basso");
-
-    notification.show()?;
+    app.notification()
+        .builder()
+        .title(&event.summary)
+        .body(&body)
+        .sound("default")
+        .show()?;
 
     Ok(())
 }
