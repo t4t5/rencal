@@ -37,6 +37,9 @@ importers:
       "@tauri-apps/api":
         specifier: ^2
         version: 2.9.0
+      "@tauri-apps/plugin-notification":
+        specifier: ^2.3.3
+        version: 2.3.3
       "@tauri-apps/plugin-opener":
         specifier: ^2
         version: 2.5.2
@@ -2169,6 +2172,12 @@ packages:
       }
     engines: { node: ">= 10" }
     hasBin: true
+
+  "@tauri-apps/plugin-notification@2.3.3":
+    resolution:
+      {
+        integrity: sha512-Zw+ZH18RJb41G4NrfHgIuofJiymusqN+q8fGUIIV7vyCH+5sSn5coqRv/MWB9qETsUs97vmU045q7OyseCV3Qg==,
+      }
 
   "@tauri-apps/plugin-opener@2.5.2":
     resolution:
@@ -4750,6 +4759,10 @@ snapshots:
       "@tauri-apps/cli-win32-arm64-msvc": 2.9.4
       "@tauri-apps/cli-win32-ia32-msvc": 2.9.4
       "@tauri-apps/cli-win32-x64-msvc": 2.9.4
+
+  "@tauri-apps/plugin-notification@2.3.3":
+    dependencies:
+      "@tauri-apps/api": 2.9.0
 
   "@tauri-apps/plugin-opener@2.5.2":
     dependencies:
