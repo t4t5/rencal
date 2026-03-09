@@ -9,6 +9,7 @@ import { Header } from "@/components/header/Header"
 import { MonthView } from "@/components/month-view/MonthView"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { WeekView } from "@/components/week-view/WeekView"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -46,7 +47,9 @@ function App() {
             </TabsList>
           </div>
           <div className="h-[calc(100vh-90px)]">
-            <TabsContent value="week">Week view</TabsContent>
+            <TabsContent value="week" className="h-full">
+              <WeekView />
+            </TabsContent>
             <TabsContent value="month" className="h-full">
               <MonthView />
             </TabsContent>
