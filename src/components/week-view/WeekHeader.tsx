@@ -55,11 +55,23 @@ export function WeekHeader({
 
       {/* All-day events zone */}
       {hasAllDay && (
-        <div className="grid grid-cols-[52px_repeat(7,1fr)]">
-          <div />
+        <div className="relative grid grid-cols-[52px_repeat(7,1fr)]">
+          {/* Gutter spacer */}
+          <div style={{ minHeight: (maxAllDayLane + 1) * 20 + 4 }} />
+
+          {/* Background columns with borders */}
+          {weekDays.map((day) => (
+            <div
+              key={day.dateKey}
+              className={cn("border-r border-border", day.isWeekend && "bg-weekendBg")}
+            />
+          ))}
+
+          {/* All-day event bars overlaid */}
           <div
-            className="col-span-7 grid grid-cols-7 gap-y-px py-0.5"
+            className="absolute top-0 bottom-0 right-0 grid grid-cols-7 py-0.5"
             style={{
+              left: 52,
               gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
             }}
           >
