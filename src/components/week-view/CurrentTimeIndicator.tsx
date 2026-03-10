@@ -3,16 +3,20 @@ import { useEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
-export function CurrentTimeIndicator({ topPercent, time }: { topPercent: number; time: Date }) {
+export function CurrentTimeIndicator({ topPercent }: { topPercent: number }) {
+  const [currentTime, setCurrentTime] = useState(new Date())
   const [colonVisible, setColonVisible] = useState(true)
 
   useEffect(() => {
-    const interval = setInterval(() => setColonVisible((v) => !v), 1_000)
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+      setColonVisible((v) => !v)
+    }, 1_000)
     return () => clearInterval(interval)
   }, [])
 
-  const hour = format(time, "H")
-  const minutes = format(time, "mm")
+  const hour = format(currentTime, "H")
+  const minutes = format(currentTime, "mm")
 
   return (
     <div

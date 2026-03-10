@@ -126,7 +126,7 @@ export function WeekTimeGrid({
 
           {/* Current time indicator */}
           {colIndex === todayColIndex && showTimeIndicator && (
-            <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} time={now} />
+            <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} />
           )}
         </div>
       ))}
