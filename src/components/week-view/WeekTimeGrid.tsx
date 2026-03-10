@@ -1,3 +1,4 @@
+import { format } from "date-fns"
 import { useEffect, useRef, useState } from "react"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
@@ -5,6 +6,34 @@ import { HOUR_HEIGHT, type WeekTimedEventLayout } from "@/hooks/cal-events/useWe
 import { cn } from "@/lib/utils"
 
 import { WeekTimedEvent } from "./WeekTimedEvent"
+
+function CurrentTimeIndicator({ top, time }: { top: number; time: Date }) {
+  const [colonVisible, setColonVisible] = useState(true)
+
+  useEffect(() => {
+    const interval = setInterval(() => setColonVisible((v) => !v), 1_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const hour = format(time, "h")
+  const minutes = format(time, "mm")
+  const ampm = format(time, "aaa")
+
+  return (
+    <div
+      className="absolute -left-3.5 -right-2 z-10 pointer-events-none flex items-center"
+      style={{ top, transform: "translateY(-50%)" }}
+    >
+      <span className="text-[11px] font-medium text-active shrink-0 leading-none bg-background">
+        {hour}
+        <span className={cn(!colonVisible && "invisible")}>:</span>
+        {minutes}
+        {ampm}
+      </span>
+      <div className="ml-1 grow border-t border-dashed border-active" />
+    </div>
+  )
+}
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
 const TOTAL_HEIGHT = 24 * HOUR_HEIGHT
@@ -24,7 +53,6 @@ export function WeekTimeGrid({
   onEventClick,
   scrollRef,
 }: WeekTimeGridProps) {
-  const timeIndicatorRef = useRef<HTMLDivElement>(null)
   const [, setTick] = useState(0)
 
   // Auto-scroll to current time on mount
@@ -86,14 +114,7 @@ export function WeekTimeGrid({
 
               {/* Current time indicator */}
               {colIndex === todayColIndex && (
-                <div
-                  ref={timeIndicatorRef}
-                  className="absolute left-0 right-0 z-10 pointer-events-none"
-                  style={{ top: timeIndicatorTop }}
-                >
-                  <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-red-500" />
-                  <div className="h-0.5 bg-red-500" />
-                </div>
+                <CurrentTimeIndicator top={timeIndicatorTop} time={now} />
               )}
             </div>
           ))}
