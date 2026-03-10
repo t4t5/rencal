@@ -23,7 +23,7 @@ export function CurrentTimeIndicator({ topPercent }: { topPercent: number }) {
       className="absolute -left-3.5 -right-2 z-10 pointer-events-none flex items-center"
       style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
     >
-      <span className="text-[11px] font-medium text-active shrink-0 leading-none bg-background">
+      <span className="text-[11px] font-medium text-active shrink-0 leading-none">
         {hour}
         <span className={cn(!colonVisible && "invisible")}>:</span>
         {minutes}

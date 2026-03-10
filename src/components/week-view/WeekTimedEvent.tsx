@@ -19,7 +19,7 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
     <div
       data-event-clickable
       className={cn(
-        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110",
+        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110 pl-2",
         isActive && "brightness-150",
       )}
       style={{
@@ -33,7 +33,6 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
         color: isActive
           ? `color-mix(in srgb, ${color} 30%, white)`
           : `color-mix(in srgb, ${color} 70%, white)`,
-        borderLeft: `3px solid ${color}`,
       }}
       onClick={(e) => {
         e.stopPropagation()
@@ -41,6 +40,8 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
         onClick()
       }}
     >
+      <div className="w-[3px] absolute left-0 top-0 bottom-0" style={{ backgroundColor: color }} />
+
       <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
       {layout.height > 2 && (
         <div className="truncate opacity-80 leading-tight">
