@@ -16,6 +16,7 @@ type WeekTimeGridProps = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   activeEventId: string | null
+  activeDateKey: string
   onEventClick: (id: string) => void
   visibleStartHour: number
   visibleEndHour: number
@@ -27,6 +28,7 @@ export function WeekTimeGrid({
   allDayItems,
   maxAllDayLane,
   activeEventId,
+  activeDateKey,
   onEventClick,
   visibleStartHour,
   visibleEndHour,
@@ -61,8 +63,8 @@ export function WeekTimeGrid({
         <div
           key={day.dateKey}
           className={cn(
-            "flex items-baseline justify-end gap-1 border-r border-border px-1",
-            day.isWeekend && "bg-weekendBg",
+            "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5",
+            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
           )}
         >
           <span className="text-[10px] text-muted-foreground uppercase">
@@ -91,7 +93,10 @@ export function WeekTimeGrid({
           {weekDays.map((day, i) => (
             <div
               key={day.dateKey}
-              className={cn("border-r border-border", day.isWeekend && "bg-weekendBg")}
+              className={cn(
+                "border-r border-border",
+                day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+              )}
               style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
             />
           ))}
@@ -112,7 +117,10 @@ export function WeekTimeGrid({
       {weekDays.map((day, colIndex) => (
         <div
           key={day.dateKey}
-          className={cn("relative border-r border-border", day.isWeekend && "bg-weekendBg")}
+          className={cn(
+            "relative border-r border-border",
+            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+          )}
         >
           {/* Timed events */}
           {timedByCol[colIndex].map((layout) => (

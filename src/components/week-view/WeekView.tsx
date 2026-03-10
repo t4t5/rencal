@@ -38,6 +38,7 @@ export function WeekView() {
         allDayItems={layout.allDayItems}
         maxAllDayLane={layout.maxAllDayLane}
         activeEventId={activeEvent?.id ?? null}
+        activeDateKey={format(activeDate, "yyyy-MM-dd")}
         onEventClick={toggleActiveEventId}
         visibleStartHour={layout.visibleStartHour}
         visibleEndHour={layout.visibleEndHour}
