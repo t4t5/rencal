@@ -1,5 +1,4 @@
 import { format, startOfWeek } from "date-fns"
-import { AnimatePresence, motion } from "motion/react"
 import { useRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -33,33 +32,16 @@ export function WeekView() {
 
   return (
     <div className="relative h-full overflow-hidden">
-      <AnimatePresence initial={false} custom={direction}>
-        <motion.div
-          key={weekKey}
-          className="absolute inset-0"
-          custom={direction}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          variants={{
-            enter: (d: number) => ({ x: d === 0 ? 0 : d * 300, opacity: d === 0 ? 1 : 0.5 }),
-            center: { x: 0, opacity: 1 },
-            exit: (d: number) => ({ x: d * -300, opacity: 0.5 }),
-          }}
-          transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
-        >
-          <WeekTimeGrid
-            weekDays={weekDays}
-            timedByCol={layout.timedByCol}
-            allDayItems={layout.allDayItems}
-            maxAllDayLane={layout.maxAllDayLane}
-            activeEventId={activeEvent?.id ?? null}
-            onEventClick={toggleActiveEventId}
-            visibleStartHour={layout.visibleStartHour}
-            visibleEndHour={layout.visibleEndHour}
-          />
-        </motion.div>
-      </AnimatePresence>
+      <WeekTimeGrid
+        weekDays={weekDays}
+        timedByCol={layout.timedByCol}
+        allDayItems={layout.allDayItems}
+        maxAllDayLane={layout.maxAllDayLane}
+        activeEventId={activeEvent?.id ?? null}
+        onEventClick={toggleActiveEventId}
+        visibleStartHour={layout.visibleStartHour}
+        visibleEndHour={layout.visibleEndHour}
+      />
     </div>
   )
 }
