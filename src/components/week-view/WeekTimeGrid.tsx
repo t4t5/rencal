@@ -6,36 +6,9 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { cn } from "@/lib/utils"
 
+import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { WeekAllDayBar } from "./WeekAllDayBar"
 import { WeekTimedEvent } from "./WeekTimedEvent"
-
-function CurrentTimeIndicator({ topPercent, time }: { topPercent: number; time: Date }) {
-  const [colonVisible, setColonVisible] = useState(true)
-
-  useEffect(() => {
-    const interval = setInterval(() => setColonVisible((v) => !v), 1_000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const hour = format(time, "h")
-  const minutes = format(time, "mm")
-  const ampm = format(time, "aaa")
-
-  return (
-    <div
-      className="absolute -left-3.5 -right-2 z-10 pointer-events-none flex items-center"
-      style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
-    >
-      <span className="text-[11px] font-medium text-active shrink-0 leading-none bg-background">
-        {hour}
-        <span className={cn(!colonVisible && "invisible")}>:</span>
-        {minutes}
-        {ampm}
-      </span>
-      <div className="ml-1 grow border-t border-dashed border-active" />
-    </div>
-  )
-}
 
 type WeekTimeGridProps = {
   weekDays: MonthDay[]
