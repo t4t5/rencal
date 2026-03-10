@@ -63,6 +63,8 @@ export function WeekView() {
               timedByCol={layout.timedByCol}
               activeEventId={activeEvent?.id ?? null}
               onEventClick={toggleActiveEventId}
+              visibleStartHour={layout.visibleStartHour}
+              visibleEndHour={layout.visibleEndHour}
             />
           </motion.div>
         </AnimatePresence>

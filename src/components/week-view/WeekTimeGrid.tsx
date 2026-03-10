@@ -35,13 +35,13 @@ function CurrentTimeIndicator({ topPercent, time }: { topPercent: number; time: 
   )
 }
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
-
 type WeekTimeGridProps = {
   weekDays: MonthDay[]
   timedByCol: WeekTimedEventLayout[][]
   activeEventId: string | null
   onEventClick: (id: string) => void
+  visibleStartHour: number
+  visibleEndHour: number
 }
 
 export function WeekTimeGrid({
@@ -49,6 +49,8 @@ export function WeekTimeGrid({
   timedByCol,
   activeEventId,
   onEventClick,
+  visibleStartHour,
+  visibleEndHour,
 }: WeekTimeGridProps) {
   const [, setTick] = useState(0)
 
@@ -58,9 +60,17 @@ export function WeekTimeGrid({
     return () => clearInterval(interval)
   }, [])
 
+  const rangeHours = visibleEndHour - visibleStartHour
+  const hours = Array.from({ length: rangeHours }, (_, i) => visibleStartHour + i)
+
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const timeIndicatorTopPercent = (currentMinutes / (24 * 60)) * 100
+  const rangeStartMin = visibleStartHour * 60
+  const rangeMinutes = rangeHours * 60
+  const timeIndicatorTopPercent = ((currentMinutes - rangeStartMin) / rangeMinutes) * 100
+
+  // Only show indicator if current time is within visible range
+  const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
 
   // Find which column (if any) is today
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
@@ -68,11 +78,11 @@ export function WeekTimeGrid({
   return (
     <div className="relative h-full">
       {/* Hour grid lines + labels */}
-      {HOURS.map((hour) => (
+      {hours.map((hour, i) => (
         <div
           key={hour}
-          className="absolute left-0 right-0 border-t border-border first-of-type:border-none"
-          style={{ top: `${(hour / 24) * 100}%` }}
+          className={cn("absolute left-0 right-0 border-t border-border", i === 0 && "border-none")}
+          style={{ top: `${((hour - visibleStartHour) / rangeHours) * 100}%` }}
         >
           <span className="absolute -top-1 left-1.5 text-[10px] text-muted-foreground w-10">
             {String(hour).padStart(2, "0")}:00
@@ -99,7 +109,7 @@ export function WeekTimeGrid({
               ))}
 
               {/* Current time indicator */}
-              {colIndex === todayColIndex && (
+              {colIndex === todayColIndex && showTimeIndicator && (
                 <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} time={now} />
               )}
             </div>
