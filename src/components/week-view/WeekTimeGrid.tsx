@@ -88,7 +88,7 @@ export function WeekTimeGrid({
         <div
           key={day.dateKey}
           className={cn(
-            "flex flex-col items-center py-1.5 border-r border-border",
+            "flex items-baseline justify-end gap-1 border-r border-border px-1",
             day.isWeekend && "bg-weekendBg",
           )}
         >
