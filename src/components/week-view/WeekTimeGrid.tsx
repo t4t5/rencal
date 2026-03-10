@@ -17,6 +17,7 @@ type WeekTimeGridProps = {
   maxAllDayLane: number
   activeEventId: string | null
   activeDateKey: string
+  onDayClick: (date: Date) => void
   onEventClick: (id: string) => void
   visibleStartHour: number
   visibleEndHour: number
@@ -29,6 +30,7 @@ export function WeekTimeGrid({
   maxAllDayLane,
   activeEventId,
   activeDateKey,
+  onDayClick,
   onEventClick,
   visibleStartHour,
   visibleEndHour,
@@ -63,9 +65,10 @@ export function WeekTimeGrid({
         <div
           key={day.dateKey}
           className={cn(
-            "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5",
+            "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
             day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
           )}
+          onClick={() => onDayClick(day.date)}
         >
           <span className="text-[10px] text-muted-foreground uppercase">
             {format(day.date, "EEE")}
@@ -118,9 +121,10 @@ export function WeekTimeGrid({
         <div
           key={day.dateKey}
           className={cn(
-            "relative border-r border-border",
+            "relative border-r border-border cursor-default",
             day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
           )}
+          onClick={() => onDayClick(day.date)}
         >
           {/* Timed events */}
           {timedByCol[colIndex].map((layout) => (

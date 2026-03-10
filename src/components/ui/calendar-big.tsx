@@ -177,7 +177,7 @@ function CalendarBig({
           return (
             <Week
               className={cn(className, {
-                "bg-white/8": isCurrentWeek,
+                "bg-bgTertiary": isCurrentWeek,
               })}
               {...weekProps}
             />

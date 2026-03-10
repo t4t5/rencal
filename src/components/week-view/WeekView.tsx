@@ -10,7 +10,7 @@ import { useWeekEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { WeekTimeGrid } from "./WeekTimeGrid"
 
 export function WeekView() {
-  const { activeDate, calendars } = useCalendarState()
+  const { activeDate, setActiveDate, calendars } = useCalendarState()
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
   const weekStart = startOfWeek(activeDate, { weekStartsOn: 1 })
@@ -39,6 +39,7 @@ export function WeekView() {
         maxAllDayLane={layout.maxAllDayLane}
         activeEventId={activeEvent?.id ?? null}
         activeDateKey={format(activeDate, "yyyy-MM-dd")}
+        onDayClick={setActiveDate}
         onEventClick={toggleActiveEventId}
         visibleStartHour={layout.visibleStartHour}
         visibleEndHour={layout.visibleEndHour}
