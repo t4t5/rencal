@@ -6,7 +6,8 @@ import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
 
-export const HOUR_HEIGHT = 60
+/** Total minutes in a day */
+const DAY_MINUTES = 24 * 60
 
 export type WeekTimedEventLayout = {
   event: CalendarEvent
@@ -35,6 +36,7 @@ function daysDiff(aMs: number, bMs: number): number {
   return Math.round((aMs - bMs) / MS_PER_DAY)
 }
 
+/** Returns top and height as percentages (0–100) of the full day */
 function computeTimedPosition(event: CalendarEvent): { top: number; height: number } {
   const start = new Date(event.start)
   const end = new Date(event.end)
@@ -44,10 +46,10 @@ function computeTimedPosition(event: CalendarEvent): { top: number; height: numb
   // If event spans midnight, clamp end to end of day
   const startDay = startOfDayMs(start)
   const endDay = startOfDayMs(end)
-  const durationMinutes = endDay > startDay ? 24 * 60 - startMinutes : endMinutes - startMinutes
+  const durationMinutes = endDay > startDay ? DAY_MINUTES - startMinutes : endMinutes - startMinutes
 
-  const top = (startMinutes / 60) * HOUR_HEIGHT
-  const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 15)
+  const top = (startMinutes / DAY_MINUTES) * 100
+  const height = Math.max((durationMinutes / DAY_MINUTES) * 100, (15 / DAY_MINUTES) * 100)
 
   return { top, height }
 }

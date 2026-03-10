@@ -32,10 +32,6 @@ export function WeekView() {
 
   const direction = directionRef.current
 
-  // Preserve scroll position across week transitions
-  const scrollRef = useRef<HTMLDivElement | null>(null)
-  const savedScrollRef = useRef(0)
-
   return (
     <div className="flex flex-col h-full">
       <WeekHeader
@@ -50,17 +46,7 @@ export function WeekView() {
         <AnimatePresence initial={false} custom={direction}>
           <motion.div
             key={weekKey}
-            className="absolute inset-0 overflow-y-auto"
-            ref={(el) => {
-              scrollRef.current = el
-              // Restore scroll position on new week
-              if (el && savedScrollRef.current > 0) {
-                el.scrollTop = savedScrollRef.current
-              }
-            }}
-            onScroll={(e) => {
-              savedScrollRef.current = e.currentTarget.scrollTop
-            }}
+            className="absolute inset-0"
             custom={direction}
             initial="enter"
             animate="center"
@@ -77,7 +63,6 @@ export function WeekView() {
               timedByCol={layout.timedByCol}
               activeEventId={activeEvent?.id ?? null}
               onEventClick={toggleActiveEventId}
-              scrollRef={scrollRef}
             />
           </motion.div>
         </AnimatePresence>

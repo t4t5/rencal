@@ -23,8 +23,8 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
         isActive && "brightness-150",
       )}
       style={{
-        top: layout.top,
-        height: layout.height,
+        top: `${layout.top}%`,
+        height: `${layout.height}%`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
         backgroundColor: isActive
@@ -42,7 +42,7 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
       }}
     >
       <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
-      {layout.height > 30 && (
+      {layout.height > 2 && (
         <div className="truncate opacity-80 leading-tight">
           {format(layout.event.start, "HH:mm")} – {format(layout.event.end, "HH:mm")}
         </div>

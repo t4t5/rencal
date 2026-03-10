@@ -1,13 +1,13 @@
 import { format } from "date-fns"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { HOUR_HEIGHT, type WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { cn } from "@/lib/utils"
 
 import { WeekTimedEvent } from "./WeekTimedEvent"
 
-function CurrentTimeIndicator({ top, time }: { top: number; time: Date }) {
+function CurrentTimeIndicator({ topPercent, time }: { topPercent: number; time: Date }) {
   const [colonVisible, setColonVisible] = useState(true)
 
   useEffect(() => {
@@ -22,7 +22,7 @@ function CurrentTimeIndicator({ top, time }: { top: number; time: Date }) {
   return (
     <div
       className="absolute -left-3.5 -right-2 z-10 pointer-events-none flex items-center"
-      style={{ top, transform: "translateY(-50%)" }}
+      style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
     >
       <span className="text-[11px] font-medium text-active shrink-0 leading-none bg-background">
         {hour}
@@ -36,14 +36,12 @@ function CurrentTimeIndicator({ top, time }: { top: number; time: Date }) {
 }
 
 const HOURS = Array.from({ length: 24 }, (_, i) => i)
-const TOTAL_HEIGHT = 24 * HOUR_HEIGHT
 
 type WeekTimeGridProps = {
   weekDays: MonthDay[]
   timedByCol: WeekTimedEventLayout[][]
   activeEventId: string | null
   onEventClick: (id: string) => void
-  scrollRef: React.RefObject<HTMLDivElement | null>
 }
 
 export function WeekTimeGrid({
@@ -51,20 +49,8 @@ export function WeekTimeGrid({
   timedByCol,
   activeEventId,
   onEventClick,
-  scrollRef,
 }: WeekTimeGridProps) {
   const [, setTick] = useState(0)
-
-  // Auto-scroll to current time on mount
-  const hasScrolled = useRef(false)
-  useEffect(() => {
-    if (hasScrolled.current || !scrollRef.current) return
-    hasScrolled.current = true
-    const now = new Date()
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
-    const targetScroll = (currentMinutes / 60) * HOUR_HEIGHT - scrollRef.current.clientHeight / 3
-    scrollRef.current.scrollTop = Math.max(0, targetScroll)
-  }, [scrollRef])
 
   // Update time indicator every 60s
   useEffect(() => {
@@ -74,19 +60,19 @@ export function WeekTimeGrid({
 
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const timeIndicatorTop = (currentMinutes / 60) * HOUR_HEIGHT
+  const timeIndicatorTopPercent = (currentMinutes / (24 * 60)) * 100
 
   // Find which column (if any) is today
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
 
   return (
-    <div className="relative" style={{ height: TOTAL_HEIGHT }}>
+    <div className="relative h-full">
       {/* Hour grid lines + labels */}
       {HOURS.map((hour) => (
         <div
           key={hour}
           className="absolute left-0 right-0 border-t border-border first-of-type:border-none"
-          style={{ top: hour * HOUR_HEIGHT }}
+          style={{ top: `${(hour / 24) * 100}%` }}
         >
           <span className="absolute -top-1 left-1.5 text-[10px] text-muted-foreground w-10">
             {String(hour).padStart(2, "0")}:00
@@ -114,7 +100,7 @@ export function WeekTimeGrid({
 
               {/* Current time indicator */}
               {colIndex === todayColIndex && (
-                <CurrentTimeIndicator top={timeIndicatorTop} time={now} />
+                <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} time={now} />
               )}
             </div>
           ))}
