@@ -57,10 +57,10 @@ export function WeekTimeGrid({
       {HOURS.map((hour) => (
         <div
           key={hour}
-          className="absolute left-0 right-0 border-t border-border"
+          className="absolute left-0 right-0 border-t border-border first-of-type:border-none"
           style={{ top: hour * HOUR_HEIGHT }}
         >
-          <span className="absolute -top-2.5 left-1.5 text-[10px] text-muted-foreground w-10">
+          <span className="absolute -top-1 left-1.5 text-[10px] text-muted-foreground w-10">
             {String(hour).padStart(2, "0")}:00
           </span>
         </div>
