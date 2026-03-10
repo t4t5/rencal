@@ -24,7 +24,7 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
       )}
       style={{
         top: `${layout.top}%`,
-        height: `${layout.height}%`,
+        height: `max(${layout.height}%, 2.125rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
         backgroundColor: isActive
