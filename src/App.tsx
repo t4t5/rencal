@@ -46,7 +46,7 @@ function App() {
               <TabsTrigger value="month">Month</TabsTrigger>
             </TabsList>
           </div>
-          <div className="h-[calc(100vh-90px)]">
+          <div className="h-[calc(100vh-80px)]">
             <TabsContent value="week" className="h-full">
               <WeekView />
             </TabsContent>

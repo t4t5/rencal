@@ -1,42 +1,41 @@
-import { useEffect, useRef, useState } from "react"
+import { format } from "date-fns"
+import { useEffect, useState } from "react"
 
+import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { HOUR_HEIGHT, type WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { cn } from "@/lib/utils"
 
+import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
+import { WeekAllDayBar } from "./WeekAllDayBar"
 import { WeekTimedEvent } from "./WeekTimedEvent"
-
-const HOURS = Array.from({ length: 24 }, (_, i) => i)
-const TOTAL_HEIGHT = 24 * HOUR_HEIGHT
 
 type WeekTimeGridProps = {
   weekDays: MonthDay[]
   timedByCol: WeekTimedEventLayout[][]
+  allDayItems: AllDayLaneItem[]
+  maxAllDayLane: number
   activeEventId: string | null
+  activeDateKey: string
+  onDayClick: (date: Date) => void
   onEventClick: (id: string) => void
-  scrollRef: React.RefObject<HTMLDivElement | null>
+  visibleStartHour: number
+  visibleEndHour: number
 }
 
 export function WeekTimeGrid({
   weekDays,
   timedByCol,
+  allDayItems,
+  maxAllDayLane,
   activeEventId,
+  activeDateKey,
+  onDayClick,
   onEventClick,
-  scrollRef,
+  visibleStartHour,
+  visibleEndHour,
 }: WeekTimeGridProps) {
-  const timeIndicatorRef = useRef<HTMLDivElement>(null)
   const [, setTick] = useState(0)
-
-  // Auto-scroll to current time on mount
-  const hasScrolled = useRef(false)
-  useEffect(() => {
-    if (hasScrolled.current || !scrollRef.current) return
-    hasScrolled.current = true
-    const now = new Date()
-    const currentMinutes = now.getHours() * 60 + now.getMinutes()
-    const targetScroll = (currentMinutes / 60) * HOUR_HEIGHT - scrollRef.current.clientHeight / 3
-    scrollRef.current.scrollTop = Math.max(0, targetScroll)
-  }, [scrollRef])
 
   // Update time indicator every 60s
   useEffect(() => {
@@ -44,61 +43,105 @@ export function WeekTimeGrid({
     return () => clearInterval(interval)
   }, [])
 
+  const rangeHours = visibleEndHour - visibleStartHour
+
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const timeIndicatorTop = (currentMinutes / 60) * HOUR_HEIGHT
+  const rangeStartMin = visibleStartHour * 60
+  const rangeMinutes = rangeHours * 60
+  const timeIndicatorTopPercent = ((currentMinutes - rangeStartMin) / rangeMinutes) * 100
 
-  // Find which column (if any) is today
+  const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
+  const hasAllDay = allDayItems.length > 0
 
   return (
-    <div className="relative" style={{ height: TOTAL_HEIGHT }}>
-      {/* Hour grid lines + labels */}
-      {HOURS.map((hour) => (
+    <div
+      className="grid grid-cols-7 h-full"
+      style={{ gridTemplateRows: hasAllDay ? "auto auto 1fr" : "auto 1fr" }}
+    >
+      {/* Row 1: Day headers */}
+      {weekDays.map((day) => (
         <div
-          key={hour}
-          className="absolute left-0 right-0 border-t border-border"
-          style={{ top: hour * HOUR_HEIGHT }}
+          key={day.dateKey}
+          className={cn(
+            "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
+            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+          )}
+          onClick={() => onDayClick(day.date)}
         >
-          <span className="absolute -top-2.5 left-1.5 text-[10px] text-muted-foreground w-10">
-            {String(hour).padStart(2, "0")}:00
+          <span className="text-[10px] text-muted-foreground uppercase">
+            {format(day.date, "EEE")}
+          </span>
+          <span
+            className={cn(
+              "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
+              day.isToday && "bg-primary text-primary-foreground",
+            )}
+          >
+            {format(day.date, "d")}
           </span>
         </div>
       ))}
 
-      {/* Day columns */}
-      <div className="absolute top-0 bottom-0 right-0" style={{ left: 52 }}>
-        <div className="grid grid-cols-7 h-full">
-          {weekDays.map((day, colIndex) => (
+      {/* Row 2: All-day events (only if present) */}
+      {hasAllDay && (
+        <div
+          className="col-span-7 relative grid grid-cols-7 border-b border-border"
+          style={{
+            gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
+          }}
+        >
+          {/* Background columns for weekend shading + borders */}
+          {weekDays.map((day, i) => (
             <div
               key={day.dateKey}
-              className={cn("relative border-r border-border", day.isWeekend && "bg-weekendBg")}
-            >
-              {/* Timed events */}
-              {timedByCol[colIndex].map((layout) => (
-                <WeekTimedEvent
-                  key={layout.event.id}
-                  layout={layout}
-                  isActive={activeEventId === layout.event.id}
-                  onClick={() => onEventClick(layout.event.id)}
-                />
-              ))}
-
-              {/* Current time indicator */}
-              {colIndex === todayColIndex && (
-                <div
-                  ref={timeIndicatorRef}
-                  className="absolute left-0 right-0 z-10 pointer-events-none"
-                  style={{ top: timeIndicatorTop }}
-                >
-                  <div className="absolute -left-1.5 -top-1.5 size-3 rounded-full bg-red-500" />
-                  <div className="h-0.5 bg-red-500" />
-                </div>
+              className={cn(
+                "border-r border-border",
+                day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
               )}
-            </div>
+              style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
+            />
+          ))}
+
+          {/* All-day event bars */}
+          {allDayItems.map((item) => (
+            <WeekAllDayBar
+              key={item.event.id}
+              item={item}
+              isActive={activeEventId === item.event.id}
+              onClick={() => onEventClick(item.event.id)}
+            />
           ))}
         </div>
-      </div>
+      )}
+
+      {/* Row 3: Time columns */}
+      {weekDays.map((day, colIndex) => (
+        <div
+          key={day.dateKey}
+          className={cn(
+            "relative border-r border-border cursor-default",
+            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+          )}
+          onClick={() => onDayClick(day.date)}
+        >
+          {/* Timed events */}
+          {timedByCol[colIndex].map((layout) => (
+            <WeekTimedEvent
+              key={layout.event.id}
+              layout={layout}
+              isActive={activeEventId === layout.event.id}
+              onClick={() => onEventClick(layout.event.id)}
+            />
+          ))}
+
+          {/* Current time indicator */}
+          {colIndex === todayColIndex && showTimeIndicator && (
+            <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} />
+          )}
+        </div>
+      ))}
     </div>
   )
 }

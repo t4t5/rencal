@@ -6,7 +6,8 @@ import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
 
-export const HOUR_HEIGHT = 60
+/** Total minutes in a day */
+const DAY_MINUTES = 24 * 60
 
 export type WeekTimedEventLayout = {
   event: CalendarEvent
@@ -21,6 +22,10 @@ export type WeekLayout = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   timedByCol: WeekTimedEventLayout[][]
+  /** First visible hour (inclusive) */
+  visibleStartHour: number
+  /** Last visible hour (exclusive, e.g. 24 means grid extends to midnight) */
+  visibleEndHour: number
 }
 
 const MS_PER_DAY = 86_400_000
@@ -35,7 +40,12 @@ function daysDiff(aMs: number, bMs: number): number {
   return Math.round((aMs - bMs) / MS_PER_DAY)
 }
 
-function computeTimedPosition(event: CalendarEvent): { top: number; height: number } {
+/** Returns top and height as percentages (0–100) of the visible range */
+function computeTimedPosition(
+  event: CalendarEvent,
+  rangeStartMin: number,
+  rangeMinutes: number,
+): { top: number; height: number } {
   const start = new Date(event.start)
   const end = new Date(event.end)
   const startMinutes = start.getHours() * 60 + start.getMinutes()
@@ -44,10 +54,10 @@ function computeTimedPosition(event: CalendarEvent): { top: number; height: numb
   // If event spans midnight, clamp end to end of day
   const startDay = startOfDayMs(start)
   const endDay = startOfDayMs(end)
-  const durationMinutes = endDay > startDay ? 24 * 60 - startMinutes : endMinutes - startMinutes
+  const durationMinutes = endDay > startDay ? DAY_MINUTES - startMinutes : endMinutes - startMinutes
 
-  const top = (startMinutes / 60) * HOUR_HEIGHT
-  const height = Math.max((durationMinutes / 60) * HOUR_HEIGHT, 15)
+  const top = ((startMinutes - rangeStartMin) / rangeMinutes) * 100
+  const height = Math.max((durationMinutes / rangeMinutes) * 100, (15 / rangeMinutes) * 100)
 
   return { top, height }
 }
@@ -116,6 +126,24 @@ export function useWeekEventLayout(
     const weekEndDayMs = startOfDay(weekDays[6].date).getTime()
     const weekExclEndMs = weekEndDayMs + MS_PER_DAY
 
+    const DEFAULT_START_HOUR = 6
+    const DEFAULT_END_HOUR = 24
+
+    // Determine visible hour range by scanning timed events
+    let visibleStartHour = DEFAULT_START_HOUR
+    for (const event of events) {
+      if (event.all_day) continue
+      const evFirstMs = startOfDayMs(event.start)
+      if (evFirstMs < weekStartMs || evFirstMs >= weekExclEndMs) continue
+      const evLastMs = startOfDayMs(event.end)
+      if (evLastMs - evFirstMs >= MS_PER_DAY) continue
+      const startHour = new Date(event.start).getHours()
+      if (startHour < visibleStartHour) visibleStartHour = startHour
+    }
+    const visibleEndHour = DEFAULT_END_HOUR
+    const rangeStartMin = visibleStartHour * 60
+    const rangeMinutes = (visibleEndHour - visibleStartHour) * 60
+
     const allDayItems: AllDayLaneItem[] = []
     const timedByCol: WeekTimedEventLayout[][] = Array.from({ length: 7 }, () => [])
 
@@ -175,7 +203,7 @@ export function useWeekEventLayout(
 
           const colIndex = daysDiff(firstMs, weekStartMs)
           if (colIndex >= 0 && colIndex < 7) {
-            const { top, height } = computeTimedPosition(event)
+            const { top, height } = computeTimedPosition(event, rangeStartMin, rangeMinutes)
             timedByCol[colIndex].push({
               event,
               color,
@@ -226,6 +254,6 @@ export function useWeekEventLayout(
       maxAllDayLane = Math.max(maxAllDayLane, lane)
     }
 
-    return { allDayItems, maxAllDayLane, timedByCol }
+    return { allDayItems, maxAllDayLane, timedByCol, visibleStartHour, visibleEndHour }
   }, [weekDays, events, calendars])
 }
