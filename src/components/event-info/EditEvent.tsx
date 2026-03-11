@@ -13,11 +13,12 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { rpc } from "@/rpc"
-import { CalendarEvent, Recurrence } from "@/rpc/bindings"
+import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { isPendingEvent } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
@@ -138,6 +139,22 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
+  const isPendingInvite = isPendingEvent(dirtyEvent, calendars)
+
+  const handleRsvp = async (response: ResponseStatus) => {
+    if (!dirtyEvent) return
+    await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
+    setDirtyEvent({
+      ...dirtyEvent,
+      attendees: dirtyEvent.attendees.map((a) =>
+        a.email.toLowerCase() === calendar?.account?.toLowerCase()
+          ? { ...a, response_status: response }
+          : a,
+      ),
+    })
+    await reloadEvents()
+  }
+
   return (
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
       <div className="flex justify-end px-1 pb-1">
@@ -214,6 +231,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         reminders={dirtyEvent.reminders}
         onReminderAdd={handleReminderAdd}
         onReminderRemove={handleReminderRemove}
+        onRsvp={isPendingInvite ? handleRsvp : undefined}
         onClose={() => setActiveEventId(null)}
       />
 

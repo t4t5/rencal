@@ -52,10 +52,17 @@ export function AttendeesDisplay({
         <span className="flex items-center py-2 pl-2 text-sm text-muted-foreground">Attendees</span>
       </InputGroup>
 
-      {organizer && <AttendeeRow attendee={organizer} label="Organiser" />}
-      {attendees?.map((a) => (
-        <AttendeeRow key={a.email} attendee={a} />
-      ))}
+      {organizer && (
+        <AttendeeRow
+          attendee={attendees?.find((a) => a.email === organizer.email) ?? organizer}
+          label="Organiser"
+        />
+      )}
+      {attendees
+        ?.filter((a) => a.email !== organizer?.email)
+        .map((a) => (
+          <AttendeeRow key={a.email} attendee={a} />
+        ))}
     </div>
   )
 }

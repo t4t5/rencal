@@ -37,4 +37,27 @@ function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitiv
   return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
 }
 
-export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor }
+function PopoverArrow({
+  className,
+  width = 12,
+  height = 6,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Arrow>) {
+  return (
+    <PopoverPrimitive.Arrow
+      data-slot="popover-arrow"
+      className={cn("fill-popover", className)}
+      asChild
+      width={width}
+      height={height}
+      {...props}
+    >
+      <svg viewBox="0 0 30 10" preserveAspectRatio="none">
+        <polygon points="0,0 30,0 15,10" />
+        <polyline points="0,0 15,10 30,0" fill="none" className="stroke-border" strokeWidth={2} />
+      </svg>
+    </PopoverPrimitive.Arrow>
+  )
+}
+
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor, PopoverArrow }
