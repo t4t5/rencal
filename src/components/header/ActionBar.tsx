@@ -18,6 +18,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { cn } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
+import { InvitesDropdown } from "./InvitesDropdown"
 
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
@@ -30,6 +31,7 @@ export function ActionBar() {
 
       <div className="flex gap-2 items-center">
         <SyncStatus />
+        <InvitesDropdown />
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>

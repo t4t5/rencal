@@ -24,7 +24,7 @@ export type Recurrence = { rrule: string; exdates: string[] }
  */
 export type UpdateEventInput = { id: string; calendar_slug: string; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
-const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"sync":["calendar_slugs"],"update_event":["input"]}' }
+const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"rsvp":["calendar_slug","event_id","response"],"sync":["calendar_slugs"],"update_event":["input"]}' }
 export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
@@ -33,6 +33,8 @@ delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>,
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
 list_calendars: () => Promise<Calendar[]>, 
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
+list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
+rsvp: (calendarSlug: string, eventId: string, response: string) => Promise<null>, 
 sync: (calendarSlugs: string[]) => Promise<null>, 
 update_event: (input: UpdateEventInput) => Promise<null>} };
 

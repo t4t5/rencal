@@ -186,6 +186,9 @@ pub trait CaldirApi {
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
 
+    async fn list_invites(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>>;
+    async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
+
     async fn sync(calendar_slugs: Vec<String>) -> TauResult<()>;
 
     async fn connect_provider<R: Runtime>(
@@ -454,6 +457,67 @@ impl CaldirApi for CaldirApiImpl {
                 .delete_event(&ce.event.uid, ce.event.recurrence_id.as_ref())
                 .map_err(|e| e.to_string())?;
         }
+
+        Ok(())
+    }
+
+    async fn list_invites(self, calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {
+        let now = Utc::now();
+        let mut invites = Vec::new();
+
+        for slug in &calendar_slugs {
+            let calendar =
+                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+
+            let email = match calendar.account_email() {
+                Some(e) => e.to_string(),
+                None => continue,
+            };
+
+            for ce in calendar.events().map_err(|e| e.to_string())? {
+                let event = &ce.event;
+                let is_future = event.start.to_utc().map_or(true, |dt| dt >= now);
+                if event.is_pending_invite_for(&email) && is_future {
+                    invites.push(CalendarEvent::from_event(event, slug, None));
+                }
+            }
+        }
+
+        invites.sort_by(|a, b| a.start.cmp(&b.start));
+        Ok(invites)
+    }
+
+    async fn rsvp(
+        self,
+        calendar_slug: String,
+        event_id: String,
+        response: String,
+    ) -> TauResult<()> {
+        let calendar =
+            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+
+        let email = calendar
+            .account_email()
+            .ok_or_else(|| "Calendar has no account email".to_string())?
+            .to_string();
+
+        let ce = calendar
+            .events()
+            .map_err(|e| e.to_string())?
+            .into_iter()
+            .find(|ce| ce.event.unique_id() == event_id)
+            .ok_or_else(|| format!("Event not found: {}", event_id))?;
+
+        let status: ParticipationStatus = response.parse().map_err(|e: String| e)?;
+
+        let updated_event = ce
+            .event
+            .with_response(&email, status)
+            .ok_or_else(|| "Failed to update response".to_string())?;
+
+        calendar
+            .update_event(&ce.event.uid, &updated_event)
+            .map_err(|e| e.to_string())?;
 
         Ok(())
     }
