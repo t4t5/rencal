@@ -7,6 +7,7 @@ import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/compone
 import { rpc } from "@/rpc"
 import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
@@ -14,6 +15,7 @@ import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {
   const { calendars } = useCalendarState()
+  const { reloadEvents } = useCalEvents()
   const [invites, setInvites] = useState<CalendarEvent[]>([])
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export function InvitesDropdown() {
     setInvites((prev) => prev.filter((i) => i.id !== invite.id))
     try {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
+      await rpc.caldir.sync([invite.calendar_slug])
+      await reloadEvents()
     } catch (e) {
       console.error("RSVP failed:", e)
     }

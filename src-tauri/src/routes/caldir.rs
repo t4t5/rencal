@@ -488,7 +488,7 @@ impl CaldirApi for CaldirApiImpl {
 
             for ce in calendar.events().map_err(|e| e.to_string())? {
                 let event = &ce.event;
-                let is_future = event.start.to_utc().map_or(true, |dt| dt >= now);
+                let is_future = event.end.to_utc().map_or(true, |dt| dt >= now);
                 if event.is_pending_invite_for(&email) && is_future {
                     invites.push(CalendarEvent::from_event(event, slug, None));
                 }
