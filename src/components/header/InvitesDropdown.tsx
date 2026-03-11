@@ -3,13 +3,14 @@ import { useEffect, useState } from "react"
 import { GoBell as BellIcon } from "react-icons/go"
 
 import { Button } from "@/components/ui/button"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {
@@ -22,6 +23,8 @@ export function InvitesDropdown() {
 
     rpc.caldir.list_invites(slugs).then(setInvites).catch(console.error)
   }, [calendars])
+
+  const isMd = useBreakpoint("md")
 
   if (invites.length === 0) return null
 
@@ -44,7 +47,8 @@ export function InvitesDropdown() {
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-80 p-0">
+      <PopoverContent align={isMd ? "start" : "end"} collisionPadding={16} className="w-80 p-0">
+        <PopoverArrow />
         <div className="p-3 font-medium text-sm border-b">Invitations</div>
         <div className="max-h-80 overflow-y-auto">
           {invites.map((invite) => (

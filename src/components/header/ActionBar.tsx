@@ -15,6 +15,7 @@ import { rpc } from "@/rpc"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { cn } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
@@ -22,16 +23,18 @@ import { InvitesDropdown } from "./InvitesDropdown"
 
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
+  const isMd = useBreakpoint("md")
 
   return (
     <div className="flex justify-between items-center gap-3">
+      {isMd && <InvitesDropdown />}
       <AddEventButton />
 
       <div className="grow h-full" data-tauri-drag-region />
 
       <div className="flex gap-2 items-center">
         <SyncStatus />
-        <InvitesDropdown />
+        {!isMd && <InvitesDropdown />}
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>
