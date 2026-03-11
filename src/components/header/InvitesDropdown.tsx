@@ -1,6 +1,5 @@
 import { format, parseISO } from "date-fns"
 import { useEffect, useState } from "react"
-import { GoBell as BellIcon } from "react-icons/go"
 
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -40,12 +39,9 @@ export function InvitesDropdown() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <Button variant="secondary" className="relative">
-          <BellIcon />
-          <span className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-medium text-white">
-            {invites.length}
-          </span>
-        </Button>
+        <button className="flex size-7 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white cursor-pointer hover:bg-red-600 transition-colors">
+          {invites.length}
+        </button>
       </PopoverTrigger>
       <PopoverContent align={isMd ? "start" : "end"} collisionPadding={16} className="w-80 p-0">
         <PopoverArrow />
