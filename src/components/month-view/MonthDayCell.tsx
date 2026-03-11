@@ -4,7 +4,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { isPendingEvent } from "@/lib/event-utils"
+import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_TIMED_VISIBLE = 2
@@ -48,6 +48,7 @@ export function MonthDayCell({
           item={item}
           isActive={item.event.id === activeEventId}
           isPending={isPendingEvent(item.event, calendars)}
+          isDeclined={isDeclinedEvent(item.event, calendars)}
           onClick={() => onEventClick(item.event.id)}
         />
       ))}

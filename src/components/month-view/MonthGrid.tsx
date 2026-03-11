@@ -9,7 +9,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { isPendingEvent } from "@/lib/event-utils"
+import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
@@ -98,6 +98,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               item={item}
               isActive={item.event.id === activeEventId}
               isPending={isPendingEvent(item.event, calendars)}
+              isDeclined={isDeclinedEvent(item.event, calendars)}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}

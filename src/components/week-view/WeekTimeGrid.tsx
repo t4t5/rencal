@@ -6,7 +6,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
-import { isPendingEvent } from "@/lib/event-utils"
+import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
@@ -115,6 +115,7 @@ export function WeekTimeGrid({
               item={item}
               isActive={activeEventId === item.event.id}
               isPending={isPendingEvent(item.event, calendars)}
+              isDeclined={isDeclinedEvent(item.event, calendars)}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}
@@ -138,6 +139,7 @@ export function WeekTimeGrid({
               layout={layout}
               isActive={activeEventId === layout.event.id}
               isPending={isPendingEvent(layout.event, calendars)}
+              isDeclined={isDeclinedEvent(layout.event, calendars)}
               onClick={() => onEventClick(layout.event.id)}
             />
           ))}

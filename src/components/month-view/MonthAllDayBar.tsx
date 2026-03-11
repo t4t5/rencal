@@ -6,10 +6,17 @@ type MonthAllDayBarProps = {
   item: AllDayLaneItem
   isActive: boolean
   isPending: boolean
+  isDeclined: boolean
   onClick: () => void
 }
 
-export function MonthAllDayBar({ item, isActive, isPending, onClick }: MonthAllDayBarProps) {
+export function MonthAllDayBar({
+  item,
+  isActive,
+  isPending,
+  isDeclined,
+  onClick,
+}: MonthAllDayBarProps) {
   const color = item.color ?? "var(--primary)"
 
   return (
@@ -18,7 +25,8 @@ export function MonthAllDayBar({ item, isActive, isPending, onClick }: MonthAllD
       className={cn(
         "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
         isActive && "brightness-150",
-        isPending && "opacity-50",
+        (isPending || isDeclined) && "opacity-50",
+        isDeclined && "line-through",
         item.isStart ? "rounded-l ml-px" : "-ml-px",
         item.isEnd ? "rounded-r mr-px" : "-mr-px",
       )}
