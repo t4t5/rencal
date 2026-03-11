@@ -20,21 +20,28 @@ export function WeekTimedEvent({ layout, isActive, isPending, onClick }: WeekTim
     <div
       data-event-clickable
       className={cn(
-        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110 pl-2",
+        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110",
+        !isPending && "pl-2",
         isActive && "brightness-150",
-        isPending && "opacity-50",
       )}
       style={{
         top: `${layout.top}%`,
         height: `max(${layout.height}%, 2.125rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
-        backgroundColor: isActive
-          ? `color-mix(in srgb, ${color} 50%, black)`
-          : `color-mix(in srgb, ${color} 30%, black)`,
-        color: isActive
-          ? `color-mix(in srgb, ${color} 30%, white)`
-          : `color-mix(in srgb, ${color} 70%, white)`,
+        ...(isPending
+          ? {
+              border: `1px dashed ${color}`,
+              color: `color-mix(in srgb, ${color} 70%, white)`,
+            }
+          : {
+              backgroundColor: isActive
+                ? `color-mix(in srgb, ${color} 50%, black)`
+                : `color-mix(in srgb, ${color} 30%, black)`,
+              color: isActive
+                ? `color-mix(in srgb, ${color} 30%, white)`
+                : `color-mix(in srgb, ${color} 70%, white)`,
+            }),
       }}
       onClick={(e) => {
         e.stopPropagation()
@@ -42,7 +49,12 @@ export function WeekTimedEvent({ layout, isActive, isPending, onClick }: WeekTim
         onClick()
       }}
     >
-      <div className="w-[3px] absolute left-0 top-0 bottom-0" style={{ backgroundColor: color }} />
+      {!isPending && (
+        <div
+          className="w-[3px] absolute left-0 top-0 bottom-0"
+          style={{ backgroundColor: color }}
+        />
+      )}
 
       <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
       {layout.height > 2 && (
