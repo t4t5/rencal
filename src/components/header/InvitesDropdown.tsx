@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { Button } from "@/components/ui/button"
+import { RsvpBar } from "@/components/event-info/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
@@ -90,19 +90,8 @@ function InviteCard({
         </div>
       </div>
 
-      <div className="flex gap-1.5 p-3 pt-0 justify-between">
-        <Button size="sm" variant="secondary" onClick={() => onRsvp(invite, "tentative")}>
-          Maybe
-        </Button>
-
-        <div className="flex gap-1.5">
-          <Button size="sm" variant="secondary" onClick={() => onRsvp(invite, "declined")}>
-            Decline
-          </Button>
-          <Button size="sm" variant="default" onClick={() => onRsvp(invite, "accepted")}>
-            Accept
-          </Button>
-        </div>
+      <div className="pt-0">
+        <RsvpBar onRsvp={(response) => onRsvp(invite, response)} />
       </div>
     </div>
   )

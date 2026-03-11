@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Calendar, EventAttendee } from "@/rpc/bindings"
 
 import { NotesInput } from "./inputs/NotesInput"
+import { RsvpBar } from "./inputs/RsvpBar"
 
 const Divider = () => (
   <div className="my-2 px-3">
@@ -46,6 +47,7 @@ export function EventInfo({
   reminders,
   onReminderAdd,
   onReminderRemove,
+  onRsvp,
   onClose,
 }: {
   summary?: string | null
@@ -74,6 +76,7 @@ export function EventInfo({
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
+  onRsvp?: (response: string) => void
 }) {
   return (
     <div className="flex flex-col gap-2 grow">
@@ -122,6 +125,13 @@ export function EventInfo({
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
 
         <NotesInput value={description} onChange={onDescriptionChange} />
+
+        {onRsvp && (
+          <>
+            <Divider />
+            <RsvpBar onRsvp={onRsvp} />
+          </>
+        )}
       </div>
     </div>
   )
