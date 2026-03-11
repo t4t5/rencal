@@ -5,10 +5,11 @@ import { cn } from "@/lib/utils"
 type WeekAllDayBarProps = {
   item: AllDayLaneItem
   isActive: boolean
+  isPending: boolean
   onClick: () => void
 }
 
-export function WeekAllDayBar({ item, isActive, onClick }: WeekAllDayBarProps) {
+export function WeekAllDayBar({ item, isActive, isPending, onClick }: WeekAllDayBarProps) {
   const color = item.color ?? "var(--primary)"
 
   return (
@@ -17,6 +18,7 @@ export function WeekAllDayBar({ item, isActive, onClick }: WeekAllDayBarProps) {
       className={cn(
         "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
         isActive && "brightness-150",
+        isPending && "opacity-50",
         item.isStart ? "rounded-l ml-px" : "-ml-px",
         item.isEnd ? "rounded-r mr-px" : "-mr-px",
       )}

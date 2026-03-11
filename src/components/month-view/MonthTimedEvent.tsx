@@ -6,16 +6,18 @@ import { cn } from "@/lib/utils"
 type MonthTimedEventProps = {
   item: TimedEventItem
   isActive: boolean
+  isPending: boolean
   onClick: () => void
 }
 
-export function MonthTimedEvent({ item, isActive, onClick }: MonthTimedEventProps) {
+export function MonthTimedEvent({ item, isActive, isPending, onClick }: MonthTimedEventProps) {
   return (
     <div
       data-event-clickable
       className={cn(
         "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded shrink-0",
         isActive && "bg-accent!",
+        isPending && "opacity-50",
       )}
       onClick={(e) => {
         e.stopPropagation()

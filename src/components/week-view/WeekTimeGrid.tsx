@@ -1,9 +1,12 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
@@ -35,6 +38,7 @@ export function WeekTimeGrid({
   visibleStartHour,
   visibleEndHour,
 }: WeekTimeGridProps) {
+  const { calendars } = useCalendarState()
   const [, setTick] = useState(0)
 
   // Update time indicator every 60s
@@ -110,6 +114,7 @@ export function WeekTimeGrid({
               key={item.event.id}
               item={item}
               isActive={activeEventId === item.event.id}
+              isPending={isPendingEvent(item.event, calendars)}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}
@@ -132,6 +137,7 @@ export function WeekTimeGrid({
               key={layout.event.id}
               layout={layout}
               isActive={activeEventId === layout.event.id}
+              isPending={isPendingEvent(layout.event, calendars)}
               onClick={() => onEventClick(layout.event.id)}
             />
           ))}

@@ -6,6 +6,7 @@ import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { setEventAnchor } from "@/lib/event-anchor"
+import { isPendingEvent } from "@/lib/event-utils"
 import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -49,6 +50,7 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
             events.map((event) => {
               const isActive = event.id === activeEvent?.id
               const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+              const isPending = isPendingEvent(event, calendars)
 
               return (
                 <div
@@ -60,6 +62,7 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
                   }}
                   className={cn("cursor-default hover:bg-secondary py-1", {
                     "bg-accent!": isActive,
+                    "opacity-50": isPending,
                   })}
                 >
                   <EventRow event={event} calendarColor={calendar?.color ?? null} />

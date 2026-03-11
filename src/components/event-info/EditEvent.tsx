@@ -18,6 +18,7 @@ import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { isPendingEvent } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
@@ -138,13 +139,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
-  const isPendingInvite =
-    calendar?.account &&
-    dirtyEvent.attendees.some(
-      (a) =>
-        a.email.toLowerCase() === calendar.account?.toLowerCase() &&
-        a.response_status === "needs-action",
-    )
+  const isPendingInvite = isPendingEvent(dirtyEvent, calendars)
 
   const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return

@@ -5,8 +5,11 @@ import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useSt
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
 
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
@@ -28,6 +31,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   onDayClick,
   onEventClick,
 }: MonthWeekRowProps) {
+  const { calendars } = useCalendarState()
   const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
   const visibleLaneCount = Math.min(layout.maxLane + 1, MAX_ALL_DAY_LANES)
 
@@ -93,6 +97,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               key={item.event.id}
               item={item}
               isActive={item.event.id === activeEventId}
+              isPending={isPendingEvent(item.event, calendars)}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}

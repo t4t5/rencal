@@ -7,10 +7,11 @@ import { cn } from "@/lib/utils"
 type WeekTimedEventProps = {
   layout: WeekTimedEventLayout
   isActive: boolean
+  isPending: boolean
   onClick: () => void
 }
 
-export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProps) {
+export function WeekTimedEvent({ layout, isActive, isPending, onClick }: WeekTimedEventProps) {
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
   const leftPercent = layout.column * widthPercent
@@ -21,6 +22,7 @@ export function WeekTimedEvent({ layout, isActive, onClick }: WeekTimedEventProp
       className={cn(
         "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110 pl-2",
         isActive && "brightness-150",
+        isPending && "opacity-50",
       )}
       style={{
         top: `${layout.top}%`,

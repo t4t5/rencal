@@ -1,7 +1,10 @@
 import { MonthTimedEvent } from "@/components/month-view/MonthTimedEvent"
 
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_TIMED_VISIBLE = 2
@@ -25,6 +28,7 @@ export function MonthDayCell({
   onClick,
   onEventClick,
 }: MonthDayCellProps) {
+  const { calendars } = useCalendarState()
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
   const hiddenTimedCount = timedEvents.length - visibleTimed.length
   const totalHidden = hiddenAllDayCount + hiddenTimedCount
@@ -43,6 +47,7 @@ export function MonthDayCell({
           key={item.event.id}
           item={item}
           isActive={item.event.id === activeEventId}
+          isPending={isPendingEvent(item.event, calendars)}
           onClick={() => onEventClick(item.event.id)}
         />
       ))}
