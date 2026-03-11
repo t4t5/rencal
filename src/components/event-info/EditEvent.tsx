@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { rpc } from "@/rpc"
-import { CalendarEvent, Recurrence } from "@/rpc/bindings"
+import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -146,14 +146,14 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         a.response_status === "needs-action",
     )
 
-  const handleRsvp = async (response: string) => {
+  const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return
     await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
     setDirtyEvent({
       ...dirtyEvent,
       attendees: dirtyEvent.attendees.map((a) =>
         a.email.toLowerCase() === calendar?.account?.toLowerCase()
-          ? { ...a, response_status: response === "tentative" ? "tentative" : response }
+          ? { ...a, response_status: response }
           : a,
       ),
     })

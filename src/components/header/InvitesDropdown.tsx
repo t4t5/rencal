@@ -5,7 +5,7 @@ import { RsvpBar } from "@/components/event-info/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent } from "@/rpc/bindings"
+import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
@@ -27,7 +27,7 @@ export function InvitesDropdown() {
 
   if (invites.length === 0) return null
 
-  const handleRsvp = async (invite: CalendarEvent, response: string) => {
+  const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
     setInvites((prev) => prev.filter((i) => i.id !== invite.id))
     try {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
@@ -61,7 +61,7 @@ function InviteCard({
   onRsvp,
 }: {
   invite: CalendarEvent
-  onRsvp: (invite: CalendarEvent, response: string) => void
+  onRsvp: (invite: CalendarEvent, response: ResponseStatus) => void
 }) {
   const organizerEmail = invite.organizer?.email ?? "Unknown"
   const organizerName = invite.organizer?.name ?? organizerEmail

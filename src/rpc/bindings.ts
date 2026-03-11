@@ -15,9 +15,11 @@ export type CreateEventInput = { calendar_slug: string; summary: string; descrip
 
 export type CredentialFieldInput = { id: string; value: string }
 
-export type EventAttendee = { name: string | null; email: string; response_status: string | null }
+export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
 
 export type Recurrence = { rrule: string; exdates: string[] }
+
+export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
 
 /**
  * Input for updating an event

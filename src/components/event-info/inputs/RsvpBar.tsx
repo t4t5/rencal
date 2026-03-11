@@ -1,6 +1,8 @@
 import { Button } from "@/components/ui/button"
 
-export function RsvpBar({ onRsvp }: { onRsvp: (response: string) => void }) {
+import type { ResponseStatus } from "@/rpc/bindings"
+
+export function RsvpBar({ onRsvp }: { onRsvp: (response: ResponseStatus) => void }) {
   return (
     <div className="flex gap-1.5 p-3 justify-between">
       <Button size="sm" variant="secondary" onClick={() => onRsvp("tentative")}>

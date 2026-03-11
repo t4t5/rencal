@@ -10,7 +10,7 @@ import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-info/inputs/RepeatSelect"
 import { Textarea } from "@/components/ui/textarea"
 
-import { Calendar, EventAttendee } from "@/rpc/bindings"
+import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -76,7 +76,7 @@ export function EventInfo({
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
-  onRsvp?: (response: string) => void
+  onRsvp?: (response: ResponseStatus) => void
 }) {
   return (
     <div className="flex flex-col gap-2 grow">

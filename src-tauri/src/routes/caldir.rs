@@ -22,10 +22,22 @@ pub struct Recurrence {
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
+pub enum ResponseStatus {
+    #[serde(rename = "accepted")]
+    Accepted,
+    #[serde(rename = "declined")]
+    Declined,
+    #[serde(rename = "tentative")]
+    Tentative,
+    #[serde(rename = "needs-action")]
+    NeedsAction,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
 pub struct EventAttendee {
     pub name: Option<String>,
     pub email: String,
-    pub response_status: Option<String>,
+    pub response_status: Option<ResponseStatus>,
 }
 
 impl From<&caldir_core::event::Attendee> for EventAttendee {
@@ -34,10 +46,10 @@ impl From<&caldir_core::event::Attendee> for EventAttendee {
             name: a.name.clone(),
             email: a.email.clone(),
             response_status: a.response_status.map(|s| match s {
-                ParticipationStatus::Accepted => "accepted".to_string(),
-                ParticipationStatus::Declined => "declined".to_string(),
-                ParticipationStatus::Tentative => "tentative".to_string(),
-                ParticipationStatus::NeedsAction => "needs-action".to_string(),
+                ParticipationStatus::Accepted => ResponseStatus::Accepted,
+                ParticipationStatus::Declined => ResponseStatus::Declined,
+                ParticipationStatus::Tentative => ResponseStatus::Tentative,
+                ParticipationStatus::NeedsAction => ResponseStatus::NeedsAction,
             }),
         }
     }
