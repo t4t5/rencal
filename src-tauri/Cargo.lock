@@ -388,9 +388,10 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.6.0"
+version = "0.6.1"
 dependencies = [
  "chrono",
+ "chrono-tz",
  "config",
  "dirs",
  "icalendar",
