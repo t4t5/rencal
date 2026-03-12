@@ -12,6 +12,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
+import { cn } from "@/lib/utils"
+
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
 
@@ -22,6 +24,7 @@ const Divider = () => (
 )
 
 export function EventInfo({
+  readonly,
   summary,
   onChangeSummary,
   start,
@@ -50,6 +53,7 @@ export function EventInfo({
   onRsvp,
   onClose,
 }: {
+  readonly?: boolean
   summary?: string | null
   onChangeSummary: (summary: string) => void
   onClose?: () => void
@@ -83,7 +87,8 @@ export function EventInfo({
       <Textarea
         placeholder="Event Title"
         value={summary ?? ""}
-        className="text-lg"
+        className={cn("text-lg", readonly && "hover:border-transparent! focus:bg-transparent!")}
+        readOnly={readonly}
         onChange={(e) => onChangeSummary(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
@@ -99,32 +104,39 @@ export function EventInfo({
           end={end}
           allDay={allDay}
           showTime={showTime}
+          readOnly={readonly}
           onChangeStartDate={onChangeStartDate}
           onChangeStartTime={onChangeStartTime}
           onChangeEndDate={onChangeEndDate}
           onChangeEndTime={onChangeEndTime}
         />
-        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} />
+        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
 
-        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} />
+        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
         <Divider />
 
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
         <AttendeesDisplay organizer={organizer} attendees={attendees} />
-        <LocationInput value={location} onChange={onLocationChange} onClose={onClose} />
+        <LocationInput
+          value={location}
+          onChange={onLocationChange}
+          onClose={onClose}
+          readOnly={readonly}
+        />
 
         <ReminderSelect
           reminders={reminders ?? []}
           onSelect={onReminderAdd}
           onRemove={onReminderRemove}
+          readOnly={readonly}
         />
 
         <Divider />
 
-        <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
+        <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
 
-        <NotesInput value={description} onChange={onDescriptionChange} />
+        <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
 
         {onRsvp && (
           <>

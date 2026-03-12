@@ -3,6 +3,8 @@ import { RRule, RRuleSet } from "rrule"
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
+import { cn } from "@/lib/utils"
+
 const INTERVALS = [
   {
     rrule: new RRule({ freq: RRule.DAILY }),
@@ -29,9 +31,11 @@ const INTERVALS = [
 export const RepeatSelect = ({
   value,
   onChange,
+  readOnly,
 }: {
   value: RRule | RRuleSet | null
   onChange: (value: RRule | RRuleSet | null) => void
+  readOnly?: boolean
 }) => {
   const handleChange = (selectedValue: string) => {
     if (selectedValue === "none") {
@@ -46,7 +50,7 @@ export const RepeatSelect = ({
 
   return (
     <Select value={value?.toString() ?? "none"} onValueChange={handleChange}>
-      <SelectTrigger className="w-full justify-start">
+      <SelectTrigger className={cn("w-full justify-start", readOnly && "pointer-events-none")}>
         <div>
           <RepeatIcon />
         </div>

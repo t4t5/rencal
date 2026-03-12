@@ -13,6 +13,7 @@ export const DateTimeSelect = ({
   end,
   allDay,
   showTime = true,
+  readOnly,
   onChangeStartDate,
   onChangeStartTime,
   onChangeEndDate,
@@ -22,6 +23,7 @@ export const DateTimeSelect = ({
   end: Date
   allDay: boolean
   showTime?: boolean
+  readOnly?: boolean
   onChangeStartDate: (start: Date | null) => void
   onChangeStartTime: (time: string) => void
   onChangeEndDate: (start: Date | null) => void
@@ -34,6 +36,7 @@ export const DateTimeSelect = ({
           start={start}
           end={end}
           allDay={allDay}
+          readOnly={readOnly}
           onChangeStartTime={onChangeStartTime}
           onChangeEndTime={onChangeEndTime}
         />
@@ -42,6 +45,7 @@ export const DateTimeSelect = ({
         start={start}
         end={end}
         allDay={allDay}
+        readOnly={readOnly}
         onChangeStart={onChangeStartDate}
         onChangeEnd={onChangeEndDate}
       />
@@ -53,12 +57,14 @@ const TimeSelect = ({
   start,
   end,
   allDay,
+  readOnly,
   onChangeStartTime,
   onChangeEndTime,
 }: {
   start: Date
   end: Date
   allDay: boolean
+  readOnly?: boolean
   onChangeStartTime: (time: string) => void
   onChangeEndTime: (time: string) => void
 }) => {
@@ -71,7 +77,9 @@ const TimeSelect = ({
         "opacity-50": allDay,
       })}
     >
-      <InputGroup className="w-36">
+      <InputGroup
+        className={cn("w-36", readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
+      >
         <InputGroupAddon>
           <ClockIcon />
         </InputGroupAddon>
@@ -80,7 +88,9 @@ const TimeSelect = ({
           placeholder="09:30"
           value={formattedStartTime}
           onChange={(e) => onChangeStartTime(e.target.value)}
+          readOnly={readOnly}
           disabled={allDay}
+          className={cn(readOnly && "hover:border-transparent! focus:bg-transparent!")}
         />
       </InputGroup>
 
@@ -89,9 +99,10 @@ const TimeSelect = ({
       <Input
         type="time"
         placeholder="10:30"
-        className="w-36"
+        className={cn("w-36", readOnly && "hover:border-transparent! focus:bg-transparent!")}
         value={formattedEndTime}
         onChange={(e) => onChangeEndTime(e.target.value)}
+        readOnly={readOnly}
         disabled={allDay}
       />
     </div>
@@ -102,18 +113,20 @@ const DateSelect = ({
   start,
   end,
   allDay,
+  readOnly,
   onChangeStart,
   onChangeEnd,
 }: {
   start: Date
   end: Date
   allDay: boolean
+  readOnly?: boolean
   onChangeStart: (date: Date | null) => void
   onChangeEnd: (date: Date | null) => void
 }) => {
   return (
     <div className="flex pl-[26px]">
-      <DatePicker date={start} setDate={onChangeStart} className="w-30" />
+      <DatePicker date={start} setDate={onChangeStart} className="w-30" readOnly={readOnly} />
 
       {allDay && (
         <>
@@ -129,6 +142,7 @@ const DateSelect = ({
               }
             }}
             className="w-30"
+            readOnly={readOnly}
           />
         </>
       )}

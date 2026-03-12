@@ -18,7 +18,7 @@ import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
-import { isPendingEvent } from "@/lib/event-utils"
+import { isPendingEvent, isUserOrganizer } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
@@ -140,6 +140,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
   const isPendingInvite = isPendingEvent(dirtyEvent, calendars)
+  const isReadonly = !isUserOrganizer(dirtyEvent, calendars)
 
   const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return
@@ -157,22 +158,25 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
   return (
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
-      <div className="flex justify-end px-1 pb-1">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-7 w-7">
-              <HiEllipsisHorizontal className="h-5 w-5" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start">
-            <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-              Delete event
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+      {!isReadonly && (
+        <div className="flex justify-end px-1 pb-1">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-7 w-7">
+                <HiEllipsisHorizontal className="h-5 w-5" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start">
+              <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+                Delete event
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
 
       <EventInfo
+        readonly={isReadonly}
         summary={summary}
         onChangeSummary={(newSummary) => {
           setDirtyEvent({ ...dirtyEvent, summary: newSummary })

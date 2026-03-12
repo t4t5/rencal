@@ -13,21 +13,27 @@ export const DatePicker = ({
   date,
   setDate,
   className,
+  readOnly,
 }: {
   date: Date | null
   setDate: (date: Date | null) => void
   className?: string
+  readOnly?: boolean
 }) => {
   const [open, setOpen] = useState(false)
 
   const formattedDate = date ? format(date, "EEE d MMM") : null
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
-          className={cn("w-48 justify-between group cursor-default!", className)}
+          className={cn(
+            "w-48 justify-between group cursor-default!",
+            readOnly && "pointer-events-none",
+            className,
+          )}
         >
           {date ? formattedDate : "Select date"}
 
