@@ -53,12 +53,10 @@ export function ReminderSelect({
   reminders,
   onSelect,
   onRemove,
-  readOnly,
 }: {
   reminders: number[]
   onSelect: (mins: number) => void
   onRemove: (mins: number) => void
-  readOnly?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -102,17 +100,13 @@ export function ReminderSelect({
       {reminders
         .sort((a, b) => a - b)
         .map((mins) => (
-          <ReminderRow
-            key={mins}
-            mins={mins}
-            onRemove={readOnly ? undefined : () => onRemove(mins)}
-          />
+          <ReminderRow key={mins} mins={mins} onRemove={() => onRemove(mins)} />
         ))}
     </div>
   )
 }
 
-const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove?: () => void }) => {
+const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove: () => void }) => {
   return (
     <div
       key={mins}
@@ -121,15 +115,13 @@ const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove?: () => void }
       <span>
         <HumanDuration mins={mins} />
       </span>
-      {onRemove && (
-        <button
-          type="button"
-          onClick={onRemove}
-          className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
-        >
-          <CloseIcon className="size-4" />
-        </button>
-      )}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+      >
+        <CloseIcon className="size-4" />
+      </button>
     </div>
   )
 }

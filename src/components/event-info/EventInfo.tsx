@@ -129,7 +129,6 @@ export function EventInfo({
           reminders={reminders ?? []}
           onSelect={onReminderAdd}
           onRemove={onReminderRemove}
-          readOnly={readonly}
         />
 
         <Divider />
