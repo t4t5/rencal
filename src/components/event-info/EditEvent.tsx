@@ -62,7 +62,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
       rpc.caldir.update_event({
         id: current.id,
-        calendar_slug: current.calendar_slug,
+        calendar_slug: original.calendar_slug,
+        new_calendar_slug:
+          current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
         summary: current.summary,
         description: current.description,
         location: current.location,
@@ -263,6 +265,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
 
             await rpc.caldir.update_event({
               ...parent,
+              new_calendar_slug: null,
               recurrence: pendingRecurrence,
             })
 

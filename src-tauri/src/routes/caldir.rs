@@ -120,6 +120,8 @@ pub struct CreateEventInput {
 pub struct UpdateEventInput {
     pub id: String,
     pub calendar_slug: String,
+    /// If set and different from calendar_slug, moves the event to this calendar
+    pub new_calendar_slug: Option<String>,
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
@@ -464,9 +466,34 @@ impl CaldirApi for CaldirApiImpl {
             custom_properties: existing.event.custom_properties.clone(),
         };
 
-        calendar
-            .update_event(&existing.event.uid, &updated_event)
-            .map_err(|e| e.to_string())?;
+        // Check if we're moving the event to a different calendar
+        let moving = input
+            .new_calendar_slug
+            .as_ref()
+            .is_some_and(|new_slug| new_slug != &input.calendar_slug);
+
+        if moving {
+            let target_calendar =
+                caldir_core::calendar::Calendar::load(input.new_calendar_slug.as_ref().unwrap())
+                    .map_err(|e| e.to_string())?;
+
+            // New UID so remote providers treat it as a fresh event
+            let moved_event = updated_event.with_new_uid();
+
+            // Create in target calendar first (safe: if this fails, original is untouched)
+            target_calendar
+                .create_event(&moved_event)
+                .map_err(|e| e.to_string())?;
+
+            // Only delete from source after successful creation
+            calendar
+                .delete_event(&existing.event.uid, existing.event.recurrence_id.as_ref())
+                .map_err(|e| e.to_string())?;
+        } else {
+            calendar
+                .update_event(&existing.event.uid, &updated_event)
+                .map_err(|e| e.to_string())?;
+        }
 
         Ok(())
     }

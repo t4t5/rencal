@@ -12,6 +12,7 @@ function getUserResponseStatus(event: CalendarEvent, calendars: Calendar[]): Res
 
 export function isUserOrganizer(event: CalendarEvent, calendars: Calendar[]): boolean {
   if (!event.organizer) return true
+  if (event.attendees.length === 0) return true
   const calendar = calendars.find((c) => c.slug === event.calendar_slug)
   if (!calendar?.account) return true
   return event.organizer.email.toLowerCase() === calendar.account.toLowerCase()
