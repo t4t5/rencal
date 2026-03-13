@@ -3535,6 +3535,7 @@ dependencies = [
  "anyhow",
  "caldir-core",
  "chrono",
+ "chrono-tz",
  "serde",
  "serde_json",
  "socket2 0.5.10",

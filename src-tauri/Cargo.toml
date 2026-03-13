@@ -37,3 +37,4 @@ tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 caldir-core = { path = "../../caldir/caldir-core" }
 chrono = "0.4.43"
 tauri-plugin-notification = "2"
+chrono-tz = "0.10.4"

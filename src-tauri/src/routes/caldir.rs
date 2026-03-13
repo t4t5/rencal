@@ -145,6 +145,38 @@ fn parse_event_time(s: &str, all_day: bool) -> Result<EventTime, String> {
     }
 }
 
+/// Parse an ISO datetime string, preserving the original EventTime's timezone.
+/// - If the instant hasn't changed, returns the original as-is.
+/// - If the instant changed but the original had a TZID, converts the new UTC
+///   time back to that timezone so the ICS file keeps its TZID parameter.
+fn parse_event_time_preserving_tz(
+    s: &str,
+    all_day: bool,
+    original: &EventTime,
+) -> Result<EventTime, String> {
+    let parsed = parse_event_time(s, all_day)?;
+
+    // If the UTC instant matches, keep the original to preserve timezone info
+    if parsed.to_utc() == original.to_utc() {
+        return Ok(original.clone());
+    }
+
+    // Time changed — convert back to the original timezone if it had one
+    if let EventTime::DateTimeZoned { tzid, .. } = original {
+        if let EventTime::DateTimeUtc(utc_dt) = &parsed {
+            if let Ok(tz) = tzid.parse::<chrono_tz::Tz>() {
+                let zoned = utc_dt.with_timezone(&tz);
+                return Ok(EventTime::DateTimeZoned {
+                    datetime: zoned.naive_local(),
+                    tzid: tzid.clone(),
+                });
+            }
+        }
+    }
+
+    Ok(parsed)
+}
+
 impl CalendarEvent {
     fn from_event(
         e: &caldir_core::event::Event,
@@ -380,8 +412,14 @@ impl CaldirApi for CaldirApiImpl {
             .find(|ce| ce.event.unique_id() == input.id)
             .ok_or_else(|| format!("Event not found: {}", input.id))?;
 
-        let start = parse_event_time(&input.start, input.all_day)?;
-        let end = parse_event_time(&input.end, input.all_day)?;
+        // Preserve original timezone if the time instant hasn't changed
+        let start = parse_event_time_preserving_tz(
+            &input.start,
+            input.all_day,
+            &existing.event.start,
+        )?;
+        let end =
+            parse_event_time_preserving_tz(&input.end, input.all_day, &existing.event.end)?;
 
         // Parse recurrence if provided
         let recurrence = match input.recurrence {
