@@ -101,6 +101,44 @@ pub struct CredentialFieldInput {
     pub value: String,
 }
 
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub enum ProviderConnectStepKind {
+    #[serde(rename = "oauth_redirect")]
+    OAuthRedirect,
+    #[serde(rename = "hosted_oauth")]
+    HostedOAuth,
+    #[serde(rename = "credentials")]
+    Credentials,
+    #[serde(rename = "needs_setup")]
+    NeedsSetup,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub enum ProviderFieldType {
+    #[serde(rename = "text")]
+    Text,
+    #[serde(rename = "password")]
+    Password,
+    #[serde(rename = "url")]
+    Url,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct ProviderField {
+    pub id: String,
+    pub label: String,
+    pub field_type: ProviderFieldType,
+    pub required: bool,
+    pub help: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct ProviderConnectInfo {
+    pub step: ProviderConnectStepKind,
+    pub fields: Vec<ProviderField>,
+    pub instructions: Option<String>,
+}
+
 /// Input for creating an event
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct CreateEventInput {
@@ -236,6 +274,12 @@ pub trait CaldirApi {
     async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
 
     async fn sync(calendar_slugs: Vec<String>) -> TauResult<()>;
+
+    async fn list_providers() -> TauResult<Vec<String>>;
+
+    async fn get_provider_connect_info(
+        provider_name: String,
+    ) -> TauResult<ProviderConnectInfo>;
 
     async fn connect_provider<R: Runtime>(
         app_handle: AppHandle<R>,
@@ -623,25 +667,103 @@ impl CaldirApi for CaldirApiImpl {
         Ok(())
     }
 
-    async fn connect_provider<R: Runtime>(
+    async fn list_providers(self) -> TauResult<Vec<String>> {
+        use caldir_core::remote::provider::Provider;
+        Ok(Provider::discover_installed())
+    }
+
+    async fn get_provider_connect_info(
         self,
-        app: AppHandle<R>,
         provider_name: String,
-    ) -> TauResult<Vec<Calendar>> {
-        use crate::oauth;
-        use caldir_core::remote::protocol::{ConnectResponse, ConnectStepKind, OAuthData};
+    ) -> TauResult<ProviderConnectInfo> {
+        use caldir_core::remote::protocol::{
+            ConnectResponse, ConnectStepKind, CredentialsData, SetupData,
+        };
         use caldir_core::remote::provider::Provider;
 
         let provider = Provider::from_name(&provider_name);
         let port: u16 = 8080;
         let redirect_uri = format!("http://localhost:{}/callback", port);
 
-        // Step 1: Initialize connect flow — get OAuth URL from provider
+        let mut options = serde_json::Map::new();
+        options.insert(
+            "redirect_uri".into(),
+            serde_json::Value::String(redirect_uri),
+        );
+        options.insert("hosted".into(), serde_json::Value::Bool(true));
+
+        let connect_response = provider
+            .connect(options, serde_json::Map::new())
+            .await
+            .map_err(|e| format!("Connect info failed: {}", e))?;
+
+        match connect_response {
+            ConnectResponse::NeedsInput { step, data } => {
+                let step_kind = match step {
+                    ConnectStepKind::OAuthRedirect => ProviderConnectStepKind::OAuthRedirect,
+                    ConnectStepKind::HostedOAuth => ProviderConnectStepKind::HostedOAuth,
+                    ConnectStepKind::Credentials => ProviderConnectStepKind::Credentials,
+                    ConnectStepKind::NeedsSetup => ProviderConnectStepKind::NeedsSetup,
+                };
+
+                let (fields, instructions) = match step {
+                    ConnectStepKind::Credentials => {
+                        let cred_data: CredentialsData = serde_json::from_value(data)
+                            .map_err(|e| format!("Failed to parse credentials data: {}", e))?;
+                        (map_fields(cred_data.fields), None)
+                    }
+                    ConnectStepKind::NeedsSetup => {
+                        let setup_data: SetupData = serde_json::from_value(data)
+                            .map_err(|e| format!("Failed to parse setup data: {}", e))?;
+                        (
+                            map_fields(setup_data.fields),
+                            Some(setup_data.instructions),
+                        )
+                    }
+                    _ => (Vec::new(), None),
+                };
+
+                Ok(ProviderConnectInfo {
+                    step: step_kind,
+                    fields,
+                    instructions,
+                })
+            }
+            ConnectResponse::Done { .. } => {
+                Err("Provider completed without requesting input".to_string())
+            }
+        }
+    }
+
+    async fn connect_provider<R: Runtime>(
+        self,
+        app: AppHandle<R>,
+        provider_name: String,
+    ) -> TauResult<Vec<Calendar>> {
+        use crate::oauth;
+        use caldir_core::remote::protocol::{
+            ConnectResponse, ConnectStepKind, HostedOAuthData, OAuthData,
+        };
+        use caldir_core::remote::provider::Provider;
+
+        let provider = Provider::from_name(&provider_name);
+
+        // Bind callback listener first on port 0 so the OS picks a free port
+        let listener = oauth::server::create_localhost_listener(0)
+            .map_err(|e| format!("Failed to start callback server: {}", e))?;
+        let port = listener
+            .local_addr()
+            .map_err(|e| format!("Failed to get listener port: {}", e))?
+            .port();
+        let redirect_uri = format!("http://localhost:{}/callback", port);
+
+        // Initialize connect flow with the actual callback port
         let mut options = serde_json::Map::new();
         options.insert(
             "redirect_uri".into(),
             serde_json::Value::String(redirect_uri.clone()),
         );
+        options.insert("hosted".into(), serde_json::Value::Bool(true));
 
         let connect_response = provider
             .connect(options, serde_json::Map::new())
@@ -659,24 +781,15 @@ impl CaldirApi for CaldirApiImpl {
                 let auth_url = url::Url::parse(&oauth_data.authorization_url)
                     .map_err(|e| format!("Invalid auth URL: {}", e))?;
 
-                // Step 2: Bind callback server BEFORE opening the popup so it's
-                // ready when the browser redirects back
-                let listener = oauth::server::create_localhost_listener(port)
-                    .map_err(|e| format!("Failed to start callback server: {}", e))?;
-
-                // Step 3: Open OAuth popup window
-                let (popup, _close_rx) =
+                let (popup, close_rx) =
                     oauth::window::create_oauth_popup(&app, auth_url, "Sign in")
                         .map_err(|e| format!("Failed to open OAuth popup: {}", e))?;
 
-                // Helper to ensure popup is closed on any error from here on
                 let run = async {
-                    // Step 4: Wait for the OAuth redirect callback
                     let callback = oauth::server::handle_oauth_callback(listener, port)
                         .await
                         .map_err(|e| format!("OAuth callback failed: {}", e))?;
 
-                    // Step 5: Submit credentials to provider
                     let mut credentials = serde_json::Map::new();
                     credentials.insert("code".into(), serde_json::Value::String(callback.code));
                     credentials.insert("state".into(), serde_json::Value::String(callback.state));
@@ -688,11 +801,49 @@ impl CaldirApi for CaldirApiImpl {
                     save_provider_calendars(&provider, credentials).await
                 };
 
-                let result = run.await;
+                let result = tokio::select! {
+                    res = run => res,
+                    _ = close_rx => Err("OAuth cancelled".to_string()),
+                };
                 let _ = popup.close();
                 result
             }
-            _ => Err("Only OAuth providers are currently supported".to_string()),
+            ConnectResponse::NeedsInput {
+                step: ConnectStepKind::HostedOAuth,
+                data,
+            } => {
+                let hosted_data: HostedOAuthData = serde_json::from_value(data)
+                    .map_err(|e| format!("Failed to parse HostedOAuth data: {}", e))?;
+
+                let auth_url = url::Url::parse(&hosted_data.url)
+                    .map_err(|e| format!("Invalid hosted auth URL: {}", e))?;
+
+                let (popup, close_rx) =
+                    oauth::window::create_oauth_popup(&app, auth_url, "Sign in")
+                        .map_err(|e| format!("Failed to open OAuth popup: {}", e))?;
+
+                let run = async {
+                    let params = oauth::server::handle_generic_callback(listener, port)
+                        .await
+                        .map_err(|e| format!("OAuth callback failed: {}", e))?;
+
+                    let mut credentials = serde_json::Map::new();
+                    for (key, value) in params {
+                        credentials
+                            .insert(key, serde_json::Value::String(value));
+                    }
+
+                    save_provider_calendars(&provider, credentials).await
+                };
+
+                let result = tokio::select! {
+                    res = run => res,
+                    _ = close_rx => Err("OAuth cancelled".to_string()),
+                };
+                let _ = popup.close();
+                result
+            }
+            _ => Err("Unsupported connect step for this flow".to_string()),
         }
     }
 
@@ -712,6 +863,25 @@ impl CaldirApi for CaldirApiImpl {
 
         save_provider_calendars(&provider, cred_map).await
     }
+}
+
+fn map_fields(fields: Vec<caldir_core::remote::protocol::CredentialField>) -> Vec<ProviderField> {
+    use caldir_core::remote::protocol::FieldType;
+
+    fields
+        .into_iter()
+        .map(|f| ProviderField {
+            id: f.id,
+            label: f.label,
+            field_type: match f.field_type {
+                FieldType::Text => ProviderFieldType::Text,
+                FieldType::Password => ProviderFieldType::Password,
+                FieldType::Url => ProviderFieldType::Url,
+            },
+            required: f.required,
+            help: f.help,
+        })
+        .collect()
 }
 
 /// Submit credentials to provider, list calendars, and save configs locally.

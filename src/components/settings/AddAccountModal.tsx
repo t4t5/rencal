@@ -1,52 +1,91 @@
-import { FormEvent, useState } from "react"
-import { FaApple, FaGoogle } from "react-icons/fa6"
-import { IoArrowBack as BackIcon } from "react-icons/io5"
+import { FormEvent, useEffect, useState } from "react"
+import type { IconType } from "react-icons"
+import { FaApple, FaGoogle, FaMicrosoft } from "react-icons/fa6"
+import { IoArrowBack as BackIcon, IoCalendar as CalendarIcon } from "react-icons/io5"
 
 import { Button } from "@/components/ui/button"
 import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
+import { rpc } from "@/rpc"
+import type { ProviderField } from "@/rpc/bindings"
+
 import { useConnectProvider } from "@/hooks/useConnectProvider"
 
-type ModalStep = "select-provider" | "icloud-instructions" | "icloud-credentials"
+const providerToIcon: Record<string, IconType> = {
+  google: FaGoogle,
+  icloud: FaApple,
+  outlook: FaMicrosoft,
+}
+
+type ModalStep =
+  | { kind: "select-provider" }
+  | { kind: "setup"; provider: string; instructions: string; fields: ProviderField[] }
+  | { kind: "credentials"; provider: string; fields: ProviderField[] }
 
 export function AddAccountModal({ onClose }: { onClose: () => void }) {
-  const [step, setStep] = useState<ModalStep>("select-provider")
+  const [step, setStep] = useState<ModalStep>({ kind: "select-provider" })
   const { connect, connectWithCredentials, isConnecting } = useConnectProvider()
 
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
+  const [providers, setProviders] = useState<string[]>([])
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
 
-  async function handleGoogleConnect() {
-    await connect("google")
-    onClose()
+  useEffect(() => {
+    rpc.caldir.list_providers().then(setProviders)
+  }, [])
+
+  async function handleProviderClick(name: string) {
+    setError(null)
+    const info = await rpc.caldir.get_provider_connect_info(name)
+
+    if (info.step === "oauth_redirect" || info.step === "hosted_oauth") {
+      await connect(name)
+      onClose()
+    } else if (info.step === "needs_setup") {
+      setStep({
+        kind: "setup",
+        provider: name,
+        instructions: info.instructions ?? "",
+        fields: info.fields,
+      })
+    } else if (info.step === "credentials") {
+      setStep({ kind: "credentials", provider: name, fields: info.fields })
+    }
   }
 
-  async function handleICloudSubmit(e: FormEvent) {
+  async function handleCredentialsSubmit(e: FormEvent) {
     e.preventDefault()
     setError(null)
 
-    if (!email || !password) {
-      setError("Please fill in both fields")
+    if (step.kind !== "credentials") return
+
+    const missingRequired = step.fields.filter((f) => f.required).some((f) => !fieldValues[f.id])
+
+    if (missingRequired) {
+      setError("Please fill in all required fields")
       return
     }
 
     try {
-      await connectWithCredentials("icloud", [
-        { id: "apple_id", value: email },
-        { id: "app_password", value: password },
-      ])
+      await connectWithCredentials(
+        step.provider,
+        Object.entries(fieldValues).map(([id, value]) => ({ id, value })),
+      )
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect iCloud account")
+      setError(err instanceof Error ? err.message : "Failed to connect account")
     }
+  }
+
+  function capitalize(s: string) {
+    return s.charAt(0).toUpperCase() + s.slice(1)
   }
 
   return (
     <Modal onClose={onClose}>
-      {step === "select-provider" && (
+      {step.kind === "select-provider" && (
         <>
           <DialogHeader>
             <DialogTitle>Add Calendar Account</DialogTitle>
@@ -54,105 +93,106 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
           </DialogHeader>
 
           <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              className="justify-start gap-3 h-12 border-input"
-              disabled={isConnecting}
-              onClick={handleGoogleConnect}
-            >
-              <FaGoogle className="size-4" />
-              Google Calendar
-            </Button>
-
-            <Button
-              variant="outline"
-              className="justify-start gap-3 h-12 border-input"
-              disabled={isConnecting}
-              onClick={() => setStep("icloud-instructions")}
-            >
-              <FaApple className="size-5" />
-              iCloud Calendar
-            </Button>
+            {providers.map((name) => {
+              const Icon = providerToIcon[name] ?? CalendarIcon
+              return (
+                <Button
+                  key={name}
+                  variant="outline"
+                  className="justify-start gap-3 h-12 border-input"
+                  disabled={isConnecting}
+                  onClick={() => handleProviderClick(name)}
+                >
+                  <Icon className="size-4" />
+                  {capitalize(name)} Calendar
+                </Button>
+              )
+            })}
           </div>
         </>
       )}
 
-      {step === "icloud-instructions" && (
+      {step.kind === "setup" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect iCloud Calendar</DialogTitle>
-            <DialogDescription>
-              iCloud requires an App-Specific Password. This is a separate password you generate in
-              your Apple account settings.
-            </DialogDescription>
+            <DialogTitle>Connect {capitalize(step.provider)} Calendar</DialogTitle>
+            <DialogDescription>{step.instructions}</DialogDescription>
           </DialogHeader>
 
-          <ol className="flex flex-col gap-2 text-sm text-muted-foreground list-decimal list-inside">
-            <li>
-              Go to{" "}
-              <a
-                href="https://account.apple.com/sign-in"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground underline underline-offset-4"
-              >
-                account.apple.com
-              </a>
-            </li>
-            <li>Navigate to Sign-In and Security &gt; App-Specific Passwords</li>
-            <li>Generate a new password for &ldquo;Rencal&rdquo;</li>
-          </ol>
-
-          <Button onClick={() => setStep("icloud-credentials")}>
-            I Have My App-Specific Password
+          <Button
+            onClick={() =>
+              setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
+            }
+          >
+            Continue
           </Button>
         </>
       )}
 
-      {step === "icloud-credentials" && (
+      {step.kind === "credentials" && (
         <>
           <DialogHeader>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon-sm" onClick={() => setStep("icloud-instructions")}>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => setStep({ kind: "select-provider" })}
+              >
                 <BackIcon className="size-4" />
               </Button>
-              <DialogTitle>iCloud Credentials</DialogTitle>
+              <DialogTitle>{capitalize(step.provider)} Credentials</DialogTitle>
             </div>
             <DialogDescription>
-              Enter your Apple ID email and the app-specific password you generated.
+              Enter your credentials to connect your {capitalize(step.provider)} account.
             </DialogDescription>
           </DialogHeader>
 
-          <form onSubmit={handleICloudSubmit} noValidate className="flex flex-col gap-3">
-            <Input
-              type="email"
-              placeholder="Apple ID email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="border-input"
-            />
-
-            <div className="relative">
-              <Input
-                type={showPassword ? "text" : "password"}
-                placeholder="App-Specific Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="border-input pr-16"
-              />
-              <button
-                type="button"
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? "Hide" : "Show"}
-              </button>
-            </div>
+          <form onSubmit={handleCredentialsSubmit} noValidate className="flex flex-col gap-3">
+            {step.fields.map((field) => (
+              <div key={field.id} className="flex flex-col gap-1">
+                {field.field_type === "password" ? (
+                  <div className="relative">
+                    <Input
+                      type={showPasswords[field.id] ? "text" : "password"}
+                      placeholder={field.label}
+                      value={fieldValues[field.id] ?? ""}
+                      onChange={(e) =>
+                        setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))
+                      }
+                      className="border-input pr-16"
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() =>
+                        setShowPasswords((prev) => ({
+                          ...prev,
+                          [field.id]: !prev[field.id],
+                        }))
+                      }
+                    >
+                      {showPasswords[field.id] ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                ) : (
+                  <Input
+                    type="text"
+                    placeholder={field.label}
+                    value={fieldValues[field.id] ?? ""}
+                    onChange={(e) =>
+                      setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))
+                    }
+                    className="border-input"
+                  />
+                )}
+                {field.help && <p className="text-xs text-muted-foreground">{field.help}</p>}
+              </div>
+            ))}
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
             <Button type="submit" disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : "Connect iCloud Account"}
+              {isConnecting ? "Connecting..." : `Connect ${capitalize(step.provider)} Account`}
             </Button>
           </form>
         </>

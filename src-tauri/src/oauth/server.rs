@@ -1,5 +1,6 @@
 use anyhow::{anyhow, Context, Result};
 use socket2::{Domain, Socket, Type};
+use std::collections::HashMap;
 use std::net::SocketAddr;
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
 use tokio::net::TcpListener;
@@ -117,4 +118,47 @@ pub async fn handle_oauth_callback(listener: TcpListener, port: u16) -> Result<O
         .ok_or_else(|| anyhow!("State not found in callback URL"))?;
 
     Ok(OAuthCallbackParams { code, state })
+}
+
+/// Waits for a callback and returns all query parameters as a HashMap.
+/// Used for HostedOAuth which returns access_token, refresh_token, etc.
+pub async fn handle_generic_callback(
+    listener: TcpListener,
+    port: u16,
+) -> Result<HashMap<String, String>> {
+    let (mut stream, _) = listener
+        .accept()
+        .await
+        .context("Failed to accept connection")?;
+
+    let mut reader = BufReader::new(&mut stream);
+    let mut http_request = String::new();
+    reader
+        .read_line(&mut http_request)
+        .await
+        .context("Failed to read HTTP request")?;
+
+    stream
+        .write_all(SUCCESS_RESPONSE.as_bytes())
+        .await
+        .context("Failed to write HTTP response")?;
+    stream
+        .flush()
+        .await
+        .context("Failed to flush HTTP response")?;
+
+    let path = http_request
+        .split_whitespace()
+        .nth(1)
+        .ok_or_else(|| anyhow!("Invalid HTTP request format"))?;
+
+    let callback_url = format!("http://localhost:{}{}", port, path);
+    let url = Url::parse(&callback_url).context("Failed to parse callback URL")?;
+
+    let params: HashMap<String, String> = url
+        .query_pairs()
+        .map(|(k, v)| (k.to_string(), v.to_string()))
+        .collect();
+
+    Ok(params)
 }
