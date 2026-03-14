@@ -2,6 +2,7 @@ import { format, parseISO } from "date-fns"
 import { useRef, useState } from "react"
 import { IoSearch as SearchIcon } from "react-icons/io5"
 
+import { EditEvent } from "@/components/event-info/EditEvent"
 import { Button } from "@/components/ui/button"
 import { Command, CommandEmpty, CommandItem, CommandList } from "@/components/ui/command"
 import { Input } from "@/components/ui/input"
@@ -10,7 +11,6 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { rpc } from "@/rpc"
 import type { CalendarEvent } from "@/rpc/bindings"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
@@ -38,14 +38,14 @@ function SearchResult({ event, color }: { event: CalendarEvent; color: string | 
 }
 
 export function SearchBar() {
-  const { calendars, navigateToDate } = useCalendarState()
-  const { setActiveEventId } = useCalEvents()
+  const { calendars } = useCalendarState()
 
   const [isSearching, setIsSearching] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<CalendarEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -74,20 +74,15 @@ export function SearchBar() {
   const close = () => {
     setQuery("")
     setResults([])
+    setSelectedEvent(null)
     setIsExiting(true)
   }
 
   useOnClickOutside(containerRef, () => {
-    if (isSearching && query === "") {
+    if (isSearching && query === "" && !selectedEvent) {
       close()
     }
   })
-
-  const onSelect = async (event: CalendarEvent) => {
-    await navigateToDate(parseISO(event.start))
-    setActiveEventId(event.id)
-    close()
-  }
 
   const showInput = isSearching || isExiting
 
@@ -96,59 +91,93 @@ export function SearchBar() {
   return (
     <div ref={containerRef}>
       {showInput ? (
-        <Popover open={hasResults}>
-          <PopoverAnchor asChild>
-            <Input
-              ref={inputRef}
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search events..."
-              autoFocus={isSearching && !isExiting}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") {
-                  close()
+        <>
+          <Popover open={hasResults}>
+            <PopoverAnchor asChild>
+              <Input
+                ref={inputRef}
+                value={query}
+                onChange={(e) => {
+                  setQuery(e.target.value)
+                  setSelectedEvent(null)
+                }}
+                placeholder="Search events..."
+                autoFocus={isSearching && !isExiting}
+                onKeyDown={(e) => {
+                  if (e.key === "Escape") {
+                    close()
+                  }
+                }}
+                className={cn(
+                  "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
+                  isExiting ? "w-10" : "w-full starting:w-10",
+                )}
+                onTransitionEnd={() => {
+                  if (isExiting) {
+                    setIsExiting(false)
+                    setIsSearching(false)
+                  }
+                }}
+              />
+            </PopoverAnchor>
+            <PopoverContent
+              className="p-0 w-72"
+              align="end"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+              onInteractOutside={(e) => {
+                if (containerRef.current?.contains(e.target as Node)) {
+                  e.preventDefault()
                 }
               }}
-              className={cn(
-                "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
-                isExiting ? "w-10" : "w-full starting:w-10",
-              )}
-              onTransitionEnd={() => {
-                if (isExiting) {
-                  setIsExiting(false)
-                  setIsSearching(false)
-                }
-              }}
-            />
-          </PopoverAnchor>
-          <PopoverContent
-            className="p-0 w-72"
-            align="end"
-            onOpenAutoFocus={(e) => e.preventDefault()}
-            onInteractOutside={(e) => {
-              if (containerRef.current?.contains(e.target as Node)) {
-                e.preventDefault()
-              }
+            >
+              <Command>
+                <CommandList>
+                  {results.length === 0 && query.length >= 2 && !isLoading && (
+                    <CommandEmpty>No events found.</CommandEmpty>
+                  )}
+                  {results.map((event) => (
+                    <CommandItem
+                      key={`${event.calendar_slug}-${event.id}`}
+                      onSelect={() => setSelectedEvent(event)}
+                      className="flex items-center gap-2 cursor-pointer"
+                    >
+                      <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
+                    </CommandItem>
+                  ))}
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+
+          <Popover
+            open={!!selectedEvent}
+            onOpenChange={(open) => {
+              if (!open) setSelectedEvent(null)
             }}
           >
-            <Command>
-              <CommandList>
-                {results.length === 0 && query.length >= 2 && !isLoading && (
-                  <CommandEmpty>No events found.</CommandEmpty>
-                )}
-                {results.map((event) => (
-                  <CommandItem
-                    key={`${event.calendar_slug}-${event.id}`}
-                    onSelect={() => void onSelect(event)}
-                    className="flex items-center gap-2 cursor-pointer"
-                  >
-                    <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
-                  </CommandItem>
-                ))}
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+            <PopoverAnchor asChild>
+              <div
+                className="fixed pointer-events-none"
+                ref={(el) => {
+                  if (!el || !inputRef.current) return
+                  const rect = inputRef.current.getBoundingClientRect()
+                  el.style.top = `${rect.top + rect.height / 2}px`
+                  el.style.left = `${rect.right}px`
+                }}
+              />
+            </PopoverAnchor>
+            <PopoverContent
+              className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+              side="right"
+              align="start"
+              sideOffset={8}
+              collisionPadding={16}
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <EditEvent event={selectedEvent} />
+            </PopoverContent>
+          </Popover>
+        </>
       ) : (
         <Button variant="secondary" onClick={() => setIsSearching(true)}>
           <SearchIcon />
