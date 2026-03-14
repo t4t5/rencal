@@ -38,7 +38,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
  */
 new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
-const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rsvp":["calendar_slug","event_id","response"],"sync":["calendar_slugs"],"update_event":["input"]}' }
+const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"sync":["calendar_slugs"],"update_event":["input"]}' }
 export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
@@ -51,6 +51,7 @@ list_events: (calendarSlugs: string[], start: string, end: string) => Promise<Ca
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<string[]>, 
 rsvp: (calendarSlug: string, eventId: string, response: string) => Promise<null>, 
+search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
 sync: (calendarSlugs: string[]) => Promise<null>, 
 update_event: (input: UpdateEventInput) => Promise<null>} };
 

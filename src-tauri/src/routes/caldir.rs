@@ -270,6 +270,11 @@ pub trait CaldirApi {
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
 
+    async fn search_events(
+        calendar_slugs: Vec<String>,
+        query: String,
+    ) -> TauResult<Vec<CalendarEvent>>;
+
     async fn list_invites(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>>;
     async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
 
@@ -580,6 +585,27 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         Ok(())
+    }
+
+    async fn search_events(
+        self,
+        calendar_slugs: Vec<String>,
+        query: String,
+    ) -> TauResult<Vec<CalendarEvent>> {
+        let mut events = Vec::new();
+
+        for slug in &calendar_slugs {
+            let calendar =
+                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+
+            for ce in calendar.search_events(&query).map_err(|e| e.to_string())? {
+                events.push(CalendarEvent::from_event(&ce.event, slug, None));
+            }
+        }
+
+        events.sort_by(|a, b| a.start.cmp(&b.start));
+
+        Ok(events)
     }
 
     async fn list_invites(self, calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {

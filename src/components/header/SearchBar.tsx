@@ -1,0 +1,152 @@
+import { format, parseISO } from "date-fns"
+import { useRef, useState } from "react"
+import { IoSearch as SearchIcon } from "react-icons/io5"
+
+import { Button } from "@/components/ui/button"
+import { Command, CommandEmpty, CommandItem, CommandList } from "@/components/ui/command"
+import { Input } from "@/components/ui/input"
+import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
+
+import { rpc } from "@/rpc"
+import type { CalendarEvent } from "@/rpc/bindings"
+
+import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
+import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
+import { useOnClickOutside } from "@/hooks/useOnClickOutside"
+import { cn } from "@/lib/utils"
+
+export function SearchBar() {
+  const { calendars, navigateToDate } = useCalendarState()
+  const { setActiveEventId } = useCalEvents()
+
+  const [isSearching, setIsSearching] = useState(false)
+  const [isExiting, setIsExiting] = useState(false)
+  const [query, setQuery] = useState("")
+  const [results, setResults] = useState<CalendarEvent[]>([])
+  const [isLoading, setIsLoading] = useState(false)
+
+  const containerRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  const calendarSlugs = calendars.map((c) => c.slug)
+  const hasResults = query.length >= 2 && results.length > 0
+
+  // Debounced search (min 2 chars)
+  useDebouncedEffect(
+    () => {
+      if (query.length < 2) {
+        setResults([])
+        return
+      }
+
+      setIsLoading(true)
+      void rpc.caldir.search_events(calendarSlugs, query).then((found) => {
+        setResults(found)
+        setIsLoading(false)
+      })
+    },
+    [query],
+    300,
+  )
+
+  const close = () => {
+    setQuery("")
+    setResults([])
+    setIsExiting(true)
+  }
+
+  useOnClickOutside(containerRef, () => {
+    if (isSearching && query === "") {
+      close()
+    }
+  })
+
+  const onSelect = async (event: CalendarEvent) => {
+    await navigateToDate(parseISO(event.start))
+    setActiveEventId(event.id)
+    close()
+  }
+
+  const showInput = isSearching || isExiting
+
+  const calendarColor = (slug: string) => calendars.find((c) => c.slug === slug)?.color ?? null
+
+  return (
+    <div ref={containerRef}>
+      {showInput ? (
+        <Popover open={hasResults}>
+          <PopoverAnchor asChild>
+            <Input
+              ref={inputRef}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search events..."
+              autoFocus={isSearching && !isExiting}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") {
+                  close()
+                }
+              }}
+              className={cn(
+                "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
+                isExiting ? "w-10" : "w-full starting:w-10",
+              )}
+              onTransitionEnd={() => {
+                if (isExiting) {
+                  setIsExiting(false)
+                  setIsSearching(false)
+                }
+              }}
+            />
+          </PopoverAnchor>
+          <PopoverContent
+            className="p-0 w-72"
+            align="end"
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onInteractOutside={(e) => {
+              if (containerRef.current?.contains(e.target as Node)) {
+                e.preventDefault()
+              }
+            }}
+          >
+            <Command>
+              <CommandList>
+                {results.length === 0 && query.length >= 2 && !isLoading && (
+                  <CommandEmpty>No events found.</CommandEmpty>
+                )}
+                {results.map((event) => (
+                  <CommandItem
+                    key={`${event.calendar_slug}-${event.id}`}
+                    onSelect={() => void onSelect(event)}
+                    className="flex items-center gap-2 cursor-pointer"
+                  >
+                    <div
+                      className="w-1 self-stretch rounded shrink-0"
+                      style={{
+                        backgroundColor: calendarColor(event.calendar_slug) ?? "var(--primary)",
+                      }}
+                    />
+                    <div className="min-w-0">
+                      <div className="font-medium text-sm truncate">{event.summary}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {event.all_day
+                          ? format(parseISO(event.start), "EEE, d MMM")
+                          : `${format(parseISO(event.start), "EEE, d MMM")} · ${format(parseISO(event.start), "HH:mm")}`}
+                      </div>
+                    </div>
+                  </CommandItem>
+                ))}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      ) : (
+        <Button variant="secondary" onClick={() => setIsSearching(true)}>
+          <SearchIcon />
+        </Button>
+      )}
+    </div>
+  )
+}
