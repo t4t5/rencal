@@ -15,6 +15,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
+import { formatShortDate } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 function SearchResult({ event, color }: { event: CalendarEvent; color: string | null }) {
@@ -28,8 +29,8 @@ function SearchResult({ event, color }: { event: CalendarEvent; color: string | 
         <div className="font-medium text-sm truncate">{event.summary}</div>
         <div className="text-xs text-muted-foreground">
           {event.all_day
-            ? format(parseISO(event.start), "EEE, d MMM")
-            : `${format(parseISO(event.start), "EEE, d MMM")} · ${format(parseISO(event.start), "HH:mm")}`}
+            ? formatShortDate(parseISO(event.start))
+            : `${formatShortDate(parseISO(event.start))} · ${format(parseISO(event.start), "HH:mm")}`}
         </div>
       </div>
     </>

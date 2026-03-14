@@ -1,4 +1,9 @@
-import { format, isToday, isTomorrow, isYesterday } from "date-fns"
+import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
+
+export function formatShortDate(date: Date): string {
+  const pattern = getYear(date) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
+  return format(date, pattern)
+}
 
 export function getRelativeDayLabel(date: Date): string {
   if (isToday(date)) return "Today"
