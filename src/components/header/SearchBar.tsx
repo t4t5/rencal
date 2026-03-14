@@ -17,6 +17,25 @@ import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
 
+function SearchResult({ event, color }: { event: CalendarEvent; color: string | null }) {
+  return (
+    <>
+      <div
+        className="w-1 self-stretch rounded shrink-0"
+        style={{ backgroundColor: color ?? "var(--primary)" }}
+      />
+      <div className="min-w-0">
+        <div className="font-medium text-sm truncate">{event.summary}</div>
+        <div className="text-xs text-muted-foreground">
+          {event.all_day
+            ? format(parseISO(event.start), "EEE, d MMM")
+            : `${format(parseISO(event.start), "EEE, d MMM")} · ${format(parseISO(event.start), "HH:mm")}`}
+        </div>
+      </div>
+    </>
+  )
+}
+
 export function SearchBar() {
   const { calendars, navigateToDate } = useCalendarState()
   const { setActiveEventId } = useCalEvents()
@@ -122,20 +141,7 @@ export function SearchBar() {
                     onSelect={() => void onSelect(event)}
                     className="flex items-center gap-2 cursor-pointer"
                   >
-                    <div
-                      className="w-1 self-stretch rounded shrink-0"
-                      style={{
-                        backgroundColor: calendarColor(event.calendar_slug) ?? "var(--primary)",
-                      }}
-                    />
-                    <div className="min-w-0">
-                      <div className="font-medium text-sm truncate">{event.summary}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {event.all_day
-                          ? format(parseISO(event.start), "EEE, d MMM")
-                          : `${format(parseISO(event.start), "EEE, d MMM")} · ${format(parseISO(event.start), "HH:mm")}`}
-                      </div>
-                    </div>
+                    <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
                   </CommandItem>
                 ))}
               </CommandList>
