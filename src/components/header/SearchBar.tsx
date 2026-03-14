@@ -22,7 +22,7 @@ function SearchResult({ event, color }: { event: CalendarEvent; color: string | 
   return (
     <>
       <div
-        className="w-1 self-stretch rounded shrink-0"
+        className="w-1 self-stretch shrink-0"
         style={{ backgroundColor: color ?? "var(--primary)" }}
       />
       <div className="min-w-0">
@@ -135,15 +135,24 @@ export function SearchBar() {
                   {results.length === 0 && query.length >= 2 && !isLoading && (
                     <CommandEmpty>No events found.</CommandEmpty>
                   )}
-                  {results.map((event) => (
-                    <CommandItem
-                      key={`${event.calendar_slug}-${event.id}`}
-                      onSelect={() => setSelectedEvent(event)}
-                      className="flex items-center gap-2 cursor-pointer"
-                    >
-                      <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
-                    </CommandItem>
-                  ))}
+                  {results.map((event) => {
+                    const isActive = selectedEvent?.id === event.id
+                    return (
+                      <CommandItem
+                        key={`${event.calendar_slug}-${event.id}`}
+                        value={`${event.calendar_slug}-${event.id}`}
+                        onSelect={() =>
+                          setSelectedEvent((prev) => (prev?.id === event.id ? null : event))
+                        }
+                        className={cn(
+                          "flex items-center gap-2 cursor-pointer",
+                          isActive && "bg-accent!",
+                        )}
+                      >
+                        <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
+                      </CommandItem>
+                    )
+                  })}
                 </CommandList>
               </Command>
             </PopoverContent>
