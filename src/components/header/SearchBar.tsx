@@ -107,6 +107,14 @@ export function SearchBar() {
                   if (e.key === "Escape") {
                     close()
                   }
+                  if (e.key === "ArrowDown" && hasResults) {
+                    e.preventDefault()
+                    const cmdkRoot = document.querySelector<HTMLDivElement>("[cmdk-root]")
+                    if (cmdkRoot) {
+                      cmdkRoot.tabIndex = -1
+                      cmdkRoot.focus()
+                    }
+                  }
                 }}
                 className={cn(
                   "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
