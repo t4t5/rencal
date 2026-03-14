@@ -66,11 +66,9 @@ export function WeekTimedEvent({
       )}
 
       <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
-      {layout.height > 2 && (
-        <div className="truncate opacity-80 leading-tight">
-          {format(layout.event.start, "HH:mm")} – {format(layout.event.end, "HH:mm")}
-        </div>
-      )}
+      <div className="truncate opacity-80 leading-tight">
+        {format(layout.event.start, "HH:mm")} – {format(layout.event.end, "HH:mm")}
+      </div>
     </div>
   )
 }
