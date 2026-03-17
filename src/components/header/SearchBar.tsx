@@ -227,7 +227,7 @@ export function SearchBar() {
               ref={eventDetailRef}
               className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
               side="right"
-              align="start"
+              align="center"
               sideOffset={8}
               collisionPadding={16}
               onOpenAutoFocus={(e) => e.preventDefault()}
