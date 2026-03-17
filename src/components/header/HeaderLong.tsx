@@ -13,14 +13,14 @@ export function HeaderLong() {
         <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
           Today
         </Button>
-
-        <TabsList>
-          <TabsTrigger value="week">Week</TabsTrigger>
-          <TabsTrigger value="month">Month</TabsTrigger>
-        </TabsList>
       </div>
 
-      <SearchBar className="w-56" />
+      <TabsList>
+        <TabsTrigger value="week">Week</TabsTrigger>
+        <TabsTrigger value="month">Month</TabsTrigger>
+      </TabsList>
+
+      <SearchBar className="w-56" eventPopoverSide="left" />
     </div>
   )
 }

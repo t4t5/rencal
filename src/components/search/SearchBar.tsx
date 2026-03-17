@@ -21,6 +21,7 @@ interface SearchBarProps {
   setIsSearching?: (v: boolean) => void
   onClose?: () => void
   className?: string
+  eventPopoverSide?: "left" | "right"
 }
 
 export function SearchBar({
@@ -30,6 +31,7 @@ export function SearchBar({
   setIsSearching = () => {},
   onClose,
   className,
+  eventPopoverSide,
 }: SearchBarProps = {}) {
   const { calendars } = useCalendarState()
 
@@ -151,6 +153,7 @@ export function SearchBar({
         inputRef={inputRef}
         eventDetailRef={eventDetailRef}
         resultsRef={resultsRef}
+        side={eventPopoverSide}
       />
     </div>
   )

@@ -12,6 +12,7 @@ interface EventPopoverProps {
   inputRef: RefObject<HTMLInputElement | null>
   eventDetailRef: RefObject<HTMLDivElement | null>
   resultsRef: RefObject<HTMLDivElement | null>
+  side?: "left" | "right"
 }
 
 export function EventPopover({
@@ -21,6 +22,7 @@ export function EventPopover({
   inputRef,
   eventDetailRef,
   resultsRef,
+  side = "right",
 }: EventPopoverProps) {
   return (
     <Popover
@@ -36,17 +38,19 @@ export function EventPopover({
         <div
           className="fixed pointer-events-none"
           ref={(el) => {
-            if (!el || !inputRef.current) return
-            const rect = inputRef.current.getBoundingClientRect()
+            if (!el) return
+            const anchorEl = side === "left" ? resultsRef.current : inputRef.current
+            if (!anchorEl) return
+            const rect = anchorEl.getBoundingClientRect()
             el.style.top = `${rect.top + rect.height / 2}px`
-            el.style.left = `${rect.right}px`
+            el.style.left = `${side === "left" ? rect.left : rect.right}px`
           }}
         />
       </PopoverAnchor>
       <PopoverContent
         ref={eventDetailRef}
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
-        side="right"
+        side={side}
         align="center"
         sideOffset={8}
         collisionPadding={16}
