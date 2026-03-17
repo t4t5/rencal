@@ -50,6 +50,7 @@ export function SearchBar() {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  const popoverDismissedRef = useRef(false)
 
   const calendarSlugs = calendars.map((c) => c.slug)
   const hasResults = query.length >= 2 && results.length > 0
@@ -106,7 +107,11 @@ export function SearchBar() {
                 autoFocus={isSearching && !isExiting}
                 onKeyDown={(e) => {
                   if (e.key === "Escape") {
-                    close()
+                    if (popoverDismissedRef.current) {
+                      popoverDismissedRef.current = false
+                    } else {
+                      close()
+                    }
                   }
                   if ((e.key === "ArrowDown" || e.key === "ArrowUp") && hasResults) {
                     e.preventDefault()
@@ -193,7 +198,10 @@ export function SearchBar() {
           <Popover
             open={!!selectedEvent}
             onOpenChange={(open) => {
-              if (!open) setSelectedEvent(null)
+              if (!open) {
+                popoverDismissedRef.current = true
+                setSelectedEvent(null)
+              }
             }}
           >
             <PopoverAnchor asChild>
