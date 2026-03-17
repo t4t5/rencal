@@ -46,6 +46,7 @@ export function SearchBar() {
   const [results, setResults] = useState<CalendarEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
+  const [highlightedValue, setHighlightedValue] = useState("")
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
@@ -107,12 +108,31 @@ export function SearchBar() {
                   if (e.key === "Escape") {
                     close()
                   }
-                  if (e.key === "ArrowDown" && hasResults) {
+                  if ((e.key === "ArrowDown" || e.key === "ArrowUp") && hasResults) {
                     e.preventDefault()
-                    const cmdkRoot = document.querySelector<HTMLDivElement>("[cmdk-root]")
-                    if (cmdkRoot) {
-                      cmdkRoot.tabIndex = -1
-                      cmdkRoot.focus()
+                    const values = results.map((ev) => `${ev.calendar_slug}-${ev.id}`)
+                    const currentIndex = values.findIndex(
+                      (v) => v.toLowerCase() === highlightedValue.toLowerCase(),
+                    )
+                    const nextIndex =
+                      e.key === "ArrowDown"
+                        ? currentIndex < values.length - 1
+                          ? currentIndex + 1
+                          : 0
+                        : currentIndex > 0
+                          ? currentIndex - 1
+                          : values.length - 1
+                    setHighlightedValue(values[nextIndex])
+                  }
+                  if (e.key === "Enter" && hasResults && highlightedValue) {
+                    e.preventDefault()
+                    const found = results.find(
+                      (ev) =>
+                        `${ev.calendar_slug}-${ev.id}`.toLowerCase() ===
+                        highlightedValue.toLowerCase(),
+                    )
+                    if (found) {
+                      setSelectedEvent((prev) => (prev?.id === found.id ? null : found))
                     }
                   }
                 }}
@@ -138,7 +158,11 @@ export function SearchBar() {
                 }
               }}
             >
-              <Command>
+              <Command
+                shouldFilter={false}
+                value={highlightedValue}
+                onValueChange={setHighlightedValue}
+              >
                 <CommandList>
                   {results.length === 0 && query.length >= 2 && !isLoading && (
                     <CommandEmpty>No events found.</CommandEmpty>
