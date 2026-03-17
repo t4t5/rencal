@@ -20,6 +20,7 @@ interface SearchInputProps {
   focusedIndex: number
   setFocusedIndex: Dispatch<SetStateAction<number>>
   setActiveEvent: Dispatch<SetStateAction<CalendarEvent | null>>
+  className?: string
 }
 
 export function SearchInput({
@@ -35,6 +36,7 @@ export function SearchInput({
   focusedIndex,
   setFocusedIndex,
   setActiveEvent,
+  className,
 }: SearchInputProps) {
   return (
     <div className="relative">
@@ -72,6 +74,7 @@ export function SearchInput({
         className={cn(
           "border-none text-sm bg-secondary transition-[width] duration-200 ease-out pl-8",
           isExiting ? "w-10" : "w-32 starting:w-10",
+          className,
         )}
         onTransitionEnd={() => {
           if (isExiting) {

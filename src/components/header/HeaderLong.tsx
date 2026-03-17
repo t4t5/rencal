@@ -1,4 +1,4 @@
-import { SearchButton } from "@/components/search/SearchButton"
+import { SearchBar } from "@/components/search/SearchBar"
 import { Button } from "@/components/ui/button"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -20,7 +20,7 @@ export function HeaderLong() {
         </TabsList>
       </div>
 
-      <SearchButton />
+      <SearchBar className="w-56" />
     </div>
   )
 }
