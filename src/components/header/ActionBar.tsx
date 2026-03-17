@@ -4,6 +4,7 @@ import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
+import { SearchButton } from "@/components/search/SearchButton"
 import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
 import { Modal } from "@/components/ui/dialog"
@@ -19,7 +20,6 @@ import { cn } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
 import { InvitesDropdown } from "./InvitesDropdown"
-import { SearchBar } from "./SearchBar"
 
 export function ActionBar() {
   const [showModal, setShowModal] = useState(false)
@@ -38,7 +38,7 @@ export function ActionBar() {
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>
-        <SearchBar />
+        <SearchButton />
       </div>
 
       {showModal && (
