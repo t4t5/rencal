@@ -87,7 +87,7 @@ export function SearchBar() {
   }
 
   useOnClickOutside(containerRef, () => {
-    if (isSearching && query === "" && !selectedEvent) {
+    if (isSearching) {
       close()
     }
   })
