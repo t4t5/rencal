@@ -1,5 +1,5 @@
 import { format, parseISO } from "date-fns"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { IoSearch as SearchIcon } from "react-icons/io5"
 
 import { EditEvent } from "@/components/event-info/EditEvent"
@@ -51,9 +51,15 @@ export function SearchBar() {
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const popoverDismissedRef = useRef(false)
+  const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
 
   const calendarSlugs = calendars.map((c) => c.slug)
   const hasResults = query.length >= 2 && results.length > 0
+
+  useEffect(() => {
+    if (!highlightedValue) return
+    itemRefs.current.get(highlightedValue)?.scrollIntoView({ block: "nearest" })
+  }, [highlightedValue])
 
   // Debounced search (min 2 chars)
   useDebouncedEffect(
@@ -178,6 +184,11 @@ export function SearchBar() {
                       <CommandItem
                         key={`${event.calendar_slug}-${event.id}`}
                         value={`${event.calendar_slug}-${event.id}`}
+                        ref={(el) => {
+                          const key = `${event.calendar_slug}-${event.id}`
+                          if (el) itemRefs.current.set(key, el)
+                          else itemRefs.current.delete(key)
+                        }}
                         onSelect={() =>
                           setSelectedEvent((prev) => (prev?.id === event.id ? null : event))
                         }
