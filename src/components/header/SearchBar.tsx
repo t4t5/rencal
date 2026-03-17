@@ -49,6 +49,8 @@ export function SearchBar() {
   const [focusedIndex, setFocusedIndex] = useState(0)
 
   const containerRef = useRef<HTMLDivElement>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const eventDetailRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const popoverDismissedRef = useRef(false)
   const itemRefs = useRef<Map<number, HTMLElement>>(new Map())
@@ -86,7 +88,7 @@ export function SearchBar() {
     setIsExiting(true)
   }
 
-  useOnClickOutside(containerRef, () => {
+  useOnClickOutside([containerRef, resultsRef, eventDetailRef], () => {
     if (isSearching) {
       close()
     }
@@ -152,6 +154,7 @@ export function SearchBar() {
               />
             </PopoverAnchor>
             <PopoverContent
+              ref={resultsRef}
               className="p-0 w-72"
               align="end"
               onOpenAutoFocus={(e) => e.preventDefault()}
@@ -218,6 +221,7 @@ export function SearchBar() {
               />
             </PopoverAnchor>
             <PopoverContent
+              ref={eventDetailRef}
               className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
               side="right"
               align="start"
