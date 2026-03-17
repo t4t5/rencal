@@ -270,6 +270,11 @@ pub trait CaldirApi {
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
 
+    async fn search_events(
+        calendar_slugs: Vec<String>,
+        query: String,
+    ) -> TauResult<Vec<CalendarEvent>>;
+
     async fn list_invites(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>>;
     async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
 
@@ -580,6 +585,27 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         Ok(())
+    }
+
+    async fn search_events(
+        self,
+        calendar_slugs: Vec<String>,
+        query: String,
+    ) -> TauResult<Vec<CalendarEvent>> {
+        let mut events = Vec::new();
+
+        for slug in &calendar_slugs {
+            let calendar =
+                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+
+            for ce in calendar.search_events(&query).map_err(|e| e.to_string())? {
+                events.push(CalendarEvent::from_event(&ce.event, slug, None));
+            }
+        }
+
+        sort_by_proximity_to_now(&mut events);
+
+        Ok(events)
     }
 
     async fn list_invites(self, calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {
@@ -921,4 +947,67 @@ async fn save_provider_calendars(
     }
 
     Ok(calendars)
+}
+
+/// Parse a start string (either RFC3339 datetime or "YYYY-MM-DD" date) into seconds from epoch.
+fn start_to_timestamp(start: &str) -> Option<i64> {
+    if let Ok(dt) = start.parse::<DateTime<Utc>>() {
+        return Some(dt.timestamp());
+    }
+    if let Ok(date) = start.parse::<NaiveDate>() {
+        return Some(date.and_hms_opt(0, 0, 0)?.and_utc().timestamp());
+    }
+    None
+}
+
+/// Sort calendar events so that events closest to now appear first.
+fn sort_by_proximity_to_now(events: &mut [CalendarEvent]) {
+    let now = Utc::now().timestamp();
+    events.sort_by_key(|e| {
+        start_to_timestamp(&e.start)
+            .map(|ts| (ts - now).unsigned_abs())
+            .unwrap_or(u64::MAX)
+    });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn make_event(start: &str) -> CalendarEvent {
+        CalendarEvent {
+            id: String::new(),
+            recurring_event_id: None,
+            summary: String::new(),
+            description: None,
+            location: None,
+            start: start.to_string(),
+            end: start.to_string(),
+            all_day: !start.contains('T'),
+            status: "confirmed".to_string(),
+            calendar_slug: String::new(),
+            recurrence: None,
+            master_recurrence: None,
+            reminders: vec![],
+            organizer: None,
+            attendees: vec![],
+            conference_url: None,
+        }
+    }
+
+    #[test]
+    fn sorts_by_proximity_to_now() {
+        let mut events = vec![
+            make_event("2015-04-01"),
+            make_event("2026-05-17"),
+            make_event("2024-12-25T10:00:00+00:00"),
+        ];
+
+        sort_by_proximity_to_now(&mut events);
+
+        // 2026-05-17 is closest to now (2026-03-14), then 2024-12-25, then 2015-04-01
+        assert_eq!(events[0].start, "2026-05-17");
+        assert_eq!(events[1].start, "2024-12-25T10:00:00+00:00");
+        assert_eq!(events[2].start, "2015-04-01");
+    }
 }
