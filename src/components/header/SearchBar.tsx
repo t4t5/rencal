@@ -62,6 +62,33 @@ export function SearchBar() {
     itemRefs.current.get(focusedIndex)?.scrollIntoView({ block: "nearest" })
   }, [focusedIndex])
 
+  // Close search on Escape regardless of focus
+  useEffect(() => {
+    if (!isSearching) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return
+      // Don't intercept if an input inside the event detail has focus
+      if (
+        eventDetailRef.current?.contains(document.activeElement) &&
+        document.activeElement?.matches("input, textarea, select")
+      ) {
+        return
+      }
+      // Radix fires onOpenChange in capture phase before this bubble listener,
+      // setting the ref to signal that the event detail was just dismissed
+      if (popoverDismissedRef.current) {
+        popoverDismissedRef.current = false
+        return
+      }
+
+      close()
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [isSearching])
+
   // Debounced search (min 2 chars)
   useDebouncedEffect(
     () => {
@@ -116,13 +143,6 @@ export function SearchBar() {
                   placeholder="Search"
                   autoFocus={isSearching && !isExiting}
                   onKeyDown={(e) => {
-                    if (e.key === "Escape") {
-                      if (popoverDismissedRef.current) {
-                        popoverDismissedRef.current = false
-                      } else {
-                        close()
-                      }
-                    }
                     if ((e.key === "ArrowDown" || e.key === "ArrowUp") && hasResults) {
                       e.preventDefault()
                       setFocusedIndex((i) =>
