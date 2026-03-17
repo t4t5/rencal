@@ -155,7 +155,7 @@ export function SearchBar() {
             </PopoverAnchor>
             <PopoverContent
               ref={resultsRef}
-              className="p-0 w-72"
+              className="p-0 w-72 ml-1.5"
               align="end"
               onOpenAutoFocus={(e) => e.preventDefault()}
               onInteractOutside={(e) => {
