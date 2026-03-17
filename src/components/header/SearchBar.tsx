@@ -231,6 +231,11 @@ export function SearchBar() {
               sideOffset={8}
               collisionPadding={16}
               onOpenAutoFocus={(e) => e.preventDefault()}
+              onInteractOutside={(e) => {
+                if (resultsRef.current?.contains(e.target as Node)) {
+                  e.preventDefault()
+                }
+              }}
             >
               <EditEvent event={activeEvent} />
             </PopoverContent>
