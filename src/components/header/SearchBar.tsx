@@ -45,21 +45,20 @@ export function SearchBar() {
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<CalendarEvent[]>([])
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null)
-  const [highlightedValue, setHighlightedValue] = useState("")
+  const [activeEvent, setActiveEvent] = useState<CalendarEvent | null>(null)
+  const [focusedIndex, setFocusedIndex] = useState(0)
 
   const containerRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
   const popoverDismissedRef = useRef(false)
-  const itemRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const itemRefs = useRef<Map<number, HTMLElement>>(new Map())
 
   const calendarSlugs = calendars.map((c) => c.slug)
   const hasResults = query.length >= 2 && results.length > 0
 
   useEffect(() => {
-    if (!highlightedValue) return
-    itemRefs.current.get(highlightedValue)?.scrollIntoView({ block: "nearest" })
-  }, [highlightedValue])
+    itemRefs.current.get(focusedIndex)?.scrollIntoView({ block: "nearest" })
+  }, [focusedIndex])
 
   // Debounced search (min 2 chars)
   useDebouncedEffect(
@@ -82,7 +81,8 @@ export function SearchBar() {
   const close = () => {
     setQuery("")
     setResults([])
-    setSelectedEvent(null)
+    setActiveEvent(null)
+    setFocusedIndex(0)
     setIsExiting(true)
   }
 
@@ -107,7 +107,7 @@ export function SearchBar() {
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value)
-                  setSelectedEvent(null)
+                  setActiveEvent(null)
                 }}
                 placeholder="Search events..."
                 autoFocus={isSearching && !isExiting}
@@ -121,29 +121,21 @@ export function SearchBar() {
                   }
                   if ((e.key === "ArrowDown" || e.key === "ArrowUp") && hasResults) {
                     e.preventDefault()
-                    const values = results.map((ev) => `${ev.calendar_slug}-${ev.id}`)
-                    const currentIndex = values.findIndex(
-                      (v) => v.toLowerCase() === highlightedValue.toLowerCase(),
-                    )
-                    const nextIndex =
+                    setFocusedIndex((i) =>
                       e.key === "ArrowDown"
-                        ? currentIndex < values.length - 1
-                          ? currentIndex + 1
+                        ? i < results.length - 1
+                          ? i + 1
                           : 0
-                        : currentIndex > 0
-                          ? currentIndex - 1
-                          : values.length - 1
-                    setHighlightedValue(values[nextIndex])
-                  }
-                  if (e.key === "Enter" && hasResults && highlightedValue) {
-                    e.preventDefault()
-                    const found = results.find(
-                      (ev) =>
-                        `${ev.calendar_slug}-${ev.id}`.toLowerCase() ===
-                        highlightedValue.toLowerCase(),
+                        : i > 0
+                          ? i - 1
+                          : results.length - 1,
                     )
-                    if (found) {
-                      setSelectedEvent((prev) => (prev?.id === found.id ? null : found))
+                  }
+                  if (e.key === "Enter" && hasResults) {
+                    e.preventDefault()
+                    const event = results[focusedIndex]
+                    if (event) {
+                      setActiveEvent((prev) => (prev?.id === event.id ? null : event))
                     }
                   }
                 }}
@@ -171,26 +163,25 @@ export function SearchBar() {
             >
               <Command
                 shouldFilter={false}
-                value={highlightedValue}
-                onValueChange={setHighlightedValue}
+                value={String(focusedIndex)}
+                onValueChange={(v) => setFocusedIndex(Number(v))}
               >
                 <CommandList>
                   {results.length === 0 && query.length >= 2 && !isLoading && (
                     <CommandEmpty>No events found.</CommandEmpty>
                   )}
-                  {results.map((event) => {
-                    const isActive = selectedEvent?.id === event.id
+                  {results.map((event, index) => {
+                    const isActive = activeEvent?.id === event.id
                     return (
                       <CommandItem
                         key={`${event.calendar_slug}-${event.id}`}
-                        value={`${event.calendar_slug}-${event.id}`}
+                        value={String(index)}
                         ref={(el) => {
-                          const key = `${event.calendar_slug}-${event.id}`
-                          if (el) itemRefs.current.set(key, el)
-                          else itemRefs.current.delete(key)
+                          if (el) itemRefs.current.set(index, el)
+                          else itemRefs.current.delete(index)
                         }}
                         onSelect={() =>
-                          setSelectedEvent((prev) => (prev?.id === event.id ? null : event))
+                          setActiveEvent((prev) => (prev?.id === event.id ? null : event))
                         }
                         className={cn(
                           "flex items-center gap-2 cursor-pointer",
@@ -207,11 +198,11 @@ export function SearchBar() {
           </Popover>
 
           <Popover
-            open={!!selectedEvent}
+            open={!!activeEvent}
             onOpenChange={(open) => {
               if (!open) {
                 popoverDismissedRef.current = true
-                setSelectedEvent(null)
+                setActiveEvent(null)
               }
             }}
           >
@@ -234,7 +225,7 @@ export function SearchBar() {
               collisionPadding={16}
               onOpenAutoFocus={(e) => e.preventDefault()}
             >
-              <EditEvent event={selectedEvent} />
+              <EditEvent event={activeEvent} />
             </PopoverContent>
           </Popover>
         </>
