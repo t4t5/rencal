@@ -38,7 +38,7 @@ export function ActionBar() {
         <Button variant="secondary" onClick={() => setShowModal(true)}>
           <SettingsIcon />
         </Button>
-        <SearchButton />
+        {!isMd && <SearchButton />}
       </div>
 
       {showModal && (

@@ -1,0 +1,26 @@
+import { SearchButton } from "@/components/search/SearchButton"
+import { Button } from "@/components/ui/button"
+import { TabsList, TabsTrigger } from "@/components/ui/tabs"
+
+import { useCalendarState } from "@/contexts/CalendarStateContext"
+
+export function HeaderLong() {
+  const { navigateToDate } = useCalendarState()
+
+  return (
+    <div className="h-18 shrink-0 items-center flex gap-2 p-4">
+      <div className="flex gap-2 items-center grow">
+        <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
+          Today
+        </Button>
+
+        <TabsList>
+          <TabsTrigger value="week">Week</TabsTrigger>
+          <TabsTrigger value="month">Month</TabsTrigger>
+        </TabsList>
+      </div>
+
+      <SearchButton />
+    </div>
+  )
+}

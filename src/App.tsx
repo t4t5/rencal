@@ -7,18 +7,16 @@ import { SheetEvent } from "@/components/event-info/SheetInfo"
 import { EventList } from "@/components/events/EventList"
 import { Header } from "@/components/header/Header"
 import { MonthView } from "@/components/month-view/MonthView"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { WeekView } from "@/components/week-view/WeekView"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { HeaderLong } from "./components/header/HeaderLong"
 import { useBreakpoint } from "./hooks/useBreakpoint"
 
 function App() {
   const { activeEvent } = useCalEvents()
-  const { navigateToDate } = useCalendarState()
 
   const isMd = useBreakpoint("md")
 
@@ -37,15 +35,7 @@ function App() {
           defaultValue="month"
           className="hidden sm:flex flex-col grow border-l border-l-border"
         >
-          <div className="h-18 shrink-0 items-center flex gap-2 p-4">
-            <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
-              Today
-            </Button>
-            <TabsList>
-              <TabsTrigger value="week">Week</TabsTrigger>
-              <TabsTrigger value="month">Month</TabsTrigger>
-            </TabsList>
-          </div>
+          <HeaderLong />
           <div className="h-[calc(100vh-80px)]">
             <TabsContent value="week" className="h-full">
               <WeekView />
