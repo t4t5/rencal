@@ -1,5 +1,5 @@
 import { format } from "date-fns"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 
 import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
 import {
@@ -38,15 +38,18 @@ export function WeekTimedEvent({
   const { calendars } = useCalendarState()
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
+  const [contextOpen, setContextOpen] = useState(false)
+
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
   const leftPercent = layout.column * widthPercent
   const isDashed = isPending || isDeclined
   const canDelete = isUserOrganizer(layout.event, calendars)
+  const highlighted = isActive || contextOpen
 
   return (
     <>
-      <ContextMenu>
+      <ContextMenu onOpenChange={setContextOpen}>
         <ContextMenuTrigger asChild>
           <div
             ref={ref}
@@ -54,7 +57,7 @@ export function WeekTimedEvent({
             className={cn(
               "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110",
               !isDashed && "pl-2",
-              isActive && "brightness-150",
+              highlighted && "brightness-150",
               isDeclined && "line-through",
             )}
             style={{
@@ -68,10 +71,10 @@ export function WeekTimedEvent({
                     color: `color-mix(in srgb, ${color} 70%, white)`,
                   }
                 : {
-                    backgroundColor: isActive
+                    backgroundColor: highlighted
                       ? `color-mix(in srgb, ${color} 50%, black)`
                       : `color-mix(in srgb, ${color} 30%, black)`,
-                    color: isActive
+                    color: highlighted
                       ? `color-mix(in srgb, ${color} 30%, white)`
                       : `color-mix(in srgb, ${color} 70%, white)`,
                   }),
