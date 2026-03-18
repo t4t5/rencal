@@ -15,6 +15,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getEventBlockStyle } from "@/lib/event-styles"
 import { isUserOrganizer } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -65,19 +66,7 @@ export function WeekTimedEvent({
               height: `max(${layout.height}%, 2.125rem)`,
               left: `${leftPercent}%`,
               width: `calc(${widthPercent}% - 2px)`,
-              ...(isDashed
-                ? {
-                    border: `1px dashed ${color}`,
-                    color: `color-mix(in srgb, ${color} 70%, white)`,
-                  }
-                : {
-                    backgroundColor: highlighted
-                      ? `color-mix(in srgb, ${color} 50%, black)`
-                      : `color-mix(in srgb, ${color} 30%, black)`,
-                    color: highlighted
-                      ? `color-mix(in srgb, ${color} 30%, white)`
-                      : `color-mix(in srgb, ${color} 70%, white)`,
-                  }),
+              ...getEventBlockStyle(color, highlighted, isDashed),
             }}
             onClick={(e) => {
               e.stopPropagation()

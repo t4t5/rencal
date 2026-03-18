@@ -14,6 +14,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getEventBlockStyle } from "@/lib/event-styles"
 import { isUserOrganizer } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -61,12 +62,7 @@ export function MonthAllDayBar({
             style={{
               gridColumn: `${item.startCol} / ${item.endCol}`,
               gridRow: item.lane + 1,
-              backgroundColor: highlighted
-                ? `color-mix(in srgb, ${color} 50%, black)`
-                : `color-mix(in srgb, ${color} 30%, black)`,
-              color: highlighted
-                ? `color-mix(in srgb, ${color} 30%, white)`
-                : `color-mix(in srgb, ${color} 70%, white)`,
+              ...getEventBlockStyle(color, highlighted, false),
             }}
             onClick={(e) => {
               e.stopPropagation()
