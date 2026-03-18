@@ -31,10 +31,7 @@ function App() {
       </div>
 
       {isMd && (
-        <Tabs
-          defaultValue="month"
-          className="hidden sm:flex flex-col grow border-l border-l-border"
-        >
+        <Tabs defaultValue="month" className="hidden sm:flex flex-col grow">
           <HeaderLong />
           <div className="h-[calc(100vh-80px)]">
             <TabsContent value="week" className="h-full">
