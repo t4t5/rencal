@@ -61,6 +61,11 @@ export function PopoverEditEvent() {
             )
           }
         }}
+        onFocusOutside={(e) => {
+          // Never dismiss the popover due to focus moving elsewhere —
+          // onPointerDownOutside and Escape already handle intentional closes.
+          e.preventDefault()
+        }}
       >
         <EditEvent event={activeEvent} />
       </PopoverContent>

@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { HiEllipsisHorizontal } from "react-icons/hi2"
 import { RRule, RRuleSet } from "rrule"
 
+import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 import {
@@ -18,10 +19,10 @@ import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { isPendingEvent, isUserOrganizer } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
-import { DeleteConfirmDialog } from "./DeleteConfirmDialog"
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
@@ -32,7 +33,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const originalEventRef = useRef<CalendarEvent | null>(null)
 
   const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
   useEffect(() => {
     if (event) {
@@ -107,31 +108,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     setDirtyEvent({ ...dirtyEvent, reminders: dirtyEvent.reminders.filter((m) => m !== mins) })
   }
 
-  const handleDeleteThis = async () => {
-    if (!dirtyEvent) return
-
-    await rpc.caldir.delete_event(dirtyEvent.calendar_slug, dirtyEvent.id)
-
-    setShowDeleteDialog(false)
-    setActiveEventId(null)
-    await reloadEvents()
-  }
-
-  const handleDeleteAll = async () => {
-    if (!dirtyEvent) return
-
-    // Get the parent event to find the shared UID
-    const parentId = dirtyEvent.recurring_event_id ?? dirtyEvent.id
-
-    if (parent) {
-      await rpc.caldir.delete_recurring_series(dirtyEvent.calendar_slug, parentId)
-    }
-
-    setShowDeleteDialog(false)
-    setActiveEventId(null)
-    await reloadEvents()
-  }
-
   if (!dirtyEvent) return null
 
   const { summary, description, start, end, all_day, location, calendar_slug, recurrence } =
@@ -169,7 +145,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">
-              <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+              <DropdownMenuItem variant="destructive" onClick={() => triggerDelete(dirtyEvent)}>
                 Delete event
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -241,13 +217,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         onClose={() => setActiveEventId(null)}
       />
 
-      <DeleteConfirmDialog
-        open={showDeleteDialog}
-        isRecurring={!!(dirtyEvent.recurring_event_id || dirtyEvent.recurrence)}
-        onClose={() => setShowDeleteDialog(false)}
-        onDeleteThis={handleDeleteThis}
-        onDeleteAll={handleDeleteAll}
-      />
+      <DeleteConfirmDialog {...deleteDialogProps} />
 
       {!!pendingRecurrence && (
         <RecurrenceConfirmDialog
