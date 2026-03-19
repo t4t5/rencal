@@ -54,7 +54,7 @@ export function WeekTimeGrid({
 }: WeekTimeGridProps) {
   const { calendars } = useCalendarState()
   const { setActiveEventId } = useCalEvents()
-  const { setDraftEvent, setDraftPopoverOpen, setIsDrafting } = useEventDraft()
+  const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const [, setTick] = useState(0)
 
   // Update time indicator every 60s
@@ -93,7 +93,7 @@ export function WeekTimeGrid({
       allDay: opts.allDay,
       start,
       end,
-      calendarId: null,
+      calendarId: defaultCalendarId,
       location: null,
       recurrence: null,
     })

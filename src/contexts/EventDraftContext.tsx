@@ -23,6 +23,8 @@ interface EventDraftContextType {
   draftPopoverOpen: boolean
   setDraftPopoverOpen: (open: boolean) => void
 
+  defaultCalendarId: string | null
+
   text: string
   setText: (text: string) => void
 
@@ -88,6 +90,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setIsDrafting,
     draftPopoverOpen,
     setDraftPopoverOpen,
+    defaultCalendarId,
     text,
     setText,
     draftEvent,
