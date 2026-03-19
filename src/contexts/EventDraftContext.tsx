@@ -20,6 +20,9 @@ interface EventDraftContextType {
   isDrafting: boolean
   setIsDrafting: (isDrafting: boolean) => void
 
+  draftPopoverOpen: boolean
+  setDraftPopoverOpen: (open: boolean) => void
+
   text: string
   setText: (text: string) => void
 
@@ -43,6 +46,7 @@ const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendarState()
   const [isDrafting, setIsDrafting] = useState(false)
+  const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
 
   const defaultCalendarId = calendars[0]?.slug ?? null
 
@@ -74,9 +78,16 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setDraftReminders([])
   }
 
+  const setDraftPopoverOpen = (open: boolean) => {
+    _setDraftPopoverOpen(open)
+    if (!open) setDefaultDraftEvent()
+  }
+
   const value = {
     isDrafting,
     setIsDrafting,
+    draftPopoverOpen,
+    setDraftPopoverOpen,
     text,
     setText,
     draftEvent,

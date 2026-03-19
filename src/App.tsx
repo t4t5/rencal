@@ -3,6 +3,7 @@ import "@/global.css"
 import { StatefulCalendar } from "@/components/StatefulCalendar"
 import { EditEvent } from "@/components/event-info/EditEvent"
 import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
+import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"
 import { EventList } from "@/components/events/EventList"
 import { Header } from "@/components/header/Header"
@@ -51,6 +52,7 @@ function App() {
       )}
 
       {isMd && <PopoverEditEvent />}
+      {isMd && <PopoverNewEvent />}
 
       {!isMd && <SheetEvent />}
     </main>

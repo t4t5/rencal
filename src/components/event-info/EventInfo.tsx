@@ -25,6 +25,7 @@ const Divider = () => (
 
 export function EventInfo({
   readonly,
+  summaryRef,
   summary,
   onChangeSummary,
   start,
@@ -54,6 +55,7 @@ export function EventInfo({
   onClose,
 }: {
   readonly?: boolean
+  summaryRef?: React.Ref<HTMLTextAreaElement>
   summary?: string | null
   onChangeSummary: (summary: string) => void
   onClose?: () => void
@@ -85,6 +87,7 @@ export function EventInfo({
   return (
     <div className="flex flex-col gap-2 grow">
       <Textarea
+        ref={summaryRef}
         placeholder="Event Title"
         value={summary ?? ""}
         className={cn("text-lg", readonly && "hover:border-transparent! focus:bg-transparent!")}

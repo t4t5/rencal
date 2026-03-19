@@ -1,13 +1,23 @@
-import { format } from "date-fns"
-import { useEffect, useState } from "react"
+import { addHours, endOfDay, format, setHours, startOfDay, startOfHour } from "date-fns"
+import { useEffect, useRef, useState } from "react"
+
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu"
 
 import type { CalendarEvent } from "@/rpc/bindings"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { setDraftAnchor } from "@/lib/draft-anchor"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -43,6 +53,8 @@ export function WeekTimeGrid({
   draftEvent,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendarState()
+  const { setActiveEventId } = useCalEvents()
+  const { setDraftEvent, setDraftPopoverOpen, setIsDrafting } = useEventDraft()
   const [, setTick] = useState(0)
 
   // Update time indicator every 60s
@@ -62,6 +74,39 @@ export function WeekTimeGrid({
   const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
   const hasAllDay = allDayItems.length > 0
+  const contextTargetRef = useRef<HTMLElement | null>(null)
+  const contextClickYRef = useRef(0)
+
+  const openCreatePopover = (
+    day: Date,
+    el: HTMLElement,
+    opts: { allDay: boolean; startHour?: number },
+  ) => {
+    const start = opts.allDay ? startOfDay(day) : setHours(startOfDay(day), opts.startHour ?? 0)
+    const end = opts.allDay ? endOfDay(day) : addHours(start, 1)
+
+    setActiveEventId(null)
+    setIsDrafting(false)
+    setDraftEvent({
+      summary: "",
+      description: null,
+      allDay: opts.allDay,
+      start,
+      end,
+      calendarId: null,
+      location: null,
+      recurrence: null,
+    })
+    setDraftAnchor(el)
+    setDraftPopoverOpen(true)
+  }
+
+  const getHourFromClickY = (el: HTMLElement, clientY: number) => {
+    const rect = el.getBoundingClientRect()
+    const fraction = (clientY - rect.top) / rect.height
+    const hour = visibleStartHour + fraction * rangeHours
+    return Math.max(visibleStartHour, Math.min(visibleEndHour - 1, Math.floor(hour)))
+  }
 
   return (
     <div
@@ -102,14 +147,33 @@ export function WeekTimeGrid({
         >
           {/* Background columns for weekend shading + borders */}
           {weekDays.map((day, i) => (
-            <div
-              key={day.dateKey}
-              className={cn(
-                "border-r border-border",
-                day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
-              )}
-              style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
-            />
+            <ContextMenu key={day.dateKey}>
+              <ContextMenuTrigger asChild>
+                <div
+                  className={cn(
+                    "border-r border-border",
+                    day.dateKey === activeDateKey
+                      ? "bg-secondary"
+                      : day.isWeekend && "bg-weekendBg",
+                  )}
+                  style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
+                  onContextMenu={(e) => {
+                    contextTargetRef.current = e.currentTarget
+                  }}
+                />
+              </ContextMenuTrigger>
+              <ContextMenuContent>
+                <ContextMenuItem
+                  onClick={() => {
+                    setTimeout(() => {
+                      openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
+                    })
+                  }}
+                >
+                  Create event
+                </ContextMenuItem>
+              </ContextMenuContent>
+            </ContextMenu>
           ))}
 
           {/* All-day event bars */}
@@ -129,32 +193,52 @@ export function WeekTimeGrid({
 
       {/* Row 3: Time columns */}
       {weekDays.map((day, colIndex) => (
-        <div
-          key={day.dateKey}
-          className={cn(
-            "relative border-r border-border cursor-default",
-            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
-          )}
-          onClick={() => onDayClick(day.date)}
-        >
-          {/* Timed events */}
-          {timedByCol[colIndex].map((layout) => (
-            <WeekTimedEvent
-              key={layout.event.id}
-              layout={layout}
-              isActive={activeEventId === layout.event.id}
-              isPending={isPendingEvent(layout.event, calendars)}
-              isDeclined={isDeclinedEvent(layout.event, calendars)}
-              isDraft={layout.event === draftEvent}
-              onClick={() => onEventClick(layout.event.id)}
-            />
-          ))}
+        <ContextMenu key={day.dateKey}>
+          <ContextMenuTrigger asChild>
+            <div
+              className={cn(
+                "relative border-r border-border cursor-default",
+                day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+              )}
+              onClick={() => onDayClick(day.date)}
+              onContextMenu={(e) => {
+                contextTargetRef.current = e.currentTarget
+                contextClickYRef.current = e.clientY
+              }}
+            >
+              {/* Timed events */}
+              {timedByCol[colIndex].map((layout) => (
+                <WeekTimedEvent
+                  key={layout.event.id}
+                  layout={layout}
+                  isActive={activeEventId === layout.event.id}
+                  isPending={isPendingEvent(layout.event, calendars)}
+                  isDeclined={isDeclinedEvent(layout.event, calendars)}
+                  isDraft={layout.event === draftEvent}
+                  onClick={() => onEventClick(layout.event.id)}
+                />
+              ))}
 
-          {/* Current time indicator */}
-          {colIndex === todayColIndex && showTimeIndicator && (
-            <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} />
-          )}
-        </div>
+              {/* Current time indicator */}
+              {colIndex === todayColIndex && showTimeIndicator && (
+                <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} />
+              )}
+            </div>
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem
+              onClick={() => {
+                setTimeout(() => {
+                  const el = contextTargetRef.current!
+                  const startHour = getHourFromClickY(el, contextClickYRef.current)
+                  openCreatePopover(day.date, el, { allDay: false, startHour })
+                })
+              }}
+            >
+              Create event
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
       ))}
     </div>
   )

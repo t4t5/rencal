@@ -7,12 +7,13 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import { draftToCalendarEvent } from "@/lib/draft-to-event"
 
 export function useEventsWithDraft(events: CalendarEvent[]) {
-  const { isDrafting, text, draftEvent } = useEventDraft()
+  const { isDrafting, text, draftPopoverOpen, draftEvent } = useEventDraft()
 
   const draftCalEvent = useMemo(() => {
+    if (draftPopoverOpen) return draftToCalendarEvent(draftEvent)
     if (!isDrafting || !text) return null
     return draftToCalendarEvent(draftEvent)
-  }, [isDrafting, text, draftEvent])
+  }, [isDrafting, text, draftPopoverOpen, draftEvent])
 
   const merged = useMemo(() => {
     if (!draftCalEvent) return events
