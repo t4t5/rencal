@@ -22,6 +22,7 @@ type MonthTimedEventProps = {
   isActive: boolean
   isPending: boolean
   isDeclined: boolean
+  isDraft: boolean
   onClick: () => void
 }
 
@@ -30,6 +31,7 @@ export function MonthTimedEvent({
   isActive,
   isPending,
   isDeclined,
+  isDraft,
   onClick,
 }: MonthTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -42,32 +44,40 @@ export function MonthTimedEvent({
   const canDelete = isUserOrganizer(item.event, calendars)
   const highlighted = isActive || contextOpen
 
-  return (
-    <>
-      <ContextMenu onOpenChange={setContextOpen}>
-        <ContextMenuTrigger asChild>
-          <div
-            ref={ref}
-            data-event-clickable
-            className={cn(
-              "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded shrink-0",
-              highlighted && "bg-accent!",
-              (isPending || isDeclined) && "opacity-50",
-              isDeclined && "line-through",
-            )}
-            onClick={(e) => {
+  const inner = (
+    <div
+      ref={ref}
+      data-event-clickable={!isDraft || undefined}
+      className={cn(
+        "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded shrink-0",
+        highlighted && "bg-accent!",
+        (isPending || isDeclined || isDraft) && "opacity-50",
+        isDeclined && "line-through",
+      )}
+      onClick={
+        isDraft
+          ? undefined
+          : (e) => {
               e.stopPropagation()
               setEventAnchor(e.currentTarget)
               onClick()
-            }}
-          >
-            <div
-              className="size-1.5 rounded-full shrink-0"
-              style={{ backgroundColor: item.color ?? "var(--primary)" }}
-            />
-            <span className="truncate">{item.event.summary}</span>
-          </div>
-        </ContextMenuTrigger>
+            }
+      }
+    >
+      <div
+        className="size-1.5 rounded-full shrink-0"
+        style={{ backgroundColor: item.color ?? "var(--primary)" }}
+      />
+      <span className="truncate">{item.event.summary}</span>
+    </div>
+  )
+
+  if (isDraft) return inner
+
+  return (
+    <>
+      <ContextMenu onOpenChange={setContextOpen}>
+        <ContextMenuTrigger asChild>{inner}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
             onClick={() => {

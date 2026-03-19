@@ -16,10 +16,11 @@ type DaySectionProps = {
   date: Date
   events: CalendarEvent[]
   calendars: Calendar[]
+  draftEvent: CalendarEvent | null
 }
 
 export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
-  ({ date, events, calendars }, ref) => {
+  ({ date, events, calendars, draftEvent }, ref) => {
     const { activeEvent, toggleActiveEventId } = useCalEvents()
 
     return (
@@ -48,22 +49,27 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
             <div className="px-3 py-1 text-sm text-muted-foreground">No events</div>
           ) : (
             events.map((event) => {
-              const isActive = event.id === activeEvent?.id
+              const isDraft = event === draftEvent
+              const isActive = !isDraft && event.id === activeEvent?.id
               const calendar = calendars.find((c) => c.slug === event.calendar_slug)
               const isPending = isPendingEvent(event, calendars)
               const isDeclined = isDeclinedEvent(event, calendars)
 
               return (
                 <div
-                  key={event.id}
-                  data-event-clickable
-                  onClick={(e) => {
-                    setEventAnchor(e.currentTarget)
-                    toggleActiveEventId(event.id)
-                  }}
+                  key={isDraft ? "__draft__" : event.id}
+                  data-event-clickable={!isDraft || undefined}
+                  onClick={
+                    isDraft
+                      ? undefined
+                      : (e) => {
+                          setEventAnchor(e.currentTarget)
+                          toggleActiveEventId(event.id)
+                        }
+                  }
                   className={cn("cursor-default hover:bg-secondary py-1", {
                     "bg-accent!": isActive,
-                    "opacity-50": isPending || isDeclined,
+                    "opacity-50": isPending || isDeclined || isDraft,
                     "line-through": isDeclined,
                   })}
                 >

@@ -9,6 +9,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfiniteScroll"
+import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
 
@@ -37,7 +38,8 @@ export function EventList() {
     currentDateRangeRef,
     isInitialLoading,
   } = useCalEvents()
-  const { eventsByDate, datesWithEvents } = useGroupedEvents({ events })
+  const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
+  const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const [ghostDate, setGhostDate] = useState<Date | null>(null)
@@ -173,6 +175,7 @@ export function EventList() {
             events={events}
             date={date}
             calendars={calendars}
+            draftEvent={draftCalEvent}
           />
         )
       })}

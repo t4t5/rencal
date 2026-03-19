@@ -5,6 +5,8 @@ import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useSt
 import { MonthAllDayBar } from "@/components/month-view/MonthAllDayBar"
 import { MonthDayCell } from "@/components/month-view/MonthDayCell"
 
+import type { CalendarEvent } from "@/rpc/bindings"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
@@ -21,6 +23,7 @@ type MonthWeekRowProps = {
   activeDateKey: string
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
+  draftEvent: CalendarEvent | null
 }
 
 const MonthWeekRow = memo(function MonthWeekRow({
@@ -30,6 +33,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   activeDateKey,
   onDayClick,
   onEventClick,
+  draftEvent,
 }: MonthWeekRowProps) {
   const { calendars } = useCalendarState()
   const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
@@ -99,6 +103,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               isActive={item.event.id === activeEventId}
               isPending={isPendingEvent(item.event, calendars)}
               isDeclined={isDeclinedEvent(item.event, calendars)}
+              isDraft={item.event === draftEvent}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}
@@ -124,6 +129,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
               onEventClick={onEventClick}
+              draftEvent={draftEvent}
             />
           )
         })}
@@ -143,6 +149,7 @@ type MonthGridProps = {
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
   onScrollMonthChange: (date: Date) => void
+  draftEvent: CalendarEvent | null
 }
 
 export function MonthGrid({
@@ -156,6 +163,7 @@ export function MonthGrid({
   onDayClick,
   onEventClick,
   onScrollMonthChange,
+  draftEvent,
 }: MonthGridProps) {
   const hasInitialized = useRef(false)
   const scrollDetectionReady = useRef(false)
@@ -353,6 +361,7 @@ export function MonthGrid({
               activeDateKey={activeDateKey}
               onDayClick={onDayClick}
               onEventClick={onEventClick}
+              draftEvent={draftEvent}
             />
           </div>
         ))}

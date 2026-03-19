@@ -1,6 +1,8 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
+import type { CalendarEvent } from "@/rpc/bindings"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -24,6 +26,7 @@ type WeekTimeGridProps = {
   onEventClick: (id: string) => void
   visibleStartHour: number
   visibleEndHour: number
+  draftEvent: CalendarEvent | null
 }
 
 export function WeekTimeGrid({
@@ -37,6 +40,7 @@ export function WeekTimeGrid({
   onEventClick,
   visibleStartHour,
   visibleEndHour,
+  draftEvent,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendarState()
   const [, setTick] = useState(0)
@@ -116,6 +120,7 @@ export function WeekTimeGrid({
               isActive={activeEventId === item.event.id}
               isPending={isPendingEvent(item.event, calendars)}
               isDeclined={isDeclinedEvent(item.event, calendars)}
+              isDraft={item.event === draftEvent}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}
@@ -140,6 +145,7 @@ export function WeekTimeGrid({
               isActive={activeEventId === layout.event.id}
               isPending={isPendingEvent(layout.event, calendars)}
               isDeclined={isDeclinedEvent(layout.event, calendars)}
+              isDraft={layout.event === draftEvent}
               onClick={() => onEventClick(layout.event.id)}
             />
           ))}

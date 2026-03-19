@@ -1,5 +1,7 @@
 import { MonthTimedEvent } from "@/components/month-view/MonthTimedEvent"
 
+import type { CalendarEvent } from "@/rpc/bindings"
+
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -17,6 +19,7 @@ type MonthDayCellProps = {
   isActiveDay: boolean
   onClick: () => void
   onEventClick: (eventId: string) => void
+  draftEvent: CalendarEvent | null
 }
 
 export function MonthDayCell({
@@ -27,6 +30,7 @@ export function MonthDayCell({
   isActiveDay,
   onClick,
   onEventClick,
+  draftEvent,
 }: MonthDayCellProps) {
   const { calendars } = useCalendarState()
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
@@ -49,6 +53,7 @@ export function MonthDayCell({
           isActive={item.event.id === activeEventId}
           isPending={isPendingEvent(item.event, calendars)}
           isDeclined={isDeclinedEvent(item.event, calendars)}
+          isDraft={item.event === draftEvent}
           onClick={() => onEventClick(item.event.id)}
         />
       ))}

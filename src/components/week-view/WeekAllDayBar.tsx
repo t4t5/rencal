@@ -23,6 +23,7 @@ type WeekAllDayBarProps = {
   isActive: boolean
   isPending: boolean
   isDeclined: boolean
+  isDraft: boolean
   onClick: () => void
 }
 
@@ -31,6 +32,7 @@ export function WeekAllDayBar({
   isActive,
   isPending,
   isDeclined,
+  isDraft,
   onClick,
 }: WeekAllDayBarProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -41,38 +43,47 @@ export function WeekAllDayBar({
   const [contextOpen, setContextOpen] = useState(false)
 
   const color = item.color ?? "var(--primary)"
-  const isDashed = isPending || isDeclined
+  const isDashed = isPending || isDeclined || isDraft
   const canDelete = isUserOrganizer(item.event, calendars)
   const highlighted = isActive || contextOpen
+
+  const inner = (
+    <div
+      ref={ref}
+      data-event-clickable={!isDraft || undefined}
+      className={cn(
+        "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
+        highlighted && "brightness-150",
+        isDeclined && "line-through",
+        isDraft && "opacity-60",
+        item.isStart ? "rounded-l ml-px" : "-ml-px",
+        item.isEnd ? "rounded-r mr-px" : "-mr-px",
+      )}
+      style={{
+        gridColumn: `${item.startCol} / ${item.endCol}`,
+        gridRow: item.lane + 1,
+        ...getEventBlockStyle(color, highlighted, isDashed),
+      }}
+      onClick={
+        isDraft
+          ? undefined
+          : (e) => {
+              e.stopPropagation()
+              setEventAnchor(e.currentTarget)
+              onClick()
+            }
+      }
+    >
+      {item.event.summary}
+    </div>
+  )
+
+  if (isDraft) return inner
 
   return (
     <>
       <ContextMenu onOpenChange={setContextOpen}>
-        <ContextMenuTrigger asChild>
-          <div
-            ref={ref}
-            data-event-clickable
-            className={cn(
-              "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
-              highlighted && "brightness-150",
-              isDeclined && "line-through",
-              item.isStart ? "rounded-l ml-px" : "-ml-px",
-              item.isEnd ? "rounded-r mr-px" : "-mr-px",
-            )}
-            style={{
-              gridColumn: `${item.startCol} / ${item.endCol}`,
-              gridRow: item.lane + 1,
-              ...getEventBlockStyle(color, highlighted, isDashed),
-            }}
-            onClick={(e) => {
-              e.stopPropagation()
-              setEventAnchor(e.currentTarget)
-              onClick()
-            }}
-          >
-            {item.event.summary}
-          </div>
-        </ContextMenuTrigger>
+        <ContextMenuTrigger asChild>{inner}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
             onClick={() => {

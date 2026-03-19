@@ -23,6 +23,7 @@ type MonthAllDayBarProps = {
   isActive: boolean
   isPending: boolean
   isDeclined: boolean
+  isDraft: boolean
   onClick: () => void
 }
 
@@ -31,6 +32,7 @@ export function MonthAllDayBar({
   isActive,
   isPending,
   isDeclined,
+  isDraft,
   onClick,
 }: MonthAllDayBarProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -44,35 +46,43 @@ export function MonthAllDayBar({
   const canDelete = isUserOrganizer(item.event, calendars)
   const highlighted = isActive || contextOpen
 
-  return (
-    <>
-      <ContextMenu onOpenChange={setContextOpen}>
-        <ContextMenuTrigger asChild>
-          <div
-            ref={ref}
-            data-event-clickable
-            className={cn(
-              "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
-              highlighted && "brightness-150",
-              (isPending || isDeclined) && "opacity-50",
-              isDeclined && "line-through",
-              item.isStart ? "rounded-l ml-px" : "-ml-px",
-              item.isEnd ? "rounded-r mr-px" : "-mr-px",
-            )}
-            style={{
-              gridColumn: `${item.startCol} / ${item.endCol}`,
-              gridRow: item.lane + 1,
-              ...getEventBlockStyle(color, highlighted, false),
-            }}
-            onClick={(e) => {
+  const inner = (
+    <div
+      ref={ref}
+      data-event-clickable={!isDraft || undefined}
+      className={cn(
+        "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
+        highlighted && "brightness-150",
+        (isPending || isDeclined || isDraft) && "opacity-50",
+        isDeclined && "line-through",
+        item.isStart ? "rounded-l ml-px" : "-ml-px",
+        item.isEnd ? "rounded-r mr-px" : "-mr-px",
+      )}
+      style={{
+        gridColumn: `${item.startCol} / ${item.endCol}`,
+        gridRow: item.lane + 1,
+        ...getEventBlockStyle(color, highlighted, false),
+      }}
+      onClick={
+        isDraft
+          ? undefined
+          : (e) => {
               e.stopPropagation()
               setEventAnchor(e.currentTarget)
               onClick()
-            }}
-          >
-            {item.event.summary}
-          </div>
-        </ContextMenuTrigger>
+            }
+      }
+    >
+      {item.event.summary}
+    </div>
+  )
+
+  if (isDraft) return inner
+
+  return (
+    <>
+      <ContextMenu onOpenChange={setContextOpen}>
+        <ContextMenuTrigger asChild>{inner}</ContextMenuTrigger>
         <ContextMenuContent>
           <ContextMenuItem
             onClick={() => {

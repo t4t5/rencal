@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useWeekDays } from "@/hooks/cal-events/useWeekDays"
 import { useWeekEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 
@@ -17,7 +18,8 @@ export function WeekView() {
   const weekKey = format(weekStart, "yyyy-MM-dd")
 
   const weekDays = useWeekDays(activeDate)
-  const layout = useWeekEventLayout(weekDays, calendarEvents, calendars)
+  const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const layout = useWeekEventLayout(weekDays, events, calendars)
 
   // Track direction for animation
   const prevWeekKeyRef = useRef(weekKey)
@@ -43,6 +45,7 @@ export function WeekView() {
         onEventClick={toggleActiveEventId}
         visibleStartHour={layout.visibleStartHour}
         visibleEndHour={layout.visibleEndHour}
+        draftEvent={draftCalEvent}
       />
     </div>
   )

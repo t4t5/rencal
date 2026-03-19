@@ -6,6 +6,7 @@ import { MonthGrid } from "@/components/month-view/MonthGrid"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
@@ -34,7 +35,8 @@ export function MonthView() {
   const [rangeEnd, setRangeEnd] = useState(() => startOfMonth(addMonths(activeDate, 3)))
 
   const weeks = useMonthGrid(rangeStart, rangeEnd)
-  const weekLayouts = useMonthEventLayout(weeks, calendarEvents, calendars)
+  const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const weekLayouts = useMonthEventLayout(weeks, events, calendars)
 
   // Compute initial anchor week (the week containing the 1st of activeDate's month)
   const initialAnchorRef = useRef(startOfMonth(activeDate))
@@ -131,6 +133,7 @@ export function MonthView() {
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
         onScrollMonthChange={setActiveDate}
+        draftEvent={draftCalEvent}
       />
     </div>
   )
