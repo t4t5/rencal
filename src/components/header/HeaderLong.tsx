@@ -9,11 +9,13 @@ export function HeaderLong() {
 
   return (
     <div className="h-18 shrink-0 items-center flex gap-2 p-4">
-      <div className="flex gap-2 items-center grow">
+      <div className="flex gap-2 items-center">
         <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
           Today
         </Button>
       </div>
+
+      <div className="grow h-full" data-tauri-drag-region />
 
       <TabsList>
         <TabsTrigger value="week">Week</TabsTrigger>
