@@ -30,6 +30,7 @@
   "bundle": {
     "active": true,
     "targets": ["appimage"],
+    "resources": ["providers/caldir-provider-google", "providers/caldir-provider-icloud"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",

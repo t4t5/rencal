@@ -46,6 +46,15 @@ communicates with the backend via taurpc.
 - Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
 - For taurpc types with a fixed set of string values, use a Rust enum with `#[serde(rename = "...")]` variants instead of `String`. Specta generates these as TypeScript string literal unions (e.g., `ResponseStatus = "accepted" | "declined" | ...`). See `ResponseStatus` in `caldir.rs` for the pattern.
 
+## Bundled Providers
+
+RenCal bundles the Google and iCloud caldir provider binaries so they work out of the box. The
+`just dev` / `just build` recipes compile them from `../caldir/` into `src-tauri/providers/`. At
+startup, `lib.rs` sets the `CALDIR_PROVIDER_PATH` env var to point at that directory. caldir-core's
+`discover_installed()` checks `CALDIR_PROVIDER_PATH` before `PATH`, so bundled providers are found
+alongside any user-installed ones. The providers are shipped as Tauri bundle resources (configured in
+`tauri.conf.json`).
+
 ## Calendar Data (caldir)
 
 Rencal reads calendars and events from the local caldir directory (`~/calendar/`) via the

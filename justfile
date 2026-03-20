@@ -6,12 +6,30 @@ default:
 install:
   pnpm install
 
+# Build caldir provider binaries (debug) into src-tauri/providers/
+build-providers:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p src-tauri/providers
+  cargo build --manifest-path ../caldir/Cargo.toml -p caldir-provider-google -p caldir-provider-icloud
+  cp ../caldir/target/debug/caldir-provider-google src-tauri/providers/
+  cp ../caldir/target/debug/caldir-provider-icloud src-tauri/providers/
+
+# Build caldir provider binaries (release) into src-tauri/providers/
+build-providers-release:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p src-tauri/providers
+  cargo build --manifest-path ../caldir/Cargo.toml --release -p caldir-provider-google -p caldir-provider-icloud
+  cp ../caldir/target/release/caldir-provider-google src-tauri/providers/
+  cp ../caldir/target/release/caldir-provider-icloud src-tauri/providers/
+
 # Run app (dev mode)
-dev:
+dev: build-providers
   pnpm tauri dev
 
 # Build the app for production
-build:
+build: build-providers-release
   NO_STRIP=true pnpm tauri build
 
 # Generate TypeScript bindings from Rust types
