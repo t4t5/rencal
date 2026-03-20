@@ -1,6 +1,5 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 import { RefObject, useCallback, useRef } from "react"
-import { flushSync } from "react-dom"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
@@ -38,28 +37,18 @@ export const useCalEventsInfiniteScroll = ({
         prevRange.end,
       )
 
-      const container = scrollContainerRef.current
-      if (!container) return
+      setCalendarEvents((prev) => {
+        const existingIds = new Set(prev.map((e) => e.id))
+        const newEvents = prevEvents.filter((e) => !existingIds.has(e.id))
 
-      const prevScrollHeight = container.scrollHeight
-
-      // Use flushSync so the DOM updates synchronously, allowing us to
-      // adjust scrollTop before the browser paints:
-      flushSync(() => {
-        setCalendarEvents((prev) => {
-          const existingIds = new Set(prev.map((e) => e.id))
-          const newEvents = prevEvents.filter((e) => !existingIds.has(e.id))
-
-          if (newEvents.length) {
-            return [...newEvents, ...prev]
-          } else {
-            return prev
-          }
-        })
+        if (newEvents.length) {
+          return [...newEvents, ...prev]
+        } else {
+          return prev
+        }
       })
 
-      // Preserve scroll position by offsetting for the prepended content:
-      container.scrollTop += container.scrollHeight - prevScrollHeight
+      // Scroll position preservation is handled by EventList's useLayoutEffect
 
       currentDateRangeRef.current = {
         start: prevStart,

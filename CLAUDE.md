@@ -37,22 +37,14 @@ communicates with the backend via taurpc.
 
 ## Rules
 
-- If implementing a frontend feature, run "just typecheck" in the end to make sure the TypeScript
-  compiled.
+- If implementing a frontend feature, run "just typecheck" in the end to make sure the TypeScript compiled.
 - If implementing a feature in Rust (`src-tauri`), run "just check" to make sure the app compiles!
-- If formatting a date, always use the date-fns `format` function instead of something like
-  `.toISOString()`
+- If formatting a date, always use a function in `@lib/time.ts` (or make a new one) instead of something like `.toISOString()` or `toLocaleString()`
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
-- Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use
-  `i32`/`u32` instead.
-- Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the
-  caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected
-  field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
-- For taurpc types with a fixed set of string values, use a Rust enum with `#[serde(rename = "...")]`
-  variants instead of `String`. Specta generates these as TypeScript string literal unions (e.g.,
-  `ResponseStatus = "accepted" | "declined" | ...`). See `ResponseStatus` in `caldir.rs` for the
-  pattern.
+- Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use `i32`/`u32` instead.
+- Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
+- For taurpc types with a fixed set of string values, use a Rust enum with `#[serde(rename = "...")]` variants instead of `String`. Specta generates these as TypeScript string literal unions (e.g., `ResponseStatus = "accepted" | "declined" | ...`). See `ResponseStatus` in `caldir.rs` for the pattern.
 
 ## Calendar Data (caldir)
 
@@ -68,9 +60,7 @@ comes from the `{provider}_account` field in each calendar's `.caldir/config.tom
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in
 `lib.rs::setup()`. The loop aligns to minute boundaries, then scans caldir for events with
-reminders whose trigger time (event start minus reminder minutes) falls within the last 60-second
-window, and fires a desktop notification via `tauri-plugin-notification`. No frontend involvement
-or state DB needed. Test with `just test-notification`.
+reminders whose trigger time (event start minus reminder minutes) falls within the last 60-second window, and fires a desktop notification via `tauri-plugin-notification`. No frontend involvement or state DB needed. Test with `just test-notification`.
 
 ## Local Database
 

@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
 
@@ -48,6 +48,8 @@ export function EventList() {
   const ghostRef = useRef<HTMLDivElement>(null)
   const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
   const hasInitiallyScrolledRef = useRef(false)
+  const prevScrollHeightRef = useRef(0)
+  const prevFirstKeyRef = useRef<string | null>(null)
 
   useCalEventsInfiniteScroll({
     scrollContainerRef,
@@ -82,6 +84,26 @@ export function EventList() {
 
     return sections
   }, [eventsByDate, ghostDate])
+
+  // Preserve scroll position when sections are prepended (e.g. MonthView loading more events
+  // into the shared event pool). Without this, prepended DOM nodes push content down.
+  useLayoutEffect(() => {
+    const container = scrollContainerRef.current
+    if (!container) return
+
+    const currentFirstKey =
+      sectionsToRender.length > 0 ? formatDateKey(sectionsToRender[0].date) : null
+
+    if (prevFirstKeyRef.current && currentFirstKey && currentFirstKey !== prevFirstKeyRef.current) {
+      const heightDelta = container.scrollHeight - prevScrollHeightRef.current
+      if (heightDelta > 0) {
+        container.scrollTop += heightDelta
+      }
+    }
+
+    prevFirstKeyRef.current = currentFirstKey
+    prevScrollHeightRef.current = container.scrollHeight
+  }, [sectionsToRender])
 
   // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
