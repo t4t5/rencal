@@ -5,6 +5,7 @@ use chrono::{DateTime, NaiveDate, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Runtime};
+use tauri_plugin_opener::OpenerExt;
 
 #[derive(Serialize, Deserialize, Type)]
 pub struct Calendar {
@@ -807,32 +808,25 @@ impl CaldirApi for CaldirApiImpl {
                 let auth_url = url::Url::parse(&oauth_data.authorization_url)
                     .map_err(|e| format!("Invalid auth URL: {}", e))?;
 
-                let (popup, close_rx) =
-                    oauth::window::create_oauth_popup(&app, auth_url, "Sign in")
-                        .map_err(|e| format!("Failed to open OAuth popup: {}", e))?;
+                app.opener()
+                    .open_url(auth_url.as_str(), None::<&str>)
+                    .map_err(|e| format!("Failed to open browser: {}", e))?;
 
-                let run = async {
-                    let callback = oauth::server::handle_oauth_callback(listener, port)
-                        .await
-                        .map_err(|e| format!("OAuth callback failed: {}", e))?;
+                let callback = oauth::server::handle_oauth_callback(listener, port)
+                    .await
+                    .map_err(|e| format!("OAuth callback failed: {}", e))?;
 
-                    let mut credentials = serde_json::Map::new();
-                    credentials.insert("code".into(), serde_json::Value::String(callback.code));
-                    credentials.insert("state".into(), serde_json::Value::String(callback.state));
-                    credentials.insert(
-                        "redirect_uri".into(),
-                        serde_json::Value::String(redirect_uri),
-                    );
+                let mut credentials = serde_json::Map::new();
+                credentials.insert("code".into(), serde_json::Value::String(callback.code));
+                credentials.insert("state".into(), serde_json::Value::String(callback.state));
 
-                    save_provider_calendars(&provider, credentials).await
-                };
+                let mut opts = serde_json::Map::new();
+                opts.insert(
+                    "redirect_uri".into(),
+                    serde_json::Value::String(redirect_uri),
+                );
 
-                let result = tokio::select! {
-                    res = run => res,
-                    _ = close_rx => Err("OAuth cancelled".to_string()),
-                };
-                let _ = popup.close();
-                result
+                save_provider_calendars(&provider, opts, credentials).await
             }
             ConnectResponse::NeedsInput {
                 step: ConnectStepKind::HostedOAuth,
@@ -844,30 +838,28 @@ impl CaldirApi for CaldirApiImpl {
                 let auth_url = url::Url::parse(&hosted_data.url)
                     .map_err(|e| format!("Invalid hosted auth URL: {}", e))?;
 
-                let (popup, close_rx) =
-                    oauth::window::create_oauth_popup(&app, auth_url, "Sign in")
-                        .map_err(|e| format!("Failed to open OAuth popup: {}", e))?;
+                app.opener()
+                    .open_url(auth_url.as_str(), None::<&str>)
+                    .map_err(|e| format!("Failed to open browser: {}", e))?;
 
-                let run = async {
-                    let params = oauth::server::handle_generic_callback(listener, port)
-                        .await
-                        .map_err(|e| format!("OAuth callback failed: {}", e))?;
+                let params = oauth::server::handle_generic_callback(listener, port)
+                    .await
+                    .map_err(|e| format!("OAuth callback failed: {}", e))?;
 
-                    let mut credentials = serde_json::Map::new();
-                    for (key, value) in params {
-                        credentials
-                            .insert(key, serde_json::Value::String(value));
-                    }
+                let mut credentials = serde_json::Map::new();
+                for (key, value) in params {
+                    credentials
+                        .insert(key, serde_json::Value::String(value));
+                }
 
-                    save_provider_calendars(&provider, credentials).await
-                };
+                let mut opts = serde_json::Map::new();
+                opts.insert(
+                    "redirect_uri".into(),
+                    serde_json::Value::String(redirect_uri),
+                );
+                opts.insert("hosted".into(), serde_json::Value::Bool(true));
 
-                let result = tokio::select! {
-                    res = run => res,
-                    _ = close_rx => Err("OAuth cancelled".to_string()),
-                };
-                let _ = popup.close();
-                result
+                save_provider_calendars(&provider, opts, credentials).await
             }
             _ => Err("Unsupported connect step for this flow".to_string()),
         }
@@ -887,7 +879,7 @@ impl CaldirApi for CaldirApiImpl {
             cred_map.insert(field.id, serde_json::Value::String(field.value));
         }
 
-        save_provider_calendars(&provider, cred_map).await
+        save_provider_calendars(&provider, serde_json::Map::new(), cred_map).await
     }
 }
 
@@ -913,12 +905,13 @@ fn map_fields(fields: Vec<caldir_core::remote::protocol::CredentialField>) -> Ve
 /// Submit credentials to provider, list calendars, and save configs locally.
 async fn save_provider_calendars(
     provider: &caldir_core::remote::provider::Provider,
+    options: serde_json::Map<String, serde_json::Value>,
     credentials: serde_json::Map<String, serde_json::Value>,
 ) -> TauResult<Vec<Calendar>> {
     use caldir_core::remote::protocol::ConnectResponse;
 
     let connect_response = provider
-        .connect(serde_json::Map::new(), credentials)
+        .connect(options, credentials)
         .await
         .map_err(|e| format!("Connect failed: {}", e))?;
 
