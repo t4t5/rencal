@@ -9,6 +9,8 @@ import { CalendarBig, EventDotsProvider } from "@/components/ui/calendar-big"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
+import { formatDateKey } from "@/lib/time"
+
 const HiddenComponent = () => <></>
 
 export function StatefulCalendar() {
@@ -44,15 +46,15 @@ export function StatefulCalendar() {
         const end = startOfDay(event.end)
         let current = start
         while (isBefore(current, end)) {
-          addDot(format(current, "yyyy-MM-dd"), event.calendar_slug, color)
+          addDot(formatDateKey(current), event.calendar_slug, color)
           current = addDays(current, 1)
         }
         // Single-day all-day event where start equals end
         if (!isBefore(start, end)) {
-          addDot(format(start, "yyyy-MM-dd"), event.calendar_slug, color)
+          addDot(formatDateKey(start), event.calendar_slug, color)
         }
       } else {
-        addDot(format(event.start, "yyyy-MM-dd"), event.calendar_slug, color)
+        addDot(formatDateKey(event.start), event.calendar_slug, color)
       }
     }
 

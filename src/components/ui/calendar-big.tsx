@@ -15,6 +15,7 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
+import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 /** Maps date strings ("yyyy-MM-dd") to arrays of calendar hex colors for that date. */
@@ -23,15 +24,8 @@ export const EventDotsProvider = EventDotsContext.Provider
 
 // Map weekday abbreviations to day numbers (0=Sunday, 1=Monday, etc.)
 // Adjust based on your formatWeekdayName formatter
-const WEEKDAY_MAP: Record<string, number> = {
-  SUN: 0,
-  MON: 1,
-  TUE: 2,
-  WED: 3,
-  THU: 4,
-  FRI: 5,
-  SAT: 6,
-}
+// Weekday short names indexed by day number (0=Sun … 6=Sat)
+const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
 
 function CalendarBig({
   className,
@@ -61,8 +55,7 @@ function CalendarBig({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
-        formatWeekdayName: (date) =>
-          date.toLocaleString("default", { weekday: "short" }).toUpperCase(),
+        formatWeekdayName: (date) => WEEKDAY_SHORT[date.getDay()],
         ...formatters,
       }}
       classNames={{
@@ -194,7 +187,7 @@ function CalendarBig({
         },
         Weekday: ({ className, children, ...weekdayProps }) => {
           const weekdayName = typeof children === "string" ? children : ""
-          const weekdayNumber = WEEKDAY_MAP[weekdayName]
+          const weekdayNumber = WEEKDAY_SHORT.indexOf(weekdayName as (typeof WEEKDAY_SHORT)[number])
           const isCurrentWeekday = weekdayNumber === new Date().getDay()
           const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
 
@@ -247,7 +240,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
-  const dateKey = format(day.date, "yyyy-MM-dd")
+  const dateKey = formatDateKey(day.date)
   const dotColors = eventDotsByDate.get(dateKey)
 
   return (
@@ -255,7 +248,6 @@ const CalendarDayButton = memo(function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon"
-      data-day={day.date.toLocaleDateString()}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

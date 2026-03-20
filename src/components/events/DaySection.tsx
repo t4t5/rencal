@@ -7,6 +7,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { setEventAnchor } from "@/lib/event-anchor"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { formatDateKey } from "@/lib/time"
 import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -24,11 +25,7 @@ export const DaySection = memo(
     const { activeEvent, toggleActiveEventId } = useCalEvents()
 
     return (
-      <div
-        ref={ref}
-        data-date={format(date, "yyyy-MM-dd")}
-        className="relative border-b border-b-divider"
-      >
+      <div ref={ref} data-date={formatDateKey(date)} className="relative border-b border-b-divider">
         <div
           className={cn("sticky top-0 z-10 text-sm bg-bgPrimary px-3 py-1.5 flex gap-2", {
             "text-active": isToday(date),

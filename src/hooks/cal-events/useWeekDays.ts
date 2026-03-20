@@ -1,5 +1,7 @@
-import { addDays, format, isSameDay, startOfWeek } from "date-fns"
+import { addDays, isSameDay, startOfWeek } from "date-fns"
 import { useMemo } from "react"
+
+import { formatDateKey } from "@/lib/time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -12,7 +14,7 @@ export function useWeekDays(activeDate: Date): MonthDay[] {
       const date = addDays(weekStart, i)
       return {
         date,
-        dateKey: format(date, "yyyy-MM-dd"),
+        dateKey: formatDateKey(date),
         isToday: isSameDay(date, today),
         isWeekend: date.getDay() === 0 || date.getDay() === 6,
       }

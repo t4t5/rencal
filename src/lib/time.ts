@@ -1,5 +1,17 @@
 import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
 
+/** Fast "yyyy-MM-dd" formatting without date-fns overhead. */
+export function formatDateKey(date: Date | string): string {
+  if (typeof date === "string") {
+    // Already an ISO string — extract the date part
+    return date.slice(0, 10)
+  }
+  const y = date.getFullYear()
+  const m = date.getMonth() + 1
+  const d = date.getDate()
+  return `${y}-${m < 10 ? "0" : ""}${m}-${d < 10 ? "0" : ""}${d}`
+}
+
 export function formatShortDate(date: Date): string {
   const pattern = getYear(date) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
   return format(date, pattern)

@@ -1,4 +1,4 @@
-import { addMonths, endOfMonth, format, isSameDay, startOfMonth, subMonths } from "date-fns"
+import { addMonths, endOfMonth, isSameDay, startOfMonth, subMonths } from "date-fns"
 import { useCallback, useRef, useState } from "react"
 
 import { MonthGrid } from "@/components/month-view/MonthGrid"
@@ -11,6 +11,7 @@ import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
+import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -126,7 +127,7 @@ export function MonthView() {
         weeks={weeks}
         weekLayouts={weekLayouts}
         activeEventId={activeEvent?.id ?? null}
-        activeDateKey={format(activeDate, "yyyy-MM-dd")}
+        activeDateKey={formatDateKey(activeDate)}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
         isNavigating={isNavigating}

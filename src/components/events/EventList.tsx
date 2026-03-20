@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { useEffect, useEffectEvent, useMemo, useRef, useState } from "react"
 
 import { DaySection } from "@/components/events/DaySection"
@@ -12,6 +11,7 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
+import { formatDateKey } from "@/lib/time"
 
 type Section = {
   date: Date
@@ -72,8 +72,8 @@ export function EventList() {
     }))
 
     if (ghostDate) {
-      const ghostDateStr = format(ghostDate, "yyyy-MM-dd")
-      const alreadyExists = sections.some(({ date }) => format(date, "yyyy-MM-dd") === ghostDateStr)
+      const ghostDateStr = formatDateKey(ghostDate)
+      const alreadyExists = sections.some(({ date }) => formatDateKey(date) === ghostDateStr)
       if (!alreadyExists) {
         sections.push({ date: ghostDate, events: [], isGhost: true })
         sections.sort((a, b) => a.date.getTime() - b.date.getTime())
@@ -87,7 +87,7 @@ export function EventList() {
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
     if (!sectionRefs.current) return
 
-    const targetDateStr = format(date, "yyyy-MM-dd")
+    const targetDateStr = formatDateKey(date)
     const section = sectionRefs.current.get(targetDateStr)
 
     if (section) {
@@ -159,7 +159,7 @@ export function EventList() {
   return (
     <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6">
       {sectionsToRender.map(({ date, events, isGhost }) => {
-        const dateStr = format(date, "yyyy-MM-dd")
+        const dateStr = formatDateKey(date)
 
         return (
           <DaySection

@@ -1,4 +1,4 @@
-import { format, startOfWeek } from "date-fns"
+import { startOfWeek } from "date-fns"
 import { useRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -7,6 +7,7 @@ import { useCalendarState } from "@/contexts/CalendarStateContext"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useWeekDays } from "@/hooks/cal-events/useWeekDays"
 import { useWeekEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { formatDateKey } from "@/lib/time"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
 
@@ -15,7 +16,7 @@ export function WeekView() {
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
   const weekStart = startOfWeek(activeDate, { weekStartsOn: 1 })
-  const weekKey = format(weekStart, "yyyy-MM-dd")
+  const weekKey = formatDateKey(weekStart)
 
   const weekDays = useWeekDays(activeDate)
   const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
@@ -40,7 +41,7 @@ export function WeekView() {
         allDayItems={layout.allDayItems}
         maxAllDayLane={layout.maxAllDayLane}
         activeEventId={activeEvent?.id ?? null}
-        activeDateKey={format(activeDate, "yyyy-MM-dd")}
+        activeDateKey={formatDateKey(activeDate)}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
         visibleStartHour={layout.visibleStartHour}
