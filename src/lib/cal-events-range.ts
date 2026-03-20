@@ -2,7 +2,7 @@ import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 
 import { rpc } from "@/rpc"
 
-import { DateRange } from "@/db/types"
+import { DateRange } from "@/lib/types"
 
 export const MONTHS_TO_LOAD = 2
 

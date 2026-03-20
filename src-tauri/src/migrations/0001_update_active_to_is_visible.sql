@@ -1,1 +1,0 @@
-ALTER TABLE `calendars` RENAME COLUMN "selected" TO "is_visible";

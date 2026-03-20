@@ -16,8 +16,7 @@ import type { CalendarEvent } from "@/rpc/bindings"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
-
-import { DateRange } from "@/db/types"
+import { DateRange } from "@/lib/types"
 
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]

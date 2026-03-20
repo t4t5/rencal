@@ -1,1 +1,0 @@
-ALTER TABLE `events` ADD `original_start` integer;

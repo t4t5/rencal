@@ -23,10 +23,6 @@ gen-types:
 start:
   src-tauri/target/release/bundle/appimage/rencal_0.1.0_amd64.AppImage
 
-# Generate new sqlite migration
-migrate name:
-  pnpm drizzle-kit generate --name {{name}}
-
 # Check Rust and TypeScript types
 check:
   cargo check --manifest-path src-tauri/Cargo.toml
@@ -35,10 +31,6 @@ check:
 # Check TypeScript types only
 typecheck:
   pnpm typecheck
-
-# Reset the database completely
-reset:
-  rm $HOME/.config/rencal/rencal.db
 
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:

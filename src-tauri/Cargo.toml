@@ -33,7 +33,6 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 anyhow = "1.0.100"
 socket2 = "0.5"
-tauri-plugin-sql = { version = "2", features = ["sqlite"] }
 caldir-core = { path = "../../caldir/caldir-core" }
 chrono = "0.4.43"
 tauri-plugin-notification = "2"

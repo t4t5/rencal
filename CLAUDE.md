@@ -61,14 +61,3 @@ comes from the `{provider}_account` field in each calendar's `.caldir/config.tom
 Desktop notifications for calendar reminders run as a background tokio task spawned in
 `lib.rs::setup()`. The loop aligns to minute boundaries, then scans caldir for events with
 reminders whose trigger time (event start minus reminder minutes) falls within the last 60-second window, and fires a desktop notification via `tauri-plugin-notification`. No frontend involvement or state DB needed. Test with `just test-notification`.
-
-## Local Database
-
-Rencal uses a local SQLite database (via Drizzle) only for app-specific state like calendar
-visibility preferences. All calendar and event data lives in caldir (`~/calendar/`).
-
-Schema is defined in `src/db/schema.ts`. To create a migration, change the schema and run
-`just migrate {your_description}`. This generates a `sql` file in `src-tauri/src/migrations/`.
-
-When the app gets built, everything in `src-tauri/src/migrations/` get auto-generated into an
-updated `src-tauri/src/migrations.rs`. When the app runs, migrations get applied automatically.
