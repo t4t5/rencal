@@ -1,5 +1,5 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
-import { getCurrentWindow } from "@tauri-apps/api/window"
+import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
@@ -27,13 +27,21 @@ async function openSettingsWindow() {
     return
   }
 
+  const width = 425
+  const height = 500
+  const monitor = await currentMonitor()
+  const scale = monitor?.scaleFactor ?? 1
+  const screenW = (monitor?.size.width ?? width) / scale
+  const screenH = (monitor?.size.height ?? height) / scale
+
   new WebviewWindow("settings", {
     url: "/?view=settings",
     title: "Accounts",
-    width: 425,
-    height: 500,
+    width,
+    height,
     decorations: false,
-    center: true,
+    x: Math.round((screenW - width) / 2),
+    y: Math.round((screenH - height) / 2),
     parent: getCurrentWindow(),
   })
 }
