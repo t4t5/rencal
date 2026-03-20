@@ -1,6 +1,6 @@
 import { format, getWeek } from "date-fns"
 import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
-import { ComponentProps, createContext, useContext, useEffect, useRef } from "react"
+import { ComponentProps, createContext, memo, useContext, useEffect, useRef } from "react"
 import {
   Day,
   DayButton,
@@ -210,7 +210,7 @@ function CalendarBig({
             </Weekday>
           )
         },
-        DayButton: CalendarDayButton,
+        DayButton: CalendarDayButton as typeof DayButton,
         Day: ({ className, ...dayProps }) => {
           const weekdayNumber = dayProps.day.date.getDay()
           const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
@@ -231,7 +231,7 @@ function CalendarBig({
   )
 }
 
-function CalendarDayButton({
+const CalendarDayButton = memo(function CalendarDayButton({
   className,
   day,
   modifiers,
@@ -285,6 +285,6 @@ function CalendarDayButton({
       )}
     </Button>
   )
-}
+})
 
 export { CalendarBig, CalendarDayButton }

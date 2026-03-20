@@ -1,5 +1,5 @@
 import { format, isSameYear, isToday } from "date-fns"
-import { forwardRef } from "react"
+import { forwardRef, memo } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
@@ -19,8 +19,8 @@ type DaySectionProps = {
   draftEvent: CalendarEvent | null
 }
 
-export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
-  ({ date, events, calendars, draftEvent }, ref) => {
+export const DaySection = memo(
+  forwardRef<HTMLDivElement, DaySectionProps>(({ date, events, calendars, draftEvent }, ref) => {
     const { activeEvent, toggleActiveEventId } = useCalEvents()
 
     return (
@@ -81,5 +81,5 @@ export const DaySection = forwardRef<HTMLDivElement, DaySectionProps>(
         </div>
       </div>
     )
-  },
+  }),
 )
