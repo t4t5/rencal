@@ -15,7 +15,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { cn } from "@/lib/utils"
+import { cn, isMacOS } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
 import { InvitesDropdown } from "./InvitesDropdown"
@@ -36,10 +36,11 @@ async function openSettingsWindow() {
 
   new WebviewWindow("settings", {
     url: "/?view=settings",
-    title: "Accounts",
+    title: "Settings",
+    titleBarStyle: "overlay",
     width,
     height,
-    decorations: false,
+    decorations: isMacOS,
     x: Math.round((screenW - width) / 2),
     y: Math.round((screenH - height) / 2),
     parent: getCurrentWindow(),
