@@ -1,13 +1,12 @@
-import { Description, DialogTitle } from "@radix-ui/react-dialog"
+import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
 import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
 import { SearchButton } from "@/components/search/SearchButton"
-import { Settings } from "@/components/settings/Settings"
 import { Button } from "@/components/ui/button"
-import { Modal } from "@/components/ui/dialog"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { rpc } from "@/rpc"
@@ -21,8 +20,25 @@ import { cn } from "@/lib/utils"
 import { AddEventButton } from "./AddEventButton"
 import { InvitesDropdown } from "./InvitesDropdown"
 
+async function openSettingsWindow() {
+  const existing = await WebviewWindow.getByLabel("settings")
+  if (existing) {
+    await existing.setFocus()
+    return
+  }
+
+  new WebviewWindow("settings", {
+    url: "/?view=settings",
+    title: "Accounts",
+    width: 425,
+    height: 500,
+    decorations: false,
+    center: true,
+    parent: getCurrentWindow(),
+  })
+}
+
 export function ActionBar() {
-  const [showModal, setShowModal] = useState(false)
   const isMd = useBreakpoint("md")
 
   return (
@@ -35,19 +51,11 @@ export function ActionBar() {
       <div className="flex gap-2 items-center">
         <SyncStatus />
         {!isMd && <InvitesDropdown />}
-        <Button variant="secondary" onClick={() => setShowModal(true)}>
+        <Button variant="secondary" onClick={() => openSettingsWindow()}>
           <SettingsIcon />
         </Button>
         {!isMd && <SearchButton />}
       </div>
-
-      {showModal && (
-        <Modal onClose={() => setShowModal(false)}>
-          <DialogTitle className="font-bold text-lg">Accounts</DialogTitle>
-          <Description className="hidden">Connect Calendar providers</Description>
-          <Settings />
-        </Modal>
-      )}
     </div>
   )
 }

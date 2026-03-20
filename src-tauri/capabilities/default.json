@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
-  "description": "Capability for the main window",
-  "windows": ["main"],
+  "description": "Capability for all windows",
+  "windows": ["main", "settings"],
   "permissions": [
     "core:default",
     "opener:default",
@@ -10,6 +10,8 @@
     "sql:allow-execute",
     "sql:allow-load",
     "core:window:allow-start-dragging",
+    "core:window:allow-set-focus",
+    "core:webview:allow-create-webview-window",
     "notification:default"
   ]
 }
