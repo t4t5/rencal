@@ -20,7 +20,7 @@ export function HeaderLong() {
         <TabsTrigger value="month">Month</TabsTrigger>
       </TabsList>
 
-      <SearchBar className="w-56" eventPopoverSide="left" />
+      <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />
     </div>
   )
 }

@@ -1,3 +1,5 @@
+import { z } from "zod"
+
 import "@/global.css"
 
 import { StatefulCalendar } from "@/components/StatefulCalendar"
@@ -13,11 +15,16 @@ import { WeekView } from "@/components/week-view/WeekView"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { useLocalStorage } from "@/hooks/useLocalStorage"
+
 import { HeaderLong } from "./components/header/HeaderLong"
 import { useBreakpoint } from "./hooks/useBreakpoint"
 
+const calendarViewSchema = z.enum(["week", "month"])
+
 function App() {
   const { activeEvent } = useCalEvents()
+  const [view, setView] = useLocalStorage("calendarView", calendarViewSchema, "month")
 
   const isMd = useBreakpoint("md")
 
@@ -32,7 +39,11 @@ function App() {
       </div>
 
       {isMd && (
-        <Tabs defaultValue="month" className="hidden sm:flex flex-col grow">
+        <Tabs
+          value={view}
+          onValueChange={(v) => setView(v as z.infer<typeof calendarViewSchema>)}
+          className="hidden sm:flex flex-col grow"
+        >
           <HeaderLong />
           <div className="h-[calc(100vh-80px)]">
             <TabsContent value="week" className="h-full">
