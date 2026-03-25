@@ -1,32 +1,16 @@
 import { AiOutlineUser as UserIcon } from "react-icons/ai"
 
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group"
+import { StatusDot } from "@/components/ui/status-dot"
 
 import { EventAttendee } from "@/rpc/bindings"
 
-import { cn } from "@/lib/utils"
-
-const statusColor: Record<string, string> = {
-  accepted: "bg-green-500",
-  declined: "bg-red-500",
-  tentative: "bg-yellow-500",
-}
-
 function AttendeeRow({ attendee, label }: { attendee: EventAttendee; label?: string }) {
   const displayName = attendee.name ?? attendee.email
-  const initial = displayName.charAt(0).toUpperCase()
-  const color = statusColor[attendee.response_status ?? ""] ?? "bg-muted-foreground"
 
   return (
     <div className="flex items-center gap-2 py-1 px-3 pl-9 text-sm">
-      <span
-        className={cn(
-          "flex size-5 shrink-0 items-center justify-center rounded-full text-[10px] font-medium text-white",
-          color,
-        )}
-      >
-        {initial}
-      </span>
+      <StatusDot status={attendee.response_status} />
       <span className="truncate">{displayName}</span>
       {label && <span className="text-muted-foreground shrink-0">{label}</span>}
     </div>

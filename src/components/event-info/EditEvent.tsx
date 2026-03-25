@@ -20,7 +20,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarState } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
-import { isPendingEvent, isUserOrganizer } from "@/lib/event-utils"
+import { getUserResponseStatus, isUserOrganizer } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
@@ -117,7 +117,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 
-  const isPendingInvite = isPendingEvent(dirtyEvent, calendars)
+  const userResponseStatus = getUserResponseStatus(dirtyEvent, calendars)
+  const isAttendee = userResponseStatus !== null
+  const isPendingInvite = userResponseStatus === "needs-action"
   const isReadonly = !isUserOrganizer(dirtyEvent, calendars)
 
   const handleRsvp = async (response: ResponseStatus) => {
@@ -213,7 +215,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
         reminders={dirtyEvent.reminders}
         onReminderAdd={handleReminderAdd}
         onReminderRemove={handleReminderRemove}
-        onRsvp={isPendingInvite ? handleRsvp : undefined}
+        onRsvp={isAttendee ? handleRsvp : undefined}
+        userResponseStatus={userResponseStatus}
+        isPendingInvite={isPendingInvite}
         onClose={() => setActiveEventId(null)}
       />
 

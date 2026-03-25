@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
+import { RsvpSelect } from "./inputs/RsvpSelect"
 
 const Divider = () => (
   <div className="my-2 px-3">
@@ -52,6 +53,8 @@ export function EventInfo({
   onReminderAdd,
   onReminderRemove,
   onRsvp,
+  userResponseStatus,
+  isPendingInvite,
   onClose,
 }: {
   readonly?: boolean
@@ -83,6 +86,8 @@ export function EventInfo({
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
   onRsvp?: (response: ResponseStatus) => void
+  userResponseStatus?: ResponseStatus | null
+  isPendingInvite?: boolean
 }) {
   return (
     <div className="flex flex-col gap-2 grow">
@@ -143,7 +148,11 @@ export function EventInfo({
         {onRsvp && (
           <>
             <Divider />
-            <RsvpBar onRsvp={onRsvp} />
+            {isPendingInvite ? (
+              <RsvpBar onRsvp={onRsvp} />
+            ) : (
+              <RsvpSelect status={userResponseStatus} onRsvp={onRsvp} />
+            )}
           </>
         )}
       </div>

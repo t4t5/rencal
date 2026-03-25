@@ -1,6 +1,9 @@
 import type { Calendar, CalendarEvent, ResponseStatus } from "@/rpc/bindings"
 
-function getUserResponseStatus(event: CalendarEvent, calendars: Calendar[]): ResponseStatus | null {
+export function getUserResponseStatus(
+  event: CalendarEvent,
+  calendars: Calendar[],
+): ResponseStatus | null {
   const calendar = calendars.find((c) => c.slug === event.calendar_slug)
   if (!calendar?.account) return null
 
