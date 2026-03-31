@@ -1,21 +1,38 @@
-import { useDeferredValue } from "react"
+import { useEffect, useRef } from "react"
 
 import { EditEvent } from "@/components/event-info/EditEvent"
-import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet"
+import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 export function SheetEvent() {
   const { activeEvent, setActiveEventId } = useCalEvents()
-  const deferredEvent = useDeferredValue(activeEvent)
+  const isOpen = !!activeEvent
+  const eventRef = useRef(activeEvent)
+
+  // Keep a ref to the last non-null event so we can render it during the
+  // close transition (the panel slides out with content still visible).
+  if (activeEvent) {
+    eventRef.current = activeEvent
+  }
+
+  // Clear the stale ref after the close transition finishes
+  useEffect(() => {
+    if (!isOpen) {
+      const id = setTimeout(() => {
+        eventRef.current = null
+      }, 150)
+      return () => clearTimeout(id)
+    }
+  }, [isOpen])
+
+  const displayEvent = activeEvent ?? eventRef.current
 
   return (
-    <Sheet open={!!activeEvent} onOpenChange={() => setActiveEventId(null)}>
-      <SheetContent onOpenAutoFocus={(e) => e.preventDefault()}>
-        <SheetTitle className="hidden">{activeEvent?.summary}</SheetTitle>
-        <SheetDescription className="hidden">{activeEvent?.summary}</SheetDescription>
-        {deferredEvent && <EditEvent event={deferredEvent} />}
-      </SheetContent>
-    </Sheet>
+    <FastSheet open={isOpen} onOpenChange={() => setActiveEventId(null)}>
+      <FastSheetContent open={isOpen}>
+        {displayEvent && <EditEvent event={displayEvent} />}
+      </FastSheetContent>
+    </FastSheet>
   )
 }
