@@ -1,22 +1,11 @@
 import { format } from "date-fns"
 import { useRef, useState } from "react"
 
-import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-
-import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { EventContextMenu } from "@/components/EventContextMenu"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
-import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockStyle } from "@/lib/event-styles"
-import { isUserOrganizer } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 type WeekTimedEventProps = {
@@ -37,17 +26,12 @@ export function WeekTimedEvent({
   onClick,
 }: WeekTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
-  const { setActiveEventId } = useCalEvents()
-  const { calendars } = useCalendarState()
-  const { triggerDelete, deleteDialogProps } = useDeleteEvent()
-
   const [contextOpen, setContextOpen] = useState(false)
 
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
   const leftPercent = layout.column * widthPercent
   const isDashed = isPending || isDeclined || isDraft
-  const canDelete = isUserOrganizer(layout.event, calendars)
   const highlighted = isActive || contextOpen
 
   const inner = (
@@ -95,31 +79,8 @@ export function WeekTimedEvent({
   if (isDraft) return inner
 
   return (
-    <>
-      <ContextMenu onOpenChange={setContextOpen}>
-        <ContextMenuTrigger asChild>{inner}</ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem
-            onClick={() => {
-              setTimeout(() => {
-                if (ref.current) {
-                  setEventAnchor(ref.current)
-                }
-                setActiveEventId(layout.event.id)
-              })
-            }}
-          >
-            Edit event
-          </ContextMenuItem>
-          {canDelete && (
-            <ContextMenuItem variant="destructive" onClick={() => triggerDelete(layout.event)}>
-              Delete event
-            </ContextMenuItem>
-          )}
-        </ContextMenuContent>
-      </ContextMenu>
-
-      <DeleteConfirmDialog {...deleteDialogProps} />
-    </>
+    <EventContextMenu event={layout.event} anchorRef={ref} onOpenChange={setContextOpen}>
+      {inner}
+    </EventContextMenu>
   )
 }
