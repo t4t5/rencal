@@ -1,9 +1,19 @@
-import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from "react"
+import {
+  useEffect,
+  useRef,
+  type Dispatch,
+  type MutableRefObject,
+  type RefObject,
+  type SetStateAction,
+} from "react"
 
 import { EditEvent } from "@/components/event-info/EditEvent"
+import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import type { CalendarEvent } from "@/rpc/bindings"
+
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 
 interface EventPopoverProps {
   activeEvent: CalendarEvent | null
@@ -24,6 +34,18 @@ export function EventPopover({
   resultsRef,
   side = "right",
 }: EventPopoverProps) {
+  const isMd = useBreakpoint("md")
+
+  if (!isMd) {
+    return (
+      <EventSheet
+        activeEvent={activeEvent}
+        setActiveEvent={setActiveEvent}
+        eventDetailRef={eventDetailRef}
+      />
+    )
+  }
+
   return (
     <Popover
       open={!!activeEvent}
@@ -64,5 +86,48 @@ export function EventPopover({
         <EditEvent event={activeEvent} />
       </PopoverContent>
     </Popover>
+  )
+}
+
+function EventSheet({
+  activeEvent,
+  setActiveEvent,
+  eventDetailRef,
+}: {
+  activeEvent: CalendarEvent | null
+  setActiveEvent: Dispatch<SetStateAction<CalendarEvent | null>>
+  eventDetailRef: RefObject<HTMLDivElement | null>
+}) {
+  const isOpen = !!activeEvent
+  const eventRef = useRef(activeEvent)
+
+  if (activeEvent) {
+    eventRef.current = activeEvent
+  }
+
+  useEffect(() => {
+    if (!isOpen) {
+      const id = setTimeout(() => {
+        eventRef.current = null
+      }, 150)
+      return () => clearTimeout(id)
+    }
+  }, [isOpen])
+
+  const displayEvent = activeEvent ?? eventRef.current
+
+  return (
+    <FastSheet
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open) {
+          setActiveEvent(null)
+        }
+      }}
+    >
+      <FastSheetContent ref={eventDetailRef} open={isOpen}>
+        {displayEvent && <EditEvent event={displayEvent} />}
+      </FastSheetContent>
+    </FastSheet>
   )
 }

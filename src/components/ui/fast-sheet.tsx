@@ -11,12 +11,24 @@ function Sheet({
   onOpenChange: (open: boolean) => void
   children: React.ReactNode
 }) {
+  React.useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        e.stopImmediatePropagation()
+        onOpenChange(false)
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown)
+    return () => document.removeEventListener("keydown", handleKeyDown)
+  }, [open, onOpenChange])
+
   return (
     <>
       {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-150",
+          "fixed inset-0 z-60 bg-black/50 transition-opacity duration-150",
           open ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => onOpenChange(false)}
@@ -27,11 +39,13 @@ function Sheet({
 }
 
 function SheetContent({
+  ref,
   open,
   className,
   children,
   side = "right",
 }: {
+  ref?: React.Ref<HTMLDivElement>
   open: boolean
   className?: string
   children: React.ReactNode
@@ -53,8 +67,9 @@ function SheetContent({
 
   return (
     <div
+      ref={ref}
       className={cn(
-        "bg-background fixed z-50 flex flex-col gap-4 shadow-lg outline-none transition-transform duration-150 will-change-transform",
+        "bg-background fixed z-60 flex flex-col gap-4 shadow-lg outline-none transition-transform duration-150 will-change-transform",
         position,
         translate,
         className,
