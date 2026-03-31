@@ -81,7 +81,7 @@ export function MonthDayCell({
   }
 
   return (
-    <ContextMenu>
+    <ContextMenu modal={false}>
       <ContextMenuTrigger asChild>
         <div
           className={cn(

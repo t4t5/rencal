@@ -147,7 +147,7 @@ export function WeekTimeGrid({
         >
           {/* Background columns for weekend shading + borders */}
           {weekDays.map((day, i) => (
-            <ContextMenu key={day.dateKey}>
+            <ContextMenu key={day.dateKey} modal={false}>
               <ContextMenuTrigger asChild>
                 <div
                   className={cn(
@@ -193,7 +193,7 @@ export function WeekTimeGrid({
 
       {/* Row 3: Time columns */}
       {weekDays.map((day, colIndex) => (
-        <ContextMenu key={day.dateKey}>
+        <ContextMenu key={day.dateKey} modal={false}>
           <ContextMenuTrigger asChild>
             <div
               className={cn(
