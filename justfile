@@ -35,7 +35,7 @@ build: build-providers-release
 # Generate TypeScript bindings from Rust types
 [working-directory: 'src-tauri']
 gen-types:
-  cargo run --bin gen_types
+  cargo run --example gen_types
 
 # Test production version of app (needs build first)
 start:

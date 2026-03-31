@@ -15,9 +15,8 @@ default-run = "rencal"
 name = "rencal_lib"
 crate-type = ["rlib"]
 
-[[bin]]
+[[example]]
 name = "gen_types"
-path = "src/bin/gen_types.rs"
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
