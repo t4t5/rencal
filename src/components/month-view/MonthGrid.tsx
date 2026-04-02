@@ -7,7 +7,7 @@ import { MonthDayCell } from "@/components/month-view/MonthDayCell"
 
 import type { CalendarEvent } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
@@ -35,7 +35,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   onEventClick,
   draftEvent,
 }: MonthWeekRowProps) {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
   const visibleLaneCount = Math.min(layout.maxLane + 1, MAX_ALL_DAY_LANES)
 

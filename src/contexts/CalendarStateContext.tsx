@@ -4,6 +4,7 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -13,9 +14,22 @@ import type { Calendar } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 
-interface CalendarStateContextType {
+// --- Calendars context (changes rarely) ---
+
+interface CalendarsContextType {
   calendars: Calendar[]
   reloadCalendars: () => Promise<void>
+}
+
+const CalendarsContext = createContext({} as CalendarsContextType)
+
+export function useCalendars() {
+  return useContext(CalendarsContext)
+}
+
+// --- Navigation context (changes on every date navigation) ---
+
+interface CalendarNavigationContextType {
   activeDate: Date
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
@@ -24,11 +38,20 @@ interface CalendarStateContextType {
   setIsNavigating: (value: boolean) => void
 }
 
-const CalendarStateContext = createContext({} as CalendarStateContextType)
+const CalendarNavigationContext = createContext({} as CalendarNavigationContextType)
 
-export function useCalendarState() {
-  return useContext(CalendarStateContext)
+export function useCalendarNavigation() {
+  return useContext(CalendarNavigationContext)
 }
+
+/** @deprecated Use useCalendars() or useCalendarNavigation() directly */
+export function useCalendarState() {
+  const calendars = useCalendars()
+  const navigation = useCalendarNavigation()
+  return { ...calendars, ...navigation }
+}
+
+// --- Provider ---
 
 export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
@@ -84,17 +107,28 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     }, 500)
   }, [])
 
-  const value = {
-    calendars,
-    reloadCalendars: loadCalendarsFromStore,
-    activeDate,
-    setActiveDate,
+  const calendarsValue = useMemo(
+    () => ({ calendars, reloadCalendars: loadCalendarsFromStore }),
+    [calendars],
+  )
 
-    navigateToDate,
-    registerScrollToDate,
-    isNavigating,
-    setIsNavigating,
-  }
+  const navigationValue = useMemo(
+    () => ({
+      activeDate,
+      setActiveDate,
+      navigateToDate,
+      registerScrollToDate,
+      isNavigating,
+      setIsNavigating,
+    }),
+    [activeDate],
+  )
 
-  return <CalendarStateContext.Provider value={value}>{children}</CalendarStateContext.Provider>
+  return (
+    <CalendarsContext.Provider value={calendarsValue}>
+      <CalendarNavigationContext.Provider value={navigationValue}>
+        {children}
+      </CalendarNavigationContext.Provider>
+    </CalendarsContext.Provider>
+  )
 }

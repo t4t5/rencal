@@ -8,13 +8,13 @@ import { rpc } from "@/rpc"
 import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { reloadEvents } = useCalEvents()
   const [invites, setInvites] = useState<CalendarEvent[]>([])
 

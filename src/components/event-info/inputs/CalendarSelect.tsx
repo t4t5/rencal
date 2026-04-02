@@ -3,7 +3,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 
 import { Calendar } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { cn } from "@/lib/utils"
 
@@ -16,7 +16,7 @@ export const CalendarSelect = ({
   onChange: (calendarId: string) => void
   readOnly?: boolean
 }) => {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
 
   return (
     <Select onValueChange={onChange}>

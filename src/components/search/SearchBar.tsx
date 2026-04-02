@@ -5,7 +5,7 @@ import { Popover, PopoverAnchor } from "@/components/ui/popover"
 import { rpc } from "@/rpc"
 import type { CalendarEvent } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
@@ -33,7 +33,7 @@ export function SearchBar({
   className,
   eventPopoverSide,
 }: SearchBarProps = {}) {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
 
   const [query, setQuery] = useState("")
   const [results, setResults] = useState<CalendarEvent[]>([])

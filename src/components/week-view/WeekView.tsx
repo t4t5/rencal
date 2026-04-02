@@ -2,7 +2,7 @@ import { startOfWeek } from "date-fns"
 import { useRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useWeekDays } from "@/hooks/cal-events/useWeekDays"
@@ -12,7 +12,8 @@ import { formatDateKey } from "@/lib/time"
 import { WeekTimeGrid } from "./WeekTimeGrid"
 
 export function WeekView() {
-  const { activeDate, navigateToDate, calendars } = useCalendarState()
+  const { calendars } = useCalendars()
+  const { activeDate, navigateToDate } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
   const weekStart = startOfWeek(activeDate, { weekStartsOn: 1 })

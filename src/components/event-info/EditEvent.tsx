@@ -17,7 +17,7 @@ import { rpc } from "@/rpc"
 import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { getUserResponseStatus, isUserOrganizer } from "@/lib/event-utils"
@@ -26,7 +26,7 @@ import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { setActiveEventId, reloadEvents, setCalendarEvents } = useCalEvents()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)

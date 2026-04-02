@@ -11,7 +11,7 @@ import {
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { setEventAnchor } from "@/lib/event-anchor"
@@ -31,7 +31,7 @@ export function EventContextMenu({
   children,
 }: EventContextMenuProps) {
   const { setActiveEventId } = useCalEvents()
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
   const canDelete = isUserOrganizer(event, calendars)

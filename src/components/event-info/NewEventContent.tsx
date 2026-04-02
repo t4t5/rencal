@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { rpc } from "@/rpc"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { logger } from "@/lib/logger"
@@ -20,7 +20,7 @@ type NewEventContentProps = {
 }
 
 export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps) => {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { draftEvent, setDraftEvent, draftReminders, setDraftReminders } = useEventDraft()
   const { reloadEvents } = useCalEvents()
 

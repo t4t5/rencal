@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from "react"
 import { MonthGrid } from "@/components/month-view/MonthGrid"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
@@ -17,7 +17,8 @@ import { cn } from "@/lib/utils"
 const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function MonthView() {
-  const { activeDate, setActiveDate, calendars, navigateToDate, isNavigating } = useCalendarState()
+  const { calendars } = useCalendars()
+  const { activeDate, setActiveDate, navigateToDate, isNavigating } = useCalendarNavigation()
   const {
     calendarEvents,
     setCalendarEvents,

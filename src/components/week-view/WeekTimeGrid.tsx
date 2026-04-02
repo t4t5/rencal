@@ -11,7 +11,7 @@ import {
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -52,7 +52,7 @@ export function WeekTimeGrid({
   visibleEndHour,
   draftEvent,
 }: WeekTimeGridProps) {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const [, setTick] = useState(0)

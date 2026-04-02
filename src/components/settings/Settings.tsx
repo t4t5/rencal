@@ -3,13 +3,13 @@ import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { AccountSection } from "./AccountSection"
 import { AddAccountModal } from "./AddAccountModal"
 
 export function Settings() {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const [showAddAccount, setShowAddAccount] = useState(false)
 
   const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")

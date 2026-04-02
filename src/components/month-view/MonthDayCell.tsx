@@ -12,7 +12,7 @@ import {
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -44,7 +44,7 @@ export function MonthDayCell({
   onEventClick,
   draftEvent,
 }: MonthDayCellProps) {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const contextTargetRef = useRef<HTMLElement | null>(null)

@@ -3,13 +3,13 @@ import { useState } from "react"
 import { rpc } from "@/rpc"
 import type { CredentialFieldInput } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { logger } from "@/lib/logger"
 
 export const useConnectProvider = () => {
   const [isConnecting, setIsConnecting] = useState(false)
-  const { reloadCalendars } = useCalendarState()
+  const { reloadCalendars } = useCalendars()
 
   async function connect(providerName: string) {
     setIsConnecting(true)

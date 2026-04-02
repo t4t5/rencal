@@ -7,14 +7,15 @@ import { Button } from "@/components/ui/button"
 import { CalendarBig, EventDotsProvider } from "@/components/ui/calendar-big"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { formatDateKey } from "@/lib/time"
 
 const HiddenComponent = () => <></>
 
 export function StatefulCalendar() {
-  const { activeDate, navigateToDate, calendars } = useCalendarState()
+  const { calendars } = useCalendars()
+  const { activeDate, navigateToDate } = useCalendarNavigation()
   const { calendarEvents } = useCalEvents()
 
   const eventDotsByDate = useMemo(() => {

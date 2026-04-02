@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { rpc } from "@/rpc"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { cn, isMacOS } from "@/lib/utils"
@@ -70,7 +70,7 @@ export function ActionBar() {
 }
 
 const SyncStatus = () => {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const { reloadEvents } = useCalEvents()
 
   const [isSyncing, setIsSyncing] = useState(false)

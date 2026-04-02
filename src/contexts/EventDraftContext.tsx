@@ -3,7 +3,7 @@ import { ReactNode, createContext, useCallback, useContext, useState } from "rea
 
 import type { Recurrence } from "@/rpc/bindings"
 
-import { useCalendarState } from "./CalendarStateContext"
+import { useCalendars } from "./CalendarStateContext"
 
 interface DraftEvent {
   summary: string
@@ -46,7 +46,7 @@ export function useEventDraft() {
 const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 
 export function EventDraftProvider({ children }: { children: ReactNode }) {
-  const { calendars } = useCalendarState()
+  const { calendars } = useCalendars()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
 

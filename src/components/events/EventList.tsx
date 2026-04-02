@@ -5,7 +5,7 @@ import { DaySection } from "@/components/events/DaySection"
 import { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfiniteScroll"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
@@ -20,14 +20,9 @@ type Section = {
 }
 
 export function EventList() {
-  const {
-    calendars,
-    activeDate,
-    setActiveDate,
-    registerScrollToDate,
-    isNavigating,
-    setIsNavigating,
-  } = useCalendarState()
+  const { calendars } = useCalendars()
+  const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
+    useCalendarNavigation()
   // TODO: respect calendar visibility
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
   const visibleCalendarIds = calendars.map((c) => c.slug)

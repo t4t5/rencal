@@ -13,7 +13,7 @@ import {
 
 import type { CalendarEvent } from "@/rpc/bindings"
 
-import { useCalendarState } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
@@ -36,7 +36,8 @@ export function useCalEvents() {
 }
 
 export function CalEventsProvider({ children }: { children: ReactNode }) {
-  const { calendars, activeDate } = useCalendarState()
+  const { calendars } = useCalendars()
+  const { activeDate } = useCalendarNavigation()
 
   // TODO: respect calendar visibility
   const visibleCalendarIds = calendars.map((c) => c.slug)
