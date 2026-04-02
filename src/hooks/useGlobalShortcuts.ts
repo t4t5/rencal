@@ -7,7 +7,7 @@ import { openSettingsWindow } from "@/components/header/ActionBar"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
-const NAV_THROTTLE_MS = 150
+const NAV_THROTTLE_MS = 80
 
 interface UseGlobalShortcutsOptions {
   setView: (view: "week" | "month") => void

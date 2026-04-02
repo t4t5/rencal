@@ -4,9 +4,11 @@ import {
   RefObject,
   SetStateAction,
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   useState,
 } from "react"
@@ -51,9 +53,9 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
 
   const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
 
-  const toggleActiveEventId = (id: string) => {
+  const toggleActiveEventId = useCallback((id: string) => {
     setActiveEventId((prev) => (prev === id ? null : id))
-  }
+  }, [])
 
   const reloadEvents = useEffectEvent(async () => {
     // Core data hasn't loaded yet:
@@ -79,16 +81,19 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     }
   }, [visibleCalendarIds.length > 0])
 
-  const value: CalEventsContextType = {
-    calendarEvents,
-    setCalendarEvents,
-    reloadEvents,
-    currentDateRangeRef,
-    activeEvent,
-    setActiveEventId,
-    toggleActiveEventId,
-    isInitialLoading,
-  }
+  const value = useMemo<CalEventsContextType>(
+    () => ({
+      calendarEvents,
+      setCalendarEvents,
+      reloadEvents,
+      currentDateRangeRef,
+      activeEvent,
+      setActiveEventId,
+      toggleActiveEventId,
+      isInitialLoading,
+    }),
+    [calendarEvents, activeEvent, toggleActiveEventId, isInitialLoading],
+  )
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>
 }

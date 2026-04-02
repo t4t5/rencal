@@ -23,16 +23,20 @@ import { useBreakpoint } from "./hooks/useBreakpoint"
 
 const calendarViewSchema = z.enum(["week", "month"])
 
+function GlobalShortcuts({ setView }: { setView: (view: "week" | "month") => void }) {
+  useGlobalShortcuts({ setView })
+  return null
+}
+
 function App() {
   const { activeEvent } = useCalEvents()
   const [view, setView] = useLocalStorage("calendarView", calendarViewSchema, "month")
 
   const isMd = useBreakpoint("md")
 
-  useGlobalShortcuts({ setView })
-
   return (
     <main className="flex h-screen overflow-hidden">
+      <GlobalShortcuts setView={setView} />
       <div className="absolute h-4 w-full" data-tauri-drag-region />
 
       <div className="w-full md:w-[300px] flex flex-col shrink-0 md:border-r border-r-divider">
