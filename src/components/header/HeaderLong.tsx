@@ -17,7 +17,7 @@ export function HeaderLong() {
 
       <div className="grow h-full" data-tauri-drag-region />
 
-      <TabsList>
+      <TabsList onMouseDown={(e) => e.preventDefault()}>
         <TabsTrigger value="week">Week</TabsTrigger>
         <TabsTrigger value="month">Month</TabsTrigger>
       </TabsList>
