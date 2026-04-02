@@ -28,7 +28,7 @@ function Sheet({
       {/* Overlay */}
       <div
         className={cn(
-          "fixed inset-0 z-60 bg-black/50 transition-opacity duration-150",
+          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-150",
           open ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => onOpenChange(false)}
@@ -69,7 +69,7 @@ function SheetContent({
     <div
       ref={ref}
       className={cn(
-        "bg-background fixed z-60 flex flex-col gap-4 shadow-lg outline-none transition-transform duration-150 will-change-transform",
+        "bg-background fixed z-50 flex flex-col gap-4 shadow-lg outline-none transition-transform duration-150 will-change-transform",
         position,
         translate,
         className,

@@ -58,7 +58,7 @@ export function SearchResults({
   return (
     <PopoverContent
       ref={resultsRef}
-      className="p-0 w-72 ml-1.5"
+      className="p-0 w-72 ml-1.5 z-40"
       align="end"
       onOpenAutoFocus={(e) => e.preventDefault()}
       onInteractOutside={(e) => {
