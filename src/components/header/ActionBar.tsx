@@ -20,7 +20,7 @@ import { cn, isMacOS } from "@/lib/utils"
 import { AddEventButton } from "./AddEventButton"
 import { InvitesDropdown } from "./InvitesDropdown"
 
-async function openSettingsWindow() {
+export async function openSettingsWindow() {
   const existing = await WebviewWindow.getByLabel("settings")
   if (existing) {
     await existing.setFocus()

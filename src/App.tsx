@@ -15,6 +15,7 @@ import { WeekView } from "@/components/week-view/WeekView"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 
 import { HeaderLong } from "./components/header/HeaderLong"
@@ -27,6 +28,8 @@ function App() {
   const [view, setView] = useLocalStorage("calendarView", calendarViewSchema, "month")
 
   const isMd = useBreakpoint("md")
+
+  useGlobalShortcuts({ setView })
 
   return (
     <main className="flex h-screen overflow-hidden">

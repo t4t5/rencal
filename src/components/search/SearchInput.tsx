@@ -42,6 +42,7 @@ export function SearchInput({
     <div className="relative">
       <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
       <Input
+        id="global-search"
         ref={inputRef}
         value={query}
         onChange={(e) => {
