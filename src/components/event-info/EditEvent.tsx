@@ -140,7 +140,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
       {!isReadonly && (
         <div className="flex justify-end px-1 pb-1">
-          <DropdownMenu>
+          <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">
                 <HiEllipsisHorizontal className="h-5 w-5" />
