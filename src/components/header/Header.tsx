@@ -11,7 +11,7 @@ export function Header() {
   const showDraftEvent = isDrafting && text.length > 0
 
   return (
-    <div className={cn("flex flex-col gap-3 p-4 pb-0", isMacOS && "pl-[78px]")}>
+    <div className={cn("flex flex-col p-4 pb-0", isMacOS && "pl-[78px]")}>
       <ActionBar />
 
       <div
@@ -20,7 +20,7 @@ export function Header() {
           showDraftEvent ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
       >
-        <div className="overflow-hidden">
+        <div className="overflow-hidden pt-4">
           <NewEvent />
         </div>
       </div>

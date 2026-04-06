@@ -60,7 +60,7 @@ export function ActionBar() {
       <div className="flex gap-2 items-center">
         <SyncStatus />
         {!isMd && <InvitesDropdown />}
-        <Button variant="secondary" onClick={() => openSettingsWindow()}>
+        <Button variant="ghost" onClick={() => openSettingsWindow()}>
           <SettingsIcon />
         </Button>
         {!isMd && <SearchButton />}
