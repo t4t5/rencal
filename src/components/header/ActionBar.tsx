@@ -27,7 +27,7 @@ export async function openSettingsWindow() {
     return
   }
 
-  const width = 425
+  const width = 700
   const height = 500
   const monitor = await currentMonitor()
   const scale = monitor?.scaleFactor ?? 1
