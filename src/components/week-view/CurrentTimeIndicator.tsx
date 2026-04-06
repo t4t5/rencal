@@ -20,7 +20,7 @@ export function CurrentTimeIndicator({ topPercent }: { topPercent: number }) {
 
   return (
     <div
-      className="absolute -left-3.5 -right-2 z-10 pointer-events-none flex items-center"
+      className="absolute -left-3.5 -right-1 z-10 pointer-events-none flex items-center"
       style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
     >
       <span className="text-[11px] font-medium text-active shrink-0 leading-none [text-shadow:0_0_4px_black]">

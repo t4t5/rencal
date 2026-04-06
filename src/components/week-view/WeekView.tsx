@@ -32,10 +32,8 @@ export function WeekView() {
     prevWeekKeyRef.current = weekKey
   }
 
-  const direction = directionRef.current
-
   return (
-    <div className="relative h-full overflow-hidden">
+    <div className="relative h-full">
       <WeekTimeGrid
         weekDays={weekDays}
         timedByCol={layout.timedByCol}
