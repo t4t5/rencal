@@ -8,7 +8,7 @@ export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()
 
   return (
-    <div className="h-18 shrink-0 items-center flex gap-2 p-4">
+    <div className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
         <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
           Today

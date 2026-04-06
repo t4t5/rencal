@@ -37,6 +37,7 @@ export function AddEventButton() {
     <div ref={containerRef}>
       {showInput ? (
         <Input
+          ghost={false}
           value={text}
           onChange={(e) => setText(e.target.value)}
           autoFocus={isDrafting && !isExiting}
@@ -50,7 +51,7 @@ export function AddEventButton() {
             }
           }}
           className={cn(
-            "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
+            "transition-[width] duration-200 ease-out",
             isExiting ? "w-buttonHeight" : "w-full starting:w-buttonHeight",
           )}
           onTransitionEnd={() => {

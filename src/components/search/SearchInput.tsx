@@ -73,7 +73,7 @@ export function SearchInput({
           }
         }}
         className={cn(
-          "border-none text-sm bg-secondary transition-[width] duration-200 ease-out pl-8",
+          "border-none text-sm bg-secondary shadow-buttonBorder transition-[width] duration-200 ease-out pl-8",
           isExiting ? "w-10" : "w-32 starting:w-10",
           className,
         )}
