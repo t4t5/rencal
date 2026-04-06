@@ -48,7 +48,7 @@ export function AccountsSection() {
               <ProviderIcon className="size-6" />
             </div>
             <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-              <span className="text-sm font-semibold">{displayName}</span>
+              <span className="text-sm">{displayName}</span>
               <span className="text-xs text-muted-foreground truncate">{account}</span>
             </div>
             <Button

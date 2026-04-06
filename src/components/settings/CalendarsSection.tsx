@@ -15,9 +15,6 @@ const providerDisplayName: Record<string, string> = {
   outlook: "Outlook",
 }
 
-// TODO: Implement calendar sets
-const CALENDAR_SETS = ["My Calendar Set", "Work"]
-
 export function CalendarsSection() {
   const { calendars } = useCalendars()
 
@@ -25,26 +22,12 @@ export function CalendarsSection() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex gap-2">
-        {CALENDAR_SETS.map((set, i) => (
-          <button
-            key={set}
-            className={cn(
-              "px-4 py-2 text-sm rounded-lg border border-border transition-colors",
-              i === 0 ? "bg-accent text-accent-foreground" : "text-muted-foreground",
-            )}
-          >
-            {set}
-          </button>
-        ))}
-      </div>
-
       {Object.entries(calendarsByProvider).map(([provider, cals]) => {
         const displayName = providerDisplayName[provider] ?? provider
         return (
           <div key={provider} className="flex flex-col gap-3">
             <span className="text-sm text-muted-foreground">{displayName}</span>
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-2">
               {cals?.map((calendar) => (
                 <CalendarCheckboxItem key={calendar.slug} calendar={calendar} />
               ))}
@@ -53,7 +36,7 @@ export function CalendarsSection() {
         )
       })}
 
-      <Button variant="outline" className="self-start gap-2">
+      <Button variant="secondary" className="self-start gap-2">
         <RssIcon className="size-4" />
         Add subscription
       </Button>
@@ -65,7 +48,7 @@ function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
   const isVisible = true // TODO: Implement visibility toggle using local DB
 
   return (
-    <label className="flex items-center gap-3 cursor-pointer">
+    <label className="flex items-center gap-2 cursor-pointer">
       <Checkbox
         checked={isVisible}
         onCheckedChange={() => {

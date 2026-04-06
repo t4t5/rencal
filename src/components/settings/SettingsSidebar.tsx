@@ -46,7 +46,7 @@ export function SettingsSidebar({
   onTabChange: (tab: SettingsTab) => void
 }) {
   return (
-    <nav className="flex flex-col gap-1 w-[200px] shrink-0 p-3 pt-10 border-r border-border">
+    <nav className="flex flex-col gap-1 w-[200px] shrink-0 py-5 px-4">
       <span className="text-sm text-muted-foreground pb-2">Settings</span>
 
       {NAV_ITEMS.map((item) => (
