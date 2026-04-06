@@ -2,7 +2,7 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
-import { HiOutlineCog8Tooth as SettingsIcon } from "react-icons/hi2"
+import { HiOutlineCog6Tooth as SettingsIcon } from "react-icons/hi2"
 import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
 import { SearchButton } from "@/components/search/SearchButton"

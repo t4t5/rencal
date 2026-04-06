@@ -1,5 +1,5 @@
 import { addDays, addMonths, format, isBefore, startOfDay, subMonths } from "date-fns"
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -113,18 +113,20 @@ export function StatefulCalendar() {
         <h2 className="text-2xl font-bold">{format(activeDate, "MMMM yyyy")}</h2>
         <div className="flex items-center gap-1">
           <Button
-            variant="secondary"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
+            round
             onClick={() => navigateToDate(subMonths(activeDate, 1))}
           >
-            <ChevronLeftIcon className="size-4" />
+            <ChevronUpIcon className="size-4" />
           </Button>
           <Button
-            variant="secondary"
-            size="icon"
+            variant="ghost"
+            size="icon-sm"
+            round
             onClick={() => navigateToDate(addMonths(activeDate, 1))}
           >
-            <ChevronRightIcon className="size-4" />
+            <ChevronDownIcon className="size-4" />
           </Button>
         </div>
       </div>

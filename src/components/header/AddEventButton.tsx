@@ -51,7 +51,7 @@ export function AddEventButton() {
           }}
           className={cn(
             "border-none text-sm bg-secondary transition-[width] duration-200 ease-out",
-            isExiting ? "w-10" : "w-full starting:w-10",
+            isExiting ? "w-buttonHeight" : "w-full starting:w-buttonHeight",
           )}
           onTransitionEnd={() => {
             if (isExiting) {
@@ -61,7 +61,7 @@ export function AddEventButton() {
           }}
         />
       ) : (
-        <Button variant="secondary" onClick={onNew}>
+        <Button variant="secondary" onClick={onNew} size="icon">
           <PlusIcon />
         </Button>
       )}
