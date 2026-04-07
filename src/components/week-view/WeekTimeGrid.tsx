@@ -8,7 +8,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
-import type { CalendarEvent } from "@/rpc/bindings"
+import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -66,13 +66,6 @@ export function WeekTimeGrid({
 
   const rangeHours = visibleEndHour - visibleStartHour
 
-  const now = new Date()
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const rangeStartMin = visibleStartHour * 60
-  const rangeMinutes = rangeHours * 60
-  const timeIndicatorTopPercent = ((currentMinutes - rangeStartMin) / rangeMinutes) * 100
-
-  const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
@@ -140,46 +133,20 @@ export function WeekTimeGrid({
 
       {/* Row 2: All-day events (only if present) */}
       {hasAllDay && (
-        <div
-          className="col-span-7 relative grid grid-cols-7 border-b border-border"
-          style={{
-            gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
+        <AllDayEvents
+          maxAllDayLane={maxAllDayLane}
+          weekDays={weekDays}
+          activeDateKey={activeDateKey}
+          contextTargetRef={contextTargetRef}
+          allDayItems={allDayItems}
+          activeEventId={activeEventId}
+          calendars={calendars}
+          draftEvent={draftEvent}
+          onCreateEvent={(day: MonthDay) => {
+            openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
           }}
-        >
-          {/* Background columns for weekend shading + borders */}
-          {weekDays.map((day, i) => (
-            <AllDayContextMenu
-              key={day.dateKey}
-              onCreateEvent={() => {
-                openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
-              }}
-            >
-              <div
-                className={cn(
-                  "border-r border-border",
-                  day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
-                )}
-                style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
-                onContextMenu={(e) => {
-                  contextTargetRef.current = e.currentTarget
-                }}
-              />
-            </AllDayContextMenu>
-          ))}
-
-          {/* All-day event bars */}
-          {allDayItems.map((item) => (
-            <WeekAllDayBar
-              key={item.event.id}
-              item={item}
-              isActive={activeEventId === item.event.id}
-              isPending={isPendingEvent(item.event, calendars)}
-              isDeclined={isDeclinedEvent(item.event, calendars)}
-              isDraft={item.event === draftEvent}
-              onClick={() => onEventClick(item.event.id)}
-            />
-          ))}
-        </div>
+          onEventClick={onEventClick}
+        />
       )}
 
       {/* Row 3: Time columns */}
@@ -211,8 +178,8 @@ export function WeekTimeGrid({
               ))}
 
               {/* Current time indicator */}
-              {colIndex === todayColIndex && showTimeIndicator && (
-                <CurrentTimeIndicator topPercent={timeIndicatorTopPercent} />
+              {colIndex === todayColIndex && (
+                <CurrentTimeIndicator visibleStartHour={visibleStartHour} rangeHours={rangeHours} />
               )}
             </div>
           </ContextMenuTrigger>
@@ -230,6 +197,68 @@ export function WeekTimeGrid({
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
+      ))}
+    </div>
+  )
+}
+
+const AllDayEvents = ({
+  weekDays,
+  maxAllDayLane,
+  activeDateKey,
+  contextTargetRef,
+  allDayItems,
+  activeEventId,
+  calendars,
+  draftEvent,
+  onCreateEvent,
+  onEventClick,
+}: {
+  weekDays: MonthDay[]
+  maxAllDayLane: number
+  activeDateKey: string
+  contextTargetRef: React.RefObject<HTMLElement | null>
+  allDayItems: AllDayLaneItem[]
+  activeEventId: string | null
+  calendars: Calendar[]
+  draftEvent: CalendarEvent | null
+  onCreateEvent: (day: MonthDay) => void
+  onEventClick: (id: string) => void
+}) => {
+  return (
+    <div
+      className="col-span-7 relative grid grid-cols-7 border-b border-border"
+      style={{
+        gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
+      }}
+    >
+      {/* Background columns for weekend shading + borders */}
+      {weekDays.map((day, i) => (
+        <AllDayContextMenu key={day.dateKey} onCreateEvent={() => onCreateEvent(day)}>
+          <div
+            className={cn(
+              "border-r border-border",
+              day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+            )}
+            style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
+            onContextMenu={(e) => {
+              contextTargetRef.current = e.currentTarget
+            }}
+          />
+        </AllDayContextMenu>
+      ))}
+
+      {/* All-day event bars */}
+      {allDayItems.map((item) => (
+        <WeekAllDayBar
+          key={item.event.id}
+          item={item}
+          isActive={activeEventId === item.event.id}
+          isPending={isPendingEvent(item.event, calendars)}
+          isDeclined={isDeclinedEvent(item.event, calendars)}
+          isDraft={item.event === draftEvent}
+          onClick={() => onEventClick(item.event.id)}
+        />
       ))}
     </div>
   )
