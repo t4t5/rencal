@@ -108,28 +108,7 @@ export function WeekTimeGrid({
       style={{ gridTemplateRows: hasAllDay ? "auto auto 1fr" : "auto 1fr" }}
     >
       {/* Row 1: Day headers */}
-      {weekDays.map((day) => (
-        <div
-          key={day.dateKey}
-          className={cn(
-            "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
-            day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
-          )}
-          onClick={() => onDayClick(day.date)}
-        >
-          <span className="text-[10px] text-muted-foreground uppercase">
-            {format(day.date, "EEE")}
-          </span>
-          <span
-            className={cn(
-              "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
-              day.isToday && "bg-primary text-primary-foreground",
-            )}
-          >
-            {format(day.date, "d")}
-          </span>
-        </div>
-      ))}
+      <DayHeaders weekDays={weekDays} activeDateKey={activeDateKey} onDayClick={onDayClick} />
 
       {/* Row 2: All-day events (only if present) */}
       {hasAllDay && (
@@ -200,6 +179,37 @@ export function WeekTimeGrid({
       ))}
     </div>
   )
+}
+
+const DayHeaders = ({
+  weekDays,
+  activeDateKey,
+  onDayClick,
+}: {
+  weekDays: MonthDay[]
+  activeDateKey: string
+  onDayClick: (date: Date) => void
+}) => {
+  return weekDays.map((day) => (
+    <div
+      key={day.dateKey}
+      className={cn(
+        "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
+        day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+      )}
+      onClick={() => onDayClick(day.date)}
+    >
+      <span className="text-[10px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
+      <span
+        className={cn(
+          "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
+          day.isToday && "bg-primary text-primary-foreground",
+        )}
+      >
+        {format(day.date, "d")}
+      </span>
+    </div>
+  ))
 }
 
 const AllDayEvents = ({
