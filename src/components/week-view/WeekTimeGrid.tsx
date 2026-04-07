@@ -1,13 +1,6 @@
 import { addHours, endOfDay, format, setHours, startOfDay } from "date-fns"
 import { useEffect, useRef, useState } from "react"
 
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu"
-
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -23,6 +16,7 @@ import { cn } from "@/lib/utils"
 
 import { AllDayContextMenu } from "./AllDayContextMenu"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
+import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
 import { WeekAllDayBar } from "./WeekAllDayBar"
 import { WeekTimedEvent } from "./WeekTimedEvent"
 
@@ -69,7 +63,6 @@ export function WeekTimeGrid({
   const todayColIndex = weekDays.findIndex((d) => d.isToday)
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
-  const contextClickYRef = useRef(0)
 
   const openCreatePopover = (
     day: Date,
@@ -130,52 +123,39 @@ export function WeekTimeGrid({
 
       {/* Row 3: Time columns */}
       {weekDays.map((day, colIndex) => (
-        <ContextMenu key={day.dateKey} modal={false}>
-          <ContextMenuTrigger asChild>
-            <div
-              className={cn(
-                "relative border-r border-border cursor-default",
-                day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
-              )}
-              onClick={() => onDayClick(day.date)}
-              onContextMenu={(e) => {
-                contextTargetRef.current = e.currentTarget
-                contextClickYRef.current = e.clientY
-              }}
-            >
-              {/* Timed events */}
-              {timedByCol[colIndex].map((layout) => (
-                <WeekTimedEvent
-                  key={layout.event.id}
-                  layout={layout}
-                  isActive={activeEventId === layout.event.id}
-                  isPending={isPendingEvent(layout.event, calendars)}
-                  isDeclined={isDeclinedEvent(layout.event, calendars)}
-                  isDraft={layout.event === draftEvent}
-                  onClick={() => onEventClick(layout.event.id)}
-                />
-              ))}
+        <ScheduledDayContextMenu
+          key={day.dateKey}
+          onCreateEvent={(el, clickY) => {
+            const startHour = getHourFromClickY(el, clickY)
+            openCreatePopover(day.date, el, { allDay: false, startHour })
+          }}
+        >
+          <div
+            className={cn(
+              "relative border-r border-border cursor-default",
+              day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+            )}
+            onClick={() => onDayClick(day.date)}
+          >
+            {/* Timed events */}
+            {timedByCol[colIndex].map((layout) => (
+              <WeekTimedEvent
+                key={layout.event.id}
+                layout={layout}
+                isActive={activeEventId === layout.event.id}
+                isPending={isPendingEvent(layout.event, calendars)}
+                isDeclined={isDeclinedEvent(layout.event, calendars)}
+                isDraft={layout.event === draftEvent}
+                onClick={() => onEventClick(layout.event.id)}
+              />
+            ))}
 
-              {/* Current time indicator */}
-              {colIndex === todayColIndex && (
-                <CurrentTimeIndicator visibleStartHour={visibleStartHour} rangeHours={rangeHours} />
-              )}
-            </div>
-          </ContextMenuTrigger>
-          <ContextMenuContent>
-            <ContextMenuItem
-              onClick={() => {
-                setTimeout(() => {
-                  const el = contextTargetRef.current!
-                  const startHour = getHourFromClickY(el, contextClickYRef.current)
-                  openCreatePopover(day.date, el, { allDay: false, startHour })
-                })
-              }}
-            >
-              Create event
-            </ContextMenuItem>
-          </ContextMenuContent>
-        </ContextMenu>
+            {/* Current time indicator */}
+            {colIndex === todayColIndex && (
+              <CurrentTimeIndicator visibleStartHour={visibleStartHour} rangeHours={rangeHours} />
+            )}
+          </div>
+        </ScheduledDayContextMenu>
       ))}
     </div>
   )
