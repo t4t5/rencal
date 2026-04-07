@@ -215,7 +215,7 @@ const AllDayEvents = ({
         gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
       }}
     >
-      {/* Background columns for weekend shading + borders */}
+      {/* Background + borders */}
       {weekDays.map((day, i) => (
         <AllDayContextMenu key={day.dateKey} onCreateEvent={() => onCreateEvent(day)}>
           <div
