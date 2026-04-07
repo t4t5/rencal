@@ -21,6 +21,7 @@ import { setDraftAnchor } from "@/lib/draft-anchor"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
+import { AllDayContextMenu } from "./AllDayContextMenu"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { WeekAllDayBar } from "./WeekAllDayBar"
 import { WeekTimedEvent } from "./WeekTimedEvent"
@@ -147,33 +148,23 @@ export function WeekTimeGrid({
         >
           {/* Background columns for weekend shading + borders */}
           {weekDays.map((day, i) => (
-            <ContextMenu key={day.dateKey} modal={false}>
-              <ContextMenuTrigger asChild>
-                <div
-                  className={cn(
-                    "border-r border-border",
-                    day.dateKey === activeDateKey
-                      ? "bg-secondary"
-                      : day.isWeekend && "bg-weekendBg",
-                  )}
-                  style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
-                  onContextMenu={(e) => {
-                    contextTargetRef.current = e.currentTarget
-                  }}
-                />
-              </ContextMenuTrigger>
-              <ContextMenuContent>
-                <ContextMenuItem
-                  onClick={() => {
-                    setTimeout(() => {
-                      openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
-                    })
-                  }}
-                >
-                  Create event
-                </ContextMenuItem>
-              </ContextMenuContent>
-            </ContextMenu>
+            <AllDayContextMenu
+              key={day.dateKey}
+              onCreateEvent={() => {
+                openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
+              }}
+            >
+              <div
+                className={cn(
+                  "border-r border-border",
+                  day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+                )}
+                style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
+                onContextMenu={(e) => {
+                  contextTargetRef.current = e.currentTarget
+                }}
+              />
+            </AllDayContextMenu>
           ))}
 
           {/* All-day event bars */}
