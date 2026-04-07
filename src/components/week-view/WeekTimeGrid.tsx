@@ -1,5 +1,5 @@
 import { addHours, endOfDay, format, setHours, startOfDay } from "date-fns"
-import { useEffect, useRef, useState } from "react"
+import { useRef } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
@@ -50,13 +50,6 @@ export function WeekTimeGrid({
   const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
-  const [, setTick] = useState(0)
-
-  // Update time indicator every 60s
-  useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
-    return () => clearInterval(interval)
-  }, [])
 
   const rangeHours = visibleEndHour - visibleStartHour
 

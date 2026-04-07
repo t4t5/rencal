@@ -10,6 +10,14 @@ export function CurrentTimeIndicator({
   visibleStartHour: number
   rangeHours: number
 }) {
+  const [, setTick] = useState(0)
+
+  // Update time indicator every 60s
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   const rangeStartMin = visibleStartHour * 60
