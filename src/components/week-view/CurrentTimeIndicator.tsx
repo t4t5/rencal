@@ -3,7 +3,29 @@ import { useEffect, useState } from "react"
 
 import { cn } from "@/lib/utils"
 
-export function CurrentTimeIndicator({ topPercent }: { topPercent: number }) {
+export function CurrentTimeIndicator({
+  visibleStartHour,
+  rangeHours,
+}: {
+  visibleStartHour: number
+  rangeHours: number
+}) {
+  const [, setTick] = useState(0)
+
+  // Update time indicator every 60s
+  useEffect(() => {
+    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const now = new Date()
+  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const rangeStartMin = visibleStartHour * 60
+  const rangeMinutes = rangeHours * 60
+  const timeIndicatorTopPercent = ((currentMinutes - rangeStartMin) / rangeMinutes) * 100
+
+  const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
+
   const [currentTime, setCurrentTime] = useState(new Date())
   const [colonVisible, setColonVisible] = useState(true)
 
@@ -18,10 +40,12 @@ export function CurrentTimeIndicator({ topPercent }: { topPercent: number }) {
   const hour = format(currentTime, "H")
   const minutes = format(currentTime, "mm")
 
+  if (!showTimeIndicator) return null
+
   return (
     <div
       className="absolute -left-3.5 -right-1 z-10 pointer-events-none flex items-center"
-      style={{ top: `${topPercent}%`, transform: "translateY(-50%)" }}
+      style={{ top: `${timeIndicatorTopPercent}%`, transform: "translateY(-50%)" }}
     >
       <span className="text-[11px] font-medium text-active shrink-0 leading-none [text-shadow:0_0_4px_black]">
         {hour}

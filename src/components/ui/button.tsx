@@ -9,22 +9,26 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        default: "bg-primary text-primary-foreground hover:bg-buttonPrimaryBgHover",
+        secondary:
+          "bg-secondary text-secondary-foreground hover:bg-buttonSecondaryBgHover shadow-buttonBorder",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "bg-transparent border border-transparent hover:border-input data-[state=open]:bg-secondary data-[state=open]:border-transparent",
         ghost: "hover:bg-hoverBg hover:text-accent-foreground",
-        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
-        default: "h-9 px-4 py-2 has-[>svg]:px-3",
+        default: "px-4 py-2 has-[>svg]:px-3 h-buttonHeight",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-9",
-        "icon-sm": "size-8",
-        "icon-lg": "size-10",
+        icon: "size-buttonHeight p-0",
+        "icon-sm": "size-7 p-0",
+        "icon-lg": "size-9 p-0",
+      },
+      round: {
+        true: "rounded-full!",
+        false: "rounded-md",
       },
     },
     defaultVariants: {
@@ -38,6 +42,7 @@ function Button({
   className,
   variant,
   size,
+  round,
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
@@ -49,7 +54,7 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, className }))}
+      className={cn(buttonVariants({ variant, size, round, className }))}
       {...props}
     />
   )

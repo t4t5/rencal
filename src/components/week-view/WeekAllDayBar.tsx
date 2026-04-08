@@ -33,32 +33,34 @@ export function WeekAllDayBar({
 
   const inner = (
     <div
-      ref={ref}
-      data-event-clickable={!isDraft || undefined}
-      className={cn(
-        "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
-        highlighted && "brightness-150",
-        isDeclined && "line-through",
-        isDraft && "opacity-60",
-        item.isStart ? "rounded-l ml-px" : "-ml-px",
-        item.isEnd ? "rounded-r mr-px" : "-mr-px",
-      )}
+      className="p-0.5 py-px"
       style={{
         gridColumn: `${item.startCol} / ${item.endCol}`,
         gridRow: item.lane + 1,
-        ...getEventBlockStyle(color, highlighted, isDashed),
       }}
-      onClick={
-        isDraft
-          ? undefined
-          : (e) => {
-              e.stopPropagation()
-              setEventAnchor(e.currentTarget)
-              onClick()
-            }
-      }
     >
-      {item.event.summary}
+      <div
+        ref={ref}
+        data-event-clickable={!isDraft || undefined}
+        className={cn(
+          "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110 rounded",
+          highlighted && "brightness-150",
+          isDeclined && "line-through",
+          isDraft && "opacity-60",
+        )}
+        style={getEventBlockStyle(color, highlighted, isDashed)}
+        onClick={
+          isDraft
+            ? undefined
+            : (e) => {
+                e.stopPropagation()
+                setEventAnchor(e.currentTarget)
+                onClick()
+              }
+        }
+      >
+        {item.event.summary}
+      </div>
     </div>
   )
 

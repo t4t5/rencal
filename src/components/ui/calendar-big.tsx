@@ -247,7 +247,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
     <Button
       ref={ref}
       variant="ghost"
-      size="icon"
+      size="icon-lg"
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&
