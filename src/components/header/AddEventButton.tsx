@@ -34,38 +34,43 @@ export function AddEventButton() {
   const showInput = isDrafting || isExiting
 
   return (
-    <div ref={containerRef}>
-      {showInput ? (
-        <Input
-          ghost={false}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          autoFocus={isDrafting && !isExiting}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              if (text) {
-                setText("")
-              } else {
-                exitDraft()
+    <>
+      <div ref={containerRef} className={cn({ grow: showInput })}>
+        {showInput ? (
+          <Input
+            ghost={false}
+            value={text}
+            placeholder="Meeting at 3pm"
+            onChange={(e) => setText(e.target.value)}
+            autoFocus={isDrafting && !isExiting}
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                if (text) {
+                  setText("")
+                } else {
+                  exitDraft()
+                }
               }
-            }
-          }}
-          className={cn(
-            "transition-[width] duration-200 ease-out",
-            isExiting ? "w-buttonHeight" : "w-full starting:w-buttonHeight",
-          )}
-          onTransitionEnd={() => {
-            if (isExiting) {
-              setIsExiting(false)
-              setIsDrafting(false)
-            }
-          }}
-        />
-      ) : (
-        <Button variant="secondary" onClick={onNew} size="icon">
-          <PlusIcon />
-        </Button>
-      )}
-    </div>
+            }}
+            className={cn(
+              "transition-[width] duration-200 ease-out",
+              isExiting ? "w-buttonHeight" : "w-full starting:w-buttonHeight",
+            )}
+            onTransitionEnd={() => {
+              if (isExiting) {
+                setIsExiting(false)
+                setIsDrafting(false)
+              }
+            }}
+          />
+        ) : (
+          <Button variant="secondary" onClick={onNew} size="icon">
+            <PlusIcon />
+          </Button>
+        )}
+      </div>
+
+      <div className={cn("h-full", { grow: !showInput })} data-tauri-drag-region />
+    </>
   )
 }

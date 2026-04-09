@@ -55,8 +55,6 @@ export function ActionBar() {
       {isMd && <InvitesDropdown />}
       <AddEventButton />
 
-      <div className="grow h-full" data-tauri-drag-region />
-
       <div className="flex gap-2 items-center">
         <SyncStatus />
         {!isMd && <InvitesDropdown />}
