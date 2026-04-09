@@ -27,12 +27,7 @@ export function EventList() {
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
   const visibleCalendarIds = calendars.map((c) => c.slug)
 
-  const {
-    calendarEvents: events,
-    reloadEvents,
-    currentDateRangeRef,
-    isInitialLoading,
-  } = useCalEvents()
+  const { calendarEvents: events, isInitialLoading } = useCalEvents()
   const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
 
@@ -174,7 +169,7 @@ export function EventList() {
   }
 
   return (
-    <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6">
+    <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6 select-none">
       {sectionsToRender.map(({ date, events, isGhost }) => {
         const dateStr = formatDateKey(date)
 

@@ -52,7 +52,7 @@ function App() {
           className="hidden sm:flex flex-col grow"
         >
           <HeaderLong />
-          <div className="h-[calc(100vh-76px)]">
+          <div className="h-[calc(100vh-76px)] select-none">
             <TabsContent value="week" className="h-full">
               <WeekView />
             </TabsContent>
