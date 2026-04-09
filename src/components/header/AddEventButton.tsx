@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef } from "react"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { Button } from "@/components/ui/button"
@@ -11,13 +11,12 @@ import { cn } from "@/lib/utils"
 
 export function AddEventButton() {
   const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
-  const [isExiting, setIsExiting] = useState(false)
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
     setText("")
-    setIsExiting(true)
+    setIsDrafting(false)
   }
 
   useOnClickOutside(containerRef, () => {
@@ -31,18 +30,16 @@ export function AddEventButton() {
     setIsDrafting(true)
   }
 
-  const showInput = isDrafting || isExiting
-
   return (
     <>
-      <div ref={containerRef} className={cn({ grow: showInput })}>
-        {showInput ? (
+      <div ref={containerRef} className={cn({ grow: isDrafting })}>
+        {isDrafting ? (
           <Input
             ghost={false}
             value={text}
             placeholder="Meeting at 3pm"
             onChange={(e) => setText(e.target.value)}
-            autoFocus={isDrafting && !isExiting}
+            autoFocus
             onKeyDown={(e) => {
               if (e.key === "Escape") {
                 if (text) {
@@ -50,16 +47,6 @@ export function AddEventButton() {
                 } else {
                   exitDraft()
                 }
-              }
-            }}
-            className={cn(
-              "transition-[width] duration-200 ease-out",
-              isExiting ? "w-buttonHeight" : "w-full starting:w-buttonHeight",
-            )}
-            onTransitionEnd={() => {
-              if (isExiting) {
-                setIsExiting(false)
-                setIsDrafting(false)
               }
             }}
           />
@@ -70,7 +57,7 @@ export function AddEventButton() {
         )}
       </div>
 
-      <div className={cn("h-full", { grow: !showInput })} data-tauri-drag-region />
+      <div className={cn("h-full", { grow: !isDrafting })} data-tauri-drag-region />
     </>
   )
 }
