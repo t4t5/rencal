@@ -51,7 +51,8 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   useHotkeys("right", () => throttledNavigate(addDays(activeDate, 1)))
 
   // New event
-  useHotkeys("n", () => {
+  useHotkeys("c", (e) => {
+    e.preventDefault()
     setDefaultDraftEvent()
     setIsDrafting(true)
   })

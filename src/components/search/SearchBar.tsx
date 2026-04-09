@@ -68,7 +68,10 @@ export function SearchBar({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return
-      if (!query && !activeEvent && !onClose) return
+      if (!query && !activeEvent && !onClose) {
+        inputRef.current?.blur()
+        return
+      }
       if (
         eventDetailRef.current?.contains(document.activeElement) &&
         document.activeElement?.matches("input, textarea, select")
