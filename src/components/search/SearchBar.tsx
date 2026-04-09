@@ -60,6 +60,7 @@ export function SearchBar({
     setResults([])
     setActiveEvent(null)
     setFocusedIndex(0)
+    inputRef.current?.blur()
     onClose?.()
   }
 

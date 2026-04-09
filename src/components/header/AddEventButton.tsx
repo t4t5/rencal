@@ -15,6 +15,7 @@ export function AddEventButton() {
   const exitDraft = () => {
     setText("")
     setIsDrafting(false)
+    containerRef.current?.querySelector("input")?.blur()
   }
 
   useOnClickOutside(containerRef, () => {
