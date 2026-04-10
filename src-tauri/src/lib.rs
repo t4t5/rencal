@@ -50,6 +50,15 @@ pub async fn run() {
             tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
             Ok(())
         })
+        .on_window_event(|window, event| {
+            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                // Hide the window instead of closing it so the app keeps
+                // running in the background (e.g. for notifications).
+                // The app only quits on an explicit quit action.
+                api.prevent_close();
+                let _ = window.hide();
+            }
+        })
         .invoke_handler(router.into_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
