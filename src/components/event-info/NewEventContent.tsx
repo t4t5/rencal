@@ -5,13 +5,9 @@ import { rrulestr } from "rrule"
 import { EventInfo } from "@/components/event-info/EventInfo"
 import { Button } from "@/components/ui/button"
 
-import { rpc } from "@/rpc"
-
-import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
-import { logger } from "@/lib/logger"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
 
 type NewEventContentProps = {
@@ -21,32 +17,17 @@ type NewEventContentProps = {
 
 export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps) => {
   const { calendars } = useCalendars()
-  const { draftEvent, setDraftEvent, draftReminders, setDraftReminders } = useEventDraft()
-  const { reloadEvents } = useCalEvents()
+  const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
+    useEventDraft()
 
   const { summary, description, start, end, allDay, location, calendarId, recurrence } = draftEvent
 
   const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
   const onCreate = useCallback(async () => {
-    if (!draftEvent.calendarId) return
-
-    await rpc.caldir.create_event({
-      calendar_slug: draftEvent.calendarId,
-      summary: draftEvent.summary ?? "",
-      description: draftEvent.description,
-      location: draftEvent.location ?? null,
-      start: draftEvent.start.toISOString(),
-      end: draftEvent.end.toISOString(),
-      all_day: draftEvent.allDay,
-      recurrence: draftEvent.recurrence,
-      reminders: draftReminders,
-    })
-
-    logger.info("Create event:", draftEvent)
+    await createDraftEvent()
     onCreated()
-    await reloadEvents()
-  }, [draftEvent, draftReminders, onCreated])
+  }, [createDraftEvent, onCreated])
 
   const calendar = calendars.find((cal) => cal.slug === calendarId)
 

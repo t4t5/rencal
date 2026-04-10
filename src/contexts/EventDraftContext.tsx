@@ -1,10 +1,13 @@
-import { addHours, addMinutes, startOfDay, startOfHour } from "date-fns"
+import { addHours, addMinutes, startOfHour } from "date-fns"
 import { ReactNode, createContext, useCallback, useContext, useRef, useState } from "react"
 
+import { rpc } from "@/rpc"
 import type { Recurrence } from "@/rpc/bindings"
 
+import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
 
+import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
 
 interface DraftEvent {
@@ -37,6 +40,7 @@ interface EventDraftContextType {
   setDraftReminders: (reminders: number[]) => void
 
   setDefaultDraftEvent: () => void
+  createDraftEvent: () => Promise<void>
 }
 
 const EventDraftContext = createContext({} as EventDraftContextType)
@@ -114,6 +118,27 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     if (!open) setDefaultDraftEvent()
   }
 
+  const { reloadEvents } = useCalEvents()
+
+  const createDraftEvent = useCallback(async () => {
+    if (!draftEvent.calendarId) return
+
+    await rpc.caldir.create_event({
+      calendar_slug: draftEvent.calendarId,
+      summary: draftEvent.summary ?? "",
+      description: draftEvent.description,
+      location: draftEvent.location ?? null,
+      start: draftEvent.start.toISOString(),
+      end: draftEvent.end.toISOString(),
+      all_day: draftEvent.allDay,
+      recurrence: draftEvent.recurrence,
+      reminders: draftReminders,
+    })
+
+    logger.info("Create event:", draftEvent)
+    await reloadEvents()
+  }, [draftEvent, draftReminders, reloadEvents])
+
   const value = {
     isDrafting,
     setIsDrafting,
@@ -127,6 +152,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     draftReminders,
     setDraftReminders,
     setDefaultDraftEvent,
+    createDraftEvent,
   }
 
   return <EventDraftContext.Provider value={value}>{children}</EventDraftContext.Provider>

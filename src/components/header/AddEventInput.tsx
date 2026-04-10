@@ -8,7 +8,8 @@ import { segmentEventText } from "@/lib/parse-event-text"
 import { cn } from "@/lib/utils"
 
 export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
-  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent } =
+    useEventDraft()
   const overlayRef = useRef<HTMLDivElement>(null)
 
   const segments = useMemo(() => segmentEventText(text), [text])
@@ -63,6 +64,10 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
         }}
         onKeyDown={(e) => {
           if (!isDrafting) return
+          if (e.key === "Enter" && text) {
+            e.preventDefault()
+            void createDraftEvent().then(onExit)
+          }
           if (e.key === "Escape") {
             if (text) {
               setText("")
