@@ -57,24 +57,31 @@ export function ActionBar() {
         "pl-[78px]": isMacOS,
       })}
     >
-      {isMd && <InvitesDropdown />}
       <AddEventButton />
 
-      <div className="flex gap-2 items-center">
-        <SyncStatus />
-        {!isMd && <InvitesDropdown />}
-        <ShortcutTooltip text="Settings" shortcut="mod+comma">
-          <Button variant="ghost" onClick={() => openSettingsWindow()}>
-            <SettingsIcon />
-          </Button>
-        </ShortcutTooltip>
-        {!isMd && <SearchButton />}
-      </div>
+      {!isMd && (
+        <div className="flex gap-2 items-center">
+          <SyncStatus />
+          <InvitesDropdown />
+          <SettingsButton />
+          <SearchButton />
+        </div>
+      )}
     </div>
   )
 }
 
-const SyncStatus = () => {
+export const SettingsButton = () => {
+  return (
+    <ShortcutTooltip text="Settings" shortcut="mod+comma">
+      <Button variant="ghost" onClick={() => openSettingsWindow()}>
+        <SettingsIcon />
+      </Button>
+    </ShortcutTooltip>
+  )
+}
+
+export const SyncStatus = () => {
   const { calendars } = useCalendars()
   const { reloadEvents } = useCalEvents()
 

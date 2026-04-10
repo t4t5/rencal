@@ -5,6 +5,8 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import { ShortcutTooltip } from "../ui/shortcut-tooltip"
+import { SettingsButton, SyncStatus } from "./ActionBar"
+import { InvitesDropdown } from "./InvitesDropdown"
 
 export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()
@@ -17,6 +19,10 @@ export function HeaderLong() {
             Today
           </Button>
         </ShortcutTooltip>
+
+        <SettingsButton />
+        <InvitesDropdown />
+        <SyncStatus />
       </div>
 
       <div className="grow h-full" data-tauri-drag-region />
