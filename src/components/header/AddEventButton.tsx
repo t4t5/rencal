@@ -33,7 +33,11 @@ export function AddEventButton() {
 
   return (
     <>
-      <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="C">
+      <ShortcutTooltip
+        open={isDrafting ? false : undefined}
+        text="Create new event"
+        shortcut={["C"]}
+      >
         <div
           ref={containerRef}
           className={cn(

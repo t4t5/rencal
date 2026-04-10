@@ -59,7 +59,7 @@ function ShortcutTooltip({
   children,
 }: {
   text: string
-  shortcut: string
+  shortcut: string[]
   children: React.ReactNode
   open?: boolean
 }) {
@@ -68,9 +68,14 @@ function ShortcutTooltip({
       <TooltipTrigger asChild>{children}</TooltipTrigger>
       <TooltipContent className="py-1 px-2">
         <span>{text}</span>
-        <span className="shadow-buttonBorder text-muted-foreground bg-popover px-1.5 py-0.5 rounded">
-          {shortcut}
-        </span>
+
+        <div className="flex gap-1">
+          {shortcut.map((key) => (
+            <span className="shadow-buttonBorder text-muted-foreground bg-popover px-1.5 py-0.5 rounded">
+              {key}
+            </span>
+          ))}
+        </div>
       </TooltipContent>
     </Tooltip>
   )
