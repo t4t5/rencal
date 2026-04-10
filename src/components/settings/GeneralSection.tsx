@@ -15,10 +15,10 @@ export function GeneralSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 w-[300px]">
         <label className="text-sm">Time format</label>
         <Select value={timeFormat} onValueChange={(v) => setTimeFormat(v as TimeFormat)}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full" ghost={false}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
