@@ -1,6 +1,5 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
-import { useCallback, useEffect, useRef, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog6Tooth as SettingsIcon } from "react-icons/hi2"
 import { PiWarningCircle as WarningIcon } from "react-icons/pi"
@@ -10,10 +9,7 @@ import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-import { rpc } from "@/rpc"
-
-import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { cn, isMacOS } from "@/lib/utils"
@@ -82,45 +78,7 @@ export const SettingsButton = () => {
 }
 
 export const SyncStatus = () => {
-  const { calendars } = useCalendars()
-  const { reloadEvents } = useCalEvents()
-
-  const [isSyncing, setIsSyncing] = useState(false)
-  const [syncError, setSyncError] = useState<string | null>(null)
-  const isSyncingRef = useRef(false)
-
-  const sync = useCallback(async () => {
-    const calendarSlugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
-    if (calendarSlugs.length === 0 || isSyncingRef.current) return
-
-    isSyncingRef.current = true
-    setIsSyncing(true)
-    setSyncError(null)
-    try {
-      await rpc.caldir.sync(calendarSlugs)
-      await reloadEvents()
-    } catch (e) {
-      setSyncError(e instanceof Error ? e.message : String(e))
-    } finally {
-      isSyncingRef.current = false
-      setIsSyncing(false)
-    }
-  }, [calendars, reloadEvents])
-
-  useEffect(() => {
-    void sync()
-  }, [sync])
-
-  useEffect(() => {
-    const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-      if (focused) {
-        void sync()
-      }
-    })
-    return () => {
-      unlisten.then((fn) => fn())
-    }
-  }, [sync])
+  const { isSyncing, syncError } = useSync()
 
   if (syncError) {
     return (

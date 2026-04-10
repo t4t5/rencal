@@ -10,6 +10,7 @@ import App from "@/App"
 import { SettingsPage } from "@/pages/SettingsPage"
 
 import { CalEventsProvider } from "./contexts/CalEventsContext"
+import { SyncProvider } from "./contexts/SyncContext"
 
 const params = new URLSearchParams(window.location.search)
 const view = params.get("view")
@@ -21,10 +22,12 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
         <SettingsPage />
       ) : (
         <CalEventsProvider>
-          <EventDraftProvider>
-            <App />
-            <Toaster />
-          </EventDraftProvider>
+          <SyncProvider>
+            <EventDraftProvider>
+              <App />
+              <Toaster />
+            </EventDraftProvider>
+          </SyncProvider>
         </CalEventsProvider>
       )}
     </CalendarStateProvider>
