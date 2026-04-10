@@ -5,7 +5,7 @@ import { ActionBar } from "@/components/header/ActionBar"
 
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
-import { cn, isMacOS } from "@/lib/utils"
+import { cn } from "@/lib/utils"
 
 export function Header() {
   const { isDrafting, text } = useEventDraft()
@@ -20,7 +20,7 @@ export function Header() {
   }, [showDraftEvent])
 
   return (
-    <div className={cn("flex flex-col p-4 pb-0", isMacOS && "pl-[78px]")}>
+    <div className="flex flex-col p-4 pb-0">
       <ActionBar />
 
       <div

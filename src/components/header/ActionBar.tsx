@@ -51,7 +51,11 @@ export function ActionBar() {
   const isMd = useBreakpoint("md")
 
   return (
-    <div className="flex justify-between items-center gap-3">
+    <div
+      className={cn("flex justify-between items-center gap-3", {
+        "pl-[78px]": isMacOS,
+      })}
+    >
       {isMd && <InvitesDropdown />}
       <AddEventButton />
 
