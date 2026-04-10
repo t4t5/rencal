@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
+import { useTimeFormat } from "@/hooks/useTimeFormat"
 import { cn } from "@/lib/utils"
 
 export function CurrentTimeIndicator({
@@ -26,6 +27,7 @@ export function CurrentTimeIndicator({
 
   const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
 
+  const { timeFormat } = useTimeFormat()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [colonVisible, setColonVisible] = useState(true)
 
@@ -37,8 +39,9 @@ export function CurrentTimeIndicator({
     return () => clearInterval(interval)
   }, [])
 
-  const hour = format(currentTime, "H")
+  const hour = format(currentTime, timeFormat === "12h" ? "h" : "H")
   const minutes = format(currentTime, "mm")
+  const ampm = timeFormat === "12h" ? format(currentTime, "a").toLowerCase() : ""
 
   if (!showTimeIndicator) return null
 
@@ -51,6 +54,7 @@ export function CurrentTimeIndicator({
         {hour}
         <span className={cn(!colonVisible && "invisible")}>:</span>
         {minutes}
+        {ampm}
       </span>
       <div className="ml-1 grow border-t border-dashed border-active" />
     </div>

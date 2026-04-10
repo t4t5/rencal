@@ -5,12 +5,14 @@ import { RsvpBar } from "@/components/event-info/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
+import type { CalendarEvent, ResponseStatus, TimeFormat } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {
@@ -26,6 +28,7 @@ export function InvitesDropdown() {
   }, [calendars])
 
   const isMd = useBreakpoint("md")
+  const { timeFormat } = useTimeFormat()
 
   if (invites.length === 0) return null
 
@@ -52,7 +55,12 @@ export function InvitesDropdown() {
         <div className="p-3 font-medium text-sm border-b">Invitations</div>
         <div className="max-h-80 overflow-y-auto">
           {invites.map((invite) => (
-            <InviteCard key={invite.id} invite={invite} onRsvp={handleRsvp} />
+            <InviteCard
+              key={invite.id}
+              invite={invite}
+              onRsvp={handleRsvp}
+              timeFormat={timeFormat}
+            />
           ))}
         </div>
       </PopoverContent>
@@ -63,9 +71,11 @@ export function InvitesDropdown() {
 function InviteCard({
   invite,
   onRsvp,
+  timeFormat,
 }: {
   invite: CalendarEvent
   onRsvp: (invite: CalendarEvent, response: ResponseStatus) => void
+  timeFormat: TimeFormat
 }) {
   const organizerEmail = invite.organizer?.email ?? "Unknown"
   const organizerName = invite.organizer?.name ?? organizerEmail
@@ -73,7 +83,7 @@ function InviteCard({
 
   const dateStr = invite.all_day
     ? format(parseISO(invite.start), "EEE, d MMM")
-    : format(parseISO(invite.start), "EEE, d MMM HH:mm")
+    : `${format(parseISO(invite.start), "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
 
   return (
     <div className="flex flex-col border-b last:border-b-0">

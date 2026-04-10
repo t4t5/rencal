@@ -1,11 +1,12 @@
-import { format } from "date-fns"
 import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { useTimeFormat } from "@/hooks/useTimeFormat"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
+import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 type WeekTimedEventProps = {
@@ -27,6 +28,7 @@ export function WeekTimedEvent({
 }: WeekTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
+  const { timeFormat } = useTimeFormat()
 
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
@@ -70,7 +72,7 @@ export function WeekTimedEvent({
 
       <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
       <div className="truncate opacity-80 leading-tight">
-        {format(layout.event.start, "HH:mm")} – {format(layout.event.end, "HH:mm")}
+        {formatTime(layout.event.start, timeFormat)} – {formatTime(layout.event.end, timeFormat)}
       </div>
     </div>
   )

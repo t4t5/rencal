@@ -1,15 +1,24 @@
-import { format, parseISO } from "date-fns"
+import { parseISO } from "date-fns"
 import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from "react"
 
 import { Command, CommandEmpty, CommandItem, CommandList } from "@/components/ui/command"
 import { PopoverContent } from "@/components/ui/popover"
 
-import type { CalendarEvent } from "@/rpc/bindings"
+import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
-import { formatShortDate } from "@/lib/time"
+import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { formatShortDate, formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
-function SearchResult({ event, color }: { event: CalendarEvent; color: string | null }) {
+function SearchResult({
+  event,
+  color,
+  timeFormat,
+}: {
+  event: CalendarEvent
+  color: string | null
+  timeFormat: TimeFormat
+}) {
   return (
     <>
       <div
@@ -21,7 +30,7 @@ function SearchResult({ event, color }: { event: CalendarEvent; color: string | 
         <div className="text-xs text-muted-foreground">
           {event.all_day
             ? formatShortDate(parseISO(event.start))
-            : `${formatShortDate(parseISO(event.start))} · ${format(parseISO(event.start), "HH:mm")}`}
+            : `${formatShortDate(parseISO(event.start))} · ${formatTime(event.start, timeFormat)}`}
         </div>
       </div>
     </>
@@ -55,6 +64,8 @@ export function SearchResults({
   itemRefs,
   calendarColor,
 }: SearchResultsProps) {
+  const { timeFormat } = useTimeFormat()
+
   return (
     <PopoverContent
       ref={resultsRef}
@@ -89,7 +100,11 @@ export function SearchResults({
                 onSelect={() => setActiveEvent((prev) => (prev?.id === event.id ? null : event))}
                 className={cn("flex items-center gap-2 cursor-pointer", isActive && "bg-accent!")}
               >
-                <SearchResult event={event} color={calendarColor(event.calendar_slug)} />
+                <SearchResult
+                  event={event}
+                  color={calendarColor(event.calendar_slug)}
+                  timeFormat={timeFormat}
+                />
               </CommandItem>
             )
           })}

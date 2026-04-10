@@ -4,12 +4,16 @@ import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
+import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { formatTime } from "@/lib/time"
+
 type EventRowProps = {
   event: CalendarEvent
   calendarColor: string | null
 }
 
 export const EventRow = memo(function EventRow({ event, calendarColor }: EventRowProps) {
+  const { timeFormat } = useTimeFormat()
   const from = event.start
   const to = event.end
 
@@ -42,8 +46,8 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
         <div className="relative text-sm">
           <div className="text-muted-foreground">
             {isSameDay(from, to)
-              ? `${format(from, "HH:mm")} - ${format(to, "HH:mm")}`
-              : `${format(from, "MMM d, HH:mm")} - ${format(to, "MMM d, HH:mm")}`}
+              ? `${formatTime(from, timeFormat)} - ${formatTime(to, timeFormat)}`
+              : `${format(from, "MMM d,")} ${formatTime(from, timeFormat)} - ${format(to, "MMM d,")} ${formatTime(to, timeFormat)}`}
           </div>
           <div className="font-medium">{event.summary}</div>
         </div>

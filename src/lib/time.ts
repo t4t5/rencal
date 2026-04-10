@@ -1,4 +1,11 @@
-import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
+import { format, getYear, isToday, isTomorrow, isYesterday, parseISO } from "date-fns"
+
+import type { TimeFormat } from "@/rpc/bindings"
+
+export function formatTime(date: Date | string, timeFormat: TimeFormat): string {
+  const d = typeof date === "string" ? parseISO(date) : date
+  return format(d, timeFormat === "12h" ? "h:mm a" : "HH:mm")
+}
 
 /** Fast "yyyy-MM-dd" formatting without date-fns overhead. */
 export function formatDateKey(date: Date | string): string {

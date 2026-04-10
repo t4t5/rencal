@@ -23,6 +23,14 @@ pub struct Recurrence {
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
+pub enum TimeFormat {
+    #[serde(rename = "24h")]
+    H24,
+    #[serde(rename = "12h")]
+    H12,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
 pub enum ResponseStatus {
     #[serde(rename = "accepted")]
     Accepted,
@@ -296,6 +304,9 @@ pub trait CaldirApi {
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
     ) -> TauResult<Vec<Calendar>>;
+
+    async fn get_time_format() -> TauResult<TimeFormat>;
+    async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -880,6 +891,27 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         save_provider_calendars(&provider, serde_json::Map::new(), cred_map).await
+    }
+
+    async fn get_time_format(self) -> TauResult<TimeFormat> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let tf = match caldir.config().time_format {
+            caldir_core::caldir_config::TimeFormat::H24 => TimeFormat::H24,
+            caldir_core::caldir_config::TimeFormat::H12 => TimeFormat::H12,
+        };
+        Ok(tf)
+    }
+
+    async fn set_time_format(self, time_format: TimeFormat) -> TauResult<()> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let core_tf = match time_format {
+            TimeFormat::H24 => caldir_core::caldir_config::TimeFormat::H24,
+            TimeFormat::H12 => caldir_core::caldir_config::TimeFormat::H12,
+        };
+        let mut config = caldir.config().clone();
+        config.time_format = core_tf;
+        config.save().map_err(|e| e.to_string())?;
+        Ok(())
     }
 }
 
