@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { Input } from "@/components/ui/input"
-import { ShortcutTooltip } from "@/components/ui/tooltip"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
@@ -33,11 +33,7 @@ export function AddEventButton() {
 
   return (
     <>
-      <ShortcutTooltip
-        open={isDrafting ? false : undefined}
-        text="Create new event"
-        shortcut={["C"]}
-      >
+      <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
         <div
           ref={containerRef}
           className={cn(

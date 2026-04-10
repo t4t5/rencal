@@ -7,7 +7,8 @@ import { PiWarningCircle as WarningIcon } from "react-icons/pi"
 
 import { SearchButton } from "@/components/search/SearchButton"
 import { Button } from "@/components/ui/button"
-import { ShortcutTooltip, Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { rpc } from "@/rpc"
 
@@ -62,7 +63,7 @@ export function ActionBar() {
       <div className="flex gap-2 items-center">
         <SyncStatus />
         {!isMd && <InvitesDropdown />}
-        <ShortcutTooltip text="Settings" shortcut={["Ctrl", ","]}>
+        <ShortcutTooltip text="Settings" shortcut="mod+comma">
           <Button variant="ghost" onClick={() => openSettingsWindow()}>
             <SettingsIcon />
           </Button>
