@@ -6,6 +6,9 @@ default:
 install:
   pnpm install
 
+icons:
+  pnpm tauri icon src-tauri/icons/master.png
+
 # Build caldir provider binaries (debug) into src-tauri/providers/
 build-providers:
   #!/usr/bin/env bash
