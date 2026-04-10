@@ -4,22 +4,34 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
+import { ShortcutTooltip } from "../ui/shortcut-tooltip"
+
 export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()
 
   return (
     <div className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
-        <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
-          Today
-        </Button>
+        <ShortcutTooltip text="Go to Today" shortcut="t">
+          <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
+            Today
+          </Button>
+        </ShortcutTooltip>
       </div>
 
       <div className="grow h-full" data-tauri-drag-region />
 
       <TabsList onMouseDown={(e) => e.preventDefault()}>
-        <TabsTrigger value="week">Week</TabsTrigger>
-        <TabsTrigger value="month">Month</TabsTrigger>
+        <ShortcutTooltip text="Week view" shortcut="w">
+          <span>
+            <TabsTrigger value="week">Week</TabsTrigger>
+          </span>
+        </ShortcutTooltip>
+        <ShortcutTooltip text="Month view" shortcut="m">
+          <span>
+            <TabsTrigger value="month">Month</TabsTrigger>
+          </span>
+        </ShortcutTooltip>
       </TabsList>
 
       <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />

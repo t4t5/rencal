@@ -27,13 +27,19 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   }
 
   // Focus search
-  useHotkeys("mod+f", (e) => {
+  useHotkeys("/", (e) => {
     e.preventDefault()
     const input = document.getElementById("global-search") as HTMLInputElement | null
     input?.focus()
   })
 
-  useHotkeys("/", (e) => {
+  // Alternatives for search
+  useHotkeys("mod+f", (e) => {
+    e.preventDefault()
+    const input = document.getElementById("global-search") as HTMLInputElement | null
+    input?.focus()
+  })
+  useHotkeys("mod+p", (e) => {
     e.preventDefault()
     const input = document.getElementById("global-search") as HTMLInputElement | null
     input?.focus()

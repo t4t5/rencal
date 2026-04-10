@@ -10,6 +10,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 
+import { ShortcutTooltip } from "../ui/shortcut-tooltip"
 import { EventPopover } from "./EventPopover"
 import { SearchInput } from "./SearchInput"
 import { SearchResults } from "./SearchResults"
@@ -119,21 +120,25 @@ export function SearchBar({
     <div ref={containerRef}>
       <Popover open={hasResults}>
         <PopoverAnchor>
-          <SearchInput
-            inputRef={inputRef}
-            query={query}
-            setQuery={setQuery}
-            isSearching={isSearching}
-            isExiting={isExiting}
-            setIsExiting={setIsExiting}
-            setIsSearching={setIsSearching}
-            hasResults={hasResults}
-            results={results}
-            focusedIndex={focusedIndex}
-            setFocusedIndex={setFocusedIndex}
-            setActiveEvent={setActiveEvent}
-            className={className}
-          />
+          <ShortcutTooltip text="Search events" shortcut="/" open={isSearching ? false : undefined}>
+            <div>
+              <SearchInput
+                inputRef={inputRef}
+                query={query}
+                setQuery={setQuery}
+                isSearching={isSearching}
+                isExiting={isExiting}
+                setIsExiting={setIsExiting}
+                setIsSearching={setIsSearching}
+                hasResults={hasResults}
+                results={results}
+                focusedIndex={focusedIndex}
+                setFocusedIndex={setFocusedIndex}
+                setActiveEvent={setActiveEvent}
+                className={className}
+              />
+            </div>
+          </ShortcutTooltip>
         </PopoverAnchor>
         <SearchResults
           resultsRef={resultsRef}
