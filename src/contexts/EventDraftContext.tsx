@@ -1,7 +1,9 @@
-import { addHours, addMinutes, startOfHour } from "date-fns"
-import { ReactNode, createContext, useCallback, useContext, useState } from "react"
+import { addHours, addMinutes, startOfDay, startOfHour } from "date-fns"
+import { ReactNode, createContext, useCallback, useContext, useRef, useState } from "react"
 
 import type { Recurrence } from "@/rpc/bindings"
+
+import { parseEventText } from "@/lib/parse-event-text"
 
 import { useCalendars } from "./CalendarStateContext"
 
@@ -54,6 +56,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])
+  const parseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hasParsedTimeRef = useRef(false)
 
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     return {
@@ -72,10 +76,30 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const setText = (newText: string) => {
     _setText(newText)
-    setDraftEvent({ ...draftEvent, summary: newText })
+
+    if (!hasParsedTimeRef.current) {
+      setDraftEvent((prev) => ({ ...prev, summary: newText }))
+    }
+
+    if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
+    parseTimerRef.current = setTimeout(() => {
+      const parsed = parseEventText(newText)
+      hasParsedTimeRef.current = parsed.start !== null
+      setDraftEvent((prev) => {
+        const updates: Partial<DraftEvent> = { summary: parsed.summary }
+        if (parsed.start) {
+          updates.start = parsed.start
+          updates.end = parsed.end ?? addMinutes(parsed.start, 30)
+          updates.allDay = parsed.allDay
+        }
+        return { ...prev, ...updates }
+      })
+    }, 300)
   }
 
   const setDefaultDraftEvent = () => {
+    if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
+    hasParsedTimeRef.current = false
     setDraftEvent(generateDefaultDraftEvent())
     setDraftReminders([])
   }
