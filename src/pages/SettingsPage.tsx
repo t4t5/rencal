@@ -8,7 +8,7 @@ import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/S
 import { cn, isMacOS } from "@/lib/utils"
 
 export function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("accounts")
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general")
 
   return (
     <div className={cn("flex h-screen", { "pt-8": isMacOS })}>

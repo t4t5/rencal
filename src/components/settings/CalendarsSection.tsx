@@ -36,7 +36,7 @@ export function CalendarsSection() {
         )
       })}
 
-      <Button variant="secondary" className="self-start gap-2">
+      <Button variant="secondary" className="self-start gap-2" disabled>
         <RssIcon className="size-4" />
         Add subscription
       </Button>

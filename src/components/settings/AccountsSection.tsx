@@ -53,6 +53,7 @@ export function AccountsSection() {
             </div>
             <Button
               variant="secondary"
+              disabled
               size="sm"
               onClick={() => {
                 // TODO: Wire to backend disconnect RPC when available
