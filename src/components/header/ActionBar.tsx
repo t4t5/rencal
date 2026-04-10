@@ -1,6 +1,6 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { AiOutlineSync as SyncIcon } from "react-icons/ai"
 import { HiOutlineCog6Tooth as SettingsIcon } from "react-icons/hi2"
 import { PiWarningCircle as WarningIcon } from "react-icons/pi"
@@ -87,27 +87,40 @@ export const SyncStatus = () => {
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
+  const isSyncingRef = useRef(false)
+
+  const sync = useCallback(async () => {
+    const calendarSlugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
+    if (calendarSlugs.length === 0 || isSyncingRef.current) return
+
+    isSyncingRef.current = true
+    setIsSyncing(true)
+    setSyncError(null)
+    try {
+      await rpc.caldir.sync(calendarSlugs)
+      await reloadEvents()
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : String(e))
+    } finally {
+      isSyncingRef.current = false
+      setIsSyncing(false)
+    }
+  }, [calendars, reloadEvents])
 
   useEffect(() => {
-    const calendarSlugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
-
-    if (calendarSlugs.length === 0) return
-
-    const sync = async () => {
-      setIsSyncing(true)
-      setSyncError(null)
-      try {
-        await rpc.caldir.sync(calendarSlugs)
-        await reloadEvents()
-      } catch (e) {
-        setSyncError(e instanceof Error ? e.message : String(e))
-      } finally {
-        setIsSyncing(false)
-      }
-    }
-
     void sync()
-  }, [calendars])
+  }, [sync])
+
+  useEffect(() => {
+    const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
+      if (focused) {
+        void sync()
+      }
+    })
+    return () => {
+      unlisten.then((fn) => fn())
+    }
+  }, [sync])
 
   if (syncError) {
     return (
