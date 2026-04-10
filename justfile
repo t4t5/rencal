@@ -6,6 +6,7 @@ default:
 install:
   pnpm install
 
+# Generate app icons from 1024x1024 master.png
 icons:
   pnpm tauri icon src-tauri/icons/master.png
 
