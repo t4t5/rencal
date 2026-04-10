@@ -65,6 +65,14 @@ Calendars are listed from caldir and grouped by account in the settings UI. The 
 comes from the `{provider}_account` field in each calendar's `.caldir/config.toml` (e.g.,
 `google_account`, `icloud_account`). See the caldir CLAUDE.md for the account identifier convention.
 
+## Natural Language Event Input
+
+The header input parses natural language into structured event fields using `src/lib/parse-event-text.ts`. Parsing is debounced (300ms) in `EventDraftContext.setText` and extracts three things in order:
+
+1. **Recurrence** — "every week", "every saturday", "every weekday", etc. Produces an rrule string. Day names are kept in the text so chrono can resolve the start date.
+2. **Time/date** — Powered by chrono-node. Handles "at 3pm", "tomorrow", "next Friday at 10am", etc. The matched text (plus connector words like "at", "on") is stripped from the summary.
+3. **Location** — After time extraction, any trailing "at ..." or "in ..." in the summary is treated as a location (e.g. "dinner at Luigi's at 7pm" → location "Luigi's").
+
 ## Notifications
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in
