@@ -1,13 +1,14 @@
 import { useEffect, useRef } from "react"
 import { FaPlus as PlusIcon } from "react-icons/fa6"
 
-import { Input } from "@/components/ui/input"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
+
+import { AddEventInput } from "./AddEventInput"
 
 export function AddEventButton() {
   const { text, setText, isDrafting, setIsDrafting } = useEventDraft()
@@ -41,7 +42,7 @@ export function AddEventButton() {
             isDrafting ? "grow basis-0" : "grow-0 basis-[var(--buttonHeight)]",
           )}
         >
-          <NewEventInput onExit={exitDraft} />
+          <AddEventInput onExit={exitDraft} />
           <PlusButton show={!isDrafting} />
         </div>
       </ShortcutTooltip>
@@ -67,37 +68,5 @@ const PlusButton = ({ show }: { show: boolean }) => {
     >
       <PlusIcon className="size-4" />
     </div>
-  )
-}
-
-const NewEventInput = ({ onExit }: { onExit: () => void }) => {
-  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
-
-  return (
-    <Input
-      ghost={false}
-      value={isDrafting ? text : ""}
-      placeholder={isDrafting ? "Meeting at 3pm" : ""}
-      readOnly={!isDrafting}
-      tabIndex={isDrafting ? 0 : -1}
-      onChange={(e) => setText(e.target.value)}
-      onClick={() => {
-        if (!isDrafting) {
-          setDefaultDraftEvent()
-          setIsDrafting(true)
-        }
-      }}
-      onKeyDown={(e) => {
-        if (!isDrafting) return
-        if (e.key === "Escape") {
-          if (text) {
-            setText("")
-          } else {
-            onExit()
-          }
-        }
-      }}
-      className={cn("w-full", !isDrafting && "cursor-pointer caret-transparent")}
-    />
   )
 }
