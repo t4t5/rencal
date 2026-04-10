@@ -4,7 +4,7 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockStyle } from "@/lib/event-styles"
+import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
 type MonthAllDayBarProps = {
@@ -35,10 +35,9 @@ export function MonthAllDayBar({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "text-xs truncate px-1 py-px cursor-default leading-4",
-        highlighted ? "brightness-150" : "hover:brightness-110",
+        getEventBlockClasses(highlighted, isDeclined),
+        "truncate px-1 py-px leading-4",
         (isPending || isDeclined || isDraft) && "opacity-50",
-        isDeclined && "line-through",
         item.isStart ? "rounded-l ml-px" : "-ml-px",
         item.isEnd ? "rounded-r mr-px" : "-mr-px",
       )}

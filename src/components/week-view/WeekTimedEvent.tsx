@@ -5,7 +5,7 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockStyle } from "@/lib/event-styles"
+import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
 type WeekTimedEventProps = {
@@ -39,10 +39,9 @@ export function WeekTimedEvent({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default",
+        getEventBlockClasses(highlighted, isDeclined),
+        "absolute overflow-hidden rounded px-1 py-0.5",
         !isDashed && "pl-2",
-        highlighted ? "brightness-150" : "hover:brightness-110",
-        isDeclined && "line-through",
         isDraft && "opacity-60",
       )}
       style={{

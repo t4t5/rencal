@@ -1,5 +1,15 @@
 import type { CSSProperties } from "react"
 
+import { cn } from "@/lib/utils"
+
+export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) {
+  return cn(
+    "text-xs cursor-default",
+    highlighted ? "brightness-150" : "hover:brightness-110",
+    isDeclined && "line-through",
+  )
+}
+
 export function getEventBlockStyle(
   color: string,
   highlighted: boolean,
