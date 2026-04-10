@@ -96,6 +96,87 @@ function removeMatchAndConnectors(text: string, matchIndex: number, matchText: s
   return (cleanedBefore + after).replace(/\s{2,}/g, " ")
 }
 
+export interface TextSegment {
+  text: string
+  parsed: boolean
+}
+
+/**
+ * Splits the raw input text into plain and parsed segments for visual highlighting.
+ * Runs recurrence/time/location detection directly on the original text to identify ranges.
+ */
+export function segmentEventText(text: string, referenceDate: Date = new Date()): TextSegment[] {
+  if (!text.trim()) return [{ text, parsed: false }]
+
+  const parsed = parseEventText(text, referenceDate)
+  if (!parsed.start && !parsed.recurrence && !parsed.location) {
+    return [{ text, parsed: false }]
+  }
+
+  const ranges: Array<{ start: number; end: number }> = []
+
+  // Recurrence range
+  const recMatch = text.match(RECURRENCE_PATTERN)
+  if (recMatch && recMatch.index !== undefined) {
+    ranges.push({ start: recMatch.index, end: recMatch.index + recMatch[0].length })
+  }
+
+  // Time range — run chrono on original text to get positions
+  const chronoResults = chrono.parse(text, referenceDate, { forwardDate: true })
+  if (chronoResults.length > 0 && parsed.start) {
+    const result = chronoResults[0]
+    let start = result.index
+    const end = result.index + result.text.length
+
+    // Extend to include leading connector ("at", "on", etc.)
+    const before = text.slice(0, start)
+    const connectorMatch = before.match(/\b(at|on|for|from)\s*$/i)
+    if (connectorMatch) {
+      start -= connectorMatch[0].length
+    }
+
+    ranges.push({ start, end })
+  }
+
+  // Location range — find trailing "at/in {location}" in original text
+  if (parsed.location) {
+    const escaped = parsed.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    const locRegex = new RegExp(`\\b(?:at|in)\\s+${escaped}\\s*$`, "i")
+    const locMatch = text.match(locRegex)
+    if (locMatch && locMatch.index !== undefined) {
+      ranges.push({ start: locMatch.index, end: locMatch.index + locMatch[0].length })
+    }
+  }
+
+  // Sort and merge overlapping ranges
+  ranges.sort((a, b) => a.start - b.start)
+  const merged: typeof ranges = []
+  for (const range of ranges) {
+    const last = merged[merged.length - 1]
+    if (last && range.start <= last.end) {
+      last.end = Math.max(last.end, range.end)
+    } else {
+      merged.push({ ...range })
+    }
+  }
+
+  // Build segments from merged ranges
+  const segments: TextSegment[] = []
+  let pos = 0
+  for (const range of merged) {
+    if (pos < range.start) {
+      segments.push({ text: text.slice(pos, range.start), parsed: false })
+    }
+    segments.push({ text: text.slice(range.start, range.end), parsed: true })
+    pos = range.end
+  }
+  if (pos < text.length) {
+    segments.push({ text: text.slice(pos), parsed: false })
+  }
+
+  return segments
+}
+
 export function parseEventText(text: string, referenceDate: Date = new Date()): ParsedEventText {
   const recurrenceResult = parseRecurrence(text)
 
