@@ -43,8 +43,8 @@ export function WeekAllDayBar({
         ref={ref}
         data-event-clickable={!isDraft || undefined}
         className={cn(
-          "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110 rounded",
-          highlighted && "brightness-150",
+          "text-xs truncate px-1 py-px cursor-default leading-4 rounded",
+          highlighted ? "brightness-150" : "hover:brightness-110",
           isDeclined && "line-through",
           isDraft && "opacity-60",
         )}

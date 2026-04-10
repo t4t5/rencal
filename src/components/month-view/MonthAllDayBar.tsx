@@ -35,8 +35,8 @@ export function MonthAllDayBar({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "text-xs truncate px-1 py-px cursor-default leading-4 hover:brightness-110",
-        highlighted && "brightness-150",
+        "text-xs truncate px-1 py-px cursor-default leading-4",
+        highlighted ? "brightness-150" : "hover:brightness-110",
         (isPending || isDeclined || isDraft) && "opacity-50",
         isDeclined && "line-through",
         item.isStart ? "rounded-l ml-px" : "-ml-px",

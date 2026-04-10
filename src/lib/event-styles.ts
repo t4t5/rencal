@@ -14,9 +14,9 @@ export function getEventBlockStyle(
   return {
     backgroundColor: highlighted
       ? `color-mix(in srgb, ${color} 50%, black)`
-      : `color-mix(in srgb, ${color} 30%, black)`,
+      : `color-mix(in srgb, ${color} 50%, black)`,
     color: highlighted
       ? `color-mix(in srgb, ${color} 30%, white)`
-      : `color-mix(in srgb, ${color} 70%, white)`,
+      : `color-mix(in srgb, ${color} 30%, white)`,
   }
 }

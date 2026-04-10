@@ -39,9 +39,9 @@ export function WeekTimedEvent({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default hover:brightness-110",
+        "absolute overflow-hidden rounded px-1 py-0.5 text-xs cursor-default",
         !isDashed && "pl-2",
-        highlighted && "brightness-150",
+        highlighted ? "brightness-150" : "hover:brightness-110",
         isDeclined && "line-through",
         isDraft && "opacity-60",
       )}
