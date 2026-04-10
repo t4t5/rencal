@@ -84,11 +84,13 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
     parseTimerRef.current = setTimeout(() => {
       const parsed = parseEventText(newText)
-      hasParsedTimeRef.current = parsed.start !== null || parsed.recurrence !== null
+      hasParsedTimeRef.current =
+        parsed.start !== null || parsed.recurrence !== null || parsed.location !== null
       setDraftEvent((prev) => {
         const updates: Partial<DraftEvent> = {
           summary: parsed.summary,
           recurrence: parsed.recurrence,
+          location: parsed.location,
         }
         if (parsed.start) {
           updates.start = parsed.start

@@ -11,6 +11,7 @@ interface ParsedEventText {
   end: Date | null
   allDay: boolean
   recurrence: Recurrence | null
+  location: string | null
 }
 
 const DAYS_MAP: Record<string, string> = {
@@ -76,6 +77,16 @@ function parseRecurrence(text: string): { rrule: string; textForChrono: string }
   return { rrule, textForChrono }
 }
 
+function parseLocation(summary: string): { summary: string; location: string | null } {
+  const match = summary.match(/\b(?:at|in)\s+(.+)$/i)
+  if (!match || !match[1].trim()) return { summary, location: null }
+
+  const location = match[1].trim()
+  const cleaned = summary.slice(0, match.index).trim()
+
+  return { summary: cleaned, location }
+}
+
 function removeMatchAndConnectors(text: string, matchIndex: number, matchText: string): string {
   const before = text.slice(0, matchIndex)
   const after = text.slice(matchIndex + matchText.length)
@@ -97,13 +108,16 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
   const results = chrono.parse(textForChrono, referenceDate, { forwardDate: true })
 
   if (results.length === 0) {
-    return { summary: textForChrono.trim(), start: null, end: null, allDay: false, recurrence }
+    const { summary, location } = parseLocation(textForChrono.trim())
+    return { summary, start: null, end: null, allDay: false, recurrence, location }
   }
 
   const result = results[0]
 
   let summary = removeMatchAndConnectors(textForChrono, result.index, result.text)
   summary = summary.trim()
+
+  const { summary: finalSummary, location } = parseLocation(summary)
 
   const allDay = !result.start.isCertain("hour")
 
@@ -115,5 +129,5 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
       ? startOfDay(result.start.date())
       : addMinutes(start, DEFAULT_DURATION_MINUTES)
 
-  return { summary, start, end, allDay, recurrence }
+  return { summary: finalSummary, start, end, allDay, recurrence, location }
 }
