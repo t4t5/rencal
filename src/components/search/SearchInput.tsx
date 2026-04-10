@@ -1,4 +1,4 @@
-import type { Dispatch, RefObject, SetStateAction } from "react"
+import { type Dispatch, type RefObject, type SetStateAction, useState } from "react"
 import { IoSearch as SearchIcon } from "react-icons/io5"
 
 import { Input } from "@/components/ui/input"
@@ -6,6 +6,8 @@ import { Input } from "@/components/ui/input"
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
+
+import { ShortcutKey } from "../ui/shortcut-tooltip"
 
 interface SearchInputProps {
   inputRef: RefObject<HTMLInputElement | null>
@@ -38,9 +40,20 @@ export function SearchInput({
   setActiveEvent,
   className,
 }: SearchInputProps) {
+  const [isFocused, setIsFocused] = useState(false)
+
   return (
     <div className="relative">
       <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+      <ShortcutKey
+        shortcut="/"
+        className={cn(
+          "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-buttonSecondaryBgHover transition-opacity duration-75",
+          {
+            "opacity-0": isFocused,
+          },
+        )}
+      />
       <Input
         id="global-search"
         ref={inputRef}
@@ -51,6 +64,8 @@ export function SearchInput({
         }}
         placeholder="Search"
         autoFocus={isSearching && !isExiting}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
         onKeyDown={(e) => {
           if ((e.key === "ArrowDown" || e.key === "ArrowUp") && hasResults) {
             e.preventDefault()

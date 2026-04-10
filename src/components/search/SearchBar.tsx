@@ -120,25 +120,21 @@ export function SearchBar({
     <div ref={containerRef}>
       <Popover open={hasResults}>
         <PopoverAnchor>
-          <ShortcutTooltip text="Search events" shortcut="/" open={isSearching ? false : undefined}>
-            <div>
-              <SearchInput
-                inputRef={inputRef}
-                query={query}
-                setQuery={setQuery}
-                isSearching={isSearching}
-                isExiting={isExiting}
-                setIsExiting={setIsExiting}
-                setIsSearching={setIsSearching}
-                hasResults={hasResults}
-                results={results}
-                focusedIndex={focusedIndex}
-                setFocusedIndex={setFocusedIndex}
-                setActiveEvent={setActiveEvent}
-                className={className}
-              />
-            </div>
-          </ShortcutTooltip>
+          <SearchInput
+            inputRef={inputRef}
+            query={query}
+            setQuery={setQuery}
+            isSearching={isSearching}
+            isExiting={isExiting}
+            setIsExiting={setIsExiting}
+            setIsSearching={setIsSearching}
+            hasResults={hasResults}
+            results={results}
+            focusedIndex={focusedIndex}
+            setFocusedIndex={setFocusedIndex}
+            setActiveEvent={setActiveEvent}
+            className={className}
+          />
         </PopoverAnchor>
         <SearchResults
           resultsRef={resultsRef}

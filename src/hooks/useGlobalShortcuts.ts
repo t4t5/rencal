@@ -27,7 +27,7 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   }
 
   // Focus search
-  useHotkeys("/", (e) => {
+  useHotkeys("slash", (e) => {
     e.preventDefault()
     const input = document.getElementById("global-search") as HTMLInputElement | null
     input?.focus()

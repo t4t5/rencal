@@ -1,6 +1,6 @@
 import * as React from "react"
 
-import { isMacOS } from "@/lib/utils"
+import { cn, isMacOS } from "@/lib/utils"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 
@@ -49,15 +49,24 @@ export function ShortcutTooltip({
 
         <div className="flex gap-1">
           {keys.map((key) => (
-            <span
-              key={key}
-              className="shadow-buttonBorder text-muted-foreground bg-popover px-1.5 py-0.5 rounded"
-            >
-              {key}
-            </span>
+            <ShortcutKey shortcut={key} />
           ))}
         </div>
       </TooltipContent>
     </Tooltip>
+  )
+}
+
+export const ShortcutKey = ({ shortcut, className }: { shortcut: string; className?: string }) => {
+  return (
+    <span
+      key={shortcut}
+      className={cn(
+        "shadow-buttonBorder text-muted-foreground bg-popover px-1.5 py-0.5 rounded",
+        className,
+      )}
+    >
+      {shortcut}
+    </span>
   )
 }
