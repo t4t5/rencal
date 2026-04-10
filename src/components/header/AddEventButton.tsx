@@ -10,7 +10,7 @@ import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
 
 export function AddEventButton() {
-  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { text, setText, isDrafting, setIsDrafting } = useEventDraft()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
@@ -41,39 +41,8 @@ export function AddEventButton() {
             isDrafting ? "grow basis-0" : "grow-0 basis-[var(--buttonHeight)]",
           )}
         >
-          <Input
-            ghost={false}
-            value={isDrafting ? text : ""}
-            placeholder={isDrafting ? "Meeting at 3pm" : ""}
-            readOnly={!isDrafting}
-            tabIndex={isDrafting ? 0 : -1}
-            onChange={(e) => setText(e.target.value)}
-            onClick={() => {
-              if (!isDrafting) {
-                setDefaultDraftEvent()
-                setIsDrafting(true)
-              }
-            }}
-            onKeyDown={(e) => {
-              if (!isDrafting) return
-              if (e.key === "Escape") {
-                if (text) {
-                  setText("")
-                } else {
-                  exitDraft()
-                }
-              }
-            }}
-            className={cn("w-full", !isDrafting && "cursor-pointer caret-transparent")}
-          />
-          <div
-            className={cn(
-              "absolute left-0 top-0 size-buttonHeight flex items-center justify-center pointer-events-none transition-opacity duration-150",
-              isDrafting ? "opacity-0" : "opacity-100",
-            )}
-          >
-            <PlusIcon className="size-4" />
-          </div>
+          <NewEventInput onExit={exitDraft} />
+          <PlusButton show={!isDrafting} />
         </div>
       </ShortcutTooltip>
 
@@ -85,5 +54,50 @@ export function AddEventButton() {
         data-tauri-drag-region
       />
     </>
+  )
+}
+
+const PlusButton = ({ show }: { show: boolean }) => {
+  return (
+    <div
+      className={cn(
+        "absolute left-0 top-0 size-buttonHeight flex items-center justify-center pointer-events-none transition-opacity duration-150",
+        show ? "opacity-100" : "opacity-0",
+      )}
+    >
+      <PlusIcon className="size-4" />
+    </div>
+  )
+}
+
+const NewEventInput = ({ onExit }: { onExit: () => void }) => {
+  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+
+  return (
+    <Input
+      ghost={false}
+      value={isDrafting ? text : ""}
+      placeholder={isDrafting ? "Meeting at 3pm" : ""}
+      readOnly={!isDrafting}
+      tabIndex={isDrafting ? 0 : -1}
+      onChange={(e) => setText(e.target.value)}
+      onClick={() => {
+        if (!isDrafting) {
+          setDefaultDraftEvent()
+          setIsDrafting(true)
+        }
+      }}
+      onKeyDown={(e) => {
+        if (!isDrafting) return
+        if (e.key === "Escape") {
+          if (text) {
+            setText("")
+          } else {
+            onExit()
+          }
+        }
+      }}
+      className={cn("w-full", !isDrafting && "cursor-pointer caret-transparent")}
+    />
   )
 }
