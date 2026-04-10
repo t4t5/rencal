@@ -126,7 +126,9 @@ export function WeekTimeGrid({
           <div
             className={cn(
               "relative border-r border-border cursor-default",
-              day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+              day.dateKey === activeDateKey
+                ? "bg-buttonSecondaryBgHover"
+                : day.isWeekend && "bg-weekendBg",
             )}
             onClick={() => onDayClick(day.date)}
           >
@@ -168,7 +170,9 @@ const DayHeaders = ({
       key={day.dateKey}
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
-        day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+        day.dateKey === activeDateKey
+          ? "bg-buttonSecondaryBgHover"
+          : day.isWeekend && "bg-weekendBg",
       )}
       onClick={() => onDayClick(day.date)}
     >
@@ -221,7 +225,9 @@ const AllDayEvents = ({
           <div
             className={cn(
               "border-r border-border",
-              day.dateKey === activeDateKey ? "bg-secondary" : day.isWeekend && "bg-weekendBg",
+              day.dateKey === activeDateKey
+                ? "bg-buttonSecondaryBgHover"
+                : day.isWeekend && "bg-weekendBg",
             )}
             style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
             onContextMenu={(e) => {
