@@ -9,6 +9,7 @@ import { parseEventText } from "@/lib/parse-event-text"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
+import { useSync } from "./SyncContext"
 
 interface DraftEvent {
   summary: string
@@ -119,6 +120,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   }
 
   const { reloadEvents } = useCalEvents()
+  const { sync } = useSync()
 
   const createDraftEvent = useCallback(async () => {
     if (!draftEvent.calendarId) return
@@ -137,7 +139,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     logger.info("Create event:", draftEvent)
     await reloadEvents()
-  }, [draftEvent, draftReminders, reloadEvents])
+    void sync()
+  }, [draftEvent, draftReminders, reloadEvents, sync])
 
   const value = {
     isDrafting,

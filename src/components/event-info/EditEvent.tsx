@@ -18,6 +18,7 @@ import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { getUserResponseStatus, isUserOrganizer } from "@/lib/event-utils"
@@ -28,6 +29,7 @@ import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const { calendars } = useCalendars()
   const { setActiveEventId, reloadEvents, setCalendarEvents } = useCalEvents()
+  const { sync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
@@ -47,11 +49,36 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     !!originalEventRef.current &&
     JSON.stringify(dirtyEvent) !== JSON.stringify(originalEventRef.current)
 
-  // Keep dirtyEvent in a ref so the unmount cleanup always has the latest value
+  const updateAndSyncEvent = async (current: CalendarEvent, original: CalendarEvent) => {
+    await rpc.caldir.update_event({
+      id: current.id,
+      calendar_slug: original.calendar_slug,
+      new_calendar_slug:
+        current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
+      summary: current.summary,
+      description: current.description,
+      location: current.location,
+      start: current.start,
+      end: current.end,
+      all_day: current.all_day,
+      recurrence: current.recurrence,
+      reminders: current.reminders,
+    })
+    setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
+    await sync()
+  }
+
+  // Keep refs so the unmount cleanup always has the latest values
   const dirtyEventRef = useRef<CalendarEvent | null>(null)
+  const updateAndSyncEventRef = useRef(updateAndSyncEvent)
+
   useEffect(() => {
     dirtyEventRef.current = dirtyEvent
   }, [dirtyEvent])
+
+  useEffect(() => {
+    updateAndSyncEventRef.current = updateAndSyncEvent
+  })
 
   // Save to caldir only when the popover/sheet closes (component unmounts)
   useEffect(() => {
@@ -61,22 +88,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
       if (!current || !original) return
       if (JSON.stringify(current) === JSON.stringify(original)) return
 
-      rpc.caldir.update_event({
-        id: current.id,
-        calendar_slug: original.calendar_slug,
-        new_calendar_slug:
-          current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
-        summary: current.summary,
-        description: current.description,
-        location: current.location,
-        start: current.start,
-        end: current.end,
-        all_day: current.all_day,
-        recurrence: current.recurrence,
-        reminders: current.reminders,
-      })
-
-      setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
+      void updateAndSyncEventRef.current(current, original)
     }
   }, [])
 
@@ -134,6 +146,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
       ),
     })
     await reloadEvents()
+    void sync()
   }
 
   return (
@@ -246,6 +259,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
             setPendingRecurrence(null)
             await reloadEvents()
+            void sync()
           }}
           onApplyToThis={async () => {
             if (!dirtyEvent) return
