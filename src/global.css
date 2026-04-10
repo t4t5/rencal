@@ -73,6 +73,7 @@
   --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
   --color-buttonBorder: var(--buttonBorder);
   --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
+  --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder);
   --color-activeBg: var(--activeBg);
   --color-weekendBg: var(--weekendBg);
   --color-bgPopover: var(--bgPopover);
