@@ -77,6 +77,9 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     JSON.stringify(dirtyEvent) !== JSON.stringify(originalEventRef.current)
 
   const updateAndSyncEvent = async (current: CalendarEvent, original: CalendarEvent) => {
+    // Optimistically update the UI before the RPC call
+    setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
+
     await rpc.caldir.update_event({
       id: current.id,
       calendar_slug: original.calendar_slug,
@@ -91,7 +94,6 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
       recurrence: current.recurrence,
       reminders: current.reminders,
     })
-    setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
     await sync()
   }
 

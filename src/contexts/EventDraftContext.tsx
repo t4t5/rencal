@@ -2,7 +2,7 @@ import { addHours, addMinutes, startOfHour } from "date-fns"
 import { ReactNode, createContext, useCallback, useContext, useRef, useState } from "react"
 
 import { rpc } from "@/rpc"
-import type { Recurrence } from "@/rpc/bindings"
+import type { CalendarEvent, Recurrence } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
@@ -120,13 +120,40 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     if (!open) setDefaultDraftEvent()
   }
 
-  const { reloadEvents } = useCalEvents()
+  const { reloadEvents, setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
 
   const createDraftEvent = useCallback(async () => {
     if (!draftEvent.calendarId) return
 
-    await rpc.caldir.create_event({
+    const optimisticId = crypto.randomUUID()
+
+    // Optimistically add to UI immediately
+    const optimisticEvent: CalendarEvent = {
+      id: optimisticId,
+      recurring_event_id: null,
+      summary: draftEvent.summary ?? "",
+      description: draftEvent.description,
+      location: draftEvent.location ?? null,
+      start: formatEventTime(draftEvent.start, draftEvent.allDay),
+      end: formatEventTime(draftEvent.end, draftEvent.allDay),
+      all_day: draftEvent.allDay,
+      status: "confirmed",
+      recurrence: draftEvent.recurrence,
+      master_recurrence: null,
+      reminders: draftReminders,
+      organizer: null,
+      attendees: [],
+      conference_url: null,
+      calendar_slug: draftEvent.calendarId,
+    }
+    setCalendarEvents((prev) => [...prev, optimisticEvent])
+
+    logger.info("Create event:", draftEvent)
+    setDefaultDraftEvent()
+    _setText("")
+
+    const created = await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
@@ -138,10 +165,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       reminders: draftReminders,
     })
 
-    logger.info("Create event:", draftEvent)
-    setDefaultDraftEvent()
-    _setText("")
-    await reloadEvents()
+    // Replace optimistic entry with the real event from the backend
+    setCalendarEvents((prev) => prev.map((e) => (e.id === optimisticId ? created : e)))
     void sync()
   }, [draftEvent, draftReminders, reloadEvents, sync, setDefaultDraftEvent])
 
