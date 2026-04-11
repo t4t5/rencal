@@ -45,6 +45,32 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     }
   }, [event?.id])
 
+  // Delete key shortcut: open delete dialog when no field is focused
+  useEffect(() => {
+    if (!dirtyEvent) return
+    if (!isUserOrganizer(dirtyEvent, calendars)) return
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Delete" && e.key !== "Backspace") return
+      if (deleteDialogProps.open) return
+
+      const active = document.activeElement
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return
+      }
+
+      e.preventDefault()
+      triggerDelete(dirtyEvent)
+    }
+
+    window.addEventListener("keydown", handleKeyDown)
+    return () => window.removeEventListener("keydown", handleKeyDown)
+  }, [dirtyEvent, calendars, deleteDialogProps.open, triggerDelete])
+
   const hasBeenEdited =
     !!dirtyEvent &&
     !!originalEventRef.current &&
