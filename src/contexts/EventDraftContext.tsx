@@ -139,9 +139,11 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     })
 
     logger.info("Create event:", draftEvent)
+    setDefaultDraftEvent()
+    _setText("")
     await reloadEvents()
     void sync()
-  }, [draftEvent, draftReminders, reloadEvents, sync])
+  }, [draftEvent, draftReminders, reloadEvents, sync, setDefaultDraftEvent])
 
   const value = {
     isDrafting,
