@@ -125,15 +125,8 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
   const chronoResults = chrono.parse(text, referenceDate, { forwardDate: true })
   if (chronoResults.length > 0 && parsed.start) {
     const result = chronoResults[0]
-    let start = result.index
+    const start = result.index
     const end = result.index + result.text.length
-
-    // Extend to include leading connector ("at", "on", etc.)
-    const before = text.slice(0, start)
-    const connectorMatch = before.match(/\b(at|on|for|from)\s*$/i)
-    if (connectorMatch) {
-      start -= connectorMatch[0].length
-    }
 
     ranges.push({ start, end })
   }
@@ -141,7 +134,7 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
   // Location range — find trailing "at/in {location}" in original text
   if (parsed.location) {
     const escaped = parsed.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const locRegex = new RegExp(`\\b(?:at|in)\\s+${escaped}\\s*$`, "i")
+    const locRegex = new RegExp(`${escaped}\\s*$`, "i")
     const locMatch = text.match(locRegex)
     if (locMatch && locMatch.index !== undefined) {
       ranges.push({ start: locMatch.index, end: locMatch.index + locMatch[0].length })
