@@ -85,6 +85,10 @@ export function StatefulCalendar() {
   const handleDateSelect = useCallback(
     (date: Date) => {
       navigateToDate(date)
+      // Remove focus from the day button so global shortcuts (arrows, etc.) work
+      if (document.activeElement instanceof HTMLElement) {
+        document.activeElement.blur()
+      }
     },
     [navigateToDate],
   )
