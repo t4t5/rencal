@@ -33,7 +33,7 @@ interface CalendarNavigationContextType {
   activeDate: Date
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
-  registerScrollToDate: (fn: (date: Date) => void) => void
+  registerScrollToDate: (fn: (date: Date, behavior?: ScrollBehavior) => void) => void
   isNavigating: () => boolean
   setIsNavigating: (value: boolean) => void
 }
@@ -57,7 +57,7 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<Calendar[]>([])
 
-  const scrollToDateRef = useRef<((date: Date) => void) | null>(null)
+  const scrollToDateRef = useRef<((date: Date, behavior?: ScrollBehavior) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
   const isNavigatingRef = useRef(true)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -82,11 +82,21 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     isNavigatingRef.current = value
   }, [])
 
+  const lastNavigateTimeRef = useRef(0)
+  const RAPID_NAV_THRESHOLD_MS = 200
+
   const navigateToDate = useCallback(async (date: Date) => {
     // Cancel any pending timeout from a previous navigation
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current)
     }
+
+    // Use instant scrolling when navigations happen in quick succession
+    // to avoid stacking smooth scroll animations (causes GPU artifacts)
+    const now = Date.now()
+    const isRapid = now - lastNavigateTimeRef.current < RAPID_NAV_THRESHOLD_MS
+    lastNavigateTimeRef.current = now
+    const behavior: ScrollBehavior = isRapid ? "instant" : "smooth"
 
     isNavigatingRef.current = true
 
@@ -98,7 +108,7 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
     // Use requestAnimationFrame to ensure DOM has updated before scrolling
     requestAnimationFrame(() => {
       setActiveDate(date)
-      scrollToDateRef.current?.(date)
+      scrollToDateRef.current?.(date, behavior)
     })
 
     // Clear flag after scroll animation completes
