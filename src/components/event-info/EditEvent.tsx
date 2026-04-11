@@ -23,6 +23,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { getUserResponseStatus, isUserOrganizer } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
+import { formatEventTime } from "@/lib/time"
 
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
@@ -188,8 +189,8 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           const newEnd = new Date(new Date(end).getTime() + delta)
           setDirtyEvent({
             ...dirtyEvent,
-            start: newStart.toISOString(),
-            end: newEnd.toISOString(),
+            start: formatEventTime(newStart, all_day),
+            end: formatEventTime(newEnd, all_day),
           })
         }}
         onChangeStartTime={(time) => {
@@ -201,7 +202,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
           if (!date) return
           const newEnd = new Date(end)
           newEnd.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-          setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
+          setDirtyEvent({ ...dirtyEvent, end: formatEventTime(newEnd, all_day) })
         }}
         onChangeEndTime={(time) => {
           const newEnd = parse(time, "HH:mm", new Date(start))

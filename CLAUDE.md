@@ -39,7 +39,7 @@ communicates with the backend via taurpc.
 
 - If implementing a frontend feature, run "just typecheck" in the end to make sure the TypeScript compiled.
 - If implementing a feature in Rust (`src-tauri`), run "just check" to make sure the app compiles!
-- If formatting a date, always use a function in `@lib/time.ts` (or make a new one) instead of something like `.toISOString()` or `toLocaleString()`
+- If formatting a date, ALWAYS use a function in `@lib/time.ts` (or make a new one). NEVER use `.toISOString()` or `toLocaleString()`
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use `i32`/`u32` instead.

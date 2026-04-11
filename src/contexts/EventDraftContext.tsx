@@ -6,6 +6,7 @@ import type { Recurrence } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
+import { formatEventTime } from "@/lib/time"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
@@ -130,8 +131,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
-      start: draftEvent.start.toISOString(),
-      end: draftEvent.end.toISOString(),
+      start: formatEventTime(draftEvent.start, draftEvent.allDay),
+      end: formatEventTime(draftEvent.end, draftEvent.allDay),
       all_day: draftEvent.allDay,
       recurrence: draftEvent.recurrence,
       reminders: draftReminders,

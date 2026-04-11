@@ -1,6 +1,6 @@
-import { format } from "date-fns"
-
 import type { CalendarEvent } from "@/rpc/bindings"
+
+import { formatEventTime } from "@/lib/time"
 
 interface DraftEvent {
   summary: string
@@ -20,8 +20,8 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent {
     summary: draft.summary,
     description: draft.description,
     location: draft.location,
-    start: draft.allDay ? format(draft.start, "yyyy-MM-dd") : draft.start.toISOString(),
-    end: draft.allDay ? format(draft.end, "yyyy-MM-dd") : draft.end.toISOString(),
+    start: formatEventTime(draft.start, draft.allDay),
+    end: formatEventTime(draft.end, draft.allDay),
     all_day: draft.allDay,
     status: "confirmed",
     recurrence: draft.recurrence,

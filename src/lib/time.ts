@@ -19,6 +19,11 @@ export function formatDateKey(date: Date | string): string {
   return `${y}-${m < 10 ? "0" : ""}${m}-${d < 10 ? "0" : ""}${d}`
 }
 
+/** Format a Date for sending to the backend: local date for all-day, UTC ISO string for timed. */
+export function formatEventTime(date: Date, allDay: boolean): string {
+  return allDay ? formatDateKey(date) : date.toISOString()
+}
+
 export function formatShortDate(date: Date): string {
   const pattern = getYear(date) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
   return format(date, pattern)
