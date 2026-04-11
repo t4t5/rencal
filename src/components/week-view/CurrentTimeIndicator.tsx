@@ -1,7 +1,8 @@
 import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { useSettings } from "@/contexts/SettingsContext"
+
 import { cn } from "@/lib/utils"
 
 export function CurrentTimeIndicator({
@@ -27,7 +28,7 @@ export function CurrentTimeIndicator({
 
   const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
 
-  const { timeFormat } = useTimeFormat()
+  const { timeFormat } = useSettings()
   const [currentTime, setCurrentTime] = useState(new Date())
   const [colonVisible, setColonVisible] = useState(true)
 

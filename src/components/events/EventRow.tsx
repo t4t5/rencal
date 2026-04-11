@@ -4,7 +4,8 @@ import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
-import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { useSettings } from "@/contexts/SettingsContext"
+
 import { formatTime } from "@/lib/time"
 
 type EventRowProps = {
@@ -13,7 +14,7 @@ type EventRowProps = {
 }
 
 export const EventRow = memo(function EventRow({ event, calendarColor }: EventRowProps) {
-  const { timeFormat } = useTimeFormat()
+  const { timeFormat } = useSettings()
   const from = event.start
   const to = event.end
 

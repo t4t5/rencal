@@ -8,10 +8,10 @@ import {
 
 import type { TimeFormat } from "@/rpc/bindings"
 
-import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { useSettings } from "@/contexts/SettingsContext"
 
 export function GeneralSection() {
-  const { timeFormat, setTimeFormat } = useTimeFormat()
+  const { timeFormat, setTimeFormat } = useSettings()
 
   return (
     <div className="flex flex-col gap-4">

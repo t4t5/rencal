@@ -6,7 +6,8 @@ import { PopoverContent } from "@/components/ui/popover"
 
 import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
-import { useTimeFormat } from "@/hooks/useTimeFormat"
+import { useSettings } from "@/contexts/SettingsContext"
+
 import { formatShortDate, formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -64,7 +65,7 @@ export function SearchResults({
   itemRefs,
   calendarColor,
 }: SearchResultsProps) {
-  const { timeFormat } = useTimeFormat()
+  const { timeFormat } = useSettings()
 
   return (
     <PopoverContent

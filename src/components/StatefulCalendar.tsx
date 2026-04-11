@@ -65,13 +65,19 @@ export function StatefulCalendar() {
   const monthKey = format(activeDate, "yyyy-MM")
   const prevMonthKeyRef = useRef(monthKey)
   const directionRef = useRef(1)
+  const lastMonthChangeRef = useRef(0)
+  const isRapidRef = useRef(false)
 
   if (prevMonthKeyRef.current !== monthKey) {
+    const now = Date.now()
+    isRapidRef.current = now - lastMonthChangeRef.current < 200
+    lastMonthChangeRef.current = now
     directionRef.current = monthKey > prevMonthKeyRef.current ? 1 : -1
     prevMonthKeyRef.current = monthKey
   }
 
   const direction = directionRef.current
+  const animationDuration = isRapidRef.current ? 0 : 0.25
 
   const gridRef = useRef<HTMLDivElement>(null)
   const [gridHeight, setGridHeight] = useState<number | null>(null)
@@ -155,7 +161,7 @@ export function StatefulCalendar() {
                 center: { y: 0 },
                 exit: (d: number) => ({ y: d * -gridHeight }),
               }}
-              transition={{ duration: 0.25, ease: [0.4, 0, 0.2, 1] }}
+              transition={{ duration: animationDuration, ease: [0.4, 0, 0.2, 1] }}
             >
               {calendar}
             </motion.div>

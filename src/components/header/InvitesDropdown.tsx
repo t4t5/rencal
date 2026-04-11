@@ -9,9 +9,9 @@ import type { CalendarEvent, ResponseStatus, TimeFormat } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { useTimeFormat } from "@/hooks/useTimeFormat"
 import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -28,7 +28,7 @@ export function InvitesDropdown() {
   }, [calendars])
 
   const isMd = useBreakpoint("md")
-  const { timeFormat } = useTimeFormat()
+  const { timeFormat } = useSettings()
 
   if (invites.length === 0) return null
 

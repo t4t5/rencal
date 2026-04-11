@@ -2,8 +2,9 @@ import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
 
+import { useSettings } from "@/contexts/SettingsContext"
+
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
-import { useTimeFormat } from "@/hooks/useTimeFormat"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/time"
@@ -28,7 +29,7 @@ export function WeekTimedEvent({
 }: WeekTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
-  const { timeFormat } = useTimeFormat()
+  const { timeFormat } = useSettings()
 
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
