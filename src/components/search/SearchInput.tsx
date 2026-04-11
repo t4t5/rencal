@@ -2,12 +2,13 @@ import { type Dispatch, type RefObject, type SetStateAction, useState } from "re
 import { IoSearch as SearchIcon } from "react-icons/io5"
 
 import { Input } from "@/components/ui/input"
+import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
 
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
 
-import { ShortcutKey } from "../ui/shortcut-tooltip"
+export const SEARCH_INPUT_EL_ID = "global-search"
 
 interface SearchInputProps {
   inputRef: RefObject<HTMLInputElement | null>
@@ -55,7 +56,7 @@ export function SearchInput({
         )}
       />
       <Input
-        id="global-search"
+        id={SEARCH_INPUT_EL_ID}
         ref={inputRef}
         value={query}
         onChange={(e) => {

@@ -3,6 +3,7 @@ import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { openSettingsWindow } from "@/components/header/ActionBar"
+import { SEARCH_INPUT_EL_ID } from "@/components/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -29,19 +30,19 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   // Focus search
   useHotkeys("slash", (e) => {
     e.preventDefault()
-    const input = document.getElementById("global-search") as HTMLInputElement | null
+    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
     input?.focus()
   })
 
   // Alternatives for search
   useHotkeys("mod+f", (e) => {
     e.preventDefault()
-    const input = document.getElementById("global-search") as HTMLInputElement | null
+    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
     input?.focus()
   })
   useHotkeys("mod+p", (e) => {
     e.preventDefault()
-    const input = document.getElementById("global-search") as HTMLInputElement | null
+    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
     input?.focus()
   })
 
