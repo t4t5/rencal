@@ -1,11 +1,13 @@
 import { formatDuration } from "date-fns"
-import { useState } from "react"
+import { ReactNode, useState } from "react"
 import { GoBell as BellIcon } from "react-icons/go"
 import { IoCloseOutline as CloseIcon } from "react-icons/io5"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { InputGroupAddon } from "@/components/ui/input-group"
+
+import { cn } from "@/lib/utils"
 
 const DEFAULT_REMINDER_VALUES = [
   0, // At time of event
@@ -53,29 +55,42 @@ export function ReminderSelect({
   reminders,
   onSelect,
   onRemove,
+  placeholder = "Reminders",
+  addon,
+  ghost,
+  rowClassName,
 }: {
   reminders: number[]
   onSelect: (mins: number) => void
   onRemove: (mins: number) => void
+  placeholder?: string
+  addon?: ReactNode
+  ghost?: boolean
+  rowClassName?: string
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
 
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
+  const resolvedAddon =
+    addon === undefined ? (
+      <InputGroupAddon>
+        <BellIcon />
+      </InputGroupAddon>
+    ) : (
+      addon
+    )
 
   return (
-    <div className="flex flex-col gap-0">
+    <div className="flex flex-col gap-1">
       <Combobox
-        placeholder="Reminders"
+        placeholder={placeholder}
         query={query}
         setQuery={setQuery}
         open={open}
         setOpen={setOpen}
-        addon={
-          <InputGroupAddon>
-            <BellIcon />
-          </InputGroupAddon>
-        }
+        addon={resolvedAddon}
+        ghost={ghost}
       >
         {values.length ? (
           <CommandGroup>
@@ -83,7 +98,7 @@ export function ReminderSelect({
               <CommandItem
                 key={mins}
                 onSelect={() => {
-                  onSelect(mins)
+                  if (!reminders.includes(mins)) onSelect(mins)
                   setOpen(false)
                   setQuery("")
                 }}
@@ -100,17 +115,33 @@ export function ReminderSelect({
       {reminders
         .sort((a, b) => a - b)
         .map((mins) => (
-          <ReminderRow key={mins} mins={mins} onRemove={() => onRemove(mins)} />
+          <ReminderRow
+            key={mins}
+            mins={mins}
+            onRemove={() => onRemove(mins)}
+            className={rowClassName}
+          />
         ))}
     </div>
   )
 }
 
-const ReminderRow = ({ mins, onRemove }: { mins: number; onRemove: () => void }) => {
+const ReminderRow = ({
+  mins,
+  className,
+  onRemove,
+}: {
+  mins: number
+  className?: string
+  onRemove: () => void
+}) => {
   return (
     <div
       key={mins}
-      className="flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default"
+      className={cn(
+        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default h-buttonHeight",
+        className,
+      )}
     >
       <span>
         <HumanDuration mins={mins} />

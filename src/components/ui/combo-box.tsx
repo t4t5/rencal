@@ -16,6 +16,7 @@ export function Combobox({
   setQuery,
   open,
   setOpen,
+  ghost = true,
 }: {
   addon: ReactNode
   children: ReactNode
@@ -24,6 +25,7 @@ export function Combobox({
   setQuery: (query: string) => void
   open: boolean
   setOpen: (open: boolean) => void
+  ghost?: boolean
 }) {
   const anchorRef = useRef<HTMLDivElement>(null)
 
@@ -37,6 +39,7 @@ export function Combobox({
             "focus-within:bg-secondary focus-within:border-transparent! cursor-text",
             {
               "bg-secondary border-transparent!": open,
+              "border-divider": !ghost,
             },
           )}
           onClick={() => setOpen(true)}
@@ -47,12 +50,11 @@ export function Combobox({
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={placeholder}
-              className="bg-transparent! border-transparent!"
               onFocus={() => setOpen(true)}
             />
           </InputGroup>
 
-          <DropdownArrow forceVisible={open} />
+          <DropdownArrow forceVisible={open || !ghost} />
         </div>
       </PopoverAnchor>
       <PopoverContent

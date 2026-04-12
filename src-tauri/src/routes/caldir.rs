@@ -307,6 +307,9 @@ pub trait CaldirApi {
 
     async fn get_time_format() -> TauResult<TimeFormat>;
     async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
+
+    async fn get_default_reminders() -> TauResult<Vec<i32>>;
+    async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -910,6 +913,34 @@ impl CaldirApi for CaldirApiImpl {
         };
         let mut config = caldir.config().clone();
         config.time_format = core_tf;
+        config.save().map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    async fn get_default_reminders(self) -> TauResult<Vec<i32>> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let Some(strs) = caldir.config().default_reminders.as_ref() else {
+            return Ok(Vec::new());
+        };
+        let minutes = strs
+            .iter()
+            .map(|s| {
+                caldir_core::event::Reminder::from_duration_str(s)
+                    .map(|r| r.minutes as i32)
+                    .map_err(|e| e.to_string())
+            })
+            .collect::<TauResult<Vec<i32>>>()?;
+        Ok(minutes)
+    }
+
+    async fn set_default_reminders(self, minutes: Vec<i32>) -> TauResult<()> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let mut config = caldir.config().clone();
+        config.default_reminders = if minutes.is_empty() {
+            None
+        } else {
+            Some(minutes.iter().map(|m| format!("{m}m")).collect())
+        };
         config.save().map_err(|e| e.to_string())?;
         Ok(())
     }
