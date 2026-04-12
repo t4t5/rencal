@@ -1,4 +1,8 @@
+import { open } from "@tauri-apps/plugin-dialog"
+
 import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import {
   Select,
   SelectContent,
@@ -16,6 +20,7 @@ export function GeneralPage() {
     <div className="flex flex-col gap-4">
       <TimeFormatSection />
       <DefaultRemindersSection />
+      <DataDirectorySection />
     </div>
   )
 }
@@ -54,6 +59,28 @@ const DefaultRemindersSection = () => {
         rowClassName="pl-4"
         addon={null}
       />
+    </div>
+  )
+}
+
+const DataDirectorySection = () => {
+  const { calendarDir, setCalendarDir } = useSettings()
+
+  const onChange = async () => {
+    const selected = await open({ directory: true, multiple: false })
+    if (typeof selected !== "string") return
+    await setCalendarDir(selected)
+  }
+
+  return (
+    <div className="flex flex-col gap-2 w-[400px]">
+      <label className="text-sm">Data directory</label>
+      <div className="flex gap-2">
+        <Input value={calendarDir} readOnly ghost={false} className="flex-1" />
+        <Button variant="secondary" onClick={onChange}>
+          Change
+        </Button>
+      </div>
     </div>
   )
 }

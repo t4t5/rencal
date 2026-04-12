@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event"
 import {
   ReactNode,
   createContext,
@@ -13,6 +14,8 @@ import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
 
 import { logger } from "@/lib/logger"
+
+const CALENDAR_DIR_CHANGED = "calendar-dir-changed"
 
 // --- Calendars context (changes rarely) ---
 
@@ -70,6 +73,14 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     void loadCalendarsFromStore()
+
+    const unlisten = listen(CALENDAR_DIR_CHANGED, () => {
+      void loadCalendarsFromStore()
+    })
+
+    return () => {
+      unlisten.then((fn) => fn())
+    }
   }, [])
 
   const registerScrollToDate = useCallback((fn: (date: Date) => void) => {

@@ -75,11 +75,15 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
     })
   })
 
+  const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    if (visibleCalendarIds.length > 0) {
+    if (visibleCalendarKey) {
       reloadEvents().then(() => setIsInitialLoading(false))
+    } else {
+      setCalendarEvents([])
+      setIsInitialLoading(false)
     }
-  }, [visibleCalendarIds.length > 0])
+  }, [visibleCalendarKey])
 
   const value = useMemo<CalEventsContextType>(
     () => ({

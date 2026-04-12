@@ -35,4 +35,5 @@ socket2 = "0.5"
 caldir-core = { path = "../../caldir/caldir-core" }
 chrono = "0.4.43"
 tauri-plugin-notification = "2"
+tauri-plugin-dialog = "2"
 chrono-tz = "0.10.4"

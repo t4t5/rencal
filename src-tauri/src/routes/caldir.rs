@@ -310,6 +310,9 @@ pub trait CaldirApi {
 
     async fn get_default_reminders() -> TauResult<Vec<i32>>;
     async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()>;
+
+    async fn get_calendar_dir() -> TauResult<String>;
+    async fn set_calendar_dir(path: String) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -944,6 +947,37 @@ impl CaldirApi for CaldirApiImpl {
         config.save().map_err(|e| e.to_string())?;
         Ok(())
     }
+
+    async fn get_calendar_dir(self) -> TauResult<String> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        Ok(caldir.config().calendar_dir.to_string_lossy().to_string())
+    }
+
+    async fn set_calendar_dir(self, path: String) -> TauResult<()> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let mut config = caldir.config().clone();
+        config.calendar_dir = std::path::PathBuf::from(tildify(&path));
+        config.save().map_err(|e| e.to_string())?;
+        Ok(())
+    }
+}
+
+fn tildify(path: &str) -> String {
+    let Ok(home) = std::env::var("HOME") else {
+        return path.to_string();
+    };
+    if home.is_empty() {
+        return path.to_string();
+    }
+    if let Some(rest) = path.strip_prefix(&home) {
+        if rest.is_empty() {
+            return "~".to_string();
+        }
+        if rest.starts_with('/') {
+            return format!("~{rest}");
+        }
+    }
+    path.to_string()
 }
 
 fn map_fields(fields: Vec<caldir_core::remote::protocol::CredentialField>) -> Vec<ProviderField> {

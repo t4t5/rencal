@@ -10,6 +10,7 @@
     "core:window:allow-set-focus",
     "core:webview:allow-create-webview-window",
     "core:window:allow-center",
-    "notification:default"
+    "notification:default",
+    "dialog:allow-open"
   ]
 }
