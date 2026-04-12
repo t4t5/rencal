@@ -49,7 +49,7 @@ export function ShortcutTooltip({
 
         <div className="flex gap-1">
           {keys.map((key) => (
-            <ShortcutKey shortcut={key} />
+            <ShortcutKey key={key} shortcut={key} />
           ))}
         </div>
       </TooltipContent>
