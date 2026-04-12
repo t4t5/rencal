@@ -1,8 +1,8 @@
 import { useState } from "react"
 
-import { AccountsSection } from "@/components/settings/AccountsSection"
-import { CalendarsSection } from "@/components/settings/CalendarsSection"
-import { GeneralSection } from "@/components/settings/GeneralSection"
+import { AccountsPage } from "@/components/settings/AccountsPage"
+import { CalendarsPage } from "@/components/settings/CalendarsPage"
+import { GeneralPage } from "@/components/settings/GeneralPage"
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
 
 import { cn, isMacOS } from "@/lib/utils"
@@ -21,9 +21,9 @@ export function SettingsPage() {
           {NAV_ITEMS.find((item) => item.tab === activeTab)?.label}
         </h1>
 
-        {activeTab === "general" && <GeneralSection />}
-        {activeTab === "accounts" && <AccountsSection />}
-        {activeTab === "calendars" && <CalendarsSection />}
+        {activeTab === "general" && <GeneralPage />}
+        {activeTab === "accounts" && <AccountsPage />}
+        {activeTab === "calendars" && <CalendarsPage />}
       </div>
     </div>
   )

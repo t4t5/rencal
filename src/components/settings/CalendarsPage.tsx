@@ -15,7 +15,7 @@ const providerDisplayName: Record<string, string> = {
   outlook: "Outlook",
 }
 
-export function CalendarsSection() {
+export function CalendarsPage() {
   const { calendars } = useCalendars()
 
   const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local")

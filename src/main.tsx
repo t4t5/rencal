@@ -8,7 +8,7 @@ import { EventDraftProvider } from "@/contexts/EventDraftContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 
 import App from "@/App"
-import { SettingsPage } from "@/pages/SettingsPage"
+import { SettingsPage } from "@/Settings"
 
 import { CalEventsProvider } from "./contexts/CalEventsContext"
 import { SyncProvider } from "./contexts/SyncContext"

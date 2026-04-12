@@ -25,7 +25,7 @@ const providerDisplayName: Record<string, string> = {
   outlook: "Outlook",
 }
 
-export function AccountsSection() {
+export function AccountsPage() {
   const { calendars } = useCalendars()
   const [showAddAccount, setShowAddAccount] = useState(false)
 
