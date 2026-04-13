@@ -1,9 +1,5 @@
+import { Google, Microsoft, Apple } from "@lobehub/icons"
 import { useState } from "react"
-import {
-  FaGoogle as GoogleIcon,
-  FaApple as AppleIcon,
-  FaMicrosoft as MicrosoftIcon,
-} from "react-icons/fa"
 import { IconType } from "react-icons/lib"
 import { PiPlus as PlusIcon, PiCalendarBlank as CalendarIcon } from "react-icons/pi"
 
@@ -14,9 +10,9 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { AddAccountModal } from "./AddAccountModal"
 
 const providerToIcon: Record<string, IconType> = {
-  google: GoogleIcon,
-  icloud: AppleIcon,
-  outlook: MicrosoftIcon,
+  google: Google.Color,
+  icloud: Apple,
+  outlook: Microsoft.Color,
 }
 
 const providerDisplayName: Record<string, string> = {
