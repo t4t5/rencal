@@ -66,5 +66,5 @@ test-notification:
   else
     start_time=$(date -v+2M +%H:%M)
   fi
-  /Users/tristan/.cargo/bin/caldir new "Test notification" --start "today ${start_time}" --reminder 1m
+  caldir new "Test notification" --start "today ${start_time}" --reminder 1m
   echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."

@@ -1,9 +1,11 @@
 use std::time::Duration as StdDuration;
 
+use std::path::PathBuf;
+
 use caldir_core::caldir::Caldir;
 use caldir_core::event::Event;
 use chrono::{Duration, Utc};
-use tauri::AppHandle;
+use tauri::{AppHandle, Manager};
 use tauri_plugin_notification::NotificationExt;
 
 /// Runs the reminder check loop aligned to minute boundaries.
@@ -62,14 +64,30 @@ fn send_notification(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let body = format_body(event, minutes_before);
 
-    app.notification()
+    let mut builder = app
+        .notification()
         .builder()
         .title(&event.summary)
         .body(&body)
-        .sound("default")
-        .show()?;
+        .sound("default");
+
+    if let Some(icon) = icon_path(app) {
+        builder = builder.icon(icon.to_string_lossy());
+    }
+
+    builder.show()?;
 
     Ok(())
+}
+
+fn icon_path(app: &AppHandle) -> Option<PathBuf> {
+    if cfg!(debug_assertions) {
+        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/128x128.png"))
+    } else {
+        app.path()
+            .resolve("icons/128x128.png", tauri::path::BaseDirectory::Resource)
+            .ok()
+    }
 }
 
 fn format_body(event: &Event, minutes_before: i64) -> String {
