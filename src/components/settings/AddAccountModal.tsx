@@ -25,7 +25,18 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    rpc.caldir.list_providers().then((all) => setProviders(all.filter(providerRequiresAccount)))
+    rpc.caldir.list_providers().then((all) => {
+      const filtered = all.filter(providerRequiresAccount)
+
+      // We want "caldav" to be shown last:
+      const sorted = filtered.sort((a, b) => {
+        if (a === "caldav") return 1
+        if (b === "caldav") return -1
+        return 0
+      })
+
+      setProviders(sorted)
+    })
   }, [])
 
   async function handleProviderClick(name: string) {
@@ -82,8 +93,9 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
 
             <div className="flex flex-col gap-3 w-60">
               {providers.map((name) => {
+                const isCaldav = name === "caldav"
                 const Icon = getProviderIcon(name)
-                const displayName = getProviderDisplayName(name)
+                const displayName = isCaldav ? "Other CalDAV server" : getProviderDisplayName(name)
 
                 return (
                   <Button
@@ -93,7 +105,7 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
                     disabled={isConnecting}
                     onClick={() => handleProviderClick(name)}
                   >
-                    <Icon className="size-4" />
+                    {!isCaldav && <Icon className="size-4" />}
                     {displayName}
                   </Button>
                 )
