@@ -9,7 +9,7 @@ import { rpc } from "@/rpc"
 import type { ProviderField } from "@/rpc/bindings"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
+import { getProviderDisplayName, getProviderIcon, providerRequiresAccount } from "@/lib/providers"
 
 type ModalStep =
   | { kind: "select-provider" }
@@ -25,7 +25,7 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    rpc.caldir.list_providers().then(setProviders)
+    rpc.caldir.list_providers().then((all) => setProviders(all.filter(providerRequiresAccount)))
   }, [])
 
   async function handleProviderClick(name: string) {

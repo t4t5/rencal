@@ -28,3 +28,7 @@ export const getProviderIcon = (name: string | null) => {
   if (!name) return CalendarIcon
   return providerToIcon[name] ?? CalendarIcon
 }
+
+const providersWithoutAccount = new Set(["webcal"])
+
+export const providerRequiresAccount = (name: string) => !providersWithoutAccount.has(name)

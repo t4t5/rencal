@@ -7,13 +7,8 @@ import { Calendar } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { getProviderDisplayName } from "@/lib/providers"
 import { cn } from "@/lib/utils"
-
-const providerDisplayName: Record<string, string> = {
-  google: "Google",
-  icloud: "iCloud",
-  outlook: "Outlook",
-}
 
 export function CalendarsPage() {
   const { calendars } = useCalendars()
@@ -23,7 +18,7 @@ export function CalendarsPage() {
   return (
     <div className="flex flex-col gap-6">
       {Object.entries(calendarsByProvider).map(([provider, cals]) => {
-        const displayName = providerDisplayName[provider] ?? provider
+        const displayName = getProviderDisplayName(provider)
         return (
           <div key={provider} className="flex flex-col gap-3">
             <span className="text-sm text-muted-foreground">{displayName}</span>
