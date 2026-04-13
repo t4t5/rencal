@@ -1,16 +1,15 @@
 import { FormEvent, useEffect, useState } from "react"
-import { IoArrowBack as BackIcon, IoCalendar as CalendarIcon } from "react-icons/io5"
 
 import { Button } from "@/components/ui/button"
 import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
+import { PasswordInput } from "@/components/ui/password-input"
 
 import { rpc } from "@/rpc"
 import type { ProviderField } from "@/rpc/bindings"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-
-import { providerDisplayName, providerToIcon } from "./AccountsPage"
+import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 
 type ModalStep =
   | { kind: "select-provider" }
@@ -23,7 +22,6 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
 
   const [providers, setProviders] = useState<string[]>([])
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({})
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({})
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -73,125 +71,104 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
     }
   }
 
-  function capitalize(s: string) {
-    return s.charAt(0).toUpperCase() + s.slice(1)
-  }
-
   return (
     <Modal onClose={onClose}>
-      {step.kind === "select-provider" && (
-        <div className="flex flex-col items-center gap-6">
-          <DialogHeader>
-            <DialogTitle>Connect Account</DialogTitle>
-          </DialogHeader>
+      <div className="flex flex-col items-center gap-6">
+        {step.kind === "select-provider" && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Connect Account</DialogTitle>
+            </DialogHeader>
 
-          <div className="flex flex-col gap-3 w-60">
-            {providers.map((name) => {
-              const Icon = providerToIcon[name] ?? CalendarIcon
-              const displayName = providerDisplayName[name] || capitalize(name)
+            <div className="flex flex-col gap-3 w-60">
+              {providers.map((name) => {
+                const Icon = getProviderIcon(name)
+                const displayName = getProviderDisplayName(name)
 
-              return (
-                <Button
-                  key={name}
-                  variant="secondary"
-                  className="gap-3 h-12 border-input"
-                  disabled={isConnecting}
-                  onClick={() => handleProviderClick(name)}
-                >
-                  <Icon className="size-4" />
-                  {displayName}
-                </Button>
-              )
-            })}
-          </div>
-        </div>
-      )}
-
-      {step.kind === "setup" && (
-        <>
-          <DialogHeader>
-            <DialogTitle>Connect {capitalize(step.provider)} Calendar</DialogTitle>
-            <DialogDescription>{step.instructions}</DialogDescription>
-          </DialogHeader>
-
-          <Button
-            onClick={() =>
-              setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
-            }
-          >
-            Continue
-          </Button>
-        </>
-      )}
-
-      {step.kind === "credentials" && (
-        <>
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                onClick={() => setStep({ kind: "select-provider" })}
-              >
-                <BackIcon className="size-4" />
-              </Button>
-              <DialogTitle>{capitalize(step.provider)} Credentials</DialogTitle>
+                return (
+                  <Button
+                    key={name}
+                    variant="secondary"
+                    className="gap-3 h-12 border-input"
+                    disabled={isConnecting}
+                    onClick={() => handleProviderClick(name)}
+                  >
+                    <Icon className="size-4" />
+                    {displayName}
+                  </Button>
+                )
+              })}
             </div>
-            <DialogDescription>
-              Enter your credentials to connect your {capitalize(step.provider)} account.
-            </DialogDescription>
-          </DialogHeader>
+          </>
+        )}
 
-          <form onSubmit={handleCredentialsSubmit} noValidate className="flex flex-col gap-3">
-            {step.fields.map((field) => (
-              <div key={field.id} className="flex flex-col gap-1">
-                {field.field_type === "password" ? (
-                  <div className="relative">
-                    <Input
-                      type={showPasswords[field.id] ? "text" : "password"}
+        {step.kind === "setup" && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+              <DialogDescription>{step.instructions}</DialogDescription>
+            </DialogHeader>
+
+            <Button
+              onClick={() =>
+                setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
+              }
+            >
+              Continue
+            </Button>
+          </>
+        )}
+
+        {step.kind === "credentials" && (
+          <>
+            <DialogHeader>
+              <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+            </DialogHeader>
+
+            <form
+              onSubmit={handleCredentialsSubmit}
+              noValidate
+              className="flex flex-col gap-3 w-full"
+            >
+              {step.fields.map((field) => (
+                <div key={field.id} className="flex flex-col gap-1">
+                  {field.field_type === "password" ? (
+                    <PasswordInput
+                      ghost={false}
                       placeholder={field.label}
                       value={fieldValues[field.id] ?? ""}
                       onChange={(e) =>
                         setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))
                       }
-                      className="border-input pr-16"
                     />
-                    <button
-                      type="button"
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-muted-foreground hover:text-foreground"
-                      onClick={() =>
-                        setShowPasswords((prev) => ({
-                          ...prev,
-                          [field.id]: !prev[field.id],
-                        }))
+                  ) : (
+                    <Input
+                      ghost={false}
+                      type="text"
+                      placeholder={field.label}
+                      value={fieldValues[field.id] ?? ""}
+                      onChange={(e) =>
+                        setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))
                       }
-                    >
-                      {showPasswords[field.id] ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                ) : (
-                  <Input
-                    type="text"
-                    placeholder={field.label}
-                    value={fieldValues[field.id] ?? ""}
-                    onChange={(e) =>
-                      setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))
-                    }
-                    className="border-input"
-                  />
-                )}
-                {field.help && <p className="text-xs text-muted-foreground">{field.help}</p>}
+                    />
+                  )}
+                  {field.help && <p className="text-xs text-muted-foreground">{field.help}</p>}
+                </div>
+              ))}
+
+              {error && <p className="text-sm text-destructive">{error}</p>}
+
+              <div className="flex justify-end">
+                <Button type="submit" disabled={isConnecting} className="mt-3">
+                  {isConnecting
+                    ? "Connecting..."
+                    : `Connect ${getProviderDisplayName(step.provider)}`}
+                </Button>
               </div>
-            ))}
-
-            {error && <p className="text-sm text-destructive">{error}</p>}
-
-            <Button type="submit" disabled={isConnecting}>
-              {isConnecting ? "Connecting..." : `Connect ${capitalize(step.provider)} Account`}
-            </Button>
-          </form>
-        </>
-      )}
+            </form>
+          </>
+        )}
+      </div>
     </Modal>
   )
 }

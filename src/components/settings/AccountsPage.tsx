@@ -1,26 +1,13 @@
-import { Google, Microsoft, Apple } from "@lobehub/icons"
 import { useState } from "react"
-import { IconType } from "react-icons/lib"
-import { PiPlus as PlusIcon, PiCalendarBlank as CalendarIcon } from "react-icons/pi"
+import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
+
 import { AddAccountModal } from "./AddAccountModal"
-
-export const providerToIcon: Record<string, IconType> = {
-  google: Google.Color,
-  icloud: Apple,
-  outlook: Microsoft.Color,
-}
-
-export const providerDisplayName: Record<string, string> = {
-  google: "Google",
-  icloud: "iCloud",
-  outlook: "Outlook",
-  caldav: "CalDAV",
-}
 
 export function AccountsPage() {
   const { calendars } = useCalendars()
@@ -37,8 +24,8 @@ export function AccountsPage() {
   return (
     <div className="flex flex-col gap-4">
       {accounts.map(({ account, provider }) => {
-        const ProviderIcon = (provider ? providerToIcon[provider] : undefined) ?? CalendarIcon
-        const displayName = provider ? (providerDisplayName[provider] ?? provider) : account
+        const ProviderIcon = getProviderIcon(provider)
+        const displayName = getProviderDisplayName(provider)
 
         return (
           <div key={account} className="flex items-center gap-4">
