@@ -180,7 +180,16 @@ export function EventList() {
           <DaySection
             key={dateStr}
             ref={(el) => {
-              if (!el) return
+              if (!el) {
+                // Clear on unmount so scrollToDate doesn't find a stale detached node
+                // and skip the ghost branch (happens when a draft on an empty date is dismissed).
+                if (isGhost) {
+                  ghostRef.current = null
+                } else {
+                  sectionRefs.current.delete(dateStr)
+                }
+                return
+              }
               if (isGhost) {
                 ghostRef.current = el
               } else {
