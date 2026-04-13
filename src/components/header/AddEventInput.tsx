@@ -1,18 +1,20 @@
-import { useCallback, useMemo, useRef } from "react"
+import { useCallback, useDeferredValue, useMemo, useRef } from "react"
 
 import { Input } from "@/components/ui/input"
 
-import { useEventDraft } from "@/contexts/EventDraftContext"
+import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { segmentEventText } from "@/lib/parse-event-text"
 import { cn } from "@/lib/utils"
 
 export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
-  const { text, setText, isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent } =
-    useEventDraft()
+  const { text, setText } = useEventText()
+  const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent } = useEventDraft()
   const overlayRef = useRef<HTMLDivElement>(null)
 
-  const segments = useMemo(() => segmentEventText(text), [text])
+  // Defer the segmentation so chrono parsing doesn't block the input commit.
+  const deferredText = useDeferredValue(text)
+  const segments = useMemo(() => segmentEventText(deferredText), [deferredText])
   const hasParsedSegments = isDrafting && segments.some((s) => s.parsed)
 
   const syncScroll = useCallback(() => {

@@ -1,5 +1,14 @@
 import { addHours, addMinutes, startOfHour } from "date-fns"
-import { ReactNode, createContext, useCallback, useContext, useRef, useState } from "react"
+import {
+  ReactNode,
+  createContext,
+  startTransition,
+  useCallback,
+  useContext,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { rpc } from "@/rpc"
 import type { CalendarEvent, Recurrence } from "@/rpc/bindings"
@@ -23,6 +32,14 @@ interface DraftEvent {
   recurrence: Recurrence | null
 }
 
+// Split into two contexts: `text` changes on every keystroke, so anything that
+// doesn't need it (NewEventContent, WeekTimeGrid, MonthDayCell, etc.) should
+// only subscribe to the draft context to avoid re-rendering while typing.
+interface EventTextContextType {
+  text: string
+  setText: (text: string) => void
+}
+
 interface EventDraftContextType {
   isDrafting: boolean
   setIsDrafting: (isDrafting: boolean) => void
@@ -31,9 +48,6 @@ interface EventDraftContextType {
   setDraftPopoverOpen: (open: boolean) => void
 
   defaultCalendarId: string | null
-
-  text: string
-  setText: (text: string) => void
 
   draftEvent: DraftEvent
   setDraftEvent: (event: DraftEvent) => void
@@ -45,7 +59,12 @@ interface EventDraftContextType {
   createDraftEvent: () => Promise<void>
 }
 
+const EventTextContext = createContext({} as EventTextContextType)
 const EventDraftContext = createContext({} as EventDraftContextType)
+
+export function useEventText() {
+  return useContext(EventTextContext)
+}
 
 export function useEventDraft() {
   return useContext(EventDraftContext)
@@ -80,11 +99,17 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const [draftEvent, setDraftEvent] = useState<DraftEvent>(generateDefaultDraftEvent())
 
-  const setText = (newText: string) => {
+  // Draft updates triggered by typing are wrapped in startTransition so they
+  // don't block the urgent text-state render. Without this, the keystroke-time
+  // `setDraftEvent` forces NewEventContent (and the ~10 EventInfo subtrees)
+  // to re-render on every character.
+  const setText = useCallback((newText: string) => {
     _setText(newText)
 
     if (!hasParsedTimeRef.current) {
-      setDraftEvent((prev) => ({ ...prev, summary: newText }))
+      startTransition(() => {
+        setDraftEvent((prev) => ({ ...prev, summary: newText }))
+      })
     }
 
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
@@ -92,33 +117,38 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       const parsed = parseEventText(newText)
       hasParsedTimeRef.current =
         parsed.start !== null || parsed.recurrence !== null || parsed.location !== null
-      setDraftEvent((prev) => {
-        const updates: Partial<DraftEvent> = {
-          summary: parsed.summary,
-          recurrence: parsed.recurrence,
-          location: parsed.location,
-        }
-        if (parsed.start) {
-          updates.start = parsed.start
-          updates.end = parsed.end ?? addMinutes(parsed.start, 30)
-          updates.allDay = parsed.allDay
-        }
-        return { ...prev, ...updates }
+      startTransition(() => {
+        setDraftEvent((prev) => {
+          const updates: Partial<DraftEvent> = {
+            summary: parsed.summary,
+            recurrence: parsed.recurrence,
+            location: parsed.location,
+          }
+          if (parsed.start) {
+            updates.start = parsed.start
+            updates.end = parsed.end ?? addMinutes(parsed.start, 30)
+            updates.allDay = parsed.allDay
+          }
+          return { ...prev, ...updates }
+        })
       })
     }, 300)
-  }
+  }, [])
 
-  const setDefaultDraftEvent = () => {
+  const setDefaultDraftEvent = useCallback(() => {
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
     hasParsedTimeRef.current = false
     setDraftEvent(generateDefaultDraftEvent())
     setDraftReminders([])
-  }
+  }, [generateDefaultDraftEvent])
 
-  const setDraftPopoverOpen = (open: boolean) => {
-    _setDraftPopoverOpen(open)
-    if (!open) setDefaultDraftEvent()
-  }
+  const setDraftPopoverOpen = useCallback(
+    (open: boolean) => {
+      _setDraftPopoverOpen(open)
+      if (!open) setDefaultDraftEvent()
+    },
+    [setDefaultDraftEvent],
+  )
 
   const { reloadEvents, setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
@@ -168,23 +198,39 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     // Replace optimistic entry with the real event from the backend
     setCalendarEvents((prev) => prev.map((e) => (e.id === optimisticId ? created : e)))
     void sync()
-  }, [draftEvent, draftReminders, reloadEvents, sync, setDefaultDraftEvent])
+  }, [draftEvent, draftReminders, reloadEvents, sync, setDefaultDraftEvent, setCalendarEvents])
 
-  const value = {
-    isDrafting,
-    setIsDrafting,
-    draftPopoverOpen,
-    setDraftPopoverOpen,
-    defaultCalendarId,
-    text,
-    setText,
-    draftEvent,
-    setDraftEvent,
-    draftReminders,
-    setDraftReminders,
-    setDefaultDraftEvent,
-    createDraftEvent,
-  }
+  const textValue = useMemo<EventTextContextType>(() => ({ text, setText }), [text, setText])
 
-  return <EventDraftContext.Provider value={value}>{children}</EventDraftContext.Provider>
+  const draftValue = useMemo<EventDraftContextType>(
+    () => ({
+      isDrafting,
+      setIsDrafting,
+      draftPopoverOpen,
+      setDraftPopoverOpen,
+      defaultCalendarId,
+      draftEvent,
+      setDraftEvent,
+      draftReminders,
+      setDraftReminders,
+      setDefaultDraftEvent,
+      createDraftEvent,
+    }),
+    [
+      isDrafting,
+      draftPopoverOpen,
+      defaultCalendarId,
+      draftEvent,
+      draftReminders,
+      setDefaultDraftEvent,
+      setDraftPopoverOpen,
+      createDraftEvent,
+    ],
+  )
+
+  return (
+    <EventTextContext.Provider value={textValue}>
+      <EventDraftContext.Provider value={draftValue}>{children}</EventDraftContext.Provider>
+    </EventTextContext.Provider>
+  )
 }

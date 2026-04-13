@@ -3,12 +3,13 @@ import { useEffect, useState } from "react"
 import { NewEvent } from "@/components/event-info/NewEvent"
 import { ActionBar } from "@/components/header/ActionBar"
 
-import { useEventDraft } from "@/contexts/EventDraftContext"
+import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
 export function Header() {
-  const { isDrafting, text } = useEventDraft()
+  const { isDrafting } = useEventDraft()
+  const { text } = useEventText()
 
   const showDraftEvent = isDrafting && text.length > 0
   const [mounted, setMounted] = useState(showDraftEvent)

@@ -3,7 +3,7 @@ import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { useEventDraft } from "@/contexts/EventDraftContext"
+import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils"
 import { AddEventInput } from "./AddEventInput"
 
 export function AddEventButton() {
-  const { text, setText, isDrafting, setIsDrafting } = useEventDraft()
+  const { text, setText } = useEventText()
+  const { isDrafting, setIsDrafting } = useEventDraft()
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {

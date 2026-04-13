@@ -12,6 +12,9 @@ interface ParsedEventText {
   allDay: boolean
   recurrence: Recurrence | null
   location: string | null
+  // Raw chrono match text from the input. Used by segmentEventText to locate
+  // the time range in the original text without re-running chrono.
+  chronoMatchText: string | null
 }
 
 const DAYS_MAP: Record<string, string> = {
@@ -121,14 +124,14 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
     ranges.push({ start: recMatch.index, end: recMatch.index + recMatch[0].length })
   }
 
-  // Time range — run chrono on original text to get positions
-  const chronoResults = chrono.parse(text, referenceDate, { forwardDate: true })
-  if (chronoResults.length > 0 && parsed.start) {
-    const result = chronoResults[0]
-    const start = result.index
-    const end = result.index + result.text.length
-
-    ranges.push({ start, end })
+  // Time range — locate the chrono match in the original text. We use indexOf
+  // instead of re-running chrono.parse here to keep typing responsive.
+  if (parsed.start && parsed.chronoMatchText) {
+    const searchFrom = recMatch ? recMatch.index! + recMatch[0].length : 0
+    const idx = text.indexOf(parsed.chronoMatchText, searchFrom)
+    if (idx >= 0) {
+      ranges.push({ start: idx, end: idx + parsed.chronoMatchText.length })
+    }
   }
 
   // Location range — find trailing "at/in {location}" in original text
@@ -183,7 +186,15 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
 
   if (results.length === 0) {
     const { summary, location } = parseLocation(textForChrono.trim())
-    return { summary, start: null, end: null, allDay: false, recurrence, location }
+    return {
+      summary,
+      start: null,
+      end: null,
+      allDay: false,
+      recurrence,
+      location,
+      chronoMatchText: null,
+    }
   }
 
   const result = results[0]
@@ -203,5 +214,13 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
       ? startOfDay(result.start.date())
       : addMinutes(start, DEFAULT_DURATION_MINUTES)
 
-  return { summary: finalSummary, start, end, allDay, recurrence, location }
+  return {
+    summary: finalSummary,
+    start,
+    end,
+    allDay,
+    recurrence,
+    location,
+    chronoMatchText: result.text,
+  }
 }
