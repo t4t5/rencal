@@ -1,6 +1,4 @@
 import { FormEvent, useEffect, useState } from "react"
-import type { IconType } from "react-icons"
-import { FaApple, FaGoogle, FaMicrosoft } from "react-icons/fa6"
 import { IoArrowBack as BackIcon, IoCalendar as CalendarIcon } from "react-icons/io5"
 
 import { Button } from "@/components/ui/button"
@@ -12,11 +10,7 @@ import type { ProviderField } from "@/rpc/bindings"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
 
-const providerToIcon: Record<string, IconType> = {
-  google: FaGoogle,
-  icloud: FaApple,
-  outlook: FaMicrosoft,
-}
+import { providerDisplayName, providerToIcon } from "./AccountsPage"
 
 type ModalStep =
   | { kind: "select-provider" }
@@ -86,30 +80,31 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
   return (
     <Modal onClose={onClose}>
       {step.kind === "select-provider" && (
-        <>
+        <div className="flex flex-col items-center gap-6">
           <DialogHeader>
-            <DialogTitle>Add Calendar Account</DialogTitle>
-            <DialogDescription>Choose a calendar provider to connect.</DialogDescription>
+            <DialogTitle>Connect Account</DialogTitle>
           </DialogHeader>
 
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-3 w-60">
             {providers.map((name) => {
               const Icon = providerToIcon[name] ?? CalendarIcon
+              const displayName = providerDisplayName[name] || capitalize(name)
+
               return (
                 <Button
                   key={name}
-                  variant="outline"
-                  className="justify-start gap-3 h-12 border-input"
+                  variant="secondary"
+                  className="gap-3 h-12 border-input"
                   disabled={isConnecting}
                   onClick={() => handleProviderClick(name)}
                 >
                   <Icon className="size-4" />
-                  {capitalize(name)} Calendar
+                  {displayName}
                 </Button>
               )
             })}
           </div>
-        </>
+        </div>
       )}
 
       {step.kind === "setup" && (

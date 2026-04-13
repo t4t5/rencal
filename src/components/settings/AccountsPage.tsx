@@ -9,16 +9,17 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { AddAccountModal } from "./AddAccountModal"
 
-const providerToIcon: Record<string, IconType> = {
+export const providerToIcon: Record<string, IconType> = {
   google: Google.Color,
   icloud: Apple,
   outlook: Microsoft.Color,
 }
 
-const providerDisplayName: Record<string, string> = {
+export const providerDisplayName: Record<string, string> = {
   google: "Google",
   icloud: "iCloud",
   outlook: "Outlook",
+  caldav: "CalDAV",
 }
 
 export function AccountsPage() {

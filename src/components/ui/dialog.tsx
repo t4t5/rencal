@@ -123,7 +123,7 @@ function Modal({ onClose, children }: { onClose: () => void; children: ReactNode
         }
       }}
     >
-      <DialogContent className="sm:max-w-[425px] p-4">{children}</DialogContent>
+      <DialogContent className="sm:max-w-[425px]">{children}</DialogContent>
     </Dialog>
   )
 }
