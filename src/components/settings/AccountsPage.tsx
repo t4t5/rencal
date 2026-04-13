@@ -25,7 +25,8 @@ export function AccountsPage() {
   const { calendars } = useCalendars()
   const [showAddAccount, setShowAddAccount] = useState(false)
 
-  const calendarsByAccount = Object.groupBy(calendars, (c) => c.account ?? c.provider ?? "Local")
+  const calendarsWithAccount = calendars.filter((c) => c.account != null)
+  const calendarsByAccount = Object.groupBy(calendarsWithAccount, (c) => c.account!)
 
   const accounts = Object.entries(calendarsByAccount).map(([account, cals]) => {
     const provider = cals?.[0]?.provider ?? null
