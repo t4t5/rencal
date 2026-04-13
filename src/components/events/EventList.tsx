@@ -1,4 +1,5 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { flushSync } from "react-dom"
 
 import { DaySection } from "@/components/events/DaySection"
 
@@ -103,7 +104,9 @@ export function EventList() {
     const section = sectionRefs.current.get(targetDateStr)
 
     if (section) {
-      setGhostDate(null)
+      // Remove ghost synchronously so scrollIntoView measures the final layout.
+      // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
+      flushSync(() => setGhostDate(null))
       section.scrollIntoView({ behavior, block: "start" })
     } else {
       // No events on this date — show a ghost section
