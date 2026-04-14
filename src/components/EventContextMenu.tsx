@@ -15,7 +15,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { isUserOrganizer } from "@/lib/event-utils"
+import { isEventReadonly } from "@/lib/event-utils"
 
 type EventContextMenuProps = {
   event: CalendarEvent
@@ -34,7 +34,7 @@ export function EventContextMenu({
   const { calendars } = useCalendars()
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
-  const canDelete = isUserOrganizer(event, calendars)
+  const canDelete = !isEventReadonly(event, calendars)
 
   return (
     <>

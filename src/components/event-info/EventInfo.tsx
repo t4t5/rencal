@@ -133,11 +133,13 @@ export function EventInfo({
           readOnly={readonly}
         />
 
-        <ReminderSelect
-          reminders={reminders ?? []}
-          onSelect={onReminderAdd}
-          onRemove={onReminderRemove}
-        />
+        {!calendar?.read_only && (
+          <ReminderSelect
+            reminders={reminders ?? []}
+            onSelect={onReminderAdd}
+            onRemove={onReminderRemove}
+          />
+        )}
 
         <Divider />
 

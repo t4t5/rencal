@@ -21,7 +21,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
-import { getUserResponseStatus, isUserOrganizer } from "@/lib/event-utils"
+import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 import { formatEventTime } from "@/lib/time"
 
@@ -48,7 +48,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   // Delete key shortcut: open delete dialog when no field is focused
   useEffect(() => {
     if (!dirtyEvent) return
-    if (!isUserOrganizer(dirtyEvent, calendars)) return
+    if (isEventReadonly(dirtyEvent, calendars)) return
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Delete" && e.key !== "Backspace") return
@@ -161,7 +161,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
   const userResponseStatus = getUserResponseStatus(dirtyEvent, calendars)
   const isAttendee = userResponseStatus !== null
   const isPendingInvite = userResponseStatus === "needs-action"
-  const isReadonly = !isUserOrganizer(dirtyEvent, calendars)
+  const isReadonly = isEventReadonly(dirtyEvent, calendars)
 
   const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return

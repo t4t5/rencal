@@ -14,6 +14,7 @@ pub struct Calendar {
     pub color: Option<String>,
     pub provider: Option<String>,
     pub account: Option<String>,
+    pub read_only: Option<bool>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -100,6 +101,7 @@ impl From<&caldir_core::calendar::Calendar> for Calendar {
                 .remote
                 .as_ref()
                 .and_then(|r| r.account_identifier().map(String::from)),
+            read_only: c.config.read_only,
         }
     }
 }

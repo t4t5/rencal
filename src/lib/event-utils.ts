@@ -21,6 +21,12 @@ export function isUserOrganizer(event: CalendarEvent, calendars: Calendar[]): bo
   return event.organizer.email.toLowerCase() === calendar.account.toLowerCase()
 }
 
+export function isEventReadonly(event: CalendarEvent, calendars: Calendar[]): boolean {
+  const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+  if (calendar?.read_only) return true
+  return !isUserOrganizer(event, calendars)
+}
+
 export function isPendingEvent(event: CalendarEvent, calendars: Calendar[]): boolean {
   return getUserResponseStatus(event, calendars) === "needs-action"
 }
