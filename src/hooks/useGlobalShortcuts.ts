@@ -2,7 +2,7 @@ import { addDays, subDays } from "date-fns"
 import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
-import { openSettingsWindow } from "@/components/header/ActionBar"
+import { openSettingsWindow } from "@/components/header/SettingsButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"

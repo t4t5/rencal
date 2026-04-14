@@ -1,12 +1,13 @@
 import { SearchBar } from "@/components/search/SearchBar"
 import { Button } from "@/components/ui/button"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
-import { ShortcutTooltip } from "../ui/shortcut-tooltip"
-import { SettingsButton, SyncStatus } from "./ActionBar"
 import { InvitesDropdown } from "./InvitesDropdown"
+import { SettingsButton } from "./SettingsButton"
+import { SyncStatus } from "./SyncStatus"
 
 export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()
