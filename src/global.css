@@ -72,6 +72,8 @@
   --color-buttonSecondaryBg: var(--buttonSecondaryBg);
   --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
   --color-buttonBorder: var(--buttonBorder);
+  --color-error: var(--error);
+  --color-warning: var(--warning);
   --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
   --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder);
   --color-activeBg: var(--activeBg);
@@ -139,6 +141,8 @@
   --overlayBg: rgb(0 0 0 / 75%);
   --highlight: #ff2f00;
   --buttonHeight: 34px;
+  --error: #e25252;
+  --warning: #fd8742;
 
   /* shadcn variable adjustments */
   --background: var(--bgPrimary);
