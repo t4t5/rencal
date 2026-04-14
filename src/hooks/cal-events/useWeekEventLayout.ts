@@ -3,6 +3,8 @@ import { useMemo } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
+import { getEventDayRange, MS_PER_DAY, startOfDayMs } from "@/lib/time"
+
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
 
@@ -26,14 +28,6 @@ export type WeekLayout = {
   visibleStartHour: number
   /** Last visible hour (exclusive, e.g. 24 means grid extends to midnight) */
   visibleEndHour: number
-}
-
-const MS_PER_DAY = 86_400_000
-
-function startOfDayMs(date: Date | string): number {
-  const d = typeof date === "string" ? new Date(date) : new Date(date.getTime())
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
 }
 
 function daysDiff(aMs: number, bMs: number): number {
@@ -133,10 +127,9 @@ export function useWeekEventLayout(
     let visibleStartHour = DEFAULT_START_HOUR
     for (const event of events) {
       if (event.all_day) continue
-      const evFirstMs = startOfDayMs(event.start)
-      if (evFirstMs < weekStartMs || evFirstMs >= weekExclEndMs) continue
-      const evLastMs = startOfDayMs(event.end)
-      if (evLastMs - evFirstMs >= MS_PER_DAY) continue
+      const { firstMs, lastMs } = getEventDayRange(event)
+      if (firstMs < weekStartMs || firstMs >= weekExclEndMs) continue
+      if (lastMs - firstMs >= MS_PER_DAY) continue
       const startHour = new Date(event.start).getHours()
       if (startHour < visibleStartHour) visibleStartHour = startHour
     }
@@ -148,13 +141,10 @@ export function useWeekEventLayout(
     const timedByCol: WeekTimedEventLayout[][] = Array.from({ length: 7 }, () => [])
 
     for (const event of events) {
-      const firstMs = startOfDayMs(event.start)
+      const { firstMs, lastMs } = getEventDayRange(event)
       const color = colorMap.get(event.calendar_slug) ?? null
 
       if (event.all_day) {
-        const endMs = startOfDayMs(event.end)
-        const lastMs = endMs > firstMs ? endMs - MS_PER_DAY : firstMs
-
         // Check overlap with week
         if (firstMs > weekEndDayMs || lastMs < weekStartMs) continue
 
@@ -174,8 +164,6 @@ export function useWeekEventLayout(
           isEnd: lastMs <= weekEndDayMs,
         })
       } else {
-        // Timed event — check if it spans multiple days
-        const lastMs = startOfDayMs(event.end)
         const spanning = lastMs - firstMs >= MS_PER_DAY
 
         if (spanning) {

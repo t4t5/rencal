@@ -1,6 +1,34 @@
 import { format, getYear, isToday, isTomorrow, isYesterday, parseISO } from "date-fns"
 
-import type { TimeFormat } from "@/rpc/bindings"
+import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
+
+export const MS_PER_DAY = 86_400_000
+
+/** Truncate a timestamp to local midnight (start of day) */
+export function startOfDayMs(date: Date | string): number {
+  const d = typeof date === "string" ? new Date(date) : new Date(date.getTime())
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+/**
+ * Inclusive [firstMs, lastMs] range of local midnights the event occupies.
+ * DTEND is exclusive, so an end exactly at midnight belongs to the previous day.
+ */
+export function getEventDayRange(event: CalendarEvent): { firstMs: number; lastMs: number } {
+  const firstMs = startOfDayMs(event.start)
+
+  if (event.all_day) {
+    const endMs = startOfDayMs(event.end)
+    const lastMs = endMs > firstMs ? endMs - MS_PER_DAY : firstMs
+    return { firstMs, lastMs }
+  }
+
+  const endMs = new Date(event.end).getTime()
+  const endDayMs = startOfDayMs(event.end)
+  const lastMs = endMs === endDayMs && endDayMs > firstMs ? endDayMs - MS_PER_DAY : endDayMs
+  return { firstMs, lastMs }
+}
 
 export function formatTime(date: Date | string, timeFormat: TimeFormat): string {
   const d = typeof date === "string" ? parseISO(date) : date

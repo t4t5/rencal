@@ -3,6 +3,8 @@ import { useMemo } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
+import { getEventDayRange, MS_PER_DAY } from "@/lib/time"
+
 import type { MonthDay } from "./useMonthGrid"
 
 export type AllDayLaneItem = {
@@ -26,15 +28,6 @@ export type WeekLayout = {
   timedByCol: TimedEventItem[][] // index 0-6 for each day column
 }
 
-const MS_PER_DAY = 86_400_000
-
-/** Truncate a timestamp to midnight (start of day) */
-function startOfDayMs(date: Date | string): number {
-  const d = typeof date === "string" ? new Date(date) : date
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
-}
-
 type EventDayInfo = {
   firstMs: number
   lastMs: number
@@ -43,20 +36,10 @@ type EventDayInfo = {
 }
 
 function computeEventDayInfo(event: CalendarEvent): EventDayInfo {
-  const firstMs = startOfDayMs(event.start)
+  const { firstMs, lastMs } = getEventDayRange(event)
   const startSortKey = new Date(event.start).getTime()
-
-  if (event.all_day) {
-    const endMs = startOfDayMs(event.end)
-    // All-day events: end is typically exclusive [first, end)
-    // Single-day: when start === end, it's just that one day
-    const lastMs = endMs > firstMs ? endMs - MS_PER_DAY : firstMs
-    return { firstMs, lastMs, spanning: true, startSortKey }
-  }
-
-  // Timed event
-  const lastMs = startOfDayMs(event.end)
-  const spanning = lastMs - firstMs >= MS_PER_DAY
+  // All-day events always occupy the all-day lane; timed events only span it if they cross a day
+  const spanning = event.all_day || lastMs - firstMs >= MS_PER_DAY
   return { firstMs, lastMs, spanning, startSortKey }
 }
 
