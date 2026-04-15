@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (&:is([data-theme] *));
 
 :root {
   font-family:
@@ -90,7 +90,7 @@
   --width-buttonHeight: var(--buttonHeight);
 }
 
-.dark {
+[data-theme="classic"] {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -109,19 +109,6 @@
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.552 0.016 285.938);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.21 0.006 285.885);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.274 0.006 286.033);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.552 0.016 285.938);
 
   /* Figma variables: */
   --textPrimary: #ffffff;
@@ -143,8 +130,14 @@
   --buttonHeight: 34px;
   --error: #e25252;
   --warning: #fd8742;
+}
 
-  /* shadcn variable adjustments */
+[data-theme="ren"] {
+  --bgPrimary: #131313;
+}
+
+/* shadcn variable adjustments — shared across themes, resolved via active theme's Figma vars */
+[data-theme] {
   --background: var(--bgPrimary);
   --primary: var(--buttonPrimaryBg);
   --primary-foreground: var(--textPrimary);

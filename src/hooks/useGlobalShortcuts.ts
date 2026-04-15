@@ -8,6 +8,8 @@ import { SEARCH_INPUT_EL_ID } from "@/components/search/SearchInput"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
+import { useTheme } from "@/hooks/useTheme"
+
 const NAV_THROTTLE_MS = 80
 
 interface UseGlobalShortcutsOptions {
@@ -17,6 +19,7 @@ interface UseGlobalShortcutsOptions {
 export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { toggleTheme } = useTheme()
 
   const lastNavRef = useRef(0)
 
@@ -68,5 +71,11 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   useHotkeys("mod+comma", (e) => {
     e.preventDefault()
     void openSettingsWindow()
+  })
+
+  // Toggle theme (classic ↔ ren)
+  useHotkeys("mod+shift+t", (e) => {
+    e.preventDefault()
+    toggleTheme()
   })
 }
