@@ -1,4 +1,4 @@
-import { format } from "date-fns"
+import { addDays, format, subDays } from "date-fns"
 import { GoClock as ClockIcon } from "react-icons/go"
 import { IoIosArrowRoundForward as ArrowIcon } from "react-icons/io"
 
@@ -124,6 +124,8 @@ const DateSelect = ({
   onChangeStart: (date: Date | null) => void
   onChangeEnd: (date: Date | null) => void
 }) => {
+  const displayEnd = allDay ? subDays(end, 1) : end
+
   return (
     <div className="flex pl-[26px] flex-wrap">
       <DatePicker date={start} setDate={onChangeStart} className="w-30" readOnly={readOnly} />
@@ -133,13 +135,14 @@ const DateSelect = ({
           <div className="size-6 shrink-0" />
 
           <DatePicker
-            date={end}
+            date={displayEnd}
             setDate={(date) => {
-              if (date && date < start) {
-                onChangeEnd(start)
-              } else {
-                onChangeEnd(date)
+              if (!date) {
+                onChangeEnd(null)
+                return
               }
+              const clamped = date < start ? start : date
+              onChangeEnd(addDays(clamped, 1))
             }}
             className="w-30"
             readOnly={readOnly}

@@ -77,11 +77,6 @@ export const EditEvent = ({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [dirtyEvent, calendars, deleteDialogProps.open, triggerDelete])
 
-  const hasBeenEdited =
-    !!dirtyEvent &&
-    !!originalEventRef.current &&
-    JSON.stringify(dirtyEvent) !== JSON.stringify(originalEventRef.current)
-
   const updateAndSyncEvent = async (current: CalendarEvent, original: CalendarEvent) => {
     // Optimistically update the UI before the RPC call
     setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
@@ -247,7 +242,7 @@ export const EditEvent = ({
         onAllDayChange={(checked) => {
           setDirtyEvent({ ...dirtyEvent, all_day: checked })
         }}
-        showTime={!all_day || hasBeenEdited}
+        showTime={!all_day}
         location={location}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
