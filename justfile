@@ -36,6 +36,17 @@ dev: build-providers
 build: build-providers-release
   NO_STRIP=true pnpm tauri build
 
+# Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
+notarize: build-providers-release
+  #!/usr/bin/env bash
+  set -euo pipefail
+  set -a && source .env && set +a
+  # Sign bundled provider binaries with hardened runtime + secure timestamp
+  for bin in src-tauri/providers/caldir-provider-*; do
+    codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
+  done
+  NO_STRIP=true pnpm tauri build
+
 # Generate TypeScript bindings from Rust types
 [working-directory: 'src-tauri']
 gen-types:
