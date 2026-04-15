@@ -1,5 +1,5 @@
 import { parse } from "date-fns"
-import { useEffect, useRef, useState } from "react"
+import { ReactNode, useEffect, useRef, useState } from "react"
 import { HiEllipsisHorizontal } from "react-icons/hi2"
 import { RRule, RRuleSet } from "rrule"
 
@@ -27,7 +27,13 @@ import { formatEventTime } from "@/lib/time"
 
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
-export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
+export const EditEvent = ({
+  event,
+  children,
+}: {
+  event: CalendarEvent | null
+  children?: ReactNode
+}) => {
   const { calendars } = useCalendars()
   const { setActiveEventId, reloadEvents, setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
@@ -182,6 +188,7 @@ export const EditEvent = ({ event }: { event: CalendarEvent | null }) => {
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
       {!isReadonly && (
         <div className="flex justify-end px-1 pb-1">
+          {children}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">

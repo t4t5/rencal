@@ -54,9 +54,9 @@ export const RepeatSelect = ({
         <div>
           <RepeatIcon />
         </div>
-        <div className="grow text-left">
+        <div className="grow text-left overflow-hidden">
           {value ? (
-            <HumanInterval recurrence={value} />
+            <div className="overflow-hidden text-ellipsis">{getHumanInterval(value)}</div>
           ) : (
             <span className="text-muted-foreground">Repeat</span>
           )}
@@ -74,22 +74,15 @@ export const RepeatSelect = ({
   )
 }
 
-const HumanInterval = ({ recurrence }: { recurrence: RRule | RRuleSet }) => {
+function getHumanInterval(recurrence: RRule | RRuleSet): string {
   const interval = INTERVALS.find((i) => i.rrule.toString() === recurrence.toString())
+  if (interval) return interval.label
 
-  if (interval) {
-    return <div>{interval.label}</div>
-  }
-
-  // For complex recurrence (RRuleSet), use toText() for human-readable output
   if (recurrence instanceof RRuleSet) {
-    // RRuleSet doesn't have toText(), get the first rrule's text
     const rrules = recurrence.rrules()
-    if (rrules.length > 0) {
-      return <div>{rrules[0].toText()}</div>
-    }
-    return <div>Custom recurrence</div>
+    if (rrules.length > 0) return rrules[0].toText()
+    return "Custom recurrence"
   }
 
-  return <div>{recurrence.toText()}</div>
+  return recurrence.toText()
 }

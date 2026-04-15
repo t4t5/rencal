@@ -31,7 +31,11 @@ export function SheetEvent() {
   return (
     <FastSheet open={isOpen} onOpenChange={() => setActiveEventId(null)}>
       <FastSheetContent open={isOpen}>
-        {displayEvent && <EditEvent event={displayEvent} />}
+        {displayEvent && (
+          <EditEvent event={displayEvent}>
+            <div className="h-7 grow" data-tauri-drag-region />
+          </EditEvent>
+        )}
       </FastSheetContent>
     </FastSheet>
   )

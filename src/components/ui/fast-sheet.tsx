@@ -69,7 +69,7 @@ function SheetContent({
     <div
       ref={ref}
       className={cn(
-        "bg-background fixed z-50 flex flex-col gap-4 shadow-lg outline-none transition-transform duration-150 will-change-transform",
+        "bg-background fixed z-50 flex flex-col gap-4 overflow-y-auto shadow-lg outline-none transition-transform duration-150 will-change-transform",
         position,
         translate,
         className,

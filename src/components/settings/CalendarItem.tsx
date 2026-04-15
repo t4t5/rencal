@@ -13,16 +13,16 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
 
   return (
     <div
-      className={cn("flex items-center justify-between group", {
+      className={cn("flex items-center justify-between group max-w-full", {
         "opacity-40": !isVisible,
       })}
     >
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 min-w-0">
         <div
           className="size-3 rounded-[3px] shrink-0"
           style={{ backgroundColor: color ?? DEFAULT_CALENDAR_COLOR }}
         />
-        <span className="text-sm text-primary-foreground">{name}</span>
+        <span className="text-sm text-primary-foreground truncate">{name}</span>
       </div>
 
       {children}

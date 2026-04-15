@@ -21,7 +21,9 @@ export function ActionBar() {
 
       {!isMd && (
         <div className="flex gap-2 items-center">
-          <SyncStatus />
+          <div className="hidden sm:block">
+            <SyncStatus />
+          </div>
           <InvitesDropdown />
           <SettingsButton />
           <SearchButton />

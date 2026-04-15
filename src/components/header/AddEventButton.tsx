@@ -39,12 +39,12 @@ export function AddEventButton() {
         <div
           ref={containerRef}
           className={cn(
-            "relative transition-[flex-grow,flex-basis] duration-200 ease-out",
+            "relative transition-[flex-grow,flex-basis] duration-200 ease-out shrink-0",
             isDrafting ? "grow basis-0" : "grow-0 basis-[var(--buttonHeight)]",
           )}
         >
           <AddEventInput onExit={exitDraft} />
-          <PlusButton show={!isDrafting} />
+          <PlusButtonOverlay show={!isDrafting} />
         </div>
       </ShortcutTooltip>
 
@@ -59,7 +59,7 @@ export function AddEventButton() {
   )
 }
 
-const PlusButton = ({ show }: { show: boolean }) => {
+const PlusButtonOverlay = ({ show }: { show: boolean }) => {
   return (
     <div
       className={cn(
