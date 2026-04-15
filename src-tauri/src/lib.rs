@@ -6,6 +6,9 @@ use routes::caldir::{CaldirApi, CaldirApiImpl};
 use tauri::Manager;
 use taurpc::Router;
 
+const MIN_WINDOW_WIDTH: f64 = 300.0;
+const MIN_WINDOW_HEIGHT: f64 = 600.0;
+
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router() -> Router<tauri::Wry> {
     Router::new().merge(CaldirApiImpl.into_handler())
@@ -49,6 +52,12 @@ pub async fn run() {
         .setup(|app| {
             setup_bundled_providers(app);
             tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.set_min_size(Some(tauri::LogicalSize::new(
+                    MIN_WINDOW_WIDTH,
+                    MIN_WINDOW_HEIGHT,
+                )));
+            }
             Ok(())
         })
         .on_window_event(|window, event| {
@@ -67,7 +76,11 @@ pub async fn run() {
         .expect("error while building tauri application")
         .run(|_app_handle, _event| {
             #[cfg(target_os = "macos")]
-            if let tauri::RunEvent::Reopen { has_visible_windows, .. } = _event {
+            if let tauri::RunEvent::Reopen {
+                has_visible_windows,
+                ..
+            } = _event
+            {
                 if !has_visible_windows {
                     if let Some(window) = _app_handle.get_webview_window("main") {
                         let _ = window.show();
