@@ -85,6 +85,7 @@
   --color-warning: var(--warning);
   --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
   --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder);
+  --shadow-tabList: var(--tabListShadow);
   --color-activeBg: var(--activeBg);
   --color-weekendBg: var(--weekendBg);
   --color-bgPopover: var(--bgPopover);
@@ -142,6 +143,7 @@
   --overlayBg: rgb(0 0 0 / 75%);
   --highlight: #ff2f00;
   --buttonHeight: 34px;
+  --tabListShadow: none;
   --error: #e25252;
   --warning: #fd8742;
   --fontHeading: inherit;
@@ -161,6 +163,8 @@
   --fontHeading: "Geist Mono", ui-monospace, monospace;
   --fontButton: "Geist Mono", ui-monospace, monospace;
   --fontNumerical: "Geist Mono", ui-monospace, monospace;
+
+  --tabListShadow: inset 0 0 0 1px var(--buttonSecondaryBg);
 }
 
 [data-theme="ren"] .font-heading,

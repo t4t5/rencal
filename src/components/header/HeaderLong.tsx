@@ -30,12 +30,12 @@ export function HeaderLong() {
 
       <TabsList onMouseDown={(e) => e.preventDefault()}>
         <ShortcutTooltip text="Week view" shortcut="w">
-          <span>
+          <span className="h-full">
             <TabsTrigger value="week">Week</TabsTrigger>
           </span>
         </ShortcutTooltip>
         <ShortcutTooltip text="Month view" shortcut="m">
-          <span>
+          <span className="h-full">
             <TabsTrigger value="month">Month</TabsTrigger>
           </span>
         </ShortcutTooltip>
