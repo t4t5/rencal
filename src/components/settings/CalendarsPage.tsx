@@ -2,6 +2,7 @@ import { PiRssSimple as RssIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Calendar } from "@/rpc/bindings"
 
@@ -31,10 +32,17 @@ export function CalendarsPage() {
         )
       })}
 
-      <Button variant="secondary" className="self-start gap-2" disabled>
-        <RssIcon className="size-4" />
-        Add subscription
-      </Button>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span className="self-start">
+            <Button variant="secondary" className="gap-2" disabled>
+              <RssIcon className="size-4" />
+              Add subscription
+            </Button>
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>Coming soon</TooltipContent>
+      </Tooltip>
     </div>
   )
 }

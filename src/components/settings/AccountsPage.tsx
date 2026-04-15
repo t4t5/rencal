@@ -2,6 +2,7 @@ import { useState } from "react"
 import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
@@ -36,16 +37,23 @@ export function AccountsPage() {
               <span className="text-sm">{displayName}</span>
               <span className="text-xs text-muted-foreground truncate">{account}</span>
             </div>
-            <Button
-              variant="secondary"
-              disabled
-              size="sm"
-              onClick={() => {
-                // TODO: Wire to backend disconnect RPC when available
-              }}
-            >
-              Disconnect
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    variant="secondary"
+                    disabled
+                    size="sm"
+                    onClick={() => {
+                      // TODO: Wire to backend disconnect RPC when available
+                    }}
+                  >
+                    Disconnect
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              <TooltipContent>Coming soon</TooltipContent>
+            </Tooltip>
           </div>
         )
       })}
