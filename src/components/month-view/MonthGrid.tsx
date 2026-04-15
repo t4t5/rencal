@@ -16,6 +16,38 @@ import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
 
+type TopLeftDateProps = {
+  day: MonthDay
+  isActive: boolean
+  onClick: () => void
+}
+
+function TopLeftDate({ day, isActive, onClick }: TopLeftDateProps) {
+  return (
+    <div
+      className={cn(
+        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-border last:border-r-0",
+        day.isWeekend && "bg-weekendBg",
+        isActive && "bg-buttonSecondaryBgHover",
+      )}
+      onClick={onClick}
+    >
+      {day.date.getDate() === 1 && (
+        <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
+      )}
+      <span
+        className={cn(
+          "text-xs w-5 h-5 flex items-center justify-center",
+          day.isToday && "bg-primary text-primary-foreground rounded-circle",
+          isActive && !day.isToday && "bg-secondary rounded-circle",
+        )}
+      >
+        {format(day.date, "d")}
+      </span>
+    </div>
+  )
+}
+
 type MonthWeekRowProps = {
   weekDays: MonthDay[]
   layout: WeekLayout
@@ -43,33 +75,14 @@ const MonthWeekRow = memo(function MonthWeekRow({
     <>
       {/* Day numbers row */}
       <div className="grid grid-cols-7">
-        {weekDays.map((day) => {
-          const isActive = day.dateKey === activeDateKey
-          return (
-            <div
-              key={day.dateKey}
-              className={cn(
-                "font-numerical flex items-center justify-end gap-1 p-1 pb-0 cursor-default border-r border-border last:border-r-0",
-                day.isWeekend && "bg-weekendBg",
-                isActive && "bg-buttonSecondaryBgHover",
-              )}
-              onClick={() => onDayClick(day.date)}
-            >
-              {day.date.getDate() === 1 && (
-                <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
-              )}
-              <span
-                className={cn(
-                  "text-xs w-5 h-5 flex items-center justify-center",
-                  day.isToday && "bg-primary text-primary-foreground rounded-circle",
-                  isActive && !day.isToday && "bg-secondary rounded-circle",
-                )}
-              >
-                {format(day.date, "d")}
-              </span>
-            </div>
-          )
-        })}
+        {weekDays.map((day) => (
+          <TopLeftDate
+            key={day.dateKey}
+            day={day}
+            isActive={day.dateKey === activeDateKey}
+            onClick={() => onDayClick(day.date)}
+          />
+        ))}
       </div>
 
       {/* All-day spanning bars zone */}
