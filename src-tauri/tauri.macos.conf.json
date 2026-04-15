@@ -2,7 +2,7 @@
   "app": {
     "windows": [
       {
-        "width": 1200,
+        "width": 1300,
         "height": 800,
         "decorations": true,
         "titleBarStyle": "Overlay",
