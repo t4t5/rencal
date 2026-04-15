@@ -90,7 +90,8 @@
   --width-buttonHeight: var(--buttonHeight);
 }
 
-[data-theme="classic"] {
+/* Default theme values (classic). Applied to any theme; overridden per-theme below. */
+[data-theme] {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.21 0.006 285.885);
@@ -112,7 +113,7 @@
 
   /* Figma variables: */
   --textPrimary: #ffffff;
-  --textSecondary: rgb(255 255 255 / 60%);
+  --textSecondary: rgb(255 255 255 / 50%);
   --active: #36c3f3;
   --activeBg: rgb(217 217 217 / 30%);
   --bgPrimary: #1a1b26;
@@ -134,9 +135,16 @@
 
 [data-theme="ren"] {
   --bgPrimary: #131313;
+  --buttonPrimaryBg: #f56313;
+  --buttonPrimaryBgHover: #ff772d;
+  --buttonBorder: transparent;
+  --bgPopover: #1d1d1d;
+  --highlight: #ff610b;
+
+  --radius: 0;
 }
 
-/* shadcn variable adjustments — shared across themes, resolved via active theme's Figma vars */
+/* shadcn variable adjustments — mapped from Figma vars, applied last so they win over defaults */
 [data-theme] {
   --background: var(--bgPrimary);
   --primary: var(--buttonPrimaryBg);
