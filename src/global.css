@@ -42,6 +42,7 @@
 }
 
 @theme inline {
+  --radius: calc(var(--radius) - 6px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -142,6 +143,15 @@
   --highlight: #ff610b;
 
   --radius: 0;
+}
+
+/* rounded-full is hardcoded in Tailwind v4 (infinity px), not derived from --radius — zero it out explicitly.
+   Must live in a layer declared before `utilities` so our !important wins over Tailwind's !important. */
+@layer components {
+  [data-theme="ren"] [class~="rounded-full"],
+  [data-theme="ren"] [class~="rounded-full!"] {
+    border-radius: 0 !important;
+  }
 }
 
 /* shadcn variable adjustments — mapped from Figma vars, applied last so they win over defaults */
