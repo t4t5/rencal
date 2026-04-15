@@ -1,8 +1,8 @@
-import { LuMapPin as LocationIcon } from "react-icons/lu"
-
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 
 import { cn } from "@/lib/utils"
+
+import { PushpinIcon } from "@/icons/pushpin"
 
 export const LocationInput = ({
   value,
@@ -20,7 +20,7 @@ export const LocationInput = ({
       className={cn(readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
     >
       <InputGroupAddon>
-        <LocationIcon />
+        <PushpinIcon />
       </InputGroupAddon>
       <InputGroupTextarea
         placeholder="Location"

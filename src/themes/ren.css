@@ -5,6 +5,7 @@ body[data-theme="ren"] {
   --buttonBorder: transparent;
   --bgPopover: #1d1d1d;
   --highlight: #ff610b;
+  --success: var(--buttonPrimaryBg);
 
   --font-mono: "Geist Mono", ui-monospace, monospace;
 

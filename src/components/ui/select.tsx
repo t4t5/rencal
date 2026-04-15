@@ -1,13 +1,16 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+import { CheckIcon } from "@/icons/check"
+import { ChevronDownIcon } from "@/icons/chevron-down"
+import { ChevronUpIcon } from "@/icons/chevron-up"
+
 function DropdownArrow({ forceVisible }: { forceVisible?: boolean }) {
   return (
     <ChevronDownIcon
-      className={cn("size-4 opacity-0 group-hover:opacity-100 text-muted-foreground", {
+      className={cn("size-3 opacity-0 group-hover:opacity-100 text-muted-foreground", {
         "opacity-100": forceVisible,
       })}
     />
@@ -164,7 +167,7 @@ function SelectScrollDownButton({
       className={cn("flex cursor-default items-center justify-center py-1", className)}
       {...props}
     >
-      <ChevronDownIcon className="size-4" />
+      <ChevronDownIcon className="size-3" />
     </SelectPrimitive.ScrollDownButton>
   )
 }

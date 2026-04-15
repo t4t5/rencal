@@ -1,5 +1,3 @@
-import { PiRssSimple as RssIcon } from "react-icons/pi"
-
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -11,6 +9,8 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 import { cn } from "@/lib/utils"
+
+import { RssIcon } from "@/icons/rss"
 
 export function CalendarsPage() {
   const { calendars } = useCalendars()

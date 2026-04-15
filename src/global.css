@@ -83,6 +83,7 @@
   --color-buttonSecondaryBg: var(--buttonSecondaryBg);
   --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
   --color-buttonBorder: var(--buttonBorder);
+  --color-success: var(--success);
   --color-error: var(--error);
   --color-warning: var(--warning);
   --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
@@ -146,6 +147,7 @@
   --highlight: #ff2f00;
   --buttonHeight: 34px;
   --tabListShadow: none;
+  --success: #4caf50;
   --error: #e25252;
   --warning: #fd8742;
   --fontHeading: inherit;

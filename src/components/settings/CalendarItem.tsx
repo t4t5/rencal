@@ -1,5 +1,4 @@
 import { ReactNode } from "react"
-import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
 import { Calendar } from "@/rpc/bindings"
 
@@ -26,25 +25,5 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
 
       {children}
     </div>
-  )
-}
-
-export function CalendarItemWithVisibilityToggle({ calendar }: { calendar: Calendar }) {
-  const isVisible = true // TODO: STORE THIS IN RENCAL'S OWN STORE
-
-  const onToggleVisibility = async (_calendarSlug: string) => {
-    // TODO: Implement visibility toggle using local DB keyed by calendar slug
-  }
-
-  return (
-    <CalendarItem key={calendar.slug} calendar={calendar}>
-      <div className="cursor-pointer" onClick={() => onToggleVisibility(calendar.slug)}>
-        {isVisible ? (
-          <EyeIcon className="size-4 opacity-0 group-hover:opacity-50" />
-        ) : (
-          <EyeClosedIcon className="size-4 text-muted-foreground" />
-        )}
-      </div>
-    </CalendarItem>
   )
 }

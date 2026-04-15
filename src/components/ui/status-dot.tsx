@@ -1,19 +1,21 @@
-import { FaCheck as CheckIcon, FaQuestion as QuestionIcon, FaXmark as XIcon } from "react-icons/fa6"
-
 import type { ResponseStatus } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
 
+import { CheckIcon } from "@/icons/check"
+import { CloseIcon } from "@/icons/close"
+import { QuestionMarkIcon } from "@/icons/question-mark"
+
 const statusColors: Record<string, string> = {
-  accepted: "bg-green-500",
-  declined: "bg-red-500",
-  tentative: "bg-yellow-500",
+  accepted: "bg-success",
+  declined: "bg-error",
+  tentative: "bg-warning",
 }
 
 const statusIcons: Record<string, React.ReactNode> = {
-  accepted: <CheckIcon className="size-2.5" style={{ color: "var(--popover)" }} />,
-  declined: <XIcon className="size-2.5" style={{ color: "var(--popover)" }} />,
-  tentative: <QuestionIcon className="size-2.5" style={{ color: "var(--popover)" }} />,
+  accepted: <CheckIcon className="size-3 text-bgPrimary" />,
+  declined: <CloseIcon className="size-3 text-bgPrimary" />,
+  tentative: <QuestionMarkIcon className="size-3 text-bgPrimary" />,
 }
 
 export function StatusDot({ status }: { status: ResponseStatus | null | undefined }) {

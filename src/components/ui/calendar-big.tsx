@@ -1,5 +1,4 @@
 import { format, getWeek } from "date-fns"
-import { ChevronDownIcon, ChevronLeftIcon, ChevronRightIcon } from "lucide-react"
 import { ComponentProps, createContext, memo, useContext, useEffect, useRef } from "react"
 import {
   Day,
@@ -17,6 +16,10 @@ import { Button, buttonVariants } from "@/components/ui/button"
 
 import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
+
+import { ChevronDownIcon } from "@/icons/chevron-down"
+import { ChevronLeftIcon } from "@/icons/chevron-left"
+import { ChevronRightIcon } from "@/icons/chevron-right"
 
 /** Maps date strings ("yyyy-MM-dd") to arrays of calendar hex colors for that date. */
 const EventDotsContext = createContext<Map<string, string[]>>(new Map())

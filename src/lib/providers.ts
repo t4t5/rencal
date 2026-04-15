@@ -1,6 +1,9 @@
-import { Google, Microsoft, Apple } from "@lobehub/icons"
-import { IoCalendar as CalendarIcon } from "react-icons/io5"
-import { IconType } from "react-icons/lib"
+import { IconType } from "@/lib/types"
+
+import { AppleIcon } from "@/icons/apple"
+import { CalendarIcon } from "@/icons/calendar"
+import { GoogleIcon } from "@/icons/google"
+import { MicrosoftIcon } from "@/icons/microsoft"
 
 export const providerDisplayName: Record<string, string> = {
   google: "Google",
@@ -19,9 +22,9 @@ export const getProviderDisplayName = (name: string | null) => {
 }
 
 export const providerToIcon: Record<string, IconType> = {
-  google: Google.Color,
-  icloud: Apple,
-  outlook: Microsoft.Color,
+  google: GoogleIcon,
+  icloud: AppleIcon,
+  outlook: MicrosoftIcon,
 }
 
 export const getProviderIcon = (name: string | null) => {

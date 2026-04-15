@@ -1,12 +1,13 @@
 import { format, isSameDay } from "date-fns"
 import { memo } from "react"
-import { FaRegCalendar as CalendarIcon } from "react-icons/fa6"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { formatTime } from "@/lib/time"
+
+import { CalendarFillIcon } from "@/icons/calendar-fill"
 
 type EventRowProps = {
   event: CalendarEvent
@@ -27,7 +28,7 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
             ...(calendarColor ? { backgroundColor: calendarColor } : {}),
           }}
         >
-          <CalendarIcon className="text-black w-2.5" />
+          <CalendarFillIcon className="text-black w-3" />
         </div>
         <div className="relative text-sm flex gap-2 flex-wrap">
           <div className="font-medium">{event.summary}</div>

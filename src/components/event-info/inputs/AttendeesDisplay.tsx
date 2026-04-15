@@ -1,9 +1,9 @@
-import { AiOutlineUser as UserIcon } from "react-icons/ai"
-
 import { InputGroup, InputGroupAddon } from "@/components/ui/input-group"
 import { StatusDot } from "@/components/ui/status-dot"
 
 import { EventAttendee } from "@/rpc/bindings"
+
+import { UserIcon } from "@/icons/user"
 
 function AttendeeRow({ attendee, label }: { attendee: EventAttendee; label?: string }) {
   const displayName = attendee.name ?? attendee.email

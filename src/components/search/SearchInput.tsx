@@ -1,5 +1,4 @@
 import { type Dispatch, type RefObject, type SetStateAction, useState } from "react"
-import { IoSearch as SearchIcon } from "react-icons/io5"
 
 import { Input } from "@/components/ui/input"
 import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
@@ -7,6 +6,8 @@ import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
 import type { CalendarEvent } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
+
+import { SearchIcon } from "@/icons/search"
 
 export const SEARCH_INPUT_EL_ID = "global-search"
 

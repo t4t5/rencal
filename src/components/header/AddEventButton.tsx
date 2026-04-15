@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react"
-import { FaPlus as PlusIcon } from "react-icons/fa6"
 
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
@@ -7,6 +6,8 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
+
+import { PlusIcon } from "@/icons/plus"
 
 import { AddEventInput } from "./AddEventInput"
 

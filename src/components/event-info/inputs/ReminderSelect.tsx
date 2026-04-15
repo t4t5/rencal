@@ -1,13 +1,14 @@
 import { formatDuration } from "date-fns"
 import { ReactNode, useState } from "react"
-import { GoBell as BellIcon } from "react-icons/go"
-import { IoCloseOutline as CloseIcon } from "react-icons/io5"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
 import { cn } from "@/lib/utils"
+
+import { BellIcon } from "@/icons/bell"
+import { CloseIcon } from "@/icons/close"
 
 const DEFAULT_REMINDER_VALUES = [
   0, // At time of event

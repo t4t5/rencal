@@ -1,12 +1,13 @@
 import { addDays, format, subDays } from "date-fns"
-import { GoClock as ClockIcon } from "react-icons/go"
-import { IoIosArrowRoundForward as ArrowIcon } from "react-icons/io"
 
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
 import { cn } from "@/lib/utils"
+
+import { ArrowRightIcon } from "@/icons/arrow-right"
+import { ClockIcon } from "@/icons/clock"
 
 export const DateTimeSelect = ({
   start,
@@ -94,7 +95,7 @@ const TimeSelect = ({
         />
       </InputGroup>
 
-      <ArrowIcon className="size-5 shrink-0 text-muted-foreground" />
+      <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
 
       <Input
         type="time"

@@ -1,5 +1,4 @@
 import { addDays, addMonths, format, isBefore, startOfDay, subMonths } from "date-fns"
-import { ChevronDownIcon, ChevronUpIcon } from "lucide-react"
 import { AnimatePresence, motion } from "motion/react"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -10,6 +9,9 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { formatDateKey } from "@/lib/time"
+
+import { ChevronDownIcon } from "@/icons/chevron-down"
+import { ChevronUpIcon } from "@/icons/chevron-up"
 
 const HiddenComponent = () => <></>
 

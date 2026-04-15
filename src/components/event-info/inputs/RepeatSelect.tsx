@@ -1,9 +1,10 @@
-import { IoSync as RepeatIcon } from "react-icons/io5"
 import { RRule, RRuleSet } from "rrule"
 
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { cn } from "@/lib/utils"
+
+import { RepeatIcon } from "@/icons/repeat"
 
 const INTERVALS = [
   {

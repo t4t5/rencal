@@ -1,13 +1,18 @@
-import { HiOutlineCog8Tooth as GearIcon } from "react-icons/hi2"
-import { IconType } from "react-icons/lib"
-import { PiUser as UserIcon, PiCalendarBlank as CalendarIcon } from "react-icons/pi"
-
+import { IconType } from "@/lib/types"
 import { cn } from "@/lib/utils"
+
+import { CalendarIcon } from "@/icons/calendar"
+import { SettingsIcon } from "@/icons/settings"
+import { UserIcon } from "@/icons/user"
 
 export type SettingsTab = "general" | "accounts" | "calendars"
 
-export const NAV_ITEMS: { tab: SettingsTab; label: string; icon: IconType }[] = [
-  { tab: "general", label: "General", icon: GearIcon },
+export const NAV_ITEMS: {
+  tab: SettingsTab
+  label: string
+  icon: IconType
+}[] = [
+  { tab: "general", label: "General", icon: SettingsIcon },
   { tab: "accounts", label: "Accounts", icon: UserIcon },
   { tab: "calendars", label: "Calendars", icon: CalendarIcon },
 ]

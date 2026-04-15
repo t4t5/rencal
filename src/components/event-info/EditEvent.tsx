@@ -1,6 +1,5 @@
 import { parse } from "date-fns"
 import { ReactNode, useEffect, useRef, useState } from "react"
-import { HiEllipsisHorizontal } from "react-icons/hi2"
 import { RRule, RRuleSet } from "rrule"
 
 import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
@@ -24,6 +23,8 @@ import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 import { formatEventTime } from "@/lib/time"
+
+import { MoreHorizIcon } from "@/icons/more-horiz"
 
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
 
@@ -187,7 +188,7 @@ export const EditEvent = ({
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="icon" className="h-7 w-7">
-                <HiEllipsisHorizontal className="h-5 w-5" />
+                <MoreHorizIcon className="size-4" />
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="start">

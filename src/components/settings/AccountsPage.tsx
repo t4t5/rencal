@@ -1,5 +1,4 @@
 import { useState } from "react"
-import { PiPlus as PlusIcon } from "react-icons/pi"
 
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -7,6 +6,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
+
+import { PlusIcon } from "@/icons/plus"
 
 import { AddAccountModal } from "./AddAccountModal"
 

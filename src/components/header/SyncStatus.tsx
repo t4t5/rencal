@@ -1,12 +1,14 @@
 import { AnimatePresence, motion } from "motion/react"
 import { ReactNode, useEffect, useState } from "react"
-import { AiOutlineSync as SyncIcon } from "react-icons/ai"
-import { IoCloudDoneOutline, IoCloudOfflineOutline } from "react-icons/io5"
-import { PiCloudWarning } from "react-icons/pi"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useSync } from "@/contexts/SyncContext"
+
+import { CloudCheckIcon } from "@/icons/cloud-check"
+import { CloudOffIcon } from "@/icons/cloud-off"
+import { CloudWarningIcon } from "@/icons/cloud-warning"
+import { SyncIcon } from "@/icons/sync"
 
 export const SyncStatus = () => {
   const { isSyncing, syncError } = useSync()
@@ -27,7 +29,7 @@ export const SyncStatus = () => {
     if (isSyncing) {
       return {
         key: "syncing",
-        content: <SyncIcon className="text-muted-foreground animate-spin" />,
+        content: <SyncIcon className="size-4 text-muted-foreground animate-spin" />,
       }
     }
 
@@ -37,7 +39,7 @@ export const SyncStatus = () => {
         content: (
           <Tooltip>
             <TooltipTrigger>
-              <IoCloudOfflineOutline className="text-error" />
+              <CloudOffIcon className="size-4 text-error" />
             </TooltipTrigger>
             <TooltipContent>No internet connection</TooltipContent>
           </Tooltip>
@@ -51,7 +53,7 @@ export const SyncStatus = () => {
         content: (
           <Tooltip>
             <TooltipTrigger>
-              <PiCloudWarning className="text-warning" />
+              <CloudWarningIcon className="size-4 text-warning" />
             </TooltipTrigger>
             <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
           </Tooltip>
@@ -61,7 +63,7 @@ export const SyncStatus = () => {
 
     return {
       key: "success",
-      content: <IoCloudDoneOutline className="text-buttonBorder" />,
+      content: <CloudCheckIcon className="size-4 text-muted-foreground" />,
     }
   })()
 

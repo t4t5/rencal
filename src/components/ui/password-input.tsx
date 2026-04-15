@@ -1,7 +1,9 @@
 import { useState } from "react"
-import { PiEyeClosed as EyeClosedIcon, PiEye as EyeIcon } from "react-icons/pi"
 
 import { Input } from "@/components/ui/input"
+
+import { EyeIcon } from "@/icons/eye"
+import { EyeClosedIcon } from "@/icons/eye-closed"
 
 type PasswordInputProps = Omit<React.ComponentProps<typeof Input>, "type">
 

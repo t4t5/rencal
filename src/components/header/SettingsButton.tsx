@@ -1,11 +1,12 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
-import { HiOutlineCog6Tooth as SettingsIcon } from "react-icons/hi2"
 
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { isMacOS } from "@/lib/utils"
+
+import { SettingsIcon } from "@/icons/settings"
 
 export async function openSettingsWindow() {
   const existing = await WebviewWindow.getByLabel("settings")
@@ -38,7 +39,7 @@ export const SettingsButton = () => {
   return (
     <ShortcutTooltip text="Settings" shortcut="mod+comma">
       <Button variant="ghost" onClick={() => openSettingsWindow()}>
-        <SettingsIcon />
+        <SettingsIcon className="size-4" />
       </Button>
     </ShortcutTooltip>
   )

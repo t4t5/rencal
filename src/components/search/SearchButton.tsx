@@ -1,7 +1,8 @@
 import { useState } from "react"
-import { IoSearch as SearchIcon } from "react-icons/io5"
 
 import { Button } from "@/components/ui/button"
+
+import { SearchIcon } from "@/icons/search"
 
 import { SearchBar } from "./SearchBar"
 
