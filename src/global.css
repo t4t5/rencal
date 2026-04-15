@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./themes/ren.css";
 
 @font-face {
   font-family: "Geist Mono";
@@ -150,57 +151,6 @@
   --fontHeading: inherit;
   --fontButton: inherit;
   --fontNumerical: inherit;
-}
-
-[data-theme="ren"] {
-  --bgPrimary: #131313;
-  --buttonPrimaryBg: #f56313;
-  --buttonPrimaryBgHover: #ff772d;
-  --buttonBorder: transparent;
-  --bgPopover: #1d1d1d;
-  --highlight: #ff610b;
-
-  --radius: 0;
-  --radius-circle: 0;
-  --fontHeading: "Geist Mono", ui-monospace, monospace;
-  --fontButton: "Geist Mono", ui-monospace, monospace;
-  --fontNumerical: "Geist Mono", ui-monospace, monospace;
-
-  --tabListShadow: inset 0 0 0 1px var(--buttonSecondaryBg);
-}
-
-[data-theme="ren"] .font-heading,
-[data-theme="ren"] .font-button {
-  text-transform: uppercase;
-}
-
-[data-theme="ren"] .font-button,
-[data-theme="ren"] .font-numerical {
-  font-size: 13px;
-}
-
-/* Escape hatch: reset font-family when a Button is used as an input-like trigger. */
-.font-ui {
-  font-family: inherit;
-  text-transform: none;
-}
-
-/* Downshift headings one tier in ren (uppercase reads larger than mixed case). */
-[data-theme="ren"] .font-heading {
-  font-size: var(--text-sm);
-  line-height: var(--text-sm--line-height);
-}
-[data-theme="ren"] .font-heading.text-lg {
-  font-size: var(--text-base);
-  line-height: var(--text-base--line-height);
-}
-[data-theme="ren"] .font-heading.text-xl {
-  font-size: var(--text-lg);
-  line-height: var(--text-lg--line-height);
-}
-[data-theme="ren"] .font-heading.text-2xl {
-  font-size: var(--text-xl);
-  line-height: var(--text-xl--line-height);
 }
 
 /* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
