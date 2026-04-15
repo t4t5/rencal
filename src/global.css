@@ -173,6 +173,12 @@
   font-size: 13px;
 }
 
+/* Escape hatch: reset font-family when a Button is used as an input-like trigger. */
+.font-ui {
+  font-family: inherit;
+  text-transform: none;
+}
+
 /* Downshift headings one tier in ren (uppercase reads larger than mixed case). */
 [data-theme="ren"] .font-heading {
   font-size: var(--text-sm);
