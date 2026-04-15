@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "Geist Mono";
+  src: url("./fonts/GeistMono-Regular.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is([data-theme] *));
 
 :root {
@@ -89,6 +97,9 @@
   --size-buttonHeight: var(--buttonHeight);
   --height-buttonHeight: var(--buttonHeight);
   --width-buttonHeight: var(--buttonHeight);
+
+  --font-heading: var(--fontHeading);
+  --font-button: var(--fontButton);
 }
 
 /* Default theme values (classic). Applied to any theme; overridden per-theme below. */
@@ -132,6 +143,8 @@
   --buttonHeight: 34px;
   --error: #e25252;
   --warning: #fd8742;
+  --fontHeading: inherit;
+  --fontButton: inherit;
 }
 
 [data-theme="ren"] {
@@ -143,6 +156,35 @@
   --highlight: #ff610b;
 
   --radius: 0;
+  --fontHeading: "Geist Mono", ui-monospace, monospace;
+  --fontButton: "Geist Mono", ui-monospace, monospace;
+}
+
+[data-theme="ren"] .font-heading,
+[data-theme="ren"] .font-button {
+  text-transform: uppercase;
+}
+
+[data-theme="ren"] .font-button {
+  font-size: 13px;
+}
+
+/* Downshift headings one tier in ren (uppercase reads larger than mixed case). */
+[data-theme="ren"] .font-heading {
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}
+[data-theme="ren"] .font-heading.text-lg {
+  font-size: var(--text-base);
+  line-height: var(--text-base--line-height);
+}
+[data-theme="ren"] .font-heading.text-xl {
+  font-size: var(--text-lg);
+  line-height: var(--text-lg--line-height);
+}
+[data-theme="ren"] .font-heading.text-2xl {
+  font-size: var(--text-xl);
+  line-height: var(--text-xl--line-height);
 }
 
 /* rounded-full is hardcoded in Tailwind v4 (infinity px), not derived from --radius — zero it out explicitly.

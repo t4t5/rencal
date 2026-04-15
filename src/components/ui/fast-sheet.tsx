@@ -89,7 +89,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("text-foreground font-semibold", className)} {...props} />
+  return <h2 className={cn("text-foreground font-semibold font-heading", className)} {...props} />
 }
 
 function SheetDescription({ className, ...props }: React.ComponentProps<"p">) {
