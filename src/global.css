@@ -168,9 +168,19 @@
     @apply border-border outline-ring/50;
     scrollbar-width: none;
   }
+  html,
   body {
     @apply bg-background text-foreground;
-    min-height: 100vh;
+    overscroll-behavior: none;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+  }
+  #root {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
   }
 
   input[disabled]::-webkit-datetime-edit-year-field,
