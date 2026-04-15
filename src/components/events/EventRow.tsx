@@ -22,7 +22,7 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
     return (
       <div className="flex gap-2 pl-3 pr-2 items-center">
         <div
-          className="size-4 bg-primary rounded-full flex items-center justify-center"
+          className="size-4 bg-primary rounded-circle flex items-center justify-center"
           style={{
             ...(calendarColor ? { backgroundColor: calendarColor } : {}),
           }}

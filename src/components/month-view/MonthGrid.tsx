@@ -61,8 +61,8 @@ const MonthWeekRow = memo(function MonthWeekRow({
               <span
                 className={cn(
                   "text-xs w-5 h-5 flex items-center justify-center",
-                  day.isToday && "bg-primary text-primary-foreground rounded-full",
-                  isActive && !day.isToday && "bg-secondary rounded-full",
+                  day.isToday && "bg-primary text-primary-foreground rounded-circle",
+                  isActive && !day.isToday && "bg-secondary rounded-circle",
                 )}
               >
                 {format(day.date, "d")}

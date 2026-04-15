@@ -259,7 +259,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
       data-range-middle={modifiers.range_middle}
       data-today={modifiers.today}
       className={cn(
-        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-full! text-sm",
+        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle! text-sm",
         defaultClassNames.day,
         "data-[selected-single=true]:bg-activeBg! data-[selected-single=true]:font-bold! data-[selected-single=true]:text-lg!", // selected day
         "data-[today=true]:text-active data-[today=true]:data-[selected-single=true]:bg-primary! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today
@@ -271,7 +271,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
       {dotColors && dotColors.length > 0 && (
         <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
           {dotColors.map((color, i) => (
-            <div key={i} className="size-1 rounded-full" style={{ backgroundColor: color }} />
+            <div key={i} className="size-1 rounded-circle" style={{ backgroundColor: color }} />
           ))}
         </div>
       )}

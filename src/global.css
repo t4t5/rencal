@@ -161,6 +161,7 @@
   --highlight: #ff610b;
 
   --radius: 0;
+  --radius-circle: 0;
   --fontHeading: "Geist Mono", ui-monospace, monospace;
   --fontButton: "Geist Mono", ui-monospace, monospace;
   --fontNumerical: "Geist Mono", ui-monospace, monospace;
@@ -202,13 +203,9 @@
   line-height: var(--text-xl--line-height);
 }
 
-/* rounded-full is hardcoded in Tailwind v4 (infinity px), not derived from --radius — zero it out explicitly.
-   Must live in a layer declared before `utilities` so our !important wins over Tailwind's !important. */
-@layer components {
-  [data-theme="ren"] [class~="rounded-full"],
-  [data-theme="ren"] [class~="rounded-full!"] {
-    border-radius: 0 !important;
-  }
+/* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
+@utility rounded-circle {
+  border-radius: var(--radius-circle, calc(infinity* 1px));
 }
 
 /* shadcn variable adjustments — mapped from Figma vars, applied last so they win over defaults */

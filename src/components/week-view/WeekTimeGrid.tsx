@@ -179,7 +179,7 @@ const DayHeaders = ({
       <span className="text-[11px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
       <span
         className={cn(
-          "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-full",
+          "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
           day.isToday && "bg-primary text-primary-foreground",
         )}
       >
