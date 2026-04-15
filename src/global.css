@@ -173,11 +173,31 @@
   --popover: var(--bgPopover);
 }
 
-/* Move sonner close button to top right */
-[data-sonner-toast] [data-close-button] {
-  left: unset !important;
-  right: -16px !important;
-  top: -2px !important;
+@keyframes slide-in-y {
+  from {
+    transform: translateY(var(--slide-from, 0));
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-out-y {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(var(--slide-to, 0));
+  }
+}
+
+@keyframes scale-in {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
 }
 
 @layer base {

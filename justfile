@@ -11,7 +11,7 @@ icons:
   pnpm tauri icon src-tauri/icons/master.png
 
 # See the size of dependencies:
-checksize:
+bundlesize:
   npx vite-bundle-visualizer
 
 # Build caldir provider binaries (debug) into src-tauri/providers/

@@ -1,4 +1,3 @@
-import { AnimatePresence, motion } from "motion/react"
 import { ReactNode, useEffect, useState } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -68,16 +67,8 @@ export const SyncStatus = () => {
   })()
 
   return (
-    <AnimatePresence mode="wait" initial={false}>
-      <motion.div
-        key={key}
-        initial={{ scale: 0 }}
-        animate={{ scale: 1 }}
-        exit={{ scale: 0 }}
-        transition={{ duration: 0.15, ease: "easeOut" }}
-      >
-        {content}
-      </motion.div>
-    </AnimatePresence>
+    <div key={key} style={{ animation: "scale-in 0.15s ease-out" }}>
+      {content}
+    </div>
   )
 }
