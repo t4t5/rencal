@@ -2,6 +2,7 @@ import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState }
 import { flushSync } from "react-dom"
 
 import { DaySection } from "@/components/events/DaySection"
+import { WelcomeEmptyState } from "@/components/events/WelcomeEmptyState"
 
 import { CalendarEvent } from "@/rpc/bindings"
 
@@ -21,7 +22,7 @@ type Section = {
 }
 
 export function EventList() {
-  const { calendars } = useCalendars()
+  const { calendars, isLoadingCalendars } = useCalendars()
   const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
     useCalendarNavigation()
   // TODO: respect calendar visibility
@@ -163,8 +164,12 @@ export function EventList() {
     })
   }, [eventsByDate])
 
-  if (isInitialLoading) {
+  if (isInitialLoading || isLoadingCalendars) {
     return <div className="grow" />
+  }
+
+  if (calendars.length === 0) {
+    return <WelcomeEmptyState />
   }
 
   if (events.length === 0) {

@@ -21,6 +21,7 @@ const CALENDAR_DIR_CHANGED = "calendar-dir-changed"
 
 interface CalendarsContextType {
   calendars: Calendar[]
+  isLoadingCalendars: boolean
   reloadCalendars: () => Promise<void>
 }
 
@@ -59,6 +60,7 @@ export function useCalendarState() {
 export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const [activeDate, setActiveDate] = useState<Date>(new Date())
   const [calendars, setCalendars] = useState<Calendar[]>([])
+  const [isLoadingCalendars, setIsLoadingCalendars] = useState(true)
 
   const scrollToDateRef = useRef<((date: Date, behavior?: ScrollBehavior) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -66,9 +68,13 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const loadCalendarsFromStore = async () => {
-    const result = await rpc.caldir.list_calendars()
-    logger.debug("Calendars loaded from store:", result.length)
-    setCalendars(result)
+    try {
+      const result = await rpc.caldir.list_calendars()
+      logger.debug("Calendars loaded from store:", result.length)
+      setCalendars(result)
+    } finally {
+      setIsLoadingCalendars(false)
+    }
   }
 
   useEffect(() => {
@@ -129,8 +135,8 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const calendarsValue = useMemo(
-    () => ({ calendars, reloadCalendars: loadCalendarsFromStore }),
-    [calendars],
+    () => ({ calendars, isLoadingCalendars, reloadCalendars: loadCalendarsFromStore }),
+    [calendars, isLoadingCalendars],
   )
 
   const navigationValue = useMemo(
