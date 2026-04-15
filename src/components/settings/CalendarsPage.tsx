@@ -8,6 +8,7 @@ import { Calendar } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
@@ -60,7 +61,10 @@ function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
         className="data-[state=checked]:border-transparent"
         style={
           isVisible
-            ? { backgroundColor: calendar.color ?? "#888", borderColor: calendar.color ?? "#888" }
+            ? {
+                backgroundColor: getCalendarColor(calendar),
+                borderColor: getCalendarColor(calendar),
+              }
             : undefined
         }
       />
