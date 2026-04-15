@@ -38,8 +38,8 @@ export function MonthAllDayBar({
         getEventBlockClasses(highlighted, isDeclined),
         "truncate px-1 py-px leading-4",
         (isPending || isDeclined || isDraft) && "opacity-50",
-        item.isStart ? "rounded-l ml-px" : "-ml-px",
-        item.isEnd ? "rounded-r mr-px" : "-mr-px",
+        item.isStart ? "rounded-l ml-0.5" : "-ml-0.5",
+        item.isEnd ? "rounded-r mr-[3px]" : "-mr-0.5",
       )}
       style={{
         gridColumn: `${item.startCol} / ${item.endCol}`,

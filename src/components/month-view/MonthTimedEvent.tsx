@@ -33,7 +33,7 @@ export function MonthTimedEvent({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "flex items-center gap-1 text-xs truncate cursor-default px-0.5 hover:bg-hoverBg rounded shrink-0",
+        "flex items-center gap-1 text-xs truncate cursor-default px-1 hover:bg-hoverBg rounded shrink-0",
         highlighted && "bg-accent!",
         (isPending || isDeclined || isDraft) && "opacity-50",
         isDeclined && "line-through",
@@ -49,7 +49,7 @@ export function MonthTimedEvent({
       }
     >
       <div
-        className="size-1.5 rounded-full shrink-0"
+        className="size-1.5 rounded-circle shrink-0"
         style={{ backgroundColor: item.color ?? "var(--primary)" }}
       />
       <span className="truncate">{item.event.summary}</span>

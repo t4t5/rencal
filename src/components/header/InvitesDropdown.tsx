@@ -46,7 +46,7 @@ export function InvitesDropdown() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="flex size-7 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white cursor-pointer hover:bg-red-600 transition-colors">
+        <button className="flex size-7 items-center justify-center rounded-circle bg-red-500 text-xs font-medium text-white cursor-pointer hover:bg-red-600 transition-colors">
           {invites.length}
         </button>
       </PopoverTrigger>
@@ -90,7 +90,7 @@ function InviteCard({
       <div className="flex gap-3 p-3">
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white bg-muted-foreground",
+            "flex size-8 shrink-0 items-center justify-center rounded-circle text-xs font-medium text-white bg-muted-foreground",
           )}
         >
           {initial}

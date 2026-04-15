@@ -21,7 +21,9 @@ export function StatusDot({ status }: { status: ResponseStatus | null | undefine
   const icon = statusIcons[status ?? ""]
 
   return (
-    <span className={cn("size-4 rounded-full shrink-0 flex items-center justify-center", dotColor)}>
+    <span
+      className={cn("size-4 rounded-circle shrink-0 flex items-center justify-center", dotColor)}
+    >
       {icon}
     </span>
   )

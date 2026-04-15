@@ -27,13 +27,16 @@ export const DaySection = memo(
     return (
       <div ref={ref} data-date={formatDateKey(date)} className="relative border-b border-b-divider">
         <div
-          className={cn("sticky top-0 z-10 text-sm bg-bgPrimary px-3 py-1.5 flex gap-2", {
-            "text-active": isToday(date),
-          })}
+          className={cn(
+            "sticky top-0 z-10 text-sm bg-bgPrimary px-3 py-1.5 flex gap-2 h-8 items-center",
+            {
+              "text-active": isToday(date),
+            },
+          )}
         >
-          <span className="font-bold uppercase">{getRelativeDayLabel(date)}</span>
+          <span className="font-bold uppercase font-numerical">{getRelativeDayLabel(date)}</span>
           <span
-            className={cn("text-muted-foreground", {
+            className={cn("text-muted-foreground font-numerical", {
               "text-active": isToday(date),
             })}
           >

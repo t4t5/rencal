@@ -115,7 +115,7 @@ export function MonthView() {
           <div
             key={label}
             className={cn(
-              "text-xs text-muted-foreground py-2 text-center font-medium",
+              "text-[11px]! text-muted-foreground py-2 text-center font-medium font-numerical uppercase",
               i >= 5 && "bg-weekendBg",
             )}
           >
