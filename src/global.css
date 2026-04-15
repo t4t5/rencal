@@ -100,6 +100,7 @@
 
   --font-heading: var(--fontHeading);
   --font-button: var(--fontButton);
+  --font-numerical: var(--fontNumerical);
 }
 
 /* Default theme values (classic). Applied to any theme; overridden per-theme below. */
@@ -145,6 +146,7 @@
   --warning: #fd8742;
   --fontHeading: inherit;
   --fontButton: inherit;
+  --fontNumerical: inherit;
 }
 
 [data-theme="ren"] {
@@ -158,6 +160,7 @@
   --radius: 0;
   --fontHeading: "Geist Mono", ui-monospace, monospace;
   --fontButton: "Geist Mono", ui-monospace, monospace;
+  --fontNumerical: "Geist Mono", ui-monospace, monospace;
 }
 
 [data-theme="ren"] .font-heading,
@@ -165,7 +168,8 @@
   text-transform: uppercase;
 }
 
-[data-theme="ren"] .font-button {
+[data-theme="ren"] .font-button,
+[data-theme="ren"] .font-numerical {
   font-size: 13px;
 }
 

@@ -169,17 +169,17 @@ const DayHeaders = ({
     <div
       key={day.dateKey}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default",
+        "flex items-baseline justify-end gap-1 border-r border-border px-1 pt-1.5 cursor-default font-numerical",
         day.dateKey === activeDateKey
           ? "bg-buttonSecondaryBgHover"
           : day.isWeekend && "bg-weekendBg",
       )}
       onClick={() => onDayClick(day.date)}
     >
-      <span className="text-[10px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
+      <span className="text-[11px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
       <span
         className={cn(
-          "text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full",
+          "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-full",
           day.isToday && "bg-primary text-primary-foreground",
         )}
       >
