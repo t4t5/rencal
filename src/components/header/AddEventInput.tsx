@@ -1,4 +1,11 @@
-import { useCallback, useDeferredValue, useMemo, useRef } from "react"
+/*
+ * Parsed segments (time, location, recurrence) are highlighted by overlaying
+ * dashed outline rectangles on top of input.
+ * (We measure segment positions with a hidden <span> mirror,
+ * then position absolute divs + translate them in
+ * sync with input's scrollLeft)
+ */
+import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { Input } from "@/components/ui/input"
 
@@ -7,44 +14,80 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 import { segmentEventText } from "@/lib/parse-event-text"
 import { cn } from "@/lib/utils"
 
+interface OutlineRect {
+  x: number
+  width: number
+}
+
 export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
   const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent } = useEventDraft()
-  const overlayRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const measurerRef = useRef<HTMLSpanElement>(null)
+  const [scrollLeft, setScrollLeft] = useState(0)
+  const [outlines, setOutlines] = useState<OutlineRect[]>([])
 
-  // Defer the segmentation so chrono parsing doesn't block the input commit.
   const deferredText = useDeferredValue(text)
   const segments = useMemo(() => segmentEventText(deferredText), [deferredText])
   const hasParsedSegments = isDrafting && segments.some((s) => s.parsed)
 
-  const syncScroll = useCallback(() => {
-    const input = overlayRef.current?.parentElement?.querySelector("input")
-    if (input && overlayRef.current) {
-      overlayRef.current.scrollLeft = input.scrollLeft
+  const getInput = useCallback(() => containerRef.current?.querySelector("input") ?? null, [])
+
+  useLayoutEffect(() => {
+    const m = measurerRef.current
+    if (!m || !hasParsedSegments) {
+      setOutlines([])
+      return
     }
-  }, [])
+    const rects: OutlineRect[] = []
+    let pos = 0
+    for (const seg of segments) {
+      if (seg.parsed) {
+        m.textContent = deferredText.slice(0, pos)
+        const x = m.getBoundingClientRect().width
+        m.textContent = seg.text
+        const width = m.getBoundingClientRect().width
+        rects.push({ x, width })
+      }
+      pos += seg.text.length
+    }
+    setOutlines(rects)
+  }, [segments, deferredText, hasParsedSegments])
+
+  const syncScroll = useCallback(() => {
+    const input = getInput()
+    if (input) setScrollLeft(input.scrollLeft)
+  }, [getInput])
 
   return (
-    <div className="relative w-full">
+    <div ref={containerRef} className="relative w-full">
       {hasParsedSegments && (
         <div
-          ref={overlayRef}
           aria-hidden
-          className="pointer-events-none absolute inset-0 flex items-center overflow-hidden whitespace-pre px-3 py-1 text-sm"
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-md"
         >
-          {segments.map((seg, i) => (
-            <span
-              key={i}
-              className={cn(
-                seg.parsed &&
-                  "rounded-sm outline-1 outline-dashed outline-muted-foreground/40 outline-offset-2",
-              )}
-            >
-              {seg.text}
-            </span>
-          ))}
+          <div
+            className="absolute inset-y-0"
+            style={{
+              left: 13,
+              transform: `translateX(${-scrollLeft}px)`,
+            }}
+          >
+            {outlines.map((r, i) => (
+              <div
+                key={i}
+                className="absolute inset-y-1.5 rounded-sm outline-1 outline-dashed outline-muted-foreground/40 outline-offset-2"
+                style={{ left: r.x, width: r.width }}
+              />
+            ))}
+          </div>
         </div>
       )}
+      <span
+        ref={measurerRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre text-sm"
+      />
       <Input
         ghost={false}
         value={isDrafting ? text : ""}
@@ -79,11 +122,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
           }
           syncScroll()
         }}
-        className={cn(
-          "w-full",
-          hasParsedSegments && "text-transparent caret-foreground",
-          !isDrafting && "cursor-pointer caret-transparent",
-        )}
+        className={cn("w-full", !isDrafting && "cursor-pointer caret-transparent")}
       />
     </div>
   )
