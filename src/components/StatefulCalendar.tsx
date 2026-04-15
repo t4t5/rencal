@@ -119,7 +119,7 @@ export function StatefulCalendar() {
 
   return (
     <div className="pt-4 select-none">
-      <div className="flex items-center justify-between px-4 pb-4">
+      <div className="flex items-center justify-between px-4 pb-4 h-12">
         <h2 className="text-2xl font-bold font-heading">
           {format(activeDate, "MMMM")}{" "}
           <span className="text-highlight font-normal">{format(activeDate, "yyyy")}</span>
