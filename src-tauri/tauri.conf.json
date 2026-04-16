@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "rencal",
+  "productName": "renCal",
   "version": "0.1.0",
   "identifier": "rencal",
   "build": {
@@ -8,11 +8,6 @@
     "devUrl": "http://localhost:1420",
     "beforeBuildCommand": "pnpm build",
     "frontendDist": "../dist"
-  },
-  "plugins": {
-    "sql": {
-      "preload": ["sqlite:rencal.db"]
-    }
   },
   "app": {
     "windows": [
