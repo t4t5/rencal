@@ -37,7 +37,7 @@ export const SyncStatus = () => {
         key: "offline",
         content: (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="flex items-center">
               <CloudOffIcon className="size-4 text-error" />
             </TooltipTrigger>
             <TooltipContent>No internet connection</TooltipContent>
@@ -51,7 +51,7 @@ export const SyncStatus = () => {
         key: "error",
         content: (
           <Tooltip>
-            <TooltipTrigger>
+            <TooltipTrigger className="flex items-center">
               <CloudWarningIcon className="size-4 text-warning" />
             </TooltipTrigger>
             <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
