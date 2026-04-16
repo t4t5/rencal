@@ -57,10 +57,20 @@ export function useCalendarState() {
 
 // --- Provider ---
 
-export function CalendarStateProvider({ children }: { children: ReactNode }) {
-  const [activeDate, setActiveDate] = useState<Date>(new Date())
-  const [calendars, setCalendars] = useState<Calendar[]>([])
-  const [isLoadingCalendars, setIsLoadingCalendars] = useState(true)
+interface CalendarStateProviderProps {
+  children: ReactNode
+  initialCalendars?: Calendar[]
+  initialDate?: Date
+}
+
+export function CalendarStateProvider({
+  children,
+  initialCalendars,
+  initialDate,
+}: CalendarStateProviderProps) {
+  const [activeDate, setActiveDate] = useState<Date>(() => initialDate ?? new Date())
+  const [calendars, setCalendars] = useState<Calendar[]>(() => initialCalendars ?? [])
+  const [isLoadingCalendars, setIsLoadingCalendars] = useState(() => initialCalendars === undefined)
 
   const scrollToDateRef = useRef<((date: Date, behavior?: ScrollBehavior) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -78,7 +88,9 @@ export function CalendarStateProvider({ children }: { children: ReactNode }) {
   }
 
   useEffect(() => {
-    void loadCalendarsFromStore()
+    if (initialCalendars === undefined) {
+      void loadCalendarsFromStore()
+    }
 
     const unlisten = listen(CALENDAR_DIR_CHANGED, () => {
       void loadCalendarsFromStore()

@@ -14,6 +14,7 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
 import { formatDateKey } from "@/lib/time"
+import { cn } from "@/lib/utils"
 
 type Section = {
   date: Date
@@ -34,6 +35,7 @@ export function EventList() {
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
   const [ghostDate, setGhostDate] = useState<Date | null>(null)
   const ghostDateRef = useRef<Date | null>(null)
   ghostDateRef.current = ghostDate
@@ -160,6 +162,8 @@ export function EventList() {
       requestAnimationFrame(() => {
         scrollToDate(activeDate, "instant")
         setIsNavigating(false)
+        // 3: scroll (and any ghost-section follow-up scroll) has settled:
+        requestAnimationFrame(() => setHasInitiallyScrolled(true))
       })
     })
   }, [eventsByDate])
@@ -177,7 +181,13 @@ export function EventList() {
   }
 
   return (
-    <div ref={scrollContainerRef} className="grow overflow-auto flex-col gap-6 select-none">
+    <div
+      ref={scrollContainerRef}
+      className={cn(
+        "grow overflow-auto flex-col gap-6 select-none",
+        !hasInitiallyScrolled && "invisible",
+      )}
+    >
       {sectionsToRender.map(({ date, events, isGhost }) => {
         const dateStr = formatDateKey(date)
 

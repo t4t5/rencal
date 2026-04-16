@@ -37,19 +37,30 @@ export function useCalEvents() {
   return useContext(CalEventsContext)
 }
 
-export function CalEventsProvider({ children }: { children: ReactNode }) {
-  const { calendars } = useCalendars()
+interface CalEventsProviderProps {
+  children: ReactNode
+  initialEvents?: CalendarEvent[]
+  initialRange?: DateRange
+}
+
+export function CalEventsProvider({
+  children,
+  initialEvents,
+  initialRange,
+}: CalEventsProviderProps) {
+  const { calendars, isLoadingCalendars } = useCalendars()
   const { activeDate } = useCalendarNavigation()
 
   // TODO: respect calendar visibility
   const visibleCalendarIds = calendars.map((c) => c.slug)
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
-  const currentDateRangeRef = useRef<DateRange | null>(null)
+  const currentDateRangeRef = useRef<DateRange | null>(initialRange ?? null)
 
-  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>([])
+  const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => initialEvents ?? [])
   const [activeEventId, setActiveEventId] = useState<string | null>(null)
-  const [isInitialLoading, setIsInitialLoading] = useState(true)
+  const [isInitialLoading, setIsInitialLoading] = useState(() => initialEvents === undefined)
+  const skipNextEffectRef = useRef(initialEvents !== undefined)
 
   const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
 
@@ -77,13 +88,17 @@ export function CalEventsProvider({ children }: { children: ReactNode }) {
 
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
+    if (skipNextEffectRef.current) {
+      skipNextEffectRef.current = false
+      return
+    }
     if (visibleCalendarKey) {
       reloadEvents().then(() => setIsInitialLoading(false))
-    } else {
+    } else if (!isLoadingCalendars) {
       setCalendarEvents([])
       setIsInitialLoading(false)
     }
-  }, [visibleCalendarKey])
+  }, [visibleCalendarKey, isLoadingCalendars])
 
   const value = useMemo<CalEventsContextType>(
     () => ({
