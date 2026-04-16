@@ -28,6 +28,9 @@
     "resources": [
       "providers/caldir-provider-google",
       "providers/caldir-provider-icloud",
+      "providers/caldir-provider-outlook",
+      "providers/caldir-provider-caldav",
+      "providers/caldir-provider-webcal",
       "icons/128x128.png"
     ],
     "icon": [

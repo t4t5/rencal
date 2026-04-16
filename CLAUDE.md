@@ -48,7 +48,7 @@ communicates with the backend via taurpc.
 
 ## Bundled Providers
 
-RenCal bundles the Google and iCloud caldir provider binaries so they work out of the box. The
+RenCal bundles the Google, iCloud, Outlook, CalDAV, and WebCal caldir provider binaries so they work out of the box. The
 `just dev` / `just build` recipes compile them from `../caldir/` into `src-tauri/providers/`. At
 startup, `lib.rs` sets the `CALDIR_PROVIDER_PATH` env var to point at that directory. caldir-core's
 `discover_installed()` checks `CALDIR_PROVIDER_PATH` before `PATH`, so bundled providers are found
