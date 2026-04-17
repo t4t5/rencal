@@ -19,6 +19,7 @@ import { formatEventTime } from "@/lib/time"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
+import { useSettings } from "./SettingsContext"
 import { useSync } from "./SyncContext"
 
 interface DraftEvent {
@@ -74,10 +75,14 @@ const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 
 export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
+  const { defaultCalendar } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
 
-  const defaultCalendarId = calendars[0]?.slug ?? null
+  const defaultCalendarId =
+    (defaultCalendar && calendars.some((c) => c.slug === defaultCalendar)
+      ? defaultCalendar
+      : calendars[0]?.slug) ?? null
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])

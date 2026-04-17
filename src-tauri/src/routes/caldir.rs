@@ -313,6 +313,9 @@ pub trait CaldirApi {
     async fn get_default_reminders() -> TauResult<Vec<i32>>;
     async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()>;
 
+    async fn get_default_calendar() -> TauResult<Option<String>>;
+    async fn set_default_calendar(slug: Option<String>) -> TauResult<()>;
+
     async fn get_calendar_dir() -> TauResult<String>;
     async fn set_calendar_dir(path: String) -> TauResult<()>;
 }
@@ -946,6 +949,19 @@ impl CaldirApi for CaldirApiImpl {
         } else {
             Some(minutes.iter().map(|m| format!("{m}m")).collect())
         };
+        config.save().map_err(|e| e.to_string())?;
+        Ok(())
+    }
+
+    async fn get_default_calendar(self) -> TauResult<Option<String>> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        Ok(caldir.config().default_calendar.clone())
+    }
+
+    async fn set_default_calendar(self, slug: Option<String>) -> TauResult<()> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let mut config = caldir.config().clone();
+        config.default_calendar = slug;
         config.save().map_err(|e| e.to_string())?;
         Ok(())
     }

@@ -6,6 +6,7 @@ import type { TimeFormat } from "@/rpc/bindings"
 
 const TIME_FORMAT_CHANGED = "time-format-changed"
 const DEFAULT_REMINDERS_CHANGED = "default-reminders-changed"
+const DEFAULT_CALENDAR_CHANGED = "default-calendar-changed"
 const CALENDAR_DIR_CHANGED = "calendar-dir-changed"
 
 interface SettingsContextType {
@@ -13,6 +14,8 @@ interface SettingsContextType {
   setTimeFormat: (tf: TimeFormat) => Promise<void>
   defaultReminders: number[]
   setDefaultReminders: (mins: number[]) => Promise<void>
+  defaultCalendar: string | null
+  setDefaultCalendar: (slug: string | null) => Promise<void>
   calendarDir: string
   setCalendarDir: (path: string) => Promise<void>
 }
@@ -26,18 +29,36 @@ export function useSettings() {
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>("24h")
   const [defaultReminders, setDefaultRemindersState] = useState<number[]>([])
+  const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
 
   useEffect(() => {
-    rpc.caldir.get_time_format().then(setTimeFormatState).catch(console.error)
-    rpc.caldir.get_default_reminders().then(setDefaultRemindersState).catch(console.error)
-    rpc.caldir.get_calendar_dir().then(setCalendarDirState).catch(console.error)
+    const loadSettings = async () => {
+      try {
+        const [tf, reminders, cal, dir] = await Promise.all([
+          rpc.caldir.get_time_format(),
+          rpc.caldir.get_default_reminders(),
+          rpc.caldir.get_default_calendar(),
+          rpc.caldir.get_calendar_dir(),
+        ])
+        setTimeFormatState(tf)
+        setDefaultRemindersState(reminders)
+        setDefaultCalendarState(cal)
+        setCalendarDirState(dir)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+    void loadSettings()
 
     const unlistenTimeFormat = listen<TimeFormat>(TIME_FORMAT_CHANGED, (event) => {
       setTimeFormatState(event.payload)
     })
     const unlistenReminders = listen<number[]>(DEFAULT_REMINDERS_CHANGED, (event) => {
       setDefaultRemindersState(event.payload)
+    })
+    const unlistenDefaultCalendar = listen<string | null>(DEFAULT_CALENDAR_CHANGED, (event) => {
+      setDefaultCalendarState(event.payload)
     })
     const unlistenCalendarDir = listen<string>(CALENDAR_DIR_CHANGED, (event) => {
       setCalendarDirState(event.payload)
@@ -46,6 +67,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     return () => {
       unlistenTimeFormat.then((fn) => fn())
       unlistenReminders.then((fn) => fn())
+      unlistenDefaultCalendar.then((fn) => fn())
       unlistenCalendarDir.then((fn) => fn())
     }
   }, [])
@@ -62,6 +84,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(DEFAULT_REMINDERS_CHANGED, mins)
   }
 
+  const setDefaultCalendar = async (slug: string | null) => {
+    setDefaultCalendarState(slug)
+    await rpc.caldir.set_default_calendar(slug)
+    await emit(DEFAULT_CALENDAR_CHANGED, slug)
+  }
+
   const setCalendarDir = async (path: string) => {
     await rpc.caldir.set_calendar_dir(path)
     const stored = await rpc.caldir.get_calendar_dir()
@@ -76,6 +104,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setTimeFormat,
         defaultReminders,
         setDefaultReminders,
+        defaultCalendar,
+        setDefaultCalendar,
         calendarDir,
         setCalendarDir,
       }}

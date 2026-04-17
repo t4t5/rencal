@@ -1,15 +1,23 @@
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Calendar } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
+import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
 export function CalendarsPage() {
@@ -49,7 +57,9 @@ export function CalendarsPage() {
 }
 
 function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
+  const { defaultCalendar, setDefaultCalendar } = useSettings()
   const isVisible = true // TODO: Implement visibility toggle using local DB
+  const isDefault = defaultCalendar === calendar.slug
 
   return (
     <label className="flex items-center gap-2 cursor-pointer">
@@ -68,9 +78,26 @@ function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
             : undefined
         }
       />
-      <span className={cn("text-sm", { "text-muted-foreground": !isVisible })}>
+      <span className={cn("text-sm grow", { "text-muted-foreground": !isVisible })}>
         {calendar.name ?? calendar.slug}
       </span>
+      {isDefault && <span className="text-xs text-muted-foreground">Default</span>}
+
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7">
+            <MoreHorizIcon className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="start">
+          <DropdownMenuItem
+            disabled={isDefault}
+            onClick={() => void setDefaultCalendar(calendar.slug)}
+          >
+            Set as default
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
     </label>
   )
 }
