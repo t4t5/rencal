@@ -4,7 +4,7 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/MonthGrid"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
-import { setEventAnchor } from "@/lib/event-anchor"
+import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
@@ -29,10 +29,12 @@ export function MonthAllDayEvent({
   const color = item.color ?? "var(--primary)"
   const highlighted = isActive || contextOpen
 
+  const fillsRow = item.endCol - item.startCol === 7
+
   const handleClick: MouseEventHandler<HTMLDivElement> | undefined = (e) => {
     if (!isDraft) {
       e.stopPropagation()
-      setEventAnchor(e.currentTarget)
+      setEventAnchor(fillsRow ? pointAnchorFromClick(e) : e.currentTarget)
       onClick()
     }
   }

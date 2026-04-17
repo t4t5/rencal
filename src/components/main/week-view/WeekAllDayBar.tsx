@@ -3,7 +3,7 @@ import { useRef, useState } from "react"
 import { EventContextMenu } from "@/components/EventContextMenu"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
-import { setEventAnchor } from "@/lib/event-anchor"
+import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
@@ -30,6 +30,7 @@ export function WeekAllDayBar({
   const color = item.color ?? "var(--primary)"
   const isDashed = isPending || isDeclined || isDraft
   const highlighted = isActive || contextOpen
+  const fillsRow = item.endCol - item.startCol === 7
 
   const inner = (
     <div
@@ -53,7 +54,7 @@ export function WeekAllDayBar({
             ? undefined
             : (e) => {
                 e.stopPropagation()
-                setEventAnchor(e.currentTarget)
+                setEventAnchor(fillsRow ? pointAnchorFromClick(e) : e.currentTarget)
                 onClick()
               }
         }
