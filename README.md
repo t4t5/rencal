@@ -1,3 +1,3 @@
-# Rencal
+# renCal
 
-A calendar app crafted especially for Omarchy.
+A modern open-source calendar
