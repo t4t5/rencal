@@ -48,13 +48,13 @@ export function MonthAllDayEvent({
         "absolute truncate px-1 py-px leading-4",
         (isPending || isDeclined || isDraft) && "opacity-50",
         item.isStart ? "rounded-l ml-0.5" : "-ml-0.5",
-        item.isEnd ? "rounded-r mr-[3px]" : "-mr-0.5",
+        item.isEnd ? "rounded-r" : "-mr-0.5",
       )}
       style={{
         top: `${item.lane * LANE_HEIGHT}px`,
         height: `${LANE_HEIGHT - LANE_GAP}px`,
         left: `${((item.startCol - 1) / 7) * 100}%`,
-        width: `${((item.endCol - item.startCol) / 7) * 100}%`,
+        width: `calc(${((item.endCol - item.startCol) / 7) * 100}% - 5px)`,
         ...getEventBlockStyle(color, highlighted, false),
       }}
       onClick={handleClick}
