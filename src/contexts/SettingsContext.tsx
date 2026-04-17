@@ -3,11 +3,12 @@ import { ReactNode, createContext, useContext, useEffect, useState } from "react
 
 import { rpc } from "@/rpc"
 import type { TimeFormat } from "@/rpc/bindings"
-
-const TIME_FORMAT_CHANGED = "time-format-changed"
-const DEFAULT_REMINDERS_CHANGED = "default-reminders-changed"
-const DEFAULT_CALENDAR_CHANGED = "default-calendar-changed"
-const CALENDAR_DIR_CHANGED = "calendar-dir-changed"
+import {
+  CALENDAR_DIR_CHANGED,
+  DEFAULT_CALENDAR_CHANGED,
+  DEFAULT_REMINDERS_CHANGED,
+  TIME_FORMAT_CHANGED,
+} from "@/rpc/events"
 
 interface SettingsContextType {
   timeFormat: TimeFormat

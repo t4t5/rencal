@@ -12,10 +12,9 @@ import {
 
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
+import { CALENDAR_DIR_CHANGED } from "@/rpc/events"
 
 import { logger } from "@/lib/logger"
-
-const CALENDAR_DIR_CHANGED = "calendar-dir-changed"
 
 // --- Calendars context (changes rarely) ---
 
