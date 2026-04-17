@@ -98,9 +98,12 @@ export function MonthGrid({
 
   // Scroll to anchor on mount and when rowHeight changes. anchorWeekIndex is NOT a dep —
   // it shifts when weeks are prepended/appended and we don't want to jump back then.
+  // Must call measure() first: tanstack-virtual memoizes item sizes and does not
+  // re-run estimateSize when only the function reference changes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   useEffect(() => {
+    virtualizer.measure()
     const idx = latestRef.current.anchorWeekIndex
     if (idx < 0) return
     virtualizer.scrollToIndex(idx, { align: "start" })
