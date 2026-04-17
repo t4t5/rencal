@@ -3,6 +3,7 @@ import { useMemo } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { getEventDayRange, MS_PER_DAY } from "@/lib/time"
 
 import type { MonthDay } from "./useMonthGrid"
@@ -53,9 +54,10 @@ export function useMonthEventLayout(
   calendars: Calendar[],
 ): WeekLayout[] {
   return useMemo(() => {
-    const colorMap = new Map<string, string | null>()
+    const calMap = new Map<string, Calendar>()
+
     for (const cal of calendars) {
-      colorMap.set(cal.slug, cal.color)
+      calMap.set(cal.slug, cal)
     }
 
     // Pre-compute day ranges and spanning status once per event
@@ -76,6 +78,7 @@ export function useMonthEventLayout(
 
       for (const event of events) {
         const info = eventInfoMap.get(event.id)!
+        const calendar = calMap.get(event.calendar_slug)!
 
         if (info.spanning) {
           // Check overlap: event [first, last] vs week [weekStart, weekEndDay]
@@ -92,7 +95,7 @@ export function useMonthEventLayout(
 
           allDayItems.push({
             event,
-            color: colorMap.get(event.calendar_slug) ?? null,
+            color: getCalendarColor(calendar),
             startCol,
             endCol,
             lane: 0,
@@ -109,7 +112,7 @@ export function useMonthEventLayout(
           if (colIndex >= 0 && colIndex < 7) {
             timedByCol[colIndex].push({
               event,
-              color: colorMap.get(event.calendar_slug) ?? null,
+              color: getCalendarColor(calendar),
             })
           }
         }
