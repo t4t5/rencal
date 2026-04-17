@@ -7,12 +7,15 @@
  */
 import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { segmentEventText } from "@/lib/parse-event-text"
 import { cn } from "@/lib/utils"
+
+import { CloseIcon } from "@/icons/close"
 
 interface OutlineRect {
   x: number
@@ -122,8 +125,28 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
           }
           syncScroll()
         }}
-        className={cn("w-full", !isDrafting && "cursor-pointer caret-transparent")}
+        className={cn(
+          "w-full",
+          !isDrafting && "cursor-pointer caret-transparent",
+          isDrafting && text && "pr-9",
+        )}
       />
+      {isDrafting && text && (
+        <Button
+          variant="ghost"
+          size="icon-xs"
+          round
+          aria-label="Clear"
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => {
+            setText("")
+            getInput()?.focus()
+          }}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+        >
+          <CloseIcon className="size-3.5" />
+        </Button>
+      )}
     </div>
   )
 }
