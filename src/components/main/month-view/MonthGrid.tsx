@@ -15,155 +15,8 @@ import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
-
-type TopLeftDateProps = {
-  day: MonthDay
-  isActive: boolean
-  onClick: () => void
-}
-
-function TopLeftDate({ day, isActive, onClick }: TopLeftDateProps) {
-  return (
-    <div
-      className={cn(
-        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-border last:border-r-0",
-        day.isWeekend && "bg-weekendBg",
-        isActive && "bg-buttonSecondaryBgHover",
-      )}
-      onClick={onClick}
-    >
-      {day.date.getDate() === 1 && (
-        <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
-      )}
-      <span
-        className={cn(
-          "text-xs w-5 h-5 flex items-center justify-center",
-          day.isToday && "bg-primary text-primary-foreground rounded-circle",
-          isActive && !day.isToday && "bg-secondary rounded-circle",
-        )}
-      >
-        {format(day.date, "d")}
-      </span>
-    </div>
-  )
-}
-
-type MonthWeekRowProps = {
-  weekDays: MonthDay[]
-  layout: WeekLayout
-  activeEventId: string | null
-  activeDateKey: string
-  onDayClick: (date: Date) => void
-  onEventClick: (eventId: string) => void
-  draftEvent: CalendarEvent | null
-}
-
-const MonthWeekRow = memo(function MonthWeekRow({
-  weekDays,
-  layout,
-  activeEventId,
-  activeDateKey,
-  onDayClick,
-  onEventClick,
-  draftEvent,
-}: MonthWeekRowProps) {
-  const { calendars } = useCalendars()
-  const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
-  const visibleLaneCount = Math.min(layout.maxLane + 1, MAX_ALL_DAY_LANES)
-
-  return (
-    <>
-      {/* Day numbers row */}
-      <div className="grid grid-cols-7">
-        {weekDays.map((day) => (
-          <TopLeftDate
-            key={day.dateKey}
-            day={day}
-            isActive={day.dateKey === activeDateKey}
-            onClick={() => onDayClick(day.date)}
-          />
-        ))}
-      </div>
-
-      {/* All-day spanning bars zone */}
-      {visibleAllDay.length > 0 && (
-        <div
-          className="grid grid-cols-7 gap-y-0.5"
-          style={{
-            gridTemplateRows: `repeat(${visibleLaneCount}, auto)`,
-          }}
-        >
-          {weekDays.map((day, colIndex) => (
-            <div
-              key={`bg-${day.dateKey}`}
-              className={cn(
-                "cursor-default",
-                colIndex < 6 && "border-r border-border",
-                day.isWeekend && "bg-weekendBg",
-                day.dateKey === activeDateKey && "bg-buttonSecondaryBgHover",
-              )}
-              style={{
-                gridColumn: colIndex + 1,
-                gridRow: `1 / ${visibleLaneCount + 1}`,
-              }}
-              onClick={() => onDayClick(day.date)}
-            />
-          ))}
-          {visibleAllDay.map((item) => (
-            <MonthAllDayEvent
-              key={item.event.id}
-              item={item}
-              isActive={item.event.id === activeEventId}
-              isPending={isPendingEvent(item.event, calendars)}
-              isDeclined={isDeclinedEvent(item.event, calendars)}
-              isDraft={item.event === draftEvent}
-              onClick={() => onEventClick(item.event.id)}
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Day cells with timed events */}
-      <div className="grid grid-cols-7 grow min-h-0 overflow-hidden">
-        {weekDays.map((day, colIndex) => {
-          const allDayOnDay = layout.allDayItems.filter(
-            (item) => item.startCol <= colIndex + 1 && item.endCol > colIndex + 1,
-          )
-          const visibleAllDayOnDay = allDayOnDay.filter((item) => item.lane < MAX_ALL_DAY_LANES)
-          const hiddenAllDay = allDayOnDay.length - visibleAllDayOnDay.length
-
-          return (
-            <MonthDayCell
-              key={day.dateKey}
-              day={day}
-              timedEvents={layout.timedByCol[colIndex]}
-              hiddenAllDayCount={hiddenAllDay}
-              activeEventId={activeEventId}
-              isActiveDay={day.dateKey === activeDateKey}
-              onClick={() => onDayClick(day.date)}
-              onEventClick={onEventClick}
-              draftEvent={draftEvent}
-            />
-          )
-        })}
-      </div>
-    </>
-  )
-})
-
-type MonthGridProps = {
-  weeks: MonthDay[][]
-  weekLayouts: WeekLayout[]
-  activeEventId: string | null
-  activeDateKey: string
-  anchorWeekIndex: number
-  scrollRef: RefObject<HTMLDivElement | null>
-  isNavigating: () => boolean
-  onDayClick: (date: Date) => void
-  onEventClick: (eventId: string) => void
-  onScrollMonthChange: (date: Date) => void
-  draftEvent: CalendarEvent | null
-}
+export const LANE_HEIGHT = 20
+export const LANE_GAP = 2
 
 export function MonthGrid({
   weeks,
@@ -177,21 +30,27 @@ export function MonthGrid({
   onEventClick,
   onScrollMonthChange,
   draftEvent,
-}: MonthGridProps) {
-  const hasInitialized = useRef(false)
-  const scrollDetectionReady = useRef(false)
+}: {
+  weeks: MonthDay[][]
+  weekLayouts: WeekLayout[]
+  activeEventId: string | null
+  activeDateKey: string
+  anchorWeekIndex: number
+  scrollRef: RefObject<HTMLDivElement | null>
+  isNavigating: () => boolean
+  onDayClick: (date: Date) => void
+  onEventClick: (eventId: string) => void
+  onScrollMonthChange: (date: Date) => void
+  draftEvent: CalendarEvent | null
+}) {
+  // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(150)
-
-  // Track container height to compute row height (1/6 of visible area)
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
-
     const update = () => {
-      const h = el.clientHeight
-      if (h > 0) setRowHeight(Math.round(h / 6))
+      if (el.clientWidth > 0) setRowHeight(Math.round(el.clientWidth / 7))
     }
-
     update()
     const observer = new ResizeObserver(update)
     observer.observe(el)
@@ -199,7 +58,6 @@ export function MonthGrid({
   }, [scrollRef])
 
   const estimateSize = useCallback(() => rowHeight, [rowHeight])
-
   const virtualizer = useVirtualizer({
     count: weeks.length,
     getScrollElement: () => scrollRef.current,
@@ -207,133 +65,116 @@ export function MonthGrid({
     overscan: 3,
   })
 
-  // Compensate scroll position when weeks are prepended so the view stays in place.
-  // Track the first week's dateKey — if it changes with more weeks, items were prepended.
-  const prevFirstDateKeyRef = useRef(weeks[0]?.[0]?.dateKey)
-  const prevWeekCountRef = useRef(weeks.length)
+  // Give stable callbacks access to the latest render's values
+  const latestRef = useRef({
+    weeks,
+    activeDateKey,
+    anchorWeekIndex,
+    virtualizer,
+    isNavigating,
+    onScrollMonthChange,
+  })
+  latestRef.current = {
+    weeks,
+    activeDateKey,
+    anchorWeekIndex,
+    virtualizer,
+    isNavigating,
+    onScrollMonthChange,
+  }
 
+  // Keep the viewport in place when weeks are prepended
+  const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
   useLayoutEffect(() => {
     const curFirstKey = weeks[0]?.[0]?.dateKey
-    const prevFirstKey = prevFirstDateKeyRef.current
-    const prevCount = prevWeekCountRef.current
-
-    prevFirstDateKeyRef.current = curFirstKey
-    prevWeekCountRef.current = weeks.length
-
-    // Only adjust when weeks were prepended (first key changed & count grew)
+    const { firstKey: prevFirstKey, count: prevCount } = prevRef.current
+    prevRef.current = { firstKey: curFirstKey, count: weeks.length }
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
-
-    const addedWeeks = weeks.length - prevCount
-    const offset = addedWeeks * rowHeight
-    virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + offset, { align: "start" })
+    const added = weeks.length - prevCount
+    virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + added * rowHeight, {
+      align: "start",
+    })
   })
 
-  // Scroll to anchor week on mount, and re-scroll when rowHeight changes
-  // (ResizeObserver may update rowHeight after mount, shifting virtualizer
-  // positions and leaving the view at the wrong offset).
-  // NOTE: anchorWeekIndex is NOT a dependency — it shifts when weeks are
-  // prepended/appended and we don't want to jump back to the anchor then.
-  const anchorWeekIndexRef = useRef(anchorWeekIndex)
-  anchorWeekIndexRef.current = anchorWeekIndex
-
+  // Scroll to anchor on mount and when rowHeight changes. anchorWeekIndex is NOT a dep —
+  // it shifts when weeks are prepended/appended and we don't want to jump back then.
+  const hasInitialized = useRef(false)
+  const ignoreScrollUntil = useRef(0)
   useEffect(() => {
-    const idx = anchorWeekIndexRef.current
+    const idx = latestRef.current.anchorWeekIndex
     if (idx < 0) return
     virtualizer.scrollToIndex(idx, { align: "start" })
-
-    if (!hasInitialized.current) {
-      hasInitialized.current = true
-    }
-
-    // Delay enabling scroll detection so the scroll settles
-    scrollDetectionReady.current = false
-    setTimeout(() => {
-      scrollDetectionReady.current = true
-    }, 200)
+    hasInitialized.current = true
+    ignoreScrollUntil.current = Date.now() + 200
   }, [virtualizer, rowHeight])
 
-  // Scroll to active date's week during explicit navigation, but only if not already visible
+  // During explicit navigation, scroll the active week into view if it's offscreen
   useEffect(() => {
-    if (!hasInitialized.current) return
-    if (!isNavigating()) return
+    if (!hasInitialized.current || !isNavigating()) return
     const el = scrollRef.current
     if (!el) return
 
     const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
     if (weekIndex < 0) return
 
-    // Use virtualizer's measured positions (not rowHeight estimate) for accurate check
     const item = virtualizer.getVirtualItems().find((v) => v.index === weekIndex)
     if (item) {
       const viewStart = el.scrollTop
       const viewEnd = viewStart + el.clientHeight
       if (item.start >= viewStart && item.start + item.size <= viewEnd) return
     }
-
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
-  // Detect dominant visible month while scrolling and update active date
-  // Uses refs for frequently-changing values to avoid listener churn
-  const scrollStateRef = useRef({ weeks, activeDateKey })
-  scrollStateRef.current = { weeks, activeDateKey }
-  const virtualizerRef = useRef(virtualizer)
-  virtualizerRef.current = virtualizer
-
+  // As the user scrolls, pick the dominant month in the viewport and bubble it up.
+  // Stay on the active month unless another has strictly more visible area.
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
 
     let rafId: number | null = null
-
     const handleScroll = () => {
       if (rafId !== null) return
       rafId = requestAnimationFrame(() => {
         rafId = null
-        if (!scrollDetectionReady.current || isNavigating()) return
-
-        const { weeks: w, activeDateKey: adk } = scrollStateRef.current
-        if (w.length === 0) return
+        if (Date.now() < ignoreScrollUntil.current) return
+        const {
+          weeks: w,
+          activeDateKey: adk,
+          virtualizer: v,
+          isNavigating: isNav,
+          onScrollMonthChange: onChange,
+        } = latestRef.current
+        if (isNav() || w.length === 0) return
 
         const viewTop = el.scrollTop
         const viewBottom = viewTop + el.clientHeight
-        const items = virtualizerRef.current.getVirtualItems()
-
-        // Count visible days per month, weighted by each row's visibility fraction
         const monthCounts = new Map<string, number>()
-        for (const item of items) {
-          if (item.end <= viewTop || item.start >= viewBottom) continue
+        for (const item of v.getVirtualItems()) {
+          const top = Math.max(item.start, viewTop)
+          const bottom = Math.min(item.end, viewBottom)
+          if (bottom <= top) continue
+          const fraction = (bottom - top) / item.size
           const week = w[item.index]
           if (!week) continue
-          const visibleTop = Math.max(item.start, viewTop)
-          const visibleBottom = Math.min(item.end, viewBottom)
-          const fraction = (visibleBottom - visibleTop) / item.size
           for (const day of week) {
             const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
             monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
           }
         }
 
-        // Only switch away from the active month when another month exceeds it
-        const activeYear = parseInt(adk.slice(0, 4))
-        const activeMonth = parseInt(adk.slice(5, 7)) - 1 // 0-based
-        const activeKey = `${activeYear}-${activeMonth}`
-        const activeCount = monthCounts.get(activeKey) ?? 0
-
-        let bestYear = activeYear
-        let bestMonth = activeMonth
-        let bestCount = activeCount
+        const activeKey = `${adk.slice(0, 4)}-${Number(adk.slice(5, 7)) - 1}`
+        let bestKey = activeKey
+        let bestCount = monthCounts.get(activeKey) ?? 0
         for (const [key, count] of monthCounts) {
           if (count > bestCount) {
+            bestKey = key
             bestCount = count
-            const parts = key.split("-")
-            bestYear = Number(parts[0])
-            bestMonth = Number(parts[1])
           }
         }
-
-        if (bestYear !== activeYear || bestMonth !== activeMonth) {
-          onScrollMonthChange(new Date(bestYear, bestMonth, 1))
+        if (bestKey !== activeKey) {
+          const [y, m] = bestKey.split("-").map(Number)
+          onChange(new Date(y, m, 1))
         }
       })
     }
@@ -343,7 +184,7 @@ export function MonthGrid({
       el.removeEventListener("scroll", handleScroll)
       if (rafId !== null) cancelAnimationFrame(rafId)
     }
-  }, [scrollRef, isNavigating, onScrollMonthChange])
+  }, [scrollRef])
 
   return (
     <div ref={scrollRef} className="grow overflow-y-auto overflow-x-hidden relative">
@@ -382,3 +223,119 @@ export function MonthGrid({
     </div>
   )
 }
+
+function TopLeftDate({
+  day,
+  isActive,
+  onClick,
+}: {
+  day: MonthDay
+  isActive: boolean
+  onClick: () => void
+}) {
+  return (
+    <div
+      className={cn(
+        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-border last:border-r-0",
+        day.isWeekend && "bg-weekendBg",
+        isActive && "bg-buttonSecondaryBgHover",
+      )}
+      onClick={onClick}
+    >
+      {day.date.getDate() === 1 && (
+        <span className="text-xs text-muted-foreground">{format(day.date, "MMMM")}</span>
+      )}
+      <span
+        className={cn(
+          "text-xs w-5 h-5 flex items-center justify-center",
+          day.isToday && "bg-primary text-primary-foreground rounded-circle",
+          isActive && !day.isToday && "bg-secondary rounded-circle",
+        )}
+      >
+        {format(day.date, "d")}
+      </span>
+    </div>
+  )
+}
+
+const MonthWeekRow = memo(function MonthWeekRow({
+  weekDays,
+  layout,
+  activeEventId,
+  activeDateKey,
+  onDayClick,
+  onEventClick,
+  draftEvent,
+}: {
+  weekDays: MonthDay[]
+  layout: WeekLayout
+  activeEventId: string | null
+  activeDateKey: string
+  onDayClick: (date: Date) => void
+  onEventClick: (eventId: string) => void
+  draftEvent: CalendarEvent | null
+}) {
+  const { calendars } = useCalendars()
+  const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
+
+  // Per-column reserved lanes: a day only leaves space for all-day bars that actually span it
+  const reservedLanes = Array(7).fill(0) as number[]
+  for (const item of visibleAllDay) {
+    for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
+      reservedLanes[c] = Math.max(reservedLanes[c], item.lane + 1)
+    }
+  }
+
+  return (
+    <>
+      {/* Day numbers row */}
+      <div className="grid grid-cols-7">
+        {weekDays.map((day) => (
+          <TopLeftDate
+            key={day.dateKey}
+            day={day}
+            isActive={day.dateKey === activeDateKey}
+            onClick={() => onDayClick(day.date)}
+          />
+        ))}
+      </div>
+
+      {/* Day cells with all-day bars overlaid */}
+      <div className="grid grid-cols-7 grow min-h-0 relative">
+        {weekDays.map((day, colIndex) => {
+          const allDayOnDay = layout.allDayItems.filter(
+            (item) => item.startCol <= colIndex + 1 && item.endCol > colIndex + 1,
+          )
+          const visibleAllDayOnDay = allDayOnDay.filter((item) => item.lane < MAX_ALL_DAY_LANES)
+          const hiddenAllDay = allDayOnDay.length - visibleAllDayOnDay.length
+
+          return (
+            <MonthDayCell
+              key={day.dateKey}
+              day={day}
+              timedEvents={layout.timedByCol[colIndex]}
+              hiddenAllDayCount={hiddenAllDay}
+              reservedAllDayHeight={reservedLanes[colIndex] * LANE_HEIGHT}
+              activeEventId={activeEventId}
+              isActiveDay={day.dateKey === activeDateKey}
+              onClick={() => onDayClick(day.date)}
+              onEventClick={onEventClick}
+              draftEvent={draftEvent}
+            />
+          )
+        })}
+        {visibleAllDay.map((item) => (
+          <MonthAllDayEvent
+            key={item.event.id}
+            item={item}
+            isActive={item.event.id === activeEventId}
+            isPending={isPendingEvent(item.event, calendars)}
+            isDeclined={isDeclinedEvent(item.event, calendars)}
+            isDraft={item.event === draftEvent}
+            onClick={() => onEventClick(item.event.id)}
+          />
+        ))}
+      </div>
+    </>
+  )
+})

@@ -1,6 +1,7 @@
 import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
+import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/MonthGrid"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
@@ -42,14 +43,16 @@ export function MonthAllDayEvent({
       data-event-clickable={!isDraft || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
-        "truncate px-1 py-px leading-4",
+        "absolute truncate px-1 py-px leading-4",
         (isPending || isDeclined || isDraft) && "opacity-50",
         item.isStart ? "rounded-l ml-0.5" : "-ml-0.5",
         item.isEnd ? "rounded-r mr-[3px]" : "-mr-0.5",
       )}
       style={{
-        gridColumn: `${item.startCol} / ${item.endCol}`,
-        gridRow: item.lane + 1,
+        top: `${item.lane * LANE_HEIGHT}px`,
+        height: `${LANE_HEIGHT - LANE_GAP}px`,
+        left: `${((item.startCol - 1) / 7) * 100}%`,
+        width: `${((item.endCol - item.startCol) / 7) * 100}%`,
         ...getEventBlockStyle(color, highlighted, false),
       }}
       onClick={handleClick}

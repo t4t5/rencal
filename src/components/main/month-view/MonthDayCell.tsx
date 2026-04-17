@@ -21,12 +21,13 @@ import { setDraftAnchor } from "@/lib/draft-anchor"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
-const MAX_TIMED_VISIBLE = 2
+const MAX_TIMED_VISIBLE = 4
 
 type MonthDayCellProps = {
   day: MonthDay
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
+  reservedAllDayHeight: number
   activeEventId: string | null
   isActiveDay: boolean
   onClick: () => void
@@ -38,6 +39,7 @@ export function MonthDayCell({
   day,
   timedEvents,
   hiddenAllDayCount,
+  reservedAllDayHeight,
   activeEventId,
   isActiveDay,
   onClick,
@@ -94,6 +96,9 @@ export function MonthDayCell({
             contextTargetRef.current = e.currentTarget
           }}
         >
+          {reservedAllDayHeight > 0 && (
+            <div style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }} />
+          )}
           {visibleTimed.map((item) => (
             <MonthTimedEvent
               key={item.event.id}
