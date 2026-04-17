@@ -1,9 +1,6 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
-import { DaySection } from "@/components/events/DaySection"
-import { WelcomeEmptyState } from "@/components/events/WelcomeEmptyState"
-
 import { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -15,6 +12,9 @@ import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
 import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
+
+import { DaySection } from "./DaySection"
+import { WelcomeEmptyState } from "./WelcomeEmptyState"
 
 type Section = {
   date: Date

@@ -3,7 +3,7 @@ import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { openSettingsWindow } from "@/components/header/SettingsButton"
-import { SEARCH_INPUT_EL_ID } from "@/components/search/SearchInput"
+import { SEARCH_INPUT_EL_ID } from "@/components/header/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"

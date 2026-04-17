@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import { Popover, PopoverAnchor } from "@/components/ui/popover"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { rpc } from "@/rpc"
 import type { CalendarEvent } from "@/rpc/bindings"
@@ -10,7 +11,6 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 
-import { ShortcutTooltip } from "../ui/shortcut-tooltip"
 import { EventPopover } from "./EventPopover"
 import { SearchInput } from "./SearchInput"
 import { SearchResults } from "./SearchResults"

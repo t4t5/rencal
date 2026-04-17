@@ -1,7 +1,7 @@
 import "@/global.css"
 
-import { Aside } from "@/components/Aside"
 import { Main } from "@/components/Main"
+import { Aside } from "@/components/aside/Aside"
 import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"

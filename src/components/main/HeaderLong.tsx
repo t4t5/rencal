@@ -1,14 +1,13 @@
-import { SearchBar } from "@/components/search/SearchBar"
+import { InvitesDropdown } from "@/components/header/InvitesDropdown"
+import { SettingsButton } from "@/components/header/SettingsButton"
+import { SyncStatus } from "@/components/header/SyncStatus"
+import { SearchBar } from "@/components/header/search/SearchBar"
 import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
-
-import { InvitesDropdown } from "./InvitesDropdown"
-import { SettingsButton } from "./SettingsButton"
-import { SyncStatus } from "./SyncStatus"
 
 export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()

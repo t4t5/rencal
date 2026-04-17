@@ -34,6 +34,7 @@ communicates with the backend via taurpc.
 - Use `react-icons` for all icons
 - When applying a class conditionally, use the `cn` utility function
 - Avoid using margins, instead use paddings and flex-gaps
+- Always use absolute imports with the `@/` alias. Only use relative imports when the file is in the same directory (e.g. `./Sibling`). Never use `../` to go up directories.
 
 ## Rules
 

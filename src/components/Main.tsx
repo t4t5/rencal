@@ -1,4 +1,4 @@
-import { HeaderLong } from "@/components/header/HeaderLong"
+import { HeaderLong } from "@/components/main/HeaderLong"
 import { MonthView } from "@/components/main/month-view/MonthView"
 import { WeekView } from "@/components/main/week-view/WeekView"
 import { Tabs, TabsContent } from "@/components/ui/tabs"

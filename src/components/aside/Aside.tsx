@@ -1,6 +1,6 @@
-import { EventList } from "@/components/events/EventList"
-import { Header } from "@/components/header/Header"
-import { Minical } from "@/components/minical/Minical"
+import { Header } from "@/components/aside/Header"
+import { EventList } from "@/components/aside/events/EventList"
+import { Minical } from "@/components/aside/minical/Minical"
 
 export function Aside() {
   return (
