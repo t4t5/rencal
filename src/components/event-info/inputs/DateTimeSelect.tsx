@@ -19,6 +19,7 @@ export const DateTimeSelect = ({
   onChangeStartTime,
   onChangeEndDate,
   onChangeEndTime,
+  onClose,
 }: {
   start: Date
   end: Date
@@ -29,6 +30,7 @@ export const DateTimeSelect = ({
   onChangeStartTime: (time: string) => void
   onChangeEndDate: (start: Date | null) => void
   onChangeEndTime: (time: string) => void
+  onClose?: () => void
 }) => {
   return (
     <div className="flex flex-col gap-1">
@@ -40,6 +42,7 @@ export const DateTimeSelect = ({
           readOnly={readOnly}
           onChangeStartTime={onChangeStartTime}
           onChangeEndTime={onChangeEndTime}
+          onClose={onClose}
         />
       )}
       <DateSelect
@@ -61,6 +64,7 @@ const TimeSelect = ({
   readOnly,
   onChangeStartTime,
   onChangeEndTime,
+  onClose,
 }: {
   start: Date
   end: Date
@@ -68,9 +72,17 @@ const TimeSelect = ({
   readOnly?: boolean
   onChangeStartTime: (time: string) => void
   onChangeEndTime: (time: string) => void
+  onClose?: () => void
 }) => {
   const formattedStartTime = format(start, "HH:mm")
   const formattedEndTime = format(end, "HH:mm")
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      onClose?.()
+    }
+  }
 
   return (
     <div
@@ -89,6 +101,7 @@ const TimeSelect = ({
           placeholder="09:30"
           value={formattedStartTime}
           onChange={(e) => onChangeStartTime(e.target.value)}
+          onKeyDown={handleKeyDown}
           readOnly={readOnly}
           disabled={allDay}
           className={cn(readOnly && "hover:border-transparent! focus:bg-transparent!")}
@@ -103,6 +116,7 @@ const TimeSelect = ({
         className={cn("w-36", readOnly && "hover:border-transparent! focus:bg-transparent!")}
         value={formattedEndTime}
         onChange={(e) => onChangeEndTime(e.target.value)}
+        onKeyDown={handleKeyDown}
         readOnly={readOnly}
         disabled={allDay}
       />

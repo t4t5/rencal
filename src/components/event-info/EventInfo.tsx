@@ -117,6 +117,7 @@ export function EventInfo({
           onChangeStartTime={onChangeStartTime}
           onChangeEndDate={onChangeEndDate}
           onChangeEndTime={onChangeEndTime}
+          onClose={onClose}
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
 
