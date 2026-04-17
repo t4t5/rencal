@@ -2,7 +2,7 @@ import { parse } from "date-fns"
 import { type Ref, useCallback } from "react"
 import { rrulestr } from "rrule"
 
-import { EventInfo } from "@/components/event-info/EventInfo"
+import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"

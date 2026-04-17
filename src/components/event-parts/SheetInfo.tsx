@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react"
 
-import { EditEvent } from "@/components/event-info/EditEvent"
+import { EditEvent } from "@/components/event-parts/EditEvent"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"

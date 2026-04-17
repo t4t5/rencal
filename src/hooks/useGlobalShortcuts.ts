@@ -2,8 +2,8 @@ import { addDays, subDays } from "date-fns"
 import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
-import { openSettingsWindow } from "@/components/header/SettingsButton"
-import { SEARCH_INPUT_EL_ID } from "@/components/header/search/SearchInput"
+import { openSettingsWindow } from "@/components/header-parts/SettingsButton"
+import { SEARCH_INPUT_EL_ID } from "@/components/header-parts/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"

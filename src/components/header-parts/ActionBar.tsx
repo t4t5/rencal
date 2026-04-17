@@ -1,4 +1,4 @@
-import { SearchButton } from "@/components/header/search/SearchButton"
+import { SearchButton } from "@/components/header-parts/search/SearchButton"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useFullscreen } from "@/hooks/useFullscreen"

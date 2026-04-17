@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react"
 
-import { NewEvent } from "@/components/event-info/NewEvent"
-import { ActionBar } from "@/components/header/ActionBar"
+import { NewEvent } from "@/components/event-parts/NewEvent"
+import { ActionBar } from "@/components/header-parts/ActionBar"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 

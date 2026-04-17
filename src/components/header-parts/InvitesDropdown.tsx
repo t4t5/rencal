@@ -1,7 +1,7 @@
 import { format, parseISO } from "date-fns"
 import { useEffect, useState } from "react"
 
-import { RsvpBar } from "@/components/event-info/inputs/RsvpBar"
+import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"

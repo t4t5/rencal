@@ -1,6 +1,6 @@
 import type { ReactNode, RefObject } from "react"
 
-import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
+import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import {
   ContextMenu,
   ContextMenuContent,

@@ -7,7 +7,7 @@ import {
   type SetStateAction,
 } from "react"
 
-import { EditEvent } from "@/components/event-info/EditEvent"
+import { EditEvent } from "@/components/event-parts/EditEvent"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 

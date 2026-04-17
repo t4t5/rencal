@@ -2,9 +2,9 @@ import "@/global.css"
 
 import { Main } from "@/components/Main"
 import { Aside } from "@/components/aside/Aside"
-import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
-import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
-import { SheetEvent } from "@/components/event-info/SheetInfo"
+import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
+import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
+import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"

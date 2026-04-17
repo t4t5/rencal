@@ -2,8 +2,8 @@ import { parse } from "date-fns"
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
-import { DeleteConfirmDialog } from "@/components/event-info/DeleteConfirmDialog"
-import { EventInfo } from "@/components/event-info/EventInfo"
+import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
+import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,

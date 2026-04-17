@@ -1,6 +1,6 @@
 import { open } from "@tauri-apps/plugin-dialog"
 
-import { ReminderSelect } from "@/components/event-info/inputs/ReminderSelect"
+import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
