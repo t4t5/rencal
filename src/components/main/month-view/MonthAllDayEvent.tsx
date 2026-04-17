@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
 
@@ -7,28 +7,34 @@ import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
-type MonthAllDayBarProps = {
-  item: AllDayLaneItem
-  isActive: boolean
-  isPending: boolean
-  isDeclined: boolean
-  isDraft: boolean
-  onClick: () => void
-}
-
-export function MonthAllDayBar({
+export function MonthAllDayEvent({
   item,
   isActive,
   isPending,
   isDeclined,
   isDraft,
   onClick,
-}: MonthAllDayBarProps) {
+}: {
+  item: AllDayLaneItem
+  isActive: boolean
+  isPending: boolean
+  isDeclined: boolean
+  isDraft: boolean
+  onClick: () => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
   const color = item.color ?? "var(--primary)"
   const highlighted = isActive || contextOpen
+
+  const handleClick: MouseEventHandler<HTMLDivElement> | undefined = (e) => {
+    if (!isDraft) {
+      e.stopPropagation()
+      setEventAnchor(e.currentTarget)
+      onClick()
+    }
+  }
 
   const inner = (
     <div
@@ -46,15 +52,7 @@ export function MonthAllDayBar({
         gridRow: item.lane + 1,
         ...getEventBlockStyle(color, highlighted, false),
       }}
-      onClick={
-        isDraft
-          ? undefined
-          : (e) => {
-              e.stopPropagation()
-              setEventAnchor(e.currentTarget)
-              onClick()
-            }
-      }
+      onClick={handleClick}
     >
       {item.event.summary}
     </div>

@@ -29,7 +29,8 @@ export function Main({
       )}
     >
       <HeaderLong />
-      <div className="h-[calc(100vh-76px)] select-none">
+
+      <div className="h-[calc(100vh-64px)] select-none">
         <TabsContent value="week" className="h-full">
           <WeekView />
         </TabsContent>

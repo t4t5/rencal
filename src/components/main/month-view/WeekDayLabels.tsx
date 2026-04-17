@@ -1,0 +1,21 @@
+import { cn } from "@/lib/utils"
+
+const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+export const WeekDayLabels = () => {
+  return (
+    <div className="grid grid-cols-7 border-b border-border">
+      {WEEKDAY_LABELS.map((label, i) => (
+        <div
+          key={label}
+          className={cn(
+            "text-[11px]! text-muted-foreground py-2 text-center font-medium font-numerical uppercase",
+            i >= 5 && "bg-weekendBg",
+          )}
+        >
+          {label}
+        </div>
+      ))}
+    </div>
+  )
+}

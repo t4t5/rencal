@@ -2,7 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { format } from "date-fns"
 import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 
-import { MonthAllDayBar } from "@/components/main/month-view/MonthAllDayBar"
+import { MonthAllDayEvent } from "@/components/main/month-view/MonthAllDayEvent"
 import { MonthDayCell } from "@/components/main/month-view/MonthDayCell"
 
 import type { CalendarEvent } from "@/rpc/bindings"
@@ -110,7 +110,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
             />
           ))}
           {visibleAllDay.map((item) => (
-            <MonthAllDayBar
+            <MonthAllDayEvent
               key={item.event.id}
               item={item}
               isActive={item.event.id === activeEventId}
