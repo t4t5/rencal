@@ -30,7 +30,7 @@ export const EventDotsProvider = EventDotsContext.Provider
 // Weekday short names indexed by day number (0=Sun … 6=Sat)
 const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
 
-function CalendarBig({
+function Calendar({
   className,
   classNames,
   showOutsideDays = true,
@@ -282,4 +282,4 @@ const CalendarDayButton = memo(function CalendarDayButton({
   )
 })
 
-export { CalendarBig, CalendarDayButton }
+export { Calendar, CalendarDayButton }
