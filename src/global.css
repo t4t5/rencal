@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./themes/classic.css";
 @import "./themes/ren.css";
 
 @font-face {
@@ -29,34 +30,21 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
 }
 
 @theme inline {
+  /* Radius scale — preserves the shadcn convention where
+     rounded-lg maps to the base --radius. */
   --radius: calc(var(--radius) - 6px);
   --radius-xs: calc(var(--radius) - 8px);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+
+  /* shadcn color tokens */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -76,87 +64,142 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  /* Figma: */
+  /* Semantic color tokens */
+  --color-background-primary: var(--background-primary);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-popover: var(--background-popover);
+  --color-background-overlay: var(--background-overlay);
+  --color-background-weekend: var(--background-weekend);
+  --color-text-normal: var(--text-normal);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-interactive-normal: var(--interactive-normal);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-interactive-accent: var(--interactive-accent);
+  --color-interactive-accent-hover: var(--interactive-accent-hover);
+  --color-border-color: var(--border-color);
+  --color-divider: var(--divider);
+  --color-button-border: var(--button-border);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-highlight: var(--highlight);
+  --color-active: var(--active);
+  --color-active-bg: var(--active-bg);
+
+  /* Legacy camelCase color tokens — kept while components migrate */
   --color-bgPrimary: var(--bgPrimary);
+  --color-bgPopover: var(--bgPopover);
+  --color-overlayBg: var(--overlayBg);
+  --color-weekendBg: var(--weekendBg);
   --color-buttonPrimaryBg: var(--buttonPrimaryBg);
   --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover);
   --color-buttonSecondaryBg: var(--buttonSecondaryBg);
   --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
   --color-buttonBorder: var(--buttonBorder);
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-warning: var(--warning);
+  --color-hoverBg: var(--buttonSecondaryBgHover);
+  --color-activeBg: var(--activeBg);
+
+  /* Shadows */
+  --shadow-button-border: inset 0 0 0 1px var(--button-border);
+  --shadow-button-border-arrow: inset -1px -1px 0 0px var(--button-border);
+  --shadow-tab-list: var(--tab-list-shadow);
   --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
   --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder);
   --shadow-tabList: var(--tabListShadow);
-  --color-activeBg: var(--activeBg);
-  --color-weekendBg: var(--weekendBg);
-  --color-bgPopover: var(--bgPopover);
-  --color-overlayBg: var(--overlayBg);
-  --color-highlight: var(--highlight);
-  --color-divider: var(--divider);
-  --color-active: var(--active);
-  --color-hoverBg: var(--buttonSecondaryBgHover);
 
+  /* Sizing / spacing */
+  --size-control-height: var(--control-height);
+  --height-control-height: var(--control-height);
+  --width-control-height: var(--control-height);
+  --spacing-tab-gap: var(--tab-gap);
   --size-buttonHeight: var(--buttonHeight);
   --height-buttonHeight: var(--buttonHeight);
   --width-buttonHeight: var(--buttonHeight);
-
   --spacing-tabGap: var(--tabGap);
 
-  --font-heading: var(--fontHeading);
-  --font-button: var(--fontButton);
-  --font-numerical: var(--fontNumerical);
+  /* Typography */
+  --font-heading: var(--font-heading);
+  --font-button: var(--font-button);
+  --font-numerical: var(--font-numerical);
 }
 
-/* Default theme values (classic). Applied to any theme; overridden per-theme below. */
+/* ============================================================
+   Semantic layer — the public contract themes override.
+   Defined under [data-theme] (not :root) so Tailwind v4 keeps
+   var() references intact in generated utilities, allowing
+   runtime theme switching. See src/themes/README.md.
+   ============================================================ */
 [data-theme] {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
+  /* Backgrounds */
+  --background-primary: #1a1b26;
+  --background-secondary: rgb(255 255 255 / 5%);
+  --background-popover: #282934;
+  --background-overlay: rgb(0 0 0 / 75%);
+  --background-weekend: rgb(255 255 255 / 5%);
 
-  /* Figma variables: */
-  --textPrimary: #ffffff;
-  --textSecondary: rgb(255 255 255 / 50%);
-  --active: #36c3f3;
-  --activeBg: rgb(217 217 217 / 30%);
-  --bgPrimary: #1a1b26;
-  --bgTertiary: rgb(255 255 255 / 8%);
-  --buttonPrimaryBg: #0094c6;
-  --buttonPrimaryBgHover: #07abe3;
-  --buttonSecondaryBg: rgb(255 255 255 / 5%);
-  --buttonSecondaryBgHover: rgb(255 255 255 / 8%);
-  --buttonBorder: #363643;
-  --weekendBg: rgb(255 255 255 / 5%);
-  --bgPopover: #282934;
+  /* Text */
+  --text-normal: #ffffff;
+  --text-muted: rgb(255 255 255 / 50%);
+  --text-faint: rgb(255 255 255 / 35%);
+  --text-on-accent: #ffffff;
+
+  /* Interactive */
+  --interactive-normal: rgb(255 255 255 / 5%);
+  --interactive-hover: rgb(255 255 255 / 8%);
+  --interactive-accent: #0094c6;
+  --interactive-accent-hover: #07abe3;
+
+  /* Structure */
+  --border-color: rgb(255 255 255 / 10%);
   --divider: rgb(255 255 255 / 10%);
-  --overlayBg: rgb(0 0 0 / 75%);
-  --highlight: #ff2f00;
-  --buttonHeight: 34px;
-  --tabListShadow: none;
-  --success: #4caf50;
-  --error: #e25252;
-  --warning: #fd8742;
-  --fontHeading: inherit;
-  --fontButton: inherit;
-  --fontNumerical: inherit;
+  --input-border: rgb(255 255 255 / 15%);
+  --button-border: #363643;
+  --ring-color: oklch(0.552 0.016 285.938);
 
-  --tabGap: 6px;
+  /* Status / brand */
+  --success: #4caf50;
+  --warning: #fd8742;
+  --error: #e25252;
+  --highlight: #ff2f00;
+  --active: #36c3f3;
+  --active-bg: rgb(217 217 217 / 30%);
+
+  /* Sizing */
+  --radius-circle: calc(infinity * 1px);
+  --control-height: 34px;
+  --tab-gap: 6px;
+  --tab-list-shadow: none;
+
+  /* Typography slots (theme-swappable) */
+  --font-heading: inherit;
+  --font-button: inherit;
+  --font-numerical: inherit;
+
+  /* Legacy camelCase aliases. Kept so existing utilities
+     (`bg-bgPrimary`, `h-buttonHeight`, `font-fontHeading`)
+     keep working. Remove once components migrate to the
+     semantic names. */
+  --bgPrimary: var(--background-primary);
+  --bgPopover: var(--background-popover);
+  --bgTertiary: var(--interactive-hover);
+  --overlayBg: var(--background-overlay);
+  --weekendBg: var(--background-weekend);
+  --textPrimary: var(--text-normal);
+  --textSecondary: var(--text-muted);
+  --buttonPrimaryBg: var(--interactive-accent);
+  --buttonPrimaryBgHover: var(--interactive-accent-hover);
+  --buttonSecondaryBg: var(--interactive-normal);
+  --buttonSecondaryBgHover: var(--interactive-hover);
+  --buttonBorder: var(--button-border);
+  --buttonHeight: var(--control-height);
+  --activeBg: var(--active-bg);
+  --tabGap: var(--tab-gap);
+  --tabListShadow: var(--tab-list-shadow);
+  --fontHeading: var(--font-heading);
+  --fontButton: var(--font-button);
+  --fontNumerical: var(--font-numerical);
 }
 
 /* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
@@ -164,17 +207,27 @@
   border-radius: var(--radius-circle, calc(infinity* 1px));
 }
 
-/* shadcn variable adjustments — mapped from Figma vars, applied last so they win over defaults */
+/* shadcn compatibility aliases derived from the semantic layer. */
 [data-theme] {
-  --background: var(--bgPrimary);
-  --primary: var(--buttonPrimaryBg);
-  --primary-foreground: var(--textPrimary);
-  --secondary: var(--buttonSecondaryBg);
-  --accent: var(--activeBg);
-  --hover: var(--buttonSecondaryBgHover);
-  --card: var(--buttonSecondaryBg);
-  --muted-foreground: var(--textSecondary);
-  --popover: var(--bgPopover);
+  --background: var(--background-primary);
+  --foreground: var(--text-normal);
+  --card: var(--background-secondary);
+  --card-foreground: var(--text-normal);
+  --popover: var(--background-popover);
+  --popover-foreground: var(--text-normal);
+  --primary: var(--interactive-accent);
+  --primary-foreground: var(--text-on-accent);
+  --secondary: var(--interactive-normal);
+  --secondary-foreground: var(--text-normal);
+  --muted: var(--interactive-normal);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--active-bg);
+  --accent-foreground: var(--text-normal);
+  --destructive: var(--error);
+  --border: var(--border-color);
+  --input: var(--input-border);
+  --ring: var(--ring-color);
+  --hover: var(--interactive-hover);
 }
 
 @keyframes slide-in-y {

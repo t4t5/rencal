@@ -1,24 +1,27 @@
 body[data-theme="ren"] {
-  --bgPrimary: #131313;
-  --buttonPrimaryBg: #f56313;
-  --buttonPrimaryBgHover: #ff772d;
-  --buttonBorder: transparent;
-  --bgPopover: #1d1d1d;
+  /* Identity overrides — the minimum that makes ren ren */
+  --background-primary: #131313;
+  --background-popover: #1d1d1d;
+  --interactive-accent: #f56313;
+  --interactive-accent-hover: #ff772d;
   --highlight: #ff610b;
-  --success: var(--buttonPrimaryBg);
+  --success: var(--interactive-accent);
+  --button-border: transparent;
 
-  --font-mono: "Geist Mono", ui-monospace, monospace;
-
+  /* Sizing / radius */
   --radius: 0;
   --radius-circle: 0;
-  --fontHeading: var(--font-mono);
-  --fontButton: var(--font-mono);
-  --fontNumerical: var(--font-mono);
+  --tab-gap: 0;
+  --tab-list-shadow: inset 0 0 0 1px var(--interactive-normal);
 
-  --tabListShadow: inset 0 0 0 1px var(--buttonSecondaryBg);
-  --tabGap: 0;
+  /* Typography */
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-heading: var(--font-mono);
+  --font-button: var(--font-mono);
+  --font-numerical: var(--font-mono);
 }
 
+/* Visual identity — arbitrary CSS rules beyond variable overrides. */
 body[data-theme="ren"] .font-heading,
 body[data-theme="ren"] .font-button {
   text-transform: uppercase;
