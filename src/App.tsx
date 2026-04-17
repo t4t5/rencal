@@ -9,9 +9,9 @@ import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"
 import { EventList } from "@/components/events/EventList"
 import { Header } from "@/components/header/Header"
-import { MonthView } from "@/components/month-view/MonthView"
+import { MonthView } from "@/components/main/month-view/MonthView"
+import { WeekView } from "@/components/main/week-view/WeekView"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
-import { WeekView } from "@/components/week-view/WeekView"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 

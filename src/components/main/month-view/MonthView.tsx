@@ -1,7 +1,7 @@
 import { addMonths, endOfMonth, isSameDay, startOfMonth, subMonths } from "date-fns"
 import { useCallback, useRef, useState } from "react"
 
-import { MonthGrid } from "@/components/month-view/MonthGrid"
+import { MonthGrid } from "@/components/main/month-view/MonthGrid"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
