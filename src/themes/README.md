@@ -1,6 +1,6 @@
 # Themes
 
-Themes live in `src/themes/` and override a small set of semantic CSS variables. The defaults (the "classic" look) live in `:root` inside `src/global.css`; a theme's job is to change only what makes it distinct.
+Themes live in `src/themes/` and override a small set of semantic CSS variables. The defaults (the "classic" look) live in the `[data-theme]` block inside `src/global.css`; a theme's job is to change only what makes it distinct.
 
 ## Adding a theme
 
@@ -76,14 +76,14 @@ These are the variables theme files override. Anything not listed here is either
 
 ### Status / brand
 
-| Variable            | Purpose                                |
-| ------------------- | -------------------------------------- |
-| `--color-success`   | Success state                          |
-| `--color-warning`   | Warning state                          |
-| `--color-error`     | Error / destructive                    |
-| `--color-highlight` | Brand accent (e.g., "today" indicator) |
-| `--color-active`    | Distinct active-indicator color        |
-| `--color-active-bg` | Active state background                |
+| Variable      | Purpose                                |
+| ------------- | -------------------------------------- |
+| `--success`   | Success state                          |
+| `--warning`   | Warning state                          |
+| `--error`     | Error / destructive                    |
+| `--highlight` | Brand accent (e.g., "today" indicator) |
+| `--active`    | Distinct active-indicator color        |
+| `--active-bg` | Active state background                |
 
 ### Sizing
 
@@ -95,7 +95,7 @@ These are the variables theme files override. Anything not listed here is either
 | `--tab-gap`         | Tab spacing                                      |
 | `--tab-list-shadow` | Tab list outline                                 |
 
-### Typography
+### Typography (fonts)
 
 | Variable           | Purpose             |
 | ------------------ | ------------------- |
@@ -103,6 +103,27 @@ These are the variables theme files override. Anything not listed here is either
 | `--font-button`    | Button font-family  |
 | `--font-numerical` | Numeric font-family |
 
+### Typography identity (optional)
+
+These are unset by default. Setting them from a theme opts into theme-specific typography without targeting elements directly. Unset variables fall through to Tailwind's utilities.
+
+| Variable                         | Purpose                                                    |
+| -------------------------------- | ---------------------------------------------------------- |
+| `--font-heading-transform`       | `text-transform` for `.font-heading` (e.g., `uppercase`)   |
+| `--font-button-transform`        | `text-transform` for `.font-button`                        |
+| `--font-button-size`             | Override button font size                                  |
+| `--font-numerical-size`          | Override numerical font size                               |
+| `--font-heading-size`            | Base heading size (`.font-heading` with no `text-*` class) |
+| `--font-heading-line-height`     | Base heading line-height                                   |
+| `--font-heading-lg-size`         | Override `.font-heading.text-lg` size                      |
+| `--font-heading-lg-line-height`  | Override `.font-heading.text-lg` line-height               |
+| `--font-heading-xl-size`         | Override `.font-heading.text-xl` size                      |
+| `--font-heading-xl-line-height`  | Override `.font-heading.text-xl` line-height               |
+| `--font-heading-2xl-size`        | Override `.font-heading.text-2xl` size                     |
+| `--font-heading-2xl-line-height` | Override `.font-heading.text-2xl` line-height              |
+
 ## Escape hatch: custom CSS rules
 
-A theme file can include arbitrary CSS rules beyond variable overrides — useful for a signature visual identity. Scope them with `body[data-theme="yourtheme"]` so they don't leak. `ren.css` is the reference example: uppercase headings, downshifted font sizes, monospace everywhere.
+If variable overrides aren't enough, theme files can include arbitrary CSS rules beyond variable overrides. Scope them with `body[data-theme="yourtheme"]` (or use CSS nesting inside the body selector) so they don't leak to other themes.
+
+Prefer variables first — the existing contract covers most visual-identity needs, including typography transform and size overrides. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.

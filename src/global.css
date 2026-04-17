@@ -207,6 +207,55 @@
   border-radius: var(--radius-circle, calc(infinity* 1px));
 }
 
+/* ============================================================
+   Typography identity — applied when a theme sets the matching
+   variables. When a var is unset the declaration becomes invalid
+   at computed-value time and is ignored, leaving the element's
+   normal (Tailwind-driven) typography intact.
+
+   The `.font-heading.text-{lg,xl,2xl}` rules are unlayered so
+   they out-specificity Tailwind's `.text-lg` etc. utilities. This
+   lets themes like ren downshift heading sizes via a variable
+   instead of targeting specific elements in the theme file.
+   ============================================================ */
+@layer components {
+  .font-heading {
+    text-transform: var(--font-heading-transform);
+    font-size: var(--font-heading-size);
+    line-height: var(--font-heading-line-height);
+  }
+  .font-button {
+    text-transform: var(--font-button-transform);
+    font-size: var(--font-button-size);
+    line-height: var(--font-button-line-height);
+  }
+  .font-numerical {
+    font-size: var(--font-numerical-size);
+    line-height: var(--font-numerical-line-height);
+  }
+}
+
+.font-heading.text-lg {
+  font-size: var(--font-heading-lg-size, var(--text-lg));
+  line-height: var(--font-heading-lg-line-height, var(--text-lg--line-height));
+}
+.font-heading.text-xl {
+  font-size: var(--font-heading-xl-size, var(--text-xl));
+  line-height: var(--font-heading-xl-line-height, var(--text-xl--line-height));
+}
+.font-heading.text-2xl {
+  font-size: var(--font-heading-2xl-size, var(--text-2xl));
+  line-height: var(--font-heading-2xl-line-height, var(--text-2xl--line-height));
+}
+
+/* Escape hatch: reset font-family and text-transform when used as an
+   input-like trigger (e.g., date picker). Unlayered so it beats the
+   @layer components .font-button/.font-heading rules by origin. */
+.font-ui {
+  font-family: inherit;
+  text-transform: none;
+}
+
 /* shadcn compatibility aliases derived from the semantic layer. */
 [data-theme] {
   --background: var(--background-primary);
