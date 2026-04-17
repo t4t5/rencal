@@ -102,6 +102,8 @@
   --height-buttonHeight: var(--buttonHeight);
   --width-buttonHeight: var(--buttonHeight);
 
+  --spacing-tabGap: var(--tabGap);
+
   --font-heading: var(--fontHeading);
   --font-button: var(--fontButton);
   --font-numerical: var(--fontNumerical);
@@ -153,6 +155,8 @@
   --fontHeading: inherit;
   --fontButton: inherit;
   --fontNumerical: inherit;
+
+  --tabGap: 6px;
 }
 
 /* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */

@@ -16,6 +16,7 @@ body[data-theme="ren"] {
   --fontNumerical: var(--font-mono);
 
   --tabListShadow: inset 0 0 0 1px var(--buttonSecondaryBg);
+  --tabGap: 0;
 }
 
 body[data-theme="ren"] .font-heading,
