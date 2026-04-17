@@ -5,7 +5,7 @@ import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-event
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"
 
-type Preload = {
+export type Preload = {
   initialCalendars?: Calendar[]
   initialEvents?: CalendarEvent[]
   initialDate?: Date

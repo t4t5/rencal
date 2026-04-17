@@ -7,10 +7,15 @@ import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { DragRegion } from "@/components/ui/drag-region"
 
+import { CalEventsProvider } from "@/contexts/CalEventsContext"
+import { EventDraftProvider } from "@/contexts/EventDraftContext"
+import { SyncProvider } from "@/contexts/SyncContext"
+
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { CalendarView, calendarViewSchema } from "@/lib/calendar-view"
+import { Preload } from "@/lib/preload-data"
 
 function GlobalShortcuts({
   onChangeCalendarView,
@@ -21,7 +26,19 @@ function GlobalShortcuts({
   return null
 }
 
-export default function App() {
+export function AppWindow({ preload }: { preload: Preload }) {
+  return (
+    <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
+      <SyncProvider>
+        <EventDraftProvider>
+          <App />
+        </EventDraftProvider>
+      </SyncProvider>
+    </CalEventsProvider>
+  )
+}
+
+function App() {
   const [calendarView, setCalendarView] = useLocalStorage(
     "calendarView",
     calendarViewSchema,

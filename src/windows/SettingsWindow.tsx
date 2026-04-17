@@ -8,7 +8,7 @@ import { DragRegion } from "@/components/ui/drag-region"
 
 import { cn, isMacOS } from "@/lib/utils"
 
-export function SettingsPage() {
+export function SettingsWindow() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general")
 
   return (

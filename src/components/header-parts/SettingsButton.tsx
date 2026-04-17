@@ -23,7 +23,7 @@ export async function openSettingsWindow() {
   const screenH = (monitor?.size.height ?? height) / scale
 
   new WebviewWindow("settings", {
-    url: "/?view=settings",
+    url: "/?appWindow=settings",
     title: "Settings",
     titleBarStyle: "overlay",
     width,
