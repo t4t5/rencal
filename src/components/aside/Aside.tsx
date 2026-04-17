@@ -1,5 +1,5 @@
 import { Header } from "@/components/aside/Header"
-import { EventList } from "@/components/aside/events/EventList"
+import { EventList } from "@/components/aside/event-list/EventList"
 import { Minical } from "@/components/aside/minical/Minical"
 
 export function Aside() {
