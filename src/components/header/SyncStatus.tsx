@@ -9,7 +9,7 @@ import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon } from "@/icons/sync"
 
-export const SyncStatus = () => {
+export const SyncStatus = ({ className }: { className?: string }) => {
   const { isSyncing, syncError } = useSync()
   const [isOnline, setIsOnline] = useState(navigator.onLine)
 
@@ -67,7 +67,7 @@ export const SyncStatus = () => {
   })()
 
   return (
-    <div key={key} style={{ animation: "scale-in 0.15s ease-out" }}>
+    <div key={key} className={className} style={{ animation: "scale-in 0.15s ease-out" }}>
       {content}
     </div>
   )

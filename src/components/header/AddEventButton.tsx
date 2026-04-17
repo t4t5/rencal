@@ -38,7 +38,7 @@ export function AddEventButton() {
   const isMd = useBreakpoint("md")
 
   return (
-    <>
+    <div className="flex grow">
       {isMd && <Spacer grow={!isDrafting} />}
 
       <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
@@ -55,7 +55,7 @@ export function AddEventButton() {
       </ShortcutTooltip>
 
       {!isMd && <Spacer grow={!isDrafting} />}
-    </>
+    </div>
   )
 }
 
