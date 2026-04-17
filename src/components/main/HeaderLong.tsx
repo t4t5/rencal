@@ -9,6 +9,8 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
+import { CalendarView } from "@/lib/calendar-view"
+
 export function HeaderLong() {
   const { navigateToDate } = useCalendarNavigation()
 
@@ -29,19 +31,29 @@ export function HeaderLong() {
       <DragRegion className="grow h-full" />
 
       <TabsList onMouseDown={(e) => e.preventDefault()}>
-        <ShortcutTooltip text="Week view" shortcut="w">
-          <span className="h-full">
-            <TabsTrigger value="week">Week</TabsTrigger>
-          </span>
-        </ShortcutTooltip>
-        <ShortcutTooltip text="Month view" shortcut="m">
-          <span className="h-full">
-            <TabsTrigger value="month">Month</TabsTrigger>
-          </span>
-        </ShortcutTooltip>
+        <CalendarViewTab view="week" name="Week" shortcut="w" />
+        <CalendarViewTab view="month" name="Month" shortcut="m" />
       </TabsList>
 
       <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />
     </div>
+  )
+}
+
+const CalendarViewTab = ({
+  view,
+  name,
+  shortcut,
+}: {
+  view: CalendarView
+  name: string
+  shortcut: string
+}) => {
+  return (
+    <ShortcutTooltip text={`${name} view`} shortcut={shortcut}>
+      <span className="h-full">
+        <TabsTrigger value={view}>{name}</TabsTrigger>
+      </span>
+    </ShortcutTooltip>
   )
 }
