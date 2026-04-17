@@ -5,6 +5,7 @@ import { Main } from "@/components/Main"
 import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"
+import { DragRegion } from "@/components/ui/drag-region"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
@@ -32,7 +33,7 @@ export default function App() {
   return (
     <main className="flex h-screen overflow-hidden">
       <GlobalShortcuts onChangeCalendarView={setCalendarView} />
-      <div className="absolute h-4 w-full" data-tauri-drag-region />
+      <DragRegion className="absolute h-4 w-full" />
 
       <Aside />
 

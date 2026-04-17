@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 
+import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
@@ -61,12 +62,11 @@ export function AddEventButton() {
 
 const Spacer = ({ grow }: { grow?: boolean }) => {
   return (
-    <div
+    <DragRegion
       className={cn(
         "h-full transition-[flex-grow] duration-200 ease-out",
         grow ? "grow" : "grow-0",
       )}
-      data-tauri-drag-region
     />
   )
 }

@@ -5,6 +5,8 @@ import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { DragRegion } from "../ui/drag-region"
+
 export function SheetEvent() {
   const { activeEvent, setActiveEventId } = useCalEvents()
   const isOpen = !!activeEvent
@@ -33,7 +35,7 @@ export function SheetEvent() {
       <FastSheetContent open={isOpen}>
         {displayEvent && (
           <EditEvent event={displayEvent}>
-            <div className="h-7 grow" data-tauri-drag-region />
+            <DragRegion className="h-7 grow" />
           </EditEvent>
         )}
       </FastSheetContent>

@@ -1,5 +1,6 @@
 import { SearchBar } from "@/components/search/SearchBar"
 import { Button } from "@/components/ui/button"
+import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -26,7 +27,7 @@ export function HeaderLong() {
         <SyncStatus />
       </div>
 
-      <div className="grow h-full" data-tauri-drag-region />
+      <DragRegion className="grow h-full" />
 
       <TabsList onMouseDown={(e) => e.preventDefault()}>
         <ShortcutTooltip text="Week view" shortcut="w">
