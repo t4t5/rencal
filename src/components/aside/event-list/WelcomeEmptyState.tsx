@@ -1,6 +1,6 @@
 import { useState } from "react"
 
-import { AddAccountModal } from "@/components/settings/AddAccountModal"
+import { AddAccountModal } from "@/components/settings/accounts/AddAccountModal"
 import { Button } from "@/components/ui/button"
 
 export function WelcomeEmptyState() {

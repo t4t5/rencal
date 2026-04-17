@@ -1,9 +1,9 @@
 import { useState } from "react"
 
-import { AccountsPage } from "@/components/settings/AccountsPage"
-import { CalendarsPage } from "@/components/settings/CalendarsPage"
-import { GeneralPage } from "@/components/settings/GeneralPage"
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
+import { AccountsPage } from "@/components/settings/accounts/AccountsPage"
+import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
+import { GeneralPage } from "@/components/settings/general/GeneralPage"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { cn, isMacOS } from "@/lib/utils"
