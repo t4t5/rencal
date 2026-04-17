@@ -9,6 +9,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { rruleToRecurrence } from "@/lib/rrule-utils"
+import { normalizeAllDayRange } from "@/lib/time"
 
 type NewEventContentProps = {
   summaryRef?: Ref<HTMLTextAreaElement>
@@ -54,7 +55,8 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
             setDraftEvent({ ...draftEvent, summary: newSummary })
           }}
           onAllDayChange={(checked) => {
-            setDraftEvent({ ...draftEvent, allDay: checked })
+            const range = checked ? normalizeAllDayRange(start, end) : { start, end }
+            setDraftEvent({ ...draftEvent, allDay: checked, end: range.end })
           }}
           onChangeStartDate={(date) => {
             if (!date) return

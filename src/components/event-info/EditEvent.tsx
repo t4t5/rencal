@@ -22,7 +22,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
-import { formatEventTime } from "@/lib/time"
+import { formatEventTime, normalizeAllDayRange } from "@/lib/time"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
 
@@ -241,7 +241,14 @@ export const EditEvent = ({
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {
-          setDirtyEvent({ ...dirtyEvent, all_day: checked })
+          const range = checked
+            ? normalizeAllDayRange(new Date(start), new Date(end))
+            : { start: new Date(start), end: new Date(end) }
+          setDirtyEvent({
+            ...dirtyEvent,
+            all_day: checked,
+            end: formatEventTime(range.end, checked),
+          })
         }}
         showTime={!all_day}
         location={location}

@@ -1,4 +1,4 @@
-import { format, getYear, isToday, isTomorrow, isYesterday, parseISO } from "date-fns"
+import { addDays, format, getYear, isToday, isTomorrow, isYesterday, parseISO } from "date-fns"
 
 import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
@@ -50,6 +50,16 @@ export function formatDateKey(date: Date | string): string {
 /** Format a Date for sending to the backend: local date for all-day, UTC ISO string for timed. */
 export function formatEventTime(date: Date, allDay: boolean): string {
   return allDay ? formatDateKey(date) : date.toISOString()
+}
+
+/**
+ * Ensure an all-day event's [start, end) range is valid: end's day must be at
+ * least one day after start's day (since end is exclusive, end == start + 1 day
+ * means a single-day event).
+ */
+export function normalizeAllDayRange(start: Date, end: Date): { start: Date; end: Date } {
+  const needsBump = startOfDayMs(end) <= startOfDayMs(start)
+  return { start, end: needsBump ? addDays(start, 1) : end }
 }
 
 export function formatShortDate(date: Date): string {
