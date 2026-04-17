@@ -4,6 +4,7 @@ import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { cn } from "@/lib/utils"
 
@@ -34,8 +35,12 @@ export function AddEventButton() {
     }
   }, [isDrafting])
 
+  const isMd = useBreakpoint("md")
+
   return (
     <>
+      {isMd && <Spacer grow={!isDrafting} />}
+
       <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
         <div
           ref={containerRef}
@@ -49,14 +54,20 @@ export function AddEventButton() {
         </div>
       </ShortcutTooltip>
 
-      <div
-        className={cn(
-          "h-full transition-[flex-grow] duration-200 ease-out",
-          isDrafting ? "grow-0" : "grow",
-        )}
-        data-tauri-drag-region
-      />
+      {!isMd && <Spacer grow={!isDrafting} />}
     </>
+  )
+}
+
+const Spacer = ({ grow }: { grow?: boolean }) => {
+  return (
+    <div
+      className={cn(
+        "h-full transition-[flex-grow] duration-200 ease-out",
+        grow ? "grow" : "grow-0",
+      )}
+      data-tauri-drag-region
+    />
   )
 }
 

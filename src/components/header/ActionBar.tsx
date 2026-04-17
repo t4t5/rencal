@@ -1,6 +1,7 @@
 import { SearchButton } from "@/components/search/SearchButton"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import { useFullscreen } from "@/hooks/useFullscreen"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { AddEventButton } from "./AddEventButton"
@@ -10,11 +11,12 @@ import { SyncStatus } from "./SyncStatus"
 
 export function ActionBar() {
   const isMd = useBreakpoint("md")
+  const isFullscreen = useFullscreen()
 
   return (
     <div
-      className={cn("flex justify-between items-center gap-3", {
-        "pl-[78px]": isMacOS,
+      className={cn("flex justify-between items-center gap-3 md:justify-end", {
+        "pl-[78px]": isMacOS && !isFullscreen,
       })}
     >
       <AddEventButton />
