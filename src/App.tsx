@@ -1,73 +1,42 @@
-import { z } from "zod"
-
 import "@/global.css"
 
-import { StatefulCalendar } from "@/components/StatefulCalendar"
-import { EditEvent } from "@/components/event-info/EditEvent"
+import { Aside } from "@/components/Aside"
+import { Main } from "@/components/Main"
 import { PopoverEditEvent } from "@/components/event-info/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-info/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-info/SheetInfo"
-import { EventList } from "@/components/events/EventList"
-import { Header } from "@/components/header/Header"
-import { MonthView } from "@/components/main/month-view/MonthView"
-import { WeekView } from "@/components/main/week-view/WeekView"
-import { Tabs, TabsContent } from "@/components/ui/tabs"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
-
+import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { CalendarView, calendarViewSchema } from "@/lib/calendar-view"
 
-import { HeaderLong } from "./components/header/HeaderLong"
-import { useBreakpoint } from "./hooks/useBreakpoint"
-
-const calendarViewSchema = z.enum(["week", "month"])
-
-function GlobalShortcuts({ setView }: { setView: (view: "week" | "month") => void }) {
-  useGlobalShortcuts({ setView })
+function GlobalShortcuts({
+  onChangeCalendarView,
+}: {
+  onChangeCalendarView: (calendarView: CalendarView) => void
+}) {
+  useGlobalShortcuts({ onChangeCalendarView })
   return null
 }
 
-function App() {
-  const { activeEvent } = useCalEvents()
-  const [view, setView] = useLocalStorage("calendarView", calendarViewSchema, "month")
+export default function App() {
+  const [calendarView, setCalendarView] = useLocalStorage(
+    "calendarView",
+    calendarViewSchema,
+    "month",
+  )
 
   const isMd = useBreakpoint("md")
 
   return (
     <main className="flex h-screen overflow-hidden">
-      <GlobalShortcuts setView={setView} />
+      <GlobalShortcuts onChangeCalendarView={setCalendarView} />
       <div className="absolute h-4 w-full" data-tauri-drag-region />
 
-      <div className="w-full md:w-[300px] flex flex-col shrink-0 md:border-r border-r-divider">
-        <Header />
-        <StatefulCalendar />
-        <EventList />
-      </div>
+      <Aside />
 
-      {isMd && (
-        <Tabs
-          value={view}
-          onValueChange={(v) => setView(v as z.infer<typeof calendarViewSchema>)}
-          className="hidden sm:flex flex-col grow"
-        >
-          <HeaderLong />
-          <div className="h-[calc(100vh-76px)] select-none">
-            <TabsContent value="week" className="h-full">
-              <WeekView />
-            </TabsContent>
-            <TabsContent value="month" className="h-full">
-              <MonthView />
-            </TabsContent>
-          </div>
-        </Tabs>
-      )}
-
-      {!isMd && (
-        <div className="hidden md:flex border-l border-l-border w-[350px] shrink-0 flex-col">
-          <EditEvent event={activeEvent} />
-        </div>
-      )}
+      {isMd && <Main calendarView={calendarView} onChangeCalendarView={setCalendarView} />}
 
       {isMd && <PopoverEditEvent />}
       {isMd && <PopoverNewEvent />}
@@ -76,5 +45,3 @@ function App() {
     </main>
   )
 }
-
-export default App

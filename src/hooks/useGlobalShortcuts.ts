@@ -9,14 +9,15 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useTheme } from "@/hooks/useTheme"
+import { CalendarView } from "@/lib/calendar-view"
 
 const NAV_THROTTLE_MS = 80
 
-interface UseGlobalShortcutsOptions {
-  setView: (view: "week" | "month") => void
-}
-
-export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
+export function useGlobalShortcuts({
+  onChangeCalendarView,
+}: {
+  onChangeCalendarView: (view: CalendarView) => void
+}) {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { toggleTheme } = useTheme()
@@ -50,8 +51,8 @@ export function useGlobalShortcuts({ setView }: UseGlobalShortcutsOptions) {
   })
 
   // View switching
-  useHotkeys("m", () => setView("month"))
-  useHotkeys("w", () => setView("week"))
+  useHotkeys("m", () => onChangeCalendarView("month"))
+  useHotkeys("w", () => onChangeCalendarView("week"))
 
   // Navigate to today
   useHotkeys("t", () => navigateToDate(new Date()))
