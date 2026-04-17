@@ -44,6 +44,7 @@ export const DatePicker = ({
         <Calendar
           mode="single"
           selected={date ?? undefined}
+          defaultMonth={date ?? undefined}
           captionLayout="dropdown"
           onSelect={(date) => {
             setDate(date ?? null)
