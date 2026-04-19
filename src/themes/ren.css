@@ -6,23 +6,17 @@ body[data-theme="ren"] {
   --interactive-accent-hover: #ff772d;
   --highlight: #ff610b;
   --success: var(--interactive-accent);
-  --button-border: transparent;
 
   /* Shape */
-  --radius: 0;
-  --radius-circle: 0;
   --tab-gap: 0;
   --tab-list-shadow: inset 0 0 0 1px var(--interactive-normal);
 
   /* Typography fonts */
-  --font-mono: "Geist Mono", ui-monospace, monospace;
-  --font-heading: var(--font-mono);
-  --font-button: var(--font-mono);
-  --font-numerical: var(--font-mono);
+  /* --font-heading: var(--font-mono); */
+  /* --font-button: var(--font-mono); */
+  /* --font-numerical: var(--font-mono); */
 
   /* Typography identity */
-  --font-heading-transform: uppercase;
-  --font-button-transform: uppercase;
   --font-button-size: 13px;
   --font-numerical-size: 13px;
 

@@ -87,7 +87,7 @@ export function MonthDayCell({
       <ContextMenuTrigger asChild>
         <div
           className={cn(
-            "flex flex-col gap-px px-0.5 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
+            "flex flex-col gap-px px-0.5 pb-1 min-h-0 overflow-hidden cursor-default border-r border-divider last:border-r-0",
             day.isWeekend && "bg-weekendBg",
             isActiveDay && "bg-buttonSecondaryBgHover",
           )}

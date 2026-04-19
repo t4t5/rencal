@@ -1,0 +1,4 @@
+body[data-theme="catpuccin-latte"] {
+  --background-primary: #eff1f5;
+  --text-normal: black;
+}

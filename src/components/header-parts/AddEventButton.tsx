@@ -47,7 +47,7 @@ export function AddEventButton() {
           ref={containerRef}
           className={cn(
             "relative transition-[flex-grow,flex-basis] duration-200 ease-out shrink-0",
-            isDrafting ? "grow basis-0" : "grow-0 basis-[var(--buttonHeight)]",
+            isDrafting ? "grow basis-0" : "grow-0 basis-[var(--control-height)]",
           )}
         >
           <AddEventInput onExit={exitDraft} />
@@ -75,7 +75,7 @@ const PlusButtonOverlay = ({ show }: { show: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute left-0 top-0 size-buttonHeight flex items-center justify-center pointer-events-none transition-opacity duration-150",
+        "absolute left-0 top-0 size-control-height flex items-center justify-center pointer-events-none transition-opacity duration-150",
         show ? "opacity-100" : "opacity-0",
       )}
     >

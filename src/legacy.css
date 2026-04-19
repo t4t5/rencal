@@ -1,0 +1,239 @@
+@theme inline {
+  /* Typography */
+  /* --font-heading: var(--font-heading); */
+  /* --font-button: var(--font-button); */
+  /* --font-numerical: var(--font-numerical); */
+
+  /* shadcn color tokens */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  /* --color-border: var(--border); */
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Semantic color tokens */
+  --color-background-primary: var(--background-primary);
+  --color-background-secondary: var(--background-secondary);
+  --color-background-popover: var(--background-popover);
+  --color-background-overlay: var(--background-overlay);
+  --color-background-weekend: var(--background-weekend);
+  --color-text-normal: var(--text-normal);
+  --color-text-muted: var(--text-muted);
+  --color-text-faint: var(--text-faint);
+  --color-text-on-accent: var(--text-on-accent);
+  --color-interactive-normal: var(--interactive-normal);
+  --color-interactive-hover: var(--interactive-hover);
+  --color-interactive-accent: var(--interactive-accent);
+  --color-interactive-accent-hover: var(--interactive-accent-hover);
+  /* --color-border-color: var(--border-color); */
+  --color-divider: var(--divider);
+  /* --color-button-border: var(--button-border); */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
+  --color-highlight: var(--highlight);
+  --color-active: var(--active);
+  --color-active-bg: var(--active-bg);
+
+  /* Legacy camelCase color tokens — kept while components migrate */
+  --color-bgPrimary: var(--bgPrimary);
+  --color-bgPopover: var(--bgPopover);
+  --color-overlayBg: var(--overlayBg);
+  --color-weekendBg: var(--weekendBg);
+  --color-buttonPrimaryBg: var(--buttonPrimaryBg);
+  --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover);
+  --color-buttonSecondaryBg: var(--buttonSecondaryBg);
+  --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
+  /* --color-buttonBorder: var(--buttonBorder); */
+  --color-hoverBg: var(--buttonSecondaryBgHover);
+  --color-activeBg: var(--activeBg);
+
+  /* Radius scale — preserves the shadcn convention where
+     rounded-lg maps to the base --radius. */
+  /* --radius: calc(var(--radius) - 6px); */
+  /* --radius-xs: calc(var(--radius) - 8px); */
+  /* --radius-sm: calc(var(--radius) - 4px); */
+  /* --radius-md: calc(var(--radius) - 2px); */
+  /* --radius-lg: var(--radius); */
+  /* --radius-xl: calc(var(--radius) + 4px); */
+
+  /* Shadows */
+  /* --shadow-button-border: inset 0 0 0 1px var(--button-border); */
+  /* --shadow-button-border-arrow: inset -1px -1px 0 0px var(--button-border); */
+  --shadow-tab-list: var(--tab-list-shadow);
+  /* --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder); */
+  /* --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder); */
+  --shadow-tabList: var(--tabListShadow);
+
+  /* Sizing / spacing */
+  --size-control-height: var(--control-height);
+  --height-control-height: var(--control-height);
+  --width-control-height: var(--control-height);
+  --spacing-tab-gap: var(--tab-gap);
+  --size-buttonHeight: var(--buttonHeight);
+  --height-buttonHeight: var(--buttonHeight);
+  --width-buttonHeight: var(--buttonHeight);
+  --spacing-tabGap: var(--tabGap);
+}
+
+/* ============================================================
+   Semantic layer — the public contract themes override.
+   Defined under [data-theme] (not :root) so Tailwind v4 keeps
+   var() references intact in generated utilities, allowing
+   runtime theme switching. See src/themes/README.md.
+   ============================================================ */
+[data-theme] {
+  /* Backgrounds */
+  --background-primary: #1a1b26;
+  --background-secondary: rgb(255 255 255 / 5%);
+  --background-popover: #282934;
+  --background-overlay: rgb(0 0 0 / 75%);
+  --background-weekend: rgb(255 255 255 / 5%);
+
+  /* Text */
+  --text-normal: #ffffff;
+  --text-muted: rgb(255 255 255 / 50%);
+  --text-faint: rgb(255 255 255 / 35%);
+  --text-on-accent: #ffffff;
+
+  /* Interactive */
+  --interactive-normal: rgb(255 255 255 / 5%);
+  --interactive-hover: rgb(255 255 255 / 8%);
+  --interactive-accent: #0094c6;
+  --interactive-accent-hover: #07abe3;
+
+  /* Structure */
+  /* --border-color: rgb(255 255 255 / 10%); */
+  --ring-color: oklch(0.552 0.016 285.938);
+
+  /* Status / brand */
+  --success: #4caf50;
+  --warning: #fd8742;
+  --error: #e25252;
+  --highlight: #ff2f00;
+  --active: #36c3f3;
+  --active-bg: rgb(217 217 217 / 30%);
+
+  /* Sizing */
+  --tab-gap: 6px;
+  --tab-list-shadow: none;
+
+  /* Typography slots (theme-swappable) */
+  /* --font-heading: inherit; */
+  /* --font-button: inherit; */
+  /* --font-numerical: inherit; */
+
+  /* Legacy camelCase aliases. Kept so existing utilities
+     (`bg-bgPrimary`, `h-buttonHeight`, `font-fontHeading`)
+     keep working. Remove once components migrate to the
+     semantic names. */
+  --bgPrimary: var(--background-primary);
+  --bgPopover: var(--background-popover);
+  --bgTertiary: var(--interactive-hover);
+  --overlayBg: var(--background-overlay);
+  --weekendBg: var(--background-weekend);
+  --textPrimary: var(--text-normal);
+  --textSecondary: var(--text-muted);
+  --buttonPrimaryBg: var(--interactive-accent);
+  --buttonPrimaryBgHover: var(--interactive-accent-hover);
+  --buttonSecondaryBg: var(--interactive-normal);
+  --buttonSecondaryBgHover: var(--interactive-hover);
+  /* --buttonBorder: var(--button-border); */
+  /* --buttonHeight: var(--control-height); */
+  --activeBg: var(--active-bg);
+  --tabGap: var(--tab-gap);
+  --tabListShadow: var(--tab-list-shadow);
+  /* --fontHeading: var(--font-heading); */
+  --fontButton: var(--font-button);
+  --fontNumerical: var(--font-numerical);
+}
+
+/* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
+@utility rounded-circle {
+  border-radius: var(--radius-circle, calc(infinity* 1px));
+}
+
+/* ============================================================
+   Typography identity — applied when a theme sets the matching
+   variables. When a var is unset the declaration becomes invalid
+   at computed-value time and is ignored, leaving the element's
+   normal (Tailwind-driven) typography intact.
+
+   The `.font-heading.text-{lg,xl,2xl}` rules are unlayered so
+   they out-specificity Tailwind's `.text-lg` etc. utilities. This
+   lets themes like ren downshift heading sizes via a variable
+   instead of targeting specific elements in the theme file.
+   ============================================================ */
+@layer components {
+  .font-heading {
+    text-transform: var(--font-heading-transform);
+    font-size: var(--font-heading-size);
+    line-height: var(--font-heading-line-height);
+  }
+  .font-button {
+    text-transform: var(--font-button-transform);
+    font-size: var(--font-button-size);
+    line-height: var(--font-button-line-height);
+  }
+  .font-numerical {
+    font-size: var(--font-numerical-size);
+    line-height: var(--font-numerical-line-height);
+  }
+}
+
+.font-heading.text-lg {
+  font-size: var(--font-heading-lg-size, var(--text-lg));
+  line-height: var(--font-heading-lg-line-height, var(--text-lg--line-height));
+}
+.font-heading.text-xl {
+  font-size: var(--font-heading-xl-size, var(--text-xl));
+  line-height: var(--font-heading-xl-line-height, var(--text-xl--line-height));
+}
+.font-heading.text-2xl {
+  font-size: var(--font-heading-2xl-size, var(--text-2xl));
+  line-height: var(--font-heading-2xl-line-height, var(--text-2xl--line-height));
+}
+
+/* Escape hatch: reset font-family and text-transform when used as an
+   input-like trigger (e.g., date picker). Unlayered so it beats the
+   @layer components .font-button/.font-heading rules by origin. */
+.font-ui {
+  font-family: inherit;
+  text-transform: none;
+}
+
+/* shadcn compatibility aliases derived from the semantic layer. */
+[data-theme] {
+  --background: var(--background-primary);
+  --foreground: var(--text-normal);
+  --card: var(--background-secondary);
+  --card-foreground: var(--text-normal);
+  --popover: var(--background-popover);
+  --popover-foreground: var(--text-normal);
+  --primary: var(--interactive-accent);
+  --primary-foreground: var(--text-on-accent);
+  --secondary: var(--interactive-normal);
+  --secondary-foreground: var(--text-normal);
+  --muted: var(--interactive-normal);
+  --muted-foreground: var(--text-muted);
+  --accent: var(--active-bg);
+  --accent-foreground: var(--text-normal);
+  --destructive: var(--error);
+  /* --border: var(--border-color); */
+  /* --input: var(--input-border); */
+  --ring: var(--ring-color);
+  --hover: var(--interactive-hover);
+}

@@ -1,4 +1,13 @@
-/* Classic is the :root default. File reserved for future classic-only overrides. */
 body[data-theme="classic"] {
-  /* Currently empty; :root values apply. */
+  --font-heading: var(--sans);
+  --font-button: var(--sans);
+  --font-numerical: var(--sans);
+
+  --font-heading-transform: normal;
+  --font-button-transform: normal;
+
+  --border-button: #363643;
+
+  --radius-base: 0.6rem;
+  --radius-circle: calc(infinity * 1px);
 }

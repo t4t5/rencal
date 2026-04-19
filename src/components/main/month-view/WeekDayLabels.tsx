@@ -4,7 +4,7 @@ const WEEKDAY_LABELS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export const WeekDayLabels = () => {
   return (
-    <div className="grid grid-cols-7 border-b border-border">
+    <div className="grid grid-cols-7 border-b border-divider">
       {WEEKDAY_LABELS.map((label, i) => (
         <div
           key={label}

@@ -209,7 +209,7 @@ export function MonthGrid({
               height: `${virtualRow.size}px`,
               transform: `translateY(${virtualRow.start}px)`,
             }}
-            className="flex flex-col border-b border-border"
+            className="flex flex-col border-b border-divider"
           >
             <MonthWeekRow
               weekDays={weeks[virtualRow.index]}
@@ -239,7 +239,7 @@ function TopLeftDate({
   return (
     <div
       className={cn(
-        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-border last:border-r-0",
+        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-divider last:border-r-0",
         day.isWeekend && "bg-weekendBg",
         isActive && "bg-buttonSecondaryBgHover",
       )}

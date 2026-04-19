@@ -11,7 +11,7 @@ const buttonVariants = cva(
       variant: {
         default: "bg-primary text-primary-foreground hover:bg-buttonPrimaryBgHover",
         secondary:
-          "bg-secondary text-secondary-foreground hover:bg-buttonSecondaryBgHover shadow-buttonBorder",
+          "bg-secondary text-secondary-foreground hover:bg-buttonSecondaryBgHover shadow-button-border",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
@@ -19,10 +19,10 @@ const buttonVariants = cva(
         ghost: "hover:bg-hoverBg hover:text-accent-foreground",
       },
       size: {
-        default: "px-4 py-2 has-[>svg]:px-3 h-buttonHeight",
+        default: "px-4 py-2 has-[>svg]:px-3 h-control-height",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
-        icon: "size-buttonHeight p-0",
+        icon: "size-control-height p-0",
         "icon-xs": "size-5 p-0",
         "icon-sm": "size-7 p-0",
         "icon-lg": "size-9 p-0",
