@@ -27,19 +27,21 @@ export function CalendarsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      {Object.entries(calendarsByProvider).map(([provider, cals]) => {
-        const displayName = getProviderDisplayName(provider)
-        return (
-          <div key={provider} className="flex flex-col gap-3">
-            <span className="text-sm text-muted-foreground">{displayName}</span>
-            <div className="flex flex-col gap-2">
-              {cals?.map((calendar) => (
-                <CalendarCheckboxItem key={calendar.slug} calendar={calendar} />
-              ))}
+      <div className="flex flex-col gap-4">
+        {Object.entries(calendarsByProvider).map(([provider, cals]) => {
+          const displayName = getProviderDisplayName(provider)
+          return (
+            <div key={provider} className="flex flex-col gap-2">
+              <span className="text-sm text-muted-foreground">{displayName}</span>
+              <div className="flex flex-col gap-1">
+                {cals?.map((calendar) => (
+                  <CalendarCheckboxItem key={calendar.slug} calendar={calendar} />
+                ))}
+              </div>
             </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
 
       <Tooltip>
         <TooltipTrigger asChild>

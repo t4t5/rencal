@@ -17,7 +17,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 export function GeneralPage() {
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
       <TimeFormatSection />
       <DefaultRemindersSection />
       <DataDirectorySection />
