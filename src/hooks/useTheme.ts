@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import { z } from "zod"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
 
 import { THEME_IDS, type ThemeId } from "@/themes/manifest"
 
@@ -21,6 +22,8 @@ export function useTheme() {
   useEffect(() => {
     document.body.dataset.theme = theme
   }, [theme])
+
+  useOmarchyTheme(theme)
 
   const toggleTheme = () => {
     const i = THEME_IDS.indexOf(theme)

@@ -86,6 +86,8 @@ To add a new theme:
 2. Import it from `src/global.css`.
 3. Set `data-theme="<name>"` on `<body>` to activate.
 
+The `omarchy` theme is a special case: its primitives aren't in a static CSS file, they're injected at runtime from `~/.config/omarchy/current/theme/colors.toml` by `src/hooks/useOmarchyTheme.ts`. A Rust file-watcher in `src-tauri/src/omarchy.rs` emits `omarchy-theme-changed` when the OS theme changes so Rencal repaints live.
+
 ## Notifications
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in

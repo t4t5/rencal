@@ -15,6 +15,10 @@
       body:not([data-theme])[data-default-theme="ren"] {
         background-color: #131313;
       }
+      body[data-theme="omarchy"],
+      body:not([data-theme])[data-default-theme="omarchy"] {
+        background-color: #1a1b26;
+      }
     </style>
   </head>
 
@@ -26,6 +30,17 @@
         document.body.dataset.theme = JSON.parse(localStorage.getItem("theme")) || DEFAULT_THEME
       } catch {
         document.body.dataset.theme = DEFAULT_THEME
+      }
+      // For the Omarchy theme, apply the last-known background from cache so the
+      // flash-prevention rule above doesn't paint a stale color while React boots.
+      if (document.body.dataset.theme === "omarchy") {
+        try {
+          const cached = JSON.parse(localStorage.getItem("omarchyColors"))
+          if (cached && cached.background) {
+            document.body.style.setProperty("--background", cached.background)
+            document.documentElement.style.backgroundColor = cached.background
+          }
+        } catch {}
       }
     </script>
     <div id="root"></div>

@@ -106,6 +106,12 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 | `--font-heading-2xl-size`        | Override `.font-heading.text-2xl` size                     |
 | `--font-heading-2xl-line-height` | Override `.font-heading.text-2xl` line-height              |
 
+## Omarchy auto-sync
+
+The `omarchy` theme is special: it doesn't ship a static palette. When active, Rencal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and applies the colors as inline CSS custom properties on `<body>`. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints Rencal live without a restart.
+
+If Omarchy isn't installed (or `colors.toml` is missing), the theme falls through to the `@theme` defaults in `global.css` and Rencal still renders correctly. The color mapping from `colors.toml` keys to CSS variables lives in `src/hooks/useOmarchyTheme.ts` — tweak it there.
+
 ## Escape hatch: custom CSS rules
 
 If primitive overrides aren't enough, theme files can include arbitrary CSS rules. Scope them with `body[data-theme="yourtheme"]` (or use CSS nesting inside the body selector) so they don't leak to other themes.
