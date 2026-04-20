@@ -1,12 +1,12 @@
 import { format, isSameYear, isToday } from "date-fns"
-import { forwardRef, memo } from "react"
+import { forwardRef, memo, type MouseEvent } from "react"
 
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockStyle } from "@/lib/event-styles"
+import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { formatDateKey } from "@/lib/time"
 import { getRelativeDayLabel } from "@/lib/time"
@@ -36,13 +36,22 @@ export const DaySection = memo(
       const isDeclined = isDeclinedEvent(event, calendars)
 
       return (
-        <AllDayEventRow
+        <AllDayEventTag
           key={isDraft ? "__draft__" : event.id}
           event={event}
           calendarColor={calendar?.color ?? "var(--primary)"}
           highlighted={isActive}
           isDashed={isPending || isDeclined}
+          isDeclined={isDeclined}
           isDraft={isDraft}
+          onClick={
+            isDraft
+              ? undefined
+              : (e) => {
+                  setEventAnchor(e.currentTarget)
+                  toggleActiveEventId(event.id)
+                }
+          }
         />
       )
     }
@@ -116,23 +125,36 @@ export const DaySection = memo(
   }),
 )
 
-const AllDayEventRow = ({
+const AllDayEventTag = ({
   event,
   calendarColor,
   highlighted,
   isDashed,
+  isDeclined,
   isDraft,
+  onClick,
 }: {
   event: CalendarEvent
   calendarColor: string
   highlighted: boolean
   isDashed: boolean
+  isDeclined: boolean
   isDraft: boolean
+  onClick?: (e: MouseEvent<HTMLDivElement>) => void
 }) => {
   const style = getEventBlockStyle(calendarColor, event.color, highlighted, isDashed, isDraft)
 
   return (
-    <div className="text-[13px] px-1.5 py-0.5 leading-snug rounded-sm inline-flex" style={style}>
+    <div
+      data-event-clickable={!isDraft || undefined}
+      onClick={onClick}
+      className={cn(
+        getEventBlockClasses(highlighted, isDeclined),
+        "px-1 py-px leading-4 rounded inline-flex text-[13px]!",
+        isDraft && "font-medium",
+      )}
+      style={style}
+    >
       {event.summary}
     </div>
   )
