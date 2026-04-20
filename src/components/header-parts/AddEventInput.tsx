@@ -31,7 +31,10 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
   const [outlines, setOutlines] = useState<OutlineRect[]>([])
 
   const deferredText = useDeferredValue(text)
-  const segments = useMemo(() => segmentEventText(deferredText), [deferredText])
+  // When text is empty, skip the deferred value: there's nothing to parse, and
+  // using the stale deferred value would leave outlines lingering for a frame.
+  const parseText = text === "" ? "" : deferredText
+  const segments = useMemo(() => (parseText === "" ? [] : segmentEventText(parseText)), [parseText])
   const hasParsedSegments = isDrafting && segments.some((s) => s.parsed)
 
   const getInput = useCallback(() => containerRef.current?.querySelector("input") ?? null, [])
@@ -46,7 +49,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
     let pos = 0
     for (const seg of segments) {
       if (seg.parsed) {
-        m.textContent = deferredText.slice(0, pos)
+        m.textContent = parseText.slice(0, pos)
         const x = m.getBoundingClientRect().width
         m.textContent = seg.text
         const width = m.getBoundingClientRect().width
@@ -55,7 +58,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
       pos += seg.text.length
     }
     setOutlines(rects)
-  }, [segments, deferredText, hasParsedSegments])
+  }, [segments, parseText, hasParsedSegments])
 
   const syncScroll = useCallback(() => {
     const input = getInput()
