@@ -6,6 +6,7 @@ import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getEventBlockStyle } from "@/lib/event-styles"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { formatDateKey } from "@/lib/time"
 import { getRelativeDayLabel } from "@/lib/time"
@@ -23,6 +24,58 @@ type DaySectionProps = {
 export const DaySection = memo(
   forwardRef<HTMLDivElement, DaySectionProps>(({ date, events, calendars, draftEvent }, ref) => {
     const { activeEvent, toggleActiveEventId } = useCalEvents()
+
+    const allDayEvents = events.filter((e) => e.all_day)
+    const timedEvents = events.filter((e) => !e.all_day)
+
+    const renderAllDay = (event: CalendarEvent) => {
+      const isDraft = event === draftEvent
+      const isActive = !isDraft && event.id === activeEvent?.id
+      const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+      const isPending = isPendingEvent(event, calendars)
+      const isDeclined = isDeclinedEvent(event, calendars)
+
+      return (
+        <AllDayEventRow
+          key={isDraft ? "__draft__" : event.id}
+          event={event}
+          calendarColor={calendar?.color ?? "var(--primary)"}
+          highlighted={isActive}
+          isDashed={isPending || isDeclined}
+          isDraft={isDraft}
+        />
+      )
+    }
+
+    const renderTimed = (event: CalendarEvent) => {
+      const isDraft = event === draftEvent
+      const isActive = !isDraft && event.id === activeEvent?.id
+      const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+      const isPending = isPendingEvent(event, calendars)
+      const isDeclined = isDeclinedEvent(event, calendars)
+
+      return (
+        <div
+          key={isDraft ? "__draft__" : event.id}
+          data-event-clickable={!isDraft || undefined}
+          onClick={
+            isDraft
+              ? undefined
+              : (e) => {
+                  setEventAnchor(e.currentTarget)
+                  toggleActiveEventId(event.id)
+                }
+          }
+          className={cn("cursor-default hover:bg-secondary py-1", {
+            "bg-accent!": isActive,
+            "opacity-50": isPending || isDeclined || isDraft,
+            "line-through": isDeclined,
+          })}
+        >
+          <EventRow event={event} calendarColor={calendar?.color ?? null} />
+        </div>
+      )
+    }
 
     return (
       <div ref={ref} data-date={formatDateKey(date)} className="relative border-b border-b-divider">
@@ -48,38 +101,39 @@ export const DaySection = memo(
           {events.length === 0 ? (
             <div className="px-3 py-1 text-sm text-muted-foreground">No events</div>
           ) : (
-            events.map((event) => {
-              const isDraft = event === draftEvent
-              const isActive = !isDraft && event.id === activeEvent?.id
-              const calendar = calendars.find((c) => c.slug === event.calendar_slug)
-              const isPending = isPendingEvent(event, calendars)
-              const isDeclined = isDeclinedEvent(event, calendars)
-
-              return (
-                <div
-                  key={isDraft ? "__draft__" : event.id}
-                  data-event-clickable={!isDraft || undefined}
-                  onClick={
-                    isDraft
-                      ? undefined
-                      : (e) => {
-                          setEventAnchor(e.currentTarget)
-                          toggleActiveEventId(event.id)
-                        }
-                  }
-                  className={cn("cursor-default hover:bg-secondary py-1", {
-                    "bg-accent!": isActive,
-                    "opacity-50": isPending || isDeclined || isDraft,
-                    "line-through": isDeclined,
-                  })}
-                >
-                  <EventRow event={event} calendarColor={calendar?.color ?? null} />
+            <>
+              {allDayEvents.length > 0 && (
+                <div className="px-3 py-1 flex flex-wrap gap-1">
+                  {allDayEvents.map(renderAllDay)}
                 </div>
-              )
-            })
+              )}
+              {timedEvents.map(renderTimed)}
+            </>
           )}
         </div>
       </div>
     )
   }),
 )
+
+const AllDayEventRow = ({
+  event,
+  calendarColor,
+  highlighted,
+  isDashed,
+  isDraft,
+}: {
+  event: CalendarEvent
+  calendarColor: string
+  highlighted: boolean
+  isDashed: boolean
+  isDraft: boolean
+}) => {
+  const style = getEventBlockStyle(calendarColor, event.color, highlighted, isDashed, isDraft)
+
+  return (
+    <div className="text-[13px] px-1.5 py-0.5 leading-snug rounded-sm inline-flex" style={style}>
+      {event.summary}
+    </div>
+  )
+}

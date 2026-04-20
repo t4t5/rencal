@@ -28,7 +28,7 @@ export function EventList() {
     useCalendarNavigation()
   // TODO: respect calendar visibility
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
-  const visibleCalendarIds = calendars.map((c) => c.slug)
+  // const visibleCalendarIds = calendars.map((c) => c.slug)
 
   const { calendarEvents: events, isInitialLoading } = useCalEvents()
   const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
