@@ -5,14 +5,24 @@
  * then position absolute divs + translate them in
  * sync with input's scrollLeft)
  */
-import { useCallback, useDeferredValue, useLayoutEffect, useMemo, useRef, useState } from "react"
+import {
+  useCallback,
+  useDeferredValue,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
+import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { segmentEventText } from "@/lib/parse-event-text"
+import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
@@ -24,7 +34,9 @@ interface OutlineRect {
 
 export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
-  const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent } = useEventDraft()
+  const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
+    useEventDraft()
+  const { navigateToDate } = useCalendarNavigation()
   const containerRef = useRef<HTMLDivElement>(null)
   const measurerRef = useRef<HTMLSpanElement>(null)
   const [scrollLeft, setScrollLeft] = useState(0)
@@ -64,6 +76,21 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
     const input = getInput()
     if (input) setScrollLeft(input.scrollLeft)
   }, [getInput])
+
+  // Jump the event list to the draft's start date whenever it changes, so the
+  // user can see where their event will land as they type.
+  const draftStartKey = formatDateKey(draftEvent.start)
+  const prevStartKeyRef = useRef<string | null>(null)
+  useEffect(() => {
+    if (!isDrafting) {
+      prevStartKeyRef.current = null
+      return
+    }
+    if (prevStartKeyRef.current !== null && prevStartKeyRef.current !== draftStartKey) {
+      void navigateToDate(draftEvent.start)
+    }
+    prevStartKeyRef.current = draftStartKey
+  }, [isDrafting, draftStartKey])
 
   return (
     <div ref={containerRef} className="relative w-full">
