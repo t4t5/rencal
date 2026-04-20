@@ -3,9 +3,12 @@ import { useRef, useState } from "react"
 import { EventContextMenu } from "@/components/EventContextMenu"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
+import { useSettings } from "@/contexts/SettingsContext"
+
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockColors } from "@/lib/event-styles"
+import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 type MonthTimedEventProps = {
@@ -29,19 +32,18 @@ export function MonthTimedEvent({
 }: MonthTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
+  const { timeFormat } = useSettings()
 
   const highlighted = isActive || contextOpen
   const color = item.color ?? "var(--primary)"
-  const draftColors = isDraft
-    ? getEventBlockColors(color, item.eventColor, highlighted, false, true)
-    : null
+  const colors = getEventBlockColors(color, item.eventColor, highlighted, false, true)
 
   const inner = (
     <div
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "flex items-center gap-1 text-xs truncate cursor-default px-1 hover:bg-hover rounded shrink-0",
+        "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded shrink-0",
         highlighted && "bg-accent!",
         (isPending || isDeclined) && "opacity-50",
         !isDraft && dimmed && "opacity-50",
@@ -49,11 +51,11 @@ export function MonthTimedEvent({
         isDeclined && "line-through",
       )}
       style={
-        draftColors
+        isDraft
           ? {
-              backgroundColor: draftColors.backgroundColor,
-              borderColor: draftColors.accentColor,
-              color: draftColors.textColor,
+              backgroundColor: colors.backgroundColor,
+              borderColor: colors.accentColor,
+              color: colors.textColor,
             }
           : undefined
       }
@@ -67,8 +69,18 @@ export function MonthTimedEvent({
             }
       }
     >
-      <div className="size-1.5 rounded-circle shrink-0" style={{ backgroundColor: color }} />
-      <span className="truncate">{item.event.summary || <UntitledEventText />}</span>
+      <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: color }} />
+      <span className="truncate">
+        <span
+          className="text-[10px] font-numerical"
+          style={{
+            color: colors.textColor,
+          }}
+        >
+          {formatTime(item.event.start, timeFormat)}
+        </span>{" "}
+        {item.event.summary || <UntitledEventText />}
+      </span>
     </div>
   )
 
