@@ -84,9 +84,7 @@ export function Minical() {
         <div ref={gridRef}>{calendar}</div>
       ) : (
         <div className="relative overflow-hidden shrink-0" style={{ height: gridHeight }}>
-          <SlidePresence slideKey={monthKey} direction={direction} duration={animationDuration}>
-            {calendar}
-          </SlidePresence>
+          {calendar}
         </div>
       )}
     </div>
