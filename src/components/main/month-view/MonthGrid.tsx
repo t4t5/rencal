@@ -239,7 +239,7 @@ function TopLeftDate({
   return (
     <div
       className={cn(
-        "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-divider last:border-r-0",
+        "font-numerical flex items-center justify-end gap-1 p-0.5 cursor-default border-r border-divider last:border-r-0",
         day.isWeekend && "bg-weekend",
         isActive && "bg-accent",
       )}

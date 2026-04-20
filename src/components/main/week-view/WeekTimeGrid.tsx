@@ -167,7 +167,7 @@ const DayHeaders = ({
     <div
       key={day.dateKey}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-divider px-1 pt-1.5 cursor-default font-numerical",
+        "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default font-numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
       onClick={() => onDayClick(day.date)}
@@ -241,6 +241,15 @@ const AllDayEvents = ({
           isDeclined={isDeclinedEvent(item.event, calendars)}
           isDraft={item.event === draftEvent}
           onClick={() => onEventClick(item.event.id)}
+        />
+      ))}
+
+      {weekDays.map((day) => (
+        <div
+          className={cn(
+            "h-px border-r border-divider",
+            day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
+          )}
         />
       ))}
     </div>
