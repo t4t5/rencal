@@ -61,10 +61,7 @@ export const ShortcutKey = ({ shortcut, className }: { shortcut: string; classNa
   return (
     <span
       key={shortcut}
-      className={cn(
-        "shadow-buttonBorder text-muted-foreground bg-popover px-1.5 py-0.5 rounded",
-        className,
-      )}
+      className={cn("text-muted-foreground bg-hover px-1.5 py-0.5 rounded", className)}
     >
       {shortcut}
     </span>

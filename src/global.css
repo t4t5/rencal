@@ -44,6 +44,13 @@
   --primary: #f56313;
 
   --today: #3a93ff;
+  --highlight: #ff2f00; /* year */
+
+  --ring: oklch(0.552 0.016 285.938);
+
+  --success: #4caf50;
+  --warning: #fd8742;
+  --error: #e25252;
 
   --hover-tint: white;
   --hover-mix: 5%;
@@ -64,6 +71,7 @@ body {
   /* same as divider, but stronger tint */
   --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--divider));
 
+  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
 
   --popover: var(--card);
@@ -84,6 +92,7 @@ body {
 
   --color-hover: var(--hover);
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
   --color-primary-foreground: var(--primary-foreground);
 
   --color-secondary: var(--secondary);
@@ -99,6 +108,10 @@ body {
 
   --color-divider: var(--divider);
   --color-input: var(--input);
+
+  --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
+
   --shadow-button-border: inset 0 0 0 1px var(--border-button);
 }
 
