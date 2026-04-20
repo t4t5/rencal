@@ -52,7 +52,7 @@ export function WeekAllDayBar({
           !isDraft && dimmed && "opacity-50",
           isDraft && "font-medium",
         )}
-        style={getEventBlockStyle(color, highlighted, isDashed, isDraft)}
+        style={getEventBlockStyle(color, item.eventColor, highlighted, isDashed, isDraft)}
         onClick={
           isDraft
             ? undefined

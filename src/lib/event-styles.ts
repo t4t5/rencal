@@ -10,34 +10,75 @@ export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) 
   )
 }
 
-export function getEventBlockStyle(
-  color: string,
+export function getEventBlockColors(
+  calendarColor: string,
+  eventColor: string | null,
   highlighted: boolean,
   isDashed: boolean,
   isDraft: boolean = false,
-): CSSProperties {
-  const boosted = `oklch(from ${color} l calc(c * 1.4) h)`
+): { accentColor: string; textColor: string; backgroundColor: string } {
+  const boostedCalendar = `oklch(from ${calendarColor} l calc(c * 1.4) h)`
+  const fillSource = eventColor ?? calendarColor
+  const boostedFill = `oklch(from ${fillSource} l calc(c * 1.4) h)`
 
   if (isDraft) {
     return {
-      border: `1px dashed ${boosted}`,
-      backgroundColor: `color-mix(in srgb, ${boosted} 15%, var(--background))`,
-      color: `color-mix(in srgb, ${boosted} 60%, var(--foreground))`,
-      boxShadow: `0 0 0 2px color-mix(in srgb, ${boosted} 25%, transparent)`,
+      accentColor: boostedCalendar,
+      textColor: `color-mix(in srgb, ${boostedFill} 60%, var(--foreground))`,
+      backgroundColor: `color-mix(in srgb, ${boostedFill} 15%, var(--background))`,
     }
   }
 
   if (isDashed) {
     return {
-      border: `1px dashed ${boosted}`,
-      color: `color-mix(in srgb, ${boosted} 50%, var(--foreground))`,
+      accentColor: boostedCalendar,
+      textColor: `color-mix(in srgb, ${boostedFill} 50%, var(--foreground))`,
+      backgroundColor: "transparent",
     }
   }
 
-  const base = `color-mix(in srgb, ${boosted} 20%, var(--background))`
+  const base = `color-mix(in srgb, ${boostedFill} 20%, var(--background))`
 
   return {
+    accentColor: boostedCalendar,
+    textColor: `color-mix(in srgb, ${boostedFill} 40%, var(--foreground))`,
     backgroundColor: highlighted ? `color-mix(in srgb, ${base} 80%, var(--foreground))` : base,
-    color: `color-mix(in srgb, ${boosted} 40%, var(--foreground))`,
+  }
+}
+
+export function getEventBlockStyle(
+  calendarColor: string,
+  eventColor: string | null,
+  highlighted: boolean,
+  isDashed: boolean,
+  isDraft: boolean = false,
+): CSSProperties {
+  const { accentColor, textColor, backgroundColor } = getEventBlockColors(
+    calendarColor,
+    eventColor,
+    highlighted,
+    isDashed,
+    isDraft,
+  )
+
+  if (isDraft) {
+    return {
+      border: `1px dashed ${accentColor}`,
+      backgroundColor,
+      color: textColor,
+      boxShadow: `0 0 0 2px color-mix(in srgb, ${accentColor} 25%, transparent)`,
+    }
+  }
+
+  if (isDashed) {
+    return {
+      border: `1px dashed ${accentColor}`,
+      color: textColor,
+    }
+  }
+
+  return {
+    backgroundColor,
+    color: textColor,
   }
 }

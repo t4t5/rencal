@@ -14,6 +14,7 @@ const DAY_MINUTES = 24 * 60
 export type WeekTimedEventLayout = {
   event: CalendarEvent
   color: string | null
+  eventColor: string | null
   top: number
   height: number
   column: number
@@ -143,6 +144,7 @@ export function useWeekEventLayout(
     for (const event of events) {
       const { firstMs, lastMs } = getEventDayRange(event)
       const color = colorMap.get(event.calendar_slug) ?? null
+      const eventColor = event.color
 
       if (event.all_day) {
         // Check overlap with week
@@ -157,6 +159,7 @@ export function useWeekEventLayout(
         allDayItems.push({
           event,
           color,
+          eventColor,
           startCol,
           endCol,
           lane: 0,
@@ -179,6 +182,7 @@ export function useWeekEventLayout(
           allDayItems.push({
             event,
             color,
+            eventColor,
             startCol,
             endCol,
             lane: 0,
@@ -195,6 +199,7 @@ export function useWeekEventLayout(
             timedByCol[colIndex].push({
               event,
               color,
+              eventColor,
               top,
               height,
               column: 0,

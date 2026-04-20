@@ -83,6 +83,26 @@ pub struct CalendarEvent {
     pub attendees: Vec<EventAttendee>,
     pub conference_url: Option<String>,
     pub calendar_slug: String,
+    pub color: Option<String>,
+}
+
+/// Map a Google Calendar event color ID (1–11) to its canonical hex color.
+/// Source: Google Calendar API `colors.get`.
+fn google_color_id_to_hex(id: &str) -> Option<&'static str> {
+    match id {
+        "1" => Some("#7986cb"),
+        "2" => Some("#33b679"),
+        "3" => Some("#8e24aa"),
+        "4" => Some("#e67c73"),
+        "5" => Some("#f6bf26"),
+        "6" => Some("#f4511e"),
+        "7" => Some("#039be5"),
+        "8" => Some("#616161"),
+        "9" => Some("#3f51b5"),
+        "10" => Some("#0b8043"),
+        "11" => Some("#d50000"),
+        _ => None,
+    }
 }
 
 impl From<&caldir_core::calendar::Calendar> for Calendar {
@@ -262,6 +282,12 @@ impl CalendarEvent {
             attendees: e.attendees.iter().map(EventAttendee::from).collect(),
             conference_url: e.conference_url.clone(),
             calendar_slug: calendar_slug.to_string(),
+            color: e
+                .custom_properties
+                .iter()
+                .find(|(k, _)| k == "X-GOOGLE-COLOR-ID")
+                .and_then(|(_, v)| google_color_id_to_hex(v))
+                .map(String::from),
         }
     }
 }
@@ -1100,6 +1126,7 @@ mod tests {
             organizer: None,
             attendees: vec![],
             conference_url: None,
+            color: None,
         }
     }
 

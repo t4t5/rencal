@@ -60,7 +60,7 @@ export function MonthAllDayEvent({
         height: `${LANE_HEIGHT - LANE_GAP}px`,
         left: `${((item.startCol - 1) / 7) * 100}%`,
         width: `calc(${((item.endCol - item.startCol) / 7) * 100}% - 5px)`,
-        ...getEventBlockStyle(color, highlighted, isDashed, isDraft),
+        ...getEventBlockStyle(color, item.eventColor, highlighted, isDashed, isDraft),
       }}
       onClick={handleClick}
     >
