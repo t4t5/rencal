@@ -11,7 +11,7 @@ body[data-theme="catpuccin-latte"] {
   --background: var(--theme-base);
   --foreground: var(--theme-text);
   --muted: var(--theme-subtext-0);
-  --color-divider: var(--theme-surface-0);
+  --divider: var(--theme-surface-0);
 
   --hover-tint: #484f7f;
   --hover-mix: 10%;
