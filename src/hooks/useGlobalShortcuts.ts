@@ -60,6 +60,14 @@ export function useGlobalShortcuts({
   // Navigate previous/next day
   useHotkeys("left", () => throttledNavigate(subDays(activeDate, 1)))
   useHotkeys("right", () => throttledNavigate(addDays(activeDate, 1)))
+  useHotkeys("up", () => throttledNavigate(subDays(activeDate, 7)))
+  useHotkeys("down", () => throttledNavigate(addDays(activeDate, 7)))
+
+  // vim navigation:
+  useHotkeys("h", () => throttledNavigate(subDays(activeDate, 1)))
+  useHotkeys("l", () => throttledNavigate(addDays(activeDate, 1)))
+  useHotkeys("k", () => throttledNavigate(subDays(activeDate, 7)))
+  useHotkeys("j", () => throttledNavigate(addDays(activeDate, 7)))
 
   // New event
   useHotkeys("c", (e) => {
