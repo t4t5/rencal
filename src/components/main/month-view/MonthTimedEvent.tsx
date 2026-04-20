@@ -5,6 +5,7 @@ import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getEventBlockColors } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
 type MonthTimedEventProps = {
@@ -31,6 +32,9 @@ export function MonthTimedEvent({
 
   const highlighted = isActive || contextOpen
   const color = item.color ?? "var(--primary)"
+  const draftColors = isDraft
+    ? getEventBlockColors(color, item.eventColor, highlighted, false, true)
+    : null
 
   const inner = (
     <div
@@ -45,11 +49,11 @@ export function MonthTimedEvent({
         isDeclined && "line-through",
       )}
       style={
-        isDraft
+        draftColors
           ? {
-              backgroundColor: `color-mix(in srgb, ${color} 15%, var(--background))`,
-              borderColor: `oklch(from ${color} l calc(c * 1.4) h)`,
-              color: `color-mix(in srgb, oklch(from ${color} l calc(c * 1.4) h) 60%, var(--foreground))`,
+              backgroundColor: draftColors.backgroundColor,
+              borderColor: draftColors.accentColor,
+              color: draftColors.textColor,
             }
           : undefined
       }
