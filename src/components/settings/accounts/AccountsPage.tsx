@@ -49,6 +49,7 @@ export function AccountsPage() {
                       onClick={() => {
                         // TODO: Wire to backend disconnect RPC when available
                       }}
+                      className="hidden"
                     >
                       Disconnect
                     </Button>
