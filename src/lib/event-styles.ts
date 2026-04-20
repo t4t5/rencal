@@ -15,7 +15,7 @@ export function getEventBlockStyle(
   highlighted: boolean,
   isDashed: boolean,
 ): CSSProperties {
-  const boosted = `oklch(from ${color} l calc(c * 1.2) h)`
+  const boosted = `oklch(from ${color} l calc(c * 1.4) h)`
 
   if (isDashed) {
     return {
@@ -23,10 +23,11 @@ export function getEventBlockStyle(
       color: `color-mix(in srgb, ${boosted} 50%, var(--foreground))`,
     }
   }
-  const base = `color-mix(in srgb, ${boosted} 50%, var(--background))`
+
+  const base = `color-mix(in srgb, ${boosted} 20%, var(--background))`
 
   return {
     backgroundColor: highlighted ? `color-mix(in srgb, ${base} 80%, var(--foreground))` : base,
-    color: `color-mix(in srgb, ${color} 10%, var(--foreground))`,
+    color: `color-mix(in srgb, ${boosted} 40%, var(--foreground))`,
   }
 }
