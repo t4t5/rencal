@@ -247,7 +247,6 @@ function TopLeftDate({
         "font-numerical flex items-center justify-end gap-1 p-0.5 cursor-default border-r border-divider last:border-r-0",
         day.isWeekend && "bg-weekend",
         isActive && "bg-accent",
-        dimmed && "opacity-50",
       )}
       onClick={onClick}
     >
@@ -259,6 +258,7 @@ function TopLeftDate({
           "text-xs w-5 h-5 flex items-center justify-center",
           day.isToday && "bg-today text-primary-foreground rounded-circle",
           isActive && !day.isToday && "bg-accent rounded-circle",
+          dimmed && "opacity-50",
         )}
       >
         {format(day.date, "d")}

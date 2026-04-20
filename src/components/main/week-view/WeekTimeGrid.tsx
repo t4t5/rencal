@@ -180,7 +180,6 @@ const DayHeaders = ({
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default font-numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
-        dimmed && "opacity-50",
       )}
       onClick={() => onDayClick(day.date)}
     >
@@ -189,6 +188,7 @@ const DayHeaders = ({
         className={cn(
           "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
           day.isToday && "bg-today text-primary-foreground",
+          dimmed && "opacity-50",
         )}
       >
         {format(day.date, "d")}
