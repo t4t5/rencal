@@ -50,7 +50,7 @@ export function SearchInput({
       <ShortcutKey
         shortcut="/"
         className={cn(
-          "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-buttonSecondaryBgHover transition-opacity duration-75",
+          "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-hover transition-opacity duration-75",
           {
             "opacity-0": isFocused,
           },
@@ -90,7 +90,7 @@ export function SearchInput({
           }
         }}
         className={cn(
-          "border-none text-sm bg-secondary shadow-buttonBorder transition-[width] duration-200 ease-out pl-8",
+          "border-none text-sm bg-secondary shadow-button-border transition-[width] duration-200 ease-out pl-8",
           isExiting ? "w-10" : "w-32 starting:w-10",
           className,
         )}

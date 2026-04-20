@@ -140,7 +140,7 @@ const ReminderRow = ({
     <div
       key={mins}
       className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default h-buttonHeight",
+        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default h-control-height",
         className,
       )}
     >

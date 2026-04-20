@@ -1,8 +1,10 @@
 mod notifications;
 mod oauth;
+mod omarchy;
 mod routes;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
+use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use tauri::Manager;
 use taurpc::Router;
 
@@ -11,7 +13,9 @@ const MIN_WINDOW_HEIGHT: f64 = 600.0;
 
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router() -> Router<tauri::Wry> {
-    Router::new().merge(CaldirApiImpl.into_handler())
+    Router::new()
+        .merge(CaldirApiImpl.into_handler())
+        .merge(OmarchyApiImpl.into_handler())
 }
 
 /// Resolve the bundled providers directory and set `CALDIR_PROVIDER_PATH`.
@@ -52,6 +56,7 @@ pub async fn run() {
         .setup(|app| {
             setup_bundled_providers(app);
             tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
+            tokio::spawn(omarchy::run_watcher(app.handle().clone()));
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.set_min_size(Some(tauri::LogicalSize::new(
                     MIN_WINDOW_WIDTH,

@@ -26,7 +26,7 @@ export const LocationInput = ({
         placeholder="Location"
         value={value ?? ""}
         readOnly={readOnly}
-        className={cn(readOnly && "hover:border-transparent! focus:bg-transparent!")}
+        className={"hover:border-transparent! focus:bg-transparent!"}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

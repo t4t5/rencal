@@ -1,6 +1,14 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+
+@import "./animations.css";
+
+/* Themes */
+@import "./themes/classic.css";
 @import "./themes/ren.css";
+@import "./themes/catpuccin-latte.css";
+@import "./themes/tokyonight.css";
+@import "./themes/omarchy.css";
 
 @font-face {
   font-family: "Geist Mono";
@@ -10,153 +18,118 @@
   font-display: swap;
 }
 
-@custom-variant dark (&:is([data-theme] *));
-
 :root {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    sans-serif;
-  font-size: 16px;
-  line-height: 24px;
-  font-weight: 400;
+  --mono: "Geist Mono", ui-monospace, monospace;
+  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  -webkit-text-size-adjust: 100%;
-  --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.141 0.005 285.823);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.141 0.005 285.823);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.141 0.005 285.823);
-  --primary: oklch(0.21 0.006 285.885);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.967 0.001 286.375);
-  --secondary-foreground: oklch(0.21 0.006 285.885);
-  --muted: oklch(0.967 0.001 286.375);
-  --muted-foreground: oklch(0.552 0.016 285.938);
-  --accent: oklch(0.967 0.001 286.375);
-  --accent-foreground: oklch(0.21 0.006 285.885);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.92 0.004 286.32);
-  --input: oklch(0.92 0.004 286.32);
-  --ring: oklch(0.705 0.015 286.067);
+/* Default theme (ren) */
+@theme {
+  --font-heading: var(--mono);
+  --font-button: var(--mono);
+  --font-numerical: var(--mono);
+
+  --font-heading-transform: uppercase;
+  --font-button-transform: uppercase;
+
+  --radius-base: 0;
+  --radius-circle: 0;
+  --control-height: 34px;
+
+  --background: #131313;
+  --foreground: white;
+  --muted: rgba(255, 255, 255, 0.5);
+
+  --primary: #f56313;
+
+  --today: #3a93ff;
+  --highlight: #ff610b; /* year */
+
+  --ring: oklch(0.552 0.016 285.938);
+
+  --success: #4caf50;
+  --warning: #fd8742;
+  --error: #e25252;
+
+  --hover-tint: white;
+  --hover-mix: 5%;
+
+  --tab-gap: 0;
+  --tab-list-shadow: none;
+}
+
+/* variables computed from other variables */
+body {
+  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
+  --secondary: var(--hover);
+  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+
+  --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --weekend: var(--hover);
+
+  --divider: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+
+  /* same as hover, but solid color: */
+  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
+
+  /* same as divider, but stronger tint */
+  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--divider));
+
+  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
+  --primary-foreground: var(--background);
+
+  --popover: var(--card);
+  --popover-foreground: var(--foreground);
+
+  --tab-list-shadow: inset 0 0 0 1px var(--secondary);
 }
 
 @theme inline {
-  --radius: calc(var(--radius) - 6px);
-  --radius-xs: calc(var(--radius) - 8px);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius: calc(var(--radius-base) - 6px);
+  --radius-xs: calc(var(--radius-base) - 8px);
+  --radius-sm: calc(var(--radius-base) - 4px);
+  --radius-md: calc(var(--radius-base) - 2px);
+  --radius-lg: var(--radius-base);
+  --radius-xl: calc(var(--radius-base) + 4px);
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
+  --color-muted-foreground: var(--muted);
+
+  --color-hover: var(--hover);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+
+  --color-card: var(--card);
+  --color-today: var(--today);
+  --color-weekend: var(--weekend);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
 
-  /* Figma: */
-  --color-bgPrimary: var(--bgPrimary);
-  --color-buttonPrimaryBg: var(--buttonPrimaryBg);
-  --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover);
-  --color-buttonSecondaryBg: var(--buttonSecondaryBg);
-  --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
-  --color-buttonBorder: var(--buttonBorder);
-  --color-success: var(--success);
-  --color-error: var(--error);
-  --color-warning: var(--warning);
-  --shadow-buttonBorder: inset 0 0 0 1px var(--buttonBorder);
-  --shadow-buttonBorderArrow: inset -1px -1px 0 0px var(--buttonBorder);
-  --shadow-tabList: var(--tabListShadow);
-  --color-activeBg: var(--activeBg);
-  --color-weekendBg: var(--weekendBg);
-  --color-bgPopover: var(--bgPopover);
-  --color-overlayBg: var(--overlayBg);
-  --color-highlight: var(--highlight);
   --color-divider: var(--divider);
-  --color-active: var(--active);
-  --color-hoverBg: var(--buttonSecondaryBgHover);
+  --color-input: var(--input);
 
-  --size-buttonHeight: var(--buttonHeight);
-  --height-buttonHeight: var(--buttonHeight);
-  --width-buttonHeight: var(--buttonHeight);
+  --color-ring: var(--ring);
+  --color-highlight: var(--highlight);
 
-  --spacing-tabGap: var(--tabGap);
+  /* Attendee status */
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-error: var(--error);
 
-  --font-heading: var(--fontHeading);
-  --font-button: var(--fontButton);
-  --font-numerical: var(--fontNumerical);
-}
+  --shadow-button-border: inset 0 0 0 1px var(--border-button);
+  --shadow-tab-list: var(--tab-list-shadow);
 
-/* Default theme values (classic). Applied to any theme; overridden per-theme below. */
-[data-theme] {
-  --background: oklch(0.141 0.005 285.823);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.21 0.006 285.885);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.21 0.006 285.885);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.92 0.004 286.32);
-  --primary-foreground: oklch(0.21 0.006 285.885);
-  --secondary: oklch(0.274 0.006 286.033);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.274 0.006 286.033);
-  --muted-foreground: oklch(0.705 0.015 286.067);
-  --accent: oklch(0.274 0.006 286.033);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.552 0.016 285.938);
-
-  /* Figma variables: */
-  --textPrimary: #ffffff;
-  --textSecondary: rgb(255 255 255 / 50%);
-  --active: #36c3f3;
-  --activeBg: rgb(217 217 217 / 30%);
-  --bgPrimary: #1a1b26;
-  --bgTertiary: rgb(255 255 255 / 8%);
-  --buttonPrimaryBg: #0094c6;
-  --buttonPrimaryBgHover: #07abe3;
-  --buttonSecondaryBg: rgb(255 255 255 / 5%);
-  --buttonSecondaryBgHover: rgb(255 255 255 / 8%);
-  --buttonBorder: #363643;
-  --weekendBg: rgb(255 255 255 / 5%);
-  --bgPopover: #282934;
-  --divider: rgb(255 255 255 / 10%);
-  --overlayBg: rgb(0 0 0 / 75%);
-  --highlight: #ff2f00;
-  --buttonHeight: 34px;
-  --tabListShadow: none;
-  --success: #4caf50;
-  --error: #e25252;
-  --warning: #fd8742;
-  --fontHeading: inherit;
-  --fontButton: inherit;
-  --fontNumerical: inherit;
-
-  --tabGap: 6px;
+  --size-control-height: var(--control-height);
+  --height-control-height: var(--control-height);
+  --width-control-height: var(--control-height);
+  --spacing-tab-gap: var(--tab-gap);
 }
 
 /* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
@@ -164,54 +137,26 @@
   border-radius: var(--radius-circle, calc(infinity* 1px));
 }
 
-/* shadcn variable adjustments — mapped from Figma vars, applied last so they win over defaults */
-[data-theme] {
-  --background: var(--bgPrimary);
-  --primary: var(--buttonPrimaryBg);
-  --primary-foreground: var(--textPrimary);
-  --secondary: var(--buttonSecondaryBg);
-  --accent: var(--activeBg);
-  --hover: var(--buttonSecondaryBgHover);
-  --card: var(--buttonSecondaryBg);
-  --muted-foreground: var(--textSecondary);
-  --popover: var(--bgPopover);
-}
-
-@keyframes slide-in-y {
-  from {
-    transform: translateY(var(--slide-from, 0));
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
-@keyframes slide-out-y {
-  from {
-    transform: translateY(0);
-  }
-  to {
-    transform: translateY(var(--slide-to, 0));
-  }
-}
-
-@keyframes scale-in {
-  from {
-    transform: scale(0);
-  }
-  to {
-    transform: scale(1);
-  }
-}
-
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-divider outline-ring/50;
     scrollbar-width: none;
   }
   html,
   body {
     @apply bg-background text-foreground;
+
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-text-size-adjust: 100%;
+
     overscroll-behavior: none;
     position: fixed;
     width: 100%;
@@ -222,6 +167,7 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
+    background: var(--background);
   }
 
   input[disabled]::-webkit-datetime-edit-year-field,
@@ -237,3 +183,24 @@
     -webkit-text-fill-color: inherit;
   }
 }
+
+/* For reference: */
+/* shadcn color tokens */
+/* --color-background: var(--background); */
+/* --color-foreground: var(--foreground); */
+/* --color-card: var(--card); */
+/* --color-card-foreground: var(--card-foreground); */
+/* --color-popover: var(--popover); */
+/* --color-popover-foreground: var(--popover-foreground); */
+/* --color-primary: var(--primary); */
+/* --color-primary-foreground: var(--primary-foreground); */
+/* --color-secondary: var(--secondary); */
+/* --color-secondary-foreground: var(--secondary-foreground); */
+/* --color-muted: var(--muted); */
+/* --color-muted-foreground: var(--muted-foreground); */
+/* --color-accent: var(--accent); */
+/* --color-accent-foreground: var(--accent-foreground); */
+/* --color-destructive: var(--destructive); */
+/* --color-border: var(--border); */
+/* --color-input: var(--input); */
+/* --color-ring: var(--ring); */

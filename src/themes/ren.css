@@ -1,54 +1,15 @@
 body[data-theme="ren"] {
-  --bgPrimary: #131313;
-  --buttonPrimaryBg: #f56313;
-  --buttonPrimaryBgHover: #ff772d;
-  --buttonBorder: transparent;
-  --bgPopover: #1d1d1d;
-  --highlight: #ff610b;
-  --success: var(--buttonPrimaryBg);
+  /* Typography identity */
+  /* --font-button-size: 13px;
+  --font-numerical-size: 13px; */
 
-  --font-mono: "Geist Mono", ui-monospace, monospace;
-
-  --radius: 0;
-  --radius-circle: 0;
-  --fontHeading: var(--font-mono);
-  --fontButton: var(--font-mono);
-  --fontNumerical: var(--font-mono);
-
-  --tabListShadow: inset 0 0 0 1px var(--buttonSecondaryBg);
-  --tabGap: 0;
-}
-
-body[data-theme="ren"] .font-heading,
-body[data-theme="ren"] .font-button {
-  text-transform: uppercase;
-}
-
-body[data-theme="ren"] .font-button,
-body[data-theme="ren"] .font-numerical {
-  font-size: 13px;
-}
-
-/* Escape hatch: reset font-family when a Button is used as an input-like trigger. */
-.font-ui {
-  font-family: inherit;
-  text-transform: none;
-}
-
-/* Downshift headings one tier in ren (uppercase reads larger than mixed case). */
-body[data-theme="ren"] .font-heading {
-  font-size: var(--text-sm);
-  line-height: var(--text-sm--line-height);
-}
-body[data-theme="ren"] .font-heading.text-lg {
-  font-size: var(--text-base);
-  line-height: var(--text-base--line-height);
-}
-body[data-theme="ren"] .font-heading.text-xl {
-  font-size: var(--text-lg);
-  line-height: var(--text-lg--line-height);
-}
-body[data-theme="ren"] .font-heading.text-2xl {
-  font-size: var(--text-xl);
-  line-height: var(--text-xl--line-height);
+  /* Downshift heading sizes one tier (uppercase reads larger than mixed case) */
+  /* --font-heading-size: var(--text-sm);
+  --font-heading-line-height: var(--text-sm--line-height);
+  --font-heading-lg-size: var(--text-base);
+  --font-heading-lg-line-height: var(--text-base--line-height);
+  --font-heading-xl-size: var(--text-lg);
+  --font-heading-xl-line-height: var(--text-lg--line-height);
+  --font-heading-2xl-size: var(--text-xl);
+  --font-heading-2xl-line-height: var(--text-xl--line-height); */
 }

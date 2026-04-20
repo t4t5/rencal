@@ -6,10 +6,12 @@ import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
 import { GeneralPage } from "@/components/settings/general/GeneralPage"
 import { DragRegion } from "@/components/ui/drag-region"
 
+import { useTheme } from "@/hooks/useTheme"
 import { cn, isMacOS } from "@/lib/utils"
 
 export function SettingsWindow() {
   const [activeTab, setActiveTab] = useState<SettingsTab>("general")
+  useTheme()
 
   return (
     <div className={cn("flex h-screen", { "pt-8": isMacOS })}>

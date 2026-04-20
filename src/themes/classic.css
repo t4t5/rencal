@@ -1,0 +1,26 @@
+body[data-theme="classic"] {
+  --background: #1a1b26;
+  --font-heading: var(--sans);
+  --font-button: var(--sans);
+  --font-numerical: var(--sans);
+
+  --font-heading-transform: normal;
+  --font-button-transform: normal;
+
+  --divider: #40404f;
+  --border-button: #363643;
+
+  --highlight: #ff2f00; /* year */
+
+  --tab-gap: 6px;
+  --tab-list-shadow: none;
+
+  --hover-tint: #979bc8;
+  --hover-mix: 10%;
+
+  --radius-base: 0.6rem;
+  --radius-circle: calc(infinity * 1px);
+
+  --primary: #0094c6;
+  --primary-foreground: white;
+}

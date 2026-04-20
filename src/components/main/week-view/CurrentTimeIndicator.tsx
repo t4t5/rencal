@@ -51,13 +51,13 @@ export function CurrentTimeIndicator({
       className="absolute -left-3.5 -right-1 z-10 pointer-events-none flex items-center"
       style={{ top: `${timeIndicatorTopPercent}%`, transform: "translateY(-50%)" }}
     >
-      <span className="text-[11px] font-medium text-active shrink-0 leading-none [text-shadow:0_0_4px_black]">
+      <span className="text-[11px] font-medium text-today shrink-0 leading-none">
         {hour}
         <span className={cn(!colonVisible && "invisible")}>:</span>
         {minutes}
         {ampm}
       </span>
-      <div className="ml-1 grow border-t border-dashed border-active" />
+      <div className="ml-1 grow border-t border-dashed border-today" />
     </div>
   )
 }

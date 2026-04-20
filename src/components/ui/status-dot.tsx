@@ -13,9 +13,9 @@ const statusColors: Record<string, string> = {
 }
 
 const statusIcons: Record<string, React.ReactNode> = {
-  accepted: <CheckIcon className="size-3 text-bgPrimary" />,
-  declined: <CloseIcon className="size-3 text-bgPrimary" />,
-  tentative: <QuestionMarkIcon className="size-3 text-bgPrimary" />,
+  accepted: <CheckIcon className="size-3 text-background" />,
+  declined: <CloseIcon className="size-3 text-background" />,
+  tentative: <QuestionMarkIcon className="size-3 text-background" />,
 }
 
 export function StatusDot({ status }: { status: ResponseStatus | null | undefined }) {

@@ -34,7 +34,7 @@ export function WeekAllDayBar({
 
   const inner = (
     <div
-      className="p-0.5 py-px"
+      className="p-0.5 py-px pr-[3px]"
       style={{
         gridColumn: `${item.startCol} / ${item.endCol}`,
         gridRow: item.lane + 1,

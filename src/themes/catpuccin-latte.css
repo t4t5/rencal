@@ -1,0 +1,22 @@
+:root {
+  /* Catpuccin Latte palette */
+  --theme-base: #eff1f5;
+  --theme-surface-0: #ccd0da;
+  --theme-text: #4c4f69;
+  --theme-subtext-0: #6c6f85;
+  --theme-lavender: #7287fd;
+  --theme-blue: #1e66f5;
+}
+
+body[data-theme="catpuccin-latte"] {
+  --background: var(--theme-base);
+  --foreground: var(--theme-text);
+  --muted: var(--theme-subtext-0);
+  --divider: var(--theme-surface-0);
+
+  --hover-tint: #484f7f;
+  --hover-mix: 10%;
+
+  --primary: var(--theme-lavender);
+  --today: var(--theme-blue);
+}
