@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
+import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
@@ -63,7 +64,7 @@ export function MonthTimedEvent({
       }
     >
       <div className="size-1.5 rounded-circle shrink-0" style={{ backgroundColor: color }} />
-      <span className="truncate">{item.event.summary}</span>
+      <span className="truncate">{item.event.summary || <UntitledEventText />}</span>
     </div>
   )
 

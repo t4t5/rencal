@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
+import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
@@ -62,7 +63,7 @@ export function WeekAllDayBar({
               }
         }
       >
-        {item.event.summary}
+        {item.event.summary || <UntitledEventText />}
       </div>
     </div>
   )

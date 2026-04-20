@@ -2,6 +2,7 @@ import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
 import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/MonthGrid"
+import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
@@ -63,7 +64,7 @@ export function MonthAllDayEvent({
       }}
       onClick={handleClick}
     >
-      {item.event.summary}
+      {item.event.summary || <UntitledEventText />}
     </div>
   )
 

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
+import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -74,7 +75,9 @@ export function WeekTimedEvent({
         />
       )}
 
-      <div className="truncate font-medium leading-tight">{layout.event.summary}</div>
+      <div className="truncate font-medium leading-tight">
+        {layout.event.summary || <UntitledEventText />}
+      </div>
       <div className="truncate opacity-80 leading-tight">
         {formatTime(layout.event.start, timeFormat)} – {formatTime(layout.event.end, timeFormat)}
       </div>
