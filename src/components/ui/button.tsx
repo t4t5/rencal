@@ -16,7 +16,7 @@ const buttonVariants = cva(
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
           "bg-transparent border border-transparent hover:border-input data-[state=open]:bg-secondary data-[state=open]:border-transparent",
-        ghost: "hover:bg-hoverBg hover:text-accent-foreground",
+        ghost: "hover:bg-hover hover:text-accent-foreground",
       },
       size: {
         default: "px-4 py-2 has-[>svg]:px-3 h-control-height",

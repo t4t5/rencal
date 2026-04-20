@@ -240,8 +240,8 @@ function TopLeftDate({
     <div
       className={cn(
         "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-divider last:border-r-0",
-        day.isWeekend && "bg-weekendBg",
-        isActive && "bg-secondary",
+        day.isWeekend && "bg-weekend",
+        isActive && "bg-accent",
       )}
       onClick={onClick}
     >
@@ -252,7 +252,7 @@ function TopLeftDate({
         className={cn(
           "text-xs w-5 h-5 flex items-center justify-center",
           day.isToday && "bg-primary text-primary-foreground rounded-circle",
-          isActive && !day.isToday && "bg-secondary rounded-circle",
+          isActive && !day.isToday && "bg-accent rounded-circle",
         )}
       >
         {format(day.date, "d")}

@@ -33,7 +33,7 @@ export function MonthTimedEvent({
       ref={ref}
       data-event-clickable={!isDraft || undefined}
       className={cn(
-        "flex items-center gap-1 text-xs truncate cursor-default px-1 hover:bg-hoverBg rounded shrink-0",
+        "flex items-center gap-1 text-xs truncate cursor-default px-1 hover:bg-hover rounded shrink-0",
         highlighted && "bg-accent!",
         (isPending || isDeclined || isDraft) && "opacity-50",
         isDeclined && "line-through",

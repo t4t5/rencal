@@ -74,6 +74,18 @@ The header input parses natural language into structured event fields using `src
 2. **Time/date** — Powered by chrono-node. Handles "at 3pm", "tomorrow", "next Friday at 10am", etc. The matched text (plus connector words like "at", "on") is stripped from the summary.
 3. **Location** — After time extraction, any trailing "at ..." or "in ..." in the summary is treated as a location (e.g. "dinner at Luigi's at 7pm" → location "Luigi's").
 
+## Themes
+
+Themes live in `src/themes/<name>.css` and are scoped by `body[data-theme="<name>"]`. Each theme sets primitive tokens (e.g. `--background`, `--foreground`, `--hover-tint`, `--hover-mix`, `--primary`). The default (ren) values live in the `@theme` block in `src/global.css`.
+
+Derived tokens like `--hover`, `--secondary`, `--secondary-hover`, and `--card` are declared in a `body { ... }` block in `global.css` using `color-mix()` over the primitives. They must live on `body` — not `:root` — because custom properties containing `var()` are resolved at the element where they're declared; descendants inherit the already-computed value. Declaring them on `body` lets the theme's override of `--hover-tint` / `--background` flow through.
+
+To add a new theme:
+
+1. Create `src/themes/<name>.css` with a `body[data-theme="<name>"] { ... }` block overriding whichever primitives you need.
+2. Import it from `src/global.css`.
+3. Set `data-theme="<name>"` on `<body>` to activate.
+
 ## Notifications
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in

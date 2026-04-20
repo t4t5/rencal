@@ -52,6 +52,9 @@ body {
   --secondary: var(--hover);
   --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
 
+  --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --weekend: var(--hover);
+
   /* same as hover, but solid color: */
   --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
 }
@@ -64,6 +67,7 @@ body {
   --radius-lg: var(--radius-base);
   --radius-xl: calc(var(--radius-base) + 4px);
 
+  --color-hover: var(--hover);
   --color-primary: var(--primary);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -71,6 +75,8 @@ body {
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
   --color-card: var(--card);
+  --color-weekend: var(--weekend);
+  --color-accent: var(--accent);
 
   --shadow-button-border: inset 0 0 0 1px var(--border-button);
 }

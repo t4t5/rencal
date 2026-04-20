@@ -4,6 +4,7 @@
   --theme-surface-0: #ccd0da;
   --theme-text: #4c4f69;
   --theme-subtext-0: #6c6f85;
+  --theme-lavender: #7287fd;
 }
 
 body[data-theme="catpuccin-latte"] {
@@ -14,4 +15,6 @@ body[data-theme="catpuccin-latte"] {
 
   --hover-tint: #484f7f;
   --hover-mix: 10%;
+
+  --primary: var(--theme-lavender);
 }

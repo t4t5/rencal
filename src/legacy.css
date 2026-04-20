@@ -17,27 +17,27 @@
   /* --color-secondary-foreground: var(--secondary-foreground); */
   /* --color-muted: var(--muted); */
   /* --color-muted-foreground: var(--muted-foreground); */
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
+  /* --color-accent: var(--accent); */
+  /* --color-accent-foreground: var(--accent-foreground); */
+  /* --color-destructive: var(--destructive); */
   /* --color-border: var(--border); */
-  --color-input: var(--input);
+  /* --color-input: var(--input); */
   --color-ring: var(--ring);
 
   /* Semantic color tokens */
   /* --color-background-primary: var(--background-primary); */
   /* --color-background-secondary: var(--background-secondary); */
-  --color-background-popover: var(--background-popover);
-  --color-background-overlay: var(--background-overlay);
-  --color-background-weekend: var(--background-weekend);
-  --color-text-normal: var(--text-normal);
+  /* --color-background-popover: var(--background-popover); */
+  /* --color-background-overlay: var(--background-overlay); */
+  /* --color-background-weekend: var(--background-weekend); */
+  /* --color-text-normal: var(--text-normal); */
   /* --color-text-muted: var(--text-muted); */
   /* --color-text-faint: var(--text-faint); */
-  --color-text-on-accent: var(--text-on-accent);
-  --color-interactive-normal: var(--interactive-normal);
-  --color-interactive-hover: var(--interactive-hover);
-  --color-interactive-accent: var(--interactive-accent);
-  --color-interactive-accent-hover: var(--interactive-accent-hover);
+  /* --color-text-on-accent: var(--text-on-accent); */
+  /* --color-interactive-normal: var(--interactive-normal); */
+  /* --color-interactive-hover: var(--interactive-hover); */
+  /* --color-interactive-accent: var(--interactive-accent); */
+  /* --color-interactive-accent-hover: var(--interactive-accent-hover); */
   /* --color-border-color: var(--border-color); */
   /* --color-divider: var(--divider); */
   /* --color-button-border: var(--button-border); */
@@ -50,16 +50,16 @@
 
   /* Legacy camelCase color tokens — kept while components migrate */
   /* --color-bgPrimary: var(--bgPrimary); */
-  --color-bgPopover: var(--bgPopover);
-  --color-overlayBg: var(--overlayBg);
-  --color-weekendBg: var(--weekendBg);
+  /* --color-bgPopover: var(--bgPopover); */
+  /* --color-overlayBg: var(--overlayBg); */
+  /* --color-weekendBg: var(--weekendBg); */
   /* --color-buttonPrimaryBg: var(--buttonPrimaryBg); */
   /* --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover); */
   /* --color-buttonSecondaryBg: var(--buttonSecondaryBg); */
   /* --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover); */
   /* --color-buttonBorder: var(--buttonBorder); */
   /* --color-hoverBg: var(--buttonSecondaryBgHover); */
-  --color-activeBg: var(--activeBg);
+  /* --color-activeBg: var(--activeBg); */
 
   /* Radius scale — preserves the shadcn convention where
      rounded-lg maps to the base --radius. */
@@ -99,21 +99,21 @@
   /* Backgrounds */
   /* --background-primary: #1a1b26; */
   /* --background-secondary: rgb(255 255 255 / 5%); */
-  --background-popover: #282934;
-  --background-overlay: rgb(0 0 0 / 75%);
-  --background-weekend: rgb(255 255 255 / 5%);
+  /* --background-popover: #282934; */
+  /* --background-overlay: rgb(0 0 0 / 75%); */
+  /* --background-weekend: rgb(255 255 255 / 5%); */
 
   /* Text */
-  --text-normal: #ffffff;
+  /* --text-normal: #ffffff; */
   /* --text-muted: rgb(255 255 255 / 50%); */
   /* --text-faint: rgb(255 255 255 / 35%); */
-  --text-on-accent: #ffffff;
+  /* --text-on-accent: #ffffff; */
 
   /* Interactive */
-  --interactive-normal: rgb(255 255 255 / 5%);
-  --interactive-hover: rgb(255 255 255 / 8%);
-  --interactive-accent: #0094c6;
-  --interactive-accent-hover: #07abe3;
+  /* --interactive-normal: rgb(255 255 255 / 5%); */
+  /* --interactive-hover: rgb(255 255 255 / 8%); */
+  /* --interactive-accent: #0094c6; */
+  /* --interactive-accent-hover: #07abe3; */
 
   /* Structure */
   /* --border-color: rgb(255 255 255 / 10%); */
@@ -141,10 +141,10 @@
      keep working. Remove once components migrate to the
      semantic names. */
   /* --bgPrimary: var(--background-primary); */
-  --bgPopover: var(--background-popover);
-  --bgTertiary: var(--interactive-hover);
-  --overlayBg: var(--background-overlay);
-  --weekendBg: var(--background-weekend);
+  /* --bgPopover: var(--background-popover); */
+  /* --bgTertiary: var(--interactive-hover); */
+  /* --overlayBg: var(--background-overlay); */
+  /* --weekendBg: var(--background-weekend); */
   /* --textPrimary: var(--text-normal); */
   /* --textSecondary: var(--text-muted); */
   /* --buttonPrimaryBg: var(--interactive-accent); */
@@ -153,7 +153,7 @@
   /* --buttonSecondaryBgHover: var(--interactive-hover); */
   /* --buttonBorder: var(--button-border); */
   /* --buttonHeight: var(--control-height); */
-  --activeBg: var(--active-bg);
+  /* --activeBg: var(--active-bg); */
   --tabGap: var(--tab-gap);
   --tabListShadow: var(--tab-list-shadow);
   /* --fontHeading: var(--font-heading); */
@@ -229,9 +229,9 @@
   /* --secondary-foreground: var(--text-normal); */
   /* --muted: var(--interactive-normal); */
   /* --muted-foreground: var(--text-muted); */
-  --accent: var(--active-bg);
-  --accent-foreground: var(--text-normal);
-  --destructive: var(--error);
+  /* --accent: var(--active-bg); */
+  /* --accent-foreground: var(--text-normal); */
+  /* --destructive: var(--error); */
   /* --border: var(--border-color); */
   /* --input: var(--input-border); */
   --ring: var(--ring-color);
