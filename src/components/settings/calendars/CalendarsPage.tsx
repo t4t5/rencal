@@ -1,5 +1,10 @@
+import { ReactNode } from "react"
+
+import { CalendarItem } from "@/components/event-parts/inputs/CalendarSelect"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
+/* import { Checkbox } from "@/components/ui/checkbox"
+import { getCalendarColor } from "@/lib/calendar-styles"
+import { cn } from "@/lib/utils" */
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,9 +18,7 @@ import { Calendar } from "@/rpc/bindings"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
-import { cn } from "@/lib/utils"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
@@ -35,7 +38,10 @@ export function CalendarsPage() {
               <span className="text-sm text-muted-foreground">{displayName}</span>
               <div className="flex flex-col gap-1">
                 {cals?.map((calendar) => (
-                  <CalendarCheckboxItem key={calendar.slug} calendar={calendar} />
+                  <CalendarDropdownMenuWrapper calendar={calendar}>
+                    <CalendarItem key={calendar.slug} calendar={calendar} />
+                  </CalendarDropdownMenuWrapper>
+                  /*<CalendarCheckboxItem key={calendar.slug} calendar={calendar} />*/
                 ))}
               </div>
             </div>
@@ -45,7 +51,7 @@ export function CalendarsPage() {
 
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="self-start">
+          <span className="self-start hidden">
             <Button variant="secondary" className="gap-2" disabled>
               <RssIcon className="size-4" />
               Add subscription
@@ -58,10 +64,44 @@ export function CalendarsPage() {
   )
 }
 
-function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
+function CalendarDropdownMenuWrapper({
+  calendar,
+  children,
+}: {
+  calendar: Calendar
+  children: ReactNode
+}) {
   const { defaultCalendar, setDefaultCalendar } = useSettings()
-  const isVisible = true // TODO: Implement visibility toggle using local DB
   const isDefault = defaultCalendar === calendar.slug
+
+  return (
+    <div className="flex items-center gap-3">
+      <div className="grow">{children}</div>
+
+      {isDefault && <span className="text-xs text-muted-foreground">Default</span>}
+
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" className="h-7 w-7">
+            <MoreHorizIcon className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            disabled={isDefault}
+            onClick={() => void setDefaultCalendar(calendar.slug)}
+          >
+            Set as default
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  )
+}
+
+/*
+function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
+  const isVisible = true // TODO: Implement visibility toggle
 
   return (
     <label className="flex items-center gap-2 cursor-pointer">
@@ -83,23 +123,7 @@ function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
       <span className={cn("text-sm grow", { "text-muted-foreground": !isVisible })}>
         {calendar.name ?? calendar.slug}
       </span>
-      {isDefault && <span className="text-xs text-muted-foreground">Default</span>}
-
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <MoreHorizIcon className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="start">
-          <DropdownMenuItem
-            disabled={isDefault}
-            onClick={() => void setDefaultCalendar(calendar.slug)}
-          >
-            Set as default
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
     </label>
   )
 }
+*/

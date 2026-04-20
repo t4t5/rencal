@@ -191,7 +191,7 @@ export const EditEvent = ({
                 <MoreHorizIcon className="size-4" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
+            <DropdownMenuContent align="end">
               <DropdownMenuItem variant="destructive" onClick={() => triggerDelete(dirtyEvent)}>
                 Delete event
               </DropdownMenuItem>
