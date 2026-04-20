@@ -43,10 +43,13 @@
 
   --primary: #f56313;
 
+  --today: #3a93ff;
+
   --hover-tint: white;
   --hover-mix: 5%;
 }
 
+/* variables computed from other variables */
 body {
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
   --secondary: var(--hover);
@@ -90,6 +93,7 @@ body {
   --color-popover-foreground: var(--popover-foreground);
 
   --color-card: var(--card);
+  --color-today: var(--today);
   --color-weekend: var(--weekend);
   --color-accent: var(--accent);
 

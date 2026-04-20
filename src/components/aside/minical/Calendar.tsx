@@ -198,7 +198,7 @@ function Calendar({
             <Weekday
               {...weekdayProps}
               className={cn(className, "rounded-none", {
-                "text-active": isCurrentWeekday,
+                "text-today": isCurrentWeekday,
                 "bg-weekend": isWeekend,
               })}
             >
@@ -265,7 +265,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
         "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle! text-sm",
         defaultClassNames.day,
         "data-[selected-single=true]:bg-accent! data-[selected-single=true]:font-bold! data-[selected-single=true]:text-lg!", // selected day
-        "data-[today=true]:text-active data-[today=true]:data-[selected-single=true]:bg-primary! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today
+        "data-[today=true]:text-today data-[today=true]:data-[selected-single=true]:bg-today! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today
         className,
       )}
       {...props}

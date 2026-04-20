@@ -30,14 +30,14 @@ export const DaySection = memo(
           className={cn(
             "sticky top-0 z-10 text-sm bg-background px-3 py-1.5 flex gap-2 h-8 items-center",
             {
-              "text-active": isToday(date),
+              "text-today": isToday(date),
             },
           )}
         >
           <span className="font-bold uppercase font-numerical">{getRelativeDayLabel(date)}</span>
           <span
             className={cn("text-muted-foreground font-numerical", {
-              "text-active": isToday(date),
+              "text-today": isToday(date),
             })}
           >
             {format(date, isSameYear(date, new Date()) ? "d MMM" : "d MMM yyyy")}

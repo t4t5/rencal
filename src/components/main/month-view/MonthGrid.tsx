@@ -251,7 +251,7 @@ function TopLeftDate({
       <span
         className={cn(
           "text-xs w-5 h-5 flex items-center justify-center",
-          day.isToday && "bg-primary text-primary-foreground rounded-circle",
+          day.isToday && "bg-today text-primary-foreground rounded-circle",
           isActive && !day.isToday && "bg-accent rounded-circle",
         )}
       >

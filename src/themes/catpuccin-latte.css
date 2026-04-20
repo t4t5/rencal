@@ -5,6 +5,7 @@
   --theme-text: #4c4f69;
   --theme-subtext-0: #6c6f85;
   --theme-lavender: #7287fd;
+  --theme-blue: #1e66f5;
 }
 
 body[data-theme="catpuccin-latte"] {
@@ -17,4 +18,5 @@ body[data-theme="catpuccin-latte"] {
   --hover-mix: 10%;
 
   --primary: var(--theme-lavender);
+  --today: var(--theme-blue);
 }

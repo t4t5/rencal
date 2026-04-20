@@ -176,7 +176,7 @@ const DayHeaders = ({
       <span
         className={cn(
           "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
-          day.isToday && "bg-primary text-primary-foreground",
+          day.isToday && "bg-today text-primary-foreground",
         )}
       >
         {format(day.date, "d")}
