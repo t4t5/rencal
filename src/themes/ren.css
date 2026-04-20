@@ -1,30 +1,15 @@
 body[data-theme="ren"] {
-  /* Colors */
-  --interactive-accent: #f56313;
-  --interactive-accent-hover: #ff772d;
-  --highlight: #ff610b;
-  --success: var(--interactive-accent);
-
-  /* Shape */
-  --tab-gap: 0;
-  --tab-list-shadow: inset 0 0 0 1px var(--interactive-normal);
-
-  /* Typography fonts */
-  /* --font-heading: var(--font-mono); */
-  /* --font-button: var(--font-mono); */
-  /* --font-numerical: var(--font-mono); */
-
   /* Typography identity */
-  --font-button-size: 13px;
-  --font-numerical-size: 13px;
+  /* --font-button-size: 13px;
+  --font-numerical-size: 13px; */
 
   /* Downshift heading sizes one tier (uppercase reads larger than mixed case) */
-  --font-heading-size: var(--text-sm);
+  /* --font-heading-size: var(--text-sm);
   --font-heading-line-height: var(--text-sm--line-height);
   --font-heading-lg-size: var(--text-base);
   --font-heading-lg-line-height: var(--text-base--line-height);
   --font-heading-xl-size: var(--text-lg);
   --font-heading-xl-line-height: var(--text-lg--line-height);
   --font-heading-2xl-size: var(--text-xl);
-  --font-heading-2xl-line-height: var(--text-xl--line-height);
+  --font-heading-2xl-line-height: var(--text-xl--line-height); */
 }

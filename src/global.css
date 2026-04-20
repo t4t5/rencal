@@ -43,7 +43,7 @@
   --primary: #f56313;
 
   --today: #3a93ff;
-  --highlight: #ff2f00; /* year */
+  --highlight: #ff610b; /* year */
 
   --ring: oklch(0.552 0.016 285.938);
 
@@ -54,7 +54,7 @@
   --hover-tint: white;
   --hover-mix: 5%;
 
-  --tab-gap: 6px;
+  --tab-gap: 0;
   --tab-list-shadow: none;
 }
 
@@ -78,6 +78,8 @@ body {
 
   --popover: var(--card);
   --popover-foreground: var(--foreground);
+
+  --tab-list-shadow: inset 0 0 0 1px var(--secondary);
 }
 
 @theme inline {

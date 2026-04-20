@@ -10,6 +10,11 @@ body[data-theme="classic"] {
   --divider: #40404f;
   --border-button: #363643;
 
+  --highlight: #ff2f00; /* year */
+
+  --tab-gap: 6px;
+  --tab-list-shadow: none;
+
   --hover-tint: #979bc8;
   --hover-mix: 10%;
 
