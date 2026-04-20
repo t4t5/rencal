@@ -32,6 +32,7 @@ type WeekTimeGridProps = {
   visibleStartHour: number
   visibleEndHour: number
   draftEvent: CalendarEvent | null
+  dimmed: boolean
 }
 
 export function WeekTimeGrid({
@@ -46,6 +47,7 @@ export function WeekTimeGrid({
   visibleStartHour,
   visibleEndHour,
   draftEvent,
+  dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
@@ -94,7 +96,12 @@ export function WeekTimeGrid({
       style={{ gridTemplateRows: hasAllDay ? "auto auto 1fr" : "auto 1fr" }}
     >
       {/* Row 1: Day headers */}
-      <DayHeaders weekDays={weekDays} activeDateKey={activeDateKey} onDayClick={onDayClick} />
+      <DayHeaders
+        weekDays={weekDays}
+        activeDateKey={activeDateKey}
+        dimmed={dimmed}
+        onDayClick={onDayClick}
+      />
 
       {/* Row 2: All-day events (only if present) */}
       {hasAllDay && (
@@ -107,6 +114,7 @@ export function WeekTimeGrid({
           activeEventId={activeEventId}
           calendars={calendars}
           draftEvent={draftEvent}
+          dimmed={dimmed}
           onCreateEvent={(day: MonthDay) => {
             openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
           }}
@@ -139,6 +147,7 @@ export function WeekTimeGrid({
                 isPending={isPendingEvent(layout.event, calendars)}
                 isDeclined={isDeclinedEvent(layout.event, calendars)}
                 isDraft={layout.event === draftEvent}
+                dimmed={dimmed}
                 onClick={() => onEventClick(layout.event.id)}
               />
             ))}
@@ -157,10 +166,12 @@ export function WeekTimeGrid({
 const DayHeaders = ({
   weekDays,
   activeDateKey,
+  dimmed,
   onDayClick,
 }: {
   weekDays: MonthDay[]
   activeDateKey: string
+  dimmed: boolean
   onDayClick: (date: Date) => void
 }) => {
   return weekDays.map((day) => (
@@ -169,6 +180,7 @@ const DayHeaders = ({
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default font-numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
+        dimmed && "opacity-50",
       )}
       onClick={() => onDayClick(day.date)}
     >
@@ -194,6 +206,7 @@ const AllDayEvents = ({
   activeEventId,
   calendars,
   draftEvent,
+  dimmed,
   onCreateEvent,
   onEventClick,
 }: {
@@ -205,6 +218,7 @@ const AllDayEvents = ({
   activeEventId: string | null
   calendars: Calendar[]
   draftEvent: CalendarEvent | null
+  dimmed: boolean
   onCreateEvent: (day: MonthDay) => void
   onEventClick: (id: string) => void
 }) => {
@@ -240,6 +254,7 @@ const AllDayEvents = ({
           isPending={isPendingEvent(item.event, calendars)}
           isDeclined={isDeclinedEvent(item.event, calendars)}
           isDraft={item.event === draftEvent}
+          dimmed={dimmed}
           onClick={() => onEventClick(item.event.id)}
         />
       ))}

@@ -30,6 +30,7 @@ export function MonthGrid({
   onEventClick,
   onScrollMonthChange,
   draftEvent,
+  dimmed,
 }: {
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
@@ -42,6 +43,7 @@ export function MonthGrid({
   onEventClick: (eventId: string) => void
   onScrollMonthChange: (date: Date) => void
   draftEvent: CalendarEvent | null
+  dimmed: boolean
 }) {
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(150)
@@ -219,6 +221,7 @@ export function MonthGrid({
               onDayClick={onDayClick}
               onEventClick={onEventClick}
               draftEvent={draftEvent}
+              dimmed={dimmed}
             />
           </div>
         ))}
@@ -230,10 +233,12 @@ export function MonthGrid({
 function TopLeftDate({
   day,
   isActive,
+  dimmed,
   onClick,
 }: {
   day: MonthDay
   isActive: boolean
+  dimmed: boolean
   onClick: () => void
 }) {
   return (
@@ -242,6 +247,7 @@ function TopLeftDate({
         "font-numerical flex items-center justify-end gap-1 p-0.5 cursor-default border-r border-divider last:border-r-0",
         day.isWeekend && "bg-weekend",
         isActive && "bg-accent",
+        dimmed && "opacity-50",
       )}
       onClick={onClick}
     >
@@ -269,6 +275,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   onDayClick,
   onEventClick,
   draftEvent,
+  dimmed,
 }: {
   weekDays: MonthDay[]
   layout: WeekLayout
@@ -277,6 +284,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
   onDayClick: (date: Date) => void
   onEventClick: (eventId: string) => void
   draftEvent: CalendarEvent | null
+  dimmed: boolean
 }) {
   const { calendars } = useCalendars()
   const visibleAllDay = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
@@ -298,6 +306,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
             key={day.dateKey}
             day={day}
             isActive={day.dateKey === activeDateKey}
+            dimmed={dimmed}
             onClick={() => onDayClick(day.date)}
           />
         ))}
@@ -324,6 +333,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
               onClick={() => onDayClick(day.date)}
               onEventClick={onEventClick}
               draftEvent={draftEvent}
+              dimmed={dimmed}
             />
           )
         })}
@@ -335,6 +345,7 @@ const MonthWeekRow = memo(function MonthWeekRow({
             isPending={isPendingEvent(item.event, calendars)}
             isDeclined={isDeclinedEvent(item.event, calendars)}
             isDraft={item.event === draftEvent}
+            dimmed={dimmed}
             onClick={() => onEventClick(item.event.id)}
           />
         ))}

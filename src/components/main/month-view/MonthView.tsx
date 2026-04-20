@@ -9,6 +9,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
+import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { formatDateKey } from "@/lib/time"
 
 import { WeekDayLabels } from "./WeekDayLabels"
@@ -33,6 +34,7 @@ export function MonthView() {
   const weeks = useMonthGrid(rangeStart, rangeEnd)
   const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
   const weekLayouts = useMonthEventLayout(weeks, events, calendars)
+  const dimmed = useIsDimmed()
 
   // Compute initial anchor week (the week containing the 1st of activeDate's month)
   const initialAnchorRef = useRef(startOfMonth(activeDate))
@@ -42,7 +44,7 @@ export function MonthView() {
 
   return (
     <div className="flex flex-col grow w-full h-full">
-      <WeekDayLabels />
+      <WeekDayLabels dimmed={dimmed} />
 
       <MonthGrid
         weeks={weeks}
@@ -56,6 +58,7 @@ export function MonthView() {
         onEventClick={toggleActiveEventId}
         onScrollMonthChange={setActiveDate}
         draftEvent={draftCalEvent}
+        dimmed={dimmed}
       />
     </div>
   )

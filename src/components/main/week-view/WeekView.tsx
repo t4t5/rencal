@@ -7,6 +7,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useWeekDays } from "@/hooks/cal-events/useWeekDays"
 import { useWeekEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { formatDateKey } from "@/lib/time"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
@@ -22,6 +23,7 @@ export function WeekView() {
   const weekDays = useWeekDays(activeDate)
   const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
   const layout = useWeekEventLayout(weekDays, events, calendars)
+  const dimmed = useIsDimmed()
 
   // Track direction for animation
   const prevWeekKeyRef = useRef(weekKey)
@@ -46,6 +48,7 @@ export function WeekView() {
         visibleStartHour={layout.visibleStartHour}
         visibleEndHour={layout.visibleEndHour}
         draftEvent={draftCalEvent}
+        dimmed={dimmed}
       />
     </div>
   )

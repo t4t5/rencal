@@ -14,8 +14,18 @@ export function getEventBlockStyle(
   color: string,
   highlighted: boolean,
   isDashed: boolean,
+  isDraft: boolean = false,
 ): CSSProperties {
   const boosted = `oklch(from ${color} l calc(c * 1.4) h)`
+
+  if (isDraft) {
+    return {
+      border: `1px dashed ${boosted}`,
+      backgroundColor: `color-mix(in srgb, ${boosted} 15%, var(--background))`,
+      color: `color-mix(in srgb, ${boosted} 60%, var(--foreground))`,
+      boxShadow: `0 0 0 2px color-mix(in srgb, ${boosted} 25%, transparent)`,
+    }
+  }
 
   if (isDashed) {
     return {
