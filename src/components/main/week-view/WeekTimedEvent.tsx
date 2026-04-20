@@ -16,6 +16,7 @@ type WeekTimedEventProps = {
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
+  dimmed: boolean
   onClick: () => void
 }
 
@@ -25,6 +26,7 @@ export function WeekTimedEvent({
   isPending,
   isDeclined,
   isDraft,
+  dimmed,
   onClick,
 }: WeekTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
@@ -34,7 +36,7 @@ export function WeekTimedEvent({
   const color = layout.color ?? "var(--primary)"
   const widthPercent = 100 / layout.totalColumns
   const leftPercent = layout.column * widthPercent
-  const isDashed = isPending || isDeclined || isDraft
+  const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
 
   const inner = (
@@ -44,15 +46,16 @@ export function WeekTimedEvent({
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
         "absolute overflow-hidden rounded px-1 py-0.5",
-        !isDashed && "pl-2",
-        isDraft && "opacity-60",
+        !isDashed && !isDraft && "pl-2",
+        !isDraft && dimmed && "opacity-50",
+        isDraft && "font-medium",
       )}
       style={{
         top: `${layout.top}%`,
         height: `max(${layout.height}%, 2.125rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
-        ...getEventBlockStyle(color, highlighted, isDashed),
+        ...getEventBlockStyle(color, highlighted, isDashed, isDraft),
       }}
       onClick={
         isDraft
@@ -64,7 +67,7 @@ export function WeekTimedEvent({
             }
       }
     >
-      {!isDashed && (
+      {!isDashed && !isDraft && (
         <div
           className="w-[3px] absolute left-0 top-0 bottom-0"
           style={{ backgroundColor: color }}

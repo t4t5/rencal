@@ -33,6 +33,7 @@ type MonthDayCellProps = {
   onClick: () => void
   onEventClick: (eventId: string) => void
   draftEvent: CalendarEvent | null
+  dimmed: boolean
 }
 
 export function MonthDayCell({
@@ -45,6 +46,7 @@ export function MonthDayCell({
   onClick,
   onEventClick,
   draftEvent,
+  dimmed,
 }: MonthDayCellProps) {
   const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
@@ -107,6 +109,7 @@ export function MonthDayCell({
               isPending={isPendingEvent(item.event, calendars)}
               isDeclined={isDeclinedEvent(item.event, calendars)}
               isDraft={item.event === draftEvent}
+              dimmed={dimmed}
               onClick={() => onEventClick(item.event.id)}
             />
           ))}

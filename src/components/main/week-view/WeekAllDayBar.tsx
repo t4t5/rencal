@@ -13,6 +13,7 @@ type WeekAllDayBarProps = {
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
+  dimmed: boolean
   onClick: () => void
 }
 
@@ -22,13 +23,14 @@ export function WeekAllDayBar({
   isPending,
   isDeclined,
   isDraft,
+  dimmed,
   onClick,
 }: WeekAllDayBarProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
   const color = item.color ?? "var(--primary)"
-  const isDashed = isPending || isDeclined || isDraft
+  const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
   const fillsRow = item.endCol - item.startCol === 7
 
@@ -46,9 +48,10 @@ export function WeekAllDayBar({
         className={cn(
           getEventBlockClasses(highlighted, isDeclined),
           "truncate px-1 py-px leading-4 rounded",
-          isDraft && "opacity-60",
+          !isDraft && dimmed && "opacity-50",
+          isDraft && "font-medium",
         )}
-        style={getEventBlockStyle(color, highlighted, isDashed)}
+        style={getEventBlockStyle(color, highlighted, isDashed, isDraft)}
         onClick={
           isDraft
             ? undefined

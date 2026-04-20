@@ -14,6 +14,7 @@ export function MonthAllDayEvent({
   isPending,
   isDeclined,
   isDraft,
+  dimmed,
   onClick,
 }: {
   item: AllDayLaneItem
@@ -21,6 +22,7 @@ export function MonthAllDayEvent({
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
+  dimmed: boolean
   onClick: () => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -28,6 +30,7 @@ export function MonthAllDayEvent({
 
   const color = item.color ?? "var(--primary)"
   const highlighted = isActive || contextOpen
+  const isDashed = isPending || isDeclined
 
   const fillsRow = item.endCol - item.startCol === 7
 
@@ -46,7 +49,8 @@ export function MonthAllDayEvent({
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
         "absolute truncate px-1 py-px leading-4",
-        (isPending || isDeclined || isDraft) && "opacity-50",
+        isDashed && "opacity-50",
+        !isDraft && dimmed && "opacity-50",
         item.isStart ? "rounded-l ml-0.5" : "-ml-0.5",
         item.isEnd ? "rounded-r" : "-mr-0.5",
       )}
@@ -55,7 +59,7 @@ export function MonthAllDayEvent({
         height: `${LANE_HEIGHT - LANE_GAP}px`,
         left: `${((item.startCol - 1) / 7) * 100}%`,
         width: `calc(${((item.endCol - item.startCol) / 7) * 100}% - 5px)`,
-        ...getEventBlockStyle(color, highlighted, false),
+        ...getEventBlockStyle(color, highlighted, isDashed, isDraft),
       }}
       onClick={handleClick}
     >
