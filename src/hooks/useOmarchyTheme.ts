@@ -22,15 +22,36 @@ const CSS_VARS = [
   "--error",
 ] as const
 
+function luminance(hex: string): number {
+  const h = hex.replace("#", "")
+  const r = parseInt(h.slice(0, 2), 16)
+  const g = parseInt(h.slice(2, 4), 16)
+  const b = parseInt(h.slice(4, 6), 16)
+  return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+}
+
+// Some Omarchy themes set `cursor` to a brighter variant of the body text
+// (tokyo-night, catppuccin), others to an accent tint (catppuccin-latte's
+// rosewater, rose-pine's pale gray) that reads poorly as primary text.
+// Pick whichever of cursor/foreground contrasts the background more.
+function pickForeground(c: OmarchyColors): string {
+  if (!c.cursor) return c.foreground
+  const bg = luminance(c.background)
+  const fgContrast = Math.abs(luminance(c.foreground) - bg)
+  const cursorContrast = Math.abs(luminance(c.cursor) - bg)
+  return cursorContrast > fgContrast ? c.cursor : c.foreground
+}
+
 function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], string> {
+  const fg = pickForeground(c)
   return {
     "--background": c.background,
-    "--foreground": c.foreground,
+    "--foreground": fg,
     "--primary": c.accent,
     "--today": c.color4,
     "--highlight": c.color1,
-    "--hover-tint": c.foreground,
-    "--muted": `color-mix(in srgb, ${c.foreground} 55%, transparent)`,
+    "--hover-tint": fg,
+    "--muted": `color-mix(in srgb, ${fg} 55%, transparent)`,
     "--success": c.color2,
     "--warning": c.color3,
     "--error": c.color1,
