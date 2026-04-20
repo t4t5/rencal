@@ -22,7 +22,7 @@ export const NotesInput = ({
         placeholder="Notes"
         value={value ?? ""}
         readOnly={readOnly}
-        className={cn(readOnly && "hover:border-transparent! focus:bg-transparent!")}
+        className={"hover:border-transparent! focus:bg-transparent!"}
         onChange={(e) => onChange(e.target.value)}
       />
     </InputGroup>
