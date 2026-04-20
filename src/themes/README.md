@@ -1,6 +1,8 @@
 # Themes
 
-Themes live in `src/themes/` and override a small set of semantic CSS variables. The defaults (the "classic" look) live in the `[data-theme]` block inside `src/global.css`; a theme's job is to change only what makes it distinct.
+Themes live in `src/themes/` and override a small set of primitive CSS variables. The defaults (the "ren" look) live in the `@theme` block in `src/global.css`; a theme's job is to change only what makes it distinct.
+
+Most tokens are **derived** from a handful of primitives via `color-mix()` (declared in the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. all fall out automatically. See `tokyonight.css` for a minimal example.
 
 ## Adding a theme
 
@@ -8,9 +10,10 @@ Themes live in `src/themes/` and override a small set of semantic CSS variables.
 
    ```css
    body[data-theme="mytheme"] {
-     --background-primary: #0f0f0f;
-     --interactive-accent: #7c3aed;
-     --interactive-accent-hover: #8b5cf6;
+     --background: #0f0f0f;
+     --foreground: #eaeaea;
+     --hover-tint: #ffffff;
+     --primary: #7c3aed;
      --highlight: #7c3aed;
    }
    ```
@@ -32,64 +35,45 @@ Themes live in `src/themes/` and override a small set of semantic CSS variables.
 
 That's it. `useTheme` will pick up the new theme automatically, and Ctrl/Cmd+Shift+T cycles through all registered themes.
 
-## Semantic variable contract
+## Primitives
 
-These are the variables theme files override. Anything not listed here is either derived from these (via shadcn aliases) or internal.
+These are the variables theme files override. Everything else (`--hover`, `--card`, `--secondary`, `--divider`, `--accent`, `--weekend`, `--popover`, `--input`, `--primary-hover`, `--primary-foreground`) is derived from these in `global.css` and should not be set directly unless you need to break out of the derivation.
 
-### Backgrounds
+### Colors
 
-| Variable                 | Purpose                        |
-| ------------------------ | ------------------------------ |
-| `--background-primary`   | App background                 |
-| `--background-secondary` | Cards, sidebars, raised panels |
-| `--background-popover`   | Popovers, menus, tooltips      |
-| `--background-overlay`   | Modal backdrop                 |
-| `--background-weekend`   | Calendar weekend cells         |
+| Variable       | Purpose                         |
+| -------------- | ------------------------------- |
+| `--background` | App background                  |
+| `--foreground` | Primary text                    |
+| `--muted`      | De-emphasized text              |
+| `--primary`    | Primary action color            |
+| `--today`      | "Today" indicator color         |
+| `--highlight`  | Brand accent (year badge, etc.) |
+| `--ring`       | Focus rings                     |
+| `--success`    | Success / accepted state        |
+| `--warning`    | Warning / tentative state       |
+| `--error`      | Error / declined state          |
 
-### Text
+### Hover / tint system
 
-| Variable           | Purpose                                |
-| ------------------ | -------------------------------------- |
-| `--text-normal`    | Primary body text                      |
-| `--text-muted`     | Secondary / de-emphasized              |
-| `--text-faint`     | Tertiary / subtle                      |
-| `--text-on-accent` | Text layered on `--interactive-accent` |
+The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`, `--input`, …) are all built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
 
-### Interactive
-
-| Variable                     | Purpose                               |
-| ---------------------------- | ------------------------------------- |
-| `--interactive-normal`       | Default / secondary button background |
-| `--interactive-hover`        | Hover state for normal buttons        |
-| `--interactive-accent`       | Primary action color                  |
-| `--interactive-accent-hover` | Primary action hover                  |
+| Variable       | Purpose                                                           |
+| -------------- | ----------------------------------------------------------------- |
+| `--hover-tint` | Color mixed over the background to produce hover / surface layers |
+| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)   |
 
 ### Structure
 
 | Variable          | Purpose                                     |
 | ----------------- | ------------------------------------------- |
-| `--border-color`  | Generic element borders                     |
-| `--divider`       | Section dividers                            |
-| `--input-border`  | Input field borders                         |
-| `--button-border` | Button outline/shadow (often `transparent`) |
-| `--ring-color`    | Focus rings                                 |
-
-### Status / brand
-
-| Variable      | Purpose                                |
-| ------------- | -------------------------------------- |
-| `--success`   | Success state                          |
-| `--warning`   | Warning state                          |
-| `--error`     | Error / destructive                    |
-| `--highlight` | Brand accent (e.g., "today" indicator) |
-| `--active`    | Distinct active-indicator color        |
-| `--active-bg` | Active state background                |
+| `--border-button` | Button outline/shadow (often `transparent`) |
 
 ### Sizing
 
 | Variable            | Purpose                                          |
 | ------------------- | ------------------------------------------------ |
-| `--radius`          | Base border radius                               |
+| `--radius-base`     | Base border radius                               |
 | `--radius-circle`   | Pill/avatar radius (set to `0` for sharp themes) |
 | `--control-height`  | Button/input height                              |
 | `--tab-gap`         | Tab spacing                                      |
@@ -124,6 +108,6 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 
 ## Escape hatch: custom CSS rules
 
-If variable overrides aren't enough, theme files can include arbitrary CSS rules beyond variable overrides. Scope them with `body[data-theme="yourtheme"]` (or use CSS nesting inside the body selector) so they don't leak to other themes.
+If primitive overrides aren't enough, theme files can include arbitrary CSS rules. Scope them with `body[data-theme="yourtheme"]` (or use CSS nesting inside the body selector) so they don't leak to other themes.
 
-Prefer variables first — the existing contract covers most visual-identity needs, including typography transform and size overrides. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.
+Prefer primitives first — the derivation chain covers most visual-identity needs. You can also override a derived token directly (e.g., set `--divider` explicitly in `classic.css`) when the computed value isn't right for the theme. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.
