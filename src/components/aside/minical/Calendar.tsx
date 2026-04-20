@@ -8,6 +8,7 @@ import {
   Month,
   MonthCaption,
   Nav,
+  useDayPicker,
   Week,
   Weekday,
 } from "react-day-picker"
@@ -166,14 +167,17 @@ function Calendar({
         },
         Week: ({ className, ...weekProps }) => {
           const { week } = weekProps
+          const { isSelected } = useDayPicker()
 
           const currentWeekNumber = getWeek(new Date())
           const isCurrentWeek = week.weekNumber === currentWeekNumber
+          const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
           return (
             <Week
               className={cn(className, {
-                "bg-bgTertiary": isCurrentWeek,
+                "bg-bgTertiary": isCurrentWeek && !isSelectedWeek,
+                "bg-hover": isSelectedWeek,
               })}
               {...weekProps}
             />
