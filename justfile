@@ -75,6 +75,10 @@ check:
 typecheck:
   pnpm typecheck
 
+# Run frontend tests
+test:
+  pnpm test
+
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:
   bun scripts/analyze-recording.ts {{path}}

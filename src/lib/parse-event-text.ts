@@ -1,5 +1,5 @@
 import * as chrono from "chrono-node"
-import { addMinutes, startOfDay } from "date-fns"
+import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/rpc/bindings"
 
@@ -208,10 +208,10 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
 
   const start = allDay ? startOfDay(result.start.date()) : result.start.date()
 
-  const end = result.end
-    ? result.end.date()
-    : allDay
-      ? startOfDay(result.start.date())
+  const end = allDay
+    ? startOfDay(addDays(result.end ? result.end.date() : result.start.date(), 1))
+    : result.end
+      ? result.end.date()
       : addMinutes(start, DEFAULT_DURATION_MINUTES)
 
   return {
