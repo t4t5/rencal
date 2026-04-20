@@ -1,7 +1,5 @@
 body[data-theme="ren"] {
   /* Colors */
-  --background-primary: #131313;
-  --background-popover: #1d1d1d;
   --interactive-accent: #f56313;
   --interactive-accent-hover: #ff772d;
   --highlight: #ff610b;

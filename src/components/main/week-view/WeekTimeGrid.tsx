@@ -226,7 +226,7 @@ const AllDayEvents = ({
             className={cn(
               "border-r border-divider",
               day.dateKey === activeDateKey
-                ? "bg-buttonSecondaryBgHover"
+                ? "bg-secondary-hover"
                 : day.isWeekend && "bg-weekendBg",
             )}
             style={{ gridColumn: i + 1, gridRow: "1 / -1" }}

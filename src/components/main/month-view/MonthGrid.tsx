@@ -241,7 +241,7 @@ function TopLeftDate({
       className={cn(
         "font-numerical flex items-center justify-end gap-1 p-0 pb-0 cursor-default border-r border-divider last:border-r-0",
         day.isWeekend && "bg-weekendBg",
-        isActive && "bg-buttonSecondaryBgHover",
+        isActive && "bg-secondary",
       )}
       onClick={onClick}
     >

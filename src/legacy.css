@@ -5,18 +5,18 @@
   /* --font-numerical: var(--font-numerical); */
 
   /* shadcn color tokens */
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
+  /* --color-background: var(--background); */
+  /* --color-foreground: var(--foreground); */
+  /* --color-card: var(--card); */
+  /* --color-card-foreground: var(--card-foreground); */
+  /* --color-popover: var(--popover); */
+  /* --color-popover-foreground: var(--popover-foreground); */
+  /* --color-primary: var(--primary); */
+  /* --color-primary-foreground: var(--primary-foreground); */
+  /* --color-secondary: var(--secondary); */
+  /* --color-secondary-foreground: var(--secondary-foreground); */
+  /* --color-muted: var(--muted); */
+  /* --color-muted-foreground: var(--muted-foreground); */
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
@@ -25,21 +25,21 @@
   --color-ring: var(--ring);
 
   /* Semantic color tokens */
-  --color-background-primary: var(--background-primary);
-  --color-background-secondary: var(--background-secondary);
+  /* --color-background-primary: var(--background-primary); */
+  /* --color-background-secondary: var(--background-secondary); */
   --color-background-popover: var(--background-popover);
   --color-background-overlay: var(--background-overlay);
   --color-background-weekend: var(--background-weekend);
   --color-text-normal: var(--text-normal);
-  --color-text-muted: var(--text-muted);
-  --color-text-faint: var(--text-faint);
+  /* --color-text-muted: var(--text-muted); */
+  /* --color-text-faint: var(--text-faint); */
   --color-text-on-accent: var(--text-on-accent);
   --color-interactive-normal: var(--interactive-normal);
   --color-interactive-hover: var(--interactive-hover);
   --color-interactive-accent: var(--interactive-accent);
   --color-interactive-accent-hover: var(--interactive-accent-hover);
   /* --color-border-color: var(--border-color); */
-  --color-divider: var(--divider);
+  /* --color-divider: var(--divider); */
   /* --color-button-border: var(--button-border); */
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -49,16 +49,16 @@
   --color-active-bg: var(--active-bg);
 
   /* Legacy camelCase color tokens — kept while components migrate */
-  --color-bgPrimary: var(--bgPrimary);
+  /* --color-bgPrimary: var(--bgPrimary); */
   --color-bgPopover: var(--bgPopover);
   --color-overlayBg: var(--overlayBg);
   --color-weekendBg: var(--weekendBg);
-  --color-buttonPrimaryBg: var(--buttonPrimaryBg);
-  --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover);
-  --color-buttonSecondaryBg: var(--buttonSecondaryBg);
-  --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover);
+  /* --color-buttonPrimaryBg: var(--buttonPrimaryBg); */
+  /* --color-buttonPrimaryBgHover: var(--buttonPrimaryBgHover); */
+  /* --color-buttonSecondaryBg: var(--buttonSecondaryBg); */
+  /* --color-buttonSecondaryBgHover: var(--buttonSecondaryBgHover); */
   /* --color-buttonBorder: var(--buttonBorder); */
-  --color-hoverBg: var(--buttonSecondaryBgHover);
+  /* --color-hoverBg: var(--buttonSecondaryBgHover); */
   --color-activeBg: var(--activeBg);
 
   /* Radius scale — preserves the shadcn convention where
@@ -97,16 +97,16 @@
    ============================================================ */
 [data-theme] {
   /* Backgrounds */
-  --background-primary: #1a1b26;
-  --background-secondary: rgb(255 255 255 / 5%);
+  /* --background-primary: #1a1b26; */
+  /* --background-secondary: rgb(255 255 255 / 5%); */
   --background-popover: #282934;
   --background-overlay: rgb(0 0 0 / 75%);
   --background-weekend: rgb(255 255 255 / 5%);
 
   /* Text */
   --text-normal: #ffffff;
-  --text-muted: rgb(255 255 255 / 50%);
-  --text-faint: rgb(255 255 255 / 35%);
+  /* --text-muted: rgb(255 255 255 / 50%); */
+  /* --text-faint: rgb(255 255 255 / 35%); */
   --text-on-accent: #ffffff;
 
   /* Interactive */
@@ -140,17 +140,17 @@
      (`bg-bgPrimary`, `h-buttonHeight`, `font-fontHeading`)
      keep working. Remove once components migrate to the
      semantic names. */
-  --bgPrimary: var(--background-primary);
+  /* --bgPrimary: var(--background-primary); */
   --bgPopover: var(--background-popover);
   --bgTertiary: var(--interactive-hover);
   --overlayBg: var(--background-overlay);
   --weekendBg: var(--background-weekend);
-  --textPrimary: var(--text-normal);
-  --textSecondary: var(--text-muted);
-  --buttonPrimaryBg: var(--interactive-accent);
-  --buttonPrimaryBgHover: var(--interactive-accent-hover);
-  --buttonSecondaryBg: var(--interactive-normal);
-  --buttonSecondaryBgHover: var(--interactive-hover);
+  /* --textPrimary: var(--text-normal); */
+  /* --textSecondary: var(--text-muted); */
+  /* --buttonPrimaryBg: var(--interactive-accent); */
+  /* --buttonPrimaryBgHover: var(--interactive-accent-hover); */
+  /* --buttonSecondaryBg: var(--interactive-normal); */
+  /* --buttonSecondaryBgHover: var(--interactive-hover); */
   /* --buttonBorder: var(--button-border); */
   /* --buttonHeight: var(--control-height); */
   --activeBg: var(--active-bg);
@@ -177,35 +177,35 @@
    lets themes like ren downshift heading sizes via a variable
    instead of targeting specific elements in the theme file.
    ============================================================ */
-@layer components {
-  .font-heading {
-    text-transform: var(--font-heading-transform);
-    font-size: var(--font-heading-size);
-    line-height: var(--font-heading-line-height);
-  }
-  .font-button {
-    text-transform: var(--font-button-transform);
-    font-size: var(--font-button-size);
-    line-height: var(--font-button-line-height);
-  }
-  .font-numerical {
-    font-size: var(--font-numerical-size);
-    line-height: var(--font-numerical-line-height);
-  }
-}
-
-.font-heading.text-lg {
-  font-size: var(--font-heading-lg-size, var(--text-lg));
-  line-height: var(--font-heading-lg-line-height, var(--text-lg--line-height));
-}
-.font-heading.text-xl {
-  font-size: var(--font-heading-xl-size, var(--text-xl));
-  line-height: var(--font-heading-xl-line-height, var(--text-xl--line-height));
-}
-.font-heading.text-2xl {
-  font-size: var(--font-heading-2xl-size, var(--text-2xl));
-  line-height: var(--font-heading-2xl-line-height, var(--text-2xl--line-height));
-}
+/* @layer components { */
+/*   .font-heading { */
+/*     text-transform: var(--font-heading-transform); */
+/*     font-size: var(--font-heading-size); */
+/*     line-height: var(--font-heading-line-height); */
+/*   } */
+/*   .font-button { */
+/*     text-transform: var(--font-button-transform); */
+/*     font-size: var(--font-button-size); */
+/*     line-height: var(--font-button-line-height); */
+/*   } */
+/*   .font-numerical { */
+/*     font-size: var(--font-numerical-size); */
+/*     line-height: var(--font-numerical-line-height); */
+/*   } */
+/* } */
+/**/
+/* .font-heading.text-lg { */
+/*   font-size: var(--font-heading-lg-size, var(--text-lg)); */
+/*   line-height: var(--font-heading-lg-line-height, var(--text-lg--line-height)); */
+/* } */
+/* .font-heading.text-xl { */
+/*   font-size: var(--font-heading-xl-size, var(--text-xl)); */
+/*   line-height: var(--font-heading-xl-line-height, var(--text-xl--line-height)); */
+/* } */
+/* .font-heading.text-2xl { */
+/*   font-size: var(--font-heading-2xl-size, var(--text-2xl)); */
+/*   line-height: var(--font-heading-2xl-line-height, var(--text-2xl--line-height)); */
+/* } */
 
 /* Escape hatch: reset font-family and text-transform when used as an
    input-like trigger (e.g., date picker). Unlayered so it beats the
@@ -217,23 +217,22 @@
 
 /* shadcn compatibility aliases derived from the semantic layer. */
 [data-theme] {
-  --background: var(--background-primary);
-  --foreground: var(--text-normal);
-  --card: var(--background-secondary);
-  --card-foreground: var(--text-normal);
-  --popover: var(--background-popover);
-  --popover-foreground: var(--text-normal);
-  --primary: var(--interactive-accent);
-  --primary-foreground: var(--text-on-accent);
-  --secondary: var(--interactive-normal);
-  --secondary-foreground: var(--text-normal);
-  --muted: var(--interactive-normal);
-  --muted-foreground: var(--text-muted);
+  /* --background: var(--background-primary); */
+  /* --foreground: var(--text-normal); */
+  /* --card: var(--background-secondary); */
+  /* --card-foreground: var(--text-normal); */
+  /* --popover: var(--background-popover); */
+  /* --popover-foreground: var(--text-normal); */
+  /* --primary: var(--interactive-accent); */
+  /* --primary-foreground: var(--text-on-accent); */
+  /* --secondary: var(--interactive-normal); */
+  /* --secondary-foreground: var(--text-normal); */
+  /* --muted: var(--interactive-normal); */
+  /* --muted-foreground: var(--text-muted); */
   --accent: var(--active-bg);
   --accent-foreground: var(--text-normal);
   --destructive: var(--error);
   /* --border: var(--border-color); */
   /* --input: var(--input-border); */
   --ring: var(--ring-color);
-  --hover: var(--interactive-hover);
 }

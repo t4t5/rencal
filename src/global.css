@@ -22,6 +22,7 @@
   --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Default theme (ren) */
 @theme {
   --font-heading: var(--mono);
   --font-button: var(--mono);
@@ -34,9 +35,25 @@
   --radius-circle: 0;
   --control-height: 34px;
 
-  --divider: #323232;
-  /* --border-divider: var(--border-input); */
-  --border-button: transparent;
+  --background: #131313;
+  --foreground: white;
+  --muted: rgba(255, 255, 255, 0.5);
+
+  --color-divider: #323232;
+
+  --primary: #f56313;
+
+  --hover-tint: white;
+  --hover-mix: 5%;
+}
+
+body {
+  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
+  --secondary: var(--hover);
+  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+
+  /* same as hover, but solid color: */
+  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
 }
 
 @theme inline {
@@ -46,6 +63,14 @@
   --radius-md: calc(var(--radius-base) - 2px);
   --radius-lg: var(--radius-base);
   --radius-xl: calc(var(--radius-base) + 4px);
+
+  --color-primary: var(--primary);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted-foreground: var(--muted);
+  --color-secondary: var(--secondary);
+  --color-secondary-hover: var(--secondary-hover);
+  --color-card: var(--card);
 
   --shadow-button-border: inset 0 0 0 1px var(--border-button);
 }

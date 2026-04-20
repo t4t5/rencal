@@ -1,4 +1,5 @@
 body[data-theme="classic"] {
+  --background: #1a1b26;
   --font-heading: var(--sans);
   --font-button: var(--sans);
   --font-numerical: var(--sans);
@@ -6,8 +7,14 @@ body[data-theme="classic"] {
   --font-heading-transform: normal;
   --font-button-transform: normal;
 
+  --color-divider: #40404f;
   --border-button: #363643;
+
+  --hover-tint: #979bc8;
+  --hover-mix: 10%;
 
   --radius-base: 0.6rem;
   --radius-circle: calc(infinity * 1px);
+
+  --primary: #0094c6;
 }
