@@ -181,6 +181,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       attendees: [],
       conference_url: null,
       calendar_slug: draftEvent.calendarId,
+      color: null,
     }
     setCalendarEvents((prev) => [...prev, optimisticEvent])
 

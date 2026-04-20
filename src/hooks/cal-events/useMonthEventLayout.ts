@@ -11,6 +11,7 @@ import type { MonthDay } from "./useMonthGrid"
 export type AllDayLaneItem = {
   event: CalendarEvent
   color: string | null
+  eventColor: string | null
   startCol: number // 1-based CSS grid-column-start
   endCol: number // 1-based CSS grid-column-end (exclusive)
   lane: number
@@ -21,6 +22,7 @@ export type AllDayLaneItem = {
 export type TimedEventItem = {
   event: CalendarEvent
   color: string | null
+  eventColor: string | null
 }
 
 export type WeekLayout = {
@@ -96,6 +98,7 @@ export function useMonthEventLayout(
           allDayItems.push({
             event,
             color: getCalendarColor(calendar),
+            eventColor: event.color,
             startCol,
             endCol,
             lane: 0,
@@ -113,6 +116,7 @@ export function useMonthEventLayout(
             timedByCol[colIndex].push({
               event,
               color: getCalendarColor(calendar),
+              eventColor: event.color,
             })
           }
         }

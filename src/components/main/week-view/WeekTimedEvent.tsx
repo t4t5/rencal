@@ -56,7 +56,7 @@ export function WeekTimedEvent({
         height: `max(${layout.height}%, 2.125rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
-        ...getEventBlockStyle(color, highlighted, isDashed, isDraft),
+        ...getEventBlockStyle(color, layout.eventColor, highlighted, isDashed, isDraft),
       }}
       onClick={
         isDraft
