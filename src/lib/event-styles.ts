@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) {
   return cn(
     "text-xs cursor-default",
-    highlighted ? "brightness-150" : "hover:brightness-110",
+    !highlighted && "hover:brightness-105",
     isDeclined && "line-through",
   )
 }
@@ -15,18 +15,18 @@ export function getEventBlockStyle(
   highlighted: boolean,
   isDashed: boolean,
 ): CSSProperties {
+  const boosted = `oklch(from ${color} l calc(c * 1.2) h)`
+
   if (isDashed) {
     return {
-      border: `1px dashed ${color}`,
-      color: `color-mix(in srgb, ${color} 70%, white)`,
+      border: `1px dashed ${boosted}`,
+      color: `color-mix(in srgb, ${boosted} 50%, var(--foreground))`,
     }
   }
+  const base = `color-mix(in srgb, ${boosted} 50%, var(--background))`
+
   return {
-    backgroundColor: highlighted
-      ? `color-mix(in srgb, ${color} 50%, black)`
-      : `color-mix(in srgb, ${color} 50%, black)`,
-    color: highlighted
-      ? `color-mix(in srgb, ${color} 30%, white)`
-      : `color-mix(in srgb, ${color} 30%, white)`,
+    backgroundColor: highlighted ? `color-mix(in srgb, ${base} 80%, var(--foreground))` : base,
+    color: `color-mix(in srgb, ${color} 10%, var(--foreground))`,
   }
 }
