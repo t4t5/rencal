@@ -1,6 +1,8 @@
 import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef, memo, type MouseEvent } from "react"
 
+import { UntitledEventText } from "@/components/ui/untitled-event-text"
+
 import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -155,7 +157,7 @@ const AllDayEventTag = ({
       )}
       style={style}
     >
-      {event.summary}
+      {event.summary || <UntitledEventText />}
     </div>
   )
 }
