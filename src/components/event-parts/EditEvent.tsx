@@ -1,4 +1,4 @@
-import { parse } from "date-fns"
+import { addMinutes, parse } from "date-fns"
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -17,6 +17,7 @@ import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { DEFAULT_DURATION_MINS } from "@/contexts/EventDraftContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
@@ -241,13 +242,13 @@ export const EditEvent = ({
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {
-          const range = checked
-            ? normalizeAllDayRange(new Date(start), new Date(end))
-            : { start: new Date(start), end: new Date(end) }
+          const newEnd = checked
+            ? normalizeAllDayRange(new Date(start), new Date(end)).end
+            : addMinutes(new Date(start), DEFAULT_DURATION_MINS)
           setDirtyEvent({
             ...dirtyEvent,
             all_day: checked,
-            end: formatEventTime(range.end, checked),
+            end: formatEventTime(newEnd, checked),
           })
         }}
         showTime={!all_day}

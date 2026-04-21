@@ -33,6 +33,8 @@ interface DraftEvent {
   recurrence: Recurrence | null
 }
 
+export const DEFAULT_DURATION_MINS = 60
+
 // Split into two contexts: `text` changes on every keystroke, so anything that
 // doesn't need it (NewEventContent, WeekTimeGrid, MonthDayCell, etc.) should
 // only subscribe to the draft context to avoid re-rendering while typing.
@@ -90,12 +92,14 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const hasParsedTimeRef = useRef(false)
 
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
+    const start = getClosestNextHour()
+
     return {
       summary: "",
       description: null,
       allDay: false,
-      start: getClosestNextHour(),
-      end: addMinutes(getClosestNextHour(), 30),
+      start,
+      end: addMinutes(start, DEFAULT_DURATION_MINS),
       calendarId: defaultCalendarId,
       location: null,
       recurrence: null,
@@ -131,7 +135,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
           }
           if (parsed.start) {
             updates.start = parsed.start
-            updates.end = parsed.end ?? addMinutes(parsed.start, 30)
+            updates.end = parsed.end ?? addMinutes(parsed.start, DEFAULT_DURATION_MINS)
             updates.allDay = parsed.allDay
           }
           return { ...prev, ...updates }

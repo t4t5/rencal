@@ -1,4 +1,4 @@
-import { parse } from "date-fns"
+import { addMinutes, parse } from "date-fns"
 import { type Ref, useCallback } from "react"
 import { rrulestr } from "rrule"
 
@@ -6,7 +6,7 @@ import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
-import { useEventDraft } from "@/contexts/EventDraftContext"
+import { DEFAULT_DURATION_MINS, useEventDraft } from "@/contexts/EventDraftContext"
 
 import { rruleToRecurrence } from "@/lib/rrule-utils"
 import { normalizeAllDayRange } from "@/lib/time"
@@ -55,8 +55,10 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
             setDraftEvent({ ...draftEvent, summary: newSummary })
           }}
           onAllDayChange={(checked) => {
-            const range = checked ? normalizeAllDayRange(start, end) : { start, end }
-            setDraftEvent({ ...draftEvent, allDay: checked, end: range.end })
+            const newEnd = checked
+              ? normalizeAllDayRange(start, end).end
+              : addMinutes(start, DEFAULT_DURATION_MINS)
+            setDraftEvent({ ...draftEvent, allDay: checked, end: newEnd })
           }}
           onChangeStartDate={(date) => {
             if (!date) return
