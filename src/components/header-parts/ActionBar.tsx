@@ -1,4 +1,4 @@
-import { SearchButton } from "@/components/header-parts/search/SearchButton"
+import { SearchButtonArea } from "@/components/header-parts/search/SearchButton"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useFullscreen } from "@/hooks/useFullscreen"
@@ -15,7 +15,7 @@ export function ActionBar() {
 
   return (
     <div
-      className={cn("flex justify-between items-center gap-3 md:justify-end", {
+      className={cn("flex justify-between items-center gap-3 md:justify-end relative", {
         "pl-[78px]": isMacOS && !isFullscreen,
       })}
     >
@@ -26,7 +26,10 @@ export function ActionBar() {
           <SyncStatus className="pl-4" />
           <InvitesDropdown />
           <SettingsButton />
-          <SearchButton />
+
+          <div className="w-10" />
+
+          <SearchButtonArea />
         </div>
       )}
     </div>

@@ -95,7 +95,7 @@ export function SearchInput({
         }}
         className={cn(
           "border-none text-sm bg-secondary shadow-button-border transition-[width] duration-200 ease-out pl-8",
-          isExiting ? "w-10" : "w-32 starting:w-10",
+          isExiting ? "w-10" : "w-56 starting:w-10",
           className,
         )}
         onTransitionEnd={() => {
