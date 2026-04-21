@@ -167,6 +167,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
           size="icon-xs"
           round
           aria-label="Clear"
+          tabIndex={-1}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             setText("")
