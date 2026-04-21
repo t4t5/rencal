@@ -77,7 +77,7 @@ const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
 
 export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
-  const { defaultCalendar } = useSettings()
+  const { defaultCalendar, defaultReminders } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
 
@@ -148,15 +148,16 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
     hasParsedTimeRef.current = false
     setDraftEvent(generateDefaultDraftEvent())
-    setDraftReminders([])
-  }, [generateDefaultDraftEvent])
+    setDraftReminders(defaultReminders)
+  }, [generateDefaultDraftEvent, defaultReminders])
 
   const setDraftPopoverOpen = useCallback(
     (open: boolean) => {
       _setDraftPopoverOpen(open)
-      if (!open) setDefaultDraftEvent()
+      if (open) setDraftReminders(defaultReminders)
+      else setDefaultDraftEvent()
     },
-    [setDefaultDraftEvent],
+    [setDefaultDraftEvent, defaultReminders],
   )
 
   const { reloadEvents, setCalendarEvents } = useCalEvents()
