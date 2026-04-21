@@ -107,6 +107,13 @@ export function EventInfo({
       />
 
       <div className="flex flex-col gap-1">
+        <LocationInput
+          value={location}
+          onChange={onLocationChange}
+          onClose={onClose}
+          readOnly={readonly}
+        />
+
         <DateTimeSelect
           start={start}
           end={end}
@@ -123,16 +130,8 @@ export function EventInfo({
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
-        <Divider />
-
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
         <AttendeesDisplay organizer={organizer} attendees={attendees} />
-        <LocationInput
-          value={location}
-          onChange={onLocationChange}
-          onClose={onClose}
-          readOnly={readonly}
-        />
 
         {!calendar?.read_only && (
           <ReminderSelect
@@ -141,8 +140,6 @@ export function EventInfo({
             onRemove={onReminderRemove}
           />
         )}
-
-        <Divider />
 
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
 
