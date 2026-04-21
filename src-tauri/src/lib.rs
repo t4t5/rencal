@@ -49,6 +49,14 @@ fn setup_bundled_providers(app: &tauri::App) {
 
 #[tokio::main]
 pub async fn run() {
+    // Force a dark GTK theme so the native titlebar drawn by the WM/compositor
+    // matches the app's dark UI instead of the user's (usually light) system theme.
+    // Must be set before GTK initializes, hence at the very top of run().
+    #[cfg(target_os = "linux")]
+    if needs_native_decorations() {
+        std::env::set_var("GTK_THEME", "Adwaita:dark");
+    }
+
     let router = create_router();
 
     tauri::Builder::default()
@@ -62,6 +70,10 @@ pub async fn run() {
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {
                     let _ = window.set_decorations(true);
+                    // Windows: trigger DWM immersive dark mode on the titlebar.
+                    // (GTK dark theme is handled via GTK_THEME above.)
+                    #[cfg(target_os = "windows")]
+                    let _ = window.set_theme(Some(tauri::Theme::Dark));
                 }
                 let _ = window.set_min_size(Some(tauri::LogicalSize::new(
                     MIN_WINDOW_WIDTH,

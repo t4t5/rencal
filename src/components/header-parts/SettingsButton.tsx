@@ -33,6 +33,8 @@ export async function openSettingsWindow() {
     height,
     resizable: false,
     decorations: isMacOS || needsNative,
+    // Dark titlebar on Windows (DWM immersive dark mode). GTK is handled globally in lib.rs.
+    theme: needsNative ? "dark" : undefined,
     x: Math.round((screenW - width) / 2),
     y: Math.round((screenH - height) / 2),
     parent: getCurrentWindow(),
