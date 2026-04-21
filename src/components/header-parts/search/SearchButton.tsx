@@ -8,6 +8,8 @@ import { SearchIcon } from "@/icons/search"
 
 import { SearchBar } from "./SearchBar"
 
+export const SEARCH_BUTTON_EL_ID = "global-search-button"
+
 // Make expanded input overlap the other action buttons on the left:
 export function SearchButtonArea() {
   const [isSearching, setIsSearching] = useState(false)
@@ -32,7 +34,7 @@ export function SearchButtonArea() {
           showShortcut={false}
         />
       ) : (
-        <Button variant="secondary" onClick={() => setIsSearching(true)}>
+        <Button id={SEARCH_BUTTON_EL_ID} variant="secondary" onClick={() => setIsSearching(true)}>
           <SearchIcon />
         </Button>
       )}

@@ -3,6 +3,7 @@ import { useRef } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { openSettingsWindow } from "@/components/header-parts/SettingsButton"
+import { SEARCH_BUTTON_EL_ID } from "@/components/header-parts/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/header-parts/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
@@ -33,24 +34,24 @@ export function useGlobalShortcuts({
     void navigateToDate(date)
   }
 
-  // Focus search
-  useHotkeys("slash", (e) => {
+  const handleSearch = (e: KeyboardEvent) => {
     e.preventDefault()
     const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
-    input?.focus()
-  })
 
-  // Alternatives for search
-  useHotkeys("mod+f", (e) => {
-    e.preventDefault()
-    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
-    input?.focus()
-  })
-  useHotkeys("mod+p", (e) => {
-    e.preventDefault()
-    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
-    input?.focus()
-  })
+    if (input) {
+      input.focus()
+      return
+    }
+
+    const button = document.getElementById(SEARCH_BUTTON_EL_ID) as HTMLButtonElement | null
+
+    button?.click()
+  }
+
+  // Focus search
+  useHotkeys("slash", handleSearch)
+  useHotkeys("mod+f", handleSearch)
+  useHotkeys("mod+p", handleSearch)
 
   // View switching
   useHotkeys("m", () => onChangeCalendarView("month"))
