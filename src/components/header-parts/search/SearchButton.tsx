@@ -19,6 +19,7 @@ export function SearchButton() {
       setIsExiting={setIsExiting}
       setIsSearching={setIsSearching}
       onClose={() => setIsExiting(true)}
+      showShortcut={false}
     />
   ) : (
     <Button variant="secondary" onClick={() => setIsSearching(true)}>

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 
 import { Popover, PopoverAnchor } from "@/components/ui/popover"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { rpc } from "@/rpc"
 import type { CalendarEvent } from "@/rpc/bindings"
@@ -23,6 +22,7 @@ interface SearchBarProps {
   onClose?: () => void
   className?: string
   eventPopoverSide?: "left" | "right"
+  showShortcut?: boolean
 }
 
 export function SearchBar({
@@ -33,6 +33,7 @@ export function SearchBar({
   onClose,
   className,
   eventPopoverSide,
+  showShortcut = true,
 }: SearchBarProps = {}) {
   const { calendars } = useCalendars()
 
@@ -134,6 +135,7 @@ export function SearchBar({
             setFocusedIndex={setFocusedIndex}
             setActiveEvent={setActiveEvent}
             className={className}
+            showShortcut={showShortcut}
           />
         </PopoverAnchor>
         <SearchResults

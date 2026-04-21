@@ -25,6 +25,7 @@ interface SearchInputProps {
   setFocusedIndex: Dispatch<SetStateAction<number>>
   setActiveEvent: Dispatch<SetStateAction<CalendarEvent | null>>
   className?: string
+  showShortcut?: boolean
 }
 
 export function SearchInput({
@@ -41,21 +42,24 @@ export function SearchInput({
   setFocusedIndex,
   setActiveEvent,
   className,
+  showShortcut = true,
 }: SearchInputProps) {
   const [isFocused, setIsFocused] = useState(false)
 
   return (
     <div className="relative">
       <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-      <ShortcutKey
-        shortcut="/"
-        className={cn(
-          "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-hover transition-opacity duration-75",
-          {
-            "opacity-0": isFocused,
-          },
-        )}
-      />
+      {showShortcut && (
+        <ShortcutKey
+          shortcut="/"
+          className={cn(
+            "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-hover transition-opacity duration-75",
+            {
+              "opacity-0": isFocused,
+            },
+          )}
+        />
+      )}
       <Input
         id={SEARCH_INPUT_EL_ID}
         ref={inputRef}
