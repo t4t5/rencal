@@ -6,6 +6,7 @@ import { openSettingsWindow } from "@/components/header-parts/SettingsButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/header-parts/search/SearchInput"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useTheme } from "@/hooks/useTheme"
@@ -20,6 +21,7 @@ export function useGlobalShortcuts({
 }) {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { canCreate, promptToConnect } = useCreateEventGate()
   const { toggleTheme } = useTheme()
 
   const lastNavRef = useRef(0)
@@ -72,6 +74,10 @@ export function useGlobalShortcuts({
   // New event
   useHotkeys("c", (e) => {
     e.preventDefault()
+    if (!canCreate) {
+      promptToConnect()
+      return
+    }
     setDefaultDraftEvent()
     setIsDrafting(true)
   })

@@ -19,6 +19,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { segmentEventText } from "@/lib/parse-event-text"
@@ -37,6 +38,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
   const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
     useEventDraft()
   const { navigateToDate } = useCalendarNavigation()
+  const { canCreate, promptToConnect } = useCreateEventGate()
   const containerRef = useRef<HTMLDivElement>(null)
   const measurerRef = useRef<HTMLSpanElement>(null)
   const [scrollLeft, setScrollLeft] = useState(0)
@@ -135,6 +137,10 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
         onSelect={syncScroll}
         onClick={() => {
           if (!isDrafting) {
+            if (!canCreate) {
+              promptToConnect()
+              return
+            }
             setDefaultDraftEvent()
             setIsDrafting(true)
           }

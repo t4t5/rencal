@@ -5,6 +5,7 @@ import type { Calendar, CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -52,6 +53,7 @@ export function WeekTimeGrid({
   const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
+  const { canCreate, promptToConnect } = useCreateEventGate()
 
   const rangeHours = visibleEndHour - visibleStartHour
 
@@ -64,6 +66,10 @@ export function WeekTimeGrid({
     el: HTMLElement,
     opts: { allDay: boolean; startHour?: number },
   ) => {
+    if (!canCreate) {
+      promptToConnect()
+      return
+    }
     const start = opts.allDay ? startOfDay(day) : setHours(startOfDay(day), opts.startHour ?? 0)
     const end = opts.allDay ? endOfDay(day) : addHours(start, 1)
 

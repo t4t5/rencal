@@ -8,6 +8,7 @@ import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
+import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
 import { SyncProvider } from "@/contexts/SyncContext"
 
@@ -31,7 +32,9 @@ export function AppWindow({ preload }: { preload: Preload }) {
     <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
       <SyncProvider>
         <EventDraftProvider>
-          <App />
+          <CreateEventGateProvider>
+            <App />
+          </CreateEventGateProvider>
         </EventDraftProvider>
       </SyncProvider>
     </CalEventsProvider>

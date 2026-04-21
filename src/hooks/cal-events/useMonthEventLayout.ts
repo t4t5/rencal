@@ -80,7 +80,7 @@ export function useMonthEventLayout(
 
       for (const event of events) {
         const info = eventInfoMap.get(event.id)!
-        const calendar = calMap.get(event.calendar_slug)!
+        const calendar = calMap.get(event.calendar_slug)
 
         if (info.spanning) {
           // Check overlap: event [first, last] vs week [weekStart, weekEndDay]

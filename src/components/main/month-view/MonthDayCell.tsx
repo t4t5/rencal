@@ -13,6 +13,7 @@ import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -51,6 +52,7 @@ export function MonthDayCell({
   const { calendars } = useCalendars()
   const { setActiveEventId } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
+  const { canCreate, promptToConnect } = useCreateEventGate()
   const contextTargetRef = useRef<HTMLElement | null>(null)
 
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
@@ -64,6 +66,10 @@ export function MonthDayCell({
   }
 
   const handleCreateEvent = (el: HTMLElement) => {
+    if (!canCreate) {
+      promptToConnect()
+      return
+    }
     const startHour = getStartHour()
     const start = setHours(startOfDay(day.date), startHour)
     const end = addHours(start, 1)

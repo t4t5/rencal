@@ -13,7 +13,8 @@ interface DraftEvent {
   recurrence: { rrule: string; exdates: string[] } | null
 }
 
-export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent {
+export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
+  if (draft.calendarId == null) return null
   return {
     id: "",
     recurring_event_id: null,
@@ -30,7 +31,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent {
     organizer: null,
     attendees: [],
     conference_url: null,
-    calendar_slug: draft.calendarId ?? "",
+    calendar_slug: draft.calendarId,
     color: null,
   }
 }
