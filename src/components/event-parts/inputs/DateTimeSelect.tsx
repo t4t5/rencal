@@ -4,6 +4,7 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
+import { startOfDayMs } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
@@ -54,7 +55,9 @@ export const DateTimeSelect = ({
   }
 
   const handleEndTime = (time: string) => {
-    onChange({ start, end: parse(time, "HH:mm", start) })
+    const parsed = parse(time, "HH:mm", start)
+    const newEnd = !allDay && parsed < start ? addDays(parsed, 1) : parsed
+    onChange({ start, end: newEnd })
   }
 
   return (
@@ -165,6 +168,7 @@ const DateSelect = ({
   onChangeEnd: (date: Date | null) => void
 }) => {
   const displayEnd = allDay ? subDays(end, 1) : end
+  const showEndDate = allDay || startOfDayMs(start) !== startOfDayMs(displayEnd)
 
   return (
     <div className="flex pl-[26px] flex-wrap">
@@ -172,7 +176,7 @@ const DateSelect = ({
         <DatePicker date={start} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 
-      {allDay && <DatePicker date={displayEnd} setDate={onChangeEnd} readOnly={readOnly} />}
+      {showEndDate && <DatePicker date={displayEnd} setDate={onChangeEnd} readOnly={readOnly} />}
     </div>
   )
 }
