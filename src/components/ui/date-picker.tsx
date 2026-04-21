@@ -7,8 +7,6 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 
 import { cn } from "@/lib/utils"
 
-import { DropdownArrow } from "./select"
-
 export const DatePicker = ({
   date,
   setDate,
@@ -30,14 +28,12 @@ export const DatePicker = ({
         <Button
           variant="outline"
           className={cn(
-            "w-48 justify-between group cursor-default! transition-none font-sans focus-visible:border-none! focus-visible:ring-0! focus-visible:bg-secondary",
+            "justify-between group cursor-default! transition-none font-sans focus-visible:border-none! focus-visible:ring-0! focus-visible:bg-secondary",
             readOnly && "pointer-events-none",
             className,
           )}
         >
           {date ? formattedDate : "Select date"}
-
-          <DropdownArrow forceVisible={open} />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">

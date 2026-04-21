@@ -19,7 +19,7 @@ const buttonVariants = cva(
         ghost: "hover:bg-hover hover:text-accent-foreground",
       },
       size: {
-        default: "px-4 py-2 has-[>svg]:px-3 h-control-height",
+        default: "px-3 py-2 has-[>svg]:px-3 h-control-height",
         sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
         icon: "size-control-height p-0",

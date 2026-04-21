@@ -143,11 +143,11 @@ const DateSelect = ({
 
   return (
     <div className="flex pl-[26px] flex-wrap">
-      <DatePicker date={start} setDate={onChangeStart} className="w-30" readOnly={readOnly} />
+      <DatePicker date={start} setDate={onChangeStart} readOnly={readOnly} />
 
       {allDay && (
         <>
-          <div className="size-6 shrink-0" />
+          <div className="size-3 shrink-0" />
 
           <DatePicker
             date={displayEnd}
@@ -159,7 +159,6 @@ const DateSelect = ({
               const clamped = date < start ? start : date
               onChangeEnd(addDays(clamped, 1))
             }}
-            className="w-30"
             readOnly={readOnly}
           />
         </>
