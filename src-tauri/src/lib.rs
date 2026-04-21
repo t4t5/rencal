@@ -5,6 +5,7 @@ mod routes;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
+use routes::platform::{needs_native_decorations, PlatformApi, PlatformApiImpl};
 use tauri::Manager;
 use taurpc::Router;
 
@@ -16,6 +17,7 @@ pub fn create_router() -> Router<tauri::Wry> {
     Router::new()
         .merge(CaldirApiImpl.into_handler())
         .merge(OmarchyApiImpl.into_handler())
+        .merge(PlatformApiImpl.into_handler())
 }
 
 /// Resolve the bundled providers directory and set `CALDIR_PROVIDER_PATH`.
@@ -58,6 +60,9 @@ pub async fn run() {
             tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
             if let Some(window) = app.get_webview_window("main") {
+                if needs_native_decorations() {
+                    let _ = window.set_decorations(true);
+                }
                 let _ = window.set_min_size(Some(tauri::LogicalSize::new(
                     MIN_WINDOW_WIDTH,
                     MIN_WINDOW_HEIGHT,
@@ -69,8 +74,9 @@ pub async fn run() {
             if let tauri::WindowEvent::CloseRequested { api, .. } = event {
                 // Hide the main window instead of closing it so the app keeps
                 // running in the background (e.g. for notifications).
-                // The app only quits on an explicit quit action.
-                if window.label() == "main" {
+                // Only applied where no visible close button exists — on
+                // stacking WMs the user expects clicking X to actually quit.
+                if window.label() == "main" && !needs_native_decorations() {
                     api.prevent_close();
                     let _ = window.hide();
                 }

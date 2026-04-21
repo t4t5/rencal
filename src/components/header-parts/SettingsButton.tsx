@@ -4,6 +4,8 @@ import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
+import { rpc } from "@/rpc"
+
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
@@ -21,15 +23,16 @@ export async function openSettingsWindow() {
   const scale = monitor?.scaleFactor ?? 1
   const screenW = (monitor?.size.width ?? width) / scale
   const screenH = (monitor?.size.height ?? height) / scale
+  const needsNative = await rpc.platform.needs_native_decorations()
 
   new WebviewWindow("settings", {
     url: "/?appWindow=settings",
     title: "Settings",
-    titleBarStyle: "overlay",
+    titleBarStyle: isMacOS ? "overlay" : undefined,
     width,
     height,
     resizable: false,
-    decorations: isMacOS,
+    decorations: isMacOS || needsNative,
     x: Math.round((screenW - width) / 2),
     y: Math.round((screenH - height) / 2),
     parent: getCurrentWindow(),
