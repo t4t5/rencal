@@ -24,7 +24,7 @@ export function AddAccountModal({ onClose }: { onClose: () => void }) {
         {step.kind === "select-provider" && (
           <>
             <DialogHeader>
-              <DialogTitle>Connect Account</DialogTitle>
+              <DialogTitle>Connect calendar</DialogTitle>
             </DialogHeader>
 
             <ProviderList onClose={onClose} onSetStep={setStep} />
