@@ -28,6 +28,7 @@ export async function openSettingsWindow() {
     titleBarStyle: "overlay",
     width,
     height,
+    resizable: false,
     decorations: isMacOS,
     x: Math.round((screenW - width) / 2),
     y: Math.round((screenH - height) / 2),
