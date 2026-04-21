@@ -3,7 +3,7 @@ import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/rpc/bindings"
 
-const DEFAULT_DURATION_MINUTES = 30
+import { DEFAULT_DURATION_MINS } from "@/contexts/EventDraftContext"
 
 interface ParsedEventText {
   summary: string
@@ -212,7 +212,7 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
     ? startOfDay(addDays(result.end ? result.end.date() : result.start.date(), 1))
     : result.end
       ? result.end.date()
-      : addMinutes(start, DEFAULT_DURATION_MINUTES)
+      : addMinutes(start, DEFAULT_DURATION_MINS)
 
   return {
     summary: finalSummary,

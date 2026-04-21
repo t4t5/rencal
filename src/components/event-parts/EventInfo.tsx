@@ -4,7 +4,7 @@ import { AllDayCheckbox } from "@/components/event-parts/inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDisplay"
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
-import { DateTimeSelect } from "@/components/event-parts/inputs/DateTimeSelect"
+import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
@@ -30,11 +30,8 @@ export function EventInfo({
   summary,
   onChangeSummary,
   start,
-  onChangeStartDate,
-  onChangeStartTime,
   end,
-  onChangeEndDate,
-  onChangeEndTime,
+  onChangeDateTime,
   allDay,
   onAllDayChange,
   showTime,
@@ -63,11 +60,8 @@ export function EventInfo({
   onChangeSummary: (summary: string) => void
   onClose?: () => void
   start: Date
-  onChangeStartDate: (date: Date | null) => void
-  onChangeStartTime: (time: string) => void
   end: Date
-  onChangeEndDate: (date: Date | null) => void
-  onChangeEndTime: (time: string) => void
+  onChangeDateTime: (range: DateTimeRange) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
   location?: string | null
@@ -120,10 +114,7 @@ export function EventInfo({
           allDay={allDay}
           showTime={showTime}
           readOnly={readonly}
-          onChangeStartDate={onChangeStartDate}
-          onChangeStartTime={onChangeStartTime}
-          onChangeEndDate={onChangeEndDate}
-          onChangeEndTime={onChangeEndTime}
+          onChange={onChangeDateTime}
           onClose={onClose}
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />

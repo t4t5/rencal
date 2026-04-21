@@ -1,4 +1,4 @@
-import { addMinutes, parse } from "date-fns"
+import { addMinutes } from "date-fns"
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -212,33 +212,13 @@ export const EditEvent = ({
           setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
         }}
         start={new Date(start)}
-        onChangeStartDate={(date) => {
-          if (!date) return
-          const oldStart = new Date(start)
-          const newStart = new Date(start)
-          newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-          const delta = newStart.getTime() - oldStart.getTime()
-          const newEnd = new Date(new Date(end).getTime() + delta)
+        end={new Date(end)}
+        onChangeDateTime={({ start: newStart, end: newEnd }) => {
           setDirtyEvent({
             ...dirtyEvent,
             start: formatEventTime(newStart, all_day),
             end: formatEventTime(newEnd, all_day),
           })
-        }}
-        onChangeStartTime={(time) => {
-          const newStart = parse(time, "HH:mm", new Date(start))
-          setDirtyEvent({ ...dirtyEvent, start: newStart.toISOString() })
-        }}
-        end={new Date(end)}
-        onChangeEndDate={(date) => {
-          if (!date) return
-          const newEnd = new Date(end)
-          newEnd.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-          setDirtyEvent({ ...dirtyEvent, end: formatEventTime(newEnd, all_day) })
-        }}
-        onChangeEndTime={(time) => {
-          const newEnd = parse(time, "HH:mm", new Date(start))
-          setDirtyEvent({ ...dirtyEvent, end: newEnd.toISOString() })
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {

@@ -1,4 +1,4 @@
-import { addMinutes, parse } from "date-fns"
+import { addMinutes } from "date-fns"
 import { type Ref, useCallback } from "react"
 import { rrulestr } from "rrule"
 
@@ -60,27 +60,8 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
               : addMinutes(start, DEFAULT_DURATION_MINS)
             setDraftEvent({ ...draftEvent, allDay: checked, end: newEnd })
           }}
-          onChangeStartDate={(date) => {
-            if (!date) return
-            const newStart = new Date(start)
-            newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-            const delta = newStart.getTime() - start.getTime()
-            const newEnd = new Date(end.getTime() + delta)
+          onChangeDateTime={({ start: newStart, end: newEnd }) => {
             setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
-          }}
-          onChangeStartTime={(time) => {
-            const newStart = parse(time, "HH:mm", start)
-            setDraftEvent({ ...draftEvent, start: newStart })
-          }}
-          onChangeEndDate={(date) => {
-            if (!date) return
-            const newEnd = new Date(end)
-            newEnd.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-            setDraftEvent({ ...draftEvent, end: newEnd })
-          }}
-          onChangeEndTime={(time) => {
-            const newEnd = parse(time, "HH:mm", start)
-            setDraftEvent({ ...draftEvent, end: newEnd })
           }}
           onCalendarChange={(newCalendarId) => {
             setDraftEvent({ ...draftEvent, calendarId: newCalendarId })

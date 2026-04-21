@@ -1,4 +1,4 @@
-import { addDays, format, subDays } from "date-fns"
+import { addDays, format, parse, subDays } from "date-fns"
 
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
@@ -9,16 +9,15 @@ import { cn } from "@/lib/utils"
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
 
+export type DateTimeRange = { start: Date; end: Date }
+
 export const DateTimeSelect = ({
   start,
   end,
   allDay,
   showTime = true,
   readOnly,
-  onChangeStartDate,
-  onChangeStartTime,
-  onChangeEndDate,
-  onChangeEndTime,
+  onChange,
   onClose,
 }: {
   start: Date
@@ -26,12 +25,38 @@ export const DateTimeSelect = ({
   allDay: boolean
   showTime?: boolean
   readOnly?: boolean
-  onChangeStartDate: (start: Date | null) => void
-  onChangeStartTime: (time: string) => void
-  onChangeEndDate: (start: Date | null) => void
-  onChangeEndTime: (time: string) => void
+  onChange: (range: DateTimeRange) => void
   onClose?: () => void
 }) => {
+  const shiftStart = (newStart: Date) => {
+    const delta = newStart.getTime() - start.getTime()
+    onChange({ start: newStart, end: new Date(end.getTime() + delta) })
+  }
+
+  const handleStartDate = (date: Date | null) => {
+    if (!date) return
+    const newStart = new Date(start)
+    newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
+    shiftStart(newStart)
+  }
+
+  const handleStartTime = (time: string) => {
+    shiftStart(parse(time, "HH:mm", start))
+  }
+
+  const handleEndDate = (date: Date | null) => {
+    if (!date) return
+    const clamped = allDay && date < start ? start : date
+    const base = allDay ? addDays(clamped, 1) : clamped
+    const newEnd = new Date(end)
+    newEnd.setFullYear(base.getFullYear(), base.getMonth(), base.getDate())
+    onChange({ start, end: newEnd })
+  }
+
+  const handleEndTime = (time: string) => {
+    onChange({ start, end: parse(time, "HH:mm", start) })
+  }
+
   return (
     <div className="flex flex-col gap-1">
       {showTime && (
@@ -40,8 +65,8 @@ export const DateTimeSelect = ({
           end={end}
           allDay={allDay}
           readOnly={readOnly}
-          onChangeStartTime={onChangeStartTime}
-          onChangeEndTime={onChangeEndTime}
+          onChangeStartTime={handleStartTime}
+          onChangeEndTime={handleEndTime}
           onClose={onClose}
         />
       )}
@@ -50,8 +75,8 @@ export const DateTimeSelect = ({
         end={end}
         allDay={allDay}
         readOnly={readOnly}
-        onChangeStart={onChangeStartDate}
-        onChangeEnd={onChangeEndDate}
+        onChangeStart={handleStartDate}
+        onChangeEnd={handleEndDate}
       />
     </div>
   )
@@ -147,20 +172,7 @@ const DateSelect = ({
         <DatePicker date={start} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 
-      {allDay && (
-        <DatePicker
-          date={displayEnd}
-          setDate={(date) => {
-            if (!date) {
-              onChangeEnd(null)
-              return
-            }
-            const clamped = date < start ? start : date
-            onChangeEnd(addDays(clamped, 1))
-          }}
-          readOnly={readOnly}
-        />
-      )}
+      {allDay && <DatePicker date={displayEnd} setDate={onChangeEnd} readOnly={readOnly} />}
     </div>
   )
 }
