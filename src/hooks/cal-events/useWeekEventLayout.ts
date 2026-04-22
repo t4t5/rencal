@@ -29,10 +29,6 @@ export type WeekLayout = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   timedByCol: WeekTimedEventLayout[][]
-  /** First visible hour (inclusive) */
-  visibleStartHour: number
-  /** Last visible hour (exclusive, e.g. 24 means grid extends to midnight) */
-  visibleEndHour: number
 }
 
 function daysDiff(aMs: number, bMs: number): number {
@@ -134,22 +130,8 @@ export function useWeekEventLayout(
     const weekEndDayMs = startOfDay(weekDays[6].date).getTime()
     const weekExclEndMs = weekEndDayMs + MS_PER_DAY
 
-    const DEFAULT_START_HOUR = 6
-    const DEFAULT_END_HOUR = 24
-
-    // Determine visible hour range by scanning timed events
-    let visibleStartHour = DEFAULT_START_HOUR
-    for (const event of events) {
-      if (event.all_day) continue
-      const { firstMs, lastMs } = getEventDayRange(event)
-      if (firstMs < weekStartMs || firstMs >= weekExclEndMs) continue
-      if (lastMs - firstMs >= MS_PER_DAY) continue
-      const startHour = new Date(event.start).getHours()
-      if (startHour < visibleStartHour) visibleStartHour = startHour
-    }
-    const visibleEndHour = DEFAULT_END_HOUR
-    const rangeStartMin = visibleStartHour * 60
-    const rangeMinutes = (visibleEndHour - visibleStartHour) * 60
+    const rangeStartMin = 0
+    const rangeMinutes = DAY_MINUTES
 
     const allDayItems: AllDayLaneItem[] = []
     const timedByCol: WeekTimedEventLayout[][] = Array.from({ length: 7 }, () => [])
@@ -266,6 +248,6 @@ export function useWeekEventLayout(
       maxAllDayLane = Math.max(maxAllDayLane, lane)
     }
 
-    return { allDayItems, maxAllDayLane, timedByCol, visibleStartHour, visibleEndHour }
+    return { allDayItems, maxAllDayLane, timedByCol }
   }, [weekDays, events, calendars])
 }

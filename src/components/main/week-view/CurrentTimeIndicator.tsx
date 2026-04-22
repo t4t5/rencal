@@ -5,13 +5,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { cn } from "@/lib/utils"
 
-export function CurrentTimeIndicator({
-  visibleStartHour,
-  rangeHours,
-}: {
-  visibleStartHour: number
-  rangeHours: number
-}) {
+export function CurrentTimeIndicator() {
   const [, setTick] = useState(0)
 
   // Update time indicator every 60s
@@ -22,11 +16,7 @@ export function CurrentTimeIndicator({
 
   const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
-  const rangeStartMin = visibleStartHour * 60
-  const rangeMinutes = rangeHours * 60
-  const timeIndicatorTopPercent = ((currentMinutes - rangeStartMin) / rangeMinutes) * 100
-
-  const showTimeIndicator = timeIndicatorTopPercent >= 0 && timeIndicatorTopPercent <= 100
+  const timeIndicatorTopPercent = (currentMinutes / 1440) * 100
 
   const { timeFormat } = useSettings()
   const [currentTime, setCurrentTime] = useState(new Date())
@@ -43,8 +33,6 @@ export function CurrentTimeIndicator({
   const hour = format(currentTime, timeFormat === "12h" ? "h" : "H")
   const minutes = format(currentTime, "mm")
   const ampm = timeFormat === "12h" ? format(currentTime, "a").toLowerCase() : ""
-
-  if (!showTimeIndicator) return null
 
   return (
     <div

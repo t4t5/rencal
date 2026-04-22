@@ -19,11 +19,15 @@ export function PopoverNewEvent() {
   useLayoutEffect(() => {
     if (!draftPopoverOpen) return
 
-    const el = getDraftAnchor()
-    if (!el) return
+    const anchor = getDraftAnchor()
+    if (!anchor) return
 
-    const rect = el.getBoundingClientRect()
-    setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
+    if (anchor instanceof HTMLElement) {
+      const rect = anchor.getBoundingClientRect()
+      setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
+    } else {
+      setPos(anchor)
+    }
   }, [draftPopoverOpen])
 
   // Focus the summary textarea after the context menu finishes restoring focus

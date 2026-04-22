@@ -45,8 +45,6 @@ export function WeekView() {
         activeDateKey={formatDateKey(activeDate)}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
-        visibleStartHour={layout.visibleStartHour}
-        visibleEndHour={layout.visibleEndHour}
         draftEvent={draftCalEvent}
         dimmed={dimmed}
       />
