@@ -11,6 +11,8 @@ import type { MonthDay } from "./useMonthGrid"
 /** Total minutes in a day */
 const DAY_MINUTES = 24 * 60
 
+export type WeekEventDisplayMode = "compact" | "standard" | "expanded"
+
 export type WeekTimedEventLayout = {
   event: CalendarEvent
   color: string | null
@@ -19,6 +21,8 @@ export type WeekTimedEventLayout = {
   height: number
   column: number
   totalColumns: number
+  durationMinutes: number
+  displayMode: WeekEventDisplayMode
 }
 
 export type WeekLayout = {
@@ -40,7 +44,7 @@ function computeTimedPosition(
   event: CalendarEvent,
   rangeStartMin: number,
   rangeMinutes: number,
-): { top: number; height: number } {
+): { top: number; height: number; durationMinutes: number } {
   const start = new Date(event.start)
   const end = new Date(event.end)
   const startMinutes = start.getHours() * 60 + start.getMinutes()
@@ -52,10 +56,19 @@ function computeTimedPosition(
   const durationMinutes = endDay > startDay ? DAY_MINUTES - startMinutes : endMinutes - startMinutes
 
   const top = ((startMinutes - rangeStartMin) / rangeMinutes) * 100
-  const height = Math.max((durationMinutes / rangeMinutes) * 100, (15 / rangeMinutes) * 100)
+  const height = (durationMinutes / rangeMinutes) * 100
 
-  return { top, height }
+  return { top, height, durationMinutes }
 }
+
+function displayModeFor(durationMinutes: number): WeekEventDisplayMode {
+  if (durationMinutes < 30) return "compact"
+  if (durationMinutes < 60) return "standard"
+  return "expanded"
+}
+
+/** Tolerance for float precision when comparing positions derived from minute-based math */
+const OVERLAP_EPS = 1e-5
 
 /** Assign overlap columns using a greedy sweep-line algorithm */
 function assignOverlapColumns(events: WeekTimedEventLayout[]) {
@@ -71,7 +84,7 @@ function assignOverlapColumns(events: WeekTimedEventLayout[]) {
 
   for (let i = 1; i < events.length; i++) {
     const ev = events[i]
-    if (ev.top < groupEnd) {
+    if (ev.top + OVERLAP_EPS < groupEnd) {
       // Overlaps with current group
       currentGroup.push(ev)
       groupEnd = Math.max(groupEnd, ev.top + ev.height)
@@ -88,7 +101,7 @@ function assignOverlapColumns(events: WeekTimedEventLayout[]) {
     const columns: number[] = [] // end positions per column
     for (const ev of group) {
       let col = 0
-      while (col < columns.length && columns[col] > ev.top) {
+      while (col < columns.length && columns[col] > ev.top + OVERLAP_EPS) {
         col++
       }
       ev.column = col
@@ -195,7 +208,11 @@ export function useWeekEventLayout(
 
           const colIndex = daysDiff(firstMs, weekStartMs)
           if (colIndex >= 0 && colIndex < 7) {
-            const { top, height } = computeTimedPosition(event, rangeStartMin, rangeMinutes)
+            const { top, height, durationMinutes } = computeTimedPosition(
+              event,
+              rangeStartMin,
+              rangeMinutes,
+            )
             timedByCol[colIndex].push({
               event,
               color,
@@ -204,6 +221,8 @@ export function useWeekEventLayout(
               height,
               column: 0,
               totalColumns: 1,
+              durationMinutes,
+              displayMode: displayModeFor(durationMinutes),
             })
           }
         }

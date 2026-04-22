@@ -35,10 +35,20 @@ export function WeekTimedEvent({
   const { timeFormat } = useSettings()
 
   const color = layout.color ?? "var(--primary)"
-  const widthPercent = 100 / layout.totalColumns
-  const leftPercent = layout.column * widthPercent
+  // Cascade layout: each overlap depth indents from the left by a fixed percentage and
+  // extends to the right edge, so the earlier/outer event remains fully visible beneath.
+  const CASCADE_OFFSET_PCT = 15
+  const leftPercent = layout.column * CASCADE_OFFSET_PCT
+  const widthPercent = 100 - leftPercent
   const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
+  const mode = layout.displayMode
+  const isCompact = mode === "compact"
+  const hasStripe = !isDashed && !isDraft
+
+  const summary = layout.event.summary || <UntitledEventText />
+  const startTime = formatTime(layout.event.start, timeFormat)
+  const endTime = formatTime(layout.event.end, timeFormat)
 
   const inner = (
     <div
@@ -47,15 +57,16 @@ export function WeekTimedEvent({
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
         "absolute overflow-hidden rounded px-1 py-0.5",
-        !isDashed && !isDraft && "pl-2",
+        hasStripe && (isCompact ? "pl-1.5" : "pl-2"),
         !isDraft && dimmed && "opacity-50",
         isDraft && "font-medium",
       )}
       style={{
         top: `${layout.top}%`,
-        height: `max(${layout.height}%, 2.125rem)`,
+        height: `max(calc(${layout.height}% - 1px), 1rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
+        zIndex: layout.column,
         ...getEventBlockStyle(color, layout.eventColor, highlighted, isDashed, isDraft),
       }}
       onClick={
@@ -68,19 +79,31 @@ export function WeekTimedEvent({
             }
       }
     >
-      {!isDashed && !isDraft && (
+      {hasStripe && (
         <div
-          className="w-[3px] absolute left-0 top-0 bottom-0"
+          className={cn("absolute left-0 top-0 bottom-0", isCompact ? "w-[2px]" : "w-[3px]")}
           style={{ backgroundColor: color }}
         />
       )}
 
-      <div className="truncate font-medium leading-tight">
-        {layout.event.summary || <UntitledEventText />}
-      </div>
-      <div className="truncate opacity-80 leading-tight">
-        {formatTime(layout.event.start, timeFormat)} – {formatTime(layout.event.end, timeFormat)}
-      </div>
+      {mode === "compact" ? (
+        <div className="flex items-baseline gap-1">
+          <span className="truncate font-medium leading-tight min-w-0 flex-1">{summary}</span>
+          <span className="text-[10px] opacity-70 shrink-0 leading-tight">{startTime}</span>
+        </div>
+      ) : mode === "standard" ? (
+        <>
+          <div className="truncate font-medium leading-tight">{summary}</div>
+          <div className="truncate opacity-80 leading-tight">{startTime}</div>
+        </>
+      ) : (
+        <>
+          <div className="font-medium leading-tight line-clamp-2">{summary}</div>
+          <div className="truncate opacity-80 leading-tight">
+            {startTime} – {endTime}
+          </div>
+        </>
+      )}
     </div>
   )
 
