@@ -22,12 +22,8 @@ export function PopoverNewEvent() {
     const anchor = getDraftAnchor()
     if (!anchor) return
 
-    if (anchor instanceof HTMLElement) {
-      const rect = anchor.getBoundingClientRect()
-      setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
-    } else {
-      setPos(anchor)
-    }
+    const rect = anchor.getBoundingClientRect()
+    setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
   }, [draftPopoverOpen])
 
   // Focus the summary textarea after the context menu finishes restoring focus

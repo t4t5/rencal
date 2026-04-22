@@ -1,4 +1,4 @@
-export type DraftAnchor = HTMLElement | { top: number; left: number; width: number }
+export type DraftAnchor = { getBoundingClientRect: () => DOMRect }
 
 let _anchor: DraftAnchor | null = null
 

@@ -102,8 +102,9 @@ export function WeekTimeGrid({
     })
 
     if (opts.clickY != null) {
-      const rect = el.getBoundingClientRect()
-      setDraftAnchor({ top: opts.clickY, left: rect.left, width: rect.width })
+      const { left, width } = el.getBoundingClientRect()
+      const y = opts.clickY
+      setDraftAnchor({ getBoundingClientRect: () => new DOMRect(left, y, width, 0) })
     } else {
       setDraftAnchor(el)
     }
