@@ -142,6 +142,16 @@ export function WeekTimeGrid({
               "relative border-r border-divider cursor-default",
               day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
             )}
+            style={
+              {
+                "--day-bg":
+                  day.dateKey === activeDateKey
+                    ? "var(--secondary-hover)"
+                    : day.isWeekend
+                      ? "var(--weekend)"
+                      : "var(--background)",
+              } as React.CSSProperties
+            }
             onClick={() => onDayClick(day.date)}
           >
             {/* Timed events */}

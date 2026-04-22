@@ -63,10 +63,11 @@ export function WeekTimedEvent({
       )}
       style={{
         top: `${layout.top}%`,
-        height: `max(calc(${layout.height}% - 1px), 1rem)`,
+        height: `max(${layout.height}%, 1rem)`,
         left: `${leftPercent}%`,
         width: `calc(${widthPercent}% - 2px)`,
         zIndex: layout.column,
+        border: "1px solid var(--day-bg)",
         ...getEventBlockStyle(color, layout.eventColor, highlighted, isDashed, isDraft),
       }}
       onClick={
