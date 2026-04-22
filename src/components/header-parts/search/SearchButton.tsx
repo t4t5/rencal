@@ -19,9 +19,9 @@ export function SearchButtonArea() {
 
   return (
     <div
-      className={cn("absolute inset-0 left-10 flex justify-end transition duration-75", {
-        "bg-transparent": !showInput,
-        "bg-background": showInput,
+      className={cn("absolute inset-0 flex justify-end transition duration-75", {
+        "bg-transparent left-auto": !showInput,
+        "bg-background left-0": showInput,
       })}
     >
       {showInput ? (
