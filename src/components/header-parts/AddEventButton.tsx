@@ -63,10 +63,7 @@ export function AddEventButton() {
 const Spacer = ({ grow }: { grow?: boolean }) => {
   return (
     <DragRegion
-      className={cn(
-        "h-full transition-[flex-grow] duration-200 ease-out",
-        grow ? "grow" : "grow-0",
-      )}
+      className={cn("transition-[flex-grow] duration-200 ease-out", grow ? "grow" : "grow-0")}
     />
   )
 }
