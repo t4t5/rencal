@@ -1,5 +1,5 @@
-import { addHours, endOfDay, format, setHours, startOfDay } from "date-fns"
-import { useEffect, useRef } from "react"
+import { addHours, endOfDay, format, setHours, startOfDay, startOfWeek } from "date-fns"
+import { RefObject, useLayoutEffect, useRef, useState } from "react"
 
 import type { Calendar, CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
@@ -9,12 +9,12 @@ import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
-import { formatTime } from "@/lib/time"
+import { formatDateKey, formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { AllDayContextMenu } from "./AllDayContextMenu"
@@ -26,15 +26,16 @@ import { WeekTimedEvent } from "./WeekTimedEvent"
 const HOUR_HEIGHT = 56
 const GRID_HEIGHT = 24 * HOUR_HEIGHT
 const GUTTER_WIDTH = 48
-const GRID_TEMPLATE_COLUMNS = `${GUTTER_WIDTH}px repeat(7, 1fr)`
+const DAY_WIDTH_MIN = 100
 
 type WeekTimeGridProps = {
-  weekDays: MonthDay[]
-  timedByCol: WeekTimedEventLayout[][]
+  days: MonthDay[]
+  timedByDay: Map<string, WeekTimedEventLayout[]>
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   activeEventId: string | null
   activeDateKey: string
+  scrollContainerRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
   onEventClick: (id: string) => void
   draftEvent: CalendarEvent | null
@@ -42,12 +43,13 @@ type WeekTimeGridProps = {
 }
 
 export function WeekTimeGrid({
-  weekDays,
-  timedByCol,
+  days,
+  timedByDay,
   allDayItems,
   maxAllDayLane,
   activeEventId,
   activeDateKey,
+  scrollContainerRef,
   onDayClick,
   onEventClick,
   draftEvent,
@@ -59,22 +61,86 @@ export function WeekTimeGrid({
   const { canCreate, promptToConnect } = useCreateEventGate()
   const { timeFormat } = useSettings()
 
-  const todayColIndex = weekDays.findIndex((d) => d.isToday)
+  const N = days.length
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
-  const scrollRef = useRef<HTMLDivElement>(null)
-  const didInitialScrollRef = useRef(false)
 
-  useEffect(() => {
-    if (didInitialScrollRef.current) return
-    const el = scrollRef.current
+  // Day width is computed so 7 days fit in the viewport (min-floored).
+  // The `ready` flag gates the initial-scroll effect until the width is measured against the real container.
+  const [dayWidth, setDayWidth] = useState(180)
+  const [dayWidthReady, setDayWidthReady] = useState(false)
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current
     if (!el) return
-    const hasToday = weekDays.some((d) => d.isToday)
+    const update = () => {
+      const w = Math.max(DAY_WIDTH_MIN, (el.clientWidth - GUTTER_WIDTH) / 7)
+      setDayWidth(w)
+      setDayWidthReady(true)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [scrollContainerRef])
+
+  // Adjust scrollLeft when days are prepended, so the viewport stays over the same content.
+  // Detect prepend: the previous firstKey must still be present at position `added` in the new array.
+  const prevFirstKeyRef = useRef<string | undefined>(days[0]?.dateKey)
+  const prevCountRef = useRef(days.length)
+  useLayoutEffect(() => {
+    const el = scrollContainerRef.current
+    const curFirstKey = days[0]?.dateKey
+    const prevFirstKey = prevFirstKeyRef.current
+    const prevCount = prevCountRef.current
+    prevFirstKeyRef.current = curFirstKey
+    prevCountRef.current = days.length
+    if (!el || !curFirstKey || !prevFirstKey) return
+    if (curFirstKey === prevFirstKey) return
+    const added = days.length - prevCount
+    if (added > 0 && days[added]?.dateKey === prevFirstKey) {
+      el.scrollLeft += added * dayWidth
+    }
+  })
+
+  // Initial scroll (once dayWidth is measured): scrollTop to current time / 08:00, scrollLeft to Monday of activeDate's week.
+  const didInitialScrollRef = useRef(false)
+  useLayoutEffect(() => {
+    if (!dayWidthReady || didInitialScrollRef.current) return
+    const el = scrollContainerRef.current
+    if (!el) return
+
+    const hasToday = days.some((d) => d.isToday)
     const now = new Date()
     const targetHour = hasToday ? now.getHours() + now.getMinutes() / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
+
+    const activeDay = days.find((d) => d.dateKey === activeDateKey)
+    if (activeDay) {
+      const weekStartKey = formatDateKey(startOfWeek(activeDay.date, { weekStartsOn: 1 }))
+      const mondayIdx = days.findIndex((d) => d.dateKey === weekStartKey)
+      if (mondayIdx !== -1) el.scrollLeft = mondayIdx * dayWidth
+    }
+
     didInitialScrollRef.current = true
-  }, [weekDays])
+  }, [dayWidthReady, days, dayWidth, activeDateKey, scrollContainerRef])
+
+  // After initial scroll, whenever activeDate changes to an off-screen day, smooth-scroll it into view.
+  useLayoutEffect(() => {
+    if (!didInitialScrollRef.current) return
+    const el = scrollContainerRef.current
+    if (!el) return
+    const idx = days.findIndex((d) => d.dateKey === activeDateKey)
+    if (idx === -1) return
+
+    const columnLeft = GUTTER_WIDTH + idx * dayWidth
+    const columnRight = columnLeft + dayWidth
+    const viewportLeft = el.scrollLeft + GUTTER_WIDTH
+    const viewportRight = el.scrollLeft + el.clientWidth
+
+    if (columnLeft < viewportLeft || columnRight > viewportRight) {
+      el.scrollTo({ left: idx * dayWidth, behavior: "smooth" })
+    }
+  }, [activeDateKey, days, dayWidth, scrollContainerRef])
 
   const openCreatePopover = (
     day: Date,
@@ -118,49 +184,58 @@ export function WeekTimeGrid({
     return Math.max(0, Math.min(23, Math.floor(hour)))
   }
 
+  const totalContentWidth = GUTTER_WIDTH + N * dayWidth
+  const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
+
   return (
-    <div className="flex flex-col h-full">
-      {/* Zone 1: Day headers (fixed) */}
-      <div className="grid" style={{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }}>
-        <div />
-        <DayHeaders
-          weekDays={weekDays}
-          activeDateKey={activeDateKey}
-          dimmed={dimmed}
-          onDayClick={onDayClick}
-        />
-      </div>
-
-      {/* Zone 2: All-day bar (fixed, only if present) */}
-      {hasAllDay && (
-        <div className="grid" style={{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS }}>
-          <div className="border-r border-b border-divider" />
-          <AllDayEvents
-            maxAllDayLane={maxAllDayLane}
-            weekDays={weekDays}
-            activeDateKey={activeDateKey}
-            contextTargetRef={contextTargetRef}
-            allDayItems={allDayItems}
-            activeEventId={activeEventId}
-            calendars={calendars}
-            draftEvent={draftEvent}
-            dimmed={dimmed}
-            onCreateEvent={(day: MonthDay) => {
-              openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
-            }}
-            onEventClick={onEventClick}
+    <div ref={scrollContainerRef} className="h-full w-full min-w-0 overflow-auto">
+      <div style={{ width: totalContentWidth, minHeight: "100%" }}>
+        {/* Zone 1+2: Day headers + all-day bar (sticky top) */}
+        <div
+          className="sticky top-0 z-20 bg-background grid"
+          style={{ gridTemplateColumns: dayGridCols, gridTemplateRows: "auto auto" }}
+        >
+          {/* Gutter spacer — sticky left, spans both rows */}
+          <div
+            className="sticky left-0 z-30 bg-background border-r border-b border-divider"
+            style={{ gridColumn: 1, gridRow: "1 / span 2" }}
           />
+          <DayHeaders
+            days={days}
+            activeDateKey={activeDateKey}
+            dimmed={dimmed}
+            onDayClick={onDayClick}
+          />
+          {hasAllDay && (
+            <div style={{ gridColumn: "2 / -1", gridRow: 2 }}>
+              <AllDayEvents
+                maxAllDayLane={maxAllDayLane}
+                days={days}
+                activeDateKey={activeDateKey}
+                contextTargetRef={contextTargetRef}
+                allDayItems={allDayItems}
+                activeEventId={activeEventId}
+                calendars={calendars}
+                draftEvent={draftEvent}
+                dimmed={dimmed}
+                onCreateEvent={(day: MonthDay) => {
+                  openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
+                }}
+                onEventClick={onEventClick}
+              />
+            </div>
+          )}
         </div>
-      )}
 
-      {/* Zone 3: Scrollable time area */}
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
+        {/* Zone 3: Time grid (horizontally and vertically scrollable) */}
         <div
           className="grid relative"
-          style={{ gridTemplateColumns: GRID_TEMPLATE_COLUMNS, height: GRID_HEIGHT }}
+          style={{ gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
         >
-          <TimeGutter timeFormat={timeFormat} />
-          {weekDays.map((day, colIndex) => (
+          <div className="sticky left-0 z-10 bg-background border-r border-divider">
+            <TimeGutter timeFormat={timeFormat} />
+          </div>
+          {days.map((day) => (
             <ScheduledDayContextMenu
               key={day.dateKey}
               onCreateEvent={(el, clickY) => {
@@ -188,7 +263,7 @@ export function WeekTimeGrid({
                 }
                 onClick={() => onDayClick(day.date)}
               >
-                {timedByCol[colIndex].map((layout) => (
+                {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
                   <WeekTimedEvent
                     key={layout.event.id}
                     layout={layout}
@@ -201,7 +276,7 @@ export function WeekTimeGrid({
                   />
                 ))}
 
-                {colIndex === todayColIndex && <CurrentTimeIndicator />}
+                {day.isToday && <CurrentTimeIndicator />}
               </div>
             </ScheduledDayContextMenu>
           ))}
@@ -213,7 +288,7 @@ export function WeekTimeGrid({
 
 function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
   return (
-    <div className="relative border-r border-divider">
+    <div className="relative" style={{ height: GRID_HEIGHT }}>
       {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => {
         const d = new Date()
         d.setHours(h, 0, 0, 0)
@@ -232,23 +307,24 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 }
 
 const DayHeaders = ({
-  weekDays,
+  days,
   activeDateKey,
   dimmed,
   onDayClick,
 }: {
-  weekDays: MonthDay[]
+  days: MonthDay[]
   activeDateKey: string
   dimmed: boolean
   onDayClick: (date: Date) => void
 }) => {
-  return weekDays.map((day) => (
+  return days.map((day) => (
     <div
       key={day.dateKey}
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default font-numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
+      style={{ gridRow: 1 }}
       onClick={() => onDayClick(day.date)}
     >
       <span className="text-[11px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
@@ -266,7 +342,7 @@ const DayHeaders = ({
 }
 
 const AllDayEvents = ({
-  weekDays,
+  days,
   maxAllDayLane,
   activeDateKey,
   contextTargetRef,
@@ -278,7 +354,7 @@ const AllDayEvents = ({
   onCreateEvent,
   onEventClick,
 }: {
-  weekDays: MonthDay[]
+  days: MonthDay[]
   maxAllDayLane: number
   activeDateKey: string
   contextTargetRef: React.RefObject<HTMLElement | null>
@@ -290,16 +366,17 @@ const AllDayEvents = ({
   onCreateEvent: (day: MonthDay) => void
   onEventClick: (id: string) => void
 }) => {
+  const N = days.length
   return (
     <div
-      className="relative grid grid-cols-7 border-b border-divider"
+      className="relative grid border-b border-divider"
       style={{
-        gridColumn: "2 / -1",
+        gridTemplateColumns: `repeat(${N}, 1fr)`,
         gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
       }}
     >
       {/* Background + borders */}
-      {weekDays.map((day, i) => (
+      {days.map((day, i) => (
         <AllDayContextMenu key={day.dateKey} onCreateEvent={() => onCreateEvent(day)}>
           <div
             className={cn(
@@ -328,8 +405,9 @@ const AllDayEvents = ({
         />
       ))}
 
-      {weekDays.map((day) => (
+      {days.map((day) => (
         <div
+          key={`${day.dateKey}-divider`}
           className={cn(
             "h-px border-r border-divider",
             day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",

@@ -33,7 +33,7 @@ export function WeekAllDayBar({
   const color = item.color ?? "var(--primary)"
   const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
-  const fillsRow = item.endCol - item.startCol === 7
+  const fillsRow = item.endCol - item.startCol >= 7
 
   const inner = (
     <div

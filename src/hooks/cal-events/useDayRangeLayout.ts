@@ -25,10 +25,10 @@ export type WeekTimedEventLayout = {
   displayMode: WeekEventDisplayMode
 }
 
-export type WeekLayout = {
+export type DayRangeLayout = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
-  timedByCol: WeekTimedEventLayout[][]
+  timedByDay: Map<string, WeekTimedEventLayout[]>
 }
 
 function daysDiff(aMs: number, bMs: number): number {
@@ -115,26 +115,34 @@ function assignOverlapColumns(events: WeekTimedEventLayout[]) {
   }
 }
 
-export function useWeekEventLayout(
-  weekDays: MonthDay[],
+export function useDayRangeLayout(
+  days: MonthDay[],
   events: CalendarEvent[],
   calendars: Calendar[],
-): WeekLayout {
+): DayRangeLayout {
   return useMemo(() => {
     const colorMap = new Map<string, string | null>()
     for (const cal of calendars) {
       colorMap.set(cal.slug, cal.color)
     }
 
-    const weekStartMs = startOfDay(weekDays[0].date).getTime()
-    const weekEndDayMs = startOfDay(weekDays[6].date).getTime()
-    const weekExclEndMs = weekEndDayMs + MS_PER_DAY
+    const N = days.length
+    if (N === 0) {
+      return { allDayItems: [], maxAllDayLane: -1, timedByDay: new Map() }
+    }
+
+    const rangeStartMs = startOfDay(days[0].date).getTime()
+    const rangeLastDayMs = startOfDay(days[N - 1].date).getTime()
+    const rangeExclEndMs = rangeLastDayMs + MS_PER_DAY
 
     const rangeStartMin = 0
     const rangeMinutes = DAY_MINUTES
 
     const allDayItems: AllDayLaneItem[] = []
-    const timedByCol: WeekTimedEventLayout[][] = Array.from({ length: 7 }, () => [])
+    const timedByDay = new Map<string, WeekTimedEventLayout[]>()
+    for (const day of days) {
+      timedByDay.set(day.dateKey, [])
+    }
 
     for (const event of events) {
       const { firstMs, lastMs } = getEventDayRange(event)
@@ -142,14 +150,14 @@ export function useWeekEventLayout(
       const eventColor = event.color
 
       if (event.all_day) {
-        // Check overlap with week
-        if (firstMs > weekEndDayMs || lastMs < weekStartMs) continue
+        // Check overlap with range
+        if (firstMs > rangeLastDayMs || lastMs < rangeStartMs) continue
 
-        const clampedFirstMs = Math.max(firstMs, weekStartMs)
-        const clampedLastMs = Math.min(lastMs, weekEndDayMs)
+        const clampedFirstMs = Math.max(firstMs, rangeStartMs)
+        const clampedLastMs = Math.min(lastMs, rangeLastDayMs)
 
-        const startCol = daysDiff(clampedFirstMs, weekStartMs) + 1
-        const endCol = daysDiff(clampedLastMs, weekStartMs) + 2
+        const startCol = daysDiff(clampedFirstMs, rangeStartMs) + 1
+        const endCol = daysDiff(clampedLastMs, rangeStartMs) + 2
 
         allDayItems.push({
           event,
@@ -158,21 +166,21 @@ export function useWeekEventLayout(
           startCol,
           endCol,
           lane: 0,
-          isStart: firstMs >= weekStartMs,
-          isEnd: lastMs <= weekEndDayMs,
+          isStart: firstMs >= rangeStartMs,
+          isEnd: lastMs <= rangeLastDayMs,
         })
       } else {
         const spanning = lastMs - firstMs >= MS_PER_DAY
 
         if (spanning) {
           // Multi-day timed events go to all-day bar
-          if (firstMs > weekEndDayMs || lastMs < weekStartMs) continue
+          if (firstMs > rangeLastDayMs || lastMs < rangeStartMs) continue
 
-          const clampedFirstMs = Math.max(firstMs, weekStartMs)
-          const clampedLastMs = Math.min(lastMs, weekEndDayMs)
+          const clampedFirstMs = Math.max(firstMs, rangeStartMs)
+          const clampedLastMs = Math.min(lastMs, rangeLastDayMs)
 
-          const startCol = daysDiff(clampedFirstMs, weekStartMs) + 1
-          const endCol = daysDiff(clampedLastMs, weekStartMs) + 2
+          const startCol = daysDiff(clampedFirstMs, rangeStartMs) + 1
+          const endCol = daysDiff(clampedLastMs, rangeStartMs) + 2
 
           allDayItems.push({
             event,
@@ -181,21 +189,22 @@ export function useWeekEventLayout(
             startCol,
             endCol,
             lane: 0,
-            isStart: firstMs >= weekStartMs,
-            isEnd: lastMs <= weekEndDayMs,
+            isStart: firstMs >= rangeStartMs,
+            isEnd: lastMs <= rangeLastDayMs,
           })
         } else {
           // Single-day timed event
-          if (firstMs < weekStartMs || firstMs >= weekExclEndMs) continue
+          if (firstMs < rangeStartMs || firstMs >= rangeExclEndMs) continue
 
-          const colIndex = daysDiff(firstMs, weekStartMs)
-          if (colIndex >= 0 && colIndex < 7) {
+          const colIndex = daysDiff(firstMs, rangeStartMs)
+          if (colIndex >= 0 && colIndex < N) {
+            const dateKey = days[colIndex].dateKey
             const { top, height, durationMinutes } = computeTimedPosition(
               event,
               rangeStartMin,
               rangeMinutes,
             )
-            timedByCol[colIndex].push({
+            timedByDay.get(dateKey)!.push({
               event,
               color,
               eventColor,
@@ -212,8 +221,8 @@ export function useWeekEventLayout(
     }
 
     // Assign overlap columns for each day
-    for (const col of timedByCol) {
-      assignOverlapColumns(col)
+    for (const layouts of timedByDay.values()) {
+      assignOverlapColumns(layouts)
     }
 
     // Sort and assign lanes for all-day items
@@ -229,7 +238,7 @@ export function useWeekEventLayout(
     for (const item of allDayItems) {
       let lane = 0
       while (true) {
-        if (!laneOccupied[lane]) laneOccupied[lane] = Array(7).fill(false) as boolean[]
+        if (!laneOccupied[lane]) laneOccupied[lane] = Array(N).fill(false) as boolean[]
         let fits = true
         for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
           if (laneOccupied[lane][c]) {
@@ -240,7 +249,7 @@ export function useWeekEventLayout(
         if (fits) break
         lane++
       }
-      if (!laneOccupied[lane]) laneOccupied[lane] = Array(7).fill(false) as boolean[]
+      if (!laneOccupied[lane]) laneOccupied[lane] = Array(N).fill(false) as boolean[]
       for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
         laneOccupied[lane][c] = true
       }
@@ -248,6 +257,6 @@ export function useWeekEventLayout(
       maxAllDayLane = Math.max(maxAllDayLane, lane)
     }
 
-    return { allDayItems, maxAllDayLane, timedByCol }
-  }, [weekDays, events, calendars])
+    return { allDayItems, maxAllDayLane, timedByDay }
+  }, [days, events, calendars])
 }

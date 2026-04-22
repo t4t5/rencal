@@ -1,18 +1,28 @@
 import { RefObject, useEffect, useRef } from "react"
 
+type Axis = "x" | "y" | "both"
+
+type UseScrollBoundaryProps = {
+  scrollContainerRef: RefObject<HTMLDivElement | null>
+  threshold?: number // pixels from edge (default: 100)
+  throttleMs?: number // throttle delay (default: 150)
+  axis?: Axis // which axis to watch (default: "y")
+  onNearTop?: () => void
+  onNearBottom?: () => void
+  onNearLeft?: () => void
+  onNearRight?: () => void
+}
+
 export const useScrollBoundary = ({
   scrollContainerRef,
   threshold = 100,
   throttleMs = 150,
+  axis = "y",
   onNearTop,
   onNearBottom,
-}: {
-  scrollContainerRef: RefObject<HTMLDivElement | null>
-  threshold?: number // pixels from edge (default: 100)
-  throttleMs?: number // throttle delay (default: 150)
-  onNearTop?: () => void
-  onNearBottom?: () => void
-}) => {
+  onNearLeft,
+  onNearRight,
+}: UseScrollBoundaryProps) => {
   const lastRunRef = useRef<number>(0)
 
   useEffect(() => {
@@ -20,17 +30,16 @@ export const useScrollBoundary = ({
     if (!container) return
 
     const checkBoundaries = () => {
-      const { scrollTop, scrollHeight, clientHeight } = container
-
-      const isCloseToTop = scrollTop < threshold
-      const isCloseToBottom = scrollHeight - scrollTop - clientHeight < threshold
-
-      if (isCloseToTop) {
-        onNearTop?.()
+      if (axis === "y" || axis === "both") {
+        const { scrollTop, scrollHeight, clientHeight } = container
+        if (scrollTop < threshold) onNearTop?.()
+        if (scrollHeight - scrollTop - clientHeight < threshold) onNearBottom?.()
       }
 
-      if (isCloseToBottom) {
-        onNearBottom?.()
+      if (axis === "x" || axis === "both") {
+        const { scrollLeft, scrollWidth, clientWidth } = container
+        if (scrollLeft < threshold) onNearLeft?.()
+        if (scrollWidth - scrollLeft - clientWidth < threshold) onNearRight?.()
       }
     }
 
@@ -55,5 +64,14 @@ export const useScrollBoundary = ({
     return () => {
       container.removeEventListener("scroll", handleScroll)
     }
-  }, [scrollContainerRef, threshold, throttleMs, onNearTop, onNearBottom])
+  }, [
+    scrollContainerRef,
+    threshold,
+    throttleMs,
+    axis,
+    onNearTop,
+    onNearBottom,
+    onNearLeft,
+    onNearRight,
+  ])
 }

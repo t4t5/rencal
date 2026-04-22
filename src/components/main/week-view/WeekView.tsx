@@ -1,12 +1,11 @@
-import { startOfWeek } from "date-fns"
 import { useRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
+import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
-import { useWeekDays } from "@/hooks/cal-events/useWeekDays"
-import { useWeekEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { formatDateKey } from "@/lib/time"
 
@@ -17,32 +16,22 @@ export function WeekView() {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
-  const weekStart = startOfWeek(activeDate, { weekStartsOn: 1 })
-  const weekKey = formatDateKey(weekStart)
-
-  const weekDays = useWeekDays(activeDate)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+  const { days } = useInfiniteDays({ scrollContainerRef, activeDate })
   const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
-  const layout = useWeekEventLayout(weekDays, events, calendars)
+  const layout = useDayRangeLayout(days, events, calendars)
   const dimmed = useIsDimmed()
 
-  // Track direction for animation
-  const prevWeekKeyRef = useRef(weekKey)
-  const directionRef = useRef(0)
-
-  if (prevWeekKeyRef.current !== weekKey) {
-    directionRef.current = weekKey > prevWeekKeyRef.current ? 1 : -1
-    prevWeekKeyRef.current = weekKey
-  }
-
   return (
-    <div className="relative h-full">
+    <div className="relative h-full w-full min-w-0">
       <WeekTimeGrid
-        weekDays={weekDays}
-        timedByCol={layout.timedByCol}
+        days={days}
+        timedByDay={layout.timedByDay}
         allDayItems={layout.allDayItems}
         maxAllDayLane={layout.maxAllDayLane}
         activeEventId={activeEvent?.id ?? null}
         activeDateKey={formatDateKey(activeDate)}
+        scrollContainerRef={scrollContainerRef}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
         draftEvent={draftCalEvent}

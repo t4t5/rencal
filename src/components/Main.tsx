@@ -16,7 +16,7 @@ export function Main({
     <Tabs
       value={calendarView}
       onValueChange={(v) => onChangeCalendarView(calendarViewSchema.parse(v))}
-      className="hidden sm:flex flex-col grow"
+      className="hidden sm:flex flex-col grow min-w-0"
     >
       <HeaderLong />
 

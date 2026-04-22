@@ -5,7 +5,7 @@ import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import type { WeekTimedEventLayout } from "@/hooks/cal-events/useWeekEventLayout"
+import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/time"

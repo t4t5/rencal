@@ -11,7 +11,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
   const { text } = useEventText()
 
   // Defer the typing-driven values so the layout pipelines downstream
-  // (useWeekEventLayout, useMonthEventLayout, useGroupedEvents) don't
+  // (useDayRangeLayout, useMonthEventLayout, useGroupedEvents) don't
   // recompute on every keystroke and block the input commit.
   const deferredText = useDeferredValue(text)
   const deferredDraftEvent = useDeferredValue(draftEvent)
