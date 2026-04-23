@@ -15,7 +15,7 @@ export function ActionBar() {
 
   return (
     <div
-      className={cn("flex justify-between items-center gap-3 md:justify-end relative", {
+      className={cn("flex justify-end items-center gap-3 md:justify-end relative", {
         "pl-[78px]": isMacOS && !isFullscreen,
       })}
     >
