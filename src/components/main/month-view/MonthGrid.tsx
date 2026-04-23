@@ -126,7 +126,10 @@ export function MonthGrid({
     if (item) {
       const viewStart = el.scrollTop
       const viewEnd = viewStart + el.clientHeight
-      if (item.start >= viewStart && item.start + item.size <= viewEnd) return
+      // Skip if the week has any overlap with the viewport — user can already see the
+      // active date, so there's no need to yank. (A stricter "fully visible" check would
+      // fight scroll-follow, which sets activeDate to a day in a partially-visible week.)
+      if (item.start < viewEnd && item.start + item.size > viewStart) return
     }
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
@@ -155,16 +158,27 @@ export function MonthGrid({
         const viewTop = el.scrollTop
         const viewBottom = viewTop + el.clientHeight
         const monthCounts = new Map<string, number>()
+        // Prefer the first fully-visible week's day so the date is clearly visible and the
+        // scroll-to-active-week effect doesn't try to re-align a partially-clipped week.
+        const monthFirstFullyVisibleDay = new Map<string, Date>()
+        const monthFirstAnyVisibleDay = new Map<string, Date>()
         for (const item of v.getVirtualItems()) {
           const top = Math.max(item.start, viewTop)
           const bottom = Math.min(item.end, viewBottom)
           if (bottom <= top) continue
+          const fullyVisible = item.start >= viewTop && item.end <= viewBottom
           const fraction = (bottom - top) / item.size
           const week = w[item.index]
           if (!week) continue
           for (const day of week) {
             const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
             monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
+            if (!monthFirstAnyVisibleDay.has(key)) {
+              monthFirstAnyVisibleDay.set(key, day.date)
+            }
+            if (fullyVisible && !monthFirstFullyVisibleDay.has(key)) {
+              monthFirstFullyVisibleDay.set(key, day.date)
+            }
           }
         }
 
@@ -178,8 +192,9 @@ export function MonthGrid({
           }
         }
         if (bestKey !== activeKey) {
-          const [y, m] = bestKey.split("-").map(Number)
-          onChange(new Date(y, m, 1))
+          const target =
+            monthFirstFullyVisibleDay.get(bestKey) ?? monthFirstAnyVisibleDay.get(bestKey)
+          if (target) onChange(target)
         }
       })
     }

@@ -17,7 +17,7 @@ import { useInfiniteEvents } from "./useInfiniteEvents"
 
 export function MonthView() {
   const { calendars } = useCalendars()
-  const { activeDate, setActiveDate, navigateToDate, isNavigating } = useCalendarNavigation()
+  const { activeDate, navigateToDate, isNavigating } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
   // TODO: respect calendar visibility
@@ -56,7 +56,7 @@ export function MonthView() {
         isNavigating={isNavigating}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventId}
-        onScrollMonthChange={setActiveDate}
+        onScrollMonthChange={navigateToDate}
         draftEvent={draftCalEvent}
         dimmed={dimmed}
       />

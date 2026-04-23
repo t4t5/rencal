@@ -46,6 +46,7 @@ communicates with the backend via taurpc.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use `i32`/`u32` instead.
 - Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
 - For taurpc types with a fixed set of string values, use a Rust enum with `#[serde(rename = "...")]` variants instead of `String`. Specta generates these as TypeScript string literal unions (e.g., `ResponseStatus = "accepted" | "declined" | ...`). See `ResponseStatus` in `caldir.rs` for the pattern.
+- To change `activeDate`, prefer `navigateToDate` over the raw `setActiveDate` setter from `useCalendarNavigation`. `navigateToDate` also syncs the sidebar `EventList` scroll position and lazy-loads events for distant dates. Only reach for `setActiveDate` if you specifically need to suppress those side effects.
 
 ## Bundled Providers
 
