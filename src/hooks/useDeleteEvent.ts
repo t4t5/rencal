@@ -6,7 +6,7 @@ import type { CalendarEvent } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 export function useDeleteEvent() {
-  const { setActiveEventId, setCalendarEvents, reloadEvents } = useCalEvents()
+  const { setActiveEventId, setCalendarEvents } = useCalEvents()
   const [targetEvent, setTargetEvent] = useState<CalendarEvent | null>(null)
 
   const isRecurring = !!(targetEvent?.recurring_event_id || targetEvent?.recurrence)
@@ -24,7 +24,6 @@ export function useDeleteEvent() {
     setActiveEventId(null)
 
     await rpc.caldir.delete_event(targetEvent.calendar_slug, targetEvent.id)
-    await reloadEvents()
   }
 
   const handleDeleteAll = async () => {
@@ -40,7 +39,6 @@ export function useDeleteEvent() {
     setActiveEventId(null)
 
     await rpc.caldir.delete_recurring_series(targetEvent.calendar_slug, parentId)
-    await reloadEvents()
   }
 
   const handleClose = () => {

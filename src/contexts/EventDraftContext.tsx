@@ -160,7 +160,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     [setDefaultDraftEvent, defaultReminders],
   )
 
-  const { reloadEvents, setCalendarEvents } = useCalEvents()
+  const { setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
 
   const createDraftEvent = useCallback(async () => {
@@ -209,7 +209,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     // Replace optimistic entry with the real event from the backend
     setCalendarEvents((prev) => prev.map((e) => (e.id === optimisticId ? created : e)))
     void sync()
-  }, [draftEvent, draftReminders, reloadEvents, sync, setDefaultDraftEvent, setCalendarEvents])
+  }, [draftEvent, draftReminders, sync, setDefaultDraftEvent, setCalendarEvents])
 
   const textValue = useMemo<EventTextContextType>(() => ({ text, setText }), [text, setText])
 

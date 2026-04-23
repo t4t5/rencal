@@ -12,7 +12,6 @@ import {
 
 import { rpc } from "@/rpc"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 interface SyncContextType {
@@ -29,7 +28,6 @@ export function useSync() {
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
-  const { reloadEvents } = useCalEvents()
 
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
@@ -44,14 +42,13 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       await rpc.caldir.sync(calendarSlugs)
-      await reloadEvents()
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : String(e))
     } finally {
       isSyncingRef.current = false
       setIsSyncing(false)
     }
-  }, [calendars, reloadEvents])
+  }, [calendars])
 
   // Sync on mount and when calendars change
   useEffect(() => {

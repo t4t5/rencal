@@ -37,7 +37,7 @@ export const EditEvent = ({
   children?: ReactNode
 }) => {
   const { calendars } = useCalendars()
-  const { setActiveEventId, reloadEvents, setCalendarEvents } = useCalEvents()
+  const { setActiveEventId, setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
@@ -177,7 +177,6 @@ export const EditEvent = ({
           : a,
       ),
     })
-    await reloadEvents()
     void sync()
   }
 
@@ -278,7 +277,6 @@ export const EditEvent = ({
 
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
             setPendingRecurrence(null)
-            await reloadEvents()
             void sync()
           }}
           onApplyToThis={async () => {

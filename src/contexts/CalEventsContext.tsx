@@ -1,3 +1,4 @@
+import { listen } from "@tauri-apps/api/event"
 import {
   Dispatch,
   ReactNode,
@@ -20,10 +21,11 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
 
+const CALDIR_CHANGED = "caldir-changed"
+
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]
   setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
-  reloadEvents: () => Promise<void>
   currentDateRangeRef: RefObject<DateRange | null>
   activeEvent: CalendarEvent | null
   setActiveEventId: Dispatch<SetStateAction<string | null>>
@@ -100,11 +102,19 @@ export function CalEventsProvider({
     }
   }, [visibleCalendarKey, isLoadingCalendars])
 
+  useEffect(() => {
+    const unlisten = listen(CALDIR_CHANGED, () => {
+      void reloadEvents()
+    })
+    return () => {
+      unlisten.then((fn) => fn())
+    }
+  }, [])
+
   const value = useMemo<CalEventsContextType>(
     () => ({
       calendarEvents,
       setCalendarEvents,
-      reloadEvents,
       currentDateRangeRef,
       activeEvent,
       setActiveEventId,

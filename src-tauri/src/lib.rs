@@ -1,3 +1,4 @@
+mod caldir_watcher;
 mod notifications;
 mod oauth;
 mod omarchy;
@@ -67,6 +68,7 @@ pub async fn run() {
             setup_bundled_providers(app);
             tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
+            tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {
                     let _ = window.set_decorations(true);
