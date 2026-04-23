@@ -125,22 +125,30 @@ export function WeekTimeGrid({
   }, [dayWidthReady, days, dayWidth, activeDateKey, scrollContainerRef])
 
   // After initial scroll, whenever activeDate changes to an off-screen day, smooth-scroll it into view.
+  // Deps are intentionally only activeDateKey — if we include `days` / `dayWidth`, the effect
+  // re-fires on edge-growth and snaps the scroll back to activeDate, breaking free pan.
+  const daysRef = useRef(days)
+  const dayWidthRef = useRef(dayWidth)
+  daysRef.current = days
+  dayWidthRef.current = dayWidth
   useLayoutEffect(() => {
     if (!didInitialScrollRef.current) return
     const el = scrollContainerRef.current
     if (!el) return
-    const idx = days.findIndex((d) => d.dateKey === activeDateKey)
+    const currentDays = daysRef.current
+    const currentDayWidth = dayWidthRef.current
+    const idx = currentDays.findIndex((d) => d.dateKey === activeDateKey)
     if (idx === -1) return
 
-    const columnLeft = GUTTER_WIDTH + idx * dayWidth
-    const columnRight = columnLeft + dayWidth
+    const columnLeft = GUTTER_WIDTH + idx * currentDayWidth
+    const columnRight = columnLeft + currentDayWidth
     const viewportLeft = el.scrollLeft + GUTTER_WIDTH
     const viewportRight = el.scrollLeft + el.clientWidth
 
     if (columnLeft < viewportLeft || columnRight > viewportRight) {
-      el.scrollTo({ left: idx * dayWidth, behavior: "smooth" })
+      el.scrollTo({ left: idx * currentDayWidth, behavior: "smooth" })
     }
-  }, [activeDateKey, days, dayWidth, scrollContainerRef])
+  }, [activeDateKey, scrollContainerRef])
 
   const openCreatePopover = (
     day: Date,
