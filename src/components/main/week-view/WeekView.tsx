@@ -13,7 +13,7 @@ import { WeekTimeGrid } from "./WeekTimeGrid"
 
 export function WeekView() {
   const { calendars } = useCalendars()
-  const { activeDate, navigateToDate } = useCalendarNavigation()
+  const { activeDate, navigateToDate, setActiveDate } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -33,6 +33,7 @@ export function WeekView() {
         activeDateKey={formatDateKey(activeDate)}
         scrollContainerRef={scrollContainerRef}
         onDayClick={navigateToDate}
+        onScrollActiveChange={setActiveDate}
         onEventClick={toggleActiveEventId}
         draftEvent={draftCalEvent}
         dimmed={dimmed}

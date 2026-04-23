@@ -1,5 +1,5 @@
 import { addHours, endOfDay, format, setHours, startOfDay, startOfWeek } from "date-fns"
-import { RefObject, useLayoutEffect, useRef, useState } from "react"
+import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import type { Calendar, CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
@@ -37,6 +37,7 @@ type WeekTimeGridProps = {
   activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
+  onScrollActiveChange: (date: Date) => void
   onEventClick: (id: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
@@ -51,6 +52,7 @@ export function WeekTimeGrid({
   activeDateKey,
   scrollContainerRef,
   onDayClick,
+  onScrollActiveChange,
   onEventClick,
   draftEvent,
   dimmed,
@@ -64,6 +66,12 @@ export function WeekTimeGrid({
   const N = days.length
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
+
+  // Used to suppress the "update activeDate on scroll" logic during our own programmatic scrolls.
+  const ignoreScrollUntilRef = useRef(0)
+  const suppressScrollTracking = (durationMs = 500) => {
+    ignoreScrollUntilRef.current = Date.now() + durationMs
+  }
 
   // Day width is computed so 7 days fit in the viewport (min-floored).
   // The `ready` flag gates the initial-scroll effect until the width is measured against the real container.
@@ -98,6 +106,7 @@ export function WeekTimeGrid({
     if (curFirstKey === prevFirstKey) return
     const added = days.length - prevCount
     if (added > 0 && days[added]?.dateKey === prevFirstKey) {
+      suppressScrollTracking()
       el.scrollLeft += added * dayWidth
     }
   })
@@ -109,6 +118,7 @@ export function WeekTimeGrid({
     const el = scrollContainerRef.current
     if (!el) return
 
+    suppressScrollTracking()
     const hasToday = days.some((d) => d.isToday)
     const now = new Date()
     const targetHour = hasToday ? now.getHours() + now.getMinutes() / 60 : 8
@@ -145,10 +155,49 @@ export function WeekTimeGrid({
     const viewportLeft = el.scrollLeft + GUTTER_WIDTH
     const viewportRight = el.scrollLeft + el.clientWidth
 
-    if (columnLeft < viewportLeft || columnRight > viewportRight) {
+    if (columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
+      suppressScrollTracking()
       el.scrollTo({ left: idx * currentDayWidth, behavior: "smooth" })
     }
   }, [activeDateKey, scrollContainerRef])
+
+  // When user stops scrolling, set activeDate to whatever day is the leftmost fully-visible column.
+  const activeDateKeyRef = useRef(activeDateKey)
+  activeDateKeyRef.current = activeDateKey
+  const onScrollActiveChangeRef = useRef(onScrollActiveChange)
+  onScrollActiveChangeRef.current = onScrollActiveChange
+  useEffect(() => {
+    const el = scrollContainerRef.current
+    if (!el) return
+    let debounceTimer: number | null = null
+    let lastScrollLeft = el.scrollLeft
+
+    const onScroll = () => {
+      if (Date.now() < ignoreScrollUntilRef.current) return
+      if (el.scrollLeft === lastScrollLeft) return // vertical-only scroll
+      lastScrollLeft = el.scrollLeft
+
+      if (debounceTimer !== null) window.clearTimeout(debounceTimer)
+      debounceTimer = window.setTimeout(() => {
+        const currentDays = daysRef.current
+        const currentDayWidth = dayWidthRef.current
+        if (currentDayWidth === 0 || currentDays.length === 0) return
+        const idx = Math.min(
+          currentDays.length - 1,
+          Math.max(0, Math.ceil(el.scrollLeft / currentDayWidth)),
+        )
+        const day = currentDays[idx]
+        if (!day || day.dateKey === activeDateKeyRef.current) return
+        onScrollActiveChangeRef.current(day.date)
+      }, 150)
+    }
+
+    el.addEventListener("scroll", onScroll, { passive: true })
+    return () => {
+      el.removeEventListener("scroll", onScroll)
+      if (debounceTimer !== null) window.clearTimeout(debounceTimer)
+    }
+  }, [scrollContainerRef])
 
   const openCreatePopover = (
     day: Date,
