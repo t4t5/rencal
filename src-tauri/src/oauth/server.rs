@@ -18,20 +18,10 @@ Content-Type: text/html; charset=utf-8
 <html>
 <head>
     <title>Authentication Successful</title>
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-               display: flex; justify-content: center; align-items: center;
-               height: 100vh; margin: 0; background: #f5f5f5; }
-        .message { text-align: center; padding: 2rem; background: white;
-                   border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        h1 { color: #4CAF50; margin: 0 0 1rem 0; }
-    </style>
 </head>
 <body>
-    <div class="message">
-        <h1>✓ Authentication Successful</h1>
-        <p>This window will close automatically...</p>
-    </div>
+    <h1>Authentication Successful</h1>
+    <p>This window will close automatically...</p>
 </body>
 </html>
 "#;
@@ -72,7 +62,10 @@ pub fn create_localhost_listener(port: u16) -> Result<TcpListener> {
 /// 2. Reads the HTTP request line (e.g., "GET /callback?code=... HTTP/1.1")
 /// 3. Sends a success HTML response to the browser
 /// 4. Extracts and returns the authorization code from the URL
-pub async fn handle_oauth_callback(listener: TcpListener, port: u16) -> Result<OAuthCallbackParams> {
+pub async fn handle_oauth_callback(
+    listener: TcpListener,
+    port: u16,
+) -> Result<OAuthCallbackParams> {
     // Wait for the OAuth callback
     let (mut stream, _) = listener
         .accept()
