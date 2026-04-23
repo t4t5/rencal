@@ -184,7 +184,7 @@ export function EventList() {
     <div
       ref={scrollContainerRef}
       className={cn(
-        "grow overflow-auto flex-col gap-6 select-none",
+        "grow overflow-auto flex-col gap-6 select-none bg-background",
         !hasInitiallyScrolled && "invisible",
       )}
     >
