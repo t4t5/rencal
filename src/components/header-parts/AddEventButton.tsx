@@ -7,7 +7,7 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
-import { cn } from "@/lib/utils"
+import { cn, isMacOS } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
@@ -43,7 +43,8 @@ export function AddEventButton() {
       className={cn(
         "absolute inset-0 flex justify-end transition duration-75 z-20 md:static md:w-full",
         {
-          "bg-transparent right-auto": !isDrafting,
+          "pl-[70px]": isMacOS,
+          "bg-transparent right-auto w-[105px] md:w-full": !isDrafting,
           "bg-background right-0": isDrafting,
         },
       )}

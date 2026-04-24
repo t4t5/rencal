@@ -56,6 +56,8 @@
 
   --tab-gap: 0;
   --tab-list-shadow: none;
+
+  --breakpoint-xs: 380px;
 }
 
 /* variables computed from other variables */
