@@ -126,12 +126,8 @@ jobs:
             --repo t4t5/caldir \
             --pattern "caldir-${CALDIR_TARGET}.tar.gz" \
             --output caldir-release.tar.gz
-          tar -xzf caldir-release.tar.gz -C src-tauri/providers/ \
-            caldir-provider-google \
-            caldir-provider-icloud \
-            caldir-provider-caldav \
-            caldir-provider-outlook \
-            caldir-provider-webcal
+          tar -xzf caldir-release.tar.gz -C src-tauri/providers/
+          rm -f src-tauri/providers/caldir
           chmod +x src-tauri/providers/caldir-provider-*
           rm caldir-release.tar.gz
 
