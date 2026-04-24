@@ -1,0 +1,172 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    outputs:
+      should_release: ${{ steps.check.outputs.should_release }}
+      version: ${{ steps.check.outputs.version }}
+      caldir_tag: ${{ steps.check.outputs.caldir_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine rencal version and latest caldir tag
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          version=$(jq -r .version package.json)
+          tag="v${version}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag ${tag} already exists, skipping release"
+            echo "should_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Tag ${tag} does not exist, will release"
+            echo "should_release=true" >> "$GITHUB_OUTPUT"
+          fi
+          caldir_tag=$(gh release view --repo t4t5/caldir --json tagName -q .tagName)
+          echo "caldir_tag=${caldir_tag}" >> "$GITHUB_OUTPUT"
+          echo "Using caldir ${caldir_tag}"
+
+  build:
+    needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-latest
+            rust-target: aarch64-apple-darwin
+            caldir-target: aarch64-apple-darwin
+            tauri-args: --target aarch64-apple-darwin
+          - runner: ubuntu-22.04
+            rust-target: x86_64-unknown-linux-gnu
+            caldir-target: x86_64-unknown-linux-musl
+            tauri-args: ""
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - name: Checkout rencal
+        uses: actions/checkout@v4
+        with:
+          path: rencal
+
+      - name: Checkout caldir at latest release tag
+        uses: actions/checkout@v4
+        with:
+          repository: t4t5/caldir
+          ref: ${{ needs.check-version.outputs.caldir_tag }}
+          path: caldir
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - name: Install Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: rencal/pnpm-lock.yaml
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.rust-target }}
+
+      - name: Cache Rust build
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: rencal/src-tauri -> target
+
+      - name: Install Linux system dependencies
+        if: matrix.runner == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - name: Install frontend dependencies
+        working-directory: rencal
+        run: pnpm install --frozen-lockfile
+
+      - name: Sync version into tauri.conf.json and Cargo.toml
+        working-directory: rencal
+        env:
+          VERSION: ${{ needs.check-version.outputs.version }}
+        run: |
+          jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
+          mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
+          awk -v ver="$VERSION" '!done && /^version = / { sub(/version = ".*"/, "version = \"" ver "\""); done=1 } 1' \
+            src-tauri/Cargo.toml > src-tauri/Cargo.toml.tmp
+          mv src-tauri/Cargo.toml.tmp src-tauri/Cargo.toml
+
+      - name: Download caldir provider binaries
+        working-directory: rencal
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CALDIR_TAG: ${{ needs.check-version.outputs.caldir_tag }}
+          CALDIR_TARGET: ${{ matrix.caldir-target }}
+        run: |
+          mkdir -p src-tauri/providers
+          gh release download "$CALDIR_TAG" \
+            --repo t4t5/caldir \
+            --pattern "caldir-${CALDIR_TARGET}.tar.gz" \
+            --output caldir-release.tar.gz
+          tar -xzf caldir-release.tar.gz -C src-tauri/providers/ \
+            caldir-provider-google \
+            caldir-provider-icloud \
+            caldir-provider-caldav \
+            caldir-provider-outlook \
+            caldir-provider-webcal
+          chmod +x src-tauri/providers/caldir-provider-*
+          rm caldir-release.tar.gz
+
+      - name: Import Apple signing certificate
+        if: matrix.runner == 'macos-latest'
+        uses: apple-actions/import-codesign-certs@v3
+        with:
+          p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
+          p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Pre-sign bundled provider binaries
+        if: matrix.runner == 'macos-latest'
+        working-directory: rencal
+        env:
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+        run: |
+          for bin in src-tauri/providers/caldir-provider-*; do
+            codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
+          done
+
+      - name: Build and upload release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          NO_STRIP: "true"
+        with:
+          projectPath: rencal
+          tagName: v${{ needs.check-version.outputs.version }}
+          releaseName: v${{ needs.check-version.outputs.version }}
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.tauri-args }}
