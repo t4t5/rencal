@@ -10,6 +10,10 @@ import { cn } from "@/lib/utils"
 
 type WeekAllDayBarProps = {
   item: AllDayLaneItem
+  /** Added to item.startCol/endCol so the bar aligns with the parent grid's day columns. */
+  colOffset: number
+  /** Added to item.lane so the bar lands on the right row in the parent grid. */
+  rowOffset: number
   isActive: boolean
   isPending: boolean
   isDeclined: boolean
@@ -20,6 +24,8 @@ type WeekAllDayBarProps = {
 
 export function WeekAllDayBar({
   item,
+  colOffset,
+  rowOffset,
   isActive,
   isPending,
   isDeclined,
@@ -39,8 +45,8 @@ export function WeekAllDayBar({
     <div
       className="p-0.5 py-px pr-[3px]"
       style={{
-        gridColumn: `${item.startCol} / ${item.endCol}`,
-        gridRow: item.lane + 1,
+        gridColumn: `${item.startCol + colOffset} / ${item.endCol + colOffset}`,
+        gridRow: item.lane + 1 + rowOffset,
       }}
     >
       <div

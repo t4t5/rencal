@@ -1,7 +1,7 @@
 import { addHours, endOfDay, format, setHours, startOfDay, startOfWeek } from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
-import type { Calendar, CalendarEvent, TimeFormat } from "@/rpc/bindings"
+import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -247,15 +247,21 @@ export function WeekTimeGrid({
   return (
     <div ref={scrollContainerRef} className="h-full w-full min-w-0 overflow-auto">
       <div style={{ width: totalContentWidth, minHeight: "100%" }}>
-        {/* Zone 1+2: Day headers + all-day bar (sticky top) */}
+        {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
+            line up exactly with the time grid below. */}
         <div
           className="sticky top-0 z-20 bg-background grid"
-          style={{ gridTemplateColumns: dayGridCols, gridTemplateRows: "auto auto" }}
+          style={{
+            gridTemplateColumns: dayGridCols,
+            gridTemplateRows: hasAllDay
+              ? `auto repeat(${maxAllDayLane + 1}, minmax(18px, auto))`
+              : "auto",
+          }}
         >
-          {/* Gutter spacer — sticky left, spans both rows */}
+          {/* Gutter spacer — sticky left, spans all rows */}
           <div
             className="sticky left-0 z-30 bg-background border-r border-b border-divider"
-            style={{ gridColumn: 1, gridRow: "1 / span 2" }}
+            style={{ gridColumn: 1, gridRow: "1 / -1" }}
           />
           <DayHeaders
             days={days}
@@ -264,23 +270,44 @@ export function WeekTimeGrid({
             onDayClick={onDayClick}
           />
           {hasAllDay && (
-            <div style={{ gridColumn: "2 / -1", gridRow: 2 }}>
-              <AllDayEvents
-                maxAllDayLane={maxAllDayLane}
-                days={days}
-                activeDateKey={activeDateKey}
-                contextTargetRef={contextTargetRef}
-                allDayItems={allDayItems}
-                activeEventId={activeEventId}
-                calendars={calendars}
-                draftEvent={draftEvent}
-                dimmed={dimmed}
-                onCreateEvent={(day: MonthDay) => {
-                  openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
-                }}
-                onEventClick={onEventClick}
-              />
-            </div>
+            <>
+              {/* Per-day backgrounds for the all-day region */}
+              {days.map((day, i) => (
+                <AllDayContextMenu
+                  key={`${day.dateKey}-allday-bg`}
+                  onCreateEvent={() =>
+                    openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
+                  }
+                >
+                  <div
+                    className={cn(
+                      "border-r border-b border-divider",
+                      day.dateKey === activeDateKey
+                        ? "bg-secondary-hover"
+                        : day.isWeekend && "bg-weekend",
+                    )}
+                    style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
+                    onContextMenu={(e) => {
+                      contextTargetRef.current = e.currentTarget
+                    }}
+                  />
+                </AllDayContextMenu>
+              ))}
+              {allDayItems.map((item) => (
+                <WeekAllDayBar
+                  key={item.event.id}
+                  item={item}
+                  colOffset={1}
+                  rowOffset={1}
+                  isActive={activeEventId === item.event.id}
+                  isPending={isPendingEvent(item.event, calendars)}
+                  isDeclined={isDeclinedEvent(item.event, calendars)}
+                  isDraft={item.event === draftEvent}
+                  dimmed={dimmed}
+                  onClick={() => onEventClick(item.event.id)}
+                />
+              ))}
+            </>
           )}
         </div>
 
@@ -396,81 +423,4 @@ const DayHeaders = ({
       </span>
     </div>
   ))
-}
-
-const AllDayEvents = ({
-  days,
-  maxAllDayLane,
-  activeDateKey,
-  contextTargetRef,
-  allDayItems,
-  activeEventId,
-  calendars,
-  draftEvent,
-  dimmed,
-  onCreateEvent,
-  onEventClick,
-}: {
-  days: MonthDay[]
-  maxAllDayLane: number
-  activeDateKey: string
-  contextTargetRef: React.RefObject<HTMLElement | null>
-  allDayItems: AllDayLaneItem[]
-  activeEventId: string | null
-  calendars: Calendar[]
-  draftEvent: CalendarEvent | null
-  dimmed: boolean
-  onCreateEvent: (day: MonthDay) => void
-  onEventClick: (id: string) => void
-}) => {
-  const N = days.length
-  return (
-    <div
-      className="relative grid border-b border-divider"
-      style={{
-        gridTemplateColumns: `repeat(${N}, 1fr)`,
-        gridTemplateRows: `repeat(${maxAllDayLane + 1}, minmax(18px, auto))`,
-      }}
-    >
-      {/* Background + borders */}
-      {days.map((day, i) => (
-        <AllDayContextMenu key={day.dateKey} onCreateEvent={() => onCreateEvent(day)}>
-          <div
-            className={cn(
-              "border-r border-divider",
-              day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
-            )}
-            style={{ gridColumn: i + 1, gridRow: "1 / -1" }}
-            onContextMenu={(e) => {
-              contextTargetRef.current = e.currentTarget
-            }}
-          />
-        </AllDayContextMenu>
-      ))}
-
-      {/* All-day event bars */}
-      {allDayItems.map((item) => (
-        <WeekAllDayBar
-          key={item.event.id}
-          item={item}
-          isActive={activeEventId === item.event.id}
-          isPending={isPendingEvent(item.event, calendars)}
-          isDeclined={isDeclinedEvent(item.event, calendars)}
-          isDraft={item.event === draftEvent}
-          dimmed={dimmed}
-          onClick={() => onEventClick(item.event.id)}
-        />
-      ))}
-
-      {days.map((day) => (
-        <div
-          key={`${day.dateKey}-divider`}
-          className={cn(
-            "h-px border-r border-divider",
-            day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
-          )}
-        />
-      ))}
-    </div>
-  )
 }
