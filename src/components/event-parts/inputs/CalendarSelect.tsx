@@ -39,7 +39,7 @@ export const CalendarSelect = ({
 }
 
 export function CalendarItem({ calendar, children }: { calendar: Calendar; children?: ReactNode }) {
-  const { name } = calendar
+  const { name, slug } = calendar
 
   return (
     <div className="flex items-center justify-between group max-w-full min-w-0">
@@ -48,7 +48,7 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 rounded-xs shrink-0"
           style={{ backgroundColor: getCalendarColor(calendar) }}
         />
-        <span className="text-sm text-foreground truncate">{name}</span>
+        <span className="text-sm text-foreground truncate">{name || slug}</span>
       </div>
 
       {children}

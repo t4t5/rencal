@@ -26,7 +26,7 @@ import { RssIcon } from "@/icons/rss"
 export function CalendarsPage() {
   const { calendars } = useCalendars()
 
-  const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local")
+  const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local-only")
 
   return (
     <div className="flex flex-col gap-6">
