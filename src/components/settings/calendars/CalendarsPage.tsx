@@ -26,27 +26,23 @@ import { RssIcon } from "@/icons/rss"
 export function CalendarsPage() {
   const { calendars } = useCalendars()
 
-  const calendarsByProvider = Object.groupBy(calendars, (c) => c.provider ?? "Local-only")
+  const remoteCalendars = calendars.filter((c) => c.provider !== null)
+  const localCalendars = calendars.filter((c) => c.provider === null)
+  const calendarsByProvider = Object.groupBy(remoteCalendars, (c) => c.provider as string)
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-4">
-        {Object.entries(calendarsByProvider).map(([provider, cals]) => {
-          const displayName = getProviderDisplayName(provider)
-          return (
-            <div key={provider} className="flex flex-col gap-2">
-              <span className="text-sm text-muted-foreground">{displayName}</span>
-              <div className="flex flex-col gap-1">
-                {cals?.map((calendar) => (
-                  <CalendarDropdownMenuWrapper calendar={calendar}>
-                    <CalendarItem key={calendar.slug} calendar={calendar} />
-                  </CalendarDropdownMenuWrapper>
-                  /*<CalendarCheckboxItem key={calendar.slug} calendar={calendar} />*/
-                ))}
-              </div>
-            </div>
-          )
-        })}
+        {Object.entries(calendarsByProvider).map(([provider, cals]) => (
+          <CalendarGroup
+            key={provider}
+            title={getProviderDisplayName(provider)}
+            calendars={cals ?? []}
+          />
+        ))}
+        {localCalendars.length > 0 && (
+          <CalendarGroup title="Local-only" calendars={localCalendars} />
+        )}
       </div>
 
       <Tooltip>
@@ -60,6 +56,21 @@ export function CalendarsPage() {
         </TooltipTrigger>
         <TooltipContent>Coming soon</TooltipContent>
       </Tooltip>
+    </div>
+  )
+}
+
+function CalendarGroup({ title, calendars }: { title: string; calendars: Calendar[] }) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm text-muted-foreground">{title}</span>
+      <div className="flex flex-col gap-1">
+        {calendars.map((calendar) => (
+          <CalendarDropdownMenuWrapper key={calendar.slug} calendar={calendar}>
+            <CalendarItem calendar={calendar} />
+          </CalendarDropdownMenuWrapper>
+        ))}
+      </div>
     </div>
   )
 }
