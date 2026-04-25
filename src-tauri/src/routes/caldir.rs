@@ -333,6 +333,8 @@ pub trait CaldirApi {
         credentials: Vec<CredentialFieldInput>,
     ) -> TauResult<Vec<Calendar>>;
 
+    async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
+
     async fn get_time_format() -> TauResult<TimeFormat>;
     async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
 
@@ -928,6 +930,29 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         save_provider_calendars(&provider, serde_json::Map::new(), cred_map).await
+    }
+
+    async fn create_local_calendar(
+        self,
+        name: String,
+        color: Option<String>,
+    ) -> TauResult<Calendar> {
+        use caldir_core::calendar::config::CalendarConfig;
+
+        let slug = caldir_core::calendar::Calendar::unique_slug_for(Some(&name))
+            .map_err(|e| e.to_string())?;
+
+        let config = CalendarConfig {
+            name: Some(name),
+            color,
+            read_only: None,
+            remote: None,
+        };
+
+        let cal = caldir_core::calendar::Calendar { slug, config };
+        cal.save_config().map_err(|e| e.to_string())?;
+
+        Ok(Calendar::from(&cal))
     }
 
     async fn get_time_format(self) -> TauResult<TimeFormat> {

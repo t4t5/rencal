@@ -13,7 +13,9 @@ export function WelcomeEmptyState() {
         Connect a calendar
       </Button>
 
-      {showAddAccount && <AddAccountModal onClose={() => setShowAddAccount(false)} />}
+      {showAddAccount && (
+        <AddAccountModal onClose={() => setShowAddAccount(false)} showLocalOnlyOption />
+      )}
     </div>
   )
 }
