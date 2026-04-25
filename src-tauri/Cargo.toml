@@ -1,6 +1,6 @@
 [package]
 name = "rencal"
-version = "0.1.0"
+version = "0.0.1"
 description = "Delightful Calendar app for Hyprland"
 authors = ["you"]
 edition = "2021"
