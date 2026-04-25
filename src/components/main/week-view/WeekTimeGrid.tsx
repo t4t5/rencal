@@ -352,7 +352,7 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
         return (
           <span
             key={h}
-            className="absolute right-1.5 text-[11px] text-muted-foreground font-numerical leading-none -translate-y-1/2 select-none"
+            className="absolute right-1.5 text-[11px] text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
             {formatTime(d, timeFormat)}
@@ -378,7 +378,7 @@ const DayHeaders = ({
     <div
       key={day.dateKey}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default font-numerical",
+        "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}

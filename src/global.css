@@ -31,6 +31,7 @@
 
   --font-heading-transform: uppercase;
   --font-button-transform: uppercase;
+  --font-numerical-transform: uppercase;
 
   --radius-base: 0;
   --radius-circle: 0;
@@ -187,6 +188,21 @@ body {
     color: inherit;
     -webkit-text-fill-color: inherit;
   }
+}
+
+@utility heading {
+  font-family: var(--font-heading);
+  text-transform: var(--font-heading-transform, none);
+}
+
+@utility button {
+  font-family: var(--font-button);
+  text-transform: var(--font-button-transform, none);
+}
+
+@utility numerical {
+  font-family: var(--font-numerical);
+  text-transform: var(--font-numerical-transform, none);
 }
 
 /* For reference: */

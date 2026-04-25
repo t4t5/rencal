@@ -98,9 +98,9 @@ export const DaySection = memo(
             },
           )}
         >
-          <span className="font-bold uppercase font-numerical">{getRelativeDayLabel(date)}</span>
+          <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
           <span
-            className={cn("text-muted-foreground font-numerical", {
+            className={cn("text-muted-foreground numerical", {
               "text-today": isToday(date),
             })}
           >

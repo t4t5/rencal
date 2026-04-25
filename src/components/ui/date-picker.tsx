@@ -28,7 +28,7 @@ export const DatePicker = ({
         <Button
           variant="outline"
           className={cn(
-            "justify-between group cursor-default! transition-none font-sans focus-visible:border-transparent! focus-visible:ring-0! focus-visible:bg-secondary",
+            "justify-between group cursor-default! transition-none font-[inherit] normal-case focus-visible:border-transparent! focus-visible:ring-0! focus-visible:bg-secondary",
             readOnly && "pointer-events-none",
             className,
           )}

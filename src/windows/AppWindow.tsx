@@ -53,7 +53,7 @@ function App() {
   return (
     <main className="flex h-screen overflow-hidden">
       <GlobalShortcuts onChangeCalendarView={setCalendarView} />
-      <DragRegion className="absolute h-4 w-full" />
+      <DragRegion className="absolute h-4! w-full" />
 
       <Aside />
 

@@ -95,7 +95,7 @@ const CurrentMonth = () => {
   const { activeDate } = useCalendarNavigation()
 
   return (
-    <h2 className="text-2xl font-bold font-heading">
+    <h2 className="text-2xl font-bold heading">
       {format(activeDate, "MMMM")}{" "}
       <span className="text-highlight font-normal">{format(activeDate, "yyyy")}</span>
     </h2>

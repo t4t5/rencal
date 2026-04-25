@@ -72,7 +72,7 @@ export function MonthTimedEvent({
       <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: color }} />
       <span className="truncate">
         <span
-          className="text-[10px] font-numerical"
+          className="text-[10px] numerical"
           style={{
             color: colors.textColor,
           }}

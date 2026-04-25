@@ -9,7 +9,7 @@ export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
         <div
           key={label}
           className={cn(
-            "text-[11px]! text-muted-foreground py-2 text-center font-medium font-numerical uppercase",
+            "text-[11px]! text-muted-foreground py-2 text-center font-medium numerical uppercase",
             i >= 5 && "bg-weekend",
             dimmed && "opacity-50",
           )}

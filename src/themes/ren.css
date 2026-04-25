@@ -1,15 +1,2 @@
 body[data-theme="ren"] {
-  /* Typography identity */
-  /* --font-button-size: 13px;
-  --font-numerical-size: 13px; */
-
-  /* Downshift heading sizes one tier (uppercase reads larger than mixed case) */
-  /* --font-heading-size: var(--text-sm);
-  --font-heading-line-height: var(--text-sm--line-height);
-  --font-heading-lg-size: var(--text-base);
-  --font-heading-lg-line-height: var(--text-base--line-height);
-  --font-heading-xl-size: var(--text-lg);
-  --font-heading-xl-line-height: var(--text-lg--line-height);
-  --font-heading-2xl-size: var(--text-xl);
-  --font-heading-2xl-line-height: var(--text-xl--line-height); */
 }

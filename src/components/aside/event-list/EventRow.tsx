@@ -28,7 +28,7 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
         }}
       />
       <div className="relative text-sm">
-        <div className="text-muted-foreground font-numerical text-xs h-4">
+        <div className="text-muted-foreground numerical text-xs h-4">
           {isSameDay(from, to)
             ? `${formatTime(from, timeFormat)} - ${formatTime(to, timeFormat)}`
             : `${format(from, "MMM d,")} ${formatTime(from, timeFormat)} - ${format(to, "MMM d,")} ${formatTime(to, timeFormat)}`}
