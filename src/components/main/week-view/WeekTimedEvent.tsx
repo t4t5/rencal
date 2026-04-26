@@ -7,7 +7,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
+import { getEventBlockClasses, getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -34,14 +34,23 @@ export function WeekTimedEvent({
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()
 
-  const color = layout.color ?? "var(--primary)"
   // Cascade layout: each overlap depth indents from the left by a fixed percentage and
   // extends to the right edge, so the earlier/outer event remains fully visible beneath.
   const CASCADE_OFFSET_PCT = 15
   const leftPercent = layout.column * CASCADE_OFFSET_PCT
   const widthPercent = 100 - leftPercent
+
   const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
+
+  const colors = getEventBlockColors({
+    calendarColor: layout.color,
+    eventColor: layout.eventColor,
+    highlighted,
+    isDraft,
+    isDashed,
+  })
+
   const mode = layout.displayMode
   const isCompact = mode === "compact"
   const hasStripe = !isDashed && !isDraft
@@ -68,7 +77,13 @@ export function WeekTimedEvent({
         width: `calc(${widthPercent}% - 2px)`,
         zIndex: layout.column,
         border: "1px solid var(--day-bg)",
-        ...getEventBlockStyle(color, layout.eventColor, highlighted, isDashed, isDraft),
+        ...getEventBlockStyle({
+          calendarColor: layout.color,
+          eventColor: layout.eventColor,
+          highlighted,
+          isDashed,
+          isDraft,
+        }),
       }}
       onClick={
         isDraft
@@ -83,7 +98,7 @@ export function WeekTimedEvent({
       {hasStripe && (
         <div
           className={cn("absolute left-0 top-0 bottom-0", isCompact ? "w-[2px]" : "w-[3px]")}
-          style={{ backgroundColor: color }}
+          style={{ backgroundColor: colors.borderColor }}
         />
       )}
 

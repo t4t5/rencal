@@ -35,8 +35,12 @@ export function MonthTimedEvent({
   const { timeFormat } = useSettings()
 
   const highlighted = isActive || contextOpen
-  const color = item.color ?? "var(--primary)"
-  const colors = getEventBlockColors(color, item.eventColor, highlighted, false, true)
+
+  const colors = getEventBlockColors({
+    calendarColor: item.color,
+    eventColor: item.eventColor,
+    highlighted,
+  })
 
   const inner = (
     <div
@@ -54,7 +58,7 @@ export function MonthTimedEvent({
         isDraft
           ? {
               backgroundColor: colors.backgroundColor,
-              borderColor: colors.accentColor,
+              borderColor: colors.borderColor,
               color: colors.textColor,
             }
           : undefined
@@ -69,7 +73,7 @@ export function MonthTimedEvent({
             }
       }
     >
-      <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: color }} />
+      <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: colors.borderColor }} />
       <span className="truncate">
         <span
           className="text-[10px] numerical"

@@ -36,7 +36,6 @@ export function WeekAllDayBar({
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
-  const color = item.color ?? "var(--primary)"
   const isDashed = isPending || isDeclined
   const highlighted = isActive || contextOpen
   const fillsRow = item.endCol - item.startCol >= 7
@@ -58,7 +57,13 @@ export function WeekAllDayBar({
           !isDraft && dimmed && "opacity-50",
           isDraft && "font-medium",
         )}
-        style={getEventBlockStyle(color, item.eventColor, highlighted, isDashed, isDraft)}
+        style={getEventBlockStyle({
+          calendarColor: item.color,
+          eventColor: item.eventColor,
+          highlighted,
+          isDashed,
+          isDraft,
+        })}
         onClick={
           isDraft
             ? undefined

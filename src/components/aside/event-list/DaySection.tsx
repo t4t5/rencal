@@ -144,7 +144,13 @@ const AllDayEventTag = ({
   isDraft: boolean
   onClick?: (e: MouseEvent<HTMLDivElement>) => void
 }) => {
-  const style = getEventBlockStyle(calendarColor, event.color, highlighted, isDashed, isDraft)
+  const style = getEventBlockStyle({
+    calendarColor,
+    eventColor: event.color,
+    highlighted,
+    isDashed,
+    isDraft,
+  })
 
   return (
     <div

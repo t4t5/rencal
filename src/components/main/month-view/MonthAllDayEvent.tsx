@@ -29,7 +29,6 @@ export function MonthAllDayEvent({
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
-  const color = item.color ?? "var(--primary)"
   const highlighted = isActive || contextOpen
   const isDashed = isPending || isDeclined
 
@@ -60,7 +59,13 @@ export function MonthAllDayEvent({
         height: `${LANE_HEIGHT - LANE_GAP}px`,
         left: `${((item.startCol - 1) / 7) * 100}%`,
         width: `calc(${((item.endCol - item.startCol) / 7) * 100}% - 5px)`,
-        ...getEventBlockStyle(color, item.eventColor, highlighted, isDashed, isDraft),
+        ...getEventBlockStyle({
+          calendarColor: item.color,
+          eventColor: item.eventColor,
+          highlighted,
+          isDashed,
+          isDraft,
+        }),
       }}
       onClick={handleClick}
     >

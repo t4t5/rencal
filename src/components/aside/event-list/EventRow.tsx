@@ -7,6 +7,7 @@ import { CalendarEvent } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { getEventBlockColors } from "@/lib/event-styles"
 import { formatTime } from "@/lib/time"
 
 type EventRowProps = {
@@ -19,12 +20,14 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
   const from = event.start
   const to = event.end
 
+  const colors = getEventBlockColors({ calendarColor, eventColor: event.color })
+
   return (
     <div className="flex gap-3 pl-4.5 pr-2">
       <div
         className="w-1 bg-primary rounded"
         style={{
-          ...(calendarColor ? { backgroundColor: calendarColor } : {}),
+          ...(calendarColor ? { backgroundColor: colors.borderColor } : {}),
         }}
       />
       <div className="relative text-sm">
