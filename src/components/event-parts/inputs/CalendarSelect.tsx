@@ -23,7 +23,7 @@ export const CalendarSelect = ({
   const editableCalendars = calendars.filter((cal) => !cal.read_only)
 
   return (
-    <Select onValueChange={onChange}>
+    <Select value={calendar?.slug} onValueChange={onChange}>
       <SelectTrigger className={cn("w-full", readOnly && "pointer-events-none")}>
         {calendar ? <CalendarItem calendar={calendar} /> : <span>Select Calendar</span>}
       </SelectTrigger>
