@@ -12,6 +12,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
@@ -104,6 +105,7 @@ export function MonthGrid({
   // re-run estimateSize when only the function reference changes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
+  const prevScrollTopRef = useRef<number | null>(null)
   useEffect(() => {
     virtualizer.measure()
     const idx = latestRef.current.anchorWeekIndex
@@ -111,6 +113,7 @@ export function MonthGrid({
     virtualizer.scrollToIndex(idx, { align: "start" })
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
+    prevScrollTopRef.current = null
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week into view if it's offscreen
@@ -145,7 +148,10 @@ export function MonthGrid({
       if (rafId !== null) return
       rafId = requestAnimationFrame(() => {
         rafId = null
-        if (Date.now() < ignoreScrollUntil.current) return
+        if (Date.now() < ignoreScrollUntil.current) {
+          prevScrollTopRef.current = null
+          return
+        }
         const {
           weeks: w,
           activeDateKey: adk,
@@ -153,10 +159,20 @@ export function MonthGrid({
           isNavigating: isNav,
           onScrollMonthChange: onChange,
         } = latestRef.current
-        if (isNav() || w.length === 0) return
+        if (isNav() || w.length === 0) {
+          prevScrollTopRef.current = null
+          return
+        }
 
         const viewTop = el.scrollTop
         const viewBottom = viewTop + el.clientHeight
+        const prevTop = prevScrollTopRef.current
+        const direction: "up" | "down" | null =
+          prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
+        prevScrollTopRef.current = viewTop
+        // No baseline yet (first tick after mount or after a navigation/ignore window).
+        // Establish it now and skip emission so the next tick can be guarded.
+        if (direction === null) return
         const monthCounts = new Map<string, number>()
         // Prefer the first fully-visible week's day so the date is clearly visible and the
         // scroll-to-active-week effect doesn't try to re-align a partially-clipped week.
@@ -194,7 +210,12 @@ export function MonthGrid({
         if (bestKey !== activeKey) {
           const target =
             monthFirstFullyVisibleDay.get(bestKey) ?? monthFirstAnyVisibleDay.get(bestKey)
-          if (target) onChange(target)
+          if (target) {
+            const targetKey = formatDateKey(target)
+            if (direction === "up" && targetKey > adk) return
+            if (direction === "down" && targetKey < adk) return
+            onChange(target)
+          }
         }
       })
     }
