@@ -1,8 +1,6 @@
 import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 
-import { CalendarEvent } from "@/rpc/bindings"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
@@ -10,7 +8,8 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
-import { formatDateKey } from "@/lib/time"
+import { CalendarEvent } from "@/lib/cal-events"
+import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { DaySection } from "./DaySection"

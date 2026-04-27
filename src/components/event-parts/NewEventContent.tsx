@@ -1,4 +1,3 @@
-import { addMinutes } from "date-fns"
 import { type Ref, useCallback } from "react"
 import { rrulestr } from "rrule"
 
@@ -8,8 +7,14 @@ import { Button } from "@/components/ui/button"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { DEFAULT_DURATION_MINS, useEventDraft } from "@/contexts/EventDraftContext"
 
+import {
+  addMinutes,
+  isAllDay,
+  normalizeAllDayRange,
+  toAllDay,
+  toTimedAtStartOfDay,
+} from "@/lib/event-time"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
-import { normalizeAllDayRange } from "@/lib/time"
 
 type NewEventContentProps = {
   summaryRef?: Ref<HTMLTextAreaElement>
@@ -21,7 +26,8 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
   const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
     useEventDraft()
 
-  const { summary, description, start, end, allDay, location, calendarId, recurrence } = draftEvent
+  const { summary, description, start, end, location, calendarId, recurrence } = draftEvent
+  const allDay = isAllDay(start)
 
   const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
@@ -55,10 +61,18 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
             setDraftEvent({ ...draftEvent, summary: newSummary })
           }}
           onAllDayChange={(checked) => {
-            const newEnd = checked
-              ? normalizeAllDayRange(start, end).end
-              : addMinutes(start, DEFAULT_DURATION_MINS)
-            setDraftEvent({ ...draftEvent, allDay: checked, end: newEnd })
+            if (checked) {
+              const allDayStart = toAllDay(start)
+              const { end: allDayEnd } = normalizeAllDayRange(allDayStart, toAllDay(end))
+              setDraftEvent({ ...draftEvent, start: allDayStart, end: allDayEnd })
+            } else {
+              const timedStart = isAllDay(start) ? toTimedAtStartOfDay(start) : start
+              setDraftEvent({
+                ...draftEvent,
+                start: timedStart,
+                end: addMinutes(timedStart, DEFAULT_DURATION_MINS),
+              })
+            }
           }}
           onChangeDateTime={({ start: newStart, end: newEnd }) => {
             setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })

@@ -1,14 +1,15 @@
 import * as chrono from "chrono-node"
 import { addDays, addMinutes, startOfDay } from "date-fns"
 
-import type { Recurrence } from "@/rpc/bindings"
+import type { Recurrence } from "@/lib/cal-events"
+import { fromDate, getLocalTzid, plainDate, type EventTime } from "@/lib/event-time"
 
-import { DEFAULT_DURATION_MINS } from "@/contexts/EventDraftContext"
+const DEFAULT_DURATION_MINS = 60
 
 interface ParsedEventText {
   summary: string
-  start: Date | null
-  end: Date | null
+  start: EventTime | null
+  end: EventTime | null
   allDay: boolean
   recurrence: Recurrence | null
   location: string | null
@@ -206,18 +207,24 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
 
   const allDay = !result.start.isCertain("hour")
 
-  const start = allDay ? startOfDay(result.start.date()) : result.start.date()
+  const startDate = allDay ? startOfDay(result.start.date()) : result.start.date()
 
-  const end = allDay
+  const endDate = allDay
     ? startOfDay(addDays(result.end ? result.end.date() : result.start.date(), 1))
     : result.end
       ? result.end.date()
-      : addMinutes(start, DEFAULT_DURATION_MINS)
+      : addMinutes(startDate, DEFAULT_DURATION_MINS)
+
+  // Convert to EventTime: all-day → PlainDate, timed → ZonedDateTime
+  // anchored in the viewer's local zone (chrono produces local-zone Dates).
+  const tzid = getLocalTzid()
+  const toEt = (d: Date): EventTime =>
+    allDay ? plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate()) : fromDate(d, tzid)
 
   return {
     summary: finalSummary,
-    start,
-    end,
+    start: toEt(startDate),
+    end: toEt(endDate),
     allDay,
     recurrence,
     location,

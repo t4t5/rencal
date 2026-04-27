@@ -7,7 +7,7 @@ import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
 

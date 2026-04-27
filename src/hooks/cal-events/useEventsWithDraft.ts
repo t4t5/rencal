@@ -1,9 +1,8 @@
 import { useDeferredValue, useMemo } from "react"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { draftToCalendarEvent } from "@/lib/draft-to-event"
 
 export function useEventsWithDraft(events: CalendarEvent[]) {

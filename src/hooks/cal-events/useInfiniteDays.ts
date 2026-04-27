@@ -2,7 +2,7 @@ import { addDays, isSameDay, startOfWeek, subDays } from "date-fns"
 import { RefObject, useCallback, useMemo, useRef, useState } from "react"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 
 import type { MonthDay } from "./useMonthGrid"
 

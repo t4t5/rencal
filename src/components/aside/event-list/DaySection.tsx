@@ -3,15 +3,15 @@ import { forwardRef, memo, type MouseEvent } from "react"
 
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
-import type { Calendar, CalendarEvent } from "@/rpc/bindings"
+import type { Calendar } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
+import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
-import { formatDateKey } from "@/lib/time"
-import { getRelativeDayLabel } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { EventRow } from "./EventRow"
@@ -27,8 +27,8 @@ export const DaySection = memo(
   forwardRef<HTMLDivElement, DaySectionProps>(({ date, events, calendars, draftEvent }, ref) => {
     const { activeEvent, toggleActiveEventId } = useCalEvents()
 
-    const allDayEvents = events.filter((e) => e.all_day)
-    const timedEvents = events.filter((e) => !e.all_day)
+    const allDayEvents = events.filter((e) => isAllDay(e.start))
+    const timedEvents = events.filter((e) => !isAllDay(e.start))
 
     const renderAllDay = (event: CalendarEvent) => {
       const isDraft = event === draftEvent

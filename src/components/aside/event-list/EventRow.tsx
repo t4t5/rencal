@@ -1,14 +1,13 @@
-import { format, isSameDay } from "date-fns"
+import { format } from "date-fns"
 import { memo } from "react"
 
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
-import { CalendarEvent } from "@/rpc/bindings"
-
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { formatTime } from "@/lib/time"
+import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
 
 type EventRowProps = {
   event: CalendarEvent
@@ -34,7 +33,7 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
         <div className="text-muted-foreground numerical text-xs h-4">
           {isSameDay(from, to)
             ? `${formatTime(from, timeFormat)} - ${formatTime(to, timeFormat)}`
-            : `${format(from, "MMM d,")} ${formatTime(from, timeFormat)} - ${format(to, "MMM d,")} ${formatTime(to, timeFormat)}`}
+            : `${format(toInteropDate(from), "MMM d,")} ${formatTime(from, timeFormat)} - ${format(toInteropDate(to), "MMM d,")} ${formatTime(to, timeFormat)}`}
         </div>
         <div className="font-medium">{event.summary || <UntitledEventText />}</div>
       </div>

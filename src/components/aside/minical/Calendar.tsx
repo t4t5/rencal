@@ -15,7 +15,7 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"

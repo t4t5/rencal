@@ -1,4 +1,3 @@
-import { addHours, addMinutes, startOfHour } from "date-fns"
 import {
   ReactNode,
   createContext,
@@ -11,11 +10,17 @@ import {
 } from "react"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent, Recurrence } from "@/rpc/bindings"
 
+import {
+  type CalendarEvent,
+  type Recurrence,
+  recurrenceToRpc,
+  rpcToCalendarEvent,
+} from "@/lib/cal-events"
+import { addMinutes, computeEventDateInfo, nowZoned, type EventTime } from "@/lib/event-time"
+import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
-import { formatEventTime } from "@/lib/time"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
@@ -25,9 +30,8 @@ import { useSync } from "./SyncContext"
 interface DraftEvent {
   summary: string
   description: string | null
-  allDay: boolean
-  start: Date
-  end: Date
+  start: EventTime
+  end: EventTime
   calendarId: string | null
   location: string | null
   recurrence: Recurrence | null
@@ -35,9 +39,6 @@ interface DraftEvent {
 
 export const DEFAULT_DURATION_MINS = 60
 
-// Split into two contexts: `text` changes on every keystroke, so anything that
-// doesn't need it (NewEventContent, WeekTimeGrid, MonthDayCell, etc.) should
-// only subscribe to the draft context to avoid re-rendering while typing.
 interface EventTextContextType {
   text: string
   setText: (text: string) => void
@@ -73,7 +74,21 @@ export function useEventDraft() {
   return useContext(EventDraftContext)
 }
 
-const getClosestNextHour = () => startOfHour(addHours(new Date(), 1))
+/** ZonedDateTime in viewer's local zone, rounded up to the next whole hour. */
+function getClosestNextHour(): EventTime {
+  const now = nowZoned()
+  // Add 1 hour, then round down to the start of that hour.
+  const advanced = addMinutes(now, 60)
+  if (advanced.kind !== "datetime_zoned") return advanced
+  const z = advanced.value.with({
+    minute: 0,
+    second: 0,
+    millisecond: 0,
+    microsecond: 0,
+    nanosecond: 0,
+  })
+  return { kind: "datetime_zoned", value: z }
+}
 
 export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
@@ -93,11 +108,9 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     const start = getClosestNextHour()
-
     return {
       summary: "",
       description: null,
-      allDay: false,
       start,
       end: addMinutes(start, DEFAULT_DURATION_MINS),
       calendarId: defaultCalendarId,
@@ -108,10 +121,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
   const [draftEvent, setDraftEvent] = useState<DraftEvent>(generateDefaultDraftEvent())
 
-  // Draft updates triggered by typing are wrapped in startTransition so they
-  // don't block the urgent text-state render. Without this, the keystroke-time
-  // `setDraftEvent` forces NewEventContent (and the ~10 EventInfo subtrees)
-  // to re-render on every character.
   const setText = useCallback((newText: string) => {
     _setText(newText)
 
@@ -136,7 +145,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
           if (parsed.start) {
             updates.start = parsed.start
             updates.end = parsed.end ?? addMinutes(parsed.start, DEFAULT_DURATION_MINS)
-            updates.allDay = parsed.allDay
           }
           return { ...prev, ...updates }
         })
@@ -168,16 +176,15 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     const optimisticId = crypto.randomUUID()
 
-    // Optimistically add to UI immediately
     const optimisticEvent: CalendarEvent = {
       id: optimisticId,
       recurring_event_id: null,
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
-      start: formatEventTime(draftEvent.start, draftEvent.allDay),
-      end: formatEventTime(draftEvent.end, draftEvent.allDay),
-      all_day: draftEvent.allDay,
+      start: draftEvent.start,
+      end: draftEvent.end,
+      dateInfo: computeEventDateInfo(draftEvent.start, draftEvent.end),
       status: "confirmed",
       recurrence: draftEvent.recurrence,
       master_recurrence: null,
@@ -199,15 +206,15 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
-      start: formatEventTime(draftEvent.start, draftEvent.allDay),
-      end: formatEventTime(draftEvent.end, draftEvent.allDay),
-      all_day: draftEvent.allDay,
-      recurrence: draftEvent.recurrence,
+      start: toRpcEventTime(draftEvent.start),
+      end: toRpcEventTime(draftEvent.end),
+      recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
     })
 
-    // Replace optimistic entry with the real event from the backend
-    setCalendarEvents((prev) => prev.map((e) => (e.id === optimisticId ? created : e)))
+    setCalendarEvents((prev) =>
+      prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
+    )
     void sync()
   }, [draftEvent, draftReminders, sync, setDefaultDraftEvent, setCalendarEvents])
 

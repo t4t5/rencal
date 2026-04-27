@@ -1,14 +1,14 @@
-import { parseISO } from "date-fns"
 import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from "react"
 
 import { Command, CommandEmpty, CommandItem, CommandList } from "@/components/ui/command"
 import { PopoverContent } from "@/components/ui/popover"
 
-import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
+import type { TimeFormat } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { formatShortDate, formatTime } from "@/lib/time"
+import type { CalendarEvent } from "@/lib/cal-events"
+import { formatShortDate, formatTime, isAllDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 function SearchResult({
@@ -29,9 +29,9 @@ function SearchResult({
       <div className="min-w-0">
         <div className="font-medium text-sm truncate">{event.summary}</div>
         <div className="text-xs text-muted-foreground">
-          {event.all_day
-            ? formatShortDate(parseISO(event.start))
-            : `${formatShortDate(parseISO(event.start))} · ${formatTime(event.start, timeFormat)}`}
+          {isAllDay(event.start)
+            ? formatShortDate(event.start)
+            : `${formatShortDate(event.start)} · ${formatTime(event.start, timeFormat)}`}
         </div>
       </div>
     </>

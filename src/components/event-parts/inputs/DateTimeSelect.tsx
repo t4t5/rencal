@@ -1,71 +1,81 @@
-import { addDays, format, parse, subDays } from "date-fns"
-
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
-import { startOfDayMs } from "@/lib/time"
+import {
+  dateInEventZone,
+  displayEndDate,
+  isAllDay,
+  localDateToPlainDate,
+  plainDateToLocalDate,
+  shouldShowDisplayEndDate,
+  wallclockTime,
+  type EventTime,
+  type EventTimeRange,
+  withRangeDisplayEndDate,
+  withRangeEndWallclockTime,
+  withRangeStartDate,
+  withRangeStartWallclockTime,
+} from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
 
-export type DateTimeRange = { start: Date; end: Date }
+export type DateTimeRange = EventTimeRange
+
+/** "HH:mm" — wallclock in the event's own zone. Empty for all-day. */
+function formatHHMM(et: EventTime): string {
+  if (isAllDay(et)) return ""
+  const { hour, minute } = wallclockTime(et)
+  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
+}
 
 export const DateTimeSelect = ({
   start,
   end,
-  allDay,
   showTime = true,
   readOnly,
   onChange,
   onClose,
 }: {
-  start: Date
-  end: Date
-  allDay: boolean
+  start: EventTime
+  end: EventTime
   showTime?: boolean
   readOnly?: boolean
   onChange: (range: DateTimeRange) => void
   onClose?: () => void
 }) => {
-  const shiftStart = (newStart: Date) => {
-    const delta = newStart.getTime() - start.getTime()
-    onChange({ start: newStart, end: new Date(end.getTime() + delta) })
-  }
-
-  const handleStartDate = (date: Date | null) => {
-    if (!date) return
-    const newStart = new Date(start)
-    newStart.setFullYear(date.getFullYear(), date.getMonth(), date.getDate())
-    shiftStart(newStart)
-  }
+  const allDay = isAllDay(start)
 
   const handleStartTime = (time: string) => {
-    shiftStart(parse(time, "HH:mm", start))
-  }
-
-  const handleEndDate = (date: Date | null) => {
-    if (!date) return
-    const clamped = allDay && date < start ? start : date
-    const base = allDay ? addDays(clamped, 1) : clamped
-    const newEnd = new Date(end)
-    newEnd.setFullYear(base.getFullYear(), base.getMonth(), base.getDate())
-    onChange({ start, end: newEnd })
+    if (!time) return
+    const [h, m] = time.split(":").map(Number)
+    onChange(withRangeStartWallclockTime({ start, end }, h, m))
   }
 
   const handleEndTime = (time: string) => {
-    const parsed = parse(time, "HH:mm", start)
-    const newEnd = !allDay && parsed < start ? addDays(parsed, 1) : parsed
-    onChange({ start, end: newEnd })
+    if (!time) return
+    const [h, m] = time.split(":").map(Number)
+    onChange(withRangeEndWallclockTime({ start, end }, h, m))
+  }
+
+  const handleStartDate = (jsDate: Date | null) => {
+    if (!jsDate) return
+    onChange(withRangeStartDate({ start, end }, localDateToPlainDate(jsDate)))
+  }
+
+  const handleEndDate = (jsDate: Date | null) => {
+    if (!jsDate) return
+    onChange(withRangeDisplayEndDate({ start, end }, localDateToPlainDate(jsDate)))
   }
 
   return (
     <div className="flex flex-col gap-1">
       {showTime && (
         <TimeSelect
-          start={start}
-          end={end}
+          startHHMM={formatHHMM(start)}
+          endHHMM={formatHHMM(end)}
           allDay={allDay}
           readOnly={readOnly}
           onChangeStartTime={handleStartTime}
@@ -74,9 +84,9 @@ export const DateTimeSelect = ({
         />
       )}
       <DateSelect
-        start={start}
-        end={end}
-        allDay={allDay}
+        startDate={plainDateToLocalDate(dateInEventZone(start))}
+        endDate={plainDateToLocalDate(displayEndDate({ start, end }))}
+        showEndDate={shouldShowDisplayEndDate({ start, end })}
         readOnly={readOnly}
         onChangeStart={handleStartDate}
         onChangeEnd={handleEndDate}
@@ -86,25 +96,22 @@ export const DateTimeSelect = ({
 }
 
 const TimeSelect = ({
-  start,
-  end,
+  startHHMM,
+  endHHMM,
   allDay,
   readOnly,
   onChangeStartTime,
   onChangeEndTime,
   onClose,
 }: {
-  start: Date
-  end: Date
+  startHHMM: string
+  endHHMM: string
   allDay: boolean
   readOnly?: boolean
   onChangeStartTime: (time: string) => void
   onChangeEndTime: (time: string) => void
   onClose?: () => void
 }) => {
-  const formattedStartTime = format(start, "HH:mm")
-  const formattedEndTime = format(end, "HH:mm")
-
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault()
@@ -127,7 +134,7 @@ const TimeSelect = ({
         <InputGroupInput
           type="time"
           placeholder="09:30"
-          value={formattedStartTime}
+          value={startHHMM}
           onChange={(e) => onChangeStartTime(e.target.value)}
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
@@ -142,7 +149,7 @@ const TimeSelect = ({
         type="time"
         placeholder="10:30"
         className={cn("w-36", readOnly && "hover:border-transparent! focus:bg-transparent!")}
-        value={formattedEndTime}
+        value={endHHMM}
         onChange={(e) => onChangeEndTime(e.target.value)}
         onKeyDown={handleKeyDown}
         readOnly={readOnly}
@@ -153,30 +160,27 @@ const TimeSelect = ({
 }
 
 const DateSelect = ({
-  start,
-  end,
-  allDay,
+  startDate,
+  endDate,
+  showEndDate,
   readOnly,
   onChangeStart,
   onChangeEnd,
 }: {
-  start: Date
-  end: Date
-  allDay: boolean
+  startDate: Date
+  endDate: Date
+  showEndDate: boolean
   readOnly?: boolean
   onChangeStart: (date: Date | null) => void
   onChangeEnd: (date: Date | null) => void
 }) => {
-  const displayEnd = allDay ? subDays(end, 1) : end
-  const showEndDate = allDay || startOfDayMs(start) !== startOfDayMs(displayEnd)
-
   return (
     <div className="flex pl-[26px] flex-wrap">
       <div className="w-[107px] shrink-0">
-        <DatePicker date={start} setDate={onChangeStart} readOnly={readOnly} />
+        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 
-      {showEndDate && <DatePicker date={displayEnd} setDate={onChangeEnd} readOnly={readOnly} />}
+      {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
     </div>
   )
 }

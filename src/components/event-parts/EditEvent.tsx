@@ -1,4 +1,3 @@
-import { addMinutes } from "date-fns"
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent, Recurrence, ResponseStatus } from "@/rpc/bindings"
+import type { ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -21,9 +20,23 @@ import { DEFAULT_DURATION_MINS } from "@/contexts/EventDraftContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
+import {
+  recurrenceToRpc,
+  rpcToCalendarEvent,
+  withDates,
+  type CalendarEvent,
+  type Recurrence,
+} from "@/lib/cal-events"
+import {
+  addMinutes,
+  isAllDay,
+  normalizeAllDayRange,
+  toAllDay,
+  toTimedAtStartOfDay,
+} from "@/lib/event-time"
+import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
-import { formatEventTime, normalizeAllDayRange } from "@/lib/time"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
 
@@ -91,10 +104,9 @@ export const EditEvent = ({
       summary: current.summary,
       description: current.description,
       location: current.location,
-      start: current.start,
-      end: current.end,
-      all_day: current.all_day,
-      recurrence: current.recurrence,
+      start: toRpcEventTime(current.start),
+      end: toRpcEventTime(current.end),
+      recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
     })
     await sync()
@@ -154,8 +166,8 @@ export const EditEvent = ({
 
   if (!dirtyEvent) return null
 
-  const { summary, description, start, end, all_day, location, calendar_slug, recurrence } =
-    dirtyEvent
+  const { summary, description, start, end, location, calendar_slug, recurrence } = dirtyEvent
+  const all_day = isAllDay(start)
 
   const effectiveRecurrence = recurrence ?? dirtyEvent.master_recurrence
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
@@ -210,25 +222,23 @@ export const EditEvent = ({
         onDescriptionChange={(newDescription) => {
           setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
         }}
-        start={new Date(start)}
-        end={new Date(end)}
+        start={start}
+        end={end}
         onChangeDateTime={({ start: newStart, end: newEnd }) => {
-          setDirtyEvent({
-            ...dirtyEvent,
-            start: formatEventTime(newStart, all_day),
-            end: formatEventTime(newEnd, all_day),
-          })
+          setDirtyEvent(withDates(dirtyEvent, newStart, newEnd))
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {
-          const newEnd = checked
-            ? normalizeAllDayRange(new Date(start), new Date(end)).end
-            : addMinutes(new Date(start), DEFAULT_DURATION_MINS)
-          setDirtyEvent({
-            ...dirtyEvent,
-            all_day: checked,
-            end: formatEventTime(newEnd, checked),
-          })
+          if (checked) {
+            const allDayStart = toAllDay(start)
+            const { end: allDayEnd } = normalizeAllDayRange(allDayStart, toAllDay(end))
+            setDirtyEvent(withDates(dirtyEvent, allDayStart, allDayEnd))
+          } else {
+            const timedStart = isAllDay(start) ? toTimedAtStartOfDay(start) : start
+            setDirtyEvent(
+              withDates(dirtyEvent, timedStart, addMinutes(timedStart, DEFAULT_DURATION_MINS)),
+            )
+          }
         }}
         showTime={!all_day}
         location={location}
@@ -272,7 +282,7 @@ export const EditEvent = ({
             await rpc.caldir.update_event({
               ...parent,
               new_calendar_slug: null,
-              recurrence: pendingRecurrence,
+              recurrence: pendingRecurrence ? recurrenceToRpc(pendingRecurrence) : null,
             })
 
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
@@ -285,15 +295,15 @@ export const EditEvent = ({
             const newMaster = await rpc.caldir.split_recurring_series_at({
               calendar_slug: dirtyEvent.calendar_slug,
               master_uid: dirtyEvent.recurring_event_id,
-              split_start: dirtyEvent.start,
-              split_end: dirtyEvent.end,
-              all_day: dirtyEvent.all_day,
-              new_recurrence: pendingRecurrence,
+              split_start: toRpcEventTime(dirtyEvent.start),
+              split_end: toRpcEventTime(dirtyEvent.end),
+              new_recurrence: recurrenceToRpc(pendingRecurrence),
             })
 
             // Suppress the unmount-save by aligning original with new dirty
-            setDirtyEvent(newMaster)
-            originalEventRef.current = newMaster
+            const localMaster = rpcToCalendarEvent(newMaster)
+            setDirtyEvent(localMaster)
+            originalEventRef.current = localMaster
 
             setPendingRecurrence(null)
             void sync()

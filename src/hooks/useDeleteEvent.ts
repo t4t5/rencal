@@ -1,9 +1,10 @@
 import { useState } from "react"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+
+import type { CalendarEvent } from "@/lib/cal-events"
 
 export function useDeleteEvent() {
   const { setActiveEventId, setCalendarEvents } = useCalEvents()

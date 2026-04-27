@@ -8,7 +8,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { formatTime } from "@/lib/time"
+import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 type MonthTimedEventProps = {

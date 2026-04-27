@@ -1,4 +1,6 @@
-import type { Calendar, CalendarEvent, ResponseStatus } from "@/rpc/bindings"
+import type { Calendar, ResponseStatus } from "@/rpc/bindings"
+
+import type { CalendarEvent } from "@/lib/cal-events"
 
 export function getUserResponseStatus(
   event: CalendarEvent,

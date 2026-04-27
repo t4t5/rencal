@@ -11,9 +11,8 @@ import { EditEvent } from "@/components/event-parts/EditEvent"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import type { CalendarEvent } from "@/lib/cal-events"
 
 interface EventPopoverProps {
   activeEvent: CalendarEvent | null

@@ -3,8 +3,7 @@ import { type Dispatch, type RefObject, type SetStateAction, useState } from "re
 import { Input } from "@/components/ui/input"
 import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
+import type { CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
 import { SearchIcon } from "@/icons/search"

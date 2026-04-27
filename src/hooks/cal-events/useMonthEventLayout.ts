@@ -1,10 +1,11 @@
 import { startOfDay } from "date-fns"
 import { useMemo } from "react"
 
-import type { Calendar, CalendarEvent } from "@/rpc/bindings"
+import type { Calendar } from "@/rpc/bindings"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { getEventDayRange, MS_PER_DAY } from "@/lib/time"
+import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -31,23 +32,16 @@ export type WeekLayout = {
   timedByCol: TimedEventItem[][] // index 0-6 for each day column
 }
 
-type EventDayInfo = {
-  firstMs: number
-  lastMs: number
-  spanning: boolean
-  startSortKey: number // original start time for sorting timed events
-}
-
-function computeEventDayInfo(event: CalendarEvent): EventDayInfo {
-  const { firstMs, lastMs } = getEventDayRange(event)
-  const startSortKey = new Date(event.start).getTime()
-  // All-day events always occupy the all-day lane; timed events only span it if they cross a day
-  const spanning = event.all_day || lastMs - firstMs >= MS_PER_DAY
-  return { firstMs, lastMs, spanning, startSortKey }
-}
-
 function daysDiff(aMs: number, bMs: number): number {
   return Math.round((aMs - bMs) / MS_PER_DAY)
+}
+
+/**
+ * All-day events always occupy the all-day lane; timed events only span it if
+ * they cross a day boundary.
+ */
+function isSpanning(event: CalendarEvent): boolean {
+  return isAllDay(event.start) || event.dateInfo.lastDayMs - event.dateInfo.firstDayMs >= MS_PER_DAY
 }
 
 export function useMonthEventLayout(
@@ -62,14 +56,6 @@ export function useMonthEventLayout(
       calMap.set(cal.slug, cal)
     }
 
-    // Pre-compute day ranges and spanning status once per event
-    const eventInfoMap = new Map<string, EventDayInfo>()
-    for (const event of events) {
-      if (!eventInfoMap.has(event.id)) {
-        eventInfoMap.set(event.id, computeEventDayInfo(event))
-      }
-    }
-
     return weeks.map((weekDays) => {
       const weekStartMs = startOfDay(weekDays[0].date).getTime()
       const weekEndDayMs = startOfDay(weekDays[6].date).getTime()
@@ -79,18 +65,18 @@ export function useMonthEventLayout(
       const timedByCol: TimedEventItem[][] = Array.from({ length: 7 }, () => [])
 
       for (const event of events) {
-        const info = eventInfoMap.get(event.id)!
+        const { firstDayMs, lastDayMs } = event.dateInfo
         const calendar = calMap.get(event.calendar_slug)
 
-        if (info.spanning) {
+        if (isSpanning(event)) {
           // Check overlap: event [first, last] vs week [weekStart, weekEndDay]
-          if (info.firstMs > weekEndDayMs || info.lastMs < weekStartMs) {
+          if (firstDayMs > weekEndDayMs || lastDayMs < weekStartMs) {
             continue
           }
 
           // Clamp to week bounds
-          const clampedFirstMs = info.firstMs < weekStartMs ? weekStartMs : info.firstMs
-          const clampedLastMs = info.lastMs > weekEndDayMs ? weekEndDayMs : info.lastMs
+          const clampedFirstMs = firstDayMs < weekStartMs ? weekStartMs : firstDayMs
+          const clampedLastMs = lastDayMs > weekEndDayMs ? weekEndDayMs : lastDayMs
 
           const startCol = daysDiff(clampedFirstMs, weekStartMs) + 1
           const endCol = daysDiff(clampedLastMs, weekStartMs) + 2
@@ -102,16 +88,16 @@ export function useMonthEventLayout(
             startCol,
             endCol,
             lane: 0,
-            isStart: info.firstMs >= weekStartMs,
-            isEnd: info.lastMs <= weekEndDayMs,
+            isStart: firstDayMs >= weekStartMs,
+            isEnd: lastDayMs <= weekEndDayMs,
           })
         } else {
           // Single-day timed event
-          if (info.firstMs < weekStartMs || info.firstMs >= weekExclEndMs) {
+          if (firstDayMs < weekStartMs || firstDayMs >= weekExclEndMs) {
             continue
           }
 
-          const colIndex = daysDiff(info.firstMs, weekStartMs)
+          const colIndex = daysDiff(firstDayMs, weekStartMs)
           if (colIndex >= 0 && colIndex < 7) {
             timedByCol[colIndex].push({
               event,
@@ -124,10 +110,7 @@ export function useMonthEventLayout(
 
       // Sort timed events by start time (using pre-computed sort key)
       for (const col of timedByCol) {
-        col.sort(
-          (a, b) =>
-            eventInfoMap.get(a.event.id)!.startSortKey - eventInfoMap.get(b.event.id)!.startSortKey,
-        )
+        col.sort((a, b) => a.event.dateInfo.startMs - b.event.dateInfo.startMs)
       }
 
       // Sort all-day items: wider spans first, then earlier start

@@ -1,6 +1,7 @@
 import { rpc } from "@/rpc"
-import type { Calendar, CalendarEvent } from "@/rpc/bindings"
+import type { Calendar } from "@/rpc/bindings"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"

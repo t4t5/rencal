@@ -22,8 +22,8 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
+import { formatDateKey, toInteropDate } from "@/lib/event-time"
 import { segmentEventText } from "@/lib/parse-event-text"
-import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
@@ -89,7 +89,7 @@ export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
       return
     }
     if (prevStartKeyRef.current !== null && prevStartKeyRef.current !== draftStartKey) {
-      void navigateToDate(draftEvent.start)
+      void navigateToDate(toInteropDate(draftEvent.start))
     }
     prevStartKeyRef.current = draftStartKey
   }, [isDrafting, draftStartKey])

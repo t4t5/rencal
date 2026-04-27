@@ -1,16 +1,14 @@
-import type { CalendarEvent } from "@/rpc/bindings"
-
-import { formatEventTime } from "@/lib/time"
+import type { CalendarEvent, Recurrence } from "@/lib/cal-events"
+import { computeEventDateInfo, type EventTime } from "@/lib/event-time"
 
 interface DraftEvent {
   summary: string
   description: string | null
-  allDay: boolean
-  start: Date
-  end: Date
+  start: EventTime
+  end: EventTime
   calendarId: string | null
   location: string | null
-  recurrence: { rrule: string; exdates: string[] } | null
+  recurrence: Recurrence | null
 }
 
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
@@ -21,9 +19,9 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     summary: draft.summary,
     description: draft.description,
     location: draft.location,
-    start: formatEventTime(draft.start, draft.allDay),
-    end: formatEventTime(draft.end, draft.allDay),
-    all_day: draft.allDay,
+    start: draft.start,
+    end: draft.end,
+    dateInfo: computeEventDateInfo(draft.start, draft.end),
     status: "confirmed",
     recurrence: draft.recurrence,
     master_recurrence: null,

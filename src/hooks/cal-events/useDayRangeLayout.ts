@@ -1,9 +1,10 @@
 import { startOfDay } from "date-fns"
 import { useMemo } from "react"
 
-import type { Calendar, CalendarEvent } from "@/rpc/bindings"
+import type { Calendar } from "@/rpc/bindings"
 
-import { getEventDayRange, MS_PER_DAY, startOfDayMs } from "@/lib/time"
+import type { CalendarEvent } from "@/lib/cal-events"
+import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
@@ -41,17 +42,15 @@ function computeTimedPosition(
   rangeStartMin: number,
   rangeMinutes: number,
 ): { top: number; height: number; durationMinutes: number } {
-  const start = new Date(event.start)
-  const end = new Date(event.end)
-  const startMinutes = start.getHours() * 60 + start.getMinutes()
-  const endMinutes = end.getHours() * 60 + end.getMinutes()
+  // Pre-computed at the EventTime → CalendarEvent boundary; expressed in
+  // the viewer's local zone (matches Google/Apple calendar UIs).
+  const { startLocalMinutes, endLocalMinutes, firstDayMs, endDayMs } = event.dateInfo
 
   // If event spans midnight, clamp end to end of day
-  const startDay = startOfDayMs(start)
-  const endDay = startOfDayMs(end)
-  const durationMinutes = endDay > startDay ? DAY_MINUTES - startMinutes : endMinutes - startMinutes
+  const durationMinutes =
+    endDayMs > firstDayMs ? DAY_MINUTES - startLocalMinutes : endLocalMinutes - startLocalMinutes
 
-  const top = ((startMinutes - rangeStartMin) / rangeMinutes) * 100
+  const top = ((startLocalMinutes - rangeStartMin) / rangeMinutes) * 100
   const height = (durationMinutes / rangeMinutes) * 100
 
   return { top, height, durationMinutes }
@@ -145,11 +144,11 @@ export function useDayRangeLayout(
     }
 
     for (const event of events) {
-      const { firstMs, lastMs } = getEventDayRange(event)
+      const { firstDayMs: firstMs, lastDayMs: lastMs } = event.dateInfo
       const color = colorMap.get(event.calendar_slug) ?? null
       const eventColor = event.color
 
-      if (event.all_day) {
+      if (isAllDay(event.start)) {
         // Check overlap with range
         if (firstMs > rangeLastDayMs || lastMs < rangeStartMs) continue
 

@@ -1,7 +1,7 @@
 import { addDays, isSameDay, startOfWeek } from "date-fns"
 import { useMemo } from "react"
 
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 
 export type MonthDay = {
   date: Date
