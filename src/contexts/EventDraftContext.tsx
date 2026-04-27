@@ -17,7 +17,13 @@ import {
   recurrenceToWire,
   wireToCalendarEvent,
 } from "@/lib/cal-events"
-import { addMinutes, nowZoned, toWire, type EventDateTime } from "@/lib/event-time"
+import {
+  addMinutes,
+  computeEventDateInfo,
+  nowZoned,
+  toWire,
+  type EventDateTime,
+} from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
 
@@ -183,6 +189,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       location: draftEvent.location ?? null,
       start: draftEvent.start,
       end: draftEvent.end,
+      dateInfo: computeEventDateInfo(draftEvent.start, draftEvent.end),
       status: "confirmed",
       recurrence: draftEvent.recurrence,
       master_recurrence: null,

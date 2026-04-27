@@ -4,13 +4,7 @@ import { useMemo } from "react"
 import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import {
-  getEventDayRange,
-  isAllDay,
-  MS_PER_DAY,
-  startOfDayMs,
-  toLocalZoned,
-} from "@/lib/event-time"
+import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
@@ -48,18 +42,15 @@ function computeTimedPosition(
   rangeStartMin: number,
   rangeMinutes: number,
 ): { top: number; height: number; durationMinutes: number } {
-  // Render in viewer's local zone (matches behavior of Google/Apple calendar UIs).
-  const startZ = toLocalZoned(event.start)
-  const endZ = toLocalZoned(event.end)
-  const startMinutes = startZ.hour * 60 + startZ.minute
-  const endMinutes = endZ.hour * 60 + endZ.minute
+  // Pre-computed at the EventDateTime → CalendarEvent boundary; expressed in
+  // the viewer's local zone (matches Google/Apple calendar UIs).
+  const { startLocalMinutes, endLocalMinutes, firstDayMs, endDayMs } = event.dateInfo
 
   // If event spans midnight, clamp end to end of day
-  const startDay = startOfDayMs(event.start)
-  const endDay = startOfDayMs(event.end)
-  const durationMinutes = endDay > startDay ? DAY_MINUTES - startMinutes : endMinutes - startMinutes
+  const durationMinutes =
+    endDayMs > firstDayMs ? DAY_MINUTES - startLocalMinutes : endLocalMinutes - startLocalMinutes
 
-  const top = ((startMinutes - rangeStartMin) / rangeMinutes) * 100
+  const top = ((startLocalMinutes - rangeStartMin) / rangeMinutes) * 100
   const height = (durationMinutes / rangeMinutes) * 100
 
   return { top, height, durationMinutes }
@@ -153,7 +144,7 @@ export function useDayRangeLayout(
     }
 
     for (const event of events) {
-      const { firstMs, lastMs } = getEventDayRange(event.start, event.end)
+      const { firstDayMs: firstMs, lastDayMs: lastMs } = event.dateInfo
       const color = colorMap.get(event.calendar_slug) ?? null
       const eventColor = event.color
 

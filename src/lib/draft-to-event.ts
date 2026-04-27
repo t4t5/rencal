@@ -1,5 +1,5 @@
 import type { CalendarEvent, Recurrence } from "@/lib/cal-events"
-import type { EventDateTime } from "@/lib/event-time"
+import { computeEventDateInfo, type EventDateTime } from "@/lib/event-time"
 
 interface DraftEvent {
   summary: string
@@ -21,6 +21,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     location: draft.location,
     start: draft.start,
     end: draft.end,
+    dateInfo: computeEventDateInfo(draft.start, draft.end),
     status: "confirmed",
     recurrence: draft.recurrence,
     master_recurrence: null,

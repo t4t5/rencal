@@ -24,6 +24,7 @@ import {
   recurrenceToWire,
   wireToCalendarEvent,
   wireToRecurrence,
+  withDates,
   type CalendarEvent,
   type Recurrence,
 } from "@/lib/cal-events"
@@ -225,21 +226,19 @@ export const EditEvent = ({
         start={start}
         end={end}
         onChangeDateTime={({ start: newStart, end: newEnd }) => {
-          setDirtyEvent({ ...dirtyEvent, start: newStart, end: newEnd })
+          setDirtyEvent(withDates(dirtyEvent, newStart, newEnd))
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {
           if (checked) {
             const allDayStart = toAllDay(start)
             const { end: allDayEnd } = normalizeAllDayRange(allDayStart, toAllDay(end))
-            setDirtyEvent({ ...dirtyEvent, start: allDayStart, end: allDayEnd })
+            setDirtyEvent(withDates(dirtyEvent, allDayStart, allDayEnd))
           } else {
             const timedStart = isAllDay(start) ? toTimedAtStartOfDay(start) : start
-            setDirtyEvent({
-              ...dirtyEvent,
-              start: timedStart,
-              end: addMinutes(timedStart, DEFAULT_DURATION_MINS),
-            })
+            setDirtyEvent(
+              withDates(dirtyEvent, timedStart, addMinutes(timedStart, DEFAULT_DURATION_MINS)),
+            )
           }
         }}
         showTime={!all_day}

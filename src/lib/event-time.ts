@@ -436,6 +436,53 @@ export function getEventDayRange(
 }
 
 /**
+ * Numeric projections of an event's start/end. Computed once at the
+ * EventDateTime → CalendarEvent boundary so the layout hot loops can skip
+ * Temporal entirely (BigInt arithmetic, Intl construction, ZonedDateTime
+ * allocations) and operate on plain numbers.
+ */
+export type EventDateInfo = {
+  /** Start instant in epoch ms — sort key, format input. */
+  startMs: number
+  /** Local-midnight ms of the start's day (viewer's zone). */
+  firstDayMs: number
+  /** Local-midnight ms of the last occupied day, iCal-end-exclusive aware. */
+  lastDayMs: number
+  /** Local-midnight ms of the end's day (viewer's zone, raw — not iCal-aware). */
+  endDayMs: number
+  /** Wallclock minutes-of-day at start, in viewer's zone (0 for all-day). */
+  startLocalMinutes: number
+  /** Wallclock minutes-of-day at end, in viewer's zone (0 for all-day). */
+  endLocalMinutes: number
+}
+
+export function computeEventDateInfo(start: EventDateTime, end: EventDateTime): EventDateInfo {
+  const firstDayMs = startOfDayMs(start)
+  const endDayMs = startOfDayMs(end)
+  const startMs = toInstant(start).epochMilliseconds
+
+  let lastDayMs: number
+  if (start.kind === "date") {
+    lastDayMs = endDayMs > firstDayMs ? endDayMs - MS_PER_DAY : firstDayMs
+  } else {
+    const endInstantMs = toInstant(end).epochMilliseconds
+    lastDayMs =
+      endInstantMs === endDayMs && endDayMs > firstDayMs ? endDayMs - MS_PER_DAY : endDayMs
+  }
+
+  let startLocalMinutes = 0
+  let endLocalMinutes = 0
+  if (start.kind !== "date") {
+    const startZ = toLocalZoned(start)
+    const endZ = toLocalZoned(end)
+    startLocalMinutes = startZ.hour * 60 + startZ.minute
+    endLocalMinutes = endZ.hour * 60 + endZ.minute
+  }
+
+  return { startMs, firstDayMs, lastDayMs, endDayMs, startLocalMinutes, endLocalMinutes }
+}
+
+/**
  * Ensure an all-day event's [start, end) range is valid: end's day must be at
  * least one day after start's day.
  */
