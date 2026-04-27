@@ -25,9 +25,7 @@ target
 *.sw?
 
 .env
-
-# Generated migrations module
-src-tauri/src/migrations.rs
+.codex
 
 recordings
 
