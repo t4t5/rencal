@@ -29,7 +29,11 @@ export function ThemesPage() {
               <Swatch color="var(--hover-tint)" />
             </div>
             <span className="text-sm">{t.name}</span>
-            {isActive && <CheckIcon className="absolute top-2 right-2 size-4 text-primary" />}
+            {isActive && (
+              <div className="absolute top-1 right-1 size-5 rounded-full text-primary-foreground flex justify-center items-center bg-primary">
+                <CheckIcon />
+              </div>
+            )}
           </button>
         )
       })}
