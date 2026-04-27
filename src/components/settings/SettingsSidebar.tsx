@@ -2,6 +2,7 @@ import { IconType } from "@/lib/types"
 import { cn } from "@/lib/utils"
 
 import { CalendarIcon } from "@/icons/calendar"
+import { PaletteIcon } from "@/icons/palette"
 import { SettingsIcon } from "@/icons/settings"
 import { UserIcon } from "@/icons/user"
 
@@ -15,6 +16,7 @@ export const NAV_ITEMS = [
   { tab: "general" as const, label: "General", icon: SettingsIcon },
   { tab: "accounts" as const, label: "Accounts", icon: UserIcon },
   { tab: "calendars" as const, label: "Calendars", icon: CalendarIcon },
+  { tab: "themes" as const, label: "Themes", icon: PaletteIcon },
 ] satisfies NavItem[]
 
 export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]

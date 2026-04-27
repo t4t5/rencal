@@ -4,6 +4,7 @@ import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/S
 import { AccountsPage } from "@/components/settings/accounts/AccountsPage"
 import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
 import { GeneralPage } from "@/components/settings/general/GeneralPage"
+import { ThemesPage } from "@/components/settings/themes/ThemesPage"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { useTheme } from "@/hooks/useTheme"
@@ -27,6 +28,7 @@ export function SettingsWindow() {
         {activeTab === "general" && <GeneralPage />}
         {activeTab === "accounts" && <AccountsPage />}
         {activeTab === "calendars" && <CalendarsPage />}
+        {activeTab === "themes" && <ThemesPage />}
       </div>
     </div>
   )

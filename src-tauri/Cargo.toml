@@ -39,3 +39,4 @@ tauri-plugin-dialog = { version = "2", default-features = false, features = ["xd
 chrono-tz = "0.10.4"
 toml = "0.8"
 notify = "6"
+dirs = "5"

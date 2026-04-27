@@ -1,10 +1,12 @@
 mod caldir_watcher;
+mod config;
 mod notifications;
 mod oauth;
 mod omarchy;
 mod routes;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
+use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{needs_native_decorations, PlatformApi, PlatformApiImpl};
 use tauri::Manager;
@@ -19,6 +21,7 @@ pub fn create_router() -> Router<tauri::Wry> {
         .merge(CaldirApiImpl.into_handler())
         .merge(OmarchyApiImpl.into_handler())
         .merge(PlatformApiImpl.into_handler())
+        .merge(ConfigApiImpl.into_handler())
 }
 
 /// Resolve the bundled providers directory and set `CALDIR_PROVIDER_PATH`.
