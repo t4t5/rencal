@@ -64,7 +64,7 @@ gen-types:
 
 # Test production version of app (needs build first)
 start:
-  src-tauri/target/release/bundle/appimage/renCal_0.1.0_amd64.AppImage
+  src-tauri/target/release/bundle/appimage/renCal_0.0.1_amd64.AppImage
 
 # Check Rust and TypeScript types
 check:
