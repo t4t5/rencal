@@ -101,8 +101,6 @@ export function displayEndDate(range: EventTimeRange): Temporal.PlainDate {
 }
 
 export function shouldShowDisplayEndDate(range: EventTimeRange): boolean {
-  if (isAllDay(range.start)) {
-    return !dateInEventZone(range.start).equals(displayEndDate(range))
-  }
+  if (isAllDay(range.start)) return true
   return !dateInEventZone(range.start).equals(dateInEventZone(range.end))
 }
