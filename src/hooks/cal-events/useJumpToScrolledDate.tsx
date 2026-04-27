@@ -13,7 +13,7 @@ export function useJumpToScrolledDate({
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }) {
   const sectionRefs = useRef(new Map<string, HTMLDivElement>())
-  const lastContainerSizeRef = useRef<{ w: number; h: number } | null>(null)
+  const lastContainerSizeRef = useRef<{ w: number; h: number; scrollHeight: number } | null>(null)
 
   const addSectionRef = (dateStr: string, el: HTMLDivElement) => {
     sectionRefs.current.set(dateStr, el)
@@ -23,16 +23,31 @@ export function useJumpToScrolledDate({
     // Skip if we're currently doing a programmatic navigation
     if (isNavigating()) return
 
-    // Skip if the container has resized since the last callback. Resizing the
-    // window shifts sections in/out of the rootMargin trigger zone purely from
-    // layout — without this guard, activeDate would jump to whichever section
-    // ends up near the top of the new viewport.
+    // Skip if the container's geometry changed since the last callback. Two cases:
+    //   - clientWidth/clientHeight: window resized — sections shift in/out of the
+    //     rootMargin trigger zone purely from layout.
+    //   - scrollHeight: content was prepended/appended (e.g. infinite-scroll loaded
+    //     more events). The prepend-shift `useLayoutEffect` in EventList adjusts
+    //     scrollTop synchronously, which sweeps sections through the trigger zone
+    //     and produces stale "intersecting" callbacks on the still-connected
+    //     observer for sections the user never actually scrolled to.
     const container = scrollContainerRef.current
     if (container) {
-      const size = { w: container.clientWidth, h: container.clientHeight }
+      const size = {
+        w: container.clientWidth,
+        h: container.clientHeight,
+        scrollHeight: container.scrollHeight,
+      }
       const lastSize = lastContainerSizeRef.current
       lastContainerSizeRef.current = size
-      if (lastSize && (lastSize.w !== size.w || lastSize.h !== size.h)) return
+      if (
+        lastSize &&
+        (lastSize.w !== size.w ||
+          lastSize.h !== size.h ||
+          lastSize.scrollHeight !== size.scrollHeight)
+      ) {
+        return
+      }
     }
 
     for (const entry of entries) {
@@ -51,10 +66,11 @@ export function useJumpToScrolledDate({
     if (!container) return
 
     // Seed the size baseline so the first non-skipped callback can detect a
-    // resize that happened between mount and now.
+    // resize or content-shift that happened between mount and now.
     lastContainerSizeRef.current = {
       w: container.clientWidth,
       h: container.clientHeight,
+      scrollHeight: container.scrollHeight,
     }
 
     // Skip the initial batch of callbacks that IntersectionObserver fires
