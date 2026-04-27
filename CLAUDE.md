@@ -67,6 +67,26 @@ Calendars are listed from caldir and grouped by account in the settings UI. The 
 comes from the `{provider}_account` field in each calendar's `.caldir/config.toml` (e.g.,
 `google_account`, `icloud_account`). See the caldir CLAUDE.md for the account identifier convention.
 
+## Infinite scroll rules
+
+Both MonthView and WeekView use infinite scroll to navigate dates, and both update `activeDate` as the user scrolls. Each enforces invariants so that scroll-driven updates don't fight programmatic navigation or jump in the wrong direction.
+
+### MonthView (`src/components/main/month-view/MonthGrid.tsx`)
+
+- Virtualizes by week using tanstack-virtual; the unit visible in the viewport is a week row.
+- The dominant month (by visible area) in the viewport drives `activeDate`. When it differs from the active month, `activeDate` is set to the **1st of that month** — but only if the 1st is currently visible in the viewport. If it isn't, skip emission and wait for a later scroll tick.
+- **Direction guards** (always enforce):
+  - Scrolling up must never set `activeDate` to a date later than the current `activeDate`.
+  - Scrolling down must never set `activeDate` to a date earlier than the current `activeDate`.
+- After programmatic scrolls (initial mount, anchor scroll, explicit navigation), suppress scroll-driven updates briefly via `ignoreScrollUntil` and reset `prevScrollTopRef` so the next tick re-establishes the direction baseline before emitting.
+
+### WeekView (`src/components/main/week-view/WeekTimeGrid.tsx`)
+
+- Renders days linearly (no virtualization). Days are prepended/appended in 7-day chunks by `useInfiniteDays` when the user scrolls within ~200px of the horizontal edges.
+- The leftmost fully-visible column drives `activeDate`. Updates are debounced by `SCROLL_SETTLE_MS` (300ms) so transient positions during a scroll don't fire.
+- When days are prepended, correct `scrollLeft` by `added * dayWidth` so the viewport stays anchored on the same content (no visible jump).
+- After programmatic scrolls (initial scroll-to-now, smooth nav-into-view), suppress scroll-driven updates via `ignoreScrollUntilRef` (~500ms).
+
 ## Natural Language Event Input
 
 The header input parses natural language into structured event fields using `src/lib/parse-event-text.ts`. Parsing is debounced (300ms) in `EventDraftContext.setText` and extracts three things in order:

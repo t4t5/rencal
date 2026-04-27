@@ -174,27 +174,20 @@ export function MonthGrid({
         // Establish it now and skip emission so the next tick can be guarded.
         if (direction === null) return
         const monthCounts = new Map<string, number>()
-        // Prefer the first fully-visible week's day so the date is clearly visible and the
-        // scroll-to-active-week effect doesn't try to re-align a partially-clipped week.
-        const monthFirstFullyVisibleDay = new Map<string, Date>()
-        const monthFirstAnyVisibleDay = new Map<string, Date>()
+        // Track the 1st of each month that's currently in the viewport. We only navigate when
+        // the 1st is visible, so both scroll directions land on day 1 of the new month.
+        const monthFirstDay = new Map<string, Date>()
         for (const item of v.getVirtualItems()) {
           const top = Math.max(item.start, viewTop)
           const bottom = Math.min(item.end, viewBottom)
           if (bottom <= top) continue
-          const fullyVisible = item.start >= viewTop && item.end <= viewBottom
           const fraction = (bottom - top) / item.size
           const week = w[item.index]
           if (!week) continue
           for (const day of week) {
             const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
             monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
-            if (!monthFirstAnyVisibleDay.has(key)) {
-              monthFirstAnyVisibleDay.set(key, day.date)
-            }
-            if (fullyVisible && !monthFirstFullyVisibleDay.has(key)) {
-              monthFirstFullyVisibleDay.set(key, day.date)
-            }
+            if (day.date.getDate() === 1) monthFirstDay.set(key, day.date)
           }
         }
 
@@ -208,8 +201,9 @@ export function MonthGrid({
           }
         }
         if (bestKey !== activeKey) {
-          const target =
-            monthFirstFullyVisibleDay.get(bestKey) ?? monthFirstAnyVisibleDay.get(bestKey)
+          const target = monthFirstDay.get(bestKey)
+          // If the 1st of bestKey isn't in view yet, wait for a later tick once the
+          // boundary week scrolls into the viewport.
           if (target) {
             const targetKey = formatDateKey(target)
             if (direction === "up" && targetKey > adk) return
