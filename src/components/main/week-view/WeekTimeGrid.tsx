@@ -28,6 +28,10 @@ const GRID_HEIGHT = 24 * HOUR_HEIGHT
 const GUTTER_WIDTH = 48
 const DAY_WIDTH_MIN = 100
 
+// How long to wait after a scroll event before considering the scroll "settled"
+// and updating the activeDate based on the scroll position.
+const SCROLL_SETTLE_MS = 300
+
 type WeekTimeGridProps = {
   days: MonthDay[]
   timedByDay: Map<string, WeekTimedEventLayout[]>
@@ -189,7 +193,7 @@ export function WeekTimeGrid({
         const day = currentDays[idx]
         if (!day || day.dateKey === activeDateKeyRef.current) return
         onScrollActiveChangeRef.current(day.date)
-      }, 150)
+      }, SCROLL_SETTLE_MS)
     }
 
     el.addEventListener("scroll", onScroll, { passive: true })
