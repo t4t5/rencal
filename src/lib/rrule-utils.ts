@@ -1,7 +1,7 @@
 import { RRule, RRuleSet, rrulestr } from "rrule"
 
 import type { Recurrence } from "./cal-events"
-import { fromDate, getLocalTzid, toJsDate } from "./event-time"
+import { fromDate, getLocalTzid, toInteropDate } from "./event-time"
 
 /**
  * Parse an RRULE string and create an RRule with the correct dtstart.
@@ -30,14 +30,14 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
 
 /**
  * Convert a Recurrence object into an RRuleSet.
- * rrule.js works with JS Date; we project EventDateTime to its UTC instant for
+ * rrule.js works with JS Date; we project EventTime to an interop Date for
  * the bridge.
  */
 export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
   const rruleSet = new RRuleSet()
   rruleSet.rrule(rrulestr(recurrence.rrule) as RRule)
   for (const exdate of recurrence.exdates) {
-    rruleSet.exdate(toJsDate(exdate))
+    rruleSet.exdate(toInteropDate(exdate))
   }
   return rruleSet
 }
@@ -52,7 +52,7 @@ function stripRRulePrefix(s: string): string {
 
 /**
  * Convert an RRule or RRuleSet back to a Recurrence object.
- * Exdates from rrule.js are JS Dates; we wrap them as zoned EventDateTime in
+ * Exdates from rrule.js are JS Dates; we wrap them as zoned EventTime in
  * the viewer's local zone.
  */
 export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | null {

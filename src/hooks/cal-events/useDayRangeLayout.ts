@@ -42,7 +42,7 @@ function computeTimedPosition(
   rangeStartMin: number,
   rangeMinutes: number,
 ): { top: number; height: number; durationMinutes: number } {
-  // Pre-computed at the EventDateTime → CalendarEvent boundary; expressed in
+  // Pre-computed at the EventTime → CalendarEvent boundary; expressed in
   // the viewer's local zone (matches Google/Apple calendar UIs).
   const { startLocalMinutes, endLocalMinutes, firstDayMs, endDayMs } = event.dateInfo
 

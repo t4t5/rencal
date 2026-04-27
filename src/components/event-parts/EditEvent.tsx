@@ -21,9 +21,8 @@ import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import {
-  recurrenceToWire,
-  wireToCalendarEvent,
-  wireToRecurrence,
+  recurrenceToRpc,
+  rpcToCalendarEvent,
   withDates,
   type CalendarEvent,
   type Recurrence,
@@ -34,8 +33,8 @@ import {
   normalizeAllDayRange,
   toAllDay,
   toTimedAtStartOfDay,
-  toWire,
 } from "@/lib/event-time"
+import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
@@ -105,9 +104,9 @@ export const EditEvent = ({
       summary: current.summary,
       description: current.description,
       location: current.location,
-      start: toWire(current.start),
-      end: toWire(current.end),
-      recurrence: current.recurrence ? recurrenceToWire(current.recurrence) : null,
+      start: toRpcEventTime(current.start),
+      end: toRpcEventTime(current.end),
+      recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
     })
     await sync()
@@ -283,7 +282,7 @@ export const EditEvent = ({
             await rpc.caldir.update_event({
               ...parent,
               new_calendar_slug: null,
-              recurrence: pendingRecurrence ? recurrenceToWire(pendingRecurrence) : null,
+              recurrence: pendingRecurrence ? recurrenceToRpc(pendingRecurrence) : null,
             })
 
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
@@ -296,13 +295,13 @@ export const EditEvent = ({
             const newMaster = await rpc.caldir.split_recurring_series_at({
               calendar_slug: dirtyEvent.calendar_slug,
               master_uid: dirtyEvent.recurring_event_id,
-              split_start: toWire(dirtyEvent.start),
-              split_end: toWire(dirtyEvent.end),
-              new_recurrence: recurrenceToWire(pendingRecurrence),
+              split_start: toRpcEventTime(dirtyEvent.start),
+              split_end: toRpcEventTime(dirtyEvent.end),
+              new_recurrence: recurrenceToRpc(pendingRecurrence),
             })
 
             // Suppress the unmount-save by aligning original with new dirty
-            const localMaster = wireToCalendarEvent(newMaster)
+            const localMaster = rpcToCalendarEvent(newMaster)
             setDirtyEvent(localMaster)
             originalEventRef.current = localMaster
 

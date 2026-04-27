@@ -6,39 +6,39 @@ import {
   addMinutes,
   enumerateLocalDateKeys,
   formatDateKey,
-  fromWire,
   getEventDayRange,
   getLocalTzid,
-  getWallclockTime,
+  wallclockTime,
   isAllDay,
   isSameDay,
   normalizeAllDayRange,
   plainDate,
   toAllDay,
-  toEventDate,
-  toInstant,
+  dateInEventZone,
+  instantForOrdering,
   toTimedAtStartOfDay,
-  toWire,
-  withCalendarDate,
+  withEventDate,
   withWallclockTime,
-  type EventDateTime,
+  type EventTime,
 } from "./event-time"
+import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
 
-const date = (s: string): EventDateTime => fromWire({ kind: "date", date: s })
-const utc = (s: string): EventDateTime => fromWire({ kind: "datetime_utc", instant: s })
-const floating = (s: string): EventDateTime => fromWire({ kind: "datetime_floating", wallclock: s })
-const zoned = (wallclock: string, tzid: string): EventDateTime =>
-  fromWire({ kind: "datetime_zoned", wallclock, tzid })
+const date = (s: string): EventTime => fromRpcEventTime({ kind: "date", date: s })
+const utc = (s: string): EventTime => fromRpcEventTime({ kind: "datetime_utc", instant: s })
+const floating = (s: string): EventTime =>
+  fromRpcEventTime({ kind: "datetime_floating", wallclock: s })
+const zoned = (wallclock: string, tzid: string): EventTime =>
+  fromRpcEventTime({ kind: "datetime_zoned", wallclock, tzid })
 
-describe("wire round-trip", () => {
+describe("RPC round-trip", () => {
   it("date", () => {
     const w = { kind: "date" as const, date: "2026-04-28" }
-    expect(toWire(fromWire(w))).toEqual(w)
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
   })
 
   it("datetime_floating", () => {
     const w = { kind: "datetime_floating" as const, wallclock: "2026-04-28T09:00:00" }
-    expect(toWire(fromWire(w))).toEqual(w)
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
   })
 
   it("datetime_zoned preserves tzid", () => {
@@ -47,14 +47,14 @@ describe("wire round-trip", () => {
       wallclock: "2026-04-28T09:00:00",
       tzid: "America/Los_Angeles",
     }
-    expect(toWire(fromWire(w))).toEqual(w)
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
   })
 
   it("datetime_utc round-trips by instant", () => {
     const w = { kind: "datetime_utc" as const, instant: "2026-04-28T10:00:00Z" }
-    const round = toWire(fromWire(w))
+    const round = toRpcEventTime(fromRpcEventTime(w))
     // The string form may differ ("Z" vs "+00:00"), so compare by parsed instant.
-    expect(fromWire(round)).toEqual(fromWire(w))
+    expect(fromRpcEventTime(round)).toEqual(fromRpcEventTime(w))
   })
 })
 
@@ -97,11 +97,11 @@ describe("withWallclockTime", () => {
   })
 })
 
-describe("withCalendarDate", () => {
+describe("withEventDate", () => {
   it("changes the date but preserves wallclock and zone for zoned events", () => {
     const before = zoned("2026-04-28T09:00:00", "America/Los_Angeles")
     const newPd = Temporal.PlainDate.from("2026-05-15")
-    const after = withCalendarDate(before, newPd)
+    const after = withEventDate(before, newPd)
     expect(after.kind).toBe("datetime_zoned")
     if (after.kind !== "datetime_zoned") return
     expect(after.value.timeZoneId).toBe("America/Los_Angeles")
@@ -111,30 +111,30 @@ describe("withCalendarDate", () => {
   it("swaps the PlainDate for all-day", () => {
     const before = date("2026-04-28")
     const newPd = Temporal.PlainDate.from("2026-05-15")
-    const after = withCalendarDate(before, newPd)
+    const after = withEventDate(before, newPd)
     expect(after.kind).toBe("date")
     if (after.kind !== "date") return
     expect(after.value.toString()).toBe("2026-05-15")
   })
 })
 
-describe("toEventDate", () => {
+describe("dateInEventZone", () => {
   it("returns the event's own-zone date for zoned events", () => {
     // 23:00 Stockholm on 2026-04-28 is still 2026-04-28 in Stockholm — even
     // though it's a different date in some other zones.
     const ev = zoned("2026-04-28T23:00:00", "Europe/Stockholm")
-    expect(toEventDate(ev).toString()).toBe("2026-04-28")
+    expect(dateInEventZone(ev).toString()).toBe("2026-04-28")
   })
 })
 
-describe("getWallclockTime", () => {
+describe("wallclockTime", () => {
   it("returns wallclock in the event's OWN zone", () => {
     const ev = zoned("2026-04-28T09:30:00", "America/Los_Angeles")
-    expect(getWallclockTime(ev)).toEqual({ hour: 9, minute: 30 })
+    expect(wallclockTime(ev)).toEqual({ hour: 9, minute: 30 })
   })
 
   it("returns 0/0 for all-day", () => {
-    expect(getWallclockTime(date("2026-04-28"))).toEqual({ hour: 0, minute: 0 })
+    expect(wallclockTime(date("2026-04-28"))).toEqual({ hour: 0, minute: 0 })
   })
 })
 
@@ -282,11 +282,13 @@ describe("enumerateLocalDateKeys", () => {
   })
 })
 
-describe("toInstant ordering", () => {
+describe("instantForOrdering ordering", () => {
   it("a zoned 09:00 Stockholm sorts before 09:00 LA on the same date", () => {
     const sthlm = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
     const la = zoned("2026-04-28T09:00:00", "America/Los_Angeles")
-    expect(toInstant(sthlm).epochMilliseconds).toBeLessThan(toInstant(la).epochMilliseconds)
+    expect(instantForOrdering(sthlm).epochMilliseconds).toBeLessThan(
+      instantForOrdering(la).epochMilliseconds,
+    )
   })
 })
 

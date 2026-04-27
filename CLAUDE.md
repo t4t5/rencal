@@ -40,7 +40,7 @@ communicates with the backend via taurpc.
 
 - If implementing a frontend feature, run "just typecheck" in the end to make sure the TypeScript compiled.
 - If implementing a feature in Rust (`src-tauri`), run "just check" to make sure the app compiles!
-- For event dates and times, work with `EventDateTime` and the helpers in `@/lib/event-time.ts` — never call `.toISOString()`, `.toLocaleString()`, `parseISO`, or `new Date(string)` on event start/end values. See the **Dates and times** section below for the model.
+- For event dates and times, work with `EventTime` and the helpers in `@/lib/event-time` — never call `.toISOString()`, `.toLocaleString()`, `parseISO`, or `new Date(string)` on event start/end values. See the **Dates and times** section below for the model.
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use `i32`/`u32` instead.
@@ -74,32 +74,32 @@ Event datetimes carry **wall-clock + IANA timezone** (e.g. `12:00 / Europe/Stock
 ### Three layers
 
 1. **caldir on disk** — `EventTime` enum in `caldir-core/src/event.rs`: `Date` / `DateTimeUtc` / `DateTimeFloating` / `DateTimeZoned { datetime, tzid }`.
-2. **Wire (taurpc)** — `WireEventTime` in `src-tauri/src/routes/caldir.rs`, a tagged union mirroring `EventTime` 1:1. `wire_to_core` / `core_to_wire` convert losslessly. RPC types use this directly: `CreateEventInput.start: WireEventTime`, no separate `all_day: bool` (the variant carries it).
-3. **Frontend** — `EventDateTime` in `src/lib/event-time.ts`, backed by `Temporal.PlainDate` / `Temporal.Instant` / `Temporal.PlainDateTime` / `Temporal.ZonedDateTime` (via `@js-temporal/polyfill`).
+2. **RPC (taurpc)** — `RpcEventTime` in `src-tauri/src/routes/caldir.rs`, a tagged union mirroring `EventTime` 1:1. `rpc_time_to_core` / `core_time_to_rpc` convert losslessly. RPC types use this directly: `CreateEventInput.start: RpcEventTime`, no separate `all_day: bool` (the variant carries it).
+3. **Frontend** — `EventTime` in `src/lib/event-time`, backed by `Temporal.PlainDate` / `Temporal.Instant` / `Temporal.PlainDateTime` / `Temporal.ZonedDateTime` (via `@js-temporal/polyfill`).
 
 ### Boundary conversion
 
-App code never sees `WireEventTime`. The RPC adapter in `src/lib/cal-events.ts` parses to `EventDateTime` once at the boundary:
+App code never sees `RpcEventTime`. The RPC adapter in `src/lib/cal-events.ts` parses to `EventTime` once at the boundary:
 
-- **Reads** (`list_events`, `get_event`, `search_events`, `list_invites`): wrap responses with `wireToCalendarEvent`.
-- **Writes** (`create_event`, `update_event`, `split_recurring_series_at`): call `toWire(et)` on each datetime when building the payload.
+- **Reads** (`list_events`, `get_event`, `search_events`, `list_invites`): wrap responses with `rpcToCalendarEvent`.
+- **Writes** (`create_event`, `update_event`, `split_recurring_series_at`): call `toRpcEventTime(et)` from `@/lib/event-time/rpc` on each datetime when building the payload.
 
-The local `CalendarEvent` and `Recurrence` types in `@/lib/cal-events` carry `EventDateTime` fields; import these (not the wire types from `@/rpc/bindings`) in app code.
+The local `CalendarEvent` and `Recurrence` types in `@/lib/cal-events` carry `EventTime` fields; import these (not the RPC types from `@/rpc/bindings`) in app code.
 
 ### Helpers
 
-- **Construction**: `nowZoned()`, `plainDate(y, m, d)`, `dateToPlainDate(jsDate)`, `fromDate(jsDate, tzid?)` (use the last only at JS-`Date`-producing boundaries: chrono-node, drag offsets, `<input type="datetime-local">`).
-- **Display**: `formatTime(et, timeFormat)`, `formatDateKey(et)` (YYYY-MM-DD in viewer's local zone), `toLocalZoned(et)`, `toJsDate(et)` (only for date-fns / DOM leaves).
+- **Construction**: `nowZoned()`, `plainDate(y, m, d)`, `allDayFromLocalDate(jsDate)`, `fromDate(jsDate, tzid?)` (use the last only at JS-`Date`-producing boundaries: chrono-node, drag offsets, `<input type="datetime-local">`).
+- **Display**: `formatTime(et, timeFormat)`, `formatDateKey(et)` (YYYY-MM-DD in viewer's local zone), `toViewerZonedDateTime(et)`, `toInteropDate(et)` (only for date-fns / DOM leaves).
 - **Arithmetic**: `addMinutes(et, n)`, `addDays(et, n)`. Operates in the event's own zone — DST-correct.
-- **Edits**: `withWallclockTime(et, h, m)` and `withCalendarDate(et, plainDate)` change the time/date of an event _in its own zone_, preserving zone identity. This matches Google Calendar's edit semantics: moving an LA-authored event from a Stockholm laptop keeps the event's wallclock in LA. `toTimedAtStartOfDay(et)` promotes an all-day to timed when the user toggles all-day off; `toAllDay(et)` is the inverse.
+- **Edits**: `withWallclockTime(et, h, m)` and `withEventDate(et, plainDate)` change the time/date of an event _in its own zone_, preserving zone identity. This matches Google Calendar's edit semantics: moving an LA-authored event from a Stockholm laptop keeps the event's wallclock in LA. `toTimedAtStartOfDay(et)` promotes an all-day to timed when the user toggles all-day off; `toAllDay(et)` is the inverse.
 - **Predicates**: `isAllDay(et)`, `isSameDay(a, b)`.
-- **Sort/range**: `toInstant(et)` for ordering; `getEventDayRange(start, end)` for which local-zone days an event spans.
+- **Sort/range**: `instantForOrdering(et)` for ordering; `getEventDayRange(start, end)` for which local-zone days an event spans.
 
 ### Don't
 
 - Don't call `.toISOString()`, `.toLocaleString()`, `parseISO(...)`, or `new Date(eventTimeString)` on event datetimes.
 - Don't add an `allDay: boolean` sidecar; the variant `kind: "date"` already encodes it.
-- Don't compute UTC instants from wall-clock + tzid in app code unless you genuinely need the instant — `toInstant(et)` exists for that.
+- Don't compute UTC instants from wall-clock + tzid in app code unless you genuinely need an ordering projection — `instantForOrdering(et)` exists for that.
 
 ## Infinite scroll rules
 

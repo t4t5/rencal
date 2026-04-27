@@ -14,16 +14,11 @@ import { rpc } from "@/rpc"
 import {
   type CalendarEvent,
   type Recurrence,
-  recurrenceToWire,
-  wireToCalendarEvent,
+  recurrenceToRpc,
+  rpcToCalendarEvent,
 } from "@/lib/cal-events"
-import {
-  addMinutes,
-  computeEventDateInfo,
-  nowZoned,
-  toWire,
-  type EventDateTime,
-} from "@/lib/event-time"
+import { addMinutes, computeEventDateInfo, nowZoned, type EventTime } from "@/lib/event-time"
+import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/parse-event-text"
 
@@ -35,8 +30,8 @@ import { useSync } from "./SyncContext"
 interface DraftEvent {
   summary: string
   description: string | null
-  start: EventDateTime
-  end: EventDateTime
+  start: EventTime
+  end: EventTime
   calendarId: string | null
   location: string | null
   recurrence: Recurrence | null
@@ -80,7 +75,7 @@ export function useEventDraft() {
 }
 
 /** ZonedDateTime in viewer's local zone, rounded up to the next whole hour. */
-function getClosestNextHour(): EventDateTime {
+function getClosestNextHour(): EventTime {
   const now = nowZoned()
   // Add 1 hour, then round down to the start of that hour.
   const advanced = addMinutes(now, 60)
@@ -211,14 +206,14 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
-      start: toWire(draftEvent.start),
-      end: toWire(draftEvent.end),
-      recurrence: draftEvent.recurrence ? recurrenceToWire(draftEvent.recurrence) : null,
+      start: toRpcEventTime(draftEvent.start),
+      end: toRpcEventTime(draftEvent.end),
+      recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
     })
 
     setCalendarEvents((prev) =>
-      prev.map((e) => (e.id === optimisticId ? wireToCalendarEvent(created) : e)),
+      prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
     )
     void sync()
   }, [draftEvent, draftReminders, sync, setDefaultDraftEvent, setCalendarEvents])

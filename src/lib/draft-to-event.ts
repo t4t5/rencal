@@ -1,11 +1,11 @@
 import type { CalendarEvent, Recurrence } from "@/lib/cal-events"
-import { computeEventDateInfo, type EventDateTime } from "@/lib/event-time"
+import { computeEventDateInfo, type EventTime } from "@/lib/event-time"
 
 interface DraftEvent {
   summary: string
   description: string | null
-  start: EventDateTime
-  end: EventDateTime
+  start: EventTime
+  end: EventTime
   calendarId: string | null
   location: string | null
   recurrence: Recurrence | null

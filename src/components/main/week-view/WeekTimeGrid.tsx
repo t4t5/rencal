@@ -16,12 +16,12 @@ import type { CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import {
   addDays,
-  dateToPlainDate,
+  allDayFromLocalDate,
   formatDateKey,
   formatTime,
   fromDate,
   getLocalTzid,
-  type EventDateTime,
+  type EventTime,
 } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
@@ -222,10 +222,10 @@ export function WeekTimeGrid({
       return
     }
     const tzid = getLocalTzid()
-    let start: EventDateTime
-    let end: EventDateTime
+    let start: EventTime
+    let end: EventTime
     if (opts.allDay) {
-      start = dateToPlainDate(day)
+      start = allDayFromLocalDate(day)
       end = addDays(start, 1)
     } else {
       const startJs = setHours(startOfDay(day), opts.startHour ?? 0)

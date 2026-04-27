@@ -2,14 +2,14 @@ import * as chrono from "chrono-node"
 import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/lib/cal-events"
-import { fromDate, getLocalTzid, plainDate, type EventDateTime } from "@/lib/event-time"
+import { fromDate, getLocalTzid, plainDate, type EventTime } from "@/lib/event-time"
 
 const DEFAULT_DURATION_MINS = 60
 
 interface ParsedEventText {
   summary: string
-  start: EventDateTime | null
-  end: EventDateTime | null
+  start: EventTime | null
+  end: EventTime | null
   allDay: boolean
   recurrence: Recurrence | null
   location: string | null
@@ -215,10 +215,10 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
       ? result.end.date()
       : addMinutes(startDate, DEFAULT_DURATION_MINS)
 
-  // Convert to EventDateTime: all-day → PlainDate, timed → ZonedDateTime
+  // Convert to EventTime: all-day → PlainDate, timed → ZonedDateTime
   // anchored in the viewer's local zone (chrono produces local-zone Dates).
   const tzid = getLocalTzid()
-  const toEt = (d: Date): EventDateTime =>
+  const toEt = (d: Date): EventTime =>
     allDay ? plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate()) : fromDate(d, tzid)
 
   return {

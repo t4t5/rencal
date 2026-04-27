@@ -6,12 +6,12 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: WireEventTime; end: WireEventTime; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string; color: string | null }
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string; color: string | null }
 
 /**
  * Input for creating an event
  */
-export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: WireEventTime; end: WireEventTime; recurrence: Recurrence | null; reminders: number[] }
+export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: Recurrence | null; reminders: number[] }
 
 export type CredentialFieldInput = { id: string; value: string }
 
@@ -27,9 +27,32 @@ export type ProviderField = { id: string; label: string; field_type: ProviderFie
 
 export type ProviderFieldType = "text" | "password" | "url"
 
-export type Recurrence = { rrule: string; exdates: WireEventTime[] }
+export type Recurrence = { rrule: string; exdates: RpcEventTime[] }
 
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
+
+/**
+ * JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
+ * so the RPC format is lossless: zoned events keep their IANA zone identity,
+ * all-day stays date-only, UTC and floating round-trip faithfully.
+ */
+export type RpcEventTime = 
+/**
+ * All-day event. ISO date "YYYY-MM-DD".
+ */
+{ kind: "date"; date: string } | 
+/**
+ * Genuine UTC instant. ISO 8601 with Z suffix.
+ */
+{ kind: "datetime_utc"; instant: string } | 
+/**
+ * Floating local time (no zone). ISO 8601 wall-clock without offset.
+ */
+{ kind: "datetime_floating"; wallclock: string } | 
+/**
+ * Wall-clock + IANA zone — the canonical shape for authored timed events.
+ */
+{ kind: "datetime_zoned"; wallclock: string; tzid: string }
 
 /**
  * Input for splitting a recurring series at a given instance.
@@ -47,11 +70,11 @@ master_uid: string;
 /**
  * Start time of the instance from which the new series begins.
  */
-split_start: WireEventTime; 
+split_start: RpcEventTime; 
 /**
  * End time of the new master (matches the duration the instance had).
  */
-split_end: WireEventTime; 
+split_end: RpcEventTime; 
 /**
  * Recurrence rule for the new series. None means a single non-recurring event.
  */
@@ -66,30 +89,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
 /**
  * If set and different from calendar_slug, moves the event to this calendar
  */
-new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: WireEventTime; end: WireEventTime; recurrence: Recurrence | null; reminders: number[] }
-
-/**
- * JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
- * so the wire format is lossless: zoned events keep their IANA zone identity,
- * all-day stays date-only, UTC and floating round-trip faithfully.
- */
-export type WireEventTime = 
-/**
- * All-day event. ISO date "YYYY-MM-DD".
- */
-{ kind: "date"; date: string } | 
-/**
- * Genuine UTC instant. ISO 8601 with Z suffix.
- */
-{ kind: "datetime_utc"; instant: string } | 
-/**
- * Floating local time (no zone). ISO 8601 wall-clock without offset.
- */
-{ kind: "datetime_floating"; wallclock: string } | 
-/**
- * Wall-clock + IANA zone — the canonical shape for authored timed events.
- */
-{ kind: "datetime_zoned"; wallclock: string; tzid: string }
+new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: Recurrence | null; reminders: number[] }
 
 const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["calendar_slugs"],"update_event":["input"]}', 'config':'{"get_theme":[],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}' }
 export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 

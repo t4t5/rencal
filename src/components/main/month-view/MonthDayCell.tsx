@@ -18,7 +18,7 @@ import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
-import { fromDate, getLocalTzid, toLocalZoned } from "@/lib/event-time"
+import { fromDate, getLocalTzid, toViewerZonedDateTime } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -61,7 +61,7 @@ export function MonthDayCell({
 
   const getStartHour = () => {
     const lastEvent = timedEvents.at(-1)
-    if (lastEvent) return toLocalZoned(lastEvent.event.end).hour
+    if (lastEvent) return toViewerZonedDateTime(lastEvent.event.end).hour
     return getHours(startOfHour(new Date()))
   }
 

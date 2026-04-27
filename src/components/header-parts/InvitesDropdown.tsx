@@ -11,8 +11,8 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { wireToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { formatTime, toJsDate } from "@/lib/event-time"
+import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { formatTime, toInteropDate } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {
@@ -25,7 +25,7 @@ export function InvitesDropdown() {
 
     rpc.caldir
       .list_invites(slugs)
-      .then((events) => setInvites(events.map(wireToCalendarEvent)))
+      .then((events) => setInvites(events.map(rpcToCalendarEvent)))
       .catch(console.error)
   }, [calendars])
 
@@ -82,7 +82,7 @@ function InviteCard({
   const organizerName = invite.organizer?.name ?? organizerEmail
   const initial = organizerName.charAt(0).toUpperCase()
 
-  const startDate = toJsDate(invite.start)
+  const startDate = toInteropDate(invite.start)
   const dateStr =
     invite.start.kind === "date"
       ? format(startDate, "EEE, d MMM")

@@ -1,42 +1,34 @@
-import { Temporal } from "@js-temporal/polyfill"
-
 import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
 import {
-  addDays,
-  addMinutes,
-  getWallclockTime,
+  dateInEventZone,
+  displayEndDate,
   isAllDay,
-  toEventDate,
-  toInstant,
-  withCalendarDate,
-  withWallclockTime,
-  type EventDateTime,
+  localDateToPlainDate,
+  plainDateToLocalDate,
+  shouldShowDisplayEndDate,
+  wallclockTime,
+  type EventTime,
+  type EventTimeRange,
+  withRangeDisplayEndDate,
+  withRangeEndWallclockTime,
+  withRangeStartDate,
+  withRangeStartWallclockTime,
 } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
 
-export type DateTimeRange = { start: EventDateTime; end: EventDateTime }
+export type DateTimeRange = EventTimeRange
 
 /** "HH:mm" — wallclock in the event's own zone. Empty for all-day. */
-function formatHHMM(et: EventDateTime): string {
+function formatHHMM(et: EventTime): string {
   if (isAllDay(et)) return ""
-  const { hour, minute } = getWallclockTime(et)
+  const { hour, minute } = wallclockTime(et)
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
-}
-
-/** Bridge a PlainDate to a viewer-local JS Date for DatePicker. */
-function plainDateToJsDate(pd: Temporal.PlainDate): Date {
-  return new Date(pd.year, pd.month - 1, pd.day)
-}
-
-/** Bridge a viewer-local JS Date back to a PlainDate. */
-function jsDateToPlainDate(d: Date): Temporal.PlainDate {
-  return new Temporal.PlainDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
 }
 
 export const DateTimeSelect = ({
@@ -47,8 +39,8 @@ export const DateTimeSelect = ({
   onChange,
   onClose,
 }: {
-  start: EventDateTime
-  end: EventDateTime
+  start: EventTime
+  end: EventTime
   showTime?: boolean
   readOnly?: boolean
   onChange: (range: DateTimeRange) => void
@@ -59,51 +51,23 @@ export const DateTimeSelect = ({
   const handleStartTime = (time: string) => {
     if (!time) return
     const [h, m] = time.split(":").map(Number)
-    const newStart = withWallclockTime(start, h, m)
-    // Preserve duration: shift end by the same minute delta.
-    const deltaMin = Math.round(
-      (toInstant(newStart).epochMilliseconds - toInstant(start).epochMilliseconds) / 60_000,
-    )
-    const newEnd = end.kind === "date" ? end : addMinutes(end, deltaMin)
-    onChange({ start: newStart, end: newEnd })
+    onChange(withRangeStartWallclockTime({ start, end }, h, m))
   }
 
   const handleEndTime = (time: string) => {
     if (!time) return
     const [h, m] = time.split(":").map(Number)
-    let newEnd = withWallclockTime(end, h, m)
-    // If user picked a time that lands before start (same day), wrap to next day.
-    if (!allDay && toInstant(newEnd).epochMilliseconds < toInstant(start).epochMilliseconds) {
-      newEnd = addDays(newEnd, 1)
-    }
-    onChange({ start, end: newEnd })
+    onChange(withRangeEndWallclockTime({ start, end }, h, m))
   }
 
   const handleStartDate = (jsDate: Date | null) => {
     if (!jsDate) return
-    const newPd = jsDateToPlainDate(jsDate)
-    const oldPd = toEventDate(start)
-    const dayDelta = newPd.since(oldPd, { largestUnit: "days" }).days
-    const newStart = withCalendarDate(start, newPd)
-    const newEnd = addDays(end, dayDelta)
-    onChange({ start: newStart, end: newEnd })
+    onChange(withRangeStartDate({ start, end }, localDateToPlainDate(jsDate)))
   }
 
   const handleEndDate = (jsDate: Date | null) => {
     if (!jsDate) return
-    const pickedPd = jsDateToPlainDate(jsDate)
-    const startPd = toEventDate(start)
-
-    if (allDay) {
-      // Displayed end-date is the last included day; stored end is exclusive (+1).
-      // Clamp so end-date can't precede start.
-      const clamped = Temporal.PlainDate.compare(pickedPd, startPd) < 0 ? startPd : pickedPd
-      const stored = clamped.add({ days: 1 })
-      onChange({ start, end: { kind: "date", value: stored } })
-      return
-    }
-
-    onChange({ start, end: withCalendarDate(end, pickedPd) })
+    onChange(withRangeDisplayEndDate({ start, end }, localDateToPlainDate(jsDate)))
   }
 
   return (
@@ -120,30 +84,15 @@ export const DateTimeSelect = ({
         />
       )}
       <DateSelect
-        startDate={plainDateToJsDate(toEventDate(start))}
-        endDate={plainDateToJsDate(toEventDate(allDay ? subtractOneDay(end) : end))}
-        showEndDate={shouldShowEndDate(start, end, allDay)}
+        startDate={plainDateToLocalDate(dateInEventZone(start))}
+        endDate={plainDateToLocalDate(displayEndDate({ start, end }))}
+        showEndDate={shouldShowDisplayEndDate({ start, end })}
         readOnly={readOnly}
         onChangeStart={handleStartDate}
         onChangeEnd={handleEndDate}
       />
     </div>
   )
-}
-
-/** All-day end is exclusive on the wire; the user-facing end-date is one day earlier. */
-function subtractOneDay(et: EventDateTime): EventDateTime {
-  return addDays(et, -1)
-}
-
-/** Hide the end-date input when the event lives on a single day. */
-function shouldShowEndDate(start: EventDateTime, end: EventDateTime, allDay: boolean): boolean {
-  if (allDay) {
-    const startPd = toEventDate(start)
-    const lastIncludedPd = toEventDate(subtractOneDay(end))
-    return !startPd.equals(lastIncludedPd)
-  }
-  return !toEventDate(start).equals(toEventDate(end))
 }
 
 const TimeSelect = ({

@@ -18,11 +18,11 @@ pub struct Calendar {
 }
 
 /// JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
-/// so the wire format is lossless: zoned events keep their IANA zone identity,
+/// so the RPC format is lossless: zoned events keep their IANA zone identity,
 /// all-day stays date-only, UTC and floating round-trip faithfully.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
-pub enum WireEventTime {
+pub enum RpcEventTime {
     /// All-day event. ISO date "YYYY-MM-DD".
     Date { date: String },
     /// Genuine UTC instant. ISO 8601 with Z suffix.
@@ -36,7 +36,7 @@ pub enum WireEventTime {
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct Recurrence {
     pub rrule: String,
-    pub exdates: Vec<WireEventTime>,
+    pub exdates: Vec<RpcEventTime>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -88,8 +88,8 @@ pub struct CalendarEvent {
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
-    pub start: WireEventTime,
-    pub end: WireEventTime,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
     pub status: String,
     pub recurrence: Option<Recurrence>,
     pub master_recurrence: Option<Recurrence>,
@@ -192,8 +192,8 @@ pub struct CreateEventInput {
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
-    pub start: WireEventTime,
-    pub end: WireEventTime,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
     pub recurrence: Option<Recurrence>,
     pub reminders: Vec<i32>,
 }
@@ -208,8 +208,8 @@ pub struct UpdateEventInput {
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
-    pub start: WireEventTime,
-    pub end: WireEventTime,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
     pub recurrence: Option<Recurrence>,
     pub reminders: Vec<i32>,
 }
@@ -226,9 +226,9 @@ pub struct SplitRecurringSeriesInput {
     /// UID of the master event to split.
     pub master_uid: String,
     /// Start time of the instance from which the new series begins.
-    pub split_start: WireEventTime,
+    pub split_start: RpcEventTime,
     /// End time of the new master (matches the duration the instance had).
-    pub split_end: WireEventTime,
+    pub split_end: RpcEventTime,
     /// Recurrence rule for the new series. None means a single non-recurring event.
     pub new_recurrence: Option<Recurrence>,
 }
@@ -241,26 +241,26 @@ fn parse_naive_datetime(s: &str) -> Result<NaiveDateTime, String> {
         .map_err(|e| format!("Invalid wallclock datetime '{}': {}", s, e))
 }
 
-/// Convert a wire event time into caldir-core's `EventTime`.
+/// Convert an RPC event time into caldir-core's `EventTime`.
 /// 1:1 mapping; no instant computation for zoned times — the wallclock IS the
 /// source of truth on disk.
-fn wire_to_core(w: &WireEventTime) -> Result<EventTime, String> {
+fn rpc_time_to_core(w: &RpcEventTime) -> Result<EventTime, String> {
     match w {
-        WireEventTime::Date { date } => {
+        RpcEventTime::Date { date } => {
             let d = NaiveDate::parse_from_str(date, "%Y-%m-%d")
                 .map_err(|e| format!("Invalid date '{}': {}", date, e))?;
             Ok(EventTime::Date(d))
         }
-        WireEventTime::DatetimeUtc { instant } => {
-            let dt: DateTime<Utc> = instant
-                .parse()
-                .map_err(|e: chrono::ParseError| format!("Invalid UTC instant '{}': {}", instant, e))?;
+        RpcEventTime::DatetimeUtc { instant } => {
+            let dt: DateTime<Utc> = instant.parse().map_err(|e: chrono::ParseError| {
+                format!("Invalid UTC instant '{}': {}", instant, e)
+            })?;
             Ok(EventTime::DateTimeUtc(dt))
         }
-        WireEventTime::DatetimeFloating { wallclock } => {
-            Ok(EventTime::DateTimeFloating(parse_naive_datetime(wallclock)?))
-        }
-        WireEventTime::DatetimeZoned { wallclock, tzid } => {
+        RpcEventTime::DatetimeFloating { wallclock } => Ok(EventTime::DateTimeFloating(
+            parse_naive_datetime(wallclock)?,
+        )),
+        RpcEventTime::DatetimeZoned { wallclock, tzid } => {
             let datetime = parse_naive_datetime(wallclock)?;
             // Validate the tzid is a known IANA zone, but store the original string.
             tzid.parse::<chrono_tz::Tz>()
@@ -273,33 +273,31 @@ fn wire_to_core(w: &WireEventTime) -> Result<EventTime, String> {
     }
 }
 
-/// Convert caldir-core's `EventTime` into the wire shape. Inverse of
-/// `wire_to_core`; lossless across all four variants.
-fn core_to_wire(e: &EventTime) -> WireEventTime {
+/// Convert caldir-core's `EventTime` into the RPC shape. Inverse of
+/// `rpc_time_to_core`; lossless across all four variants.
+fn core_time_to_rpc(e: &EventTime) -> RpcEventTime {
     match e {
-        EventTime::Date(d) => WireEventTime::Date {
+        EventTime::Date(d) => RpcEventTime::Date {
             date: d.format("%Y-%m-%d").to_string(),
         },
-        EventTime::DateTimeUtc(dt) => WireEventTime::DatetimeUtc {
+        EventTime::DateTimeUtc(dt) => RpcEventTime::DatetimeUtc {
             instant: dt.to_rfc3339(),
         },
-        EventTime::DateTimeFloating(dt) => WireEventTime::DatetimeFloating {
+        EventTime::DateTimeFloating(dt) => RpcEventTime::DatetimeFloating {
             wallclock: dt.format("%Y-%m-%dT%H:%M:%S").to_string(),
         },
-        EventTime::DateTimeZoned { datetime, tzid } => WireEventTime::DatetimeZoned {
+        EventTime::DateTimeZoned { datetime, tzid } => RpcEventTime::DatetimeZoned {
             wallclock: datetime.format("%Y-%m-%dT%H:%M:%S").to_string(),
             tzid: tzid.clone(),
         },
     }
 }
 
-fn wire_recurrence_to_core(
-    r: &Recurrence,
-) -> Result<caldir_core::event::Recurrence, String> {
+fn rpc_recurrence_to_core(r: &Recurrence) -> Result<caldir_core::event::Recurrence, String> {
     let exdates = r
         .exdates
         .iter()
-        .map(wire_to_core)
+        .map(rpc_time_to_core)
         .collect::<Result<Vec<_>, _>>()?;
     Ok(caldir_core::event::Recurrence {
         rrule: r.rrule.clone(),
@@ -307,17 +305,17 @@ fn wire_recurrence_to_core(
     })
 }
 
-fn core_recurrence_to_wire(r: &caldir_core::event::Recurrence) -> Recurrence {
+fn core_recurrence_to_rpc(r: &caldir_core::event::Recurrence) -> Recurrence {
     Recurrence {
         rrule: r.rrule.clone(),
-        exdates: r.exdates.iter().map(core_to_wire).collect(),
+        exdates: r.exdates.iter().map(core_time_to_rpc).collect(),
     }
 }
 
-/// Sort key that orders WireEventTime values by their UTC instant.
+/// Sort key that orders RpcEventTime values by their UTC instant.
 /// Returns `None` for unparseable values; `None` sorts before `Some`.
-fn event_time_sort_key(w: &WireEventTime) -> Option<DateTime<Utc>> {
-    wire_to_core(w).ok().and_then(|et| et.to_utc())
+fn event_time_sort_key(w: &RpcEventTime) -> Option<DateTime<Utc>> {
+    rpc_time_to_core(w).ok().and_then(|et| et.to_utc())
 }
 
 impl CalendarEvent {
@@ -336,14 +334,14 @@ impl CalendarEvent {
             summary: e.summary.clone(),
             description: e.description.clone(),
             location: e.location.clone(),
-            start: core_to_wire(&e.start),
-            end: core_to_wire(&e.end),
+            start: core_time_to_rpc(&e.start),
+            end: core_time_to_rpc(&e.end),
             status: match e.status {
                 EventStatus::Confirmed => "confirmed".to_string(),
                 EventStatus::Tentative => "tentative".to_string(),
                 EventStatus::Cancelled => "cancelled".to_string(),
             },
-            recurrence: e.recurrence.as_ref().map(core_recurrence_to_wire),
+            recurrence: e.recurrence.as_ref().map(core_recurrence_to_rpc),
             master_recurrence,
             reminders: e.reminders.iter().map(|r| r.minutes as i32).collect(),
             organizer: e.organizer.as_ref().map(EventAttendee::from),
@@ -390,9 +388,7 @@ pub trait CaldirApi {
 
     async fn list_providers() -> TauResult<Vec<String>>;
 
-    async fn get_provider_connect_info(
-        provider_name: String,
-    ) -> TauResult<ProviderConnectInfo>;
+    async fn get_provider_connect_info(provider_name: String) -> TauResult<ProviderConnectInfo>;
 
     async fn connect_provider<R: Runtime>(
         app_handle: AppHandle<R>,
@@ -461,7 +457,7 @@ impl CaldirApi for CaldirApiImpl {
                     ce.event
                         .recurrence
                         .as_ref()
-                        .map(|r| (ce.event.uid.clone(), core_recurrence_to_wire(r)))
+                        .map(|r| (ce.event.uid.clone(), core_recurrence_to_rpc(r)))
                 })
                 .collect();
 
@@ -499,9 +495,7 @@ impl CaldirApi for CaldirApiImpl {
                     calendar
                         .master_event_for(&ce.event.uid)
                         .map_err(|e| e.to_string())?
-                        .and_then(|master| {
-                            master.recurrence.as_ref().map(core_recurrence_to_wire)
-                        })
+                        .and_then(|master| master.recurrence.as_ref().map(core_recurrence_to_rpc))
                 } else {
                     None
                 };
@@ -521,13 +515,13 @@ impl CaldirApi for CaldirApiImpl {
         let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
-        let start = wire_to_core(&input.start)?;
-        let end = wire_to_core(&input.end)?;
+        let start = rpc_time_to_core(&input.start)?;
+        let end = rpc_time_to_core(&input.end)?;
 
         let recurrence = input
             .recurrence
             .as_ref()
-            .map(wire_recurrence_to_core)
+            .map(rpc_recurrence_to_core)
             .transpose()?;
 
         let reminders = input
@@ -567,13 +561,13 @@ impl CaldirApi for CaldirApiImpl {
             .find(|ce| ce.event.unique_id() == input.id)
             .ok_or_else(|| format!("Event not found: {}", input.id))?;
 
-        let start = wire_to_core(&input.start)?;
-        let end = wire_to_core(&input.end)?;
+        let start = rpc_time_to_core(&input.start)?;
+        let end = rpc_time_to_core(&input.end)?;
 
         let recurrence = input
             .recurrence
             .as_ref()
-            .map(wire_recurrence_to_core)
+            .map(rpc_recurrence_to_core)
             .transpose()?;
 
         let reminders = input
@@ -688,13 +682,13 @@ impl CaldirApi for CaldirApiImpl {
             .map_err(|e| e.to_string())?
             .ok_or_else(|| format!("Master event not found: {}", input.master_uid))?;
 
-        let split_start = wire_to_core(&input.split_start)?;
-        let split_end = wire_to_core(&input.split_end)?;
+        let split_start = rpc_time_to_core(&input.split_start)?;
+        let split_end = rpc_time_to_core(&input.split_end)?;
 
         let new_recurrence = input
             .new_recurrence
             .as_ref()
-            .map(wire_recurrence_to_core)
+            .map(rpc_recurrence_to_core)
             .transpose()?;
 
         let new_master = calendar
@@ -804,8 +798,7 @@ impl CaldirApi for CaldirApiImpl {
                 .await
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
-            diff.apply_pull()
-                .map_err(|e| format!("[{}] {}", slug, e))?;
+            diff.apply_pull().map_err(|e| format!("[{}] {}", slug, e))?;
             diff.apply_push()
                 .await
                 .map_err(|e| format!("[{}] {}", slug, e))?;
@@ -862,10 +855,7 @@ impl CaldirApi for CaldirApiImpl {
                     ConnectStepKind::NeedsSetup => {
                         let setup_data: SetupData = serde_json::from_value(data)
                             .map_err(|e| format!("Failed to parse setup data: {}", e))?;
-                        (
-                            map_fields(setup_data.fields),
-                            Some(setup_data.instructions),
-                        )
+                        (map_fields(setup_data.fields), Some(setup_data.instructions))
                     }
                     _ => (Vec::new(), None),
                 };
@@ -968,8 +958,7 @@ impl CaldirApi for CaldirApiImpl {
 
                 let mut credentials = serde_json::Map::new();
                 for (key, value) in params {
-                    credentials
-                        .insert(key, serde_json::Value::String(value));
+                    credentials.insert(key, serde_json::Value::String(value));
                 }
 
                 let mut opts = serde_json::Map::new();
@@ -1192,7 +1181,7 @@ fn sort_by_proximity_to_now(events: &mut [CalendarEvent]) {
 mod tests {
     use super::*;
 
-    fn make_event(start: WireEventTime) -> CalendarEvent {
+    fn make_event(start: RpcEventTime) -> CalendarEvent {
         CalendarEvent {
             id: String::new(),
             recurring_event_id: None,
@@ -1213,14 +1202,14 @@ mod tests {
         }
     }
 
-    fn date(s: &str) -> WireEventTime {
-        WireEventTime::Date {
+    fn date(s: &str) -> RpcEventTime {
+        RpcEventTime::Date {
             date: s.to_string(),
         }
     }
 
-    fn utc(s: &str) -> WireEventTime {
-        WireEventTime::DatetimeUtc {
+    fn utc(s: &str) -> RpcEventTime {
+        RpcEventTime::DatetimeUtc {
             instant: s.to_string(),
         }
     }
@@ -1242,39 +1231,42 @@ mod tests {
     }
 
     #[test]
-    fn wire_round_trip_date() {
-        let w = WireEventTime::Date {
+    fn rpc_round_trip_date() {
+        let w = RpcEventTime::Date {
             date: "2026-04-28".to_string(),
         };
-        assert_eq!(core_to_wire(&wire_to_core(&w).unwrap()), w);
+        assert_eq!(core_time_to_rpc(&rpc_time_to_core(&w).unwrap()), w);
     }
 
     #[test]
-    fn wire_round_trip_utc() {
-        let w = WireEventTime::DatetimeUtc {
+    fn rpc_round_trip_utc() {
+        let w = RpcEventTime::DatetimeUtc {
             instant: "2026-04-28T10:00:00+00:00".to_string(),
         };
-        let round = core_to_wire(&wire_to_core(&w).unwrap());
+        let round = core_time_to_rpc(&rpc_time_to_core(&w).unwrap());
         // Re-serialization may use a different equivalent form (Z vs +00:00),
         // so compare the parsed core values instead.
-        assert_eq!(wire_to_core(&w).unwrap(), wire_to_core(&round).unwrap());
+        assert_eq!(
+            rpc_time_to_core(&w).unwrap(),
+            rpc_time_to_core(&round).unwrap()
+        );
     }
 
     #[test]
-    fn wire_round_trip_floating() {
-        let w = WireEventTime::DatetimeFloating {
+    fn rpc_round_trip_floating() {
+        let w = RpcEventTime::DatetimeFloating {
             wallclock: "2026-04-28T12:00:00".to_string(),
         };
-        assert_eq!(core_to_wire(&wire_to_core(&w).unwrap()), w);
+        assert_eq!(core_time_to_rpc(&rpc_time_to_core(&w).unwrap()), w);
     }
 
     #[test]
-    fn wire_round_trip_zoned() {
-        let w = WireEventTime::DatetimeZoned {
+    fn rpc_round_trip_zoned() {
+        let w = RpcEventTime::DatetimeZoned {
             wallclock: "2026-04-28T12:00:00".to_string(),
             tzid: "Europe/Stockholm".to_string(),
         };
-        assert_eq!(core_to_wire(&wire_to_core(&w).unwrap()), w);
+        assert_eq!(core_time_to_rpc(&rpc_time_to_core(&w).unwrap()), w);
     }
 
     #[test]
@@ -1283,19 +1275,19 @@ mod tests {
         // The wallclock 02:30 is ambiguous (occurs twice). The wallclock IS the
         // source of truth on disk — we keep it verbatim and let the consumer
         // resolve ambiguity if it ever needs the instant.
-        let w = WireEventTime::DatetimeZoned {
+        let w = RpcEventTime::DatetimeZoned {
             wallclock: "2026-10-25T02:30:00".to_string(),
             tzid: "Europe/Stockholm".to_string(),
         };
-        assert_eq!(core_to_wire(&wire_to_core(&w).unwrap()), w);
+        assert_eq!(core_time_to_rpc(&rpc_time_to_core(&w).unwrap()), w);
     }
 
     #[test]
     fn unknown_tzid_rejected() {
-        let w = WireEventTime::DatetimeZoned {
+        let w = RpcEventTime::DatetimeZoned {
             wallclock: "2026-04-28T12:00:00".to_string(),
             tzid: "Not/AReal_Zone".to_string(),
         };
-        assert!(wire_to_core(&w).is_err());
+        assert!(rpc_time_to_core(&w).is_err());
     }
 }

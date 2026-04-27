@@ -7,7 +7,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { formatTime, isSameDay, toJsDate } from "@/lib/event-time"
+import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
 
 type EventRowProps = {
   event: CalendarEvent
@@ -33,7 +33,7 @@ export const EventRow = memo(function EventRow({ event, calendarColor }: EventRo
         <div className="text-muted-foreground numerical text-xs h-4">
           {isSameDay(from, to)
             ? `${formatTime(from, timeFormat)} - ${formatTime(to, timeFormat)}`
-            : `${format(toJsDate(from), "MMM d,")} ${formatTime(from, timeFormat)} - ${format(toJsDate(to), "MMM d,")} ${formatTime(to, timeFormat)}`}
+            : `${format(toInteropDate(from), "MMM d,")} ${formatTime(from, timeFormat)} - ${format(toInteropDate(to), "MMM d,")} ${formatTime(to, timeFormat)}`}
         </div>
         <div className="font-medium">{event.summary || <UntitledEventText />}</div>
       </div>
