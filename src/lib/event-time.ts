@@ -48,9 +48,17 @@ export type EventDateTime =
 // Local zone
 // ---------------------------------------------------------------------------
 
-/** The viewer's IANA timezone (e.g. "Europe/Stockholm"). */
+/**
+ * The viewer's IANA timezone (e.g. "Europe/Stockholm"). Cached for the lifetime
+ * of the JS context — Intl.DateTimeFormat construction is expensive and the
+ * viewer's zone effectively does not change mid-session.
+ */
+let cachedLocalTzid: string | undefined
 export function getLocalTzid(): string {
-  return Intl.DateTimeFormat().resolvedOptions().timeZone
+  if (cachedLocalTzid === undefined) {
+    cachedLocalTzid = Intl.DateTimeFormat().resolvedOptions().timeZone
+  }
+  return cachedLocalTzid
 }
 
 // ---------------------------------------------------------------------------
@@ -386,8 +394,9 @@ export function getRelativeDayLabel(et: EventDateTime | Date): string {
 /** Local-midnight timestamp (ms) of the calendar day this event sits on. */
 export function startOfDayMs(et: EventDateTime): number {
   const date = toLocalDate(et)
-  // Reify in the viewer's local zone so .epochMilliseconds = local midnight.
-  return date.toZonedDateTime(getLocalTzid()).epochMilliseconds
+  // `new Date(y, m-1, d)` constructs midnight in the runtime's local zone,
+  // which equals getLocalTzid(). Bypasses the polyfill's BigInt round-trip.
+  return new Date(date.year, date.month - 1, date.day).getTime()
 }
 
 export const MS_PER_DAY = 86_400_000
