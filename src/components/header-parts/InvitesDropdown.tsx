@@ -38,7 +38,7 @@ export function InvitesDropdown() {
     setInvites((prev) => prev.filter((i) => i.id !== invite.id))
     try {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
-      await rpc.caldir.sync([invite.calendar_slug])
+      await rpc.caldir.sync([invite.calendar_slug], [])
     } catch (e) {
       console.error("RSVP failed:", e)
     }

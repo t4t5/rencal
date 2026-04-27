@@ -5,6 +5,7 @@ import { Aside } from "@/components/aside/Aside"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
+import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
@@ -36,6 +37,7 @@ export function AppWindow({ preload }: { preload: Preload }) {
             <App />
           </CreateEventGateProvider>
         </EventDraftProvider>
+        <MassDeleteConfirmDialog />
       </SyncProvider>
     </CalEventsProvider>
   )

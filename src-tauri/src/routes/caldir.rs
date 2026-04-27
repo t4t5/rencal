@@ -7,6 +7,10 @@ use specta::Type;
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
 
+/// Number of pending push deletions that triggers the mass-delete safeguard.
+/// Mirrors `caldir-cli`'s `guards::MASS_DELETE_THRESHOLD`.
+const MASS_DELETE_THRESHOLD: u32 = 10;
+
 #[derive(Serialize, Deserialize, Type)]
 pub struct Calendar {
     pub slug: String,
@@ -358,6 +362,12 @@ impl CalendarEvent {
     }
 }
 
+#[derive(Serialize, Type)]
+pub struct SyncPreview {
+    pub calendar_slug: String,
+    pub to_push_delete_count: u32,
+}
+
 #[taurpc::procedures(path = "caldir", export_to = "../src/rpc/bindings.ts")]
 pub trait CaldirApi {
     async fn list_calendars() -> TauResult<Vec<Calendar>>;
@@ -384,7 +394,12 @@ pub trait CaldirApi {
     async fn list_invites(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>>;
     async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
 
-    async fn sync(calendar_slugs: Vec<String>) -> TauResult<()>;
+    async fn sync_preview(calendar_slugs: Vec<String>) -> TauResult<Vec<SyncPreview>>;
+
+    async fn sync(
+        calendar_slugs: Vec<String>,
+        allow_mass_delete: Vec<String>,
+    ) -> TauResult<()>;
 
     async fn list_providers() -> TauResult<Vec<String>>;
 
@@ -784,9 +799,43 @@ impl CaldirApi for CaldirApiImpl {
         Ok(())
     }
 
-    async fn sync(self, calendar_slugs: Vec<String>) -> TauResult<()> {
+    async fn sync_preview(self, calendar_slugs: Vec<String>) -> TauResult<Vec<SyncPreview>> {
         use caldir_core::date_range::DateRange;
-        use caldir_core::diff::CalendarDiff;
+        use caldir_core::diff::{CalendarDiff, DiffKind};
+
+        let range = DateRange::default();
+        let mut previews = Vec::with_capacity(calendar_slugs.len());
+
+        for slug in &calendar_slugs {
+            let calendar = caldir_core::calendar::Calendar::load(slug)
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+
+            let diff = CalendarDiff::from_calendar(&calendar, &range)
+                .await
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+
+            let to_push_delete_count = diff
+                .to_push
+                .iter()
+                .filter(|d| d.kind == DiffKind::Delete)
+                .count() as u32;
+
+            previews.push(SyncPreview {
+                calendar_slug: slug.clone(),
+                to_push_delete_count,
+            });
+        }
+
+        Ok(previews)
+    }
+
+    async fn sync(
+        self,
+        calendar_slugs: Vec<String>,
+        allow_mass_delete: Vec<String>,
+    ) -> TauResult<()> {
+        use caldir_core::date_range::DateRange;
+        use caldir_core::diff::{CalendarDiff, DiffKind};
 
         let range = DateRange::default();
 
@@ -799,6 +848,20 @@ impl CaldirApi for CaldirApiImpl {
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
             diff.apply_pull().map_err(|e| format!("[{}] {}", slug, e))?;
+
+            let push_delete_count = diff
+                .to_push
+                .iter()
+                .filter(|d| d.kind == DiffKind::Delete)
+                .count() as u32;
+
+            let mass_delete_blocked = push_delete_count >= MASS_DELETE_THRESHOLD
+                && !allow_mass_delete.contains(slug);
+
+            if mass_delete_blocked {
+                continue;
+            }
+
             diff.apply_push()
                 .await
                 .map_err(|e| format!("[{}] {}", slug, e))?;
