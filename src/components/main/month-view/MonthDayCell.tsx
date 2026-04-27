@@ -9,8 +9,6 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
@@ -18,7 +16,9 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import type { CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
+import { fromDate, getLocalTzid, toLocalZoned } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -61,7 +61,7 @@ export function MonthDayCell({
 
   const getStartHour = () => {
     const lastEvent = timedEvents.at(-1)
-    if (lastEvent) return getHours(new Date(lastEvent.event.end))
+    if (lastEvent) return toLocalZoned(lastEvent.event.end).hour
     return getHours(startOfHour(new Date()))
   }
 
@@ -71,15 +71,17 @@ export function MonthDayCell({
       return
     }
     const startHour = getStartHour()
-    const start = setHours(startOfDay(day.date), startHour)
-    const end = addHours(start, 1)
+    const startJs = setHours(startOfDay(day.date), startHour)
+    const endJs = addHours(startJs, 1)
+    const tzid = getLocalTzid()
+    const start = fromDate(startJs, tzid)
+    const end = fromDate(endJs, tzid)
 
     setActiveEventId(null)
     setIsDrafting(false)
     setDraftEvent({
       summary: "",
       description: null,
-      allDay: false,
       start,
       end,
       calendarId: defaultCalendarId,

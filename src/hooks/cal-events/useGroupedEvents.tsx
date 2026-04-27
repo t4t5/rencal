@@ -1,30 +1,32 @@
-import { addDays, isBefore, startOfDay } from "date-fns"
 import { useMemo, useRef } from "react"
 
-import { CalendarEvent } from "@/rpc/bindings"
+import { CalendarEvent } from "@/lib/cal-events"
+import { addDays, formatDateKey, isAllDay, type EventDateTime } from "@/lib/event-time"
 
-import { formatDateKey } from "@/lib/time"
+function dateKeyToJsDate(key: string): Date {
+  const [y, m, d] = key.split("-").map(Number)
+  return new Date(y, m - 1, d)
+}
 
 export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const eventsByDate = useMemo(() => {
     const grouped = new Map<string, CalendarEvent[]>()
 
     for (const event of events) {
-      if (event.all_day) {
-        const start = startOfDay(event.start)
-        const end = startOfDay(event.end)
-        let day = start
-        while (isBefore(day, end)) {
+      if (isAllDay(event.start)) {
+        const startKey = formatDateKey(event.start)
+        const endKey = formatDateKey(event.end)
+        let day: EventDateTime = event.start
+        while (formatDateKey(day) < endKey) {
           const dateKey = formatDateKey(day)
           const existing = grouped.get(dateKey) || []
           grouped.set(dateKey, [...existing, event])
           day = addDays(day, 1)
         }
-        // If start equals end (single-day all-day event), ensure it's added
-        if (!isBefore(start, end)) {
-          const dateKey = formatDateKey(start)
-          const existing = grouped.get(dateKey) || []
-          grouped.set(dateKey, [...existing, event])
+        // Single-day all-day event: end equals start day, ensure it's added
+        if (startKey >= endKey) {
+          const existing = grouped.get(startKey) || []
+          grouped.set(startKey, [...existing, event])
         }
       } else {
         const dateKey = formatDateKey(event.start)
@@ -36,7 +38,7 @@ export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
     return Array.from(grouped.entries())
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([dateStr, dayEvents]) => ({
-        date: new Date(dateStr),
+        date: dateKeyToJsDate(dateStr),
         events: dayEvents,
       }))
   }, [events])
@@ -44,10 +46,8 @@ export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const prevDatesRef = useRef<string[]>([])
 
   const datesWithEvents = useMemo(() => {
-    const newDates = eventsByDate.map(({ date }) => formatDateKey(date))
+    const newDates = eventsByDate.map(({ date }) => formatLocalDateKey(date))
     const prev = prevDatesRef.current
-    // Keep the same reference if the dates haven't actually changed,
-    // so the intersection observer in useJumpToScrolledDate isn't needlessly recreated:
     if (newDates.length === prev.length && newDates.every((d, i) => d === prev[i])) {
       return prev
     }
@@ -59,4 +59,11 @@ export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
     eventsByDate,
     datesWithEvents,
   }
+}
+
+function formatLocalDateKey(d: Date): string {
+  const y = d.getFullYear()
+  const m = d.getMonth() + 1
+  const day = d.getDate()
+  return `${y}-${m < 10 ? "0" : ""}${m}-${day < 10 ? "0" : ""}${day}`
 }

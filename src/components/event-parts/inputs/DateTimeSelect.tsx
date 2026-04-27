@@ -4,11 +4,16 @@ import { DatePicker } from "@/components/ui/date-picker"
 import { Input } from "@/components/ui/input"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 
-import { startOfDayMs } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
+
+const localMidnightMs = (d: Date): number => {
+  const x = new Date(d.getTime())
+  x.setHours(0, 0, 0, 0)
+  return x.getTime()
+}
 
 export type DateTimeRange = { start: Date; end: Date }
 
@@ -168,7 +173,7 @@ const DateSelect = ({
   onChangeEnd: (date: Date | null) => void
 }) => {
   const displayEnd = allDay ? subDays(end, 1) : end
-  const showEndDate = allDay || startOfDayMs(start) !== startOfDayMs(displayEnd)
+  const showEndDate = allDay || localMidnightMs(start) !== localMidnightMs(displayEnd)
 
   return (
     <div className="flex pl-[26px] flex-wrap">

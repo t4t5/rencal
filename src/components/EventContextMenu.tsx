@@ -8,12 +8,11 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
+import type { CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { isEventReadonly } from "@/lib/event-utils"
 

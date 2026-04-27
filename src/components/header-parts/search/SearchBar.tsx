@@ -3,12 +3,12 @@ import { useEffect, useRef, useState } from "react"
 import { Popover, PopoverAnchor } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
+import { wireToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 
 import { EventPopover } from "./EventPopover"
 import { SearchInput } from "./SearchInput"
@@ -101,7 +101,7 @@ export function SearchBar({
 
       setIsLoading(true)
       void rpc.caldir.search_events(calendarSlugs, query).then((found) => {
-        setResults(found)
+        setResults(found.map(wireToCalendarEvent))
         setIsLoading(false)
       })
     },

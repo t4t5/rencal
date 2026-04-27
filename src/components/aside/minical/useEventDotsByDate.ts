@@ -1,12 +1,10 @@
-import { addDays, isBefore, startOfDay } from "date-fns"
 import { useMemo } from "react"
-
-import type { CalendarEvent } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
-import { formatDateKey } from "@/lib/time"
+import type { CalendarEvent } from "@/lib/cal-events"
+import { addDays, formatDateKey, isAllDay, type EventDateTime } from "@/lib/event-time"
 
 export function useEventDotsByDate(): Map<string, string[]> {
   const { calendars } = useCalendars()
@@ -46,21 +44,20 @@ export function useEventDotsByDate(): Map<string, string[]> {
 }
 
 function* eventDateKeys(event: CalendarEvent): Generator<string> {
-  if (!event.all_day) {
+  if (!isAllDay(event.start)) {
     yield formatDateKey(event.start)
     return
   }
 
-  const start = startOfDay(event.start)
-  const end = startOfDay(event.end)
-
-  if (!isBefore(start, end)) {
-    yield formatDateKey(start)
+  // All-day: enumerate dates from start (inclusive) until end (exclusive).
+  let current: EventDateTime = event.start
+  const endKey = formatDateKey(event.end)
+  const startKey = formatDateKey(event.start)
+  if (startKey >= endKey) {
+    yield startKey
     return
   }
-
-  let current = start
-  while (isBefore(current, end)) {
+  while (formatDateKey(current) < endKey) {
     yield formatDateKey(current)
     current = addDays(current, 1)
   }

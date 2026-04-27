@@ -5,12 +5,11 @@ import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useSt
 import { MonthAllDayEvent } from "@/components/main/month-view/MonthAllDayEvent"
 import { MonthDayCell } from "@/components/main/month-view/MonthDayCell"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import type { CalendarEvent } from "@/lib/cal-events"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"

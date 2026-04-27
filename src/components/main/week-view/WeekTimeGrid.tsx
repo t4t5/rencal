@@ -1,7 +1,7 @@
-import { addHours, endOfDay, format, setHours, startOfDay, startOfWeek } from "date-fns"
+import { addHours, format, setHours, startOfDay, startOfWeek } from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
-import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
+import type { TimeFormat } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -12,7 +12,15 @@ import { useSettings } from "@/contexts/SettingsContext"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import type { CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
+import {
+  addDays,
+  dateToPlainDate,
+  fromDate,
+  getLocalTzid,
+  type EventDateTime,
+} from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { formatDateKey, formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
@@ -212,15 +220,23 @@ export function WeekTimeGrid({
       promptToConnect()
       return
     }
-    const start = opts.allDay ? startOfDay(day) : setHours(startOfDay(day), opts.startHour ?? 0)
-    const end = opts.allDay ? endOfDay(day) : addHours(start, 1)
+    const tzid = getLocalTzid()
+    let start: EventDateTime
+    let end: EventDateTime
+    if (opts.allDay) {
+      start = dateToPlainDate(day)
+      end = addDays(start, 1)
+    } else {
+      const startJs = setHours(startOfDay(day), opts.startHour ?? 0)
+      start = fromDate(startJs, tzid)
+      end = fromDate(addHours(startJs, 1), tzid)
+    }
 
     setActiveEventId(null)
     setIsDrafting(false)
     setDraftEvent({
       summary: "",
       description: null,
-      allDay: opts.allDay,
       start,
       end,
       calendarId: defaultCalendarId,
@@ -386,7 +402,7 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
             className="absolute right-1.5 text-[11px] text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
-            {formatTime(d, timeFormat)}
+            {formatTime(fromDate(d), timeFormat)}
           </span>
         )
       })}

@@ -1,16 +1,18 @@
-import { format, parseISO } from "date-fns"
+import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { rpc } from "@/rpc"
-import type { CalendarEvent, ResponseStatus, TimeFormat } from "@/rpc/bindings"
+import type { ResponseStatus, TimeFormat } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import { wireToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { toJsDate } from "@/lib/event-time"
 import { formatTime } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
@@ -22,7 +24,10 @@ export function InvitesDropdown() {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
     if (slugs.length === 0) return
 
-    rpc.caldir.list_invites(slugs).then(setInvites).catch(console.error)
+    rpc.caldir
+      .list_invites(slugs)
+      .then((events) => setInvites(events.map(wireToCalendarEvent)))
+      .catch(console.error)
   }, [calendars])
 
   const isMd = useBreakpoint("md")
@@ -78,9 +83,11 @@ function InviteCard({
   const organizerName = invite.organizer?.name ?? organizerEmail
   const initial = organizerName.charAt(0).toUpperCase()
 
-  const dateStr = invite.all_day
-    ? format(parseISO(invite.start), "EEE, d MMM")
-    : `${format(parseISO(invite.start), "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
+  const startDate = toJsDate(invite.start)
+  const dateStr =
+    invite.start.kind === "date"
+      ? format(startDate, "EEE, d MMM")
+      : `${format(startDate, "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
 
   return (
     <div className="flex flex-col border-b last:border-b-0">

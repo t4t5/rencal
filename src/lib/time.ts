@@ -1,75 +1,49 @@
-import { addDays, format, getYear, isToday, isTomorrow, isYesterday, parseISO } from "date-fns"
+import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
 
-import type { CalendarEvent, TimeFormat } from "@/rpc/bindings"
+import type { TimeFormat } from "@/rpc/bindings"
 
-export const MS_PER_DAY = 86_400_000
+import type { CalendarEvent } from "./cal-events"
+import {
+  type EventDateTime,
+  dateToPlainDate,
+  formatDateKey as etFormatDateKey,
+  formatTime as etFormatTime,
+  getEventDayRange as etGetEventDayRange,
+  isAllDay,
+  toJsDate,
+} from "./event-time"
 
-/** Truncate a timestamp to local midnight (start of day) */
-export function startOfDayMs(date: Date | string): number {
-  const d = typeof date === "string" ? new Date(date) : new Date(date.getTime())
-  d.setHours(0, 0, 0, 0)
-  return d.getTime()
+// Re-export the canonical day-math helpers from event-time.ts so callers don't
+// need to know about the split. New code should import directly from event-time.
+export { MS_PER_DAY, normalizeAllDayRange, startOfDayMs } from "./event-time"
+
+/** Date-key in the viewer's local zone. Accepts EventDateTime or a JS Date. */
+export function formatDateKey(d: EventDateTime | Date): string {
+  if (d instanceof Date) return etFormatDateKey(dateToPlainDate(d))
+  return etFormatDateKey(d)
 }
 
-/**
- * Inclusive [firstMs, lastMs] range of local midnights the event occupies.
- * DTEND is exclusive, so an end exactly at midnight belongs to the previous day.
- */
+/** Inclusive [firstMs, lastMs] range of local midnights the event occupies. */
 export function getEventDayRange(event: CalendarEvent): { firstMs: number; lastMs: number } {
-  const firstMs = startOfDayMs(event.start)
-
-  if (event.all_day) {
-    const endMs = startOfDayMs(event.end)
-    const lastMs = endMs > firstMs ? endMs - MS_PER_DAY : firstMs
-    return { firstMs, lastMs }
-  }
-
-  const endMs = new Date(event.end).getTime()
-  const endDayMs = startOfDayMs(event.end)
-  const lastMs = endMs === endDayMs && endDayMs > firstMs ? endDayMs - MS_PER_DAY : endDayMs
-  return { firstMs, lastMs }
+  return etGetEventDayRange(event.start, event.end)
 }
 
-export function formatTime(date: Date | string, timeFormat: TimeFormat): string {
-  const d = typeof date === "string" ? parseISO(date) : date
-  return format(d, timeFormat === "12h" ? "h:mm a" : "HH:mm")
+export function formatTime(et: EventDateTime, timeFormat: TimeFormat): string {
+  return etFormatTime(et, timeFormat)
 }
 
-/** Fast "yyyy-MM-dd" formatting without date-fns overhead. */
-export function formatDateKey(date: Date | string): string {
-  if (typeof date === "string") {
-    // Already an ISO string — extract the date part
-    return date.slice(0, 10)
-  }
-  const y = date.getFullYear()
-  const m = date.getMonth() + 1
-  const d = date.getDate()
-  return `${y}-${m < 10 ? "0" : ""}${m}-${d < 10 ? "0" : ""}${d}`
+export function formatShortDate(et: EventDateTime | Date): string {
+  const d = et instanceof Date ? et : toJsDate(et)
+  const pattern = getYear(d) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
+  return format(d, pattern)
 }
 
-/** Format a Date for sending to the backend: local date for all-day, UTC ISO string for timed. */
-export function formatEventTime(date: Date, allDay: boolean): string {
-  return allDay ? formatDateKey(date) : date.toISOString()
+export function getRelativeDayLabel(et: EventDateTime | Date): string {
+  const d = et instanceof Date ? et : toJsDate(et)
+  if (isToday(d)) return "Today"
+  if (isTomorrow(d)) return "Tomorrow"
+  if (isYesterday(d)) return "Yesterday"
+  return format(d, "EEEE")
 }
 
-/**
- * Ensure an all-day event's [start, end) range is valid: end's day must be at
- * least one day after start's day (since end is exclusive, end == start + 1 day
- * means a single-day event).
- */
-export function normalizeAllDayRange(start: Date, end: Date): { start: Date; end: Date } {
-  const needsBump = startOfDayMs(end) <= startOfDayMs(start)
-  return { start, end: needsBump ? addDays(start, 1) : end }
-}
-
-export function formatShortDate(date: Date): string {
-  const pattern = getYear(date) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
-  return format(date, pattern)
-}
-
-export function getRelativeDayLabel(date: Date): string {
-  if (isToday(date)) return "Today"
-  if (isTomorrow(date)) return "Tomorrow"
-  if (isYesterday(date)) return "Yesterday"
-  return format(date, "EEEE")
-}
+export { isAllDay }

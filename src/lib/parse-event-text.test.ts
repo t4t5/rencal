@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest"
 
+import { toJsDate } from "@/lib/event-time"
 import { parseEventText } from "@/lib/parse-event-text"
 
 describe("parseEventText", () => {
@@ -14,18 +15,18 @@ describe("parseEventText", () => {
     expect(result.chronoMatchText).toBe("june 15 to june 18")
 
     expect(result.start).not.toBeNull()
-    expect(result.start?.getFullYear()).toBe(2026)
-    expect(result.start?.getMonth()).toBe(5) // June
-    expect(result.start?.getDate()).toBe(15)
-    expect(result.start?.getHours()).toBe(0)
-    expect(result.start?.getMinutes()).toBe(0)
+    expect(result.start?.kind).toBe("date")
+    const startDate = result.start && toJsDate(result.start)
+    expect(startDate?.getFullYear()).toBe(2026)
+    expect(startDate?.getMonth()).toBe(5) // June
+    expect(startDate?.getDate()).toBe(15)
 
     // End is exclusive (iCal convention): June 18 inclusive → June 19 00:00
     expect(result.end).not.toBeNull()
-    expect(result.end?.getFullYear()).toBe(2026)
-    expect(result.end?.getMonth()).toBe(5) // June
-    expect(result.end?.getDate()).toBe(19)
-    expect(result.end?.getHours()).toBe(0)
-    expect(result.end?.getMinutes()).toBe(0)
+    expect(result.end?.kind).toBe("date")
+    const endDate = result.end && toJsDate(result.end)
+    expect(endDate?.getFullYear()).toBe(2026)
+    expect(endDate?.getMonth()).toBe(5) // June
+    expect(endDate?.getDate()).toBe(19)
   })
 })

@@ -14,10 +14,9 @@ import {
   useState,
 } from "react"
 
-import type { CalendarEvent } from "@/rpc/bindings"
-
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
 
