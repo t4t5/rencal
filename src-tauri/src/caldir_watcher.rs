@@ -1,6 +1,7 @@
 use std::time::Duration;
 
 use caldir_core::caldir::Caldir;
+use notify::event::ModifyKind;
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
@@ -27,10 +28,17 @@ pub async fn run_watcher(app: AppHandle) {
 
     let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
         if let Ok(event) = res {
-            if matches!(
+            // Ignore Modify::Metadata — on Linux with `relatime`, our own reads of
+            // .ics files update atime and surface as metadata-modify events, which
+            // would otherwise fire CALDIR_CHANGED for every startup read pass.
+            let is_real_change = matches!(
                 event.kind,
-                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            ) {
+                EventKind::Create(_)
+                    | EventKind::Remove(_)
+                    | EventKind::Modify(ModifyKind::Data(_))
+                    | EventKind::Modify(ModifyKind::Name(_))
+            );
+            if is_real_change {
                 let _ = tx.send(());
             }
         }
