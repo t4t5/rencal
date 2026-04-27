@@ -1,4 +1,4 @@
-import { useRef, useState } from "react"
+import { memo, useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
@@ -18,17 +18,17 @@ type WeekTimedEventProps = {
   isDeclined: boolean
   isDraft: boolean
   dimmed: boolean
-  onClick: () => void
+  onEventClick: (id: string) => void
 }
 
-export function WeekTimedEvent({
+function WeekTimedEventImpl({
   layout,
   isActive,
   isPending,
   isDeclined,
   isDraft,
   dimmed,
-  onClick,
+  onEventClick,
 }: WeekTimedEventProps) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
@@ -91,7 +91,7 @@ export function WeekTimedEvent({
           : (e) => {
               e.stopPropagation()
               setEventAnchor(e.currentTarget)
-              onClick()
+              onEventClick(layout.event.id)
             }
       }
     >
@@ -131,3 +131,5 @@ export function WeekTimedEvent({
     </EventContextMenu>
   )
 }
+
+export const WeekTimedEvent = memo(WeekTimedEventImpl)

@@ -377,7 +377,7 @@ export function WeekTimeGrid({
                     isDeclined={isDeclinedEvent(layout.event, calendars)}
                     isDraft={layout.event === draftEvent}
                     dimmed={dimmed}
-                    onClick={() => onEventClick(layout.event.id)}
+                    onEventClick={onEventClick}
                   />
                 ))}
 

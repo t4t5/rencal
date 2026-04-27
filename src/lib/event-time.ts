@@ -360,15 +360,27 @@ export function formatDateKey(et: EventDateTime | Date): string {
   return toLocalDate(et).toString()
 }
 
+// Intl.DateTimeFormat construction is expensive (~5–10x the cost of formatting
+// itself). Build the two formatters once and reuse — they're invariant for the
+// lifetime of the JS context. Each formats in the viewer's local zone.
+const timeFormatters: Partial<Record<TimeFormat, Intl.DateTimeFormat>> = {}
+function getTimeFormatter(timeFormat: TimeFormat): Intl.DateTimeFormat {
+  let f = timeFormatters[timeFormat]
+  if (!f) {
+    f = new Intl.DateTimeFormat(timeFormat === "12h" ? "en-US" : "en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: timeFormat === "12h" ? "h12" : "h23",
+      timeZone: getLocalTzid(),
+    })
+    timeFormatters[timeFormat] = f
+  }
+  return f
+}
+
 export function formatTime(et: EventDateTime, timeFormat: TimeFormat): string {
   if (et.kind === "date") return ""
-  const z = toLocalZoned(et)
-  const locale = timeFormat === "12h" ? "en-US" : "en-GB"
-  return z.toLocaleString(locale, {
-    hour: "2-digit",
-    minute: "2-digit",
-    hourCycle: timeFormat === "12h" ? "h12" : "h23",
-  })
+  return getTimeFormatter(timeFormat).format(toInstant(et).epochMilliseconds)
 }
 
 /** "Mon, 28 Apr" (or "Mon, 28 Apr 2027" if not the current year). */
