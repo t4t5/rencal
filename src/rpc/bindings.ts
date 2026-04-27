@@ -31,6 +31,32 @@ export type Recurrence = { rrule: string; exdates: string[] }
 
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
 
+/**
+ * Input for splitting a recurring series at a given instance.
+ * 
+ * Truncates the master's RRULE to end before `split_start`, then creates a new
+ * master starting at `split_start` (carrying the original master's other fields)
+ * with `new_recurrence`. Any override files at or after `split_start` are
+ * deleted (the user's "all future events" choice supersedes them).
+ */
+export type SplitRecurringSeriesInput = { calendar_slug: string; 
+/**
+ * UID of the master event to split.
+ */
+master_uid: string; 
+/**
+ * ISO start time of the instance from which the new series begins.
+ */
+split_start: string; 
+/**
+ * ISO end time of the new master (matches the duration the instance had).
+ */
+split_end: string; all_day: boolean; 
+/**
+ * Recurrence rule for the new series. None means a single non-recurring event.
+ */
+new_recurrence: Recurrence | null }
+
 export type TimeFormat = "24h" | "12h"
 
 /**
@@ -42,7 +68,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
  */
 new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: string; end: string; all_day: boolean; recurrence: Recurrence | null; reminders: number[] }
 
-const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"sync":["calendar_slugs"],"update_event":["input"]}', 'config':'{"get_theme":[],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}' }
+const ARGS_MAP = { 'caldir':'{"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["calendar_slugs"],"update_event":["input"]}', 'config':'{"get_theme":[],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}' }
 export type Router = { "caldir": {connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
@@ -65,6 +91,7 @@ set_calendar_dir: (path: string) => Promise<null>,
 set_default_calendar: (slug: string | null) => Promise<null>, 
 set_default_reminders: (minutes: number[]) => Promise<null>, 
 set_time_format: (timeFormat: TimeFormat) => Promise<null>, 
+split_recurring_series_at: (input: SplitRecurringSeriesInput) => Promise<CalendarEvent>, 
 sync: (calendarSlugs: string[]) => Promise<null>, 
 update_event: (input: UpdateEventInput) => Promise<null>},
 "config": {get_theme: () => Promise<string | null>, 

@@ -12,11 +12,13 @@ export function RecurrenceConfirmDialog({
   isOpen,
   onClose,
   onApplyToAll,
+  onApplyToFuture,
   onApplyToThis,
 }: {
   isOpen: boolean
   onClose: () => void
   onApplyToAll: () => void
+  onApplyToFuture: () => void
   onApplyToThis: () => void
 }) {
   return (
@@ -28,7 +30,10 @@ export function RecurrenceConfirmDialog({
         </DialogHeader>
         <DialogFooter className="flex gap-2">
           <Button variant="outline" onClick={onApplyToThis}>
-            Just this event
+            Only this event
+          </Button>
+          <Button variant="outline" onClick={onApplyToFuture}>
+            All future events
           </Button>
           <Button onClick={onApplyToAll}>All events</Button>
         </DialogFooter>

@@ -201,6 +201,26 @@ pub struct UpdateEventInput {
     pub reminders: Vec<i32>,
 }
 
+/// Input for splitting a recurring series at a given instance.
+///
+/// Truncates the master's RRULE to end before `split_start`, then creates a new
+/// master starting at `split_start` (carrying the original master's other fields)
+/// with `new_recurrence`. Any override files at or after `split_start` are
+/// deleted (the user's "all future events" choice supersedes them).
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct SplitRecurringSeriesInput {
+    pub calendar_slug: String,
+    /// UID of the master event to split.
+    pub master_uid: String,
+    /// ISO start time of the instance from which the new series begins.
+    pub split_start: String,
+    /// ISO end time of the new master (matches the duration the instance had).
+    pub split_end: String,
+    pub all_day: bool,
+    /// Recurrence rule for the new series. None means a single non-recurring event.
+    pub new_recurrence: Option<Recurrence>,
+}
+
 /// Parse an ISO datetime string to EventTime
 fn parse_event_time(s: &str, all_day: bool) -> Result<EventTime, String> {
     if all_day {
@@ -306,6 +326,9 @@ pub trait CaldirApi {
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
     async fn delete_recurring_series(calendar_slug: String, uid: String) -> TauResult<()>;
+    async fn split_recurring_series_at(
+        input: SplitRecurringSeriesInput,
+    ) -> TauResult<CalendarEvent>;
 
     async fn search_events(
         calendar_slugs: Vec<String>,
@@ -636,6 +659,54 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         Ok(())
+    }
+
+    async fn split_recurring_series_at(
+        self,
+        input: SplitRecurringSeriesInput,
+    ) -> TauResult<CalendarEvent> {
+        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+            .map_err(|e| e.to_string())?;
+
+        // Look up the master so we can preserve its timezone when parsing
+        // split_start/split_end (the frontend always sends UTC ISO strings).
+        let master = calendar
+            .master_event_for(&input.master_uid)
+            .map_err(|e| e.to_string())?
+            .ok_or_else(|| format!("Master event not found: {}", input.master_uid))?;
+
+        let split_start = parse_event_time_preserving_tz(
+            &input.split_start,
+            input.all_day,
+            &master.start,
+        )?;
+        let split_end =
+            parse_event_time_preserving_tz(&input.split_end, input.all_day, &master.end)?;
+
+        let new_recurrence = match input.new_recurrence {
+            Some(r) => {
+                let exdates: Result<Vec<EventTime>, String> = r
+                    .exdates
+                    .iter()
+                    .map(|s| parse_event_time(s, false))
+                    .collect();
+                Some(caldir_core::event::Recurrence {
+                    rrule: r.rrule,
+                    exdates: exdates?,
+                })
+            }
+            None => None,
+        };
+
+        let new_master = calendar
+            .split_recurring_series_at(&input.master_uid, split_start, split_end, new_recurrence)
+            .map_err(|e| e.to_string())?;
+
+        Ok(CalendarEvent::from_event(
+            &new_master,
+            &input.calendar_slug,
+            None,
+        ))
     }
 
     async fn search_events(

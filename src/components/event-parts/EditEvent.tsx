@@ -279,6 +279,25 @@ export const EditEvent = ({
             setPendingRecurrence(null)
             void sync()
           }}
+          onApplyToFuture={async () => {
+            if (!dirtyEvent?.recurring_event_id || !pendingRecurrence) return
+
+            const newMaster = await rpc.caldir.split_recurring_series_at({
+              calendar_slug: dirtyEvent.calendar_slug,
+              master_uid: dirtyEvent.recurring_event_id,
+              split_start: dirtyEvent.start,
+              split_end: dirtyEvent.end,
+              all_day: dirtyEvent.all_day,
+              new_recurrence: pendingRecurrence,
+            })
+
+            // Suppress the unmount-save by aligning original with new dirty
+            setDirtyEvent(newMaster)
+            originalEventRef.current = newMaster
+
+            setPendingRecurrence(null)
+            void sync()
+          }}
           onApplyToThis={async () => {
             if (!dirtyEvent) return
 
