@@ -401,6 +401,8 @@ pub trait CaldirApi {
         allow_mass_delete: Vec<String>,
     ) -> TauResult<()>;
 
+    async fn discard(calendar_slugs: Vec<String>) -> TauResult<()>;
+
     async fn list_providers() -> TauResult<Vec<String>>;
 
     async fn get_provider_connect_info(provider_name: String) -> TauResult<ProviderConnectInfo>;
@@ -864,6 +866,27 @@ impl CaldirApi for CaldirApiImpl {
 
             diff.apply_push()
                 .await
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+        }
+
+        Ok(())
+    }
+
+    async fn discard(self, calendar_slugs: Vec<String>) -> TauResult<()> {
+        use caldir_core::date_range::DateRange;
+        use caldir_core::diff::CalendarDiff;
+
+        let range = DateRange::default();
+
+        for slug in &calendar_slugs {
+            let calendar = caldir_core::calendar::Calendar::load(slug)
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+
+            let diff = CalendarDiff::from_calendar(&calendar, &range)
+                .await
+                .map_err(|e| format!("[{}] {}", slug, e))?;
+
+            diff.apply_discard()
                 .map_err(|e| format!("[{}] {}", slug, e))?;
         }
 

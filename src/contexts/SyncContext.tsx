@@ -23,6 +23,7 @@ interface SyncContextType {
   syncError: string | null
   pendingMassDelete: SyncPreview[] | null
   confirmMassDelete: () => Promise<void>
+  discardMassDelete: () => Promise<void>
   cancelMassDelete: () => void
 }
 
@@ -90,6 +91,24 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     }
   }, [pendingMassDelete])
 
+  const discardMassDelete = useCallback(async () => {
+    const tripped = pendingMassDelete
+    if (tripped === null) return
+
+    setPendingMassDelete(null)
+    setIsSyncing(true)
+    setSyncError(null)
+    try {
+      const slugs = tripped.map((t) => t.calendar_slug)
+      await rpc.caldir.discard(slugs)
+    } catch (e) {
+      setSyncError(e instanceof Error ? e.message : String(e))
+    } finally {
+      isSyncingRef.current = false
+      setIsSyncing(false)
+    }
+  }, [pendingMassDelete])
+
   const cancelMassDelete = useCallback(() => {
     setPendingMassDelete(null)
     isSyncingRef.current = false
@@ -117,9 +136,18 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       syncError,
       pendingMassDelete,
       confirmMassDelete,
+      discardMassDelete,
       cancelMassDelete,
     }),
-    [sync, isSyncing, syncError, pendingMassDelete, confirmMassDelete, cancelMassDelete],
+    [
+      sync,
+      isSyncing,
+      syncError,
+      pendingMassDelete,
+      confirmMassDelete,
+      discardMassDelete,
+      cancelMassDelete,
+    ],
   )
 
   return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>

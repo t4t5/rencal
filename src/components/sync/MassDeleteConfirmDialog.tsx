@@ -12,7 +12,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 export function MassDeleteConfirmDialog() {
-  const { pendingMassDelete, confirmMassDelete, cancelMassDelete } = useSync()
+  const { pendingMassDelete, confirmMassDelete, discardMassDelete, cancelMassDelete } = useSync()
   const { calendars } = useCalendars()
 
   const open = pendingMassDelete !== null
@@ -43,13 +43,11 @@ export function MassDeleteConfirmDialog() {
           ))}
         </ul>
         <DialogFooter className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={cancelMassDelete}
-            autoFocus
-            className="focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
-          >
+          <Button variant="secondary" onClick={cancelMassDelete} autoFocus>
             Cancel
+          </Button>
+          <Button variant="secondary" onClick={() => void discardMassDelete()}>
+            Restore events
           </Button>
           <Button variant="destructive" onClick={() => void confirmMassDelete()}>
             Delete {totalDeletes} event{totalDeletes === 1 ? "" : "s"}
