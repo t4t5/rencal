@@ -21,9 +21,13 @@ export function ThemesPage() {
             )}
           >
             <div
-              className="h-16 rounded-sm border border-border"
-              style={{ backgroundColor: t.background }}
-            />
+              data-theme={t.id}
+              className="h-16 rounded-sm border border-border bg-background flex items-end p-2 gap-1.5"
+            >
+              <Swatch color="var(--foreground)" />
+              <Swatch color="var(--primary)" />
+              <Swatch color="var(--hover-tint)" />
+            </div>
             <span className="text-sm">{t.name}</span>
             {isActive && <CheckIcon className="absolute top-2 right-2 size-4 text-primary" />}
           </button>
@@ -31,4 +35,8 @@ export function ThemesPage() {
       })}
     </div>
   )
+}
+
+function Swatch({ color }: { color: string }) {
+  return <div className="size-5 rounded-full" style={{ backgroundColor: color }} />
 }

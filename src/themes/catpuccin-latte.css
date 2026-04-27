@@ -8,7 +8,7 @@
   --theme-blue: #1e66f5;
 }
 
-body[data-theme="catpuccin-latte"] {
+[data-theme="catpuccin-latte"] {
   --background: var(--theme-base);
   --foreground: var(--theme-text);
   --muted: var(--theme-subtext-0);

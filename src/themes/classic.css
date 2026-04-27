@@ -1,4 +1,4 @@
-body[data-theme="classic"] {
+[data-theme="classic"] {
   --background: #1a1b26;
   --font-heading: var(--sans);
   --font-button: var(--sans);

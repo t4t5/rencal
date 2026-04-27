@@ -4,10 +4,9 @@ import { useEffect } from "react"
 import { rpc } from "@/rpc"
 import type { OmarchyColors } from "@/rpc/bindings"
 
-import type { Theme } from "@/hooks/useTheme"
-
 const OMARCHY_THEME_CHANGED = "omarchy-theme-changed"
 const CACHE_KEY = "omarchyColors"
+const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
 const CSS_VARS = [
   "--background",
@@ -58,29 +57,38 @@ function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], str
   }
 }
 
+function ensureStyleElement(): HTMLStyleElement {
+  let el = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null
+  if (!el) {
+    el = document.createElement("style")
+    el.id = STYLE_ELEMENT_ID
+    document.head.appendChild(el)
+  }
+  return el
+}
+
 function applyOmarchyColors(c: OmarchyColors) {
   const vars = varsFromColors(c)
-  for (const [name, value] of Object.entries(vars)) {
-    document.body.style.setProperty(name, value)
+  const declarations = Object.entries(vars)
+    .map(([k, v]) => `  ${k}: ${v};`)
+    .join("\n")
+  ensureStyleElement().textContent = `[data-theme="omarchy"] {\n${declarations}\n}`
+  // index.html's flash-prevention sets some of these as inline body styles
+  // before React mounts. Clear them so the stylesheet rule wins from now on.
+  for (const name of CSS_VARS) {
+    document.body.style.removeProperty(name)
   }
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(c))
   } catch {}
 }
 
-function clearOmarchyVars() {
-  for (const name of CSS_VARS) {
-    document.body.style.removeProperty(name)
-  }
-}
-
-export function useOmarchyTheme(theme: Theme) {
+// Always-on: fetch + listen regardless of the active theme so the omarchy
+// preview tile in settings reflects the current OS theme. The
+// [data-theme="omarchy"] selector ensures the rule only paints elements
+// that actually opt in.
+export function useOmarchyTheme() {
   useEffect(() => {
-    if (theme !== "omarchy") {
-      clearOmarchyVars()
-      return
-    }
-
     let cancelled = false
 
     void rpc.omarchy.get_colors().then((colors) => {
@@ -96,5 +104,5 @@ export function useOmarchyTheme(theme: Theme) {
       cancelled = true
       void unlistenPromise.then((fn) => fn())
     }
-  }, [theme])
+  }, [])
 }

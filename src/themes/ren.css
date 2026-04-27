@@ -1,2 +1,2 @@
-body[data-theme="ren"] {
-}
+/* Ren is the default theme. Its primitives live in the `:root, [data-theme="ren"]`
+   block in src/global.css so :root carries them as fallback defaults too. */

@@ -1,6 +1,5 @@
 /* The Omarchy theme's primitives are injected at runtime from
-   ~/.config/omarchy/current/theme/colors.toml via src/hooks/useOmarchyTheme.ts.
-   If Omarchy isn't installed, this block is empty and the @theme defaults in
+   ~/.config/omarchy/current/theme/colors.toml via src/hooks/useOmarchyTheme.ts,
+   which writes a [data-theme="omarchy"] rule into a managed <style> element.
+   If Omarchy isn't installed, no rule is written and the :root defaults in
    global.css take over. */
-body[data-theme="omarchy"] {
-}

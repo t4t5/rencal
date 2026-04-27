@@ -33,7 +33,7 @@ export function useTheme() {
     document.body.dataset.theme = theme
   }, [theme])
 
-  useOmarchyTheme(theme)
+  useOmarchyTheme()
 
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {

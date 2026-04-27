@@ -1,6 +1,6 @@
 # Themes
 
-Themes live in `src/themes/` and override a small set of primitive CSS variables. The defaults (the "ren" look) live in the `@theme` block in `src/global.css`; a theme's job is to change only what makes it distinct.
+Themes live in `src/themes/` and override a small set of primitive CSS variables. Themes are scoped by `[data-theme="<id>"]` so they apply both to the whole app (when set on `<body>`) and to any opt-in subtree (e.g. the theme preview tile in settings). The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme's job is to change only what makes it distinct.
 
 Most tokens are **derived** from a handful of primitives via `color-mix()` (declared in the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. all fall out automatically. See `tokyonight.css` for a minimal example.
 
@@ -9,7 +9,7 @@ Most tokens are **derived** from a handful of primitives via `color-mix()` (decl
 1. **Create the CSS file**: `src/themes/mytheme.css`.
 
    ```css
-   body[data-theme="mytheme"] {
+   [data-theme="mytheme"] {
      --background: #0f0f0f;
      --foreground: #eaeaea;
      --hover-tint: #ffffff;
@@ -23,7 +23,7 @@ Most tokens are **derived** from a handful of primitives via `color-mix()` (decl
 3. **Register it** in `src/themes/manifest.ts`:
 
    ```ts
-   { id: "mytheme", name: "My Theme", background: "#0f0f0f" },
+   { id: "mytheme", name: "My Theme" },
    ```
 
 4. **Add a flash-prevention rule** in `index.html` pointing at the theme's background color. This runs before the CSS bundle loads, so it has to live inline:
@@ -108,12 +108,14 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 
 ## Omarchy auto-sync
 
-The `omarchy` theme is special: it doesn't ship a static palette. When active, Rencal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and applies the colors as inline CSS custom properties on `<body>`. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints Rencal live without a restart.
+The `omarchy` theme is special: it doesn't ship a static palette. Rencal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints Rencal live without a restart.
 
-If Omarchy isn't installed (or `colors.toml` is missing), the theme falls through to the `@theme` defaults in `global.css` and Rencal still renders correctly. The color mapping from `colors.toml` keys to CSS variables lives in `src/hooks/useOmarchyTheme.ts` — tweak it there.
+The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
+
+If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. The color mapping from `colors.toml` keys to CSS variables lives in `src/hooks/useOmarchyTheme.ts` — tweak it there.
 
 ## Escape hatch: custom CSS rules
 
-If primitive overrides aren't enough, theme files can include arbitrary CSS rules. Scope them with `body[data-theme="yourtheme"]` (or use CSS nesting inside the body selector) so they don't leak to other themes.
+If primitive overrides aren't enough, theme files can include arbitrary CSS rules. Scope them with `[data-theme="yourtheme"]` (or use CSS nesting inside that selector) so they don't leak to other themes.
 
 Prefer primitives first — the derivation chain covers most visual-identity needs. You can also override a derived token directly (e.g., set `--divider` explicitly in `classic.css`) when the computed value isn't right for the theme. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.
