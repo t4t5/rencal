@@ -12,8 +12,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { wireToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { toJsDate } from "@/lib/event-time"
-import { formatTime } from "@/lib/time"
+import { formatTime, toJsDate } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesDropdown() {

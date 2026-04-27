@@ -91,7 +91,7 @@ The local `CalendarEvent` and `Recurrence` types in `@/lib/cal-events` carry `Ev
 - **Construction**: `nowZoned()`, `plainDate(y, m, d)`, `dateToPlainDate(jsDate)`, `fromDate(jsDate, tzid?)` (use the last only at JS-`Date`-producing boundaries: chrono-node, drag offsets, `<input type="datetime-local">`).
 - **Display**: `formatTime(et, timeFormat)`, `formatDateKey(et)` (YYYY-MM-DD in viewer's local zone), `toLocalZoned(et)`, `toJsDate(et)` (only for date-fns / DOM leaves).
 - **Arithmetic**: `addMinutes(et, n)`, `addDays(et, n)`. Operates in the event's own zone — DST-correct.
-- **Edits**: `editTime(et, newJsDate)` re-anchors a viewer-local wallclock in the _event's_ original zone (Google Calendar semantics — moving an LA-authored event from a Stockholm laptop keeps it in LA, not retags it). `toTimedAtStartOfDay(et)` promotes an all-day to timed when the user toggles all-day off.
+- **Edits**: `withWallclockTime(et, h, m)` and `withCalendarDate(et, plainDate)` change the time/date of an event _in its own zone_, preserving zone identity. This matches Google Calendar's edit semantics: moving an LA-authored event from a Stockholm laptop keeps the event's wallclock in LA. `toTimedAtStartOfDay(et)` promotes an all-day to timed when the user toggles all-day off; `toAllDay(et)` is the inverse.
 - **Predicates**: `isAllDay(et)`, `isSameDay(a, b)`.
 - **Sort/range**: `toInstant(et)` for ordering; `getEventDayRange(start, end)` for which local-zone days an event spans.
 

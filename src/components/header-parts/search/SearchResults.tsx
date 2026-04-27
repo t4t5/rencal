@@ -8,8 +8,7 @@ import type { TimeFormat } from "@/rpc/bindings"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import { isAllDay } from "@/lib/event-time"
-import { formatShortDate, formatTime } from "@/lib/time"
+import { formatShortDate, formatTime, isAllDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 function SearchResult({

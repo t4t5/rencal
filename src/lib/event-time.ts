@@ -1,16 +1,40 @@
 /*
  * Datetime primitive for rencal events.
  *
- * Mirrors the four-variant EventTime in caldir-core (date, datetime_utc,
- * datetime_floating, datetime_zoned). Wall-clock + IANA zone is the source of
- * truth for zoned events — the UTC instant is computed when needed for
- * comparison or display in another zone.
+ * Calendar data is not one kind of time. Each variant exists because there is
+ * no single underlying type (Date, Instant, ZonedDateTime) that fits all four
+ * cases without forcing fake information into the model:
  *
- * All datetime parsing/formatting goes through this module. App code should
- * never call .toISOString(), .toLocaleString(), or `new Date(string)` on event
- * times.
+ *   - "date" (Temporal.PlainDate) — a calendar date, no clock, no zone.
+ *     Example: an all-day birthday on 2026-04-28. It must stay April 28
+ *     everywhere. Modeled as midnight UTC, a Los Angeles user would see
+ *     April 27 17:00 — wrong.
+ *
+ *   - "datetime_floating" (Temporal.PlainDateTime) — wall-clock with no zone.
+ *     Example: an ICS floating event "2026-04-28 09:00". It means 9am in
+ *     whatever local context the calendar uses, not a globally fixed instant.
+ *     Forcing a zone onto it would change the data.
+ *
+ *   - "datetime_zoned" (Temporal.ZonedDateTime) — wall-clock + named timezone.
+ *     Example: "2026-04-28 09:00 Europe/Stockholm". This is what most authored
+ *     timed events should be. It preserves the original TZID, handles DST,
+ *     and keeps recurring meetings at 9am Stockholm time even when offsets
+ *     change.
+ *
+ *   - "datetime_utc" (Temporal.Instant) — a genuine UTC instant. Used for
+ *     things produced as UTC at the source (some ICS feeds, some APIs).
+ *
+ * The four variants mirror caldir-core's EventTime 1:1 (and RFC 5545 / RFC
+ * 8984 / JSCalendar). Wall-clock + IANA zone is the source of truth for zoned
+ * events — the UTC instant is computed when needed.
+ *
+ * App code should call helpers (formatTime, toLocalDate, isAllDay,
+ * withWallclockTime, withCalendarDate, etc.) rather than juggle Temporal types
+ * directly. Never call .toISOString(), .toLocaleString(), or `new Date(string)`
+ * on event times.
  */
 import { Temporal } from "@js-temporal/polyfill"
+import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
 
 import type { TimeFormat, WireEventTime } from "@/rpc/bindings"
 
@@ -176,6 +200,15 @@ export function toTimedAtStartOfDay(et: EventDateTime): EventDateTime {
   }
 }
 
+/**
+ * Demote a timed event to an all-day PlainDate, taking the calendar date in
+ * the viewer's local zone. Used when toggling all-day on.
+ */
+export function toAllDay(et: EventDateTime): EventDateTime {
+  if (et.kind === "date") return et
+  return { kind: "date", value: toLocalDate(et) }
+}
+
 /** Add minutes. For all-day, advances by whole days (n must be a multiple of 1440 — usually you want addDays). */
 export function addMinutes(et: EventDateTime, minutes: number): EventDateTime {
   switch (et.kind) {
@@ -208,40 +241,104 @@ export function addDays(et: EventDateTime, days: number): EventDateTime {
 }
 
 /**
- * The user, viewing the event in their local zone, picked a new wall-clock
- * time. Preserve the event's zone identity: re-anchor the new instant in the
- * event's original zone (matching Google Calendar's edit semantics).
- *
- * For all-day events this swaps in a new calendar date.
+ * The PlainDate of the event in its OWN zone — not the viewer's. Used by
+ * editing UI so a Stockholm viewer sees an LA-zoned event's LA date.
  */
-export function editTime(et: EventDateTime, newViewerLocalDate: Date): EventDateTime {
-  if (et.kind === "date") {
-    return {
-      kind: "date",
-      value: Temporal.PlainDate.from({
-        year: newViewerLocalDate.getFullYear(),
-        month: newViewerLocalDate.getMonth() + 1,
-        day: newViewerLocalDate.getDate(),
-      }),
-    }
-  }
-
-  const newInstant = Temporal.Instant.fromEpochMilliseconds(newViewerLocalDate.getTime())
-
+export function toEventDate(et: EventDateTime): Temporal.PlainDate {
   switch (et.kind) {
-    case "datetime_utc":
-      return { kind: "datetime_utc", value: newInstant }
+    case "date":
+      return et.value
+    case "datetime_zoned":
+      return et.value.toPlainDate()
     case "datetime_floating":
-      // Floating: reinterpret the viewer's wallclock as the floating wallclock.
-      return {
-        kind: "datetime_floating",
-        value: newInstant.toZonedDateTimeISO(getLocalTzid()).toPlainDateTime(),
-      }
+      return et.value.toPlainDate()
+    case "datetime_utc":
+      // UTC has no other zone identity — render in the viewer's zone.
+      return toLocalDate(et)
+  }
+}
+
+/**
+ * The wallclock {hour, minute} of the event in its OWN zone. For all-day
+ * returns 0/0. Used by editing UI.
+ */
+export function getWallclockTime(et: EventDateTime): { hour: number; minute: number } {
+  switch (et.kind) {
+    case "date":
+      return { hour: 0, minute: 0 }
+    case "datetime_zoned":
+      return { hour: et.value.hour, minute: et.value.minute }
+    case "datetime_floating":
+      return { hour: et.value.hour, minute: et.value.minute }
+    case "datetime_utc":
+      // UTC has no other zone identity — render in the viewer's zone.
+      const z = toLocalZoned(et)
+      return { hour: z.hour, minute: z.minute }
+  }
+}
+
+/**
+ * Replace the wallclock hour/minute in the event's own zone, preserving zone
+ * identity. For all-day events this is a no-op (toggle all-day off first).
+ */
+export function withWallclockTime(et: EventDateTime, hour: number, minute: number): EventDateTime {
+  switch (et.kind) {
+    case "date":
+      return et
     case "datetime_zoned":
       return {
         kind: "datetime_zoned",
-        value: newInstant.toZonedDateTimeISO(et.value.timeZoneId),
+        value: et.value.with({ hour, minute, second: 0, millisecond: 0 }),
       }
+    case "datetime_floating":
+      return {
+        kind: "datetime_floating",
+        value: et.value.with({ hour, minute, second: 0, millisecond: 0 }),
+      }
+    case "datetime_utc": {
+      // UTC has no other zone identity — interpret the new wallclock in the
+      // viewer's zone, then convert back to a UTC instant.
+      const z = toLocalZoned(et).with({ hour, minute, second: 0, millisecond: 0 })
+      return { kind: "datetime_utc", value: z.toInstant() }
+    }
+  }
+}
+
+/**
+ * Replace the calendar date, preserving the wallclock and zone. For all-day
+ * events this swaps the date directly.
+ */
+export function withCalendarDate(et: EventDateTime, newDate: Temporal.PlainDate): EventDateTime {
+  switch (et.kind) {
+    case "date":
+      return { kind: "date", value: newDate }
+    case "datetime_zoned":
+      return {
+        kind: "datetime_zoned",
+        value: et.value.with({
+          year: newDate.year,
+          month: newDate.month,
+          day: newDate.day,
+        }),
+      }
+    case "datetime_floating":
+      return {
+        kind: "datetime_floating",
+        value: et.value.with({
+          year: newDate.year,
+          month: newDate.month,
+          day: newDate.day,
+        }),
+      }
+    case "datetime_utc": {
+      // UTC: shift the date in the viewer's zone, then convert back.
+      const z = toLocalZoned(et).with({
+        year: newDate.year,
+        month: newDate.month,
+        day: newDate.day,
+      })
+      return { kind: "datetime_utc", value: z.toInstant() }
+    }
   }
 }
 
@@ -250,20 +347,36 @@ export function editTime(et: EventDateTime, newViewerLocalDate: Date): EventDate
 // ---------------------------------------------------------------------------
 
 /** "YYYY-MM-DD" in the viewer's local zone. Used as a stable key for grouping. */
-export function formatDateKey(et: EventDateTime): string {
+export function formatDateKey(et: EventDateTime | Date): string {
+  if (et instanceof Date) return toLocalDate(dateToPlainDate(et)).toString()
   return toLocalDate(et).toString()
 }
 
 export function formatTime(et: EventDateTime, timeFormat: TimeFormat): string {
   if (et.kind === "date") return ""
   const z = toLocalZoned(et)
-  if (timeFormat === "12h") {
-    return z.toLocaleString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
-  }
-  // 24h: HH:mm with leading zero.
-  const h = String(z.hour).padStart(2, "0")
-  const m = String(z.minute).padStart(2, "0")
-  return `${h}:${m}`
+  const locale = timeFormat === "12h" ? "en-US" : "en-GB"
+  return z.toLocaleString(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: timeFormat === "12h" ? "h12" : "h23",
+  })
+}
+
+/** "Mon, 28 Apr" (or "Mon, 28 Apr 2027" if not the current year). */
+export function formatShortDate(et: EventDateTime | Date): string {
+  const d = et instanceof Date ? et : toJsDate(et)
+  const pattern = getYear(d) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
+  return format(d, pattern)
+}
+
+/** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
+export function getRelativeDayLabel(et: EventDateTime | Date): string {
+  const d = et instanceof Date ? et : toJsDate(et)
+  if (isToday(d)) return "Today"
+  if (isTomorrow(d)) return "Tomorrow"
+  if (isYesterday(d)) return "Yesterday"
+  return format(d, "EEEE")
 }
 
 // ---------------------------------------------------------------------------
@@ -311,4 +424,33 @@ export function normalizeAllDayRange(
 ): { start: EventDateTime; end: EventDateTime } {
   const needsBump = startOfDayMs(end) <= startOfDayMs(start)
   return { start, end: needsBump ? addDays(start, 1) : end }
+}
+
+/**
+ * The viewer-local date keys (YYYY-MM-DD) this event occupies. For timed
+ * events that's a single key. For all-day events that's start (inclusive)
+ * through end (exclusive, iCal convention) — and at least the start key for
+ * degenerate single-day ranges.
+ */
+export function* enumerateLocalDateKeys(
+  start: EventDateTime,
+  end: EventDateTime,
+): Generator<string> {
+  if (!isAllDay(start)) {
+    yield formatDateKey(start)
+    return
+  }
+
+  const startKey = formatDateKey(start)
+  const endKey = formatDateKey(end)
+  if (startKey >= endKey) {
+    yield startKey
+    return
+  }
+
+  let current: EventDateTime = start
+  while (formatDateKey(current) < endKey) {
+    yield formatDateKey(current)
+    current = addDays(current, 1)
+  }
 }

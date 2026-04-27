@@ -9,7 +9,7 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
 import { CalendarEvent } from "@/lib/cal-events"
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { DaySection } from "./DaySection"

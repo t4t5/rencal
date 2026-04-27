@@ -29,14 +29,11 @@ import {
 } from "@/lib/cal-events"
 import {
   addMinutes,
-  editTime,
   isAllDay,
   normalizeAllDayRange,
-  plainDate,
-  toJsDate,
+  toAllDay,
   toTimedAtStartOfDay,
   toWire,
-  type EventDateTime,
 } from "@/lib/event-time"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
@@ -44,13 +41,6 @@ import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 import { MoreHorizIcon } from "@/icons/more-horiz"
 
 import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
-
-function toAllDay(et: EventDateTime): EventDateTime {
-  if (et.kind === "date") return et
-  // Take the local-zone calendar date and produce a PlainDate.
-  const d = toJsDate(et)
-  return plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
-}
 
 export const EditEvent = ({
   event,
@@ -232,14 +222,10 @@ export const EditEvent = ({
         onDescriptionChange={(newDescription) => {
           setDirtyEvent({ ...dirtyEvent, description: newDescription || null })
         }}
-        start={toJsDate(start)}
-        end={toJsDate(end)}
+        start={start}
+        end={end}
         onChangeDateTime={({ start: newStart, end: newEnd }) => {
-          setDirtyEvent({
-            ...dirtyEvent,
-            start: editTime(start, newStart),
-            end: editTime(end, newEnd),
-          })
+          setDirtyEvent({ ...dirtyEvent, start: newStart, end: newEnd })
         }}
         allDay={all_day}
         onAllDayChange={(checked) => {

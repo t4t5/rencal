@@ -7,8 +7,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { isSameDay, toJsDate } from "@/lib/event-time"
-import { formatTime } from "@/lib/time"
+import { formatTime, isSameDay, toJsDate } from "@/lib/event-time"
 
 type EventRowProps = {
   event: CalendarEvent

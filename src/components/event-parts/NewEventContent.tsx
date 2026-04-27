@@ -9,25 +9,16 @@ import { DEFAULT_DURATION_MINS, useEventDraft } from "@/contexts/EventDraftConte
 
 import {
   addMinutes,
-  editTime,
   isAllDay,
   normalizeAllDayRange,
-  plainDate,
-  toJsDate,
+  toAllDay,
   toTimedAtStartOfDay,
-  type EventDateTime,
 } from "@/lib/event-time"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
 
 type NewEventContentProps = {
   summaryRef?: Ref<HTMLTextAreaElement>
   onCreated: () => void
-}
-
-function toAllDay(et: EventDateTime): EventDateTime {
-  if (et.kind === "date") return et
-  const d = toJsDate(et)
-  return plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
 }
 
 export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps) => {
@@ -55,8 +46,8 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
           summary={summary}
           onClose={onCreate}
           description={description}
-          start={toJsDate(start)}
-          end={toJsDate(end)}
+          start={start}
+          end={end}
           allDay={allDay}
           location={location}
           calendar={calendar}
@@ -84,11 +75,7 @@ export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps)
             }
           }}
           onChangeDateTime={({ start: newStart, end: newEnd }) => {
-            setDraftEvent({
-              ...draftEvent,
-              start: editTime(start, newStart),
-              end: editTime(end, newEnd),
-            })
+            setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
           }}
           onCalendarChange={(newCalendarId) => {
             setDraftEvent({ ...draftEvent, calendarId: newCalendarId })

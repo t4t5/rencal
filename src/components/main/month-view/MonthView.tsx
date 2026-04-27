@@ -10,7 +10,7 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
-import { formatDateKey } from "@/lib/time"
+import { formatDateKey } from "@/lib/event-time"
 
 import { WeekDayLabels } from "./WeekDayLabels"
 import { useInfiniteEvents } from "./useInfiniteEvents"

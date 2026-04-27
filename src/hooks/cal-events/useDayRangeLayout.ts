@@ -4,8 +4,13 @@ import { useMemo } from "react"
 import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import { isAllDay, startOfDayMs, toLocalZoned } from "@/lib/event-time"
-import { getEventDayRange, MS_PER_DAY } from "@/lib/time"
+import {
+  getEventDayRange,
+  isAllDay,
+  MS_PER_DAY,
+  startOfDayMs,
+  toLocalZoned,
+} from "@/lib/event-time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
@@ -148,7 +153,7 @@ export function useDayRangeLayout(
     }
 
     for (const event of events) {
-      const { firstMs, lastMs } = getEventDayRange(event)
+      const { firstMs, lastMs } = getEventDayRange(event.start, event.end)
       const color = colorMap.get(event.calendar_slug) ?? null
       const eventColor = event.color
 

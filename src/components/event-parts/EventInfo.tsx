@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
+import type { EventDateTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { NotesInput } from "./inputs/NotesInput"
@@ -59,8 +60,8 @@ export function EventInfo({
   summary?: string | null
   onChangeSummary: (summary: string) => void
   onClose?: () => void
-  start: Date
-  end: Date
+  start: EventDateTime
+  end: EventDateTime
   onChangeDateTime: (range: DateTimeRange) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
@@ -111,7 +112,6 @@ export function EventInfo({
         <DateTimeSelect
           start={start}
           end={end}
-          allDay={allDay}
           showTime={showTime}
           readOnly={readonly}
           onChange={onChangeDateTime}

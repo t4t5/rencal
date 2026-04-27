@@ -5,8 +5,7 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { isAllDay, toInstant } from "@/lib/event-time"
-import { getEventDayRange, MS_PER_DAY } from "@/lib/time"
+import { getEventDayRange, isAllDay, MS_PER_DAY, toInstant } from "@/lib/event-time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -41,7 +40,7 @@ type EventDayInfo = {
 }
 
 function computeEventDayInfo(event: CalendarEvent): EventDayInfo {
-  const { firstMs, lastMs } = getEventDayRange(event)
+  const { firstMs, lastMs } = getEventDayRange(event.start, event.end)
   const startSortKey = toInstant(event.start).epochMilliseconds
   // All-day events always occupy the all-day lane; timed events only span it if they cross a day
   const spanning = isAllDay(event.start) || lastMs - firstMs >= MS_PER_DAY

@@ -8,7 +8,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
-import { formatTime } from "@/lib/time"
+import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 type WeekTimedEventProps = {

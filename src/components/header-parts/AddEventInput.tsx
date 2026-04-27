@@ -22,9 +22,8 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
-import { toJsDate } from "@/lib/event-time"
+import { formatDateKey, toJsDate } from "@/lib/event-time"
 import { segmentEventText } from "@/lib/parse-event-text"
-import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"

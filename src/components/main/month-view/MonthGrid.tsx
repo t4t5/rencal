@@ -10,8 +10,8 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { formatDateKey } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
-import { formatDateKey } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
