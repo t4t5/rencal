@@ -19,24 +19,22 @@ build-providers:
   #!/usr/bin/env bash
   set -euo pipefail
   mkdir -p src-tauri/providers
-  cargo build --manifest-path ../caldir/Cargo.toml -p caldir-provider-google -p caldir-provider-icloud -p caldir-provider-outlook -p caldir-provider-caldav -p caldir-provider-webcal
-  cp ../caldir/target/debug/caldir-provider-google src-tauri/providers/
-  cp ../caldir/target/debug/caldir-provider-icloud src-tauri/providers/
-  cp ../caldir/target/debug/caldir-provider-outlook src-tauri/providers/
-  cp ../caldir/target/debug/caldir-provider-caldav src-tauri/providers/
-  cp ../caldir/target/debug/caldir-provider-webcal src-tauri/providers/
+  providers=(google icloud outlook caldav webcal)
+  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
+  for p in "${providers[@]}"; do
+    cp "../caldir/target/debug/caldir-provider-$p" src-tauri/providers/
+  done
 
 # Build caldir provider binaries (release) into src-tauri/providers/
 build-providers-release:
   #!/usr/bin/env bash
   set -euo pipefail
   mkdir -p src-tauri/providers
-  cargo build --manifest-path ../caldir/Cargo.toml --release -p caldir-provider-google -p caldir-provider-icloud -p caldir-provider-outlook -p caldir-provider-caldav -p caldir-provider-webcal
-  cp ../caldir/target/release/caldir-provider-google src-tauri/providers/
-  cp ../caldir/target/release/caldir-provider-icloud src-tauri/providers/
-  cp ../caldir/target/release/caldir-provider-outlook src-tauri/providers/
-  cp ../caldir/target/release/caldir-provider-caldav src-tauri/providers/
-  cp ../caldir/target/release/caldir-provider-webcal src-tauri/providers/
+  providers=(google icloud outlook caldav webcal)
+  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
+  for p in "${providers[@]}"; do
+    cp "../caldir/target/release/caldir-provider-$p" src-tauri/providers/
+  done
 
 # Run app (dev mode)
 dev: build-providers
