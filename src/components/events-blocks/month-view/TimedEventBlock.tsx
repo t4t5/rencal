@@ -11,16 +11,6 @@ import { getEventBlockColors } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-type MonthTimedEventProps = {
-  item: TimedEventItem
-  isActive: boolean
-  isPending: boolean
-  isDeclined: boolean
-  isDraft: boolean
-  dimmed: boolean
-  onClick: () => void
-}
-
 export function MonthTimedEvent({
   item,
   isActive,
@@ -29,7 +19,15 @@ export function MonthTimedEvent({
   isDraft,
   dimmed,
   onClick,
-}: MonthTimedEventProps) {
+}: {
+  item: TimedEventItem
+  isActive: boolean
+  isPending: boolean
+  isDeclined: boolean
+  isDraft: boolean
+  dimmed: boolean
+  onClick: () => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()

@@ -11,16 +11,6 @@ import { getEventBlockClasses, getEventBlockColors, getEventBlockStyle } from "@
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-type WeekTimedEventProps = {
-  layout: WeekTimedEventLayout
-  isActive: boolean
-  isPending: boolean
-  isDeclined: boolean
-  isDraft: boolean
-  dimmed: boolean
-  onEventClick: (id: string) => void
-}
-
 function WeekTimedEventImpl({
   layout,
   isActive,
@@ -29,7 +19,15 @@ function WeekTimedEventImpl({
   isDraft,
   dimmed,
   onEventClick,
-}: WeekTimedEventProps) {
+}: {
+  layout: WeekTimedEventLayout
+  isActive: boolean
+  isPending: boolean
+  isDeclined: boolean
+  isDraft: boolean
+  dimmed: boolean
+  onEventClick: (id: string) => void
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()

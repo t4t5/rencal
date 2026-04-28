@@ -8,7 +8,17 @@ import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
-type WeekAllDayBarProps = {
+export function WeekAllDayBar({
+  item,
+  colOffset,
+  rowOffset,
+  isActive,
+  isPending,
+  isDeclined,
+  isDraft,
+  dimmed,
+  onClick,
+}: {
   item: AllDayLaneItem
   /** Added to item.startCol/endCol so the bar aligns with the parent grid's day columns. */
   colOffset: number
@@ -20,19 +30,7 @@ type WeekAllDayBarProps = {
   isDraft: boolean
   dimmed: boolean
   onClick: () => void
-}
-
-export function WeekAllDayBar({
-  item,
-  colOffset,
-  rowOffset,
-  isActive,
-  isPending,
-  isDeclined,
-  isDraft,
-  dimmed,
-  onClick,
-}: WeekAllDayBarProps) {
+}) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 

@@ -1,42 +1,13 @@
 import type { Dispatch, MutableRefObject, RefObject, SetStateAction } from "react"
 
+import { SearchResultEventBlock } from "@/components/events-blocks/search-result/EventBlock"
 import { Command, CommandEmpty, CommandItem, CommandList } from "@/components/ui/command"
 import { PopoverContent } from "@/components/ui/popover"
-
-import type { TimeFormat } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import { formatShortDate, formatTime, isAllDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
-
-function SearchResult({
-  event,
-  color,
-  timeFormat,
-}: {
-  event: CalendarEvent
-  color: string | null
-  timeFormat: TimeFormat
-}) {
-  return (
-    <>
-      <div
-        className="w-1 self-stretch shrink-0"
-        style={{ backgroundColor: color ?? "var(--primary)" }}
-      />
-      <div className="min-w-0">
-        <div className="font-medium text-sm truncate">{event.summary}</div>
-        <div className="text-xs text-muted-foreground">
-          {isAllDay(event.start)
-            ? formatShortDate(event.start)
-            : `${formatShortDate(event.start)} · ${formatTime(event.start, timeFormat)}`}
-        </div>
-      </div>
-    </>
-  )
-}
 
 interface SearchResultsProps {
   resultsRef: RefObject<HTMLDivElement | null>
@@ -101,7 +72,7 @@ export function SearchResults({
                 onSelect={() => setActiveEvent((prev) => (prev?.id === event.id ? null : event))}
                 className={cn("flex items-center gap-2 cursor-pointer", isActive && "bg-accent!")}
               >
-                <SearchResult
+                <SearchResultEventBlock
                   event={event}
                   color={calendarColor(event.calendar_slug)}
                   timeFormat={timeFormat}

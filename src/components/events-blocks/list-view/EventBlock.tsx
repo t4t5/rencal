@@ -9,12 +9,13 @@ import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
 import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
 
-type EventRowProps = {
+export const ListViewEventBlock = memo(function EventRow({
+  event,
+  calendarColor,
+}: {
   event: CalendarEvent
   calendarColor: string | null
-}
-
-export const EventRow = memo(function EventRow({ event, calendarColor }: EventRowProps) {
+}) {
   const { timeFormat } = useSettings()
   const from = event.start
   const to = event.end

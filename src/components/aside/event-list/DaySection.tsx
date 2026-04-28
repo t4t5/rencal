@@ -1,8 +1,8 @@
 import { format, isSameYear, isToday } from "date-fns"
-import { forwardRef, memo, type MouseEvent } from "react"
+import { forwardRef, memo } from "react"
 
-import { EventRow } from "@/components/events-blocks/list-view/EventBlock"
-import { UntitledEventText } from "@/components/ui/untitled-event-text"
+import { AllDayEventBlock } from "@/components/events-blocks/list-view/AllDayEventBlock"
+import { ListViewEventBlock } from "@/components/events-blocks/list-view/EventBlock"
 
 import type { Calendar } from "@/rpc/bindings"
 
@@ -10,7 +10,6 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
@@ -37,10 +36,10 @@ export const DaySection = memo(
       const isDeclined = isDeclinedEvent(event, calendars)
 
       return (
-        <AllDayEventTag
+        <AllDayEventBlock
           key={isDraft ? "__draft__" : event.id}
           event={event}
-          calendarColor={calendar?.color ?? "var(--primary)"}
+          calendarColor={calendar?.color || null}
           highlighted={isActive}
           isDashed={isPending || isDeclined}
           isDeclined={isDeclined}
@@ -82,7 +81,7 @@ export const DaySection = memo(
             "line-through": isDeclined,
           })}
         >
-          <EventRow event={event} calendarColor={calendar?.color ?? null} />
+          <ListViewEventBlock event={event} calendarColor={calendar?.color ?? null} />
         </div>
       )
     }
@@ -125,44 +124,3 @@ export const DaySection = memo(
     )
   }),
 )
-
-const AllDayEventTag = ({
-  event,
-  calendarColor,
-  highlighted,
-  isDashed,
-  isDeclined,
-  isDraft,
-  onClick,
-}: {
-  event: CalendarEvent
-  calendarColor: string
-  highlighted: boolean
-  isDashed: boolean
-  isDeclined: boolean
-  isDraft: boolean
-  onClick?: (e: MouseEvent<HTMLDivElement>) => void
-}) => {
-  const style = getEventBlockStyle({
-    calendarColor,
-    eventColor: event.color,
-    highlighted,
-    isDashed,
-    isDraft,
-  })
-
-  return (
-    <div
-      data-event-clickable={!isDraft || undefined}
-      onClick={onClick}
-      className={cn(
-        getEventBlockClasses(highlighted, isDeclined),
-        "px-1 py-px leading-4 rounded inline-flex text-[13px]!",
-        isDraft && "font-medium",
-      )}
-      style={style}
-    >
-      {event.summary || <UntitledEventText />}
-    </div>
-  )
-}
