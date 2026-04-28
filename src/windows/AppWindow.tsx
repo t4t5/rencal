@@ -14,19 +14,10 @@ import { EventDraftProvider } from "@/contexts/EventDraftContext"
 import { SyncProvider } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import { useCalendarView } from "@/hooks/useCalendarView"
 import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
-import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { CalendarView, calendarViewSchema } from "@/lib/calendar-view"
+import { CalendarView } from "@/lib/calendar-view"
 import { Preload } from "@/lib/preload-data"
-
-function GlobalShortcuts({
-  onChangeCalendarView,
-}: {
-  onChangeCalendarView: (calendarView: CalendarView) => void
-}) {
-  useGlobalShortcuts({ onChangeCalendarView })
-  return null
-}
 
 export function AppWindow({ preload }: { preload: Preload }) {
   return (
@@ -44,11 +35,7 @@ export function AppWindow({ preload }: { preload: Preload }) {
 }
 
 function App() {
-  const [calendarView, setCalendarView] = useLocalStorage(
-    "calendarView",
-    calendarViewSchema,
-    "month",
-  )
+  const { calendarView, setCalendarView } = useCalendarView()
 
   const isMd = useBreakpoint("md")
 
@@ -67,4 +54,14 @@ function App() {
       {!isMd && <SheetEvent />}
     </main>
   )
+}
+
+// Isolated so context updates in useGlobalShortcuts don't re-render <App />
+function GlobalShortcuts({
+  onChangeCalendarView,
+}: {
+  onChangeCalendarView: (calendarView: CalendarView) => void
+}) {
+  useGlobalShortcuts({ onChangeCalendarView })
+  return null
 }
