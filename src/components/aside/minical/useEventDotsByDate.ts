@@ -3,6 +3,7 @@ import { useMemo } from "react"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { enumerateLocalDateKeys } from "@/lib/event-time"
 
 export function useEventDotsByDate(): Map<string, string[]> {
@@ -12,7 +13,7 @@ export function useEventDotsByDate(): Map<string, string[]> {
   return useMemo(() => {
     const colorByCalendarSlug = new Map<string, string>()
     for (const cal of calendars) {
-      if (cal.color) colorByCalendarSlug.set(cal.slug, cal.color)
+      colorByCalendarSlug.set(cal.slug, getCalendarColor(cal))
     }
 
     const dotsByDate = new Map<string, string[]>()

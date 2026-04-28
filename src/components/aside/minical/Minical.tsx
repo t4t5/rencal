@@ -9,7 +9,6 @@ import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronUpIcon } from "@/icons/chevron-up"
 
 import { Calendar, EventDotsProvider } from "./Calendar"
-import { SlidePresence } from "./SlidePresence"
 import { useEventDotsByDate } from "./useEventDotsByDate"
 
 const HiddenComponent = () => <></>
@@ -31,9 +30,6 @@ export function Minical() {
     directionRef.current = monthKey > prevMonthKeyRef.current ? 1 : -1
     prevMonthKeyRef.current = monthKey
   }
-
-  const direction = directionRef.current
-  const animationDuration = isRapidRef.current ? 0 : 0.25
 
   const gridRef = useRef<HTMLDivElement>(null)
   const [gridHeight, setGridHeight] = useState<number | null>(null)
