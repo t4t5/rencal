@@ -1,7 +1,7 @@
 import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
-import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/MonthGrid"
+import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/Grid"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"

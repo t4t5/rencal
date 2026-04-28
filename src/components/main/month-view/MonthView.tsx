@@ -1,7 +1,7 @@
 import { isSameDay, startOfMonth } from "date-fns"
 import { useRef } from "react"
 
-import { MonthGrid } from "@/components/main/month-view/MonthGrid"
+import { MonthGrid } from "@/components/main/month-view/Grid"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
