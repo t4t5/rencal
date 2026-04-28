@@ -31,6 +31,14 @@ Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releas
 
 ## Screenshots
 
+| Month view                                                                                     | Week view                                                                                     |
+| ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| ![Month view](https://github.com/user-attachments/assets/72b2ba23-5503-4558-b018-0cb4ab97d0c9) | ![Week view](https://github.com/user-attachments/assets/9c209e19-53fd-440a-8278-13ca3ba13fc8) |
+
+| Connect account                                                                                     | Theme selector                                                                                     |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ![Connect account](https://github.com/user-attachments/assets/24899b23-d64f-4395-96e7-ca4acc14a4e9) | ![Theme selector](https://github.com/user-attachments/assets/86f0460f-6e71-48f4-b78a-8cfad3b602ab) |
+
 ## Development
 
 Use [`just`](https://just.systems/) to access handy development commands.
