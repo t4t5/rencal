@@ -13,7 +13,7 @@ import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { DaySection } from "./DaySection"
-import { WelcomeEmptyState } from "./WelcomeEmptyState"
+import { GetStartedState } from "./GetStartedState"
 
 type Section = {
   date: Date
@@ -21,13 +21,11 @@ type Section = {
   isGhost: boolean
 }
 
-export function EventList() {
+export function Agenda() {
   const { calendars, isLoadingCalendars } = useCalendars()
+
   const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
     useCalendarNavigation()
-  // TODO: respect calendar visibility
-  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
-  // const visibleCalendarIds = calendars.map((c) => c.slug)
 
   const { calendarEvents: events, isInitialLoading } = useCalEvents()
   const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
@@ -172,7 +170,7 @@ export function EventList() {
   }
 
   if (calendars.length === 0) {
-    return <WelcomeEmptyState />
+    return <GetStartedState />
   }
 
   if (events.length === 0) {

@@ -3,7 +3,7 @@ import { useState } from "react"
 import { AddAccountModal } from "@/components/settings/accounts/AddAccountModal"
 import { Button } from "@/components/ui/button"
 
-export function WelcomeEmptyState() {
+export function GetStartedState() {
   const [showAddAccount, setShowAddAccount] = useState(false)
 
   return (
