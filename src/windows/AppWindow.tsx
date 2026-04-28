@@ -1,9 +1,9 @@
 import "@/global.css"
 
-import { Main } from "@/components/Main"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
+import { Main } from "@/components/main/Main"
 import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"

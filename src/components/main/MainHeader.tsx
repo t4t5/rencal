@@ -1,7 +1,7 @@
-import { InvitesDropdown } from "@/components/header-parts/InvitesDropdown"
-import { SettingsButton } from "@/components/header-parts/SettingsButton"
-import { SyncStatus } from "@/components/header-parts/SyncStatus"
-import { SearchBar } from "@/components/header-parts/search/SearchBar"
+import { InvitesDropdown } from "@/components/toolbar/InvitesDropdown"
+import { SettingsButton } from "@/components/toolbar/SettingsButton"
+import { SyncStatus } from "@/components/toolbar/SyncStatus"
+import { SearchBar } from "@/components/toolbar/search/SearchBar"
 import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
@@ -11,7 +11,7 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import { CalendarView } from "@/lib/calendar-view"
 
-export function HeaderLong() {
+export function MainHeader() {
   const { navigateToDate } = useCalendarNavigation()
 
   return (

@@ -1,14 +1,15 @@
 import { useEffect, useState } from "react"
 
 import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
-import { ActionBar } from "@/components/header-parts/ActionBar"
 import { Card } from "@/components/ui/card"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
-export function Header() {
+import { SidebarToolbar } from "./SidebarToolbar"
+
+export function SidebarHeader() {
   const { isDrafting } = useEventDraft()
   const { text } = useEventText()
 
@@ -23,7 +24,7 @@ export function Header() {
 
   return (
     <div className="flex flex-col p-4 pb-0">
-      <ActionBar />
+      <SidebarToolbar />
 
       <div
         className={cn(

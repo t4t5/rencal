@@ -1,4 +1,4 @@
-import { HeaderLong } from "@/components/main/HeaderLong"
+import { MainHeader } from "@/components/main/MainHeader"
 import { MonthView } from "@/components/main/month-view/MonthView"
 import { WeekView } from "@/components/main/week-view/WeekView"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
@@ -18,7 +18,7 @@ export function Main({
       onValueChange={(v) => onChangeCalendarView(calendarViewSchema.parse(v))}
       className="hidden sm:flex flex-col grow min-w-0"
     >
-      <HeaderLong />
+      <MainHeader />
 
       <div className="h-[calc(100vh-64px)] select-none">
         <TabsContent value="week" className="h-full">
