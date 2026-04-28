@@ -1,6 +1,7 @@
 import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef, memo, type MouseEvent } from "react"
 
+import { EventRow } from "@/components/events-blocks/list-view/EventBlock"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { Calendar } from "@/rpc/bindings"
@@ -13,8 +14,6 @@ import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
-
-import { EventRow } from "./EventRow"
 
 type DaySectionProps = {
   date: Date

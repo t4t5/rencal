@@ -1,7 +1,7 @@
 import { addHours, getHours, setHours, startOfDay, startOfHour } from "date-fns"
 import { useRef } from "react"
 
-import { MonthTimedEvent } from "@/components/main/month-view/MonthTimedEvent"
+import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
 import {
   ContextMenu,
   ContextMenuContent,

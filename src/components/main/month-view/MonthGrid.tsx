@@ -2,7 +2,7 @@ import { useVirtualizer } from "@tanstack/react-virtual"
 import { format } from "date-fns"
 import { memo, RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 
-import { MonthAllDayEvent } from "@/components/main/month-view/MonthAllDayEvent"
+import { MonthAllDayEvent } from "@/components/events-blocks/month-view/AllDayEventBlock"
 import { MonthDayCell } from "@/components/main/month-view/MonthDayCell"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"

@@ -1,6 +1,9 @@
 import { addHours, format, setHours, startOfDay, startOfWeek } from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
+import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
+import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventBlock"
+
 import type { TimeFormat } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -29,8 +32,6 @@ import { cn } from "@/lib/utils"
 import { AllDayContextMenu } from "./AllDayContextMenu"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
-import { WeekAllDayBar } from "./WeekAllDayBar"
-import { WeekTimedEvent } from "./WeekTimedEvent"
 
 const HOUR_HEIGHT = 56
 const GRID_HEIGHT = 24 * HOUR_HEIGHT
