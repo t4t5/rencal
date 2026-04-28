@@ -6,7 +6,12 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string; color: string | null }
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: Recurrence | null; master_recurrence: Recurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string; color: string | null; 
+/**
+ * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
+ * Used by the frontend to cheaply detect content changes for reload dedup.
+ */
+updated: string | null }
 
 /**
  * Input for creating an event

@@ -31,5 +31,6 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     conference_url: null,
     calendar_slug: draft.calendarId,
     color: null,
+    updated: null,
   }
 }

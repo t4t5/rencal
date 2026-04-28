@@ -22,6 +22,20 @@ import { DateRange } from "@/lib/types"
 
 const CALDIR_CHANGED = "caldir-changed"
 
+// Cheap identity check used to skip no-op state updates after a reload. The
+// previous JSON.stringify-based dedup was correct but cost tens of ms per call
+// at thousands-of-events scale (see CalEventsContext list_events flow).
+// Both arrays come back sorted by start time from the backend, so we can scan
+// position-by-position. `updated` is RFC 3339 of DTSTAMP/LAST-MODIFIED — bumps
+// on any real edit, so different content yields a different tuple.
+function sameEventList(a: CalendarEvent[], b: CalendarEvent[]): boolean {
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].id !== b[i].id || a[i].updated !== b[i].updated) return false
+  }
+  return true
+}
+
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]
   setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
@@ -104,10 +118,7 @@ export function CalEventsProvider({
           latest.end.getTime() !== range.end.getTime()
         if (rangeChanged) continue
 
-        setCalendarEvents((prev) => {
-          if (JSON.stringify(prev) === JSON.stringify(events)) return prev
-          return events
-        })
+        setCalendarEvents((prev) => (sameEventList(prev, events) ? prev : events))
 
         if (!reloadPendingRef.current) break
       }

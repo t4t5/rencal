@@ -103,6 +103,9 @@ pub struct CalendarEvent {
     pub conference_url: Option<String>,
     pub calendar_slug: String,
     pub color: Option<String>,
+    /// RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
+    /// Used by the frontend to cheaply detect content changes for reload dedup.
+    pub updated: Option<String>,
 }
 
 /// Map a Google Calendar event color ID (1–11) to its canonical hex color.
@@ -358,6 +361,7 @@ impl CalendarEvent {
                 .find(|(k, _)| k == "X-GOOGLE-COLOR-ID")
                 .and_then(|(_, v)| google_color_id_to_hex(v))
                 .map(String::from),
+            updated: e.updated.map(|dt| dt.to_rfc3339()),
         }
     }
 }
@@ -1285,6 +1289,7 @@ mod tests {
             attendees: vec![],
             conference_url: None,
             color: None,
+            updated: None,
         }
     }
 
