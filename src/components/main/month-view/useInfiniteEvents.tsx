@@ -21,18 +21,60 @@ export function useInfiniteEvents({
   const [rangeStart, setRangeStart] = useState(() => startOfMonth(subMonths(activeDate, 2)))
   const [rangeEnd, setRangeEnd] = useState(() => startOfMonth(addMonths(activeDate, 3)))
 
-  // When navigation jumps activeDate outside the loaded range (e.g. typing
-  // "on july 5" while the grid stops at July 1), extend the range so the
-  // scroll-to-active-week effect can find the target.
-  useEffect(() => {
-    if (activeDate >= rangeEnd) {
-      setRangeEnd(startOfMonth(addMonths(activeDate, 2)))
-    } else if (activeDate < rangeStart) {
-      setRangeStart(startOfMonth(subMonths(activeDate, 2)))
-    }
-  }, [activeDate, rangeStart, rangeEnd])
-
   const isLoadingRef = useRef(false)
+
+  // When navigation jumps activeDate outside the loaded range (e.g. typing
+  // "on july 5" while the grid stops at July 1), extend the grid AND load
+  // events for the gap. Without this, weeks render but appear eventless.
+  const visibleCalendarKey = visibleCalendarIds.join("|")
+  useEffect(() => {
+    const currentRange = currentDateRangeRef.current
+    if (!currentRange || isLoadingRef.current) return
+
+    if (activeDate >= currentRange.end) {
+      const newEnd = endOfMonth(addMonths(activeDate, MONTHS_TO_LOAD))
+      setRangeEnd(startOfMonth(addMonths(activeDate, MONTHS_TO_LOAD)))
+      isLoadingRef.current = true
+      void (async () => {
+        try {
+          const newEvents = await getCalendarEventsForRange(
+            visibleCalendarIds,
+            currentRange.end,
+            newEnd,
+          )
+          setCalendarEvents((prev) => {
+            const existingIds = new Set(prev.map((e) => e.id))
+            const filtered = newEvents.filter((e) => !existingIds.has(e.id))
+            return filtered.length ? [...prev, ...filtered] : prev
+          })
+          currentDateRangeRef.current = { start: currentRange.start, end: newEnd }
+        } finally {
+          isLoadingRef.current = false
+        }
+      })()
+    } else if (activeDate < currentRange.start) {
+      const newStart = startOfMonth(subMonths(activeDate, MONTHS_TO_LOAD))
+      isLoadingRef.current = true
+      void (async () => {
+        try {
+          const newEvents = await getCalendarEventsForRange(
+            visibleCalendarIds,
+            newStart,
+            currentRange.start,
+          )
+          setCalendarEvents((prev) => {
+            const existingIds = new Set(prev.map((e) => e.id))
+            const filtered = newEvents.filter((e) => !existingIds.has(e.id))
+            return filtered.length ? [...filtered, ...prev] : prev
+          })
+          currentDateRangeRef.current = { start: newStart, end: currentRange.end }
+          setRangeStart(startOfMonth(subMonths(activeDate, MONTHS_TO_LOAD)))
+        } finally {
+          isLoadingRef.current = false
+        }
+      })()
+    }
+  }, [activeDate, visibleCalendarKey, setCalendarEvents, currentDateRangeRef])
 
   useScrollBoundary({
     scrollContainerRef,
