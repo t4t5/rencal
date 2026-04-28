@@ -17,8 +17,7 @@ export type WeekEventDisplayMode = "compact" | "standard" | "expanded"
 
 export type WeekTimedEventLayout = {
   event: CalendarEvent
-  color: string | null
-  eventColor: string | null
+  calendarColor: string | null
   top: number
   height: number
   column: number
@@ -146,8 +145,7 @@ export function useDayRangeLayout(
 
     for (const event of events) {
       const { firstDayMs: firstMs, lastDayMs: lastMs } = event.dateInfo
-      const color = getCalendarColor(calMap.get(event.calendar_slug))
-      const eventColor = event.color
+      const calendarColor = getCalendarColor(calMap.get(event.calendar_slug))
 
       if (isAllDay(event.start)) {
         // Check overlap with range
@@ -161,8 +159,7 @@ export function useDayRangeLayout(
 
         allDayItems.push({
           event,
-          color,
-          eventColor,
+          calendarColor,
           startCol,
           endCol,
           lane: 0,
@@ -184,8 +181,7 @@ export function useDayRangeLayout(
 
           allDayItems.push({
             event,
-            color,
-            eventColor,
+            calendarColor,
             startCol,
             endCol,
             lane: 0,
@@ -206,8 +202,7 @@ export function useDayRangeLayout(
             )
             timedByDay.get(dateKey)!.push({
               event,
-              color,
-              eventColor,
+              calendarColor,
               top,
               height,
               column: 0,

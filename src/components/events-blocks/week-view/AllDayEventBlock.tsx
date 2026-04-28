@@ -56,8 +56,8 @@ export function WeekAllDayBar({
           isDraft && "font-medium",
         )}
         style={getEventBlockStyle({
-          calendarColor: item.color,
-          eventColor: item.eventColor,
+          calendarColor: item.calendarColor,
+          eventColor: item.event.color,
           highlighted,
           isDashed,
           isDraft,

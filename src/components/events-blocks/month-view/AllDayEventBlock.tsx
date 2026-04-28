@@ -1,7 +1,7 @@
 import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
-import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/Grid"
+import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/Row"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -60,8 +60,8 @@ export function MonthAllDayEvent({
         left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 3 : -2}px)`,
         right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 4 : -2}px)`,
         ...getEventBlockStyle({
-          calendarColor: item.color,
-          eventColor: item.eventColor,
+          calendarColor: item.calendarColor,
+          eventColor: item.event.color,
           highlighted,
           isDashed,
           isDraft,

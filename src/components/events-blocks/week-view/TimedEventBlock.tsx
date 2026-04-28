@@ -42,8 +42,8 @@ function WeekTimedEventImpl({
   const highlighted = isActive || contextOpen
 
   const colors = getEventBlockColors({
-    calendarColor: layout.color,
-    eventColor: layout.eventColor,
+    calendarColor: layout.calendarColor,
+    eventColor: layout.event.color,
     highlighted,
     isDraft,
     isDashed,
@@ -76,8 +76,8 @@ function WeekTimedEventImpl({
         zIndex: layout.column,
         border: "1px solid var(--background)",
         ...getEventBlockStyle({
-          calendarColor: layout.color,
-          eventColor: layout.eventColor,
+          calendarColor: layout.calendarColor,
+          eventColor: layout.event.color,
           highlighted,
           isDashed,
           isDraft,
