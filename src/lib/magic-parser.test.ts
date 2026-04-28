@@ -9,7 +9,6 @@ describe("parseEventText", () => {
     const result = parseEventText("Holiday from june 15 to june 18", referenceDate)
 
     expect(result.summary).toBe("Holiday")
-    expect(result.allDay).toBe(true)
     expect(result.recurrence).toBeNull()
     expect(result.location).toBeNull()
     expect(result.chronoMatchText).toBe("june 15 to june 18")

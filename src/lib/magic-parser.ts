@@ -10,11 +10,10 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 
-interface ParsedEventText {
+interface ParsedEventSegments {
   summary: string
   start: EventTime | null
   end: EventTime | null
-  allDay: boolean
   recurrence: Recurrence | null
   location: string | null
   // Raw chrono match text from the input. Used by segmentEventText to locate
@@ -117,6 +116,7 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
   if (!text.trim()) return [{ text, parsed: false }]
 
   const parsed = parseEventText(text, referenceDate)
+
   if (!parsed.start && !parsed.recurrence && !parsed.location) {
     return [{ text, parsed: false }]
   }
@@ -178,7 +178,10 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
   return segments
 }
 
-export function parseEventText(text: string, referenceDate: Date = new Date()): ParsedEventText {
+export function parseEventText(
+  text: string,
+  referenceDate: Date = new Date(),
+): ParsedEventSegments {
   const recurrenceResult = parseRecurrence(text)
 
   const recurrence: Recurrence | null = recurrenceResult
@@ -195,7 +198,6 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
       summary,
       start: null,
       end: null,
-      allDay: false,
       recurrence,
       location,
       chronoMatchText: null,
@@ -229,7 +231,6 @@ export function parseEventText(text: string, referenceDate: Date = new Date()): 
     summary: finalSummary,
     start: toEt(startDate),
     end: toEt(endDate),
-    allDay,
     recurrence,
     location,
     chronoMatchText: result.text,
