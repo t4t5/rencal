@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -20,19 +20,20 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
     useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
 
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  const getInput = useCallback(() => containerRef.current?.querySelector("input") ?? null, [])
+  const inputRef = useRef<HTMLInputElement>(null)
 
   // Get magic segments like "tomorrow at 7pm", "in London", etc.
-  const { measurerRef, outlines, scrollLeft, syncScroll, hasMagicSegments } =
-    useMagicSegmentOutlines({ text, enabled: isDrafting, getInput })
+  const { measurerRef, magicOutlines, scrollLeft, repositionMagicSegments, hasMagicSegments } =
+    useMagicSegmentOutlines({ text, enabled: isDrafting, inputRef })
 
+  // Automatically jump to the day the event is created for:
   useJumpToStartDate({ isDrafting, draftStart: draftEvent.start })
 
   return (
-    <div ref={containerRef} className="relative w-full">
-      {hasMagicSegments && <MagicSegmentsOverlay outlines={outlines} scrollLeft={scrollLeft} />}
+    <div className="relative w-full">
+      {hasMagicSegments && (
+        <MagicSegmentsOverlay magicOutlines={magicOutlines} scrollLeft={scrollLeft} />
+      )}
 
       <span
         ref={measurerRef}
@@ -41,6 +42,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
       />
 
       <Input
+        ref={inputRef}
         ghost={false}
         value={isDrafting ? text : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
@@ -48,10 +50,10 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         tabIndex={isDrafting ? 0 : -1}
         onChange={(e) => {
           setText(e.target.value)
-          syncScroll()
+          repositionMagicSegments()
         }}
-        onScroll={syncScroll}
-        onSelect={syncScroll}
+        onScroll={repositionMagicSegments}
+        onSelect={repositionMagicSegments}
         onClick={() => {
           if (!isDrafting) {
             if (!canCreate) {
@@ -61,14 +63,18 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
             setDefaultDraftEvent()
             setIsDrafting(true)
           }
-          syncScroll()
+          repositionMagicSegments()
         }}
         onKeyDown={(e) => {
           if (!isDrafting) return
+
           if (e.key === "Enter" && text) {
             e.preventDefault()
             void createDraftEvent().then(onExit)
           }
+
+          // Hitting escape once clears the text
+          // Hitting it again exits compose mode
           if (e.key === "Escape") {
             if (text) {
               setText("")
@@ -76,7 +82,8 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
               onExit()
             }
           }
-          syncScroll()
+
+          repositionMagicSegments()
         }}
         className={cn(
           "w-full",
@@ -95,7 +102,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {
             setText("")
-            getInput()?.focus()
+            inputRef.current?.focus()
           }}
           className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
         >
@@ -106,8 +113,6 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   )
 }
 
-// Jump the event list to the draft's start date whenever it changes, so the
-// user can see where their event will land as they type.
 const useJumpToStartDate = ({
   isDrafting,
   draftStart,
