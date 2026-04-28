@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { ReactNode, RefObject, useEffect, useRef } from "react"
 
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
@@ -14,8 +14,10 @@ import { PlusIcon } from "@/icons/plus"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {
-  const { text, setText } = useEventText()
   const { isDrafting, setIsDrafting } = useEventDraft()
+
+  const { text, setText } = useEventText()
+
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
@@ -39,36 +41,62 @@ export function ComposeEventButton() {
   const isMd = useBreakpoint("md")
 
   return (
-    <div
-      className={cn(
-        "absolute inset-0 flex justify-end transition duration-75 z-20 md:static md:w-full",
-        {
-          "pl-[70px]": isMacOS,
-          "bg-transparent right-auto w-[105px] md:w-full": !isDrafting,
-          "bg-background right-0": isDrafting,
-        },
-      )}
-    >
+    <SidebarOverlay expanded={isDrafting}>
       {isMd && <Spacer grow={!isDrafting} />}
 
       <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
-        <div
-          ref={containerRef}
-          className={cn(
-            "relative transition-[flex-grow,flex-basis] duration-200 ease-out shrink-0",
-            isDrafting ? "grow basis-0" : "grow-0 basis-[var(--control-height)]",
-          )}
-        >
+        <ButtonContainer expanded={isDrafting} ref={containerRef}>
           <ComposeEventInput onExit={exitDraft} />
           <PlusButtonOverlay show={!isDrafting} />
-        </div>
+        </ButtonContainer>
       </ShortcutTooltip>
 
       {!isMd && <Spacer grow={!isDrafting} />}
+    </SidebarOverlay>
+  )
+}
+
+// This grows to overlap the other elements in the header.
+// This way, the user can fully focus on composing their event
+// without the other toolbar buttons being in the way
+const SidebarOverlay = ({ expanded, children }: { expanded: boolean; children: ReactNode }) => (
+  <div
+    className={cn(
+      "absolute inset-0 flex justify-end transition duration-75 z-20 md:static md:w-full",
+      {
+        "pl-[70px]": isMacOS,
+        "bg-transparent right-auto w-[105px] md:w-full": !expanded,
+        "bg-background right-0": expanded,
+      },
+    )}
+  >
+    {children}
+  </div>
+)
+
+const ButtonContainer = ({
+  children,
+  expanded,
+  ref,
+}: {
+  children: ReactNode
+  expanded: boolean
+  ref: RefObject<HTMLDivElement | null>
+}) => {
+  return (
+    <div
+      ref={ref}
+      className={cn(
+        "relative transition-[flex-grow,flex-basis] duration-200 ease-out shrink-0",
+        expanded ? "grow basis-0" : "grow-0 basis-[var(--control-height)]",
+      )}
+    >
+      {children}
     </div>
   )
 }
 
+// Empty space filled by this, so that the window stays draggable
 const Spacer = ({ grow }: { grow?: boolean }) => {
   return (
     <DragRegion
@@ -77,6 +105,9 @@ const Spacer = ({ grow }: { grow?: boolean }) => {
   )
 }
 
+// The compose "button" is just an ilusion.
+// It's actually an input with this overlay so that it looks like a button:
+// This makes it easier to animate the button -> input expansion
 const PlusButtonOverlay = ({ show }: { show: boolean }) => {
   return (
     <div
