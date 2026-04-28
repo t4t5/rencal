@@ -3,6 +3,8 @@ import { RefObject, useEffect, useMemo, useRef, useState } from "react"
 import { CalendarEvent } from "@/lib/cal-events"
 import { formatDateKey } from "@/lib/event-time"
 
+import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
+
 export type Section = {
   date: Date
   events: CalendarEvent[]
@@ -49,7 +51,7 @@ export function useGhostSection({
     if (!ghostDate || !ghostRef.current || !scrollContainerRef.current) return
 
     const el = ghostRef.current
-    el.scrollIntoView({ behavior: ghostScrollBehaviorRef.current, block: "start" })
+    scrollSectionIntoContainer(scrollContainerRef.current, el, ghostScrollBehaviorRef.current)
 
     let hasBeenVisible = false
     const observer = new IntersectionObserver(

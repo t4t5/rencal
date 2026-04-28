@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 
 import { DaySection } from "./DaySection"
 import { GetStartedState } from "./GetStartedState"
+import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
@@ -54,11 +55,12 @@ export function Agenda() {
     const targetDateStr = formatDateKey(date)
     const section = sectionRefs.current.get(targetDateStr)
 
-    if (section) {
-      // Remove ghost synchronously so scrollIntoView measures the final layout.
+    const container = scrollContainerRef.current
+    if (section && container) {
+      // Remove ghost synchronously so the scroll target measures the final layout.
       // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
       flushSync(() => clearGhost())
-      section.scrollIntoView({ behavior, block: "start" })
+      scrollSectionIntoContainer(container, section, behavior)
     } else {
       showGhost(date, behavior)
     }
