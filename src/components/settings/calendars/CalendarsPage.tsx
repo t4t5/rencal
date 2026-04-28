@@ -2,9 +2,6 @@ import { ReactNode } from "react"
 
 import { CalendarItem } from "@/components/event-parts/inputs/CalendarSelect"
 import { Button } from "@/components/ui/button"
-/* import { Checkbox } from "@/components/ui/checkbox"
-import { getCalendarColor } from "@/lib/calendar-styles"
-import { cn } from "@/lib/utils" */
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,18 +29,23 @@ export function CalendarsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-4">
-        {Object.entries(calendarsByProvider).map(([provider, cals]) => (
-          <CalendarGroup
-            key={provider}
-            title={getProviderDisplayName(provider)}
-            calendars={cals ?? []}
-          />
-        ))}
-        {localCalendars.length > 0 && (
-          <CalendarGroup title="Local-only" calendars={localCalendars} />
-        )}
-      </div>
+      {!!calendars.length && (
+        <div className="flex flex-col gap-4">
+          {Object.entries(calendarsByProvider).map(([provider, cals]) => (
+            <CalendarGroup
+              key={provider}
+              title={getProviderDisplayName(provider)}
+              calendars={cals ?? []}
+            />
+          ))}
+
+          {localCalendars.length > 0 && (
+            <CalendarGroup title="Local-only" calendars={localCalendars} />
+          )}
+        </div>
+      )}
+
+      {!calendars.length && <div className="text-sm text-muted-foreground">No calendars yet.</div>}
 
       <Tooltip>
         <TooltipTrigger asChild>
@@ -109,32 +111,3 @@ function CalendarDropdownMenuWrapper({
     </div>
   )
 }
-
-/*
-function CalendarCheckboxItem({ calendar }: { calendar: Calendar }) {
-  const isVisible = true // TODO: Implement visibility toggle
-
-  return (
-    <label className="flex items-center gap-2 cursor-pointer">
-      <Checkbox
-        checked={isVisible}
-        onCheckedChange={() => {
-          // TODO: Implement visibility toggle using local DB keyed by calendar slug
-        }}
-        className="data-[state=checked]:border-transparent"
-        style={
-          isVisible
-            ? {
-                backgroundColor: getCalendarColor(calendar),
-                borderColor: getCalendarColor(calendar),
-              }
-            : undefined
-        }
-      />
-      <span className={cn("text-sm grow", { "text-muted-foreground": !isVisible })}>
-        {calendar.name ?? calendar.slug}
-      </span>
-    </label>
-  )
-}
-*/
