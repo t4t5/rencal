@@ -74,7 +74,7 @@ function WeekTimedEventImpl({
         top: `${layout.top}%`,
         height: `max(${layout.height}%, 1rem)`,
         left: `${leftPercent}%`,
-        width: `calc(${widthPercent}% - 2px)`,
+        width: `${widthPercent}%`,
         zIndex: layout.column,
         border: "1px solid var(--day-bg)",
         ...getEventBlockStyle({
