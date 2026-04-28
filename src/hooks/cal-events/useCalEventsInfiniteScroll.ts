@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
-import { RefObject, useCallback, useRef } from "react"
+import { RefObject, useCallback, useMemo, useRef } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -9,15 +9,17 @@ import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-rang
 
 export const useCalEventsInfiniteScroll = ({
   scrollContainerRef,
+  enabled = true,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
+  enabled?: boolean
 }) => {
   const { calendars } = useCalendars()
   const { currentDateRangeRef, setCalendarEvents } = useCalEvents()
   const isLoadingRef = useRef(false)
 
   // TODO: respect calendar visibility
-  const visibleCalendarIds = calendars.map((c) => c.slug)
+  const visibleCalendarIds = useMemo(() => calendars.map((c) => c.slug), [calendars])
   // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
 
   const onNearTop = useCallback(async () => {
@@ -98,6 +100,7 @@ export const useCalEventsInfiniteScroll = ({
 
   useScrollBoundary({
     scrollContainerRef,
+    enabled,
     threshold: 200,
     onNearTop,
     onNearBottom,

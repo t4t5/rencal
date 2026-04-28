@@ -48,9 +48,12 @@ export function EventList() {
   ghostDateRef.current = ghostDate
   const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
   const hasInitiallyScrolledRef = useRef(false)
+  const pendingInitialGhostScrollRef = useRef(false)
+  const initialRevealRafRef = useRef<number | null>(null)
 
   useCalEventsInfiniteScroll({
     scrollContainerRef,
+    enabled: hasInitiallyScrolled,
   })
 
   const sectionsToRender = useMemo((): Section[] => {
@@ -92,10 +95,16 @@ export function EventList() {
     return HEADER_PX + allDayRows + timedCount * 44 + 8
   }, [])
 
+  const getItemKey = useCallback((index: number) => {
+    const section = sectionsRef.current[index]
+    return section ? formatDateKey(section.date) : index
+  }, [])
+
   const virtualizer = useVirtualizer({
     count: sectionsToRender.length,
     getScrollElement: () => scrollContainerRef.current,
     estimateSize,
+    getItemKey,
     overscan: 5,
   })
 
@@ -104,6 +113,15 @@ export function EventList() {
   // we just programmatically applied would be read back as a "user scroll" and
   // emit the wrong activeDate.
   const ignoreScrollUntilRef = useRef(0)
+
+  const finishInitialScroll = useEffectEvent(() => {
+    setIsNavigating(false)
+    if (initialRevealRafRef.current !== null) cancelAnimationFrame(initialRevealRafRef.current)
+    initialRevealRafRef.current = requestAnimationFrame(() => {
+      initialRevealRafRef.current = null
+      setHasInitiallyScrolled(true)
+    })
+  })
 
   // Preserve scroll position when sections are prepended (infinite-scroll loading
   // a previous range). Without this, the prepended items would push the user's
@@ -141,10 +159,12 @@ export function EventList() {
         align: "start",
         behavior: behavior === "smooth" ? "smooth" : "auto",
       })
+      return true
     } else {
       // No events on this date — show a ghost section
       ghostScrollBehaviorRef.current = behavior
       setGhostDate(date)
+      return false
     }
   })
 
@@ -160,6 +180,10 @@ export function EventList() {
       align: "start",
       behavior: ghostScrollBehaviorRef.current === "smooth" ? "smooth" : "auto",
     })
+    if (pendingInitialGhostScrollRef.current) {
+      pendingInitialGhostScrollRef.current = false
+      finishInitialScroll()
+    }
 
     const el = scrollContainerRef.current
     if (!el) return
@@ -186,6 +210,12 @@ export function EventList() {
       if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [ghostDate, sectionIndexByDate, virtualizer])
+
+  useEffect(() => {
+    return () => {
+      if (initialRevealRafRef.current !== null) cancelAnimationFrame(initialRevealRafRef.current)
+    }
+  }, [])
 
   // The "currently visible" section is the one whose box contains the point
   // just below the sticky header (scrollTop + HEADER_PX).
@@ -222,21 +252,33 @@ export function EventList() {
     registerScrollToDate(scrollToDate)
   }, [])
 
+  const scrollContainerHeight = virtualizer.scrollRect?.height ?? 0
   useEffect(() => {
     if (hasInitiallyScrolledRef.current) return
     if (eventsByDate.length === 0) return
+    if (scrollContainerHeight === 0) return
 
-    hasInitiallyScrolledRef.current = true
     setIsNavigating(true)
 
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        scrollToDate(activeDate, "instant")
-        setIsNavigating(false)
-        requestAnimationFrame(() => setHasInitiallyScrolled(true))
+    let secondRafId: number | null = null
+    const firstRafId = requestAnimationFrame(() => {
+      secondRafId = requestAnimationFrame(() => {
+        if (hasInitiallyScrolledRef.current) return
+        const scrolledImmediately = scrollToDate(activeDate, "instant")
+        hasInitiallyScrolledRef.current = true
+        if (scrolledImmediately) {
+          finishInitialScroll()
+        } else {
+          pendingInitialGhostScrollRef.current = true
+        }
       })
     })
-  }, [eventsByDate])
+
+    return () => {
+      cancelAnimationFrame(firstRafId)
+      if (secondRafId !== null) cancelAnimationFrame(secondRafId)
+    }
+  }, [activeDate, eventsByDate, finishInitialScroll, scrollContainerHeight])
 
   if (isInitialLoading || isLoadingCalendars) {
     return <div className="grow" />
