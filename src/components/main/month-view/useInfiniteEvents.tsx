@@ -4,9 +4,22 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
+import { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 
-// Extends the month grid and loads more events when the user scrolls near the top or bottom.
+function mergeEvents(
+  prev: CalendarEvent[],
+  incoming: CalendarEvent[],
+  position: "append" | "prepend",
+): CalendarEvent[] {
+  const existingIds = new Set(prev.map((e) => e.id))
+  const filtered = incoming.filter((e) => !existingIds.has(e.id))
+  if (!filtered.length) return prev
+  return position === "append" ? [...prev, ...filtered] : [...filtered, ...prev]
+}
+
+// Extends the month grid and loads events when scrolling past edges or when
+// activeDate jumps outside the loaded range (e.g. typing "on july 5").
 export function useInfiniteEvents({
   scrollContainerRef,
   activeDate,
@@ -23,114 +36,69 @@ export function useInfiniteEvents({
 
   const isLoadingRef = useRef(false)
 
-  // When navigation jumps activeDate outside the loaded range (e.g. typing
-  // "on july 5" while the grid stops at July 1), extend the grid AND load
-  // events for the gap. Without this, weeks render but appear eventless.
+  const extendForward = useCallback(
+    async (newEnd: Date) => {
+      if (isLoadingRef.current) return
+      isLoadingRef.current = true
+      try {
+        const cur = currentDateRangeRef.current
+        if (!cur || newEnd <= cur.end) return
+        setRangeEnd(startOfMonth(addMonths(newEnd, 1)))
+        const events = await getCalendarEventsForRange(visibleCalendarIds, cur.end, newEnd)
+        setCalendarEvents((prev) => mergeEvents(prev, events, "append"))
+        currentDateRangeRef.current = { start: cur.start, end: newEnd }
+      } finally {
+        isLoadingRef.current = false
+      }
+    },
+    [visibleCalendarIds, setCalendarEvents, currentDateRangeRef],
+  )
+
+  const extendBackward = useCallback(
+    async (newStart: Date) => {
+      if (isLoadingRef.current) return
+      isLoadingRef.current = true
+      try {
+        const cur = currentDateRangeRef.current
+        if (!cur || newStart >= cur.start) return
+        // Load events BEFORE extending the grid so they're already available
+        // when the new rows render (scroll adjustment makes them instantly visible).
+        const events = await getCalendarEventsForRange(visibleCalendarIds, newStart, cur.start)
+        setCalendarEvents((prev) => mergeEvents(prev, events, "prepend"))
+        currentDateRangeRef.current = { start: newStart, end: cur.end }
+        setRangeStart(newStart)
+      } finally {
+        isLoadingRef.current = false
+      }
+    },
+    [visibleCalendarIds, setCalendarEvents, currentDateRangeRef],
+  )
+
+  // Jump-navigation: activeDate moved outside the loaded range.
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    const currentRange = currentDateRangeRef.current
-    if (!currentRange || isLoadingRef.current) return
-
-    if (activeDate >= currentRange.end) {
-      const newEnd = endOfMonth(addMonths(activeDate, MONTHS_TO_LOAD))
-      setRangeEnd(startOfMonth(addMonths(activeDate, MONTHS_TO_LOAD)))
-      isLoadingRef.current = true
-      void (async () => {
-        try {
-          const newEvents = await getCalendarEventsForRange(
-            visibleCalendarIds,
-            currentRange.end,
-            newEnd,
-          )
-          setCalendarEvents((prev) => {
-            const existingIds = new Set(prev.map((e) => e.id))
-            const filtered = newEvents.filter((e) => !existingIds.has(e.id))
-            return filtered.length ? [...prev, ...filtered] : prev
-          })
-          currentDateRangeRef.current = { start: currentRange.start, end: newEnd }
-        } finally {
-          isLoadingRef.current = false
-        }
-      })()
-    } else if (activeDate < currentRange.start) {
-      const newStart = startOfMonth(subMonths(activeDate, MONTHS_TO_LOAD))
-      isLoadingRef.current = true
-      void (async () => {
-        try {
-          const newEvents = await getCalendarEventsForRange(
-            visibleCalendarIds,
-            newStart,
-            currentRange.start,
-          )
-          setCalendarEvents((prev) => {
-            const existingIds = new Set(prev.map((e) => e.id))
-            const filtered = newEvents.filter((e) => !existingIds.has(e.id))
-            return filtered.length ? [...filtered, ...prev] : prev
-          })
-          currentDateRangeRef.current = { start: newStart, end: currentRange.end }
-          setRangeStart(startOfMonth(subMonths(activeDate, MONTHS_TO_LOAD)))
-        } finally {
-          isLoadingRef.current = false
-        }
-      })()
+    const cur = currentDateRangeRef.current
+    if (!cur) return
+    if (activeDate >= cur.end) {
+      void extendForward(endOfMonth(addMonths(activeDate, MONTHS_TO_LOAD)))
+    } else if (activeDate < cur.start) {
+      void extendBackward(startOfMonth(subMonths(activeDate, MONTHS_TO_LOAD)))
     }
-  }, [activeDate, visibleCalendarKey, setCalendarEvents, currentDateRangeRef])
+  }, [activeDate, visibleCalendarKey, currentDateRangeRef, extendForward, extendBackward])
 
   useScrollBoundary({
     scrollContainerRef,
     threshold: 200,
-    onNearTop: useCallback(async () => {
-      if (isLoadingRef.current) return
-      isLoadingRef.current = true
-
-      try {
-        // Load events BEFORE extending the grid so they're already available
-        // when the new rows render (scroll adjustment makes them instantly visible)
-        const currentRange = currentDateRangeRef.current
-        if (!currentRange) return
-        const prevStart = startOfMonth(subMonths(currentRange.start, MONTHS_TO_LOAD))
-        const prevEvents = await getCalendarEventsForRange(
-          visibleCalendarIds,
-          prevStart,
-          currentRange.start,
-        )
-        setCalendarEvents((prev) => {
-          const existingIds = new Set(prev.map((e) => e.id))
-          const newEvents = prevEvents.filter((e) => !existingIds.has(e.id))
-          return newEvents.length ? [...newEvents, ...prev] : prev
-        })
-        currentDateRangeRef.current = { start: prevStart, end: currentRange.end }
-
-        setRangeStart((prev) => startOfMonth(subMonths(prev, 2)))
-      } finally {
-        isLoadingRef.current = false
-      }
-    }, [visibleCalendarIds, setCalendarEvents, currentDateRangeRef]),
-    onNearBottom: useCallback(async () => {
-      if (isLoadingRef.current) return
-      isLoadingRef.current = true
-
-      try {
-        setRangeEnd((prev) => startOfMonth(addMonths(prev, 2)))
-
-        const currentRange = currentDateRangeRef.current
-        if (!currentRange) return
-        const nextEnd = endOfMonth(addMonths(currentRange.end, MONTHS_TO_LOAD))
-        const nextEvents = await getCalendarEventsForRange(
-          visibleCalendarIds,
-          currentRange.end,
-          nextEnd,
-        )
-        setCalendarEvents((prev) => {
-          const existingIds = new Set(prev.map((e) => e.id))
-          const newEvents = nextEvents.filter((e) => !existingIds.has(e.id))
-          return newEvents.length ? [...prev, ...newEvents] : prev
-        })
-        currentDateRangeRef.current = { start: currentRange.start, end: nextEnd }
-      } finally {
-        isLoadingRef.current = false
-      }
-    }, [visibleCalendarIds, setCalendarEvents, currentDateRangeRef]),
+    onNearTop: useCallback(() => {
+      const cur = currentDateRangeRef.current
+      if (!cur) return
+      void extendBackward(startOfMonth(subMonths(cur.start, MONTHS_TO_LOAD)))
+    }, [currentDateRangeRef, extendBackward]),
+    onNearBottom: useCallback(() => {
+      const cur = currentDateRangeRef.current
+      if (!cur) return
+      void extendForward(endOfMonth(addMonths(cur.end, MONTHS_TO_LOAD)))
+    }, [currentDateRangeRef, extendForward]),
   })
 
   return { rangeStart, rangeEnd }
