@@ -356,7 +356,9 @@ const MonthWeekRow = memo(function MonthWeekRow({
               day={day}
               timedEvents={layout.timedByCol[colIndex]}
               hiddenAllDayCount={hiddenAllDay}
-              reservedAllDayHeight={reservedLanes[colIndex] * LANE_HEIGHT}
+              reservedAllDayHeight={
+                reservedLanes[colIndex] > 0 ? reservedLanes[colIndex] * LANE_HEIGHT - LANE_GAP : 0
+              }
               activeEventId={activeEventId}
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}

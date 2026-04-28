@@ -55,7 +55,7 @@ export function MonthAllDayEvent({
         item.isEnd && "rounded-r",
       )}
       style={{
-        top: `${item.lane * LANE_HEIGHT + LANE_GAP}px`,
+        top: `${item.lane * LANE_HEIGHT}px`,
         height: `${LANE_HEIGHT - LANE_GAP}px`,
         left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 3 : -2}px)`,
         right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 4 : -2}px)`,
