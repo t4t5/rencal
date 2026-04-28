@@ -1,4 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useRef } from "react"
 import { z } from "zod"
 
@@ -8,6 +9,7 @@ import { THEME_CHANGED } from "@/rpc/events"
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
 
+import { getActiveAppearance } from "@/themes/appearance"
 import { THEME_IDS, type ThemeId } from "@/themes/manifest"
 
 const themeSchema = z.enum(THEME_IDS)
@@ -31,6 +33,11 @@ export function useTheme() {
 
   useEffect(() => {
     document.body.dataset.theme = theme
+    // Sync OS window chrome (macOS titlebar text, Windows DWM chrome) to the
+    // theme's light/dark appearance. For omarchy this depends on the
+    // dynamically-injected --background, which may not be applied yet on
+    // first mount; useOmarchyTheme re-syncs once colors arrive.
+    void getCurrentWindow().setTheme(getActiveAppearance(theme))
   }, [theme])
 
   useOmarchyTheme()

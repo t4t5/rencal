@@ -1,8 +1,11 @@
 import { listen } from "@tauri-apps/api/event"
+import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect } from "react"
 
 import { rpc } from "@/rpc"
 import type { OmarchyColors } from "@/rpc/bindings"
+
+import { appearanceFromHex } from "@/themes/appearance"
 
 const OMARCHY_THEME_CHANGED = "omarchy-theme-changed"
 const CACHE_KEY = "omarchyColors"
@@ -81,6 +84,11 @@ function applyOmarchyColors(c: OmarchyColors) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(c))
   } catch {}
+  // Sync OS window chrome if omarchy is the active theme. useTheme can't
+  // do this itself because the appearance is derived from these colors.
+  if (document.body.dataset.theme === "omarchy") {
+    void getCurrentWindow().setTheme(appearanceFromHex(c.background))
+  }
 }
 
 // Always-on: fetch + listen regardless of the active theme so the omarchy
