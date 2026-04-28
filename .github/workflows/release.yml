@@ -60,13 +60,6 @@ jobs:
         with:
           path: rencal
 
-      - name: Checkout caldir at latest release tag
-        uses: actions/checkout@v4
-        with:
-          repository: t4t5/caldir
-          ref: ${{ needs.check-version.outputs.caldir_tag }}
-          path: caldir
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:

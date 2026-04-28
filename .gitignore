@@ -31,3 +31,6 @@ recordings
 
 # Built provider binaries
 src-tauri/providers/
+
+# Local cargo config (path overrides for sibling caldir checkout)
+.cargo/
