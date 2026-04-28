@@ -1,5 +1,5 @@
 import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
-import { useCallback, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
@@ -20,6 +20,17 @@ export function useInfiniteEvents({
 
   const [rangeStart, setRangeStart] = useState(() => startOfMonth(subMonths(activeDate, 2)))
   const [rangeEnd, setRangeEnd] = useState(() => startOfMonth(addMonths(activeDate, 3)))
+
+  // When navigation jumps activeDate outside the loaded range (e.g. typing
+  // "on july 5" while the grid stops at July 1), extend the range so the
+  // scroll-to-active-week effect can find the target.
+  useEffect(() => {
+    if (activeDate >= rangeEnd) {
+      setRangeEnd(startOfMonth(addMonths(activeDate, 2)))
+    } else if (activeDate < rangeStart) {
+      setRangeStart(startOfMonth(subMonths(activeDate, 2)))
+    }
+  }, [activeDate, rangeStart, rangeEnd])
 
   const isLoadingRef = useRef(false)
 
