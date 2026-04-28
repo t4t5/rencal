@@ -22,13 +22,39 @@ interface MagicOutline {
   width: number
 }
 
-export const useMagicSegmentOutlines = ({
+export const MagicSegments = ({
   text,
-  enabled,
   inputRef,
 }: {
   text: string
-  enabled: boolean
+  inputRef: RefObject<HTMLInputElement | null>
+}) => {
+  // Get magic segments like "tomorrow at 7pm", "in London", etc.
+  const { measurerRef, magicOutlines, scrollLeft, hasMagicSegments } = useMagicSegmentOutlines({
+    text,
+    inputRef,
+  })
+
+  return (
+    <>
+      {hasMagicSegments && (
+        <MagicSegmentsOverlay magicOutlines={magicOutlines} scrollLeft={scrollLeft} />
+      )}
+
+      <span
+        ref={measurerRef}
+        aria-hidden
+        className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre text-sm"
+      />
+    </>
+  )
+}
+
+const useMagicSegmentOutlines = ({
+  text,
+  inputRef,
+}: {
+  text: string
   inputRef: RefObject<HTMLInputElement | null>
 }) => {
   const measurerRef = useRef<HTMLSpanElement>(null)
@@ -42,7 +68,7 @@ export const useMagicSegmentOutlines = ({
   // using the stale deferred value would leave outlines lingering for a frame.
   const parseText = text === "" ? "" : deferredText
   const segments = useMemo(() => (parseText === "" ? [] : segmentEventText(parseText)), [parseText])
-  const hasMagicSegments = enabled && segments.some((s) => s.parsed)
+  const hasMagicSegments = segments.some((s) => s.parsed)
 
   useLayoutEffect(() => {
     const m = measurerRef.current
@@ -75,7 +101,7 @@ export const useMagicSegmentOutlines = ({
   // reliable hook for caret-driven moves; `keydown` fires too early.
   useEffect(() => {
     const input = inputRef.current
-    if (!input || !enabled) return
+    if (!input) return
 
     const sync = () => setScrollLeft(input.scrollLeft)
 
@@ -88,12 +114,12 @@ export const useMagicSegmentOutlines = ({
       input.removeEventListener("input", sync)
       document.removeEventListener("selectionchange", sync)
     }
-  }, [enabled, inputRef])
+  }, [inputRef])
 
   return { measurerRef, magicOutlines, scrollLeft, hasMagicSegments }
 }
 
-export const MagicSegmentsOverlay = ({
+const MagicSegmentsOverlay = ({
   scrollLeft,
   magicOutlines,
 }: {

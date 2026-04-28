@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
 
-import { MagicSegmentsOverlay, useMagicSegmentOutlines } from "./MagicSegments"
+import { MagicSegments } from "./MagicSegments"
 
 export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
@@ -22,27 +22,12 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
   const inputRef = useRef<HTMLInputElement>(null)
 
-  // Get magic segments like "tomorrow at 7pm", "in London", etc.
-  const { measurerRef, magicOutlines, scrollLeft, hasMagicSegments } = useMagicSegmentOutlines({
-    text,
-    enabled: isDrafting,
-    inputRef,
-  })
-
   // Automatically jump to the day the event is created for:
   useJumpToStartDate({ isDrafting, draftStart: draftEvent.start })
 
   return (
     <div className="relative w-full">
-      {hasMagicSegments && (
-        <MagicSegmentsOverlay magicOutlines={magicOutlines} scrollLeft={scrollLeft} />
-      )}
-
-      <span
-        ref={measurerRef}
-        aria-hidden
-        className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre text-sm"
-      />
+      {isDrafting && <MagicSegments text={text} inputRef={inputRef} />}
 
       <Input
         ref={inputRef}
