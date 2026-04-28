@@ -76,7 +76,7 @@ function WeekTimedEventImpl({
         left: `${leftPercent}%`,
         width: `${widthPercent}%`,
         zIndex: layout.column,
-        border: "1px solid var(--day-bg)",
+        border: "1px solid var(--background)",
         ...getEventBlockStyle({
           calendarColor: layout.color,
           eventColor: layout.eventColor,
