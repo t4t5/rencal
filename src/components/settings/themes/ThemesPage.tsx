@@ -26,7 +26,7 @@ export function ThemesPage() {
 
             {isActive && (
               <div className="absolute top-1 right-1 size-5 rounded-full text-primary-foreground flex justify-center items-center bg-primary">
-                <CheckIcon />
+                <CheckIcon className="w-4" />
               </div>
             )}
           </button>
@@ -39,7 +39,7 @@ export function ThemesPage() {
 const Palette = ({ themeId }: { themeId: string }) => (
   <div
     data-theme={themeId}
-    className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3"
+    className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3 w-full"
   >
     <div className="flex justify-between items-center gap-3">
       <div className="grow h-[5px] rounded bg-foreground" />
