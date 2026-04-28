@@ -9,6 +9,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { getCalendarColor } from "@/lib/calendar-styles"
 
 import { EventPopover } from "./EventPopover"
 import { SearchInput } from "./SearchInput"
@@ -115,7 +116,7 @@ export function SearchBar({
     }
   })
 
-  const calendarColor = (slug: string) => calendars.find((c) => c.slug === slug)?.color ?? null
+  const calendarColor = (slug: string) => getCalendarColor(calendars.find((c) => c.slug === slug))
 
   return (
     <div ref={containerRef}>

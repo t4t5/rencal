@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
@@ -120,9 +121,9 @@ export function useDayRangeLayout(
   calendars: Calendar[],
 ): DayRangeLayout {
   return useMemo(() => {
-    const colorMap = new Map<string, string | null>()
+    const calMap = new Map<string, Calendar>()
     for (const cal of calendars) {
-      colorMap.set(cal.slug, cal.color)
+      calMap.set(cal.slug, cal)
     }
 
     const N = days.length
@@ -145,7 +146,7 @@ export function useDayRangeLayout(
 
     for (const event of events) {
       const { firstDayMs: firstMs, lastDayMs: lastMs } = event.dateInfo
-      const color = colorMap.get(event.calendar_slug) ?? null
+      const color = getCalendarColor(calMap.get(event.calendar_slug))
       const eventColor = event.color
 
       if (isAllDay(event.start)) {

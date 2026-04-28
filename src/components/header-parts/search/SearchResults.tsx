@@ -20,7 +20,7 @@ interface SearchResultsProps {
   focusedIndex: number
   setFocusedIndex: Dispatch<SetStateAction<number>>
   itemRefs: MutableRefObject<Map<number, HTMLElement>>
-  calendarColor: (slug: string) => string | null
+  calendarColor: (slug: string) => string
 }
 
 export function SearchResults({

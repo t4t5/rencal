@@ -9,6 +9,7 @@ import type { Calendar } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import type { CalendarEvent } from "@/lib/cal-events"
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
@@ -39,7 +40,7 @@ export const DaySection = memo(
         <AllDayEventBlock
           key={isDraft ? "__draft__" : event.id}
           event={event}
-          calendarColor={calendar?.color || null}
+          calendarColor={getCalendarColor(calendar)}
           highlighted={isActive}
           isDashed={isPending || isDeclined}
           isDeclined={isDeclined}
@@ -81,7 +82,7 @@ export const DaySection = memo(
             "line-through": isDeclined,
           })}
         >
-          <ListViewEventBlock event={event} calendarColor={calendar?.color ?? null} />
+          <ListViewEventBlock event={event} calendarColor={getCalendarColor(calendar)} />
         </div>
       )
     }

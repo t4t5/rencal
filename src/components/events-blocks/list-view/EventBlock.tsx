@@ -14,7 +14,7 @@ export const ListViewEventBlock = memo(function EventRow({
   calendarColor,
 }: {
   event: CalendarEvent
-  calendarColor: string | null
+  calendarColor: string
 }) {
   const { timeFormat } = useSettings()
   const from = event.start
@@ -24,12 +24,7 @@ export const ListViewEventBlock = memo(function EventRow({
 
   return (
     <div className="flex gap-3 pl-3.5 pr-2">
-      <div
-        className="w-[3px] bg-primary rounded"
-        style={{
-          ...(calendarColor ? { backgroundColor: colors.borderColor } : {}),
-        }}
-      />
+      <div className="w-[3px] rounded" style={{ backgroundColor: colors.borderColor }} />
       <div className="relative text-sm">
         <div className="text-muted-foreground numerical text-xs h-4">
           {isSameDay(from, to)

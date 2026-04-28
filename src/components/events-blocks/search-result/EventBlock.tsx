@@ -9,15 +9,12 @@ export function SearchResultEventBlock({
   timeFormat,
 }: {
   event: CalendarEvent
-  color: string | null
+  color: string
   timeFormat: TimeFormat
 }) {
   return (
     <>
-      <div
-        className="w-[3px] self-stretch shrink-0"
-        style={{ backgroundColor: color ?? "var(--primary)" }}
-      />
+      <div className="w-[3px] self-stretch shrink-0" style={{ backgroundColor: color }} />
       <div className="min-w-0">
         <div className="font-medium text-sm truncate">{event.summary}</div>
         <div className="text-xs text-muted-foreground">

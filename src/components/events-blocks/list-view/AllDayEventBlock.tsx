@@ -16,7 +16,7 @@ export const AllDayEventBlock = ({
   onClick,
 }: {
   event: CalendarEvent
-  calendarColor: string | null
+  calendarColor: string
   highlighted: boolean
   isDashed: boolean
   isDeclined: boolean
