@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest"
 
 import { toInteropDate } from "@/lib/event-time"
-import { parseEventText } from "@/lib/parse-event-text"
+import { parseEventText } from "@/lib/magic-parser"
 
 describe("parseEventText", () => {
   it("parses a multi-day range: 'Holiday from june 15 to june 18'", () => {

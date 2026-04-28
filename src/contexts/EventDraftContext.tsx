@@ -17,10 +17,16 @@ import {
   recurrenceToRpc,
   rpcToCalendarEvent,
 } from "@/lib/cal-events"
-import { addMinutes, computeEventDateInfo, nowZoned, type EventTime } from "@/lib/event-time"
+import {
+  addMinutes,
+  computeEventDateInfo,
+  DEFAULT_DURATION_MINS,
+  nowZoned,
+  type EventTime,
+} from "@/lib/event-time"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { logger } from "@/lib/logger"
-import { parseEventText } from "@/lib/parse-event-text"
+import { parseEventText } from "@/lib/magic-parser"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
@@ -36,8 +42,6 @@ interface DraftEvent {
   location: string | null
   recurrence: Recurrence | null
 }
-
-export const DEFAULT_DURATION_MINS = 60
 
 interface EventTextContextType {
   text: string
@@ -131,10 +135,13 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     }
 
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
+
     parseTimerRef.current = setTimeout(() => {
       const parsed = parseEventText(newText)
+
       hasParsedTimeRef.current =
         parsed.start !== null || parsed.recurrence !== null || parsed.location !== null
+
       startTransition(() => {
         setDraftEvent((prev) => {
           const updates: Partial<DraftEvent> = {

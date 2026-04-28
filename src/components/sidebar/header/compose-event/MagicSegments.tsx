@@ -15,7 +15,7 @@ import {
   useState,
 } from "react"
 
-import { segmentEventText } from "@/lib/parse-event-text"
+import { segmentEventText } from "@/lib/magic-parser"
 
 interface MagicOutline {
   x: number

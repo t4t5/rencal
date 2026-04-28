@@ -6,10 +6,11 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
-import { DEFAULT_DURATION_MINS, useEventDraft } from "@/contexts/EventDraftContext"
+import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import {
   addMinutes,
+  DEFAULT_DURATION_MINS,
   isAllDay,
   normalizeAllDayRange,
   toAllDay,

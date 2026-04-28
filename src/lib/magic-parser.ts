@@ -2,9 +2,13 @@ import * as chrono from "chrono-node"
 import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/lib/cal-events"
-import { fromDate, getLocalTzid, plainDate, type EventTime } from "@/lib/event-time"
-
-const DEFAULT_DURATION_MINS = 60
+import {
+  DEFAULT_DURATION_MINS,
+  fromDate,
+  getLocalTzid,
+  plainDate,
+  type EventTime,
+} from "@/lib/event-time"
 
 interface ParsedEventText {
   summary: string

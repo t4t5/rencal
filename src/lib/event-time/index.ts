@@ -15,6 +15,7 @@
  */
 export type { EventDateInfo, EventTime, EventTimeRange } from "./types"
 
+export { DEFAULT_DURATION_MINS } from "./constants"
 export { allDayDate, allDayFromLocalDate, fromDate, nowZoned, plainDate } from "./constructors"
 export {
   formatDateKey,

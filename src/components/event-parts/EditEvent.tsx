@@ -16,7 +16,6 @@ import type { ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
-import { DEFAULT_DURATION_MINS } from "@/contexts/EventDraftContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
@@ -29,6 +28,7 @@ import {
 } from "@/lib/cal-events"
 import {
   addMinutes,
+  DEFAULT_DURATION_MINS,
   isAllDay,
   normalizeAllDayRange,
   toAllDay,
