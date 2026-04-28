@@ -1,5 +1,5 @@
 /*
- * Parsed segments (time, location, recurrence) are highlighted by overlaying
+ * Magic (parsed) segments (time, location, recurrence) are highlighted by overlaying
  * dashed outline rectangles on top of input.
  * (We measure segment positions with a hidden <span> mirror,
  * then position absolute divs + translate them in
@@ -49,13 +49,13 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   // using the stale deferred value would leave outlines lingering for a frame.
   const parseText = text === "" ? "" : deferredText
   const segments = useMemo(() => (parseText === "" ? [] : segmentEventText(parseText)), [parseText])
-  const hasParsedSegments = isDrafting && segments.some((s) => s.parsed)
+  const hasMagicSegments = isDrafting && segments.some((s) => s.parsed)
 
   const getInput = useCallback(() => containerRef.current?.querySelector("input") ?? null, [])
 
   useLayoutEffect(() => {
     const m = measurerRef.current
-    if (!m || !hasParsedSegments) {
+    if (!m || !hasMagicSegments) {
       setOutlines([])
       return
     }
@@ -72,7 +72,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
       pos += seg.text.length
     }
     setOutlines(rects)
-  }, [segments, parseText, hasParsedSegments])
+  }, [segments, parseText, hasMagicSegments])
 
   const syncScroll = useCallback(() => {
     const input = getInput()
@@ -96,33 +96,14 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
   return (
     <div ref={containerRef} className="relative w-full">
-      {hasParsedSegments && (
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-md"
-        >
-          <div
-            className="absolute inset-y-0"
-            style={{
-              left: 13,
-              transform: `translateX(${-scrollLeft}px)`,
-            }}
-          >
-            {outlines.map((r, i) => (
-              <div
-                key={i}
-                className="absolute inset-y-1.5 rounded-sm outline-1 outline-dashed outline-muted-foreground/40 outline-offset-2"
-                style={{ left: r.x, width: r.width }}
-              />
-            ))}
-          </div>
-        </div>
-      )}
+      {hasMagicSegments && <MagicSegmentsOverlay outlines={outlines} scrollLeft={scrollLeft} />}
+
       <span
         ref={measurerRef}
         aria-hidden
         className="pointer-events-none invisible absolute left-0 top-0 whitespace-pre text-sm"
       />
+
       <Input
         ghost={false}
         value={isDrafting ? text : ""}
@@ -167,6 +148,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
           isDrafting && text && "pr-9",
         )}
       />
+
       {isDrafting && text && (
         <Button
           variant="ghost"
@@ -185,5 +167,40 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         </Button>
       )}
     </div>
+  )
+}
+
+const MagicSegmentsOverlay = ({
+  scrollLeft,
+  outlines,
+}: {
+  scrollLeft: number
+  outlines: OutlineRect[]
+}) => {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden rounded-md">
+      <div
+        className="absolute inset-y-0"
+        style={{
+          left: 13,
+          transform: `translateX(${-scrollLeft}px)`,
+        }}
+      >
+        {outlines.map((outlineRect, index) => (
+          <MagicSegment key={index} outlineRect={outlineRect} />
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const MagicSegment = ({ outlineRect }: { outlineRect: OutlineRect }) => {
+  const { x: left, width } = outlineRect
+
+  return (
+    <div
+      className="absolute inset-y-1.5 rounded-sm outline-1 outline-dashed outline-muted-foreground/40 outline-offset-2"
+      style={{ left, width }}
+    />
   )
 }
