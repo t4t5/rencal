@@ -57,8 +57,8 @@ export function MonthAllDayEvent({
       style={{
         top: `${item.lane * LANE_HEIGHT + LANE_GAP}px`,
         height: `${LANE_HEIGHT - LANE_GAP}px`,
-        left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 2 : -2}px)`,
-        right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 3 : -2}px)`,
+        left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 3 : -2}px)`,
+        right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 4 : -2}px)`,
         ...getEventBlockStyle({
           calendarColor: item.color,
           eventColor: item.eventColor,

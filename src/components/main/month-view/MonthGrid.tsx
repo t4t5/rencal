@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils"
 
 const MAX_ALL_DAY_LANES = 3
 export const LANE_HEIGHT = 20
-export const LANE_GAP = 2
+export const LANE_GAP = 3
 
 export function MonthGrid({
   weeks,
