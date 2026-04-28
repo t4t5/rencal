@@ -1,3 +1,5 @@
+import { MS_PER_DAY } from "@/lib/time"
+
 import {
   instantForOrdering,
   isAllDay,
@@ -11,8 +13,6 @@ export function startOfDayMs(et: EventTime): number {
   const date = dateInViewerZone(et)
   return new Date(date.year, date.month - 1, date.day).getTime()
 }
-
-export const MS_PER_DAY = 86_400_000
 
 /**
  * Inclusive [firstMs, lastMs] range of local midnights this event occupies.

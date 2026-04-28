@@ -5,13 +5,11 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
+import { isAllDay } from "@/lib/event-time"
+import { DAY_MINUTES, daysDiff, MS_PER_DAY } from "@/lib/time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
-
-/** Total minutes in a day */
-const DAY_MINUTES = 24 * 60
 
 export type WeekEventDisplayMode = "compact" | "standard" | "expanded"
 
@@ -30,10 +28,6 @@ export type DayRangeLayout = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   timedByDay: Map<string, WeekTimedEventLayout[]>
-}
-
-function daysDiff(aMs: number, bMs: number): number {
-  return Math.round((aMs - bMs) / MS_PER_DAY)
 }
 
 /** Returns top and height as percentages (0–100) of the visible range */

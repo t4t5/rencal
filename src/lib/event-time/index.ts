@@ -36,7 +36,7 @@ export {
   withWallclockTime,
 } from "./edit"
 export { getLocalTzid } from "./local-zone"
-export { computeEventDateInfo, getEventDayRange, MS_PER_DAY, startOfDayMs } from "./layout"
+export { computeEventDateInfo, getEventDayRange, startOfDayMs } from "./layout"
 export {
   dateInViewerZone,
   instantForOrdering,

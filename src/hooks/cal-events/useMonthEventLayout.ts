@@ -5,7 +5,8 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { isAllDay, MS_PER_DAY } from "@/lib/event-time"
+import { isAllDay } from "@/lib/event-time"
+import { daysDiff, MS_PER_DAY } from "@/lib/time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -29,10 +30,6 @@ export type WeekLayout = {
   allDayItems: AllDayLaneItem[]
   maxLane: number
   timedByCol: TimedEventItem[][] // index 0-6 for each day column
-}
-
-function daysDiff(aMs: number, bMs: number): number {
-  return Math.round((aMs - bMs) / MS_PER_DAY)
 }
 
 /**
