@@ -6,6 +6,7 @@
 
 <p align="center">
   <b>Modern, open-source calendar app for Linux.</b><br>
+  Connects to Google Calendar, iCloud, Outlook, CalDAV.<br>
   Built on top of <a href="https://caldir.org">Caldir</a> with Tauri.
 </p>
 
