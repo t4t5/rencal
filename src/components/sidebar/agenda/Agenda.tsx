@@ -1,4 +1,4 @@
-import { useEffect, useEffectEvent, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useEffectEvent, useRef } from "react"
 import { flushSync } from "react-dom"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -8,18 +8,14 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
-import { CalendarEvent } from "@/lib/cal-events"
 import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { DaySection } from "./DaySection"
 import { GetStartedState } from "./GetStartedState"
-
-type Section = {
-  date: Date
-  events: CalendarEvent[]
-  isGhost: boolean
-}
+import { useGhostSection } from "./useGhostSection"
+import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
+import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
 
 export function Agenda() {
   const { calendars, isLoadingCalendars } = useCalendars()
@@ -32,19 +28,13 @@ export function Agenda() {
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
-  const [ghostDate, setGhostDate] = useState<Date | null>(null)
-  const ghostDateRef = useRef<Date | null>(null)
-  ghostDateRef.current = ghostDate
-  const ghostRef = useRef<HTMLDivElement>(null)
-  const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
-  const hasInitiallyScrolledRef = useRef(false)
-  const prevScrollHeightRef = useRef(0)
-  const prevFirstKeyRef = useRef<string | null>(null)
 
-  useCalEventsInfiniteScroll({
+  const { sectionsToRender, ghostRef, ghostDateRef, showGhost, clearGhost } = useGhostSection({
+    eventsByDate,
     scrollContainerRef,
   })
+
+  useCalEventsInfiniteScroll({ scrollContainerRef })
 
   const { addSectionRef, sectionRefs } = useJumpToScrolledDate({
     onSetActiveDate: (date) => {
@@ -56,47 +46,8 @@ export function Agenda() {
     scrollContainerRef,
   })
 
-  // Merge ghost date into the sections list:
-  const sectionsToRender = useMemo((): Section[] => {
-    const sections: Section[] = eventsByDate.map(({ date, events }) => ({
-      date,
-      events,
-      isGhost: false,
-    }))
+  usePreserveScrollOnPrepend({ scrollContainerRef, sections: sectionsToRender })
 
-    if (ghostDate) {
-      const ghostDateStr = formatDateKey(ghostDate)
-      const alreadyExists = sections.some(({ date }) => formatDateKey(date) === ghostDateStr)
-      if (!alreadyExists) {
-        sections.push({ date: ghostDate, events: [], isGhost: true })
-        sections.sort((a, b) => a.date.getTime() - b.date.getTime())
-      }
-    }
-
-    return sections
-  }, [eventsByDate, ghostDate])
-
-  // Preserve scroll position when sections are prepended (e.g. MonthView loading more events
-  // into the shared event pool). Without this, prepended DOM nodes push content down.
-  useLayoutEffect(() => {
-    const container = scrollContainerRef.current
-    if (!container) return
-
-    const currentFirstKey =
-      sectionsToRender.length > 0 ? formatDateKey(sectionsToRender[0].date) : null
-
-    if (prevFirstKeyRef.current && currentFirstKey && currentFirstKey !== prevFirstKeyRef.current) {
-      const heightDelta = container.scrollHeight - prevScrollHeightRef.current
-      if (heightDelta > 0) {
-        container.scrollTop += heightDelta
-      }
-    }
-
-    prevFirstKeyRef.current = currentFirstKey
-    prevScrollHeightRef.current = container.scrollHeight
-  }, [sectionsToRender])
-
-  // Register scroll function so calendar can trigger scrolling when a date is clicked:
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
     if (!sectionRefs.current) return
 
@@ -106,64 +57,23 @@ export function Agenda() {
     if (section) {
       // Remove ghost synchronously so scrollIntoView measures the final layout.
       // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
-      flushSync(() => setGhostDate(null))
+      flushSync(() => clearGhost())
       section.scrollIntoView({ behavior, block: "start" })
     } else {
-      // No events on this date — show a ghost section
-      ghostScrollBehaviorRef.current = behavior
-      setGhostDate(date)
+      showGhost(date, behavior)
     }
   })
-
-  // Scroll to ghost section after it renders, and watch for it leaving the viewport:
-  useEffect(() => {
-    if (!ghostDate || !ghostRef.current || !scrollContainerRef.current) return
-
-    const el = ghostRef.current
-    el.scrollIntoView({ behavior: ghostScrollBehaviorRef.current, block: "start" })
-
-    // Remove ghost when user scrolls it out of view:
-    let hasBeenVisible = false
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          hasBeenVisible = true
-        } else if (hasBeenVisible) {
-          setGhostDate(null)
-        }
-      },
-      { root: scrollContainerRef.current, threshold: 0 },
-    )
-    observer.observe(el)
-
-    return () => observer.disconnect()
-  }, [ghostDate])
 
   useEffect(() => {
     registerScrollToDate(scrollToDate)
   }, [])
 
-  useEffect(() => {
-    if (hasInitiallyScrolledRef.current) return
-    if (eventsByDate.length === 0) return
-
-    hasInitiallyScrolledRef.current = true
-
-    // Scroll to currently active date as soon as events have loaded:
-    setIsNavigating(true)
-
-    // Wait for intersection observers to process before clearing flag
-    // 1: browser paints scroll position:
-    requestAnimationFrame(() => {
-      // 2: intersectionObserver callbacks are processed:
-      requestAnimationFrame(() => {
-        scrollToDate(activeDate, "instant")
-        setIsNavigating(false)
-        // 3: scroll (and any ghost-section follow-up scroll) has settled:
-        requestAnimationFrame(() => setHasInitiallyScrolled(true))
-      })
-    })
-  }, [eventsByDate])
+  const hasInitiallyScrolled = useInitialScrollToActiveDate({
+    hasEvents: eventsByDate.length > 0,
+    activeDate,
+    scrollToDate,
+    setIsNavigating,
+  })
 
   if (isInitialLoading || isLoadingCalendars) {
     return <div className="grow" />
