@@ -1,4 +1,5 @@
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
+import { ReportBugButton } from "@/components/toolbar/ReportBugButton"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { SearchBar } from "@/components/toolbar/search/SearchBar"
@@ -29,6 +30,8 @@ export function MainHeader() {
       </div>
 
       <DragRegion className="grow h-full" />
+
+      <ReportBugButton />
 
       <TabsList onMouseDown={(e) => e.preventDefault()}>
         <CalendarViewTab view="week" name="Week" shortcut="w" />
