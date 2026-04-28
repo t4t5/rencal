@@ -12,6 +12,15 @@
 
 ---
 
+## Features
+
+- **Plaintext on disk** — Your events are stored as readable `.ics` files. `grep` them, script
+  them or hand them to Claude Code. No database, no lock-in.
+- **Connect any provider** — Sync your existing Google, iCloud, Outlook or CalDAV account.
+- **Natural-language input** — e.g. "lunch with Sarah tomorrow at 1pm".
+- **Vim motions** — Navigate with `hjkl`. Switch between the `w`eek view and `m`onth view.
+- **Themes** — Tokyo Night, Catppuccin Latte, plus live Omarchy sync.
+
 ## Install
 
 ### Arch Linux / Omarchy (AUR):
