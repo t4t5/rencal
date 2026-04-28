@@ -19,9 +19,15 @@
 yay -S rencal
 ```
 
-### Linux (deb/rpm/apk) / macOS
+### Linux (deb/rpm/AppImage)
 
 Download from [Releases](https://github.com/t4t5/rencal/releases).
+
+### macOS
+
+Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releases), open it, and drag RenCal to `/Applications`.
+
+> Signed and notarized with Apple Developer ID - installs without Gatekeeper warnings.
 
 ## Screenshots
 
