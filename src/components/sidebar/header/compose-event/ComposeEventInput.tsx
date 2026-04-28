@@ -23,8 +23,11 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const inputRef = useRef<HTMLInputElement>(null)
 
   // Get magic segments like "tomorrow at 7pm", "in London", etc.
-  const { measurerRef, magicOutlines, scrollLeft, repositionMagicSegments, hasMagicSegments } =
-    useMagicSegmentOutlines({ text, enabled: isDrafting, inputRef })
+  const { measurerRef, magicOutlines, scrollLeft, hasMagicSegments } = useMagicSegmentOutlines({
+    text,
+    enabled: isDrafting,
+    inputRef,
+  })
 
   // Automatically jump to the day the event is created for:
   useJumpToStartDate({ isDrafting, draftStart: draftEvent.start })
@@ -48,22 +51,15 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}
         tabIndex={isDrafting ? 0 : -1}
-        onChange={(e) => {
-          setText(e.target.value)
-          repositionMagicSegments()
-        }}
-        onScroll={repositionMagicSegments}
-        onSelect={repositionMagicSegments}
+        onChange={(e) => setText(e.target.value)}
         onClick={() => {
-          if (!isDrafting) {
-            if (!canCreate) {
-              promptToConnect()
-              return
-            }
-            setDefaultDraftEvent()
-            setIsDrafting(true)
+          if (isDrafting) return
+          if (!canCreate) {
+            promptToConnect()
+            return
           }
-          repositionMagicSegments()
+          setDefaultDraftEvent()
+          setIsDrafting(true)
         }}
         onKeyDown={(e) => {
           if (!isDrafting) return
@@ -82,8 +78,6 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
               onExit()
             }
           }
-
-          repositionMagicSegments()
         }}
         className={cn(
           "w-full",

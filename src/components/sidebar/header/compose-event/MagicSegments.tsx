@@ -7,8 +7,8 @@
  */
 import {
   type RefObject,
-  useCallback,
   useDeferredValue,
+  useEffect,
   useLayoutEffect,
   useMemo,
   useRef,
@@ -70,12 +70,27 @@ export const useMagicSegmentOutlines = ({
     setMagicOutlines(outlines)
   }, [segments, parseText, hasMagicSegments])
 
-  const repositionMagicSegments = useCallback(() => {
+  // Keep `scrollLeft` in sync with the input. `selectionchange` (document-level) fires
+  // after the browser auto-scrolls the input to keep the caret visible, so it's the
+  // reliable hook for caret-driven moves; `keydown` fires too early.
+  useEffect(() => {
     const input = inputRef.current
-    if (input) setScrollLeft(input.scrollLeft)
-  }, [inputRef])
+    if (!input || !enabled) return
 
-  return { measurerRef, magicOutlines, scrollLeft, repositionMagicSegments, hasMagicSegments }
+    const sync = () => setScrollLeft(input.scrollLeft)
+
+    input.addEventListener("scroll", sync, { passive: true })
+    input.addEventListener("input", sync)
+    document.addEventListener("selectionchange", sync)
+
+    return () => {
+      input.removeEventListener("scroll", sync)
+      input.removeEventListener("input", sync)
+      document.removeEventListener("selectionchange", sync)
+    }
+  }, [enabled, inputRef])
+
+  return { measurerRef, magicOutlines, scrollLeft, hasMagicSegments }
 }
 
 export const MagicSegmentsOverlay = ({
