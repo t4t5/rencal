@@ -6,7 +6,7 @@ import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
-export const AllDayEventBlock = ({
+export const AgendaAllDayEventBlock = ({
   event,
   calendarColor,
   highlighted,

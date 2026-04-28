@@ -9,7 +9,7 @@ import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
 import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
 
-export const ListViewEventBlock = memo(function EventRow({
+export const AgendaTimedEventBlock = memo(function EventRow({
   event,
   calendarColor,
 }: {

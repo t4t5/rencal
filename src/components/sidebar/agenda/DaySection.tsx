@@ -1,8 +1,8 @@
 import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef, memo } from "react"
 
-import { AllDayEventBlock } from "@/components/events-blocks/list-view/AllDayEventBlock"
-import { ListViewEventBlock } from "@/components/events-blocks/list-view/EventBlock"
+import { AgendaAllDayEventBlock } from "@/components/events-blocks/agenda/AllDayEventBlock"
+import { AgendaTimedEventBlock } from "@/components/events-blocks/agenda/TimedEventBlock"
 
 import type { Calendar } from "@/rpc/bindings"
 
@@ -37,7 +37,7 @@ export const DaySection = memo(
       const isDeclined = isDeclinedEvent(event, calendars)
 
       return (
-        <AllDayEventBlock
+        <AgendaAllDayEventBlock
           key={isDraft ? "__draft__" : event.id}
           event={event}
           calendarColor={getCalendarColor(calendar)}
@@ -82,7 +82,7 @@ export const DaySection = memo(
             "line-through": isDeclined,
           })}
         >
-          <ListViewEventBlock event={event} calendarColor={getCalendarColor(calendar)} />
+          <AgendaTimedEventBlock event={event} calendarColor={getCalendarColor(calendar)} />
         </div>
       )
     }
