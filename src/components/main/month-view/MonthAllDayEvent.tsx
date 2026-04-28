@@ -51,14 +51,14 @@ export function MonthAllDayEvent({
         "absolute truncate px-1 py-px leading-4",
         isDashed && "opacity-50",
         !isDraft && dimmed && "opacity-50",
-        item.isStart ? "rounded-l ml-0.5" : "-ml-0.5",
-        item.isEnd ? "rounded-r" : "-mr-0.5",
+        item.isStart && "rounded-l",
+        item.isEnd && "rounded-r",
       )}
       style={{
         top: `${item.lane * LANE_HEIGHT + LANE_GAP}px`,
         height: `${LANE_HEIGHT - LANE_GAP}px`,
-        left: `${((item.startCol - 1) / 7) * 100}%`,
-        width: `calc(${((item.endCol - item.startCol) / 7) * 100}% - 5px)`,
+        left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 2 : -2}px)`,
+        right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 3 : -2}px)`,
         ...getEventBlockStyle({
           calendarColor: item.color,
           eventColor: item.eventColor,
