@@ -1,5 +1,5 @@
 import { addMonths, format, subMonths } from "date-fns"
-import { useCallback, useEffect, useRef, useState } from "react"
+import { useCallback } from "react"
 
 import { Button } from "@/components/ui/button"
 
@@ -17,29 +17,6 @@ export function Minical() {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const eventDotsByDate = useEventDotsByDate()
 
-  const monthKey = format(activeDate, "yyyy-MM")
-  const prevMonthKeyRef = useRef(monthKey)
-  const directionRef = useRef(1)
-  const lastMonthChangeRef = useRef(0)
-  const isRapidRef = useRef(false)
-
-  if (prevMonthKeyRef.current !== monthKey) {
-    const now = Date.now()
-    isRapidRef.current = now - lastMonthChangeRef.current < 200
-    lastMonthChangeRef.current = now
-    directionRef.current = monthKey > prevMonthKeyRef.current ? 1 : -1
-    prevMonthKeyRef.current = monthKey
-  }
-
-  const gridRef = useRef<HTMLDivElement>(null)
-  const [gridHeight, setGridHeight] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (gridHeight == null && gridRef.current) {
-      setGridHeight(gridRef.current.offsetHeight)
-    }
-  }, [gridHeight])
-
   const handleDateSelect = useCallback(
     (date: Date) => {
       navigateToDate(date)
@@ -51,24 +28,6 @@ export function Minical() {
     [navigateToDate],
   )
 
-  const calendar = (
-    <EventDotsProvider value={eventDotsByDate}>
-      <Calendar
-        mode="single"
-        selected={activeDate}
-        onSelect={handleDateSelect}
-        month={activeDate}
-        onMonthChange={handleDateSelect}
-        className="bg-transparent p-0"
-        required
-        components={{
-          MonthCaption: HiddenComponent,
-          Nav: HiddenComponent,
-        }}
-      />
-    </EventDotsProvider>
-  )
-
   return (
     <div className="pt-4 select-none">
       <div className="flex items-center justify-between px-4 pb-4 h-12">
@@ -76,13 +35,21 @@ export function Minical() {
         <ArrowKeys />
       </div>
 
-      {gridHeight == null ? (
-        <div ref={gridRef}>{calendar}</div>
-      ) : (
-        <div className="relative overflow-hidden shrink-0" style={{ height: gridHeight }}>
-          {calendar}
-        </div>
-      )}
+      <EventDotsProvider value={eventDotsByDate}>
+        <Calendar
+          mode="single"
+          selected={activeDate}
+          onSelect={handleDateSelect}
+          month={activeDate}
+          onMonthChange={handleDateSelect}
+          className="bg-transparent p-0"
+          required
+          components={{
+            MonthCaption: HiddenComponent,
+            Nav: HiddenComponent,
+          }}
+        />
+      </EventDotsProvider>
     </div>
   )
 }
