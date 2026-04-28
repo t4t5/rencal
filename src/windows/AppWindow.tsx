@@ -1,10 +1,10 @@
 import "@/global.css"
 
 import { Main } from "@/components/Main"
-import { Aside } from "@/components/aside/Aside"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
+import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
 
@@ -44,7 +44,7 @@ function App() {
       <GlobalShortcuts onChangeCalendarView={setCalendarView} />
       <DragRegion className="absolute h-4! w-full" />
 
-      <Aside />
+      <Sidebar />
 
       {isMd && <Main calendarView={calendarView} onChangeCalendarView={setCalendarView} />}
 
