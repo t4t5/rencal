@@ -7,7 +7,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { getDraftAnchor } from "@/lib/draft-anchor"
 
-import { NewEventContent } from "./NewEventContent"
+import { ComposeEventInner } from "./ComposeEvent"
 
 export function PopoverNewEvent() {
   const { draftPopoverOpen, setDraftPopoverOpen } = useEventDraft()
@@ -80,7 +80,7 @@ export function PopoverNewEvent() {
           e.preventDefault()
         }}
       >
-        <NewEventContent summaryRef={summaryRef} onCreated={() => setDraftPopoverOpen(false)} />
+        <ComposeEventInner summaryRef={summaryRef} onCreated={() => setDraftPopoverOpen(false)} />
       </PopoverContent>
     </Popover>
   )

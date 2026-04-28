@@ -3,6 +3,7 @@ import { rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { DEFAULT_DURATION_MINS, useEventDraft } from "@/contexts/EventDraftContext"
@@ -16,12 +17,23 @@ import {
 } from "@/lib/event-time"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
 
-type NewEventContentProps = {
-  summaryRef?: Ref<HTMLTextAreaElement>
-  onCreated: () => void
+export const ComposeEventCard = () => {
+  const { setIsDrafting } = useEventDraft()
+
+  return (
+    <Card className="p-0 flex flex-col gap-0">
+      <ComposeEventInner onCreated={() => setIsDrafting(false)} />
+    </Card>
+  )
 }
 
-export const NewEventContent = ({ summaryRef, onCreated }: NewEventContentProps) => {
+export const ComposeEventInner = ({
+  summaryRef,
+  onCreated,
+}: {
+  summaryRef?: Ref<HTMLTextAreaElement>
+  onCreated: () => void
+}) => {
   const { calendars } = useCalendars()
   const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
     useEventDraft()

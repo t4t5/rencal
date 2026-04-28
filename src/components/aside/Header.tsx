@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react"
 
-import { NewEvent } from "@/components/event-parts/NewEvent"
+import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
 import { ActionBar } from "@/components/header-parts/ActionBar"
+import { Card } from "@/components/ui/card"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
@@ -35,8 +36,18 @@ export function Header() {
           }
         }}
       >
-        <div className="overflow-hidden pt-4">{mounted && <NewEvent />}</div>
+        <div className="overflow-hidden pt-4">{mounted && <ComposeEventCard />}</div>
       </div>
     </div>
+  )
+}
+
+export const ComposeEventCard = () => {
+  const { setIsDrafting } = useEventDraft()
+
+  return (
+    <Card className="p-0 flex flex-col gap-0">
+      <ComposeEventInner onCreated={() => setIsDrafting(false)} />
+    </Card>
   )
 }
