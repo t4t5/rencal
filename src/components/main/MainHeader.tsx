@@ -1,4 +1,4 @@
-import { InvitesDropdown } from "@/components/toolbar/InvitesDropdown"
+import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { SearchBar } from "@/components/toolbar/search/SearchBar"
@@ -24,7 +24,7 @@ export function MainHeader() {
         </ShortcutTooltip>
 
         <SettingsButton />
-        <InvitesDropdown />
+        <InvitesBadge />
         <SyncStatus />
       </div>
 

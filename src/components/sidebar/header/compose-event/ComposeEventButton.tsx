@@ -11,9 +11,9 @@ import { cn, isMacOS } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
-import { AddEventInput } from "./AddEventInput"
+import { ComposeEventInput } from "./ComposeEventInput"
 
-export function AddEventButton() {
+export function ComposeEventButton() {
   const { text, setText } = useEventText()
   const { isDrafting, setIsDrafting } = useEventDraft()
   const containerRef = useRef<HTMLDivElement>(null)
@@ -59,7 +59,7 @@ export function AddEventButton() {
             isDrafting ? "grow basis-0" : "grow-0 basis-[var(--control-height)]",
           )}
         >
-          <AddEventInput onExit={exitDraft} />
+          <ComposeEventInput onExit={exitDraft} />
           <PlusButtonOverlay show={!isDrafting} />
         </div>
       </ShortcutTooltip>

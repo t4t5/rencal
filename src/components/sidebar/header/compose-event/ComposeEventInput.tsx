@@ -33,7 +33,7 @@ interface OutlineRect {
   width: number
 }
 
-export const AddEventInput = ({ onExit }: { onExit: () => void }) => {
+export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
   const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
     useEventDraft()

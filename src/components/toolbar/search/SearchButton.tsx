@@ -11,7 +11,7 @@ import { SearchBar } from "./SearchBar"
 export const SEARCH_BUTTON_EL_ID = "global-search-button"
 
 // Make expanded input overlap the other action buttons on the left:
-export function SearchButtonArea() {
+export function SearchButton() {
   const [isSearching, setIsSearching] = useState(false)
   const [isExiting, setIsExiting] = useState(false)
 

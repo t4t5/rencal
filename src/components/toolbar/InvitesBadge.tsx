@@ -15,7 +15,7 @@ import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 import { formatTime, toInteropDate } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-export function InvitesDropdown() {
+export function InvitesBadge() {
   const { calendars } = useCalendars()
   const [invites, setInvites] = useState<CalendarEvent[]>([])
 
