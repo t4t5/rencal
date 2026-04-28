@@ -4,6 +4,7 @@ type Axis = "x" | "y" | "both"
 
 type UseScrollBoundaryProps = {
   scrollContainerRef: RefObject<HTMLDivElement | null>
+  enabled?: boolean
   threshold?: number // pixels from edge (default: 100)
   throttleMs?: number // throttle delay (default: 150)
   axis?: Axis // which axis to watch (default: "y")
@@ -15,6 +16,7 @@ type UseScrollBoundaryProps = {
 
 export const useScrollBoundary = ({
   scrollContainerRef,
+  enabled = true,
   threshold = 100,
   throttleMs = 150,
   axis = "y",
@@ -26,6 +28,8 @@ export const useScrollBoundary = ({
   const lastRunRef = useRef<number>(0)
 
   useEffect(() => {
+    if (!enabled) return
+
     const container = scrollContainerRef.current
     if (!container) return
 
@@ -57,11 +61,12 @@ export const useScrollBoundary = ({
 
     // Check boundaries on mount
     // (fixes issue where user scrolls very fast to top/bottom)
-    requestAnimationFrame(() => {
+    const rafId = requestAnimationFrame(() => {
       checkBoundaries()
     })
 
     return () => {
+      cancelAnimationFrame(rafId)
       container.removeEventListener("scroll", handleScroll)
     }
   }, [
@@ -73,5 +78,6 @@ export const useScrollBoundary = ({
     onNearBottom,
     onNearLeft,
     onNearRight,
+    enabled,
   ])
 }
