@@ -13,14 +13,17 @@ export function SidebarHeader() {
   const { isDrafting } = useEventDraft()
   const { text } = useEventText()
 
-  const showDraftEvent = isDrafting && text.length > 0
-  const [mounted, setMounted] = useState(showDraftEvent)
+  const showDraft = isDrafting && text.length > 0
+
+  // Stay true briefly after showDraft flips false, so the card
+  // remains mounted while the collapse animation plays.
+  const [renderDraft, setRenderDraft] = useState(showDraft)
 
   useEffect(() => {
-    if (showDraftEvent) {
-      setMounted(true)
+    if (showDraft) {
+      setRenderDraft(true)
     }
-  }, [showDraftEvent])
+  }, [showDraft])
 
   return (
     <div className="flex flex-col p-4 pb-0">
@@ -29,15 +32,15 @@ export function SidebarHeader() {
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-200 ease-out",
-          showDraftEvent ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          showDraft ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
         onTransitionEnd={() => {
-          if (!showDraftEvent) {
-            setMounted(false)
+          if (!showDraft) {
+            setRenderDraft(false)
           }
         }}
       >
-        <div className="overflow-hidden pt-4">{mounted && <ComposeEventCard />}</div>
+        <div className="overflow-hidden pt-4">{renderDraft && <ComposeEventCard />}</div>
       </div>
     </div>
   )
