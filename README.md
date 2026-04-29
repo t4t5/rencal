@@ -5,29 +5,32 @@
 <h1 align="center">RenCal</h1>
 
 <p align="center">
-  <b>Modern, open-source calendar app for Linux.</b><br>
-  Connects to Google Calendar, iCloud, Outlook, CalDAV.<br>
-  Built on top of <a href="https://caldir.org">Caldir</a> with Tauri.
+  <b>Modern, open-source calendar app. Built for Omarchy.</b><br>
+  Syncs with Google, iCloud, Outlook, and CalDAV.<br>
+  Powered by <a href="https://caldir.org">Caldir</a>.
 </p>
 
 ---
 
 ## Features
 
-- **Plaintext on disk** — Your events are stored as readable `.ics` files. `grep` them, script
+- **Local-first** — Your events are stored as plaintext `.ics` files. `grep` them, script
   them or hand them to Claude Code. No database, no lock-in.
-- **Connect any provider** — Sync your existing Google, iCloud, Outlook or CalDAV account.
+- **Connect any provider** — Two-way sync with your existing Google, iCloud, Outlook or CalDAV account.
 - **Natural-language input** — e.g. "lunch with Sarah tomorrow at 1pm".
-- **Vim motions** — Navigate with `hjkl`. Switch between the `w`eek view and `m`onth view.
+- **Keyboard-driven** — Vim motions (`hjkl`) for navigation, `m`/`w` to switch views.
 - **Themes** — Tokyo Night, Catppuccin Latte, plus live Omarchy sync.
 
 ## Install
 
-### Arch Linux / Omarchy (AUR):
+### Omarchy / Arch Linux (AUR)
 
 ```bash
 yay -S rencal
 ```
+
+<details>
+<summary><b>Other platforms</b></summary>
 
 ### Linux (deb/rpm/AppImage)
 
@@ -38,6 +41,8 @@ Download from [Releases](https://github.com/t4t5/rencal/releases).
 Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releases), open it, and drag RenCal to `/Applications`.
 
 > Signed and notarized with Apple Developer ID - installs without Gatekeeper warnings.
+
+</details>
 
 ## Screenshots
 
@@ -54,5 +59,6 @@ Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releas
 Use [`just`](https://just.systems/) to access handy development commands.
 
 ```bash
+# Start the Tauri app:
 just dev
 ```
