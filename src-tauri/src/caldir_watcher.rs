@@ -11,7 +11,7 @@ pub const CALDIR_CHANGED: &str = "caldir-changed";
 
 /// Watches the user's caldir directory recursively and emits `CALDIR_CHANGED`
 /// whenever anything inside changes. The frontend uses this to keep the event
-/// list in sync with the directory — whether the change came from Rencal, a
+/// list in sync with the directory — whether the change came from renCal, a
 /// CLI tool, a git pull, or another editor.
 pub async fn run_watcher(app: AppHandle) {
     let Ok(caldir) = Caldir::load() else {

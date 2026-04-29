@@ -1,4 +1,4 @@
-# Rencal
+# renCal
 
 A calendar app crafted especially for Omarchy.
 
@@ -44,13 +44,13 @@ communicates with the backend via taurpc.
 - _NEVER_ use the `any` type in TypeScript! Always aim to have as precise types as possible. If
   you're using `any`, you're doing something wrong.
 - Avoid using `i64`/`u64` in taurpc route types — Specta forbids BigInt exports to TypeScript. Use `i32`/`u32` instead.
-- Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the caldir provider binaries, NOT by Rencal. Always check the provider source code for the expected field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
+- Provider credential field IDs (used in `connect_provider_with_credentials`) are defined by the caldir provider binaries, NOT by renCal. Always check the provider source code for the expected field IDs (e.g., iCloud expects `apple_id` and `app_password`, not `email`/`password`).
 - For taurpc types with a fixed set of string values, use a Rust enum with `#[serde(rename = "...")]` variants instead of `String`. Specta generates these as TypeScript string literal unions (e.g., `ResponseStatus = "accepted" | "declined" | ...`). See `ResponseStatus` in `caldir.rs` for the pattern.
 - To change `activeDate`, prefer `navigateToDate` over the raw `setActiveDate` setter from `useCalendarNavigation`. `navigateToDate` also syncs the sidebar `EventList` scroll position and lazy-loads events for distant dates. Only reach for `setActiveDate` if you specifically need to suppress those side effects.
 
 ## Bundled Providers
 
-RenCal bundles the Google, iCloud, Outlook, CalDAV, and WebCal caldir provider binaries so they work out of the box. The
+renCal bundles the Google, iCloud, Outlook, CalDAV, and WebCal caldir provider binaries so they work out of the box. The
 `just dev` / `just build` recipes compile them from `../caldir/` into `src-tauri/providers/`. At
 startup, `lib.rs` sets the `CALDIR_PROVIDER_PATH` env var to point at that directory. caldir-core's
 `discover_installed()` checks `CALDIR_PROVIDER_PATH` before `PATH`, so bundled providers are found
@@ -59,7 +59,7 @@ alongside any user-installed ones. The providers are shipped as Tauri bundle res
 
 ## Calendar Data (caldir)
 
-Rencal reads calendars and events from the local caldir directory (`~/calendar/`) via the
+renCal reads calendars and events from the local caldir directory (`~/calendar/`) via the
 `caldir-core` Rust crate. The Rust backend exposes caldir operations as taurpc procedures
 (`src-tauri/src/routes/caldir.rs`), and the frontend calls them via `rpc.caldir.*`.
 
@@ -141,7 +141,7 @@ To add a new theme:
 2. Import it from `src/global.css`.
 3. Set `data-theme="<name>"` on `<body>` to activate.
 
-The `omarchy` theme is a special case. On Omarchy machines its primitives are injected at runtime from `~/.config/omarchy/current/theme/colors.toml` by `src/hooks/useOmarchyTheme.ts`, into a managed `<style>` element appended to `<head>`. A Rust file-watcher in `src-tauri/src/omarchy.rs` emits `omarchy-theme-changed` when the OS theme changes so Rencal repaints live. `src/themes/omarchy.css` holds a static Tokyo Night palette as a fallback for non-Omarchy users (e.g. the settings preview tile); the dynamic `<style>` wins via source order when present, not specificity, so don't strip the static values.
+The `omarchy` theme is a special case. On Omarchy machines its primitives are injected at runtime from `~/.config/omarchy/current/theme/colors.toml` by `src/hooks/useOmarchyTheme.ts`, into a managed `<style>` element appended to `<head>`. A Rust file-watcher in `src-tauri/src/omarchy.rs` emits `omarchy-theme-changed` when the OS theme changes so renCal repaints live. `src/themes/omarchy.css` holds a static Tokyo Night palette as a fallback for non-Omarchy users (e.g. the settings preview tile); the dynamic `<style>` wins via source order when present, not specificity, so don't strip the static values.
 
 On first launch with no persisted preference, `useTheme.ts` defaults to `omarchy` if `rpc.omarchy.get_colors()` returns non-null (Omarchy detected on disk), otherwise to `ren` (the default everywhere else — macOS, Windows, non-Omarchy Linux). Subsequent launches use the persisted choice from `~/.config/rencal/config.toml`.
 

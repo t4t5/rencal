@@ -108,7 +108,7 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 
 ## Omarchy auto-sync
 
-The `omarchy` theme is special: it doesn't ship a static palette. Rencal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints Rencal live without a restart.
+The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints renCal live without a restart.
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 

@@ -1,7 +1,7 @@
-//! Rencal-specific user preferences at ~/.config/rencal/config.toml.
+//! renCal-specific user preferences at ~/.config/rencal/config.toml.
 //!
 //! Mirrors the get/save shape of caldir-core's `CaldirConfig`. Kept local to
-//! Rencal so we don't pollute caldir-core with app-specific settings.
+//! renCal so we don't pollute caldir-core with app-specific settings.
 
 use std::path::PathBuf;
 
@@ -55,8 +55,8 @@ impl RencalConfig {
             std::fs::create_dir_all(parent)
                 .map_err(|e| format!("Could not create config directory: {e}"))?;
         }
-        let contents = toml::to_string_pretty(self)
-            .map_err(|e| format!("Could not serialize config: {e}"))?;
+        let contents =
+            toml::to_string_pretty(self).map_err(|e| format!("Could not serialize config: {e}"))?;
         std::fs::write(&path, contents).map_err(|e| format!("Could not write config file: {e}"))
     }
 }
