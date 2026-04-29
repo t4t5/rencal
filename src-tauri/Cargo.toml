@@ -47,3 +47,6 @@ dirs = "5"
 tauri-plugin-log = "2.8.0"
 log = "0.4.29"
 tauri-plugin-single-instance = "2.4.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"

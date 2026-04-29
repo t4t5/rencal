@@ -82,18 +82,16 @@ pub fn check_and_notify(
     let now = Utc::now();
     let time_format = caldir.config().time_format;
 
-    // First run / cache wipe: optimistically use the full catch-up window so
-    // a freshly-launched host still fires recently-missed reminders. The cap
-    // itself bounds the spam.
-    let cap_start = now - Duration::hours(CATCHUP_CAP_HOURS);
-    let last_check = read_last_check_time().unwrap_or(cap_start);
-    let window_start = std::cmp::max(last_check, cap_start);
+    let last_check = read_last_check_time(now);
+    let window_start = compute_window_start(now, last_check);
 
     // 7 days forward covers "1 week before" reminders.
     let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
-    log::info!("tick now={now} last_check={last_check} window_start={window_start}");
+    log::info!(
+        "tick now={now} last_check={last_check:?} window_start={window_start}"
+    );
 
     let calendars = caldir.calendars();
     log::info!("calendars={}", calendars.len());
@@ -109,23 +107,12 @@ pub fn check_and_notify(
         };
 
         for event in &events {
-            // If multiple reminders for the same event fall in this tick's
-            // window (typical on catch-up: e.g. both "1h before" and "30m
-            // before" Lunch when the host launched after both fired), collapse
-            // to the most recent trigger so the user sees one notification
-            // per event, not a stack of stale ones.
-            // Exclusive `> window_start` so we don't double-fire at tick
-            // boundaries — the previous tick already covered last_check.
-            let best = event
+            let triggers = event
                 .reminders
                 .iter()
-                .filter_map(|r| {
-                    let trigger = compute_trigger_time(event, r.minutes)?;
-                    (trigger > window_start && trigger <= now).then_some((r.minutes, trigger))
-                })
-                .max_by_key(|(_, t)| *t);
+                .filter_map(|r| Some((r.minutes, compute_trigger_time(event, r.minutes)?)));
 
-            if let Some((minutes, trigger)) = best {
+            if let Some((minutes, trigger)) = select_best_trigger(triggers, window_start, now) {
                 log::info!(
                     "FIRE \"{}\" {minutes}min before (trigger={trigger})",
                     event.summary
@@ -142,21 +129,60 @@ pub fn check_and_notify(
     Ok(())
 }
 
+/// Lower bound of the catch-up window. Optimistically uses the full
+/// `CATCHUP_CAP_HOURS` when there's no `last_check` (first run / cache wipe)
+/// so a freshly-launched host still fires recently-missed reminders; the cap
+/// bounds the spam. When `last_check` is set, clamp it to no earlier than
+/// `now - cap` so a long-stale machine doesn't fire dozens of stale reminders.
+fn compute_window_start(
+    now: DateTime<Utc>,
+    last_check: Option<DateTime<Utc>>,
+) -> DateTime<Utc> {
+    let cap_start = now - Duration::hours(CATCHUP_CAP_HOURS);
+    let last_check = last_check.unwrap_or(cap_start);
+    std::cmp::max(last_check, cap_start)
+}
+
+/// Pick the latest reminder trigger in `(window_start, now]` for one event.
+///
+/// Window is exclusive on the left (the previous tick already covered
+/// anything at exactly `last_check`) and inclusive on the right (`now` itself
+/// is part of this tick).
+///
+/// When multiple reminders for the same event fall in the same tick's window
+/// (typical on catch-up: e.g. both "1h before" and "30m before" Lunch when
+/// the host launched after both fired), collapse to the most recent trigger
+/// so the user sees one notification per event, not a stack of stale ones.
+fn select_best_trigger(
+    triggers: impl IntoIterator<Item = (i64, DateTime<Utc>)>,
+    window_start: DateTime<Utc>,
+    now: DateTime<Utc>,
+) -> Option<(i64, DateTime<Utc>)> {
+    triggers
+        .into_iter()
+        .filter(|(_, t)| *t > window_start && *t <= now)
+        .max_by_key(|(_, t)| *t)
+}
+
 fn last_check_path() -> Option<PathBuf> {
     Some(dirs::cache_dir()?.join("rencal").join("last-reminder-check"))
 }
 
-fn read_last_check_time() -> Option<DateTime<Utc>> {
+fn read_last_check_time(now: DateTime<Utc>) -> Option<DateTime<Utc>> {
     let path = last_check_path()?;
     let contents = std::fs::read_to_string(&path).ok()?;
-    let parsed = DateTime::parse_from_rfc3339(contents.trim()).ok()?;
-    let parsed = parsed.with_timezone(&Utc);
-    // Guard against a clock that jumped backwards (NTP correction, manual
-    // change). Treat a future last_check as if we had no record.
-    if parsed > Utc::now() {
-        return None;
-    }
-    Some(parsed)
+    parse_last_check(&contents, now)
+}
+
+/// Parse a persisted `last_check` timestamp. Returns `None` for malformed
+/// input or for any value that's after `now` — guards against a clock that
+/// jumped backwards (NTP correction, manual change), in which case we'd
+/// rather act as if there's no record than skip a real reminder window.
+fn parse_last_check(contents: &str, now: DateTime<Utc>) -> Option<DateTime<Utc>> {
+    let parsed = DateTime::parse_from_rfc3339(contents.trim())
+        .ok()?
+        .with_timezone(&Utc);
+    (parsed <= now).then_some(parsed)
 }
 
 fn write_last_check_time(now: DateTime<Utc>) {

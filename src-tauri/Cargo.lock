@@ -3837,6 +3837,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "dirs 5.0.1",
+ "libc",
  "log",
  "notify",
  "reminder-core",

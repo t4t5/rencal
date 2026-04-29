@@ -7,8 +7,10 @@
 //! macOS/Windows (no zbus there); we use this socket-based stand-in only on
 //! Linux.
 //!
-//! Protocol: a single socket at `$XDG_RUNTIME_DIR/rencal.sock` (falling back
-//! to `/tmp/...`). On startup, we try to connect:
+//! Protocol: a single socket at `$XDG_RUNTIME_DIR/rencal.sock` (or, when
+//! `XDG_RUNTIME_DIR` is unset, `/tmp/rencal-<uid>.sock` — UID-namespaced so
+//! a second user on a multi-user host doesn't collide with the first).
+//! On startup, we try to connect:
 //! - `Ok` → another instance is alive; we send `focus\n` and exit.
 //! - `Err` → either no instance, or a stale socket file from a prior crash.
 //!   Remove the file and bind. The bound listener is held for the process
@@ -34,9 +36,15 @@ impl Drop for InstanceGuard {
 }
 
 fn socket_path() -> PathBuf {
-    dirs::runtime_dir()
-        .unwrap_or_else(std::env::temp_dir)
-        .join("rencal.sock")
+    if let Some(runtime) = dirs::runtime_dir() {
+        // XDG_RUNTIME_DIR is already per-user (mode 0700, owned by the user),
+        // so a bare filename is safe.
+        return runtime.join("rencal.sock");
+    }
+    // Fallback: /tmp is shared across users. Namespace by euid so each user
+    // gets their own socket instead of fighting over a single global one.
+    let uid = unsafe { libc::geteuid() };
+    std::env::temp_dir().join(format!("rencal-{uid}.sock"))
 }
 
 /// Either acquire the single-instance role (returning a guard + listener),
