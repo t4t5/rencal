@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 use std::time::Duration as StdDuration;
 
 use caldir_core::caldir::Caldir;
-use caldir_core::event::Event;
-use chrono::{DateTime, Duration, Utc};
+use caldir_core::caldir_config::TimeFormat;
+use caldir_core::event::{Event, EventTime};
+use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 
 /// Bounded so a long-stale machine doesn't fire dozens of reminders at once
 /// for events the user has already moved past.
@@ -79,6 +80,7 @@ pub fn check_and_notify(
 ) -> Result<(), Box<dyn std::error::Error>> {
     let caldir = Caldir::load()?;
     let now = Utc::now();
+    let time_format = caldir.config().time_format;
 
     // First run / cache wipe: optimistically use the full catch-up window so
     // a freshly-launched host still fires recently-missed reminders. The cap
@@ -128,7 +130,7 @@ pub fn check_and_notify(
                     "FIRE \"{}\" {minutes}min before (trigger={trigger})",
                     event.summary
                 );
-                let body = format_body(event, minutes);
+                let body = format_body(event, time_format, Local::now());
                 notifier.notify(&event.summary, &body, icon);
                 fired += 1;
             }
@@ -174,25 +176,55 @@ fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<U
     Some(start_utc - Duration::minutes(minutes_before))
 }
 
-fn format_body(event: &Event, minutes_before: i64) -> String {
-    let time_str = if minutes_before == 0 {
-        "Now".to_string()
-    } else if minutes_before == 1 {
-        "In 1 minute".to_string()
-    } else if minutes_before < 60 {
-        format!("In {} minutes", minutes_before)
-    } else if minutes_before == 60 {
-        "In 1 hour".to_string()
-    } else if minutes_before % 60 == 0 {
-        format!("In {} hours", minutes_before / 60)
-    } else {
-        let hours = minutes_before / 60;
-        let mins = minutes_before % 60;
-        format!("In {}h {}m", hours, mins)
-    };
+/// Build the notification body. Shows the event's absolute start time
+/// (in the host's local zone) rather than the static "in N minutes"
+/// reminder offset — a delayed catch-up notification for a past event
+/// would otherwise lie about how soon it starts.
+fn format_body(event: &Event, time_format: TimeFormat, now: DateTime<Local>) -> String {
+    let time_str = format_event_time(&event.start, time_format, now);
 
     match &event.location {
         Some(loc) if !loc.is_empty() => format!("{}\n{}", time_str, loc),
         _ => time_str,
+    }
+}
+
+fn format_event_time(et: &EventTime, time_format: TimeFormat, now: DateTime<Local>) -> String {
+    let today = now.date_naive();
+
+    if let EventTime::Date(d) = et {
+        return format_relative_date(*d, today);
+    }
+
+    let Some(local) = et.to_utc().map(|u| u.with_timezone(&Local)) else {
+        return String::new();
+    };
+
+    let time_part = match time_format {
+        TimeFormat::H24 => local.format("%H:%M").to_string(),
+        TimeFormat::H12 => local.format("%-I:%M %p").to_string(),
+    };
+
+    let event_day = local.date_naive();
+    if event_day == today {
+        time_part
+    } else if Some(event_day) == today.succ_opt() {
+        format!("Tomorrow at {time_part}")
+    } else if Some(event_day) == today.pred_opt() {
+        format!("Yesterday at {time_part}")
+    } else {
+        format!("{} at {time_part}", local.format("%a, %b %-d"))
+    }
+}
+
+fn format_relative_date(date: NaiveDate, today: NaiveDate) -> String {
+    if date == today {
+        "Today".to_string()
+    } else if Some(date) == today.succ_opt() {
+        "Tomorrow".to_string()
+    } else if Some(date) == today.pred_opt() {
+        "Yesterday".to_string()
+    } else {
+        date.format("%a, %b %-d").to_string()
     }
 }
