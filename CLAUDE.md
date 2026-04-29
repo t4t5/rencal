@@ -154,4 +154,5 @@ own loop. macOS/Windows always run the loop in-process via `tauri-plugin-notific
 `just test-notification`.
 
 See [docs/notifications.md](./docs/notifications.md) for details on the catch-up window,
-per-event dedup, the Linux notify-send workaround, and how to share logs in bug reports.
+the delivered-reminder cache, per-event collapse, the Linux notify-send workaround, and how to share
+logs in bug reports.

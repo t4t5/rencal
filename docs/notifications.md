@@ -1,7 +1,7 @@
 # Notifications
 
 The reminder loop scans caldir for events with VALARMs whose trigger time (event start minus
-reminder minutes) falls in the catch-up window, dedupes per delivered reminder, and fires desktop
+reminder minutes) falls in the catch-up window, records delivered reminder keys, and fires desktop
 notifications. The platform-agnostic logic lives in `src-tauri/reminder-core/`. There are two
 hosts:
 
@@ -90,10 +90,10 @@ as delivered (without calling `notify`). This means re-enabling later doesn't du
 
 The loop honors reminder offsets from **4 weeks before** to **24 hours after**
 the event start. Both bounds drive the `events_in_range` scan: we widen the
-event-start scan by these offsets so that any trigger landing in the current
-tick's window has its event loaded. Reminders outside the range are skipped
-with a debug log — they wouldn't fire reliably anyway because the scan
-wouldn't cover their event's start time.
+event-start scan by these offsets so that any trigger landing in the catch-up
+window has its event loaded. Reminders outside the range are skipped with a
+debug log — they wouldn't fire reliably anyway because the scan wouldn't cover
+their event's start time.
 
 The "after" side covers iCal `TRIGGER:PT...` alarms (e.g. Google's
 `TRIGGER:PT8H` default for all-day events, which caldir parses as a negative
@@ -102,8 +102,8 @@ patterns. The "before" side matches Google Calendar's UI cap.
 
 ## Trigger times
 
-Reminders resolve event start times to a UTC instant via a host-local-aware
-helper (`event_start_instant` in `reminder-core`), not `EventTime::to_utc` —
+Reminders resolve event start times to a UTC instant via
+`EventTime::resolve_instant_in_zone(&Local)`, not `EventTime::to_utc` —
 caldir-core documents `to_utc` as an ordering projection, and it gets two
 cases wrong for our purposes:
 
@@ -129,8 +129,10 @@ per event. The collapsed (latest) trigger is what gets recorded in the cache.
 
 Only one rencal GUI process runs at a time. A second launch focuses the existing window instead of
 spawning a duplicate. Two GUI processes would each run their own in-process reminder loop (in the
-daemon-not-installed fallback path) and write to the same `last-reminder-check` cache, producing
-duplicate notifications. The daemon is similarly single-by-construction (systemd unit).
+daemon-not-installed fallback path) and race over the same `delivered-reminders.json` cache. The
+per-reminder cache suppresses repeats after a successful write, but single-instance still matters:
+two processes could both read the cache before either writes and then both notify. The daemon is
+similarly single-by-construction (systemd unit).
 
 On macOS/Windows we use `tauri-plugin-single-instance` directly. On **Linux** we can't: the plugin
 uses `zbus::blocking` for D-Bus IPC, and `tauri-plugin-dialog`'s `xdg-portal` feature transitively

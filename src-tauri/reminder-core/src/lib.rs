@@ -224,9 +224,9 @@ fn process_reminders(
 
 /// Pick the latest reminder trigger in `(window_start, now]` for one event.
 ///
-/// Window is exclusive on the left (the previous tick already covered
-/// anything at exactly `last_check`) and inclusive on the right (`now` itself
-/// is part of this tick).
+/// Window is exclusive on the left (anything at exactly the catch-up cutoff is
+/// intentionally too old) and inclusive on the right (`now` itself is part of
+/// this tick).
 ///
 /// When multiple reminders for the same event fall in the same tick's window
 /// (typical on catch-up: e.g. both "1h before" and "30m before" Lunch when
