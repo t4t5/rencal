@@ -1,14 +1,7 @@
-//! Per-reminder dedup cache. Replaces the old global `last_check` checkpoint.
+//! Per-reminder dedup cache.
 //!
 //! Each tick scans triggers in `(now - CATCHUP_CAP_HOURS, now]` and fires any
-//! that aren't already in the cache. Keying per-reminder (rather than tracking
-//! a single "last evaluated" timestamp) closes a race that was visible whenever
-//! an event landed in caldir *after* a tick had already passed its trigger
-//! time — sync, manual create, or the file watcher picking up an external
-//! write. The old model would advance `last_check` past the trigger and the
-//! reminder was lost; here, the trigger is still in the scan window and the
-//! cache is the only thing that can mark it delivered.
-//!
+//! that aren't already in the cache.
 //! Eviction drops entries whose trigger is older than the catchup cap. They
 //! can never re-fire (the scan window stops at the cap), so keeping them is
 //! pure bloat.
