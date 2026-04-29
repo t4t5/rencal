@@ -1,5 +1,17 @@
 /* The Omarchy theme's primitives are injected at runtime from
    ~/.config/omarchy/current/theme/colors.toml via src/hooks/useOmarchyTheme.ts,
-   which writes a [data-theme="omarchy"] rule into a managed <style> element.
-   If Omarchy isn't installed, no rule is written and the :root defaults in
-   global.css take over. */
+   which writes a [data-theme="omarchy"] rule into a managed <style> element
+   appended to <head>. The values below act as a fallback for users who
+   aren't on Omarchy (so the theme still has a coherent look in the settings
+   preview tile or if selected manually) — these mirror the Tokyo Night
+   palette. When Omarchy is installed, the dynamically-injected rule comes
+   later in source order and overrides these. */
+[data-theme="omarchy"] {
+  --background: #1a1b26;
+  --foreground: #c0caf5;
+  --muted: #9aa5ce;
+  --highlight: #f7768e;
+  --today: #7dcfff;
+  --hover-tint: #a7b7ff;
+  --primary: #7aa2f7;
+}

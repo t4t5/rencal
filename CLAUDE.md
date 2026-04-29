@@ -141,7 +141,9 @@ To add a new theme:
 2. Import it from `src/global.css`.
 3. Set `data-theme="<name>"` on `<body>` to activate.
 
-The `omarchy` theme is a special case: its primitives aren't in a static CSS file, they're injected at runtime from `~/.config/omarchy/current/theme/colors.toml` by `src/hooks/useOmarchyTheme.ts`. A Rust file-watcher in `src-tauri/src/omarchy.rs` emits `omarchy-theme-changed` when the OS theme changes so Rencal repaints live.
+The `omarchy` theme is a special case. On Omarchy machines its primitives are injected at runtime from `~/.config/omarchy/current/theme/colors.toml` by `src/hooks/useOmarchyTheme.ts`, into a managed `<style>` element appended to `<head>`. A Rust file-watcher in `src-tauri/src/omarchy.rs` emits `omarchy-theme-changed` when the OS theme changes so Rencal repaints live. `src/themes/omarchy.css` holds a static Tokyo Night palette as a fallback for non-Omarchy users (e.g. the settings preview tile); the dynamic `<style>` wins via source order when present, not specificity, so don't strip the static values.
+
+On first launch with no persisted preference, `useTheme.ts` defaults to `omarchy` if `rpc.omarchy.get_colors()` returns non-null (Omarchy detected on disk), otherwise to `ren` (the default everywhere else — macOS, Windows, non-Omarchy Linux). Subsequent launches use the persisted choice from `~/.config/rencal/config.toml`.
 
 ## Notifications
 

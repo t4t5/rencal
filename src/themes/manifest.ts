@@ -3,8 +3,8 @@ export type Appearance = "light" | "dark"
 // `appearance: null` means the theme's appearance is derived at runtime
 // (e.g. omarchy, which inherits from the OS theme).
 export const themes = [
+  { id: "omarchy", name: "Omarchy (Auto)", appearance: null },
   { id: "ren", name: "Ren", appearance: "dark" },
-  { id: "omarchy", name: "Omarchy", appearance: null },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },

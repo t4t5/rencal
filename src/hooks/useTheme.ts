@@ -45,12 +45,26 @@ export function useTheme() {
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {
     let cancelled = false
-    void rpc.config.get_theme().then((toml) => {
+    void rpc.config.get_theme().then(async (toml) => {
       if (cancelled) return
       if (toml === null) {
         // First run with this build: persist whatever the cache holds so the
-        // file exists and future reads are unambiguous.
-        void rpc.config.set_theme(themeRef.current)
+        // file exists and future reads are unambiguous. On a truly fresh
+        // install (no prior localStorage either), default to omarchy when
+        // detected on disk so Omarchy users see their OS theme out of the box.
+        let initial = themeRef.current
+        const hadCachedTheme = localStorage.getItem("theme") !== null
+        if (!hadCachedTheme) {
+          try {
+            const colors = await rpc.omarchy.get_colors()
+            if (cancelled) return
+            if (colors) {
+              initial = "omarchy"
+              setThemeLocal(initial)
+            }
+          } catch {}
+        }
+        void rpc.config.set_theme(initial)
         return
       }
       const parsed = themeSchema.safeParse(toml)
