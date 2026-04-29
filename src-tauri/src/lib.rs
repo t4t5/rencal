@@ -64,6 +64,19 @@ pub async fn run() {
     let router = create_router();
 
     tauri::Builder::default()
+        // Must be the first plugin so a second-launched process exits as
+        // early as possible. The callback fires in the *first* instance and
+        // brings its main window back to the foreground — the natural UX
+        // when the user re-launches from the app launcher to reopen a hidden
+        // window. Also prevents duplicate reminder loops writing to the
+        // same `last-reminder-check` cache.
+        .plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.unminimize();
+                let _ = window.show();
+                let _ = window.set_focus();
+            }
+        }))
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(if cfg!(debug_assertions) {
