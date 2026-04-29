@@ -148,5 +148,9 @@ On first launch with no persisted preference, `useTheme.ts` defaults to `omarchy
 ## Notifications
 
 Desktop notifications for calendar reminders run as a background tokio task spawned in
-`lib.rs::setup()`. The loop aligns to minute boundaries, then scans caldir for events with
-reminders whose trigger time (event start minus reminder minutes) falls within the last 60-second window, and fires a desktop notification via `tauri-plugin-notification`. No frontend involvement or state DB needed. Test with `just test-notification`.
+`lib.rs::setup()`. The loop aligns to minute boundaries, scans caldir for events with reminders
+whose trigger falls in a catch-up window, dedupes per event, and fires via `notify-send` on Linux
+(or `tauri-plugin-notification` on macOS/Windows). Test with `just test-notification`.
+
+See [docs/notifications.md](./docs/notifications.md) for details on the catch-up window,
+per-event dedup, and the Linux notify-send workaround.

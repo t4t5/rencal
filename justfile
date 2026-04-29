@@ -91,3 +91,6 @@ test-notification:
   fi
   caldir new "Test notification" --start "today ${start_time}" --reminder 1m
   echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
+
+clear-notification-cache:
+  rm -f ~/.cache/rencal/last-reminder-check

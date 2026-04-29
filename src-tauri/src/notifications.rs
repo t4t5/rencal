@@ -6,11 +6,12 @@ use caldir_core::caldir::Caldir;
 use caldir_core::event::Event;
 use chrono::{DateTime, Duration, Utc};
 use tauri::{AppHandle, Manager};
+#[cfg(not(target_os = "linux"))]
 use tauri_plugin_notification::NotificationExt;
 
 /// Bounded so a long-stale machine doesn't fire dozens of reminders at once
 /// for events the user has already moved past.
-const CATCHUP_CAP_HOURS: i64 = 1;
+const CATCHUP_CAP_HOURS: i64 = 4;
 
 /// Runs the reminder check loop aligned to minute boundaries.
 pub async fn run_reminder_loop(app: AppHandle) {
@@ -35,35 +36,65 @@ fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let caldir = Caldir::load()?;
     let now = Utc::now();
 
-    // First-run fallback: 60s trailing window, so a reminder that fired just
-    // before rencal launched is still caught.
-    let last_check = read_last_check_time().unwrap_or_else(|| now - Duration::seconds(60));
-    let window_start = std::cmp::max(last_check, now - Duration::hours(CATCHUP_CAP_HOURS));
+    // First run / cache wipe: optimistically use the full catch-up window so
+    // a freshly-launched rencal still fires recently-missed reminders. The cap
+    // itself bounds the spam.
+    let cap_start = now - Duration::hours(CATCHUP_CAP_HOURS);
+    let last_check = read_last_check_time().unwrap_or(cap_start);
+    let window_start = std::cmp::max(last_check, cap_start);
 
     // 7 days forward covers "1 week before" reminders.
     let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
-    for calendar in caldir.calendars() {
+    eprintln!(
+        "[reminder] tick now={now} last_check={last_check} window_start={window_start}"
+    );
+
+    let calendars = caldir.calendars();
+    eprintln!("[reminder]   calendars={}", calendars.len());
+
+    let mut fired = 0;
+    for calendar in &calendars {
         let events = match calendar.events_in_range(range_start, range_end) {
             Ok(events) => events,
-            Err(_) => continue,
+            Err(e) => {
+                eprintln!("[reminder]   [{}] events_in_range err: {e}", calendar.slug);
+                continue;
+            }
         };
 
         for event in &events {
-            for reminder in event.reminders.iter() {
-                if let Some(trigger_time) = compute_trigger_time(event, reminder.minutes) {
-                    // Exclusive on the left: the previous tick already covered
-                    // anything at exactly `last_check`, so including it here
-                    // would double-fire on tick boundaries.
-                    if trigger_time > window_start && trigger_time <= now {
-                        send_notification(app, event, reminder.minutes)?;
-                    }
+            // If multiple reminders for the same event fall in this tick's
+            // window (typical on catch-up: e.g. both "1h before" and "30m
+            // before" Lunch when rencal launched after both fired), collapse
+            // to the most recent trigger so the user sees one notification
+            // per event, not a stack of stale ones.
+            // Exclusive `> window_start` so we don't double-fire at tick
+            // boundaries — the previous tick already covered last_check.
+            let best = event
+                .reminders
+                .iter()
+                .filter_map(|r| {
+                    let trigger = compute_trigger_time(event, r.minutes)?;
+                    (trigger > window_start && trigger <= now).then_some((r.minutes, trigger))
+                })
+                .max_by_key(|(_, t)| *t);
+
+            if let Some((minutes, trigger)) = best {
+                eprintln!(
+                    "[reminder]   FIRE \"{}\" {minutes}min before (trigger={trigger})",
+                    event.summary
+                );
+                match send_notification(app, event, minutes) {
+                    Ok(()) => fired += 1,
+                    Err(e) => eprintln!("[reminder]   send err: {e}"),
                 }
             }
         }
     }
 
+    eprintln!("[reminder]   fired={fired}");
     write_last_check_time(now);
     Ok(())
 }
@@ -108,19 +139,51 @@ fn send_notification(
     minutes_before: i64,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let body = format_body(event, minutes_before);
+    let title = event.summary.clone();
+    let icon = icon_path(app).map(|p| p.to_string_lossy().into_owned());
 
-    let mut builder = app
-        .notification()
-        .builder()
-        .title(&event.summary)
-        .body(&body)
-        .sound("default");
-
-    if let Some(icon) = icon_path(app) {
-        builder = builder.icon(icon.to_string_lossy());
+    // On Linux, tauri-plugin-notification → notify-rust uses zbus with the
+    // async-io runtime, which panics ("Cannot start a runtime from within a
+    // runtime") when invoked from any tokio context — and the plugin always
+    // re-spawns the call onto Tauri's tokio runtime, so we can't escape it
+    // from the call site. Shell out to notify-send instead; it goes to the
+    // same D-Bus notification daemon (mako, dunst, etc.) and has no runtime.
+    #[cfg(target_os = "linux")]
+    {
+        let _ = app;
+        std::thread::spawn(move || {
+            let mut cmd = std::process::Command::new("notify-send");
+            cmd.arg("--app-name=Rencal");
+            if let Some(icon) = icon {
+                cmd.arg(format!("--icon={icon}"));
+            }
+            cmd.arg(&title).arg(&body);
+            match cmd.status() {
+                Ok(s) if !s.success() => eprintln!("[reminder] notify-send {s}"),
+                Err(e) => eprintln!("[reminder] notify-send err: {e}"),
+                _ => {}
+            }
+        });
     }
 
-    builder.show()?;
+    #[cfg(not(target_os = "linux"))]
+    {
+        let app = app.clone();
+        std::thread::spawn(move || {
+            let mut builder = app
+                .notification()
+                .builder()
+                .title(&title)
+                .body(&body)
+                .sound("default");
+            if let Some(icon) = icon {
+                builder = builder.icon(icon);
+            }
+            if let Err(e) = builder.show() {
+                eprintln!("[reminder] show err: {e}");
+            }
+        });
+    }
 
     Ok(())
 }
