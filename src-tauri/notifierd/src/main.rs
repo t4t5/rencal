@@ -9,12 +9,20 @@
 //! Logs go to stderr; systemd captures them to journald
 //! (`journalctl --user -u rencal-notifierd`).
 
+#[cfg(not(target_os = "linux"))]
+fn main() {
+    eprintln!("rencal-notifierd is Linux-only; macOS and Windows run the reminder loop in-process.");
+    std::process::exit(1);
+}
+
+#[cfg(target_os = "linux")]
 use std::path::PathBuf;
 
 /// Resolve the icon path notify-send should use. Tries `RENCAL_NOTIFIER_ICON`
 /// first (dev override), then standard XDG locations populated by the deb/rpm
 /// bundle and `just install-notifierd`. Returns `None` if nothing's there;
 /// notifications then fire iconless rather than failing.
+#[cfg(target_os = "linux")]
 fn icon_path() -> Option<PathBuf> {
     if let Some(p) = std::env::var_os("RENCAL_NOTIFIER_ICON") {
         return Some(p.into());
@@ -31,6 +39,7 @@ fn icon_path() -> Option<PathBuf> {
     candidates.into_iter().find(|p| p.exists())
 }
 
+#[cfg(target_os = "linux")]
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info"))
