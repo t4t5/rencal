@@ -50,7 +50,11 @@ fn setup_bundled_providers(app: &tauri::App) {
         }
     }
 
-    std::env::set_var("CALDIR_PROVIDER_PATH", &providers_dir);
+    // SAFETY: called from Tauri's setup hook before any caldir provider is
+    // spawned; no other thread reads CALDIR_PROVIDER_PATH concurrently.
+    unsafe {
+        std::env::set_var("CALDIR_PROVIDER_PATH", &providers_dir);
+    }
 }
 
 /// On Linux, defer to `rencal-notifierd` (a separate systemd-managed daemon)
@@ -118,7 +122,11 @@ pub async fn run() {
     // Must be set before GTK initializes, hence at the very top of run().
     #[cfg(target_os = "linux")]
     if needs_native_decorations() {
-        std::env::set_var("GTK_THEME", "Adwaita:dark");
+        // SAFETY: first statement in run(), before GTK initializes; no other
+        // thread reads GTK_THEME at this point.
+        unsafe {
+            std::env::set_var("GTK_THEME", "Adwaita:dark");
+        }
     }
 
     // Single-instance: on Linux we use a Unix socket because

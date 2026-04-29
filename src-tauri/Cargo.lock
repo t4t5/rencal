@@ -548,9 +548,9 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.8.2"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "305cfbb705cdfe93d810333e0149be3dff4583caeb47997fee898b7c35a60ad3"
+checksum = "b932bbb715dde0bd3a65c7150a64fb296b5dfe72fcfd0060c894dcaee9ee0f87"
 dependencies = [
  "chrono",
  "chrono-tz",
