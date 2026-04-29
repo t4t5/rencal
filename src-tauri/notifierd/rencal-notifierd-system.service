@@ -1,0 +1,14 @@
+[Unit]
+Description=Rencal calendar reminder notifier
+Documentation=https://github.com/t4t5/rencal/blob/main/docs/notifications.md
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/rencal-notifierd
+Restart=on-failure
+RestartSec=10s
+
+[Install]
+WantedBy=graphical-session.target

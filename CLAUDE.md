@@ -147,10 +147,11 @@ On first launch with no persisted preference, `useTheme.ts` defaults to `omarchy
 
 ## Notifications
 
-Desktop notifications for calendar reminders run as a background tokio task spawned in
-`lib.rs::setup()`. The loop aligns to minute boundaries, scans caldir for events with reminders
-whose trigger falls in a catch-up window, dedupes per event, and fires via `notify-send` on Linux
-(or `tauri-plugin-notification` on macOS/Windows). Test with `just test-notification`.
+The reminder loop lives in the workspace crate `src-tauri/reminder-core/` (platform-agnostic). On
+Linux it runs in a separate `rencal-notifierd` daemon (systemd user service, install via
+`just install-notifierd`); the GUI's `lib.rs::setup` detects the active daemon and skips its
+own loop. macOS/Windows always run the loop in-process via `tauri-plugin-notification`. Test with
+`just test-notification`.
 
 See [docs/notifications.md](./docs/notifications.md) for details on the catch-up window,
-per-event dedup, and the Linux notify-send workaround.
+per-event dedup, the Linux notify-send workaround, and how to share logs in bug reports.

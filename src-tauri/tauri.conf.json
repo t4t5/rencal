@@ -39,6 +39,20 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "linux": {
+      "deb": {
+        "files": {
+          "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
+          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd-system.service"
+        }
+      },
+      "rpm": {
+        "files": {
+          "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
+          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd-system.service"
+        }
+      }
+    }
   }
 }
