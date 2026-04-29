@@ -74,6 +74,7 @@ start:
 # Check Rust and TypeScript types
 check:
   cargo check --workspace --manifest-path src-tauri/Cargo.toml
+  cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
   @just typecheck
 
 # Check TypeScript types only

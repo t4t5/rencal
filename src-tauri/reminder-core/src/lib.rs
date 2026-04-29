@@ -261,7 +261,7 @@ fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<U
 /// Anything outside is dropped so we don't fire reminders the scan
 /// window can't reliably cover.
 fn is_supported_offset(minutes: i64) -> bool {
-    minutes <= MAX_REMINDER_BEFORE_MINUTES && minutes >= -MAX_REMINDER_AFTER_MINUTES
+    (-MAX_REMINDER_AFTER_MINUTES..=MAX_REMINDER_BEFORE_MINUTES).contains(&minutes)
 }
 
 /// Build the notification body. Shows the event's absolute start time
@@ -543,7 +543,7 @@ mod tests {
         // First tick at 12:01 — fires.
         run(
             t(2026, 4, 29, 12, 1),
-            &[event.clone()],
+            std::slice::from_ref(&event),
             &mut cache,
             &notifier,
             true,
@@ -593,7 +593,7 @@ mod tests {
 
         let fired = run(
             t(2026, 4, 29, 12, 1),
-            &[event.clone()],
+            std::slice::from_ref(&event),
             &mut cache,
             &notifier,
             false,

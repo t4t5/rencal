@@ -66,13 +66,13 @@ pub async fn run_watcher(app: AppHandle) {
     let (tx, mut rx) = mpsc::unbounded_channel::<()>();
 
     let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
-        if let Ok(event) = res {
-            if matches!(
+        if let Ok(event) = res
+            && matches!(
                 event.kind,
                 EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            ) {
-                let _ = tx.send(());
-            }
+            )
+        {
+            let _ = tx.send(());
         }
     }) {
         Ok(w) => w,
