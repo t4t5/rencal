@@ -50,13 +50,13 @@ Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releas
 | ---------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
 | ![Month view](https://github.com/user-attachments/assets/72b2ba23-5503-4558-b018-0cb4ab97d0c9) | ![Week view](https://github.com/user-attachments/assets/9c209e19-53fd-440a-8278-13ca3ba13fc8) |
 
-| Connect account                                                                                     | Theme selector                                                                                     |
-| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| ![Connect account](https://github.com/user-attachments/assets/24899b23-d64f-4395-96e7-ca4acc14a4e9) | ![Theme selector](https://github.com/user-attachments/assets/86f0460f-6e71-48f4-b78a-8cfad3b602ab) |
-
 | Theme: Gruvbox | Theme: Catpuccin Light | Theme: Hackerman |
 | ------------------ | ---------------------- | -------------- |
 | ![Gruvbox](https://github.com/user-attachments/assets/f1e4560c-1680-4800-90e2-b68f001bd5ed) | ![Catpuccin Light](https://github.com/user-attachments/assets/6e25d158-10d1-46f9-9355-2bc5ec20d398)  | ![Hackerman](https://github.com/user-attachments/assets/cdda52df-8e8c-46c8-b601-6eef66abce2b) |
+
+| Connect account                                                                                     | Theme selector                                                                                     |
+| --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| ![Connect account](https://github.com/user-attachments/assets/24899b23-d64f-4395-96e7-ca4acc14a4e9) | ![Theme selector](https://github.com/user-attachments/assets/86f0460f-6e71-48f4-b78a-8cfad3b602ab) |
 
 
 ## Development
