@@ -36,7 +36,10 @@ impl Notifier for NotifySendNotifier {
         let icon = icon.map(|p| p.to_string_lossy().into_owned());
         std::thread::spawn(move || {
             let mut cmd = std::process::Command::new("notify-send");
-            cmd.arg("--app-name=Rencal");
+            cmd.arg("--app-name=rencal");
+            // Persist until dismissed — event reminders are easy to miss at the
+            // daemon's default 5s timeout (mako/dunst). 0 = never expire.
+            cmd.arg("--expire-time=0");
             if let Some(icon) = icon {
                 cmd.arg(format!("--icon={icon}"));
             }
