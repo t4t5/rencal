@@ -82,11 +82,22 @@ per event.
 
 ## Single-instance guard (GUI)
 
-`tauri-plugin-single-instance` ensures only one rencal GUI process runs at a time. A second launch
-focuses the existing window instead of spawning a duplicate. This matters because two GUI
-processes would each run their own reminder loop and write to the same `last-reminder-check`
-cache, producing duplicate notifications. The daemon is similarly single-by-construction (systemd
-unit).
+Only one rencal GUI process runs at a time. A second launch focuses the existing window instead of
+spawning a duplicate. Two GUI processes would each run their own in-process reminder loop (in the
+daemon-not-installed fallback path) and write to the same `last-reminder-check` cache, producing
+duplicate notifications. The daemon is similarly single-by-construction (systemd unit).
+
+On macOS/Windows we use `tauri-plugin-single-instance` directly. On **Linux** we can't: the plugin
+uses `zbus::blocking` for D-Bus IPC, and `tauri-plugin-dialog`'s `xdg-portal` feature transitively
+turns on `zbus/tokio`. With Cargo feature unification that flips zbus's blocking layer over to a
+tokio-based executor that panics from inside `#[tokio::main]` ("Cannot start a runtime from within
+a runtime") — the same shape as the notification panic below, different culprit.
+
+So on Linux we use a tiny stand-in in `src-tauri/src/single_instance.rs`: a Unix domain socket at
+`$XDG_RUNTIME_DIR/rencal.sock` (falling back to `/tmp`). On startup we try to connect — if it
+succeeds, another instance is alive and we send `focus\n` then exit. Otherwise we bind the socket
+and a background thread accepts connections, calling a handler that unminimizes/shows/focuses the
+main window.
 
 ## Linux: notify-send instead of tauri-plugin-notification
 
