@@ -15,8 +15,14 @@ const CATCHUP_CAP_HOURS: i64 = 4;
 
 /// Runs the reminder check loop aligned to minute boundaries.
 pub async fn run_reminder_loop(app: AppHandle) {
+    // Run once immediately so a freshly-launched rencal fires any catch-up
+    // reminders right away instead of waiting up to ~60s for the first
+    // minute-aligned tick.
+    if let Err(e) = check_and_notify(&app) {
+        log::error!("Reminder check error: {e}");
+    }
+
     loop {
-        // Sleep until the start of the next minute
         let now = Utc::now();
         let secs_remaining = 60 - now.timestamp() % 60;
         tokio::time::sleep(StdDuration::from_secs(secs_remaining as u64)).await;
