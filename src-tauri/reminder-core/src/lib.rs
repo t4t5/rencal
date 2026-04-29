@@ -3,6 +3,8 @@
 //! computes trigger times, dedupes per event, and hands off notifications to a
 //! `Notifier` impl supplied by the host.
 
+mod delivered_cache;
+
 use std::path::{Path, PathBuf};
 use std::time::Duration as StdDuration;
 
@@ -11,6 +13,8 @@ use caldir_core::caldir_config::TimeFormat;
 use caldir_core::event::{Event, EventTime};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 use rencal_config::RencalConfig;
+
+use delivered_cache::{DeliveredCache, DeliveryKey};
 
 /// Bounded so a long-stale machine doesn't fire dozens of reminders at once
 /// for events the user has already moved past.
@@ -84,96 +88,138 @@ pub async fn run_reminder_loop<N: Notifier>(notifier: N, icon: Option<PathBuf>) 
     }
 }
 
-/// Scan all calendars for reminders due since the last check and fire notifications.
+/// Scan all calendars for reminders due in the catch-up window and fire
+/// notifications for any not yet delivered.
 ///
-/// Window is `(last_check, now]`, capped at `CATCHUP_CAP_HOURS`. This lets a
-/// reminder fire on the first tick after the host starts up or the laptop wakes,
-/// even though the trigger time itself was missed.
+/// Window is `(now - CATCHUP_CAP_HOURS, now]`. The per-reminder cache
+/// (`DeliveredCache`) is the only thing that prevents re-firing — that
+/// closes the race where an event lands in caldir *after* a tick has
+/// already passed its trigger time (sync, manual create, file-watcher
+/// pickup). The 4h cap bounds how loud a freshly-launched host gets.
 pub fn check_and_notify(
     notifier: &dyn Notifier,
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
+    let notifications_enabled = RencalConfig::load().notifications_enabled;
 
-    // Honor the user's "notifications enabled" toggle (rencal config). Still
-    // advance `last_check` so that re-enabling later doesn't dump a 4h
-    // catch-up window of stale reminders — disabled means "I don't want
-    // these," not "queue them up for me."
-    if !RencalConfig::load().notifications_enabled {
-        log::debug!("notifications disabled — skipping tick");
-        write_last_check_time(now);
-        return Ok(());
-    }
+    let cache_path = delivered_cache_path();
+    let mut cache = cache_path
+        .as_deref()
+        .map(DeliveredCache::load)
+        .unwrap_or_default();
+
+    let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
+    cache.evict_older_than(cutoff);
 
     let caldir = Caldir::load()?;
     let time_format = caldir.config().time_format;
 
-    let last_check = read_last_check_time(now);
-    let window_start = compute_window_start(now, last_check);
-
     // Scan range is over event *start* times, but reminders fire at
     // `start - minutes_before`. To cover every trigger that could land in
-    // `(window_start, now]`, widen the start-time scan by the supported
+    // `(cutoff, now]`, widen the start-time scan by the supported
     // before/after offsets:
     //   - A "max-before" reminder fires now when start = now + max_before.
-    //   - A "max-after" alarm fires now when start = now - max_after.
-    let range_start = window_start - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
+    //   - A "max-after" alarm fires at cutoff when start = cutoff - max_after.
+    let range_start = cutoff - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
     let range_end = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
 
-    log::debug!("tick now={now} last_check={last_check:?} window_start={window_start}");
-
     let calendars = caldir.calendars();
-    log::debug!("calendars={}", calendars.len());
+    log::debug!(
+        "tick now={now} cutoff={cutoff} calendars={}",
+        calendars.len()
+    );
 
-    let mut fired = 0;
+    let mut events = Vec::new();
     for calendar in &calendars {
-        let events = match calendar.events_in_range(range_start, range_end) {
-            Ok(events) => events,
-            Err(e) => {
-                log::warn!("[{}] events_in_range err: {e}", calendar.slug);
-                continue;
-            }
-        };
-
-        for event in &events {
-            let triggers = event.reminders.iter().filter_map(|r| {
-                if !is_supported_offset(r.minutes) {
-                    log::debug!(
-                        "skipping out-of-range reminder ({}min) on \"{}\"",
-                        r.minutes,
-                        event.summary
-                    );
-                    return None;
-                }
-                Some((r.minutes, compute_trigger_time(event, r.minutes)?))
-            });
-
-            if let Some((minutes, trigger)) = select_best_trigger(triggers, window_start, now) {
-                log::info!(
-                    "FIRE \"{}\" {minutes}min before (trigger={trigger})",
-                    event.summary
-                );
-                let body = format_body(event, time_format, Local::now());
-                notifier.notify(&event.summary, &body, icon);
-                fired += 1;
-            }
+        match calendar.events_in_range(range_start, range_end) {
+            Ok(es) => events.extend(es),
+            Err(e) => log::warn!("[{}] events_in_range err: {e}", calendar.slug),
         }
     }
 
+    let fired = process_reminders(
+        now,
+        cutoff,
+        &events,
+        &mut cache,
+        notifier,
+        notifications_enabled,
+        icon,
+        time_format,
+    );
+
     log::debug!("fired={fired}");
-    write_last_check_time(now);
+    if let Some(path) = cache_path {
+        cache.save(&path);
+    }
     Ok(())
 }
 
-/// Lower bound of the catch-up window. Optimistically uses the full
-/// `CATCHUP_CAP_HOURS` when there's no `last_check` (first run / cache wipe)
-/// so a freshly-launched host still fires recently-missed reminders; the cap
-/// bounds the spam. When `last_check` is set, clamp it to no earlier than
-/// `now - cap` so a long-stale machine doesn't fire dozens of stale reminders.
-fn compute_window_start(now: DateTime<Utc>, last_check: Option<DateTime<Utc>>) -> DateTime<Utc> {
-    let cap_start = now - Duration::hours(CATCHUP_CAP_HOURS);
-    let last_check = last_check.unwrap_or(cap_start);
-    std::cmp::max(last_check, cap_start)
+/// Pure decision logic — no I/O, no `Utc::now()`, no caldir loading.
+/// Walks `events`, picks the latest trigger in `(cutoff, now]` per event,
+/// fires it through `notifier` if not already in `cache`, and records the
+/// fire in `cache` (whether or not we actually called `notify`, so that
+/// disabling notifications doesn't queue up a 4h replay on re-enable).
+///
+/// Returns the number of `notifier.notify` calls made.
+#[allow(clippy::too_many_arguments)]
+fn process_reminders(
+    now: DateTime<Utc>,
+    cutoff: DateTime<Utc>,
+    events: &[Event],
+    cache: &mut DeliveredCache,
+    notifier: &dyn Notifier,
+    notifications_enabled: bool,
+    icon: Option<&Path>,
+    time_format: TimeFormat,
+) -> usize {
+    let mut fired = 0;
+
+    for event in events {
+        let triggers = event.reminders.iter().filter_map(|r| {
+            if !is_supported_offset(r.minutes) {
+                log::debug!(
+                    "skipping out-of-range reminder ({}min) on \"{}\"",
+                    r.minutes,
+                    event.summary
+                );
+                return None;
+            }
+            Some((r.minutes, compute_trigger_time(event, r.minutes)?))
+        });
+
+        let Some((minutes, trigger)) = select_best_trigger(triggers, cutoff, now) else {
+            continue;
+        };
+
+        let key = DeliveryKey {
+            event_id: event.unique_id(),
+            trigger,
+        };
+        if !cache.insert(key) {
+            // Already delivered (or already marked delivered while disabled).
+            continue;
+        }
+
+        if !notifications_enabled {
+            log::debug!(
+                "notifications disabled — recorded \"{}\" {minutes}min trigger without firing",
+                event.summary
+            );
+            continue;
+        }
+
+        log::info!(
+            "FIRE \"{}\" {minutes}min before (trigger={trigger})",
+            event.summary
+        );
+        let body = format_body(event, time_format, Local::now());
+        notifier.notify(&event.summary, &body, icon);
+        fired += 1;
+    }
+
+    fired
 }
 
 /// Pick the latest reminder trigger in `(window_start, now]` for one event.
@@ -197,41 +243,12 @@ fn select_best_trigger(
         .max_by_key(|(_, t)| *t)
 }
 
-fn last_check_path() -> Option<PathBuf> {
+fn delivered_cache_path() -> Option<PathBuf> {
     Some(
         dirs::cache_dir()?
             .join("rencal")
-            .join("last-reminder-check"),
+            .join("delivered-reminders.json"),
     )
-}
-
-fn read_last_check_time(now: DateTime<Utc>) -> Option<DateTime<Utc>> {
-    let path = last_check_path()?;
-    let contents = std::fs::read_to_string(&path).ok()?;
-    parse_last_check(&contents, now)
-}
-
-/// Parse a persisted `last_check` timestamp. Returns `None` for malformed
-/// input or for any value that's after `now` — guards against a clock that
-/// jumped backwards (NTP correction, manual change), in which case we'd
-/// rather act as if there's no record than skip a real reminder window.
-fn parse_last_check(contents: &str, now: DateTime<Utc>) -> Option<DateTime<Utc>> {
-    let parsed = DateTime::parse_from_rfc3339(contents.trim())
-        .ok()?
-        .with_timezone(&Utc);
-    (parsed <= now).then_some(parsed)
-}
-
-fn write_last_check_time(now: DateTime<Utc>) {
-    let Some(path) = last_check_path() else {
-        return;
-    };
-    if let Some(parent) = path.parent() {
-        if std::fs::create_dir_all(parent).is_err() {
-            return;
-        }
-    }
-    let _ = std::fs::write(&path, now.to_rfc3339());
 }
 
 fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<Utc>> {
@@ -313,31 +330,6 @@ mod tests {
     fn t(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Utc> {
         Utc.with_ymd_and_hms(year, month, day, hour, min, 0)
             .unwrap()
-    }
-
-    // ---- compute_window_start --------------------------------------------
-
-    #[test]
-    fn window_start_uses_full_cap_when_no_last_check() {
-        let now = t(2026, 4, 29, 12, 0);
-        assert_eq!(compute_window_start(now, None), now - Duration::hours(4));
-    }
-
-    #[test]
-    fn window_start_uses_last_check_when_recent() {
-        let now = t(2026, 4, 29, 12, 0);
-        let last = t(2026, 4, 29, 11, 0);
-        assert_eq!(compute_window_start(now, Some(last)), last);
-    }
-
-    #[test]
-    fn window_start_clamps_stale_last_check_to_cap() {
-        let now = t(2026, 4, 29, 12, 0);
-        let last = t(2026, 4, 28, 0, 0); // way more than 4h ago
-        assert_eq!(
-            compute_window_start(now, Some(last)),
-            now - Duration::hours(4)
-        );
     }
 
     // ---- select_best_trigger ---------------------------------------------
@@ -441,14 +433,13 @@ mod tests {
         // A 4-week-before reminder firing now corresponds to an event starting
         // 4 weeks from now. range_end must include that start time.
         let now = t(2026, 4, 29, 12, 0);
-        let last = now - Duration::minutes(1);
-        let window_start = compute_window_start(now, Some(last));
+        let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
         let range_end = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
         let event_start = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
         assert!(event_start <= range_end);
         // Sanity: the trigger derived from that start lands in the tick window.
         let trigger = event_start - Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
-        assert!(trigger > window_start && trigger <= now);
+        assert!(trigger > cutoff && trigger <= now);
     }
 
     #[test]
@@ -457,48 +448,199 @@ mod tests {
         // The event started 8h ago; the alarm fires now. Scan range must still
         // include that 8h-old start.
         let now = t(2026, 4, 29, 12, 0);
-        let last = now - Duration::minutes(1);
-        let window_start = compute_window_start(now, Some(last));
-        let range_start = window_start - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
+        let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
+        let range_start = cutoff - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
         let event_start = now - Duration::hours(8);
         assert!(event_start >= range_start);
         let trigger = event_start - Duration::minutes(-480);
-        assert!(trigger > window_start && trigger <= now);
+        assert!(trigger > cutoff && trigger <= now);
     }
 
-    // ---- parse_last_check -------------------------------------------------
+    // ---- process_reminders -----------------------------------------------
 
+    use caldir_core::event::{Reminder, Reminders};
+    use std::sync::Mutex;
+
+    #[derive(Default)]
+    struct TestNotifier {
+        calls: Mutex<Vec<(String, String)>>,
+    }
+
+    impl TestNotifier {
+        fn count(&self) -> usize {
+            self.calls.lock().unwrap().len()
+        }
+    }
+
+    impl Notifier for TestNotifier {
+        fn notify(&self, title: &str, body: &str, _icon: Option<&Path>) {
+            self.calls
+                .lock()
+                .unwrap()
+                .push((title.to_string(), body.to_string()));
+        }
+    }
+
+    fn make_event(uid: &str, start_utc: DateTime<Utc>, reminder_minutes: i64) -> Event {
+        let mut event = Event::new(
+            format!("Test {uid}"),
+            EventTime::DateTimeUtc(start_utc),
+            EventTime::DateTimeUtc(start_utc + Duration::minutes(30)),
+            None,
+            None,
+            None,
+            vec![Reminder {
+                minutes: reminder_minutes,
+            }],
+        );
+        event.uid = uid.to_string();
+        event
+    }
+
+    fn run(
+        now: DateTime<Utc>,
+        events: &[Event],
+        cache: &mut DeliveredCache,
+        notifier: &TestNotifier,
+        notifications_enabled: bool,
+    ) -> usize {
+        let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
+        process_reminders(
+            now,
+            cutoff,
+            events,
+            cache,
+            notifier,
+            notifications_enabled,
+            None,
+            TimeFormat::H24,
+        )
+    }
+
+    /// A tick runs at 12:00 with no events present,
+    /// then sync introduces an event with a 60-min reminder for a 12:30
+    /// start (trigger = 11:30). The next tick at 12:01 must still fire it.
     #[test]
-    fn parse_round_trips_a_recent_timestamp() {
-        let now = t(2026, 4, 29, 12, 0);
-        let prev = now - Duration::minutes(5);
-        let s = prev.to_rfc3339();
-        assert_eq!(parse_last_check(&s, now), Some(prev));
+    fn newly_synced_event_with_passed_trigger_still_fires() {
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        run(t(2026, 4, 29, 12, 0), &[], &mut cache, &notifier, true);
+        assert_eq!(notifier.count(), 0);
+
+        let event = make_event("evt-sync", t(2026, 4, 29, 12, 30), 60);
+        run(t(2026, 4, 29, 12, 1), &[event], &mut cache, &notifier, true);
+
+        assert_eq!(notifier.count(), 1);
     }
 
     #[test]
-    fn parse_trims_whitespace() {
-        let now = t(2026, 4, 29, 12, 0);
-        let prev = now - Duration::minutes(5);
-        let s = format!("  {}\n", prev.to_rfc3339());
-        assert_eq!(parse_last_check(&s, now), Some(prev));
+    fn repeat_tick_does_not_refire() {
+        let event = make_event("evt-1", t(2026, 4, 29, 12, 30), 60);
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        // First tick at 12:01 — fires.
+        run(
+            t(2026, 4, 29, 12, 1),
+            &[event.clone()],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        // Second tick a minute later — same event, still in window, but cached.
+        run(t(2026, 4, 29, 12, 2), &[event], &mut cache, &notifier, true);
+
+        assert_eq!(notifier.count(), 1);
     }
 
     #[test]
-    fn parse_rejects_garbage() {
-        let now = t(2026, 4, 29, 12, 0);
-        assert_eq!(parse_last_check("not a timestamp", now), None);
-        assert_eq!(parse_last_check("", now), None);
+    fn moved_event_fires_again_at_new_time() {
+        // User's event was at 12:30 with a 60-min reminder; trigger 11:30 fires
+        // and is cached. Then they move it to 13:30 — new trigger 12:30. The
+        // new trigger has a different cache key and must fire.
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        let original = make_event("evt-1", t(2026, 4, 29, 12, 30), 60);
+        run(
+            t(2026, 4, 29, 11, 31),
+            &[original],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
+
+        let moved = make_event("evt-1", t(2026, 4, 29, 13, 30), 60);
+        run(
+            t(2026, 4, 29, 12, 31),
+            &[moved],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 2);
     }
 
     #[test]
-    fn parse_rejects_future_timestamps() {
-        // Clock jumped backwards (NTP correction). Treat as no record so we
-        // still catch up, rather than skipping a real window.
-        let now = t(2026, 4, 29, 12, 0);
-        let future = now + Duration::hours(1);
-        let s = future.to_rfc3339();
-        assert_eq!(parse_last_check(&s, now), None);
+    fn disabled_notifications_records_without_firing() {
+        // Disabling notifications still walks the cache so re-enabling later
+        // doesn't dump the catch-up window of stale reminders.
+        let event = make_event("evt-1", t(2026, 4, 29, 12, 30), 60);
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        let fired = run(
+            t(2026, 4, 29, 12, 1),
+            &[event.clone()],
+            &mut cache,
+            &notifier,
+            false,
+        );
+
+        assert_eq!(fired, 0);
+        assert_eq!(notifier.count(), 0);
+
+        // Now flip notifications on and tick again — the trigger is still in
+        // the catch-up window but already in the cache, so no fire.
+        run(t(2026, 4, 29, 12, 2), &[event], &mut cache, &notifier, true);
+        assert_eq!(notifier.count(), 0);
+    }
+
+    #[test]
+    fn collapses_multiple_reminders_to_one_notification() {
+        // An event with both "1h before" and "30m before" reminders, both
+        // triggers in the catch-up window: only one notification should fire.
+        let mut event = make_event("evt-1", t(2026, 4, 29, 13, 0), 60);
+        event.reminders = Reminders(vec![
+            Reminder { minutes: 60 }, // trigger 12:00
+            Reminder { minutes: 30 }, // trigger 12:30
+        ]);
+
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        let fired = run(
+            t(2026, 4, 29, 12, 31),
+            &[event],
+            &mut cache,
+            &notifier,
+            true,
+        );
+
+        assert_eq!(fired, 1);
+    }
+
+    #[test]
+    fn ignores_events_with_only_future_triggers() {
+        let event = make_event("evt-future", t(2026, 4, 29, 14, 0), 60); // trigger 13:00
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+
+        let fired = run(t(2026, 4, 29, 12, 0), &[event], &mut cache, &notifier, true);
+
+        assert_eq!(fired, 0);
     }
 
     // ---- EventTime::resolve_instant_in_zone ------------------------------

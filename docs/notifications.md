@@ -1,7 +1,7 @@
 # Notifications
 
 The reminder loop scans caldir for events with VALARMs whose trigger time (event start minus
-reminder minutes) falls in the current tick's window, dedupes per event, and fires desktop
+reminder minutes) falls in the catch-up window, dedupes per delivered reminder, and fires desktop
 notifications. The platform-agnostic logic lives in `src-tauri/reminder-core/`. There are two
 hosts:
 
@@ -52,24 +52,39 @@ package install + first launch of rencal is enough; users never need to touch
 Uninstall with `just uninstall-notifierd` (self-install) or your package
 manager (system install).
 
-## Catch-up window
+## Catch-up window and per-reminder dedup
 
-Each tick fires reminders whose trigger time is in `(last_check, now]`, capped at 4 hours. The
-last successful tick's timestamp is persisted to `~/.cache/rencal/last-reminder-check` so a
-reminder that fired while the host wasn't running (laptop suspended, daemon not yet started) still
-fires on the first tick after launch — as long as it's within the 4h cap.
+Each tick scans triggers in `(now - 4h, now]` and fires any not yet recorded in
+`~/.cache/rencal/delivered-reminders.json`. The cache key is
+`(event.unique_id(), trigger_time_utc)` — fine-grained enough that:
 
-The `>` on the left is exclusive so reminders don't double-fire at tick boundaries — the previous
-tick already covered anything at exactly `last_check`.
+- Repeated ticks within the catch-up window don't refire the same reminder (steady state).
+- An event that lands in caldir _after_ a tick has already passed its trigger time still fires
+  once — sync, manual create, or the file watcher picking up an external write. The earlier
+  global-checkpoint model would have advanced past the trigger and silently dropped the
+  notification; the cache is the only thing that can mark a reminder delivered.
+- Moving an event produces a new trigger instant → new key → fires once at the new time.
+  The stale entry sits in the cache until eviction.
 
-On first run with no cache file, the fallback is `now - cap` (the full catch-up window), not 60s.
-A 60s fallback would defeat catch-up on every fresh install or cache wipe — the user would only
-get the reminders that fired in the last minute, which is rarely the case after launching the
-app.
+The 4h cap bounds how loud a freshly-launched host gets after a long sleep — older triggers are
+considered too stale to surface. The `>` on the left is exclusive so a reminder exactly at the
+cap boundary doesn't fire (negligible in practice, just keeps the math clean).
+
+Eviction drops entries whose trigger is older than the cap on every tick. They can never re-fire
+(the scan window stops there), so retention is pure bloat.
+
+A missing or corrupt cache file yields an empty cache rather than an error — at worst we re-fire
+a few reminders, which is louder and recoverable, vs. silently swallowing them.
 
 The cache file is shared between the GUI's in-process loop (used as a fallback on Linux when the
 daemon isn't installed) and the daemon. Only one of them runs at a time on Linux thanks to the
 daemon-detection check in `should_run_in_process_reminders()`.
+
+### Notifications-disabled handling
+
+When the user toggles notifications off, ticks still walk the cache and record eligible triggers
+as delivered (without calling `notify`). This means re-enabling later doesn't dump the previous
+4h of stale reminders — disabled means "I don't want these," not "queue them up for me."
 
 ## Supported reminder range
 
@@ -102,13 +117,13 @@ cases wrong for our purposes:
 `DateTimeUtc` and `DateTimeZoned` already have an unambiguous instant and
 pass through to caldir-core's `to_utc`.
 
-## Per-event dedup
+## Per-event collapse
 
 When multiple reminders for the same event fall in the same tick's window — typical on catch-up,
 e.g. both "1h before" and "30m before" Lunch when the host launched after both fired — only the
 one with the latest trigger time fires. In steady state, reminders for the same event fall on
 different ticks so this is a no-op; on catch-up it collapses a stale stack into one notification
-per event.
+per event. The collapsed (latest) trigger is what gets recorded in the cache.
 
 ## Single-instance guard (GUI)
 

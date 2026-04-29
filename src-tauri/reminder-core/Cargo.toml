@@ -9,4 +9,6 @@ chrono = "0.4.43"
 dirs = "5"
 log = "0.4.29"
 rencal-config = { path = "../rencal-config" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
 tokio = { version = "1", features = ["time"] }

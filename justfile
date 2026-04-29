@@ -100,7 +100,7 @@ test-notification:
   echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
 
 clear-notification-cache:
-  rm -f ~/.cache/rencal/last-reminder-check
+  rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
 
 # Build the standalone reminder daemon (Linux)
 build-notifierd:
