@@ -54,6 +54,10 @@ Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releas
 | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
 | ![Connect account](https://github.com/user-attachments/assets/24899b23-d64f-4395-96e7-ca4acc14a4e9) | ![Theme selector](https://github.com/user-attachments/assets/86f0460f-6e71-48f4-b78a-8cfad3b602ab) |
 
+| Theme: Tokyo Night | Theme: Catpuccin Light | Theme: Classic |
+| ------------------ | ---------------------- | -------------- |
+| ![Tokyo Night](https://github.com/user-attachments/assets/4458ad9b-5b6d-42ab-a869-3b24a2eaee44) | ![Catpuccin Light](https://github.com/user-attachments/assets/6e25d158-10d1-46f9-9355-2bc5ec20d398)  | ![Classic](https://github.com/user-attachments/assets/151db0a4-c086-4894-afe3-d88c83951b49) |
+
 ## Development
 
 Use [`just`](https://just.systems/) to access handy development commands.
