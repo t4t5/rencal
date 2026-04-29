@@ -4,9 +4,13 @@ use std::path::PathBuf;
 
 use caldir_core::caldir::Caldir;
 use caldir_core::event::Event;
-use chrono::{Duration, Utc};
+use chrono::{DateTime, Duration, Utc};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_notification::NotificationExt;
+
+/// Bounded so a long-stale machine doesn't fire dozens of reminders at once
+/// for events the user has already moved past.
+const CATCHUP_CAP_HOURS: i64 = 1;
 
 /// Runs the reminder check loop aligned to minute boundaries.
 pub async fn run_reminder_loop(app: AppHandle) {
@@ -22,14 +26,22 @@ pub async fn run_reminder_loop(app: AppHandle) {
     }
 }
 
-/// Scan all calendars for reminders due in the last 60 seconds and fire notifications.
+/// Scan all calendars for reminders due since the last check and fire notifications.
+///
+/// Window is `(last_check, now]`, capped at `CATCHUP_CAP_HOURS`. This lets a
+/// reminder fire on the first tick after rencal starts up or the laptop wakes,
+/// even though the trigger time itself was missed.
 fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let caldir = Caldir::load()?;
     let now = Utc::now();
-    let window_start = now - Duration::seconds(60);
 
-    // Look at events starting within the next 7 days (covers reminders like "1 week before")
-    let range_start = now - Duration::hours(1);
+    // First-run fallback: 60s trailing window, so a reminder that fired just
+    // before rencal launched is still caught.
+    let last_check = read_last_check_time().unwrap_or_else(|| now - Duration::seconds(60));
+    let window_start = std::cmp::max(last_check, now - Duration::hours(CATCHUP_CAP_HOURS));
+
+    // 7 days forward covers "1 week before" reminders.
+    let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
     for calendar in caldir.calendars() {
@@ -41,7 +53,10 @@ fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         for event in &events {
             for reminder in event.reminders.iter() {
                 if let Some(trigger_time) = compute_trigger_time(event, reminder.minutes) {
-                    if trigger_time >= window_start && trigger_time <= now {
+                    // Exclusive on the left: the previous tick already covered
+                    // anything at exactly `last_check`, so including it here
+                    // would double-fire on tick boundaries.
+                    if trigger_time > window_start && trigger_time <= now {
                         send_notification(app, event, reminder.minutes)?;
                     }
                 }
@@ -49,7 +64,37 @@ fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    write_last_check_time(now);
     Ok(())
+}
+
+fn last_check_path() -> Option<PathBuf> {
+    Some(dirs::cache_dir()?.join("rencal").join("last-reminder-check"))
+}
+
+fn read_last_check_time() -> Option<DateTime<Utc>> {
+    let path = last_check_path()?;
+    let contents = std::fs::read_to_string(&path).ok()?;
+    let parsed = DateTime::parse_from_rfc3339(contents.trim()).ok()?;
+    let parsed = parsed.with_timezone(&Utc);
+    // Guard against a clock that jumped backwards (NTP correction, manual
+    // change). Treat a future last_check as if we had no record.
+    if parsed > Utc::now() {
+        return None;
+    }
+    Some(parsed)
+}
+
+fn write_last_check_time(now: DateTime<Utc>) {
+    let Some(path) = last_check_path() else {
+        return;
+    };
+    if let Some(parent) = path.parent() {
+        if std::fs::create_dir_all(parent).is_err() {
+            return;
+        }
+    }
+    let _ = std::fs::write(&path, now.to_rfc3339());
 }
 
 fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<chrono::DateTime<Utc>> {
