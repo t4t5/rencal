@@ -254,3 +254,143 @@ fn format_relative_date(date: NaiveDate, today: NaiveDate) -> String {
         date.format("%a, %b %-d").to_string()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use chrono::TimeZone;
+
+    fn t(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Utc> {
+        Utc.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()
+    }
+
+    // ---- compute_window_start --------------------------------------------
+
+    #[test]
+    fn window_start_uses_full_cap_when_no_last_check() {
+        let now = t(2026, 4, 29, 12, 0);
+        assert_eq!(compute_window_start(now, None), now - Duration::hours(4));
+    }
+
+    #[test]
+    fn window_start_uses_last_check_when_recent() {
+        let now = t(2026, 4, 29, 12, 0);
+        let last = t(2026, 4, 29, 11, 0);
+        assert_eq!(compute_window_start(now, Some(last)), last);
+    }
+
+    #[test]
+    fn window_start_clamps_stale_last_check_to_cap() {
+        let now = t(2026, 4, 29, 12, 0);
+        let last = t(2026, 4, 28, 0, 0); // way more than 4h ago
+        assert_eq!(compute_window_start(now, Some(last)), now - Duration::hours(4));
+    }
+
+    // ---- select_best_trigger ---------------------------------------------
+
+    #[test]
+    fn select_returns_none_when_empty() {
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::hours(1);
+        let triggers: Vec<(i64, DateTime<Utc>)> = vec![];
+        assert_eq!(select_best_trigger(triggers, window_start, now), None);
+    }
+
+    #[test]
+    fn select_excludes_triggers_before_window() {
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::hours(1);
+        let triggers = vec![(60, now - Duration::hours(2))];
+        assert_eq!(select_best_trigger(triggers, window_start, now), None);
+    }
+
+    #[test]
+    fn select_excludes_triggers_after_now() {
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::hours(1);
+        let triggers = vec![(15, now + Duration::minutes(5))];
+        assert_eq!(select_best_trigger(triggers, window_start, now), None);
+    }
+
+    #[test]
+    fn select_window_start_is_exclusive() {
+        // A trigger exactly at window_start belongs to the previous tick.
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::minutes(60);
+        let triggers = vec![(60, window_start)];
+        assert_eq!(select_best_trigger(triggers, window_start, now), None);
+    }
+
+    #[test]
+    fn select_now_is_inclusive() {
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::minutes(60);
+        let triggers = vec![(0, now)];
+        assert_eq!(select_best_trigger(triggers, window_start, now), Some((0, now)));
+    }
+
+    #[test]
+    fn select_collapses_stacked_reminders_to_latest() {
+        // Catch-up: both "1h before" and "30m before" Lunch fired during a
+        // missed window. We want one notification (the more recent one).
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::hours(2);
+        let one_hour_before = now - Duration::hours(1);
+        let thirty_min_before = now - Duration::minutes(30);
+        let triggers = vec![(60, one_hour_before), (30, thirty_min_before)];
+        assert_eq!(
+            select_best_trigger(triggers, window_start, now),
+            Some((30, thirty_min_before))
+        );
+    }
+
+    #[test]
+    fn select_picks_in_window_trigger_when_others_fall_outside() {
+        let now = t(2026, 4, 29, 12, 0);
+        let window_start = now - Duration::hours(1);
+        let triggers = vec![
+            (180, now - Duration::hours(3)),  // before window
+            (30, now - Duration::minutes(30)), // in window
+            (-30, now + Duration::minutes(30)), // future
+        ];
+        assert_eq!(
+            select_best_trigger(triggers, window_start, now),
+            Some((30, now - Duration::minutes(30)))
+        );
+    }
+
+    // ---- parse_last_check -------------------------------------------------
+
+    #[test]
+    fn parse_round_trips_a_recent_timestamp() {
+        let now = t(2026, 4, 29, 12, 0);
+        let prev = now - Duration::minutes(5);
+        let s = prev.to_rfc3339();
+        assert_eq!(parse_last_check(&s, now), Some(prev));
+    }
+
+    #[test]
+    fn parse_trims_whitespace() {
+        let now = t(2026, 4, 29, 12, 0);
+        let prev = now - Duration::minutes(5);
+        let s = format!("  {}\n", prev.to_rfc3339());
+        assert_eq!(parse_last_check(&s, now), Some(prev));
+    }
+
+    #[test]
+    fn parse_rejects_garbage() {
+        let now = t(2026, 4, 29, 12, 0);
+        assert_eq!(parse_last_check("not a timestamp", now), None);
+        assert_eq!(parse_last_check("", now), None);
+    }
+
+    #[test]
+    fn parse_rejects_future_timestamps() {
+        // Clock jumped backwards (NTP correction). Treat as no record so we
+        // still catch up, rather than skipping a real window.
+        let now = t(2026, 4, 29, 12, 0);
+        let future = now + Duration::hours(1);
+        let s = future.to_rfc3339();
+        assert_eq!(parse_last_check(&s, now), None);
+    }
+}
