@@ -72,6 +72,23 @@ The cache file is shared between the GUI's in-process loop (used as a fallback o
 daemon isn't installed) and the daemon. Only one of them runs at a time on Linux thanks to the
 daemon-detection check in `should_run_in_process_reminders()`.
 
+## Trigger times
+
+Reminders resolve event start times to a UTC instant via a host-local-aware
+helper (`event_start_instant` in `reminder-core`), not `EventTime::to_utc` —
+caldir-core documents `to_utc` as an ordering projection, and it gets two
+cases wrong for our purposes:
+
+- **All-day `Date`** resolves to local midnight on the host. A "1h before"
+  reminder on a "today" all-day event fires at 23:00 yesterday _local_, not
+  23:00 UTC.
+- **`DateTimeFloating`** is interpreted in the host's local zone (RFC 5545
+  floating semantics: "9am wherever you are"). A 09:00 floating event fires
+  at 09:00 local on whichever host runs the reminder loop.
+
+`DateTimeUtc` and `DateTimeZoned` already have an unambiguous instant and
+pass through to caldir-core's `to_utc`.
+
 ## Per-event dedup
 
 When multiple reminders for the same event fall in the same tick's window — typical on catch-up,
@@ -94,10 +111,11 @@ tokio-based executor that panics from inside `#[tokio::main]` ("Cannot start a r
 a runtime") — the same shape as the notification panic below, different culprit.
 
 So on Linux we use a tiny stand-in in `src-tauri/src/single_instance.rs`: a Unix domain socket at
-`$XDG_RUNTIME_DIR/rencal.sock` (falling back to `/tmp`). On startup we try to connect — if it
-succeeds, another instance is alive and we send `focus\n` then exit. Otherwise we bind the socket
-and a background thread accepts connections, calling a handler that unminimizes/shows/focuses the
-main window.
+`$XDG_RUNTIME_DIR/rencal.sock` (or `/tmp/rencal-<uid>.sock` when `XDG_RUNTIME_DIR` is unset —
+UID-namespaced so two users on the same host don't collide on a shared `/tmp` path). On startup
+we try to connect — if it succeeds, another instance is alive and we send `focus\n` then exit.
+Otherwise we bind the socket and a background thread accepts connections, calling a handler that
+unminimizes/shows/focuses the main window.
 
 ## Linux: notify-send instead of tauri-plugin-notification
 
