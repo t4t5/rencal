@@ -1,4 +1,6 @@
 mod caldir_watcher;
+#[cfg(target_os = "linux")]
+mod linux_reminders;
 mod notifications;
 mod oauth;
 mod omarchy;
@@ -56,62 +58,14 @@ fn setup_bundled_providers(app: &tauri::App) {
     }
 }
 
-/// On Linux, defer to `rencal-notifierd` (a separate systemd-managed daemon)
-/// when it's active. Otherwise (daemon not installed, or any other platform)
-/// run the loop in-process. Avoids duplicate notifications when both are running.
-fn should_run_in_process_reminders() -> bool {
+fn spawn_reminder_loop_if_needed(app: &tauri::App) {
     #[cfg(target_os = "linux")]
-    {
-        let active = std::process::Command::new("systemctl")
-            .args(["--user", "is-active", "--quiet", "rencal-notifierd.service"])
-            .status()
-            .map(|s| s.success())
-            .unwrap_or(false);
-        return !active;
-    }
-    #[cfg(not(target_os = "linux"))]
-    true
-}
-
-/// On Linux, package installs (deb/rpm/AUR) drop the daemon's unit file at
-/// `/usr/lib/systemd/user/rencal-notifierd.service` but each user still has to
-/// enable it once. Detect that state on launch and enable+start automatically
-/// — making the daemon "just work" no matter how rencal was installed.
-///
-/// Skipped if the unit isn't visible to systemctl at all (dev builds, manual
-/// AppImage runs, or non-systemd systems): users in those flows install via
-/// `just install-notifierd` or accept the in-process fallback.
-#[cfg(target_os = "linux")]
-fn enable_notifierd_if_needed() {
-    let status = std::process::Command::new("systemctl")
-        .args(["--user", "is-enabled", "--quiet", "rencal-notifierd.service"])
-        .status();
-    match status {
-        Ok(s) if s.success() => return, // already enabled
-        Ok(_) => {}                     // disabled or not-found — proceed
-        Err(_) => return,               // no systemctl available — skip
-    }
-
-    // Distinguish "disabled" from "doesn't exist". list-unit-files returns 0
-    // and prints rows when the unit is known to systemd.
-    let exists = std::process::Command::new("systemctl")
-        .args([
-            "--user",
-            "list-unit-files",
-            "rencal-notifierd.service",
-            "--no-legend",
-        ])
-        .output()
-        .map(|o| o.status.success() && !o.stdout.is_empty())
-        .unwrap_or(false);
-    if !exists {
+    if !linux_reminders::should_run_in_process_reminders() {
+        log::info!("rencal-notifierd is active — skipping in-process reminder loop");
         return;
     }
 
-    log::info!("Enabling rencal-notifierd.service for the current user");
-    let _ = std::process::Command::new("systemctl")
-        .args(["--user", "enable", "--now", "rencal-notifierd.service"])
-        .status();
+    tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
 }
 
 #[tokio::main]
@@ -178,7 +132,7 @@ pub async fn run() {
             setup_bundled_providers(app);
             #[cfg(target_os = "linux")]
             {
-                enable_notifierd_if_needed();
+                linux_reminders::enable_notifierd_if_needed();
                 let app_handle = app.handle().clone();
                 single_instance::spawn_listener(&mut instance_guard, move || {
                     if let Some(window) = app_handle.get_webview_window("main") {
@@ -188,11 +142,7 @@ pub async fn run() {
                     }
                 });
             }
-            if should_run_in_process_reminders() {
-                tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
-            } else {
-                log::info!("rencal-notifierd is active — skipping in-process reminder loop");
-            }
+            spawn_reminder_loop_if_needed(app);
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
             if let Some(window) = app.get_webview_window("main") {
