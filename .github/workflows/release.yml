@@ -141,6 +141,14 @@ jobs:
             codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
           done
 
+      # Build the standalone reminder daemon so tauri-action can pick it up
+      # via bundle.linux.{deb,rpm}.files. Linux only — macOS/Windows run the
+      # reminder loop in-process via tauri-plugin-notification.
+      - name: Build rencal-notifierd
+        if: matrix.runner == 'ubuntu-22.04'
+        working-directory: rencal/src-tauri
+        run: cargo build --release -p rencal-notifierd
+
       - name: Build and upload release
         uses: tauri-apps/tauri-action@v0
         env:

@@ -1,9 +1,12 @@
 mod caldir_watcher;
-mod config;
+#[cfg(target_os = "linux")]
+mod linux_reminders;
 mod notifications;
 mod oauth;
 mod omarchy;
 mod routes;
+#[cfg(target_os = "linux")]
+mod single_instance;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
@@ -48,7 +51,21 @@ fn setup_bundled_providers(app: &tauri::App) {
         }
     }
 
-    std::env::set_var("CALDIR_PROVIDER_PATH", &providers_dir);
+    // SAFETY: called from Tauri's setup hook before any caldir provider is
+    // spawned; no other thread reads CALDIR_PROVIDER_PATH concurrently.
+    unsafe {
+        std::env::set_var("CALDIR_PROVIDER_PATH", &providers_dir);
+    }
+}
+
+fn spawn_reminder_loop_if_needed(app: &tauri::App) {
+    #[cfg(target_os = "linux")]
+    if !linux_reminders::should_run_in_process_reminders() {
+        log::info!("rencal-notifierd is active — skipping in-process reminder loop");
+        return;
+    }
+
+    tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
 }
 
 #[tokio::main]
@@ -58,18 +75,74 @@ pub async fn run() {
     // Must be set before GTK initializes, hence at the very top of run().
     #[cfg(target_os = "linux")]
     if needs_native_decorations() {
-        std::env::set_var("GTK_THEME", "Adwaita:dark");
+        // SAFETY: first statement in run(), before GTK initializes; no other
+        // thread reads GTK_THEME at this point.
+        unsafe {
+            std::env::set_var("GTK_THEME", "Adwaita:dark");
+        }
     }
+
+    // Single-instance: on Linux we use a Unix socket because
+    // `tauri-plugin-single-instance` panics under our runtime config (zbus
+    // pulls in the tokio feature transitively from xdg-portal). On
+    // macOS/Windows the plugin's native impl is fine.
+    #[cfg(target_os = "linux")]
+    let mut instance_guard = match single_instance::try_acquire_or_signal() {
+        Some(g) => g,
+        None => return, // existing instance was signaled to focus; we exit.
+    };
 
     let router = create_router();
 
-    tauri::Builder::default()
+    let builder = tauri::Builder::default();
+
+    #[cfg(not(target_os = "linux"))]
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+        if let Some(window) = app.get_webview_window("main") {
+            let _ = window.unminimize();
+            let _ = window.show();
+            let _ = window.set_focus();
+        }
+    }));
+
+    builder
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(if cfg!(debug_assertions) {
+                    log::LevelFilter::Debug
+                } else {
+                    log::LevelFilter::Info
+                })
+                .clear_targets()
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::Stderr,
+                ))
+                .target(tauri_plugin_log::Target::new(
+                    tauri_plugin_log::TargetKind::LogDir { file_name: None },
+                ))
+                .rotation_strategy(tauri_plugin_log::RotationStrategy::KeepSome(5))
+                .max_file_size(1_000_000)
+                .timezone_strategy(tauri_plugin_log::TimezoneStrategy::UseLocal)
+                .build(),
+        )
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
-        .setup(|app| {
+        .setup(move |app| {
             setup_bundled_providers(app);
-            tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
+            #[cfg(target_os = "linux")]
+            {
+                linux_reminders::enable_notifierd_if_needed();
+                let app_handle = app.handle().clone();
+                single_instance::spawn_listener(&mut instance_guard, move || {
+                    if let Some(window) = app_handle.get_webview_window("main") {
+                        let _ = window.unminimize();
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                    }
+                });
+            }
+            spawn_reminder_loop_if_needed(app);
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
             if let Some(window) = app.get_webview_window("main") {

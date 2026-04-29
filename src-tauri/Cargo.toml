@@ -1,9 +1,12 @@
+[workspace]
+members = ["reminder-core", "notifierd", "rencal-config"]
+
 [package]
 name = "rencal"
 version = "0.0.1"
 description = "A calendar for hackers"
 authors = ["you"]
-edition = "2021"
+edition = "2024"
 default-run = "rencal"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -32,11 +35,19 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 anyhow = "1.0.100"
 socket2 = "0.5"
-caldir-core = "0.8.2"
+caldir-core = "0.9.0"
 chrono = "0.4.43"
+reminder-core = { path = "reminder-core" }
+rencal-config = { path = "rencal-config" }
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
 chrono-tz = "0.10.4"
 toml = "0.8"
 notify = "6"
 dirs = "5"
+tauri-plugin-log = "2.8.0"
+log = "0.4.29"
+tauri-plugin-single-instance = "2.4.1"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"

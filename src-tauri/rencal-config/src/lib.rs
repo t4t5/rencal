@@ -1,7 +1,8 @@
-//! Rencal-specific user preferences at ~/.config/rencal/config.toml.
+//! renCal-specific user preferences at ~/.config/rencal/config.toml.
 //!
-//! Mirrors the get/save shape of caldir-core's `CaldirConfig`. Kept local to
-//! Rencal so we don't pollute caldir-core with app-specific settings.
+//! Lives in its own workspace crate so both the Tauri app and the standalone
+//! `rencal-notifierd` daemon (via `reminder-core`) can read/write the same
+//! file without dragging Tauri/taurpc into a long-lived systemd service.
 
 use std::path::PathBuf;
 
@@ -11,16 +12,23 @@ fn default_theme() -> String {
     "ren".to_string()
 }
 
+fn default_notifications_enabled() -> bool {
+    true
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
     pub theme: String,
+    #[serde(default = "default_notifications_enabled")]
+    pub notifications_enabled: bool,
 }
 
 impl Default for RencalConfig {
     fn default() -> Self {
         Self {
             theme: default_theme(),
+            notifications_enabled: default_notifications_enabled(),
         }
     }
 }
@@ -55,8 +63,8 @@ impl RencalConfig {
             std::fs::create_dir_all(parent)
                 .map_err(|e| format!("Could not create config directory: {e}"))?;
         }
-        let contents = toml::to_string_pretty(self)
-            .map_err(|e| format!("Could not serialize config: {e}"))?;
+        let contents =
+            toml::to_string_pretty(self).map_err(|e| format!("Could not serialize config: {e}"))?;
         std::fs::write(&path, contents).map_err(|e| format!("Could not write config file: {e}"))
     }
 }

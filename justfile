@@ -42,6 +42,13 @@ dev: build-providers
 
 # Build the app for production
 build: build-providers-release
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # Linux deb/rpm bundles ship the reminder daemon — build it first so
+  # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+  fi
   NO_STRIP=true pnpm tauri build
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
@@ -66,7 +73,8 @@ start:
 
 # Check Rust and TypeScript types
 check:
-  cargo check --manifest-path src-tauri/Cargo.toml
+  cargo check --workspace --manifest-path src-tauri/Cargo.toml
+  cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
   @just typecheck
 
 # Check TypeScript types only
@@ -91,3 +99,39 @@ test-notification:
   fi
   caldir new "Test notification" --start "today ${start_time}" --reminder 1m
   echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
+
+clear-notification-cache:
+  rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
+
+# Build the standalone reminder daemon (Linux)
+build-notifierd:
+  cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+
+# Install the reminder daemon binary + systemd user unit, then enable + start it.
+# Also drops the rencal icon at the XDG user path so daemon notifications get
+# the app icon (deb/rpm/AUR installs put it at /usr/share/icons/... instead).
+# Idempotent — safe to re-run after rebuilds.
+install-notifierd: build-notifierd
+  install -Dm755 src-tauri/target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
+  install -d ~/.config/systemd/user
+  sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
+    src-tauri/notifierd/rencal-notifierd.service \
+    > ~/.config/systemd/user/rencal-notifierd.service
+  install -Dm644 src-tauri/icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/rencal.png
+  systemctl --user daemon-reload
+  systemctl --user enable --now rencal-notifierd.service
+  -systemctl --user restart rencal-notifierd.service
+  @echo
+  systemctl --user status rencal-notifierd.service --no-pager --lines=0
+
+# Remove the reminder daemon and its systemd unit
+uninstall-notifierd:
+  -systemctl --user disable --now rencal-notifierd.service
+  rm -f ~/.local/bin/rencal-notifierd
+  rm -f ~/.config/systemd/user/rencal-notifierd.service
+  rm -f ~/.local/share/icons/hicolor/128x128/apps/rencal.png
+  systemctl --user daemon-reload
+
+# Tail the reminder daemon's logs
+notifierd-logs:
+  journalctl --user -u rencal-notifierd.service -f

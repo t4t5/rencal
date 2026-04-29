@@ -59,31 +59,31 @@ pub async fn run_watcher(app: AppHandle) {
         return;
     };
     if !watch_dir.exists() {
-        eprintln!("Omarchy not detected at {watch_dir:?}; theme watcher disabled");
+        log::info!("Omarchy not detected at {watch_dir:?}; theme watcher disabled");
         return;
     }
 
     let (tx, mut rx) = mpsc::unbounded_channel::<()>();
 
     let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
-        if let Ok(event) = res {
-            if matches!(
+        if let Ok(event) = res
+            && matches!(
                 event.kind,
                 EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            ) {
-                let _ = tx.send(());
-            }
+            )
+        {
+            let _ = tx.send(());
         }
     }) {
         Ok(w) => w,
         Err(e) => {
-            eprintln!("Failed to init Omarchy theme watcher: {e}");
+            log::warn!("Failed to init Omarchy theme watcher: {e}");
             return;
         }
     };
 
     if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::Recursive) {
-        eprintln!("Failed to watch {watch_dir:?}: {e}");
+        log::warn!("Failed to watch {watch_dir:?}: {e}");
         return;
     }
 
