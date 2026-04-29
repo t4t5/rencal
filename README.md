@@ -19,7 +19,7 @@
 - **Connect any provider** — Two-way sync with your existing Google, iCloud, Outlook or CalDAV account.
 - **Natural-language input** — e.g. "lunch with Sarah tomorrow at 1pm".
 - **Keyboard-driven** — Vim motions (`hjkl`) for navigation, `m`/`w` to switch views.
-- **Themes** — Tokyo Night, Catppuccin Latte, plus live Omarchy sync.
+- **Themes** — Tokyo Night, Catppuccin Latte... It syncs with your Omarchy theme!
 
 ## Install
 
