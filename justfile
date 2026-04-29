@@ -112,7 +112,10 @@ build-notifierd:
 # Idempotent — safe to re-run after rebuilds.
 install-notifierd: build-notifierd
   install -Dm755 src-tauri/target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
-  install -Dm644 src-tauri/notifierd/rencal-notifierd.service ~/.config/systemd/user/rencal-notifierd.service
+  install -d ~/.config/systemd/user
+  sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
+    src-tauri/notifierd/rencal-notifierd.service \
+    > ~/.config/systemd/user/rencal-notifierd.service
   install -Dm644 src-tauri/icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/rencal.png
   systemctl --user daemon-reload
   systemctl --user enable --now rencal-notifierd.service

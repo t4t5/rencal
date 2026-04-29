@@ -6,7 +6,7 @@ After=graphical-session.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/rencal-notifierd
+ExecStart=/usr/bin/rencal-notifierd
 Restart=on-failure
 RestartSec=10s
 

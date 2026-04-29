@@ -89,12 +89,12 @@ pub fn check_and_notify(
     let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
-    log::info!(
+    log::debug!(
         "tick now={now} last_check={last_check:?} window_start={window_start}"
     );
 
     let calendars = caldir.calendars();
-    log::info!("calendars={}", calendars.len());
+    log::debug!("calendars={}", calendars.len());
 
     let mut fired = 0;
     for calendar in &calendars {
@@ -124,7 +124,7 @@ pub fn check_and_notify(
         }
     }
 
-    log::info!("fired={fired}");
+    log::debug!("fired={fired}");
     write_last_check_time(now);
     Ok(())
 }

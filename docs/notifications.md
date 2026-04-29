@@ -35,11 +35,10 @@ Package installs (`deb`, `rpm`, AUR `rencal-bin`) ship the daemon at
 `release.yml` before tauri-action so the file exists when the bundler runs).
 
 Self-installs from a checkout use `just install-notifierd`, which writes to
-`~/.local/bin/rencal-notifierd` and `~/.config/systemd/user/...` instead. There
-are two `.service` templates in `src-tauri/notifierd/` to match: the
-`rencal-notifierd.service` (uses `%h/.local/bin`) is shipped only by the just
-recipe; `rencal-notifierd-system.service` (uses `/usr/bin`) is the one packaged
-into deb/rpm.
+`~/.local/bin/rencal-notifierd` and `~/.config/systemd/user/...` instead. The
+single `rencal-notifierd.service` template ships in deb/rpm as-is (with
+`ExecStart=/usr/bin/rencal-notifierd`); the `just` recipe sed-substitutes
+the path to `%h/.local/bin/rencal-notifierd` when installing for development.
 
 ### First-run enablement
 

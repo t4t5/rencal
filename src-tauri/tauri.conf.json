@@ -45,14 +45,14 @@
         "depends": ["libnotify-bin"],
         "files": {
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
-          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd-system.service"
+          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service"
         }
       },
       "rpm": {
         "depends": ["libnotify"],
         "files": {
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
-          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd-system.service"
+          "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service"
         }
       }
     }
