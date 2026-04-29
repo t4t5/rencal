@@ -22,7 +22,7 @@ pub async fn run_reminder_loop(app: AppHandle) {
         tokio::time::sleep(StdDuration::from_secs(secs_remaining as u64)).await;
 
         if let Err(e) = check_and_notify(&app) {
-            eprintln!("Reminder check error: {e}");
+            log::error!("Reminder check error: {e}");
         }
     }
 }
@@ -47,19 +47,17 @@ fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
     let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
-    eprintln!(
-        "[reminder] tick now={now} last_check={last_check} window_start={window_start}"
-    );
+    log::info!("tick now={now} last_check={last_check} window_start={window_start}");
 
     let calendars = caldir.calendars();
-    eprintln!("[reminder]   calendars={}", calendars.len());
+    log::info!("calendars={}", calendars.len());
 
     let mut fired = 0;
     for calendar in &calendars {
         let events = match calendar.events_in_range(range_start, range_end) {
             Ok(events) => events,
             Err(e) => {
-                eprintln!("[reminder]   [{}] events_in_range err: {e}", calendar.slug);
+                log::warn!("[{}] events_in_range err: {e}", calendar.slug);
                 continue;
             }
         };
@@ -82,19 +80,19 @@ fn check_and_notify(app: &AppHandle) -> Result<(), Box<dyn std::error::Error>> {
                 .max_by_key(|(_, t)| *t);
 
             if let Some((minutes, trigger)) = best {
-                eprintln!(
-                    "[reminder]   FIRE \"{}\" {minutes}min before (trigger={trigger})",
+                log::info!(
+                    "FIRE \"{}\" {minutes}min before (trigger={trigger})",
                     event.summary
                 );
                 match send_notification(app, event, minutes) {
                     Ok(()) => fired += 1,
-                    Err(e) => eprintln!("[reminder]   send err: {e}"),
+                    Err(e) => log::warn!("send err: {e}"),
                 }
             }
         }
     }
 
-    eprintln!("[reminder]   fired={fired}");
+    log::info!("fired={fired}");
     write_last_check_time(now);
     Ok(())
 }
@@ -159,8 +157,8 @@ fn send_notification(
             }
             cmd.arg(&title).arg(&body);
             match cmd.status() {
-                Ok(s) if !s.success() => eprintln!("[reminder] notify-send {s}"),
-                Err(e) => eprintln!("[reminder] notify-send err: {e}"),
+                Ok(s) if !s.success() => log::warn!("notify-send {s}"),
+                Err(e) => log::warn!("notify-send err: {e}"),
                 _ => {}
             }
         });
@@ -180,7 +178,7 @@ fn send_notification(
                 builder = builder.icon(icon);
             }
             if let Err(e) = builder.show() {
-                eprintln!("[reminder] show err: {e}");
+                log::warn!("show err: {e}");
             }
         });
     }

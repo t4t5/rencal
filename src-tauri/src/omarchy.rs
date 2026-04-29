@@ -59,7 +59,7 @@ pub async fn run_watcher(app: AppHandle) {
         return;
     };
     if !watch_dir.exists() {
-        eprintln!("Omarchy not detected at {watch_dir:?}; theme watcher disabled");
+        log::info!("Omarchy not detected at {watch_dir:?}; theme watcher disabled");
         return;
     }
 
@@ -77,13 +77,13 @@ pub async fn run_watcher(app: AppHandle) {
     }) {
         Ok(w) => w,
         Err(e) => {
-            eprintln!("Failed to init Omarchy theme watcher: {e}");
+            log::warn!("Failed to init Omarchy theme watcher: {e}");
             return;
         }
     };
 
     if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::Recursive) {
-        eprintln!("Failed to watch {watch_dir:?}: {e}");
+        log::warn!("Failed to watch {watch_dir:?}: {e}");
         return;
     }
 

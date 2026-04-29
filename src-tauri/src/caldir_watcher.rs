@@ -15,12 +15,12 @@ pub const CALDIR_CHANGED: &str = "caldir-changed";
 /// CLI tool, a git pull, or another editor.
 pub async fn run_watcher(app: AppHandle) {
     let Ok(caldir) = Caldir::load() else {
-        eprintln!("caldir watcher: failed to load caldir config");
+        log::warn!("caldir watcher: failed to load caldir config");
         return;
     };
     let watch_dir = caldir.data_path();
     if !watch_dir.exists() {
-        eprintln!("caldir watcher: {watch_dir:?} does not exist; watcher disabled");
+        log::warn!("caldir watcher: {watch_dir:?} does not exist; watcher disabled");
         return;
     }
 
@@ -45,13 +45,13 @@ pub async fn run_watcher(app: AppHandle) {
     }) {
         Ok(w) => w,
         Err(e) => {
-            eprintln!("caldir watcher: failed to init: {e}");
+            log::warn!("caldir watcher: failed to init: {e}");
             return;
         }
     };
 
     if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::Recursive) {
-        eprintln!("caldir watcher: failed to watch {watch_dir:?}: {e}");
+        log::warn!("caldir watcher: failed to watch {watch_dir:?}: {e}");
         return;
     }
 
