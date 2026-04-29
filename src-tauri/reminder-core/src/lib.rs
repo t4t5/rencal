@@ -9,7 +9,7 @@ use std::time::Duration as StdDuration;
 use caldir_core::caldir::Caldir;
 use caldir_core::caldir_config::TimeFormat;
 use caldir_core::event::{Event, EventTime};
-use chrono::{DateTime, Duration, Local, NaiveDate, TimeZone, Utc};
+use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 
 /// Bounded so a long-stale machine doesn't fire dozens of reminders at once
 /// for events the user has already moved past.
@@ -89,9 +89,7 @@ pub fn check_and_notify(
     let range_start = std::cmp::min(window_start, now - Duration::hours(1));
     let range_end = now + Duration::days(7);
 
-    log::debug!(
-        "tick now={now} last_check={last_check:?} window_start={window_start}"
-    );
+    log::debug!("tick now={now} last_check={last_check:?} window_start={window_start}");
 
     let calendars = caldir.calendars();
     log::debug!("calendars={}", calendars.len());
@@ -134,10 +132,7 @@ pub fn check_and_notify(
 /// so a freshly-launched host still fires recently-missed reminders; the cap
 /// bounds the spam. When `last_check` is set, clamp it to no earlier than
 /// `now - cap` so a long-stale machine doesn't fire dozens of stale reminders.
-fn compute_window_start(
-    now: DateTime<Utc>,
-    last_check: Option<DateTime<Utc>>,
-) -> DateTime<Utc> {
+fn compute_window_start(now: DateTime<Utc>, last_check: Option<DateTime<Utc>>) -> DateTime<Utc> {
     let cap_start = now - Duration::hours(CATCHUP_CAP_HOURS);
     let last_check = last_check.unwrap_or(cap_start);
     std::cmp::max(last_check, cap_start)
@@ -165,7 +160,11 @@ fn select_best_trigger(
 }
 
 fn last_check_path() -> Option<PathBuf> {
-    Some(dirs::cache_dir()?.join("rencal").join("last-reminder-check"))
+    Some(
+        dirs::cache_dir()?
+            .join("rencal")
+            .join("last-reminder-check"),
+    )
 }
 
 fn read_last_check_time(now: DateTime<Utc>) -> Option<DateTime<Utc>> {
@@ -198,44 +197,8 @@ fn write_last_check_time(now: DateTime<Utc>) {
 }
 
 fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<Utc>> {
-    let start_utc = event_start_instant(&event.start)?;
+    let start_utc = event.start.resolve_instant_in_zone(&Local)?;
     Some(start_utc - Duration::minutes(minutes_before))
-}
-
-/// Resolve an `EventTime` to the UTC instant it actually fires at *for this host*.
-///
-/// Diverges from `EventTime::to_utc` (which is documented as an ordering
-/// projection) on two cases the user cares about for reminders:
-///
-/// - `Date` (all-day): local midnight on the host, not UTC midnight. A "today"
-///   all-day event scheduled with a "1h before" reminder should fire at 23:00
-///   local on the prior day, not at 23:00 UTC.
-/// - `DateTimeFloating`: wall-clock interpreted in the host's local zone. RFC
-///   5545 floating time means "9am wherever you are." `to_utc` interprets the
-///   naive value as UTC instead, so a 09:00 floating event on a BST host would
-///   otherwise fire at 10:00 local.
-///
-/// `DateTimeUtc` and `DateTimeZoned` already have an unambiguous instant —
-/// defer to caldir-core for those.
-fn event_start_instant(et: &EventTime) -> Option<DateTime<Utc>> {
-    event_start_instant_in_zone(et, &Local)
-}
-
-fn event_start_instant_in_zone<Tz: TimeZone>(et: &EventTime, host_tz: &Tz) -> Option<DateTime<Utc>> {
-    match et {
-        EventTime::Date(d) => {
-            let naive = d.and_hms_opt(0, 0, 0)?;
-            host_tz
-                .from_local_datetime(&naive)
-                .single()
-                .map(|l| l.with_timezone(&Utc))
-        }
-        EventTime::DateTimeFloating(dt) => host_tz
-            .from_local_datetime(dt)
-            .single()
-            .map(|l| l.with_timezone(&Utc)),
-        _ => et.to_utc(),
-    }
 }
 
 /// Build the notification body. Shows the event's absolute start time
@@ -258,9 +221,12 @@ fn format_event_time(et: &EventTime, time_format: TimeFormat, now: DateTime<Loca
         return format_relative_date(*d, today);
     }
 
-    // Use event_start_instant (not to_utc) so a floating "9am" displays as
+    // Use resolve_instant_in_zone (not to_utc) so a floating "9am" displays as
     // 09:00 on the host instead of being projected through UTC.
-    let Some(local) = event_start_instant(et).map(|u| u.with_timezone(&Local)) else {
+    let Some(local) = et
+        .resolve_instant_in_zone(&Local)
+        .map(|u| u.with_timezone(&Local))
+    else {
         return String::new();
     };
 
@@ -299,7 +265,8 @@ mod tests {
     use chrono::TimeZone;
 
     fn t(year: i32, month: u32, day: u32, hour: u32, min: u32) -> DateTime<Utc> {
-        Utc.with_ymd_and_hms(year, month, day, hour, min, 0).unwrap()
+        Utc.with_ymd_and_hms(year, month, day, hour, min, 0)
+            .unwrap()
     }
 
     // ---- compute_window_start --------------------------------------------
@@ -321,7 +288,10 @@ mod tests {
     fn window_start_clamps_stale_last_check_to_cap() {
         let now = t(2026, 4, 29, 12, 0);
         let last = t(2026, 4, 28, 0, 0); // way more than 4h ago
-        assert_eq!(compute_window_start(now, Some(last)), now - Duration::hours(4));
+        assert_eq!(
+            compute_window_start(now, Some(last)),
+            now - Duration::hours(4)
+        );
     }
 
     // ---- select_best_trigger ---------------------------------------------
@@ -364,7 +334,10 @@ mod tests {
         let now = t(2026, 4, 29, 12, 0);
         let window_start = now - Duration::minutes(60);
         let triggers = vec![(0, now)];
-        assert_eq!(select_best_trigger(triggers, window_start, now), Some((0, now)));
+        assert_eq!(
+            select_best_trigger(triggers, window_start, now),
+            Some((0, now))
+        );
     }
 
     #[test]
@@ -387,8 +360,8 @@ mod tests {
         let now = t(2026, 4, 29, 12, 0);
         let window_start = now - Duration::hours(1);
         let triggers = vec![
-            (180, now - Duration::hours(3)),  // before window
-            (30, now - Duration::minutes(30)), // in window
+            (180, now - Duration::hours(3)),    // before window
+            (30, now - Duration::minutes(30)),  // in window
             (-30, now + Duration::minutes(30)), // future
         ];
         assert_eq!(
@@ -432,7 +405,7 @@ mod tests {
         assert_eq!(parse_last_check(&s, now), None);
     }
 
-    // ---- event_start_instant_in_zone -------------------------------------
+    // ---- EventTime::resolve_instant_in_zone ------------------------------
 
     use chrono::{FixedOffset, NaiveDateTime};
 
@@ -449,14 +422,14 @@ mod tests {
         // 09:00 local = 08:00 UTC, not at 09:00 UTC (= 10:00 local).
         let bst = FixedOffset::east_opt(3600).unwrap();
         let nine_am_floating = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let resolved = event_start_instant_in_zone(&nine_am_floating, &bst).unwrap();
+        let resolved = nine_am_floating.resolve_instant_in_zone(&bst).unwrap();
         assert_eq!(resolved, t(2026, 7, 15, 8, 0));
     }
 
     #[test]
     fn floating_event_in_utc_host_round_trips() {
         let nine_am_floating = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let resolved = event_start_instant_in_zone(&nine_am_floating, &Utc).unwrap();
+        let resolved = nine_am_floating.resolve_instant_in_zone(&Utc).unwrap();
         assert_eq!(resolved, t(2026, 7, 15, 9, 0));
     }
 
@@ -468,7 +441,7 @@ mod tests {
         // what to_utc would give.
         let cest = FixedOffset::east_opt(2 * 3600).unwrap();
         let tuesday = EventTime::Date(NaiveDate::from_ymd_opt(2026, 7, 14).unwrap());
-        let resolved = event_start_instant_in_zone(&tuesday, &cest).unwrap();
+        let resolved = tuesday.resolve_instant_in_zone(&cest).unwrap();
         assert_eq!(resolved, t(2026, 7, 13, 22, 0));
     }
 
@@ -477,7 +450,7 @@ mod tests {
         let bst = FixedOffset::east_opt(3600).unwrap();
         let utc_event = EventTime::DateTimeUtc(t(2026, 7, 15, 14, 30));
         assert_eq!(
-            event_start_instant_in_zone(&utc_event, &bst),
+            utc_event.resolve_instant_in_zone(&bst),
             Some(t(2026, 7, 15, 14, 30))
         );
     }
@@ -490,8 +463,9 @@ mod tests {
             datetime: naive(2026, 7, 15, 9, 0),
             tzid: "America/Los_Angeles".to_string(),
         };
-        let from_utc = event_start_instant_in_zone(&zoned, &Utc).unwrap();
-        let from_bst = event_start_instant_in_zone(&zoned, &FixedOffset::east_opt(3600).unwrap())
+        let from_utc = zoned.resolve_instant_in_zone(&Utc).unwrap();
+        let from_bst = zoned
+            .resolve_instant_in_zone(&FixedOffset::east_opt(3600).unwrap())
             .unwrap();
         assert_eq!(from_utc, from_bst);
         // 09:00 PDT = 16:00 UTC.
@@ -504,7 +478,7 @@ mod tests {
         // BST should fire at 08:30 BST = 07:30 UTC.
         let bst = FixedOffset::east_opt(3600).unwrap();
         let nine_am = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let start = event_start_instant_in_zone(&nine_am, &bst).unwrap();
+        let start = nine_am.resolve_instant_in_zone(&bst).unwrap();
         let trigger = start - Duration::minutes(30);
         assert_eq!(trigger, t(2026, 7, 15, 7, 30));
     }
