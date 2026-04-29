@@ -3825,6 +3825,7 @@ dependencies = [
  "chrono",
  "dirs 5.0.1",
  "log",
+ "rencal-config",
  "tokio",
 ]
 
@@ -3841,6 +3842,7 @@ dependencies = [
  "log",
  "notify",
  "reminder-core",
+ "rencal-config",
  "serde",
  "serde_json",
  "socket2 0.5.10",
@@ -3856,6 +3858,15 @@ dependencies = [
  "tokio",
  "toml 0.8.2",
  "url",
+]
+
+[[package]]
+name = "rencal-config"
+version = "0.1.0"
+dependencies = [
+ "dirs 5.0.1",
+ "serde",
+ "toml 0.8.2",
 ]
 
 [[package]]

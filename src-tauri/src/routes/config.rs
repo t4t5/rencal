@@ -1,4 +1,5 @@
-use crate::config::RencalConfig;
+use rencal_config::RencalConfig;
+
 use crate::routes::TauResult;
 
 // `get_theme` returns `Some(theme)` if the config file exists, `None` if it
@@ -8,6 +9,8 @@ use crate::routes::TauResult;
 pub trait ConfigApi {
     async fn get_theme() -> TauResult<Option<String>>;
     async fn set_theme(theme: String) -> TauResult<()>;
+    async fn get_notifications_enabled() -> TauResult<bool>;
+    async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -25,6 +28,16 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_theme(self, theme: String) -> TauResult<()> {
         let mut config = RencalConfig::load();
         config.theme = theme;
+        config.save()
+    }
+
+    async fn get_notifications_enabled(self) -> TauResult<bool> {
+        Ok(RencalConfig::load().notifications_enabled)
+    }
+
+    async fn set_notifications_enabled(self, enabled: bool) -> TauResult<()> {
+        let mut config = RencalConfig::load();
+        config.notifications_enabled = enabled;
         config.save()
     }
 }

@@ -1,5 +1,5 @@
 [workspace]
-members = ["reminder-core", "notifierd"]
+members = ["reminder-core", "notifierd", "rencal-config"]
 
 [package]
 name = "rencal"
@@ -38,6 +38,7 @@ socket2 = "0.5"
 caldir-core = "0.9.0"
 chrono = "0.4.43"
 reminder-core = { path = "reminder-core" }
+rencal-config = { path = "rencal-config" }
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
 chrono-tz = "0.10.4"

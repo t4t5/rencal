@@ -7,6 +7,7 @@ import {
   CALENDAR_DIR_CHANGED,
   DEFAULT_CALENDAR_CHANGED,
   DEFAULT_REMINDERS_CHANGED,
+  NOTIFICATIONS_ENABLED_CHANGED,
   TIME_FORMAT_CHANGED,
 } from "@/rpc/events"
 
@@ -19,6 +20,8 @@ interface SettingsContextType {
   setDefaultCalendar: (slug: string | null) => Promise<void>
   calendarDir: string
   setCalendarDir: (path: string) => Promise<void>
+  notificationsEnabled: boolean
+  setNotificationsEnabled: (enabled: boolean) => Promise<void>
 }
 
 const SettingsContext = createContext({} as SettingsContextType)
@@ -32,20 +35,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [defaultReminders, setDefaultRemindersState] = useState<number[]>([])
   const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
+  const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true)
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [tf, reminders, cal, dir] = await Promise.all([
+        const [tf, reminders, cal, dir, notifs] = await Promise.all([
           rpc.caldir.get_time_format(),
           rpc.caldir.get_default_reminders(),
           rpc.caldir.get_default_calendar(),
           rpc.caldir.get_calendar_dir(),
+          rpc.config.get_notifications_enabled(),
         ])
         setTimeFormatState(tf)
         setDefaultRemindersState(reminders)
         setDefaultCalendarState(cal)
         setCalendarDirState(dir)
+        setNotificationsEnabledState(notifs)
       } catch (e) {
         console.error(e)
       }
@@ -64,12 +70,16 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const unlistenCalendarDir = listen<string>(CALENDAR_DIR_CHANGED, (event) => {
       setCalendarDirState(event.payload)
     })
+    const unlistenNotifications = listen<boolean>(NOTIFICATIONS_ENABLED_CHANGED, (event) => {
+      setNotificationsEnabledState(event.payload)
+    })
 
     return () => {
       unlistenTimeFormat.then((fn) => fn())
       unlistenReminders.then((fn) => fn())
       unlistenDefaultCalendar.then((fn) => fn())
       unlistenCalendarDir.then((fn) => fn())
+      unlistenNotifications.then((fn) => fn())
     }
   }, [])
 
@@ -98,6 +108,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(CALENDAR_DIR_CHANGED, stored)
   }
 
+  const setNotificationsEnabled = async (enabled: boolean) => {
+    setNotificationsEnabledState(enabled)
+    await rpc.config.set_notifications_enabled(enabled)
+    await emit(NOTIFICATIONS_ENABLED_CHANGED, enabled)
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -109,6 +125,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setDefaultCalendar,
         calendarDir,
         setCalendarDir,
+        notificationsEnabled,
+        setNotificationsEnabled,
       }}
     >
       {children}

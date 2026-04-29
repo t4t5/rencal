@@ -1,6 +1,5 @@
 import { open } from "@tauri-apps/plugin-dialog"
 
-import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -19,7 +18,6 @@ export function GeneralPage() {
   return (
     <div className="flex flex-col gap-6">
       <TimeFormatSection />
-      <DefaultRemindersSection />
       <DataDirectorySection />
     </div>
   )
@@ -40,25 +38,6 @@ const TimeFormatSection = () => {
           <SelectItem value="12h">12h</SelectItem>
         </SelectContent>
       </Select>
-    </div>
-  )
-}
-
-const DefaultRemindersSection = () => {
-  const { defaultReminders, setDefaultReminders } = useSettings()
-
-  return (
-    <div className="flex flex-col gap-2 w-[300px]">
-      <label className="text-sm">Default reminders</label>
-      <ReminderSelect
-        reminders={defaultReminders}
-        onSelect={(mins) => setDefaultReminders([...defaultReminders, mins])}
-        onRemove={(mins) => setDefaultReminders(defaultReminders.filter((m) => m !== mins))}
-        placeholder="Add reminder"
-        ghost={false}
-        rowClassName="pl-4"
-        addon={null}
-      />
     </div>
   )
 }

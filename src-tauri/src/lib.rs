@@ -1,5 +1,4 @@
 mod caldir_watcher;
-mod config;
 mod notifications;
 mod oauth;
 mod omarchy;

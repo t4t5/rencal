@@ -10,6 +10,7 @@ use caldir_core::caldir::Caldir;
 use caldir_core::caldir_config::TimeFormat;
 use caldir_core::event::{Event, EventTime};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
+use rencal_config::RencalConfig;
 
 /// Bounded so a long-stale machine doesn't fire dozens of reminders at once
 /// for events the user has already moved past.
@@ -81,8 +82,19 @@ pub fn check_and_notify(
     notifier: &dyn Notifier,
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let caldir = Caldir::load()?;
     let now = Utc::now();
+
+    // Honor the user's "notifications enabled" toggle (rencal config). Still
+    // advance `last_check` so that re-enabling later doesn't dump a 4h
+    // catch-up window of stale reminders — disabled means "I don't want
+    // these," not "queue them up for me."
+    if !RencalConfig::load().notifications_enabled {
+        log::debug!("notifications disabled — skipping tick");
+        write_last_check_time(now);
+        return Ok(());
+    }
+
+    let caldir = Caldir::load()?;
     let time_format = caldir.config().time_format;
 
     let last_check = read_last_check_time(now);
