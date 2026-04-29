@@ -16,6 +16,17 @@ use rencal_config::RencalConfig;
 /// for events the user has already moved past.
 const CATCHUP_CAP_HOURS: i64 = 4;
 
+/// Largest "before-start" reminder offset we honor (4 weeks, matching Google
+/// Calendar's UI cap). Drives both how far ahead `events_in_range` scans and
+/// how reminders with absurdly large offsets are filtered out.
+const MAX_REMINDER_BEFORE_MINUTES: i64 = 28 * 24 * 60;
+
+/// Largest "after-start" reminder offset we honor. Caldir parses iCal
+/// `TRIGGER:PT8H` (Google's default for all-day events: "fire at 08:00 on the
+/// day of the event") as a negative `minutes` value. 24h covers same-day
+/// after-midnight patterns without dragging the scan window unreasonably far back.
+const MAX_REMINDER_AFTER_MINUTES: i64 = 24 * 60;
+
 /// Host-provided notification sink. Implementations should not block —
 /// spawn off the tick thread if the underlying call is slow.
 pub trait Notifier: Send + Sync + 'static {
@@ -100,9 +111,14 @@ pub fn check_and_notify(
     let last_check = read_last_check_time(now);
     let window_start = compute_window_start(now, last_check);
 
-    // 7 days forward covers "1 week before" reminders.
-    let range_start = std::cmp::min(window_start, now - Duration::hours(1));
-    let range_end = now + Duration::days(7);
+    // Scan range is over event *start* times, but reminders fire at
+    // `start - minutes_before`. To cover every trigger that could land in
+    // `(window_start, now]`, widen the start-time scan by the supported
+    // before/after offsets:
+    //   - A "max-before" reminder fires now when start = now + max_before.
+    //   - A "max-after" alarm fires now when start = now - max_after.
+    let range_start = window_start - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
+    let range_end = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
 
     log::debug!("tick now={now} last_check={last_check:?} window_start={window_start}");
 
@@ -120,10 +136,17 @@ pub fn check_and_notify(
         };
 
         for event in &events {
-            let triggers = event
-                .reminders
-                .iter()
-                .filter_map(|r| Some((r.minutes, compute_trigger_time(event, r.minutes)?)));
+            let triggers = event.reminders.iter().filter_map(|r| {
+                if !is_supported_offset(r.minutes) {
+                    log::debug!(
+                        "skipping out-of-range reminder ({}min) on \"{}\"",
+                        r.minutes,
+                        event.summary
+                    );
+                    return None;
+                }
+                Some((r.minutes, compute_trigger_time(event, r.minutes)?))
+            });
 
             if let Some((minutes, trigger)) = select_best_trigger(triggers, window_start, now) {
                 log::info!(
@@ -214,6 +237,14 @@ fn write_last_check_time(now: DateTime<Utc>) {
 fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<Utc>> {
     let start_utc = event.start.resolve_instant_in_zone(&Local)?;
     Some(start_utc - Duration::minutes(minutes_before))
+}
+
+/// Whether a reminder's `minutes` offset (positive = before start,
+/// negative = after start) is within the range the loop scans for.
+/// Anything outside is dropped so we don't fire reminders the scan
+/// window can't reliably cover.
+fn is_supported_offset(minutes: i64) -> bool {
+    minutes <= MAX_REMINDER_BEFORE_MINUTES && minutes >= -MAX_REMINDER_AFTER_MINUTES
 }
 
 /// Build the notification body. Shows the event's absolute start time
@@ -383,6 +414,56 @@ mod tests {
             select_best_trigger(triggers, window_start, now),
             Some((30, now - Duration::minutes(30)))
         );
+    }
+
+    // ---- is_supported_offset / scan range --------------------------------
+
+    #[test]
+    fn supported_offset_accepts_in_range_values() {
+        assert!(is_supported_offset(0));
+        assert!(is_supported_offset(60)); // 1h before
+        assert!(is_supported_offset(MAX_REMINDER_BEFORE_MINUTES));
+        assert!(is_supported_offset(-MAX_REMINDER_AFTER_MINUTES));
+        assert!(is_supported_offset(-480)); // Google's 8h-after default
+    }
+
+    #[test]
+    fn supported_offset_rejects_out_of_range_values() {
+        // 60 days before — beyond the 4-week scan-ahead bound, so the event
+        // wouldn't be loaded anyway. Filtering here makes the contract explicit.
+        assert!(!is_supported_offset(60 * 24 * 60));
+        // 48h after-start — beyond the scan-back bound for after-start alarms.
+        assert!(!is_supported_offset(-48 * 60));
+    }
+
+    #[test]
+    fn scan_range_covers_max_before_reminder() {
+        // A 4-week-before reminder firing now corresponds to an event starting
+        // 4 weeks from now. range_end must include that start time.
+        let now = t(2026, 4, 29, 12, 0);
+        let last = now - Duration::minutes(1);
+        let window_start = compute_window_start(now, Some(last));
+        let range_end = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
+        let event_start = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
+        assert!(event_start <= range_end);
+        // Sanity: the trigger derived from that start lands in the tick window.
+        let trigger = event_start - Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
+        assert!(trigger > window_start && trigger <= now);
+    }
+
+    #[test]
+    fn scan_range_covers_after_start_alarm() {
+        // Google's TRIGGER:PT8H on an all-day event parses to minutes = -480.
+        // The event started 8h ago; the alarm fires now. Scan range must still
+        // include that 8h-old start.
+        let now = t(2026, 4, 29, 12, 0);
+        let last = now - Duration::minutes(1);
+        let window_start = compute_window_start(now, Some(last));
+        let range_start = window_start - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
+        let event_start = now - Duration::hours(8);
+        assert!(event_start >= range_start);
+        let trigger = event_start - Duration::minutes(-480);
+        assert!(trigger > window_start && trigger <= now);
     }
 
     // ---- parse_last_check -------------------------------------------------

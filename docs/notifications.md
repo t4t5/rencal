@@ -71,6 +71,20 @@ The cache file is shared between the GUI's in-process loop (used as a fallback o
 daemon isn't installed) and the daemon. Only one of them runs at a time on Linux thanks to the
 daemon-detection check in `should_run_in_process_reminders()`.
 
+## Supported reminder range
+
+The loop honors reminder offsets from **4 weeks before** to **24 hours after**
+the event start. Both bounds drive the `events_in_range` scan: we widen the
+event-start scan by these offsets so that any trigger landing in the current
+tick's window has its event loaded. Reminders outside the range are skipped
+with a debug log — they wouldn't fire reliably anyway because the scan
+wouldn't cover their event's start time.
+
+The "after" side covers iCal `TRIGGER:PT...` alarms (e.g. Google's
+`TRIGGER:PT8H` default for all-day events, which caldir parses as a negative
+`minutes`); 24h is enough for "fire at HH:MM on the day of the event"
+patterns. The "before" side matches Google Calendar's UI cap.
+
 ## Trigger times
 
 Reminders resolve event start times to a UTC instant via a host-local-aware
