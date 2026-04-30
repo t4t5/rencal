@@ -17,7 +17,12 @@ export const AllDayCheckbox = ({
   const id = useId()
 
   return (
-    <div className={cn("flex items-center gap-3 px-3 py-2", readOnly && "pointer-events-none")}>
+    <div
+      className={cn(
+        "flex items-center gap-3 px-3 h-control-height",
+        readOnly && "pointer-events-none",
+      )}
+    >
       <div className="w-4 flex items-center">
         <Checkbox
           id={id}
