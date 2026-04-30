@@ -27,9 +27,6 @@ export function ComposeEventButton() {
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
-    // Don't clear text here — `createDraftEvent` defers the clear so the
-    // input stays populated through the fly animation. Other exit paths
-    // (click-outside while empty, second Escape) already have empty text.
     setIsDrafting(false)
     containerRef.current?.querySelector("input")?.blur()
   }

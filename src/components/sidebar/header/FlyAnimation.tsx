@@ -44,6 +44,10 @@ export const FLY_HOLD_MS = FLIGHT_DURATION_MS + POST_FLIGHT_BUFFER_MS
 interface FlyAnimationContextType {
   isFlying: boolean
   hideCard: boolean
+  // Snapshot of the input text taken when the flight starts. The compose
+  // input renders this while flying so it stays populated even after
+  // `createDraftEvent` clears the live draft text.
+  flyingText: string
   cardRef: RefObject<HTMLDivElement | null>
   flyRef: RefObject<FlyToMinicalHandle | null>
   startFlight: (start: EventTime) => void
@@ -57,13 +61,14 @@ export function useFlyAnimation() {
 }
 
 export function FlyAnimationProvider({ children }: { children: ReactNode }) {
-  const { setText } = useEventText()
+  const { text } = useEventText()
 
   const [isFlying, setIsFlying] = useState(false)
   // Keeps the original card invisible through both the flight AND the
   // subsequent grid collapse so it doesn't flash back into view as the
   // section closes.
   const [hideCard, setHideCard] = useState(false)
+  const [flyingText, setFlyingText] = useState("")
   const flyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const cardRef = useRef<HTMLDivElement>(null)
@@ -75,13 +80,13 @@ export function FlyAnimationProvider({ children }: { children: ReactNode }) {
       flyRef.current?.fly(cardRef.current, start)
       setIsFlying(true)
       setHideCard(true)
+      setFlyingText(text)
       if (flyTimerRef.current) clearTimeout(flyTimerRef.current)
       flyTimerRef.current = setTimeout(() => {
         setIsFlying(false)
-        setText("")
       }, FLY_HOLD_MS)
     },
-    [setText],
+    [text],
   )
 
   useEffect(() => {
@@ -95,8 +100,8 @@ export function FlyAnimationProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(
-    () => ({ isFlying, hideCard, cardRef, flyRef, startFlight, onCollapsed }),
-    [isFlying, hideCard, startFlight, onCollapsed],
+    () => ({ isFlying, hideCard, flyingText, cardRef, flyRef, startFlight, onCollapsed }),
+    [isFlying, hideCard, flyingText, startFlight, onCollapsed],
   )
 
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>

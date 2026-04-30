@@ -207,6 +207,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     logger.info("Create event:", draftEvent)
     setDefaultDraftEvent()
+    _setText("")
 
     const created = await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
