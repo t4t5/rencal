@@ -16,12 +16,18 @@ fn default_notifications_enabled() -> bool {
     true
 }
 
+fn default_auto_sync_enabled() -> bool {
+    true
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
     pub theme: String,
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
+    #[serde(default = "default_auto_sync_enabled")]
+    pub auto_sync_enabled: bool,
 }
 
 impl Default for RencalConfig {
@@ -29,6 +35,7 @@ impl Default for RencalConfig {
         Self {
             theme: default_theme(),
             notifications_enabled: default_notifications_enabled(),
+            auto_sync_enabled: default_auto_sync_enabled(),
         }
     }
 }

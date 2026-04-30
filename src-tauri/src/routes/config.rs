@@ -11,6 +11,8 @@ pub trait ConfigApi {
     async fn set_theme(theme: String) -> TauResult<()>;
     async fn get_notifications_enabled() -> TauResult<bool>;
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
+    async fn get_auto_sync_enabled() -> TauResult<bool>;
+    async fn set_auto_sync_enabled(enabled: bool) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -38,6 +40,16 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_notifications_enabled(self, enabled: bool) -> TauResult<()> {
         let mut config = RencalConfig::load();
         config.notifications_enabled = enabled;
+        config.save()
+    }
+
+    async fn get_auto_sync_enabled(self) -> TauResult<bool> {
+        Ok(RencalConfig::load().auto_sync_enabled)
+    }
+
+    async fn set_auto_sync_enabled(self, enabled: bool) -> TauResult<()> {
+        let mut config = RencalConfig::load();
+        config.auto_sync_enabled = enabled;
         config.save()
     }
 }
