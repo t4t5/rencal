@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils"
 import { FlyToMinical, type FlyToMinicalHandle } from "./FlyToMinical"
 import { SidebarToolbar } from "./SidebarToolbar"
 
-const FREEZE_MS = 1250
+const FREEZE_MS = 950
 
 export function SidebarHeader() {
   const { isDrafting, setIsDrafting, beforeCreateHandlerRef } = useEventDraft()
@@ -18,9 +18,11 @@ export function SidebarHeader() {
 
   const showDraft = isDrafting && text.length > 0
 
-  // While `freezing`, the grid stays open and the original card is hidden,
-  // so visually only the cloned card flying into the minical is on screen.
+  // While `freezing`, the grid stays open. `hideCard` keeps the original card
+  // invisible through both the freeze AND the subsequent grid collapse so it
+  // doesn't flash back into view as the section closes.
   const [freezing, setFreezing] = useState(false)
+  const [hideCard, setHideCard] = useState(false)
   const freezeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const effectiveShowDraft = showDraft || freezing
@@ -43,6 +45,7 @@ export function SidebarHeader() {
       if (!cardRef.current) return
       flyRef.current?.fly(cardRef.current, start)
       setFreezing(true)
+      setHideCard(true)
       if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
       freezeTimerRef.current = setTimeout(() => setFreezing(false), FREEZE_MS)
     }
@@ -69,12 +72,13 @@ export function SidebarHeader() {
         onTransitionEnd={() => {
           if (!effectiveShowDraft) {
             setRenderDraft(false)
+            setHideCard(false)
           }
         }}
       >
         <div className="overflow-hidden pt-4">
           {renderDraft && (
-            <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", freezing && "opacity-0")}>
+            <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", hideCard && "opacity-0")}>
               <ComposeEventInner onCreated={() => setIsDrafting(false)} />
             </Card>
           )}
