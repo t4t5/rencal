@@ -7,8 +7,7 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
-import { FlyAnimationProvider, useFlyAnimation } from "./FlyAnimation"
-import { FlyToMinical } from "./FlyToMinical"
+import { FlyAnimationProvider, FlyToMinical, useFlyAnimation } from "./FlyAnimation"
 import { SidebarToolbar } from "./SidebarToolbar"
 
 export function SidebarHeader() {
