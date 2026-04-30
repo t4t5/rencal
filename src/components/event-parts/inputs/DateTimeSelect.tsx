@@ -31,6 +31,9 @@ function formatHHMM(et: EventTime): string {
   return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
 }
 
+// To make sure time + dates are aligned
+const FIRST_INPUT_WIDTH = 126
+
 export const DateTimeSelect = ({
   start,
   end,
@@ -121,13 +124,16 @@ const TimeSelect = ({
 
   return (
     <div
-      className={cn("flex items-center", {
+      className={cn("flex items-center gap-1", {
         "opacity-50": allDay,
       })}
     >
       <InputGroup
+        style={{
+          width: FIRST_INPUT_WIDTH,
+        }}
         className={cn(
-          "w-36 h-control-height",
+          "h-control-height",
           readOnly && "hover:border-transparent! focus-within:bg-transparent!",
         )}
       >
@@ -142,7 +148,7 @@ const TimeSelect = ({
           onKeyDown={handleKeyDown}
           readOnly={readOnly}
           disabled={allDay}
-          className={cn(readOnly && "hover:border-transparent! focus:bg-transparent!")}
+          className={cn("pl-2", readOnly && "hover:border-transparent! focus:bg-transparent!")}
         />
       </InputGroup>
 
@@ -179,7 +185,12 @@ const DateSelect = ({
 }) => {
   return (
     <div className="flex pl-[26px] flex-wrap">
-      <div className="w-[107px] shrink-0">
+      <div
+        className="shrink-0"
+        style={{
+          width: FIRST_INPUT_WIDTH,
+        }}
+      >
         <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 

@@ -19,7 +19,7 @@ export const AllDayCheckbox = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-3 px-3 h-control-height",
+        "flex items-center gap-2 px-3 h-control-height",
         readOnly && "pointer-events-none",
       )}
     >

@@ -47,6 +47,7 @@ export function Combobox({
           <InputGroup className="border-none! bg-transparent!">
             {addon}
             <InputGroupInput
+              className="pl-2"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={placeholder}
