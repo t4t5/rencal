@@ -85,7 +85,7 @@ split_end: RpcEventTime;
  */
 new_recurrence: Recurrence | null }
 
-export type SyncPreview = { calendar_slug: string; to_push_delete_count: number }
+export type SyncPreview = { calendar_slug: string; to_push_count: number; to_push_delete_count: number; to_pull_count: number }
 
 export type TimeFormat = "24h" | "12h"
 

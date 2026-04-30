@@ -369,7 +369,9 @@ impl CalendarEvent {
 #[derive(Serialize, Type)]
 pub struct SyncPreview {
     pub calendar_slug: String,
+    pub to_push_count: u32,
     pub to_push_delete_count: u32,
+    pub to_pull_count: u32,
 }
 
 #[taurpc::procedures(path = "caldir", export_to = "../src/rpc/bindings.ts")]
@@ -828,7 +830,9 @@ impl CaldirApi for CaldirApiImpl {
 
             previews.push(SyncPreview {
                 calendar_slug: slug.clone(),
+                to_push_count: diff.to_push.len() as u32,
                 to_push_delete_count,
+                to_pull_count: diff.to_pull.len() as u32,
             });
         }
 

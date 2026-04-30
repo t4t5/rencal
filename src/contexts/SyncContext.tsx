@@ -19,6 +19,7 @@ const MASS_DELETE_THRESHOLD = 10
 
 interface SyncContextType {
   sync: () => Promise<void>
+  isChecking: boolean
   isSyncing: boolean
   syncError: string | null
   pendingMassDelete: SyncPreview[] | null
@@ -36,6 +37,7 @@ export function useSync() {
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
 
+  const [isChecking, setIsChecking] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
   const [syncError, setSyncError] = useState<string | null>(null)
   const [pendingMassDelete, setPendingMassDelete] = useState<SyncPreview[] | null>(null)
@@ -46,30 +48,37 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     if (calendarSlugs.length === 0 || isSyncingRef.current) return
 
     isSyncingRef.current = true
-    setIsSyncing(true)
+    setIsChecking(true)
     setSyncError(null)
     try {
       const previews = await rpc.caldir.sync_preview(calendarSlugs)
       const tripped = previews.filter((p) => p.to_push_delete_count >= MASS_DELETE_THRESHOLD)
-      const safeSlugs = calendarSlugs.filter(
+      const slugsWithWork = previews
+        .filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
+        .map((p) => p.calendar_slug)
+      const safeSlugs = slugsWithWork.filter(
         (slug) => !tripped.some((t) => t.calendar_slug === slug),
       )
 
+      setIsChecking(false)
+
       if (safeSlugs.length > 0) {
+        setIsSyncing(true)
         await rpc.caldir.sync(safeSlugs, [])
+        setIsSyncing(false)
       }
 
       if (tripped.length > 0) {
         setPendingMassDelete(tripped)
         // Keep isSyncingRef true while the dialog is open so auto-syncs don't
         // pile up. confirmMassDelete / cancelMassDelete release it.
-        setIsSyncing(false)
         return
       }
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : String(e))
     }
     isSyncingRef.current = false
+    setIsChecking(false)
     setIsSyncing(false)
   }, [calendars])
 
@@ -132,6 +141,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const value = useMemo<SyncContextType>(
     () => ({
       sync,
+      isChecking,
       isSyncing,
       syncError,
       pendingMassDelete,
@@ -141,6 +151,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     }),
     [
       sync,
+      isChecking,
       isSyncing,
       syncError,
       pendingMassDelete,
