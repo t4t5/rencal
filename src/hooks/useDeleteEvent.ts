@@ -9,7 +9,7 @@ import type { CalendarEvent } from "@/lib/cal-events"
 
 export function useDeleteEvent() {
   const { setActiveEventId, setCalendarEvents } = useCalEvents()
-  const { sync } = useSync()
+  const { requestSync } = useSync()
   const [targetEvent, setTargetEvent] = useState<CalendarEvent | null>(null)
 
   const isRecurring = !!(targetEvent?.recurring_event_id || targetEvent?.recurrence)
@@ -27,7 +27,7 @@ export function useDeleteEvent() {
     setActiveEventId(null)
 
     await rpc.caldir.delete_event(targetEvent.calendar_slug, targetEvent.id)
-    void sync()
+    void requestSync()
   }
 
   const handleDeleteAll = async () => {
@@ -43,7 +43,7 @@ export function useDeleteEvent() {
     setActiveEventId(null)
 
     await rpc.caldir.delete_recurring_series(targetEvent.calendar_slug, parentId)
-    void sync()
+    void requestSync()
   }
 
   const handleClose = () => {

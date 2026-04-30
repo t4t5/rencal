@@ -51,7 +51,7 @@ export const EditEvent = ({
 }) => {
   const { calendars } = useCalendars()
   const { setActiveEventId, setCalendarEvents } = useCalEvents()
-  const { sync } = useSync()
+  const { requestSync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
@@ -109,7 +109,7 @@ export const EditEvent = ({
       recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
     })
-    await sync()
+    await requestSync()
   }
 
   // Keep refs so the unmount cleanup always has the latest values
@@ -189,7 +189,7 @@ export const EditEvent = ({
           : a,
       ),
     })
-    void sync()
+    void requestSync()
   }
 
   return (
@@ -287,7 +287,7 @@ export const EditEvent = ({
 
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
             setPendingRecurrence(null)
-            void sync()
+            void requestSync()
           }}
           onApplyToFuture={async () => {
             if (!dirtyEvent?.recurring_event_id || !pendingRecurrence) return
@@ -306,7 +306,7 @@ export const EditEvent = ({
             originalEventRef.current = localMaster
 
             setPendingRecurrence(null)
-            void sync()
+            void requestSync()
           }}
           onApplyToThis={async () => {
             if (!dirtyEvent) return

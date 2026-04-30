@@ -19,7 +19,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 const MASS_DELETE_THRESHOLD = 10
 
 interface SyncContextType {
-  sync: () => Promise<void>
+  requestSync: () => Promise<void>
   syncNow: () => Promise<void>
   isChecking: boolean
   isSyncing: boolean
@@ -47,8 +47,8 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   const [pendingPreviews, setPendingPreviews] = useState<SyncPreview[]>([])
   const [pendingMassDelete, setPendingMassDelete] = useState<SyncPreview[] | null>(null)
   const isSyncingRef = useRef(false)
-  // Read in the stable `sync` callback so post-edit/post-create sync calls
-  // honor the current toggle without changing `sync`'s identity.
+  // Read in the stable `requestSync` callback so post-edit/post-create calls
+  // honor the current toggle without changing `requestSync`'s identity.
   const autoSyncEnabledRef = useRef(autoSyncEnabled)
   useEffect(() => {
     autoSyncEnabledRef.current = autoSyncEnabled
@@ -103,7 +103,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     [calendars],
   )
 
-  const sync = useCallback(() => runSync(autoSyncEnabledRef.current), [runSync])
+  const requestSync = useCallback(() => runSync(autoSyncEnabledRef.current), [runSync])
   const syncNow = useCallback(() => runSync(true), [runSync])
 
   const confirmMassDelete = useCallback(async () => {
@@ -166,7 +166,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<SyncContextType>(
     () => ({
-      sync,
+      requestSync,
       syncNow,
       isChecking,
       isSyncing,
@@ -178,7 +178,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       cancelMassDelete,
     }),
     [
-      sync,
+      requestSync,
       syncNow,
       isChecking,
       isSyncing,
