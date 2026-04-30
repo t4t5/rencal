@@ -1,5 +1,5 @@
 // see useFlyAnimation.ts for info about how the animation works
-import { type Ref, useCallback, useEffect, useImperativeHandle, useState } from "react"
+import { type Ref, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react"
 import { createPortal } from "react-dom"
 
 import { type EventTime, formatDateKey } from "@/lib/event-time"
@@ -10,7 +10,7 @@ export interface FlyToMinicalHandle {
 
 interface Flight {
   id: string
-  cloneHtml: string
+  clone: HTMLElement
   startRect: DOMRect
   endRect: DOMRect
 }
@@ -35,9 +35,9 @@ export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
         if (!targetEl) return
 
         const endRect = targetEl.getBoundingClientRect()
-        const cloneHtml = cardEl.outerHTML
+        const clone = cardEl.cloneNode(true) as HTMLElement
 
-        setFlights((prev) => [...prev, { id: crypto.randomUUID(), cloneHtml, startRect, endRect }])
+        setFlights((prev) => [...prev, { id: crypto.randomUUID(), clone, startRect, endRect }])
       },
     }),
     [],
@@ -59,13 +59,15 @@ export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
 
 function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) => void }) {
   const [animating, setAnimating] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
+    containerRef.current?.appendChild(flight.clone)
     let rafId = requestAnimationFrame(() => {
       rafId = requestAnimationFrame(() => setAnimating(true))
     })
     return () => cancelAnimationFrame(rafId)
-  }, [flight.id])
+  }, [flight.clone])
 
   const { startRect, endRect } = flight
   const startCenterX = startRect.left + startRect.width / 2
@@ -78,6 +80,7 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
 
   return (
     <div
+      ref={containerRef}
       onTransitionEnd={(e) => {
         if (e.propertyName === "transform") onDone(flight.id)
       }}
@@ -99,7 +102,6 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
         zIndex: 9999,
         willChange: "transform, opacity",
       }}
-      dangerouslySetInnerHTML={{ __html: flight.cloneHtml }}
     />
   )
 }
