@@ -9,7 +9,6 @@ export interface FlyToMinicalHandle {
 }
 
 interface Flight {
-  id: string
   clone: HTMLElement
   startRect: DOMRect
   endRect: DOMRect
@@ -19,7 +18,7 @@ export const FLIGHT_DURATION_MS = 650
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
 export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
-  const [flights, setFlights] = useState<Flight[]>([])
+  const [flight, setFlight] = useState<Flight | null>(null)
 
   useImperativeHandle(
     ref,
@@ -37,27 +36,18 @@ export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
         const endRect = targetEl.getBoundingClientRect()
         const clone = cardEl.cloneNode(true) as HTMLElement
 
-        setFlights((prev) => [...prev, { id: crypto.randomUUID(), clone, startRect, endRect }])
+        setFlight({ clone, startRect, endRect })
       },
     }),
     [],
   )
 
-  const handleDone = useCallback((id: string) => {
-    setFlights((prev) => prev.filter((f) => f.id !== id))
-  }, [])
+  const handleDone = useCallback(() => setFlight(null), [])
 
-  return createPortal(
-    <>
-      {flights.map((flight) => (
-        <FlightView key={flight.id} flight={flight} onDone={handleDone} />
-      ))}
-    </>,
-    document.body,
-  )
+  return createPortal(flight && <FlightView flight={flight} onDone={handleDone} />, document.body)
 }
 
-function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) => void }) {
+function FlightView({ flight, onDone }: { flight: Flight; onDone: () => void }) {
   const [animating, setAnimating] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
 
@@ -82,7 +72,7 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
     <div
       ref={containerRef}
       onTransitionEnd={(e) => {
-        if (e.propertyName === "transform") onDone(flight.id)
+        if (e.propertyName === "transform") onDone()
       }}
       style={{
         position: "fixed",
