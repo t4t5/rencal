@@ -194,23 +194,11 @@ export const EditEvent = ({
 
   return (
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
-      {!isReadonly && (
-        <div className="flex justify-end px-1 pb-1">
-          {children}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem variant="destructive" onClick={() => triggerDelete(dirtyEvent)}>
-                Delete event
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+      <div className="flex justify-end px-1 pb-1">
+        {children}
+
+        {!isReadonly && <OverflowMenu onDelete={() => triggerDelete(dirtyEvent)} />}
+      </div>
 
       <EventInfo
         readonly={isReadonly}
@@ -323,5 +311,22 @@ export const EditEvent = ({
         />
       )}
     </div>
+  )
+}
+
+const OverflowMenu = ({ onDelete }: { onDelete: () => void }) => {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <MoreHorizIcon className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem variant="destructive" onClick={onDelete}>
+          Delete event
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
