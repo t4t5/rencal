@@ -140,7 +140,7 @@ const ReminderRow = ({
     <div
       key={mins}
       className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height pl-0",
+        "flex items-center justify-between text-sm hover:bg-secondary focus-within:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height pl-0",
         className,
       )}
     >
@@ -153,7 +153,7 @@ const ReminderRow = ({
       <button
         type="button"
         onClick={onRemove}
-        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100"
+        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 rounded-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
       >
         <CloseIcon className="size-4" />
       </button>
