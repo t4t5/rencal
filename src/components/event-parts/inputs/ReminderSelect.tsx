@@ -59,7 +59,7 @@ export function ReminderSelect({
   placeholder = "Reminders",
   addon,
   ghost,
-  rowClassName,
+  withInputGroupAddon = true,
 }: {
   reminders: number[]
   onSelect: (mins: number) => void
@@ -67,7 +67,7 @@ export function ReminderSelect({
   placeholder?: string
   addon?: ReactNode
   ghost?: boolean
-  rowClassName?: string
+  withInputGroupAddon?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -120,7 +120,7 @@ export function ReminderSelect({
             key={mins}
             mins={mins}
             onRemove={() => onRemove(mins)}
-            className={rowClassName}
+            withInputGroupAddon={withInputGroupAddon}
           />
         ))}
     </div>
@@ -131,21 +131,24 @@ const ReminderRow = ({
   mins,
   className,
   onRemove,
+  withInputGroupAddon,
 }: {
   mins: number
   className?: string
   onRemove: () => void
+  withInputGroupAddon?: boolean
 }) => {
   return (
     <div
       key={mins}
       className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary focus-within:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height pl-0",
+        "flex items-center justify-between text-sm hover:bg-secondary focus-within:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height",
+        withInputGroupAddon && "pl-0",
         className,
       )}
     >
       <div className="flex gap-2">
-        <InputGroupAddon />
+        {withInputGroupAddon && <InputGroupAddon />}
         <span>
           <HumanDuration mins={mins} />
         </span>
