@@ -126,7 +126,10 @@ const TimeSelect = ({
       })}
     >
       <InputGroup
-        className={cn("w-36", readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
+        className={cn(
+          "w-36 h-control-height",
+          readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+        )}
       >
         <InputGroupAddon>
           <ClockIcon />
