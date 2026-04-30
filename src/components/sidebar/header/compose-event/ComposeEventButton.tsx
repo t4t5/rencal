@@ -14,13 +14,13 @@ import { PlusIcon } from "@/icons/plus"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {
-  const { isDrafting, setIsDrafting, freezing } = useEventDraft()
+  const { isDrafting, setIsDrafting, isFlying } = useEventDraft()
 
   const { text } = useEventText()
 
   // Keep the input visually expanded while the post-create fly animation is
   // running so it doesn't collapse out from under the flying clone.
-  const expanded = isDrafting || freezing
+  const expanded = isDrafting || isFlying
 
   const containerRef = useRef<HTMLDivElement>(null)
 

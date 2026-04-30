@@ -13,9 +13,9 @@
  *   2. The clone is rendered as a fixed-position overlay (see FlyToMinical)
  *      and starts its translate+scale toward the target cell.
  *   3. The original card flips to `opacity-0` and the section is held open
- *      via `freezing` so the layout doesn't shift while the clone is in
+ *      via `isFlying` so the layout doesn't shift while the clone is in
  *      flight (otherwise it would visually detach from its starting spot).
- *   4. After FREEZE_MS the freeze releases and the section collapses
+ *   4. After FLY_HOLD_MS the flying state releases and the section collapses
  *      normally. `hideCard` stays true through the collapse so the original
  *      never flashes back into view, then resets when the card unmounts.
  */
@@ -28,17 +28,17 @@ import { FLIGHT_DURATION_MS, type FlyToMinicalHandle } from "./FlyToMinical"
 // Hold the section open a bit past the flight so the clone has a moment
 // to settle at the target before the original layout starts collapsing.
 const POST_FLIGHT_BUFFER_MS = 300
-export const FREEZE_MS = FLIGHT_DURATION_MS + POST_FLIGHT_BUFFER_MS
+export const FLY_HOLD_MS = FLIGHT_DURATION_MS + POST_FLIGHT_BUFFER_MS
 
 export function useFlyAnimation() {
-  const { beforeCreateHandlerRef, setFreezing } = useEventDraft()
+  const { beforeCreateHandlerRef, setIsFlying } = useEventDraft()
   const { setText } = useEventText()
 
-  // `hideCard` keeps the original card invisible through both the freeze AND
+  // `hideCard` keeps the original card invisible through both the flight AND
   // the subsequent grid collapse so it doesn't flash back into view as the
   // section closes.
   const [hideCard, setHideCard] = useState(false)
-  const freezeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const flyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const cardRef = useRef<HTMLDivElement>(null)
   const flyRef = useRef<FlyToMinicalHandle>(null)
@@ -47,23 +47,23 @@ export function useFlyAnimation() {
     beforeCreateHandlerRef.current = (start) => {
       if (!cardRef.current) return
       flyRef.current?.fly(cardRef.current, start)
-      setFreezing(true)
+      setIsFlying(true)
       setHideCard(true)
-      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
-      freezeTimerRef.current = setTimeout(() => {
-        setFreezing(false)
+      if (flyTimerRef.current) clearTimeout(flyTimerRef.current)
+      flyTimerRef.current = setTimeout(() => {
+        setIsFlying(false)
         setText("")
-      }, FREEZE_MS)
+      }, FLY_HOLD_MS)
     }
 
     return () => {
       beforeCreateHandlerRef.current = null
     }
-  }, [beforeCreateHandlerRef, setFreezing, setText])
+  }, [beforeCreateHandlerRef, setIsFlying, setText])
 
   useEffect(() => {
     return () => {
-      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
+      if (flyTimerRef.current) clearTimeout(flyTimerRef.current)
     }
   }, [])
 

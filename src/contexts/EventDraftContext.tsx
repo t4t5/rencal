@@ -73,8 +73,8 @@ interface EventDraftContextType {
   beforeCreateHandlerRef: RefObject<BeforeCreateHandler | null>
 
   /** True while the post-create fly animation is running */
-  freezing: boolean
-  setFreezing: (freezing: boolean) => void
+  isFlying: boolean
+  setIsFlying: (isFlying: boolean) => void
 }
 
 const EventTextContext = createContext({} as EventTextContextType)
@@ -109,7 +109,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { defaultCalendar, defaultReminders } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
-  const [freezing, setFreezing] = useState(false)
+  const [isFlying, setIsFlying] = useState(false)
 
   const defaultCalendarId =
     (defaultCalendar && calendars.some((c) => c.slug === defaultCalendar)
@@ -256,8 +256,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDefaultDraftEvent,
       createDraftEvent,
       beforeCreateHandlerRef,
-      freezing,
-      setFreezing,
+      isFlying,
+      setIsFlying,
     }),
     [
       isDrafting,
@@ -268,7 +268,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDefaultDraftEvent,
       setDraftPopoverOpen,
       createDraftEvent,
-      freezing,
+      isFlying,
     ],
   )
 

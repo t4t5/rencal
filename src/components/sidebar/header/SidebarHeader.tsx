@@ -12,13 +12,13 @@ import { SidebarToolbar } from "./SidebarToolbar"
 import { useFlyAnimation } from "./useFlyAnimation"
 
 export function SidebarHeader() {
-  const { isDrafting, setIsDrafting, freezing } = useEventDraft()
+  const { isDrafting, setIsDrafting, isFlying } = useEventDraft()
   const { text } = useEventText()
 
   const { cardRef, hideCard, onCollapsed, flyRef } = useFlyAnimation()
 
   const showDraft = isDrafting && text.length > 0
-  const effectiveShowDraft = showDraft || freezing
+  const effectiveShowDraft = showDraft || isFlying
 
   // Stay true briefly after effectiveShowDraft flips false, so the card
   // remains mounted while the collapse animation plays.

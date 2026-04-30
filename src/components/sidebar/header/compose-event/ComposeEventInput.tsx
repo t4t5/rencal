@@ -22,11 +22,11 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
     setDefaultDraftEvent,
     createDraftEvent,
     draftEvent,
-    freezing,
+    isFlying,
   } = useEventDraft()
 
   // Keep showing the typed text through the post-create fly animation.
-  const showText = isDrafting || freezing
+  const showText = isDrafting || isFlying
   const { canCreate, promptToConnect } = useCreateEventGate()
 
   const inputRef = useRef<HTMLInputElement>(null)
