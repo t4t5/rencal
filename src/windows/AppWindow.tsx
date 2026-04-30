@@ -1,3 +1,5 @@
+import { Toaster } from "sonner"
+
 import "@/global.css"
 
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
@@ -29,6 +31,7 @@ export function AppWindow({ preload }: { preload: Preload }) {
           </CreateEventGateProvider>
         </EventDraftProvider>
         <MassDeleteConfirmDialog />
+        <Toaster richColors position="bottom-right" />
       </SyncProvider>
     </CalEventsProvider>
   )

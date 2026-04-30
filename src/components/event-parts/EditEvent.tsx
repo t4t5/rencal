@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
+import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
@@ -96,20 +97,28 @@ export const EditEvent = ({
     // Optimistically update the UI before the RPC call
     setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
 
-    await rpc.caldir.update_event({
-      id: current.id,
-      calendar_slug: original.calendar_slug,
-      new_calendar_slug:
-        current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
-      summary: current.summary,
-      description: current.description,
-      location: current.location,
-      start: toRpcEventTime(current.start),
-      end: toRpcEventTime(current.end),
-      recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
-      reminders: current.reminders,
-    })
-    await requestSync()
+    try {
+      await rpc.caldir.update_event({
+        id: current.id,
+        calendar_slug: original.calendar_slug,
+        new_calendar_slug:
+          current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
+        summary: current.summary,
+        description: current.description,
+        location: current.location,
+        start: toRpcEventTime(current.start),
+        end: toRpcEventTime(current.end),
+        recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
+        reminders: current.reminders,
+      })
+      await requestSync()
+    } catch (err) {
+      // Roll back the optimistic update so the UI matches what's on disk
+      setCalendarEvents((prev) => prev.map((e) => (e.id === original.id ? original : e)))
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error("Failed to save event", { description: message })
+      console.error("update_event failed:", err)
+    }
   }
 
   // Keep refs so the unmount cleanup always has the latest values
