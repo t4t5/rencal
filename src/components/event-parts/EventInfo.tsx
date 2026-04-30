@@ -85,21 +85,26 @@ export function EventInfo({
   isPendingInvite?: boolean
 }) {
   return (
-    <div className="flex flex-col gap-2 grow">
-      <Textarea
-        ref={summaryRef}
-        placeholder="Event Title"
-        value={summary ?? ""}
-        className={cn("text-lg", readonly && "hover:border-transparent! focus:bg-transparent!")}
-        readOnly={readonly}
-        onChange={(e) => onChangeSummary(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault()
-            onClose?.()
-          }
-        }}
-      />
+    <div className="flex flex-col gap-1 grow">
+      <div className="flex min-h-control-height items-center">
+        <Textarea
+          ref={summaryRef}
+          placeholder="Event Title"
+          value={summary ?? ""}
+          className={cn(
+            "text-base font-medium",
+            readonly && "hover:border-transparent! focus:bg-transparent!",
+          )}
+          readOnly={readonly}
+          onChange={(e) => onChangeSummary(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault()
+              onClose?.()
+            }
+          }}
+        />
+      </div>
 
       <div className="flex flex-col gap-1">
         <LocationInput

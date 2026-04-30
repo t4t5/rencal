@@ -136,10 +136,12 @@ body {
   --color-destructive: var(--destructive);
 
   --shadow-button-border: inset 0 0 0 1px var(--border-button);
+  --shadow-input-border: inset 0 0 0 1px var(--input);
   --shadow-tab-list: var(--tab-list-shadow);
 
   --size-control-height: var(--control-height);
   --height-control-height: var(--control-height);
+  --min-height-control-height: var(--control-height);
   --width-control-height: var(--control-height);
   --spacing-tab-gap: var(--tab-gap);
 }

@@ -1,5 +1,6 @@
 import { RRule, RRuleSet } from "rrule"
 
+import { InputGroupAddon } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { cn } from "@/lib/utils"
@@ -51,10 +52,10 @@ export const RepeatSelect = ({
 
   return (
     <Select value={value?.toString() ?? "none"} onValueChange={handleChange}>
-      <SelectTrigger className={cn("w-full justify-start", readOnly && "pointer-events-none")}>
-        <div>
+      <SelectTrigger className={cn("w-full justify-start pl-0", readOnly && "pointer-events-none")}>
+        <InputGroupAddon>
           <RepeatIcon />
-        </div>
+        </InputGroupAddon>
         <div className="grow text-left overflow-hidden">
           {value ? (
             <div className="overflow-hidden text-ellipsis">{getHumanInterval(value)}</div>
