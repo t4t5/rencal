@@ -13,13 +13,16 @@ export const NotesInput = ({
 }) => {
   return (
     <InputGroup
-      className={cn(readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
+      className={cn(
+        "flex gap-2",
+        readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+      )}
     >
       <InputGroupTextarea
         placeholder="Notes"
         value={value ?? ""}
         readOnly={readOnly}
-        className={"hover:border-transparent! focus:bg-transparent!"}
+        className="px-2"
         onChange={(e) => onChange(e.target.value)}
       />
     </InputGroup>

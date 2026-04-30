@@ -11,17 +11,20 @@ import { cn, isMacOS } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
+import { useFlyAnimation } from "../FlyAnimation"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {
   const { isDrafting, setIsDrafting } = useEventDraft()
+  const { isFlying } = useFlyAnimation()
 
-  const { text, setText } = useEventText()
+  const { text } = useEventText()
+
+  const expanded = isDrafting || isFlying
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
-    setText("")
     setIsDrafting(false)
     containerRef.current?.querySelector("input")?.blur()
   }
@@ -41,17 +44,17 @@ export function ComposeEventButton() {
   const isMd = useBreakpoint("md")
 
   return (
-    <SidebarOverlay expanded={isDrafting}>
-      {isMd && <Spacer grow={!isDrafting} />}
+    <SidebarOverlay expanded={expanded}>
+      {isMd && <Spacer grow={!expanded} />}
 
-      <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
-        <ButtonContainer expanded={isDrafting} ref={containerRef}>
+      <ShortcutTooltip open={expanded ? false : undefined} text="Create new event" shortcut="c">
+        <ButtonContainer expanded={expanded} ref={containerRef}>
           <ComposeEventInput onExit={exitDraft} />
-          <PlusButtonOverlay show={!isDrafting} />
+          <PlusButtonOverlay show={!expanded} />
         </ButtonContainer>
       </ShortcutTooltip>
 
-      {!isMd && <Spacer grow={!isDrafting} />}
+      {!isMd && <Spacer grow={!expanded} />}
     </SidebarOverlay>
   )
 }

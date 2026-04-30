@@ -7,13 +7,24 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
+import { FlyAnimationProvider, FlyToMinical, useFlyAnimation } from "./FlyAnimation"
 import { SidebarToolbar } from "./SidebarToolbar"
 
 export function SidebarHeader() {
-  const { isDrafting } = useEventDraft()
+  return (
+    <FlyAnimationProvider>
+      <SidebarHeaderContent />
+    </FlyAnimationProvider>
+  )
+}
+
+function SidebarHeaderContent() {
+  const { isDrafting, setIsDrafting } = useEventDraft()
   const { text } = useEventText()
 
-  const showDraft = isDrafting && text.length > 0
+  const { cardRef, hideCard, onCollapsed, flyRef, isFlying, startFlight } = useFlyAnimation()
+
+  const showDraft = (isDrafting && text.length > 0) || isFlying
 
   // Stay true briefly after showDraft flips false, so the card
   // remains mounted while the collapse animation plays.
@@ -37,21 +48,23 @@ export function SidebarHeader() {
         onTransitionEnd={() => {
           if (!showDraft) {
             setRenderDraft(false)
+            onCollapsed()
           }
         }}
       >
-        <div className="overflow-hidden pt-4">{renderDraft && <ComposeEventCard />}</div>
+        <div className="overflow-hidden pt-4">
+          {renderDraft && (
+            <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", hideCard && "opacity-0")}>
+              <ComposeEventInner
+                onBeforeCreate={startFlight}
+                onCreated={() => setIsDrafting(false)}
+              />
+            </Card>
+          )}
+        </div>
       </div>
+
+      <FlyToMinical ref={flyRef} />
     </div>
-  )
-}
-
-export const ComposeEventCard = () => {
-  const { setIsDrafting } = useEventDraft()
-
-  return (
-    <Card className="p-0 flex flex-col gap-0">
-      <ComposeEventInner onCreated={() => setIsDrafting(false)} />
-    </Card>
   )
 }

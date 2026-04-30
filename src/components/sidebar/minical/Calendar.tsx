@@ -255,6 +255,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon-lg"
+      data-date-key={dateKey}
       data-selected-single={
         modifiers.selected &&
         !modifiers.range_start &&

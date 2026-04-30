@@ -3,7 +3,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { TextareaInner } from "@/components/ui/textarea"
 
 import { cn } from "@/lib/utils"
 
@@ -13,14 +13,8 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group border-transparent hover:border-input relative flex w-full items-start rounded-md border transition-[color,box-shadow] outline-none",
-        "h-control-height min-w-0 has-[>textarea]:h-auto",
-
-        // Variants based on alignment.
-        "has-[>[data-align=inline-start]]:[&>input]:pl-2 has-[>[data-align=inline-start]]:[&>textarea]:pl-2",
-        "has-[>[data-align=inline-end]]:[&>input]:pr-2 has-[>[data-align=inline-end]]:[&>textarea]:pr-2",
-        "has-[>[data-align=block-start]]:h-auto has-[>[data-align=block-start]]:flex-col has-[>[data-align=block-start]]:[&>input]:pb-3",
-        "has-[>[data-align=block-end]]:h-auto has-[>[data-align=block-end]]:flex-col has-[>[data-align=block-end]]:[&>input]:pt-3",
+        "group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
+        "min-h-control-height min-w-0",
 
         // Focus state.
         "focus-within:bg-secondary focus-within:border-transparent!",
@@ -37,36 +31,15 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-const inputGroupAddonVariants = cva(
-  "text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
-  {
-    variants: {
-      align: {
-        "inline-start": "order-first pl-3 has-[>button]:ml-[-0.45rem] has-[>kbd]:ml-[-0.35rem]",
-        "inline-end": "order-last pr-3 has-[>button]:mr-[-0.45rem] has-[>kbd]:mr-[-0.35rem]",
-        "block-start":
-          "order-first w-full justify-start px-3 pt-3 [.border-b]:pb-3 group-has-[>input]/input-group:pt-2.5",
-        "block-end":
-          "order-last w-full justify-start px-3 pb-3 [.border-t]:pt-3 group-has-[>input]/input-group:pb-2.5",
-      },
-    },
-    defaultVariants: {
-      align: "inline-start",
-    },
-  },
-)
-
-function InputGroupAddon({
-  className,
-  align = "inline-start",
-  ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof inputGroupAddonVariants>) {
+function InputGroupAddon({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       role="group"
       data-slot="input-group-addon"
-      data-align={align}
-      className={cn(inputGroupAddonVariants({ align }), "pt-2.5 h-full items-start", className)}
+      className={cn(
+        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[28px]",
+        className,
+      )}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) {
           return
@@ -142,13 +115,10 @@ function InputGroupTextarea({
   ...props
 }: React.ComponentProps<"textarea"> & { autosize?: boolean }) {
   return (
-    <Textarea
+    <TextareaInner
       data-slot="input-group-control"
       autosize={autosize}
-      className={cn(
-        "flex-1 resize-none rounded-none border-0 bg-transparent py-3 shadow-none focus-visible:ring-0 dark:bg-transparent py-2",
-        className,
-      )}
+      className={className}
       {...props}
     />
   )

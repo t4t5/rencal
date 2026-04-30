@@ -3,10 +3,20 @@ import TextareaAutosizeComponent from "react-textarea-autosize"
 
 import { cn } from "@/lib/utils"
 
-const textareaStyles =
-  "border-transparent placeholder:text-muted-foreground aria-invalid:border-destructive flex field-sizing-content min-h-0 h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm outline-none ring-transparent disabled:cursor-not-allowed disabled:opacity-50 focus:bg-secondary hover:border-input focus:border-transparent resize-none"
+export function Textarea({ className, ...props }: React.ComponentProps<typeof TextareaInner>) {
+  return (
+    <div
+      role="group"
+      className="group/input-group w-full border border-transparent hover:border-input min-h-control-height h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md"
+    >
+      <TextareaInner {...props} className={cn("h-full", className)} />
+    </div>
+  )
+}
 
-function Textarea({
+const innerCss = "flex-1 resize-none border-0 bg-transparent outline-none! py-2 text-sm"
+
+export function TextareaInner({
   autosize = true,
   style,
   className,
@@ -16,20 +26,13 @@ function Textarea({
     return (
       <TextareaAutosizeComponent
         data-slot="textarea"
-        className={cn(textareaStyles, className)}
+        className={cn(innerCss, className)}
         {...props}
       />
     )
   } else {
     return (
-      <textarea
-        data-slot="textarea"
-        style={style}
-        className={cn(textareaStyles, className)}
-        {...props}
-      />
+      <textarea data-slot="textarea" style={style} className={cn(innerCss, className)} {...props} />
     )
   }
 }
-
-export { Textarea }
