@@ -37,7 +37,7 @@ function InputGroupAddon({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       data-slot="input-group-addon"
       className={cn(
-        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[36px]",
+        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[28px]",
         className,
       )}
       onClick={(e) => {

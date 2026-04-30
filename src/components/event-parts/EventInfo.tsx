@@ -85,7 +85,7 @@ export function EventInfo({
   isPendingInvite?: boolean
 }) {
   return (
-    <div className="flex flex-col gap-2 grow">
+    <div className="flex flex-col gap-1 grow">
       <div className="flex min-h-control-height items-center">
         <Textarea
           ref={summaryRef}
