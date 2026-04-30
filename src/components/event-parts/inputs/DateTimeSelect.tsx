@@ -32,7 +32,7 @@ function formatHHMM(et: EventTime): string {
 }
 
 // To make sure time + dates are aligned
-const FIRST_INPUT_WIDTH = 126
+const FIRST_INPUT_WIDTH = 140
 
 export const DateTimeSelect = ({
   start,
@@ -124,35 +124,39 @@ const TimeSelect = ({
 
   return (
     <div
-      className={cn("flex items-center gap-1", {
+      className={cn("flex items-center", {
         "opacity-50": allDay,
       })}
     >
-      <InputGroup
+      <div
+        className="flex items-center shrink-0"
         style={{
           width: FIRST_INPUT_WIDTH,
         }}
-        className={cn(
-          "h-control-height",
-          readOnly && "hover:border-transparent! focus-within:bg-transparent!",
-        )}
       >
-        <InputGroupAddon>
-          <ClockIcon />
-        </InputGroupAddon>
-        <InputGroupInput
-          type="time"
-          placeholder="09:30"
-          value={startHHMM}
-          onChange={(e) => onChangeStartTime(e.target.value)}
-          onKeyDown={handleKeyDown}
-          readOnly={readOnly}
-          disabled={allDay}
-          className={cn("pl-2", readOnly && "hover:border-transparent! focus:bg-transparent!")}
-        />
-      </InputGroup>
+        <InputGroup
+          className={cn(
+            "h-control-height",
+            readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+          )}
+        >
+          <InputGroupAddon>
+            <ClockIcon />
+          </InputGroupAddon>
+          <InputGroupInput
+            type="time"
+            placeholder="09:30"
+            value={startHHMM}
+            onChange={(e) => onChangeStartTime(e.target.value)}
+            onKeyDown={handleKeyDown}
+            readOnly={readOnly}
+            disabled={allDay}
+            className={cn("pl-1", readOnly && "hover:border-transparent! focus:bg-transparent!")}
+          />
+        </InputGroup>
 
-      <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+        <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
+      </div>
 
       <Input
         type="time"
@@ -184,14 +188,14 @@ const DateSelect = ({
   onChangeEnd: (date: Date | null) => void
 }) => {
   return (
-    <div className="flex flex-wrap">
-      <InputGroupAddon />
+    <div className="flex flex-wrap gap-1">
       <div
-        className="shrink-0"
+        className="shrink-0 flex"
         style={{
           width: FIRST_INPUT_WIDTH,
         }}
       >
+        <InputGroupAddon />
         <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 
