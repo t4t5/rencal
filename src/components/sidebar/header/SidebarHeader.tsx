@@ -7,14 +7,15 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
+import { FlyToMinical } from "./FlyToMinical"
 import { SidebarToolbar } from "./SidebarToolbar"
 import { useFlyAnimation } from "./useFlyAnimation"
 
 export function SidebarHeader() {
-  const { isDrafting, setIsDrafting } = useEventDraft()
+  const { isDrafting, setIsDrafting, freezing } = useEventDraft()
   const { text } = useEventText()
 
-  const { cardRef, hideCard, freezing, onCollapsed, flyLayer } = useFlyAnimation()
+  const { cardRef, hideCard, onCollapsed, flyRef } = useFlyAnimation()
 
   const showDraft = isDrafting && text.length > 0
   const effectiveShowDraft = showDraft || freezing
@@ -54,7 +55,7 @@ export function SidebarHeader() {
         </div>
       </div>
 
-      {flyLayer}
+      <FlyToMinical ref={flyRef} />
     </div>
   )
 }

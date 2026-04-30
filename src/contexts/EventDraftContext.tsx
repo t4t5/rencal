@@ -10,8 +10,6 @@ import {
   useState,
 } from "react"
 
-import { FREEZE_MS } from "@/components/sidebar/header/useFlyAnimation"
-
 import { rpc } from "@/rpc"
 
 import {
@@ -224,10 +222,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     logger.info("Create event:", draftEvent)
     setDefaultDraftEvent()
-    // Defer the text clear so the input keeps showing what the user typed
-    // until the post-create fly animation finishes. Must match FREEZE_MS in
-    // useFlyAnimation.tsx.
-    setTimeout(() => _setText(""), FREEZE_MS)
 
     const created = await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
