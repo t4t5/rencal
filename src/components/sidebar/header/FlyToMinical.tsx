@@ -1,5 +1,5 @@
 // see useFlyAnimation.ts for info about how the animation works
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react"
+import { type Ref, useCallback, useEffect, useImperativeHandle, useState } from "react"
 import { createPortal } from "react-dom"
 
 import { type EventTime, formatDateKey } from "@/lib/event-time"
@@ -18,7 +18,7 @@ interface Flight {
 const DURATION_MS = 650
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
-export const FlyToMinical = forwardRef<FlyToMinicalHandle>(function FlyToMinical(_, ref) {
+export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
   const [flights, setFlights] = useState<Flight[]>([])
 
   useImperativeHandle(
@@ -55,7 +55,7 @@ export const FlyToMinical = forwardRef<FlyToMinicalHandle>(function FlyToMinical
     </>,
     document.body,
   )
-})
+}
 
 function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) => void }) {
   const [animating, setAnimating] = useState(false)

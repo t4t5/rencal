@@ -1,5 +1,5 @@
 import {
-  type MutableRefObject,
+  type RefObject,
   ReactNode,
   createContext,
   startTransition,
@@ -70,7 +70,7 @@ interface EventDraftContextType {
   createDraftEvent: () => Promise<void>
 
   /** Fires synchronously at the very start of `createDraftEvent`, before any state resets. */
-  beforeCreateHandlerRef: MutableRefObject<BeforeCreateHandler | null>
+  beforeCreateHandlerRef: RefObject<BeforeCreateHandler | null>
 
   /** True while the post-create fly animation is running */
   freezing: boolean
