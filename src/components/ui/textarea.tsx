@@ -5,13 +5,16 @@ import { cn } from "@/lib/utils"
 
 export function Textarea({ className, ...props }: React.ComponentProps<typeof TextareaInner>) {
   return (
-    <div className="border hover:border-input h-control-height">
-      <TextareaInner {...props} />
+    <div
+      role="group"
+      className="group/input-group w-full border border-transparent hover:border-input h-control-height focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md"
+    >
+      <TextareaInner {...props} className={cn("h-full", className)} />
     </div>
   )
 }
 
-const innerCss = "flex-1 resize-none border-0 bg-transparent outline-none! py-2"
+const innerCss = "flex-1 resize-none border-0 bg-transparent outline-none! py-2 text-sm"
 
 export function TextareaInner({
   autosize = true,

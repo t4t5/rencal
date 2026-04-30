@@ -91,7 +91,10 @@ export function EventInfo({
           ref={summaryRef}
           placeholder="Event Title"
           value={summary ?? ""}
-          className={cn("text-lg", readonly && "hover:border-transparent! focus:bg-transparent!")}
+          className={cn(
+            "text-lg font-medium",
+            readonly && "hover:border-transparent! focus:bg-transparent!",
+          )}
           readOnly={readonly}
           onChange={(e) => onChangeSummary(e.target.value)}
           onKeyDown={(e) => {

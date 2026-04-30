@@ -3,7 +3,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea, TextareaInner } from "@/components/ui/textarea"
+import { TextareaInner } from "@/components/ui/textarea"
 
 import { cn } from "@/lib/utils"
 
