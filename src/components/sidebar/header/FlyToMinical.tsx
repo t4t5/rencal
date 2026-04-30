@@ -15,7 +15,7 @@ interface Flight {
   endRect: DOMRect
 }
 
-const DURATION_MS = 650
+export const FLIGHT_DURATION_MS = 650
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
 export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
@@ -93,7 +93,7 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
           : "translate(0, 0) scale(1)",
         transformOrigin: "center center",
         transition: animating
-          ? `transform ${DURATION_MS}ms ${EASING}, opacity ${DURATION_MS}ms ${EASING}`
+          ? `transform ${FLIGHT_DURATION_MS}ms ${EASING}, opacity ${FLIGHT_DURATION_MS}ms ${EASING}`
           : undefined,
         pointerEvents: "none",
         zIndex: 9999,

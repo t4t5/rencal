@@ -23,9 +23,12 @@ import { useCallback, useEffect, useRef, useState } from "react"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
-import { type FlyToMinicalHandle } from "./FlyToMinical"
+import { FLIGHT_DURATION_MS, type FlyToMinicalHandle } from "./FlyToMinical"
 
-export const FREEZE_MS = 950
+// Hold the section open a bit past the flight so the clone has a moment
+// to settle at the target before the original layout starts collapsing.
+const POST_FLIGHT_BUFFER_MS = 300
+export const FREEZE_MS = FLIGHT_DURATION_MS + POST_FLIGHT_BUFFER_MS
 
 export function useFlyAnimation() {
   const { beforeCreateHandlerRef, setFreezing } = useEventDraft()
