@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
 import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
 import { Card } from "@/components/ui/card"
@@ -7,58 +7,27 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
-import { FlyToMinical, type FlyToMinicalHandle } from "./FlyToMinical"
 import { SidebarToolbar } from "./SidebarToolbar"
-
-const FREEZE_MS = 950
+import { useFlyAnimation } from "./useFlyAnimation"
 
 export function SidebarHeader() {
-  const { isDrafting, setIsDrafting, beforeCreateHandlerRef } = useEventDraft()
+  const { isDrafting, setIsDrafting } = useEventDraft()
   const { text } = useEventText()
 
+  const { cardRef, hideCard, freezing, onCollapsed, flyLayer } = useFlyAnimation()
+
   const showDraft = isDrafting && text.length > 0
-
-  // While `freezing`, the grid stays open. `hideCard` keeps the original card
-  // invisible through both the freeze AND the subsequent grid collapse so it
-  // doesn't flash back into view as the section closes.
-  const [freezing, setFreezing] = useState(false)
-  const [hideCard, setHideCard] = useState(false)
-  const freezeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const effectiveShowDraft = showDraft || freezing
 
   // Stay true briefly after effectiveShowDraft flips false, so the card
   // remains mounted while the collapse animation plays.
   const [renderDraft, setRenderDraft] = useState(effectiveShowDraft)
 
-  const cardRef = useRef<HTMLDivElement>(null)
-  const flyRef = useRef<FlyToMinicalHandle>(null)
-
   useEffect(() => {
     if (effectiveShowDraft) {
       setRenderDraft(true)
     }
   }, [effectiveShowDraft])
-
-  useEffect(() => {
-    beforeCreateHandlerRef.current = (start) => {
-      if (!cardRef.current) return
-      flyRef.current?.fly(cardRef.current, start)
-      setFreezing(true)
-      setHideCard(true)
-      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
-      freezeTimerRef.current = setTimeout(() => setFreezing(false), FREEZE_MS)
-    }
-    return () => {
-      beforeCreateHandlerRef.current = null
-    }
-  }, [beforeCreateHandlerRef])
-
-  useEffect(() => {
-    return () => {
-      if (freezeTimerRef.current) clearTimeout(freezeTimerRef.current)
-    }
-  }, [])
 
   return (
     <div className="flex flex-col p-4 pb-0">
@@ -72,7 +41,7 @@ export function SidebarHeader() {
         onTransitionEnd={() => {
           if (!effectiveShowDraft) {
             setRenderDraft(false)
-            setHideCard(false)
+            onCollapsed()
           }
         }}
       >
@@ -85,7 +54,7 @@ export function SidebarHeader() {
         </div>
       </div>
 
-      <FlyToMinical ref={flyRef} />
+      {flyLayer}
     </div>
   )
 }

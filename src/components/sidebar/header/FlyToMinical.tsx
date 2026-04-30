@@ -1,3 +1,4 @@
+// see useFlyAnimation.ts for info about how the animation works
 import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react"
 import { createPortal } from "react-dom"
 
