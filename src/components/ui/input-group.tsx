@@ -3,7 +3,7 @@ import * as React from "react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
+import { Textarea, TextareaInner } from "@/components/ui/textarea"
 
 import { cn } from "@/lib/utils"
 
@@ -115,13 +115,10 @@ function InputGroupTextarea({
   ...props
 }: React.ComponentProps<"textarea"> & { autosize?: boolean }) {
   return (
-    <Textarea
+    <TextareaInner
       data-slot="input-group-control"
       autosize={autosize}
-      className={cn(
-        "flex-1 resize-none rounded-none border-0 bg-transparent py-3 shadow-none focus-visible:ring-0 dark:bg-transparent py-2",
-        className,
-      )}
+      className={className}
       {...props}
     />
   )
