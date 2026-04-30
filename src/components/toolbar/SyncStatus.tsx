@@ -2,20 +2,19 @@ import { ReactNode } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
+import { SyncPreview } from "@/rpc/bindings"
+
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
-import { cn } from "@/lib/utils"
 
 import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
-import { SyncIcon } from "@/icons/sync"
+import { SyncIcon as SyncingIcon } from "@/icons/sync"
 
-export const SyncStatus = ({ className }: { className?: string }) => {
-  const { calendars } = useCalendars()
-
+export const SyncStatus = () => {
   const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
 
   const isOnline = useIsOnline()
@@ -25,87 +24,93 @@ export const SyncStatus = ({ className }: { className?: string }) => {
     0,
   )
 
-  const { key, content }: { key: string; content: ReactNode } = (() => {
+  const StatusIcon = (): ReactNode => {
     if (isChecking || isSyncing) {
-      return {
-        key: "syncing",
-        content: <SyncIcon className="size-4 text-muted-foreground animate-spin" />,
-      }
+      return (
+        <div className="relative">
+          <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
+          {!!pendingCount && <BadgeCount count={pendingCount} />}
+        </div>
+      )
     }
 
     if (!isOnline) {
-      return {
-        key: "offline",
-        content: (
-          <Tooltip>
-            <TooltipTrigger className="flex items-center">
-              <CloudOffIcon className="size-4 text-error" />
-            </TooltipTrigger>
-            <TooltipContent>No internet connection</TooltipContent>
-          </Tooltip>
-        ),
-      }
+      return (
+        <Tooltip>
+          <TooltipTrigger className="flex items-center">
+            <CloudOffIcon className="size-4 text-error" />
+          </TooltipTrigger>
+          <TooltipContent>No internet connection</TooltipContent>
+        </Tooltip>
+      )
     }
 
     if (syncError) {
-      return {
-        key: "error",
-        content: (
-          <Tooltip>
-            <TooltipTrigger className="flex items-center">
-              <CloudWarningIcon className="size-4 text-warning" />
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
-          </Tooltip>
-        ),
-      }
+      return (
+        <Tooltip>
+          <TooltipTrigger className="flex items-center">
+            <CloudWarningIcon className="size-4 text-warning" />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
+        </Tooltip>
+      )
     }
 
     if (pendingCount > 0) {
-      const calendarName = (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
-
-      return {
-        key: "pending",
-        content: (
-          <Tooltip>
-            <TooltipTrigger
-              onClick={() => void syncNow()}
-              className="relative flex items-center cursor-pointer"
-            >
-              <SyncIcon className="size-4 text-muted-foreground" />
-              <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
-                {pendingCount}
-              </span>
-            </TooltipTrigger>
-            <TooltipContent className="max-w-64">
-              <div className="flex flex-col gap-1">
-                <div className="font-medium">Click to sync</div>
-                {pendingPreviews.map((p) => {
-                  const parts: string[] = []
-                  if (p.to_pull_count > 0) parts.push(`${p.to_pull_count} to pull`)
-                  if (p.to_push_count > 0) parts.push(`${p.to_push_count} to push`)
-                  return (
-                    <div key={p.calendar_slug} className="text-xs text-muted-foreground">
-                      {calendarName(p.calendar_slug)}: {parts.join(", ")}
-                    </div>
-                  )
-                })}
-              </div>
-            </TooltipContent>
-          </Tooltip>
-        ),
-      }
+      return (
+        <Tooltip>
+          <TooltipTrigger
+            onClick={() => void syncNow()}
+            className="relative flex items-center cursor-pointer"
+          >
+            <SyncingIcon className="size-4 text-muted-foreground" />
+            <BadgeCount count={pendingCount} />
+          </TooltipTrigger>
+          <TooltipContent className="max-w-64">
+            <ChangesPreview pendingPreviews={pendingPreviews} />
+          </TooltipContent>
+        </Tooltip>
+      )
     }
 
-    return {
-      key: "success",
-      content: <CloudCheckIcon className="size-4 text-muted-foreground" />,
-    }
-  })()
+    return <CloudCheckIcon className="size-4 text-muted-foreground" />
+  }
 
   return (
-    <div key={key} className={cn(className)} style={{ animation: "scale-in 0.15s ease-out" }}>
-      {content}
+    <div style={{ animation: "scale-in 0.15s ease-out" }}>
+      <StatusIcon />
+    </div>
+  )
+}
+
+const BadgeCount = ({ count }: { count: number }) => {
+  return (
+    <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
+      {count}
+    </span>
+  )
+}
+
+const ChangesPreview = ({ pendingPreviews }: { pendingPreviews: SyncPreview[] }) => {
+  const { calendars } = useCalendars()
+  const calendarName = (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="font-medium">Click to sync</div>
+
+      {pendingPreviews.map((p) => {
+        const parts: string[] = []
+
+        if (p.to_pull_count > 0) parts.push(`${p.to_pull_count} to pull`)
+        if (p.to_push_count > 0) parts.push(`${p.to_push_count} to push`)
+
+        return (
+          <div key={p.calendar_slug} className="text-xs text-muted-foreground">
+            {calendarName(p.calendar_slug)}: {parts.join(", ")}
+          </div>
+        )
+      })}
     </div>
   )
 }
