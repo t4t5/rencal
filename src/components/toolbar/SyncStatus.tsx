@@ -1,10 +1,11 @@
-import { ReactNode, useEffect, useState } from "react"
+import { ReactNode } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import { useIsOnline } from "@/hooks/useIsOnline"
 import { cn } from "@/lib/utils"
 
 import { CloudCheckIcon } from "@/icons/cloud-check"
@@ -13,20 +14,11 @@ import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon } from "@/icons/sync"
 
 export const SyncStatus = ({ className }: { className?: string }) => {
-  const { isSyncing, syncError, pendingPreviews, syncNow } = useSync()
   const { calendars } = useCalendars()
-  const [isOnline, setIsOnline] = useState(navigator.onLine)
 
-  useEffect(() => {
-    const handleOnline = () => setIsOnline(true)
-    const handleOffline = () => setIsOnline(false)
-    window.addEventListener("online", handleOnline)
-    window.addEventListener("offline", handleOffline)
-    return () => {
-      window.removeEventListener("online", handleOnline)
-      window.removeEventListener("offline", handleOffline)
-    }
-  }, [])
+  const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
+
+  const isOnline = useIsOnline()
 
   const pendingCount = pendingPreviews.reduce(
     (acc, p) => acc + p.to_push_count + p.to_pull_count,
@@ -34,7 +26,7 @@ export const SyncStatus = ({ className }: { className?: string }) => {
   )
 
   const { key, content }: { key: string; content: ReactNode } = (() => {
-    if (isSyncing) {
+    if (isChecking || isSyncing) {
       return {
         key: "syncing",
         content: <SyncIcon className="size-4 text-muted-foreground animate-spin" />,
