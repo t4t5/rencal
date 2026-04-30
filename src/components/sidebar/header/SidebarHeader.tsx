@@ -25,18 +25,17 @@ function SidebarHeaderContent() {
 
   const { cardRef, hideCard, onCollapsed, flyRef, isFlying, startFlight } = useFlyAnimation()
 
-  const showDraft = isDrafting && text.length > 0
-  const effectiveShowDraft = showDraft || isFlying
+  const showDraft = (isDrafting && text.length > 0) || isFlying
 
-  // Stay true briefly after effectiveShowDraft flips false, so the card
+  // Stay true briefly after showDraft flips false, so the card
   // remains mounted while the collapse animation plays.
-  const [renderDraft, setRenderDraft] = useState(effectiveShowDraft)
+  const [renderDraft, setRenderDraft] = useState(showDraft)
 
   useEffect(() => {
-    if (effectiveShowDraft) {
+    if (showDraft) {
       setRenderDraft(true)
     }
-  }, [effectiveShowDraft])
+  }, [showDraft])
 
   return (
     <div className="flex flex-col p-4 pb-0">
@@ -45,10 +44,10 @@ function SidebarHeaderContent() {
       <div
         className={cn(
           "grid transition-[grid-template-rows] duration-200 ease-out",
-          effectiveShowDraft ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
+          showDraft ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
         onTransitionEnd={() => {
-          if (!effectiveShowDraft) {
+          if (!showDraft) {
             setRenderDraft(false)
             onCollapsed()
           }
