@@ -7,15 +7,23 @@ import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
 import { cn } from "@/lib/utils"
 
+import { FlyAnimationProvider, useFlyAnimation } from "./FlyAnimation"
 import { FlyToMinical } from "./FlyToMinical"
 import { SidebarToolbar } from "./SidebarToolbar"
-import { useFlyAnimation } from "./useFlyAnimation"
 
 export function SidebarHeader() {
-  const { isDrafting, setIsDrafting, isFlying } = useEventDraft()
+  return (
+    <FlyAnimationProvider>
+      <SidebarHeaderContent />
+    </FlyAnimationProvider>
+  )
+}
+
+function SidebarHeaderContent() {
+  const { isDrafting, setIsDrafting } = useEventDraft()
   const { text } = useEventText()
 
-  const { cardRef, hideCard, onCollapsed, flyRef } = useFlyAnimation()
+  const { cardRef, hideCard, onCollapsed, flyRef, isFlying, startFlight } = useFlyAnimation()
 
   const showDraft = isDrafting && text.length > 0
   const effectiveShowDraft = showDraft || isFlying
@@ -49,7 +57,10 @@ export function SidebarHeader() {
         <div className="overflow-hidden pt-4">
           {renderDraft && (
             <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", hideCard && "opacity-0")}>
-              <ComposeEventInner onCreated={() => setIsDrafting(false)} />
+              <ComposeEventInner
+                onBeforeCreate={startFlight}
+                onCreated={() => setIsDrafting(false)}
+              />
             </Card>
           )}
         </div>

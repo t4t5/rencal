@@ -12,18 +12,14 @@ import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
 
+import { useFlyAnimation } from "../FlyAnimation"
 import { MagicSegments } from "./MagicSegments"
 
 export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
-  const {
-    isDrafting,
-    setIsDrafting,
-    setDefaultDraftEvent,
-    createDraftEvent,
-    draftEvent,
-    isFlying,
-  } = useEventDraft()
+  const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
+    useEventDraft()
+  const { isFlying, startFlight } = useFlyAnimation()
 
   // Keep showing the typed text through the post-create fly animation.
   const showText = isDrafting || isFlying
@@ -60,6 +56,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
           if (e.key === "Enter" && text) {
             e.preventDefault()
+            startFlight(draftEvent.start)
             void createDraftEvent().then(onExit)
           }
 

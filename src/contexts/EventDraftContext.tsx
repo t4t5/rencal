@@ -1,5 +1,4 @@
 import {
-  type RefObject,
   ReactNode,
   createContext,
   startTransition,
@@ -49,8 +48,6 @@ interface EventTextContextType {
   setText: (text: string) => void
 }
 
-type BeforeCreateHandler = (start: EventTime) => void
-
 interface EventDraftContextType {
   isDrafting: boolean
   setIsDrafting: (isDrafting: boolean) => void
@@ -68,13 +65,6 @@ interface EventDraftContextType {
 
   setDefaultDraftEvent: () => void
   createDraftEvent: () => Promise<void>
-
-  /** Fires synchronously at the very start of `createDraftEvent`, before any state resets. */
-  beforeCreateHandlerRef: RefObject<BeforeCreateHandler | null>
-
-  /** True while the post-create fly animation is running */
-  isFlying: boolean
-  setIsFlying: (isFlying: boolean) => void
 }
 
 const EventTextContext = createContext({} as EventTextContextType)
@@ -109,7 +99,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { defaultCalendar, defaultReminders } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
-  const [isFlying, setIsFlying] = useState(false)
 
   const defaultCalendarId =
     (defaultCalendar && calendars.some((c) => c.slug === defaultCalendar)
@@ -189,12 +178,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
 
-  const beforeCreateHandlerRef = useRef<BeforeCreateHandler | null>(null)
-
   const createDraftEvent = useCallback(async () => {
     if (!draftEvent.calendarId) return
-
-    beforeCreateHandlerRef.current?.(draftEvent.start)
 
     const optimisticId = crypto.randomUUID()
 
@@ -255,9 +240,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDraftReminders,
       setDefaultDraftEvent,
       createDraftEvent,
-      beforeCreateHandlerRef,
-      isFlying,
-      setIsFlying,
     }),
     [
       isDrafting,
@@ -268,7 +250,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDefaultDraftEvent,
       setDraftPopoverOpen,
       createDraftEvent,
-      isFlying,
     ],
   )
 

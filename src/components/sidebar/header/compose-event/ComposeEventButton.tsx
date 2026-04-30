@@ -11,10 +11,12 @@ import { cn, isMacOS } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
+import { useFlyAnimation } from "../FlyAnimation"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {
-  const { isDrafting, setIsDrafting, isFlying } = useEventDraft()
+  const { isDrafting, setIsDrafting } = useEventDraft()
+  const { isFlying } = useFlyAnimation()
 
   const { text } = useEventText()
 

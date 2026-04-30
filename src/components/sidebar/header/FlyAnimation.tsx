@@ -4,12 +4,11 @@
  * into the date cell in the minical where the event starts.
  *
  * We want it to feel like the card the user worked on is what's flying,
- * so we hide the original the
- * instant the clone takes off and keep the section frozen open until the
- * flight finishes.
+ * so we hide the original the instant the clone takes off and keep the
+ * section frozen open until the flight finishes.
  *
- *   1. User submits → `beforeCreateHandlerRef` fires synchronously, before
- *      any draft state resets, so we can snapshot the card at full size.
+ *   1. Caller invokes `startFlight(start)` synchronously, before resetting
+ *      draft state, so we can snapshot the card at full size.
  *   2. The clone is rendered as a fixed-position overlay (see FlyToMinical)
  *      and starts its translate+scale toward the target cell.
  *   3. The original card flips to `opacity-0` and the section is held open
@@ -19,9 +18,21 @@
  *      normally. `hideCard` stays true through the collapse so the original
  *      never flashes back into view, then resets when the card unmounts.
  */
-import { useCallback, useEffect, useRef, useState } from "react"
+import {
+  type ReactNode,
+  type RefObject,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 
-import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
+import { useEventText } from "@/contexts/EventDraftContext"
+
+import { type EventTime } from "@/lib/event-time"
 
 import { FLIGHT_DURATION_MS, type FlyToMinicalHandle } from "./FlyToMinical"
 
@@ -30,12 +41,27 @@ import { FLIGHT_DURATION_MS, type FlyToMinicalHandle } from "./FlyToMinical"
 const POST_FLIGHT_BUFFER_MS = 300
 export const FLY_HOLD_MS = FLIGHT_DURATION_MS + POST_FLIGHT_BUFFER_MS
 
+interface FlyAnimationContextType {
+  isFlying: boolean
+  hideCard: boolean
+  cardRef: RefObject<HTMLDivElement | null>
+  flyRef: RefObject<FlyToMinicalHandle | null>
+  startFlight: (start: EventTime) => void
+  onCollapsed: () => void
+}
+
+const Ctx = createContext({} as FlyAnimationContextType)
+
 export function useFlyAnimation() {
-  const { beforeCreateHandlerRef, setIsFlying } = useEventDraft()
+  return useContext(Ctx)
+}
+
+export function FlyAnimationProvider({ children }: { children: ReactNode }) {
   const { setText } = useEventText()
 
-  // `hideCard` keeps the original card invisible through both the flight AND
-  // the subsequent grid collapse so it doesn't flash back into view as the
+  const [isFlying, setIsFlying] = useState(false)
+  // Keeps the original card invisible through both the flight AND the
+  // subsequent grid collapse so it doesn't flash back into view as the
   // section closes.
   const [hideCard, setHideCard] = useState(false)
   const flyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -43,8 +69,8 @@ export function useFlyAnimation() {
   const cardRef = useRef<HTMLDivElement>(null)
   const flyRef = useRef<FlyToMinicalHandle>(null)
 
-  useEffect(() => {
-    beforeCreateHandlerRef.current = (start) => {
+  const startFlight = useCallback(
+    (start: EventTime) => {
       if (!cardRef.current) return
       flyRef.current?.fly(cardRef.current, start)
       setIsFlying(true)
@@ -54,12 +80,9 @@ export function useFlyAnimation() {
         setIsFlying(false)
         setText("")
       }, FLY_HOLD_MS)
-    }
-
-    return () => {
-      beforeCreateHandlerRef.current = null
-    }
-  }, [beforeCreateHandlerRef, setIsFlying, setText])
+    },
+    [setText],
+  )
 
   useEffect(() => {
     return () => {
@@ -71,10 +94,10 @@ export function useFlyAnimation() {
     setHideCard(false)
   }, [])
 
-  return {
-    cardRef,
-    hideCard,
-    onCollapsed,
-    flyRef,
-  }
+  const value = useMemo(
+    () => ({ isFlying, hideCard, cardRef, flyRef, startFlight, onCollapsed }),
+    [isFlying, hideCard, startFlight, onCollapsed],
+  )
+
+  return <Ctx.Provider value={value}>{children}</Ctx.Provider>
 }
