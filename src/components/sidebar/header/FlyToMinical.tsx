@@ -29,8 +29,9 @@ export function FlyToMinical({ ref }: { ref: Ref<FlyToMinicalHandle> }) {
 
         const dateKey = formatDateKey(startDate)
         const targetEl =
-          document.querySelector<HTMLElement>(`[data-date-key="${dateKey}"]`) ??
-          document.querySelector<HTMLElement>('[data-slot="calendar"]')
+          document.querySelector<HTMLElement>(
+            `[data-slot="minical"] [data-date-key="${dateKey}"]`,
+          ) ?? document.querySelector<HTMLElement>('[data-slot="minical"]')
         if (!targetEl) return
 
         const endRect = targetEl.getBoundingClientRect()
