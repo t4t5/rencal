@@ -3,7 +3,6 @@ import { rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -11,6 +10,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
+  type EventTime,
   isAllDay,
   normalizeAllDayRange,
   toAllDay,
@@ -18,22 +18,14 @@ import {
 } from "@/lib/event-time"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
 
-export const ComposeEventCard = () => {
-  const { setIsDrafting } = useEventDraft()
-
-  return (
-    <Card className="p-0 flex flex-col gap-0">
-      <ComposeEventInner onCreated={() => setIsDrafting(false)} />
-    </Card>
-  )
-}
-
 export const ComposeEventInner = ({
   summaryRef,
   onCreated,
+  onBeforeCreate,
 }: {
   summaryRef?: Ref<HTMLTextAreaElement>
   onCreated: () => void
+  onBeforeCreate?: (start: EventTime) => void
 }) => {
   const { calendars } = useCalendars()
   const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
@@ -45,9 +37,10 @@ export const ComposeEventInner = ({
   const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
   const onCreate = useCallback(async () => {
+    onBeforeCreate?.(draftEvent.start)
     await createDraftEvent()
     onCreated()
-  }, [createDraftEvent, onCreated])
+  }, [createDraftEvent, onCreated, onBeforeCreate, draftEvent.start])
 
   const calendar = calendars.find((cal) => cal.slug === calendarId)
 

@@ -29,7 +29,7 @@ export function Minical() {
   )
 
   return (
-    <div className="pt-4 select-none">
+    <div data-slot="minical" className="pt-4 select-none">
       <div className="flex items-center justify-between px-4 pb-4 h-12">
         <CurrentMonth />
         <ArrowKeys />

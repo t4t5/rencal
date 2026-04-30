@@ -12,12 +12,20 @@ import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
 
+import { useFlyAnimation } from "../FlyAnimation"
 import { MagicSegments } from "./MagicSegments"
 
 export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
   const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
     useEventDraft()
+  const { isFlying, flyingText, startFlight } = useFlyAnimation()
+
+  // Keep showing the typed text through the post-create fly animation.
+  // While flying, the live `text` has already been cleared by
+  // `createDraftEvent`, so we read the snapshot the animation captured.
+  const showText = isDrafting || isFlying
+  const displayText = isFlying ? flyingText : text
   const { canCreate, promptToConnect } = useCreateEventGate()
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -27,12 +35,12 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
   return (
     <div className="relative w-full">
-      {isDrafting && <MagicSegments text={text} inputRef={inputRef} />}
+      {showText && <MagicSegments text={displayText} inputRef={inputRef} />}
 
       <Input
         ref={inputRef}
         ghost={false}
-        value={isDrafting ? text : ""}
+        value={showText ? displayText : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}
         tabIndex={isDrafting ? 0 : -1}
@@ -51,6 +59,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
           if (e.key === "Enter" && text) {
             e.preventDefault()
+            startFlight(draftEvent.start)
             void createDraftEvent().then(onExit)
           }
 
@@ -67,7 +76,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         className={cn(
           "w-full",
           !isDrafting && "cursor-pointer caret-transparent",
-          isDrafting && text && "pr-9",
+          showText && displayText && "pr-9",
         )}
       />
 
