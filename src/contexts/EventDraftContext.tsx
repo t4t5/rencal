@@ -1,4 +1,5 @@
 import {
+  type MutableRefObject,
   ReactNode,
   createContext,
   startTransition,
@@ -48,6 +49,8 @@ interface EventTextContextType {
   setText: (text: string) => void
 }
 
+type BeforeCreateHandler = (start: EventTime) => void
+
 interface EventDraftContextType {
   isDrafting: boolean
   setIsDrafting: (isDrafting: boolean) => void
@@ -65,6 +68,9 @@ interface EventDraftContextType {
 
   setDefaultDraftEvent: () => void
   createDraftEvent: () => Promise<void>
+
+  /** Fires synchronously at the very start of `createDraftEvent`, before any state resets. */
+  beforeCreateHandlerRef: MutableRefObject<BeforeCreateHandler | null>
 }
 
 const EventTextContext = createContext({} as EventTextContextType)
@@ -178,8 +184,12 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { setCalendarEvents } = useCalEvents()
   const { sync } = useSync()
 
+  const beforeCreateHandlerRef = useRef<BeforeCreateHandler | null>(null)
+
   const createDraftEvent = useCallback(async () => {
     if (!draftEvent.calendarId) return
+
+    beforeCreateHandlerRef.current?.(draftEvent.start)
 
     const optimisticId = crypto.randomUUID()
 
@@ -241,6 +251,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDraftReminders,
       setDefaultDraftEvent,
       createDraftEvent,
+      beforeCreateHandlerRef,
     }),
     [
       isDrafting,

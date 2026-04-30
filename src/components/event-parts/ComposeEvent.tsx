@@ -3,7 +3,6 @@ import { rrulestr } from "rrule"
 
 import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -17,16 +16,6 @@ import {
   toTimedAtStartOfDay,
 } from "@/lib/event-time"
 import { rruleToRecurrence } from "@/lib/rrule-utils"
-
-export const ComposeEventCard = () => {
-  const { setIsDrafting } = useEventDraft()
-
-  return (
-    <Card className="p-0 flex flex-col gap-0">
-      <ComposeEventInner onCreated={() => setIsDrafting(false)} />
-    </Card>
-  )
-}
 
 export const ComposeEventInner = ({
   summaryRef,
