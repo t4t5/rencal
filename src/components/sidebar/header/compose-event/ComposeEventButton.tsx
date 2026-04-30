@@ -14,14 +14,20 @@ import { PlusIcon } from "@/icons/plus"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {
-  const { isDrafting, setIsDrafting } = useEventDraft()
+  const { isDrafting, setIsDrafting, freezing } = useEventDraft()
 
-  const { text, setText } = useEventText()
+  const { text } = useEventText()
+
+  // Keep the input visually expanded while the post-create fly animation is
+  // running so it doesn't collapse out from under the flying clone.
+  const expanded = isDrafting || freezing
 
   const containerRef = useRef<HTMLDivElement>(null)
 
   const exitDraft = () => {
-    setText("")
+    // Don't clear text here — `createDraftEvent` defers the clear so the
+    // input stays populated through the fly animation. Other exit paths
+    // (click-outside while empty, second Escape) already have empty text.
     setIsDrafting(false)
     containerRef.current?.querySelector("input")?.blur()
   }
@@ -41,17 +47,17 @@ export function ComposeEventButton() {
   const isMd = useBreakpoint("md")
 
   return (
-    <SidebarOverlay expanded={isDrafting}>
-      {isMd && <Spacer grow={!isDrafting} />}
+    <SidebarOverlay expanded={expanded}>
+      {isMd && <Spacer grow={!expanded} />}
 
-      <ShortcutTooltip open={isDrafting ? false : undefined} text="Create new event" shortcut="c">
-        <ButtonContainer expanded={isDrafting} ref={containerRef}>
+      <ShortcutTooltip open={expanded ? false : undefined} text="Create new event" shortcut="c">
+        <ButtonContainer expanded={expanded} ref={containerRef}>
           <ComposeEventInput onExit={exitDraft} />
-          <PlusButtonOverlay show={!isDrafting} />
+          <PlusButtonOverlay show={!expanded} />
         </ButtonContainer>
       </ShortcutTooltip>
 
-      {!isMd && <Spacer grow={!isDrafting} />}
+      {!isMd && <Spacer grow={!expanded} />}
     </SidebarOverlay>
   )
 }

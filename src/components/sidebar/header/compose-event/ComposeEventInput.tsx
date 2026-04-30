@@ -16,8 +16,17 @@ import { MagicSegments } from "./MagicSegments"
 
 export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
   const { text, setText } = useEventText()
-  const { isDrafting, setIsDrafting, setDefaultDraftEvent, createDraftEvent, draftEvent } =
-    useEventDraft()
+  const {
+    isDrafting,
+    setIsDrafting,
+    setDefaultDraftEvent,
+    createDraftEvent,
+    draftEvent,
+    freezing,
+  } = useEventDraft()
+
+  // Keep showing the typed text through the post-create fly animation.
+  const showText = isDrafting || freezing
   const { canCreate, promptToConnect } = useCreateEventGate()
 
   const inputRef = useRef<HTMLInputElement>(null)
@@ -27,12 +36,12 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
   return (
     <div className="relative w-full">
-      {isDrafting && <MagicSegments text={text} inputRef={inputRef} />}
+      {showText && <MagicSegments text={text} inputRef={inputRef} />}
 
       <Input
         ref={inputRef}
         ghost={false}
-        value={isDrafting ? text : ""}
+        value={showText ? text : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}
         tabIndex={isDrafting ? 0 : -1}
@@ -67,7 +76,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         className={cn(
           "w-full",
           !isDrafting && "cursor-pointer caret-transparent",
-          isDrafting && text && "pr-9",
+          showText && text && "pr-9",
         )}
       />
 

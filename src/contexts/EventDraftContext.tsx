@@ -10,6 +10,8 @@ import {
   useState,
 } from "react"
 
+import { FREEZE_MS } from "@/components/sidebar/header/useFlyAnimation"
+
 import { rpc } from "@/rpc"
 
 import {
@@ -71,6 +73,10 @@ interface EventDraftContextType {
 
   /** Fires synchronously at the very start of `createDraftEvent`, before any state resets. */
   beforeCreateHandlerRef: MutableRefObject<BeforeCreateHandler | null>
+
+  /** True while the post-create fly animation is running */
+  freezing: boolean
+  setFreezing: (freezing: boolean) => void
 }
 
 const EventTextContext = createContext({} as EventTextContextType)
@@ -105,6 +111,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { defaultCalendar, defaultReminders } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
+  const [freezing, setFreezing] = useState(false)
 
   const defaultCalendarId =
     (defaultCalendar && calendars.some((c) => c.slug === defaultCalendar)
@@ -217,7 +224,10 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     logger.info("Create event:", draftEvent)
     setDefaultDraftEvent()
-    _setText("")
+    // Defer the text clear so the input keeps showing what the user typed
+    // until the post-create fly animation finishes. Must match FREEZE_MS in
+    // useFlyAnimation.tsx.
+    setTimeout(() => _setText(""), FREEZE_MS)
 
     const created = await rpc.caldir.create_event({
       calendar_slug: draftEvent.calendarId,
@@ -252,6 +262,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDefaultDraftEvent,
       createDraftEvent,
       beforeCreateHandlerRef,
+      freezing,
+      setFreezing,
     }),
     [
       isDrafting,
@@ -262,6 +274,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       setDefaultDraftEvent,
       setDraftPopoverOpen,
       createDraftEvent,
+      freezing,
     ],
   )
 

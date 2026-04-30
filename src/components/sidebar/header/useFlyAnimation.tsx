@@ -25,15 +25,15 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { FlyToMinical, type FlyToMinicalHandle } from "./FlyToMinical"
 
-const FREEZE_MS = 950
+export const FREEZE_MS = 950
 
 export function useFlyAnimation() {
-  const { beforeCreateHandlerRef } = useEventDraft()
+  const { beforeCreateHandlerRef, freezing, setFreezing } = useEventDraft()
 
-  // While `freezing`, the grid stays open. `hideCard` keeps the original card
+  // `freezing` (from context, so siblings like ComposeEventButton can read it
+  // and stay expanded) keeps the grid open. `hideCard` keeps the original card
   // invisible through both the freeze AND the subsequent grid collapse so it
   // doesn't flash back into view as the section closes.
-  const [freezing, setFreezing] = useState(false)
   const [hideCard, setHideCard] = useState(false)
   const freezeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -53,7 +53,7 @@ export function useFlyAnimation() {
     return () => {
       beforeCreateHandlerRef.current = null
     }
-  }, [beforeCreateHandlerRef])
+  }, [beforeCreateHandlerRef, setFreezing])
 
   useEffect(() => {
     return () => {
