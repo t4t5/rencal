@@ -14,7 +14,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       className={cn(
         "group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
-        "h-control-height min-w-0 has-[>textarea]:h-auto",
+        "min-h-control-height min-w-0",
 
         // Focus state.
         "focus-within:bg-secondary focus-within:border-transparent!",

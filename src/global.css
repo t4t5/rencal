@@ -141,6 +141,7 @@ body {
 
   --size-control-height: var(--control-height);
   --height-control-height: var(--control-height);
+  --min-height-control-height: var(--control-height);
   --width-control-height: var(--control-height);
   --spacing-tab-gap: var(--tab-gap);
 }
