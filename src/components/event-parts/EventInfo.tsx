@@ -92,7 +92,7 @@ export function EventInfo({
           placeholder="Event Title"
           value={summary ?? ""}
           className={cn(
-            "text-lg font-medium",
+            "text-base font-medium",
             readonly && "hover:border-transparent! focus:bg-transparent!",
           )}
           readOnly={readonly}
