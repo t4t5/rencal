@@ -20,8 +20,6 @@ export function ComposeEventButton() {
 
   const { text } = useEventText()
 
-  // Keep the input visually expanded while the post-create fly animation is
-  // running so it doesn't collapse out from under the flying clone.
   const expanded = isDrafting || isFlying
 
   const containerRef = useRef<HTMLDivElement>(null)
