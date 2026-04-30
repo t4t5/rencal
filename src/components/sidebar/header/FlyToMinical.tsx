@@ -14,7 +14,7 @@ interface Flight {
   endRect: DOMRect
 }
 
-const DURATION_MS = 450
+const DURATION_MS = 650
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
 export const FlyToMinical = forwardRef<FlyToMinicalHandle>(function FlyToMinical(_, ref) {
@@ -25,25 +25,16 @@ export const FlyToMinical = forwardRef<FlyToMinicalHandle>(function FlyToMinical
     () => ({
       fly: (cardEl, startDate) => {
         const startRect = cardEl.getBoundingClientRect()
-        console.log("[FlyToMinical] fly() called", { cardEl, startRect })
-        if (startRect.width === 0 || startRect.height === 0) {
-          console.warn("[FlyToMinical] startRect is empty, aborting")
-          return
-        }
+        if (startRect.width === 0 || startRect.height === 0) return
 
         const dateKey = formatDateKey(startDate)
         const targetEl =
           document.querySelector<HTMLElement>(`[data-date-key="${dateKey}"]`) ??
           document.querySelector<HTMLElement>('[data-slot="calendar"]')
-        console.log("[FlyToMinical] target lookup", { dateKey, targetEl })
-        if (!targetEl) {
-          console.warn("[FlyToMinical] no target element, aborting")
-          return
-        }
+        if (!targetEl) return
 
         const endRect = targetEl.getBoundingClientRect()
         const cloneHtml = cardEl.outerHTML
-        console.log("[FlyToMinical] queueing flight", { startRect, endRect })
 
         setFlights((prev) => [...prev, { id: crypto.randomUUID(), cloneHtml, startRect, endRect }])
       },
@@ -69,12 +60,8 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
   const [animating, setAnimating] = useState(false)
 
   useEffect(() => {
-    console.log("[FlightView] mounted", flight.id)
     let rafId = requestAnimationFrame(() => {
-      rafId = requestAnimationFrame(() => {
-        console.log("[FlightView] starting animation", flight.id)
-        setAnimating(true)
-      })
+      rafId = requestAnimationFrame(() => setAnimating(true))
     })
     return () => cancelAnimationFrame(rafId)
   }, [flight.id])
@@ -91,10 +78,7 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
   return (
     <div
       onTransitionEnd={(e) => {
-        if (e.propertyName === "transform") {
-          console.log("[FlightView] transition end", flight.id)
-          onDone(flight.id)
-        }
+        if (e.propertyName === "transform") onDone(flight.id)
       }}
       style={{
         position: "fixed",
@@ -102,7 +86,7 @@ function FlightView({ flight, onDone }: { flight: Flight; onDone: (id: string) =
         left: startRect.left,
         width: startRect.width,
         height: startRect.height,
-        opacity: animating ? 0 : 0.6,
+        opacity: animating ? 0 : 1,
         transform: animating
           ? `translate(${dx}px, ${dy}px) scale(${scale})`
           : "translate(0, 0) scale(1)",
