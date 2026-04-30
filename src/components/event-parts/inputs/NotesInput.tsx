@@ -1,4 +1,4 @@
-import { InputGroup, InputGroupTextarea } from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 
 import { cn } from "@/lib/utils"
 
@@ -13,13 +13,16 @@ export const NotesInput = ({
 }) => {
   return (
     <InputGroup
-      className={cn(readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
+      className={cn(
+        "flex gap-2",
+        readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+      )}
     >
+      <InputGroupAddon />
       <InputGroupTextarea
         placeholder="Notes"
         value={value ?? ""}
         readOnly={readOnly}
-        className="pl-9"
         onChange={(e) => onChange(e.target.value)}
       />
     </InputGroup>

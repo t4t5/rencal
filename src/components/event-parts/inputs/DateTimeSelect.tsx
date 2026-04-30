@@ -184,7 +184,8 @@ const DateSelect = ({
   onChangeEnd: (date: Date | null) => void
 }) => {
   return (
-    <div className="flex pl-[26px] flex-wrap">
+    <div className="flex flex-wrap">
+      <InputGroupAddon />
       <div
         className="shrink-0"
         style={{

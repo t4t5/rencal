@@ -140,13 +140,16 @@ const ReminderRow = ({
     <div
       key={mins}
       className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pl-9 pr-3 group cursor-default h-control-height",
+        "flex items-center justify-between text-sm hover:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height pl-0",
         className,
       )}
     >
-      <span>
-        <HumanDuration mins={mins} />
-      </span>
+      <div className="flex gap-2">
+        <InputGroupAddon />
+        <span>
+          <HumanDuration mins={mins} />
+        </span>
+      </div>
       <button
         type="button"
         onClick={onRemove}

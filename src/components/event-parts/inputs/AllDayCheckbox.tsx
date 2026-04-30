@@ -1,6 +1,7 @@
 import { useId } from "react"
 
 import { Checkbox } from "@/components/ui/checkbox"
+import { InputGroupAddon } from "@/components/ui/input-group"
 import { Label } from "@/components/ui/label"
 
 import { cn } from "@/lib/utils"
@@ -19,11 +20,11 @@ export const AllDayCheckbox = ({
   return (
     <div
       className={cn(
-        "flex items-center gap-2 px-3 h-control-height",
+        "flex items-center gap-2 px-3 pl-0 h-control-height",
         readOnly && "pointer-events-none",
       )}
     >
-      <div className="w-4 flex items-center">
+      <InputGroupAddon>
         <Checkbox
           id={id}
           checked={checked}
@@ -33,7 +34,7 @@ export const AllDayCheckbox = ({
           }}
           defaultChecked={false}
         />
-      </div>
+      </InputGroupAddon>
 
       <Label
         htmlFor={id}
