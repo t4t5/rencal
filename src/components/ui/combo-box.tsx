@@ -35,11 +35,11 @@ export function Combobox({
         <div
           ref={anchorRef}
           className={cn(
-            "flex items-center border border-transparent hover:border-input rounded-md pr-3 group",
-            "focus-within:bg-secondary focus-within:border-transparent! cursor-text",
+            "flex items-center hover:shadow-input-border rounded-md pr-3 group",
+            "focus-within:bg-secondary focus-within:shadow-none! cursor-text",
             {
-              "bg-secondary border-transparent!": open,
-              "border-divider": !ghost,
+              "bg-secondary shadow-none!": open,
+              "shadow-input-border": !ghost,
             },
           )}
           onClick={() => setOpen(true)}

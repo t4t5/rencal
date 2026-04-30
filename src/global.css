@@ -43,7 +43,7 @@
 
   --radius-base: 0;
   --radius-circle: 0;
-  --control-height: 32px;
+  --control-height: 60px;
 
   --background: #131313;
   --foreground: white;
@@ -136,6 +136,7 @@ body {
   --color-destructive: var(--destructive);
 
   --shadow-button-border: inset 0 0 0 1px var(--border-button);
+  --shadow-input-border: inset 0 0 0 1px var(--input);
   --shadow-tab-list: var(--tab-list-shadow);
 
   --size-control-height: var(--control-height);
