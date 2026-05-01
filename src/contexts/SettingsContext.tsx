@@ -4,6 +4,7 @@ import { ReactNode, createContext, useContext, useEffect, useState } from "react
 import { rpc } from "@/rpc"
 import type { TimeFormat } from "@/rpc/bindings"
 import {
+  AUTO_SYNC_ENABLED_CHANGED,
   CALENDAR_DIR_CHANGED,
   DEFAULT_CALENDAR_CHANGED,
   DEFAULT_REMINDERS_CHANGED,
@@ -22,6 +23,8 @@ interface SettingsContextType {
   setCalendarDir: (path: string) => Promise<void>
   notificationsEnabled: boolean
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
+  autoSyncEnabled: boolean
+  setAutoSyncEnabled: (enabled: boolean) => Promise<void>
 }
 
 const SettingsContext = createContext({} as SettingsContextType)
@@ -36,22 +39,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true)
+  const [autoSyncEnabled, setAutoSyncEnabledState] = useState<boolean>(true)
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const [tf, reminders, cal, dir, notifs] = await Promise.all([
+        const [tf, reminders, cal, dir, notifs, autoSync] = await Promise.all([
           rpc.caldir.get_time_format(),
           rpc.caldir.get_default_reminders(),
           rpc.caldir.get_default_calendar(),
           rpc.caldir.get_calendar_dir(),
           rpc.config.get_notifications_enabled(),
+          rpc.config.get_auto_sync_enabled(),
         ])
         setTimeFormatState(tf)
         setDefaultRemindersState(reminders)
         setDefaultCalendarState(cal)
         setCalendarDirState(dir)
         setNotificationsEnabledState(notifs)
+        setAutoSyncEnabledState(autoSync)
       } catch (e) {
         console.error(e)
       }
@@ -73,6 +79,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const unlistenNotifications = listen<boolean>(NOTIFICATIONS_ENABLED_CHANGED, (event) => {
       setNotificationsEnabledState(event.payload)
     })
+    const unlistenAutoSync = listen<boolean>(AUTO_SYNC_ENABLED_CHANGED, (event) => {
+      setAutoSyncEnabledState(event.payload)
+    })
 
     return () => {
       unlistenTimeFormat.then((fn) => fn())
@@ -80,6 +89,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       unlistenDefaultCalendar.then((fn) => fn())
       unlistenCalendarDir.then((fn) => fn())
       unlistenNotifications.then((fn) => fn())
+      unlistenAutoSync.then((fn) => fn())
     }
   }, [])
 
@@ -114,6 +124,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(NOTIFICATIONS_ENABLED_CHANGED, enabled)
   }
 
+  const setAutoSyncEnabled = async (enabled: boolean) => {
+    setAutoSyncEnabledState(enabled)
+    await rpc.config.set_auto_sync_enabled(enabled)
+    await emit(AUTO_SYNC_ENABLED_CHANGED, enabled)
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -127,6 +143,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setCalendarDir,
         notificationsEnabled,
         setNotificationsEnabled,
+        autoSyncEnabled,
+        setAutoSyncEnabled,
       }}
     >
       {children}

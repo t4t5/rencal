@@ -176,7 +176,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   )
 
   const { setCalendarEvents } = useCalEvents()
-  const { sync } = useSync()
+  const { requestSync } = useSync()
 
   const createDraftEvent = useCallback(async () => {
     if (!draftEvent.calendarId) return
@@ -223,8 +223,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setCalendarEvents((prev) =>
       prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
     )
-    void sync()
-  }, [draftEvent, draftReminders, sync, setDefaultDraftEvent, setCalendarEvents])
+    void requestSync()
+  }, [draftEvent, draftReminders, requestSync, setDefaultDraftEvent, setCalendarEvents])
 
   const textValue = useMemo<EventTextContextType>(() => ({ text, setText }), [text, setText])
 

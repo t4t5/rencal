@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
+import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
@@ -51,7 +52,7 @@ export const EditEvent = ({
 }) => {
   const { calendars } = useCalendars()
   const { setActiveEventId, setCalendarEvents } = useCalEvents()
-  const { sync } = useSync()
+  const { requestSync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
@@ -96,20 +97,28 @@ export const EditEvent = ({
     // Optimistically update the UI before the RPC call
     setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
 
-    await rpc.caldir.update_event({
-      id: current.id,
-      calendar_slug: original.calendar_slug,
-      new_calendar_slug:
-        current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
-      summary: current.summary,
-      description: current.description,
-      location: current.location,
-      start: toRpcEventTime(current.start),
-      end: toRpcEventTime(current.end),
-      recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
-      reminders: current.reminders,
-    })
-    await sync()
+    try {
+      await rpc.caldir.update_event({
+        id: current.id,
+        calendar_slug: original.calendar_slug,
+        new_calendar_slug:
+          current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
+        summary: current.summary,
+        description: current.description,
+        location: current.location,
+        start: toRpcEventTime(current.start),
+        end: toRpcEventTime(current.end),
+        recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
+        reminders: current.reminders,
+      })
+      await requestSync()
+    } catch (err) {
+      // Roll back the optimistic update so the UI matches what's on disk
+      setCalendarEvents((prev) => prev.map((e) => (e.id === original.id ? original : e)))
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error("Failed to save event", { description: message })
+      console.error("update_event failed:", err)
+    }
   }
 
   // Keep refs so the unmount cleanup always has the latest values
@@ -189,28 +198,16 @@ export const EditEvent = ({
           : a,
       ),
     })
-    void sync()
+    void requestSync()
   }
 
   return (
     <div className="px-2 pt-2 pb-2 flex flex-col grow">
-      {!isReadonly && (
-        <div className="flex justify-end px-1 pb-1">
-          {children}
-          <DropdownMenu modal={false}>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-7 w-7">
-                <MoreHorizIcon className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem variant="destructive" onClick={() => triggerDelete(dirtyEvent)}>
-                Delete event
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+      <div className="flex justify-end px-1 pb-1">
+        {children}
+
+        {!isReadonly && <OverflowMenu onDelete={() => triggerDelete(dirtyEvent)} />}
+      </div>
 
       <EventInfo
         readonly={isReadonly}
@@ -287,7 +284,7 @@ export const EditEvent = ({
 
             setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
             setPendingRecurrence(null)
-            void sync()
+            void requestSync()
           }}
           onApplyToFuture={async () => {
             if (!dirtyEvent?.recurring_event_id || !pendingRecurrence) return
@@ -306,7 +303,7 @@ export const EditEvent = ({
             originalEventRef.current = localMaster
 
             setPendingRecurrence(null)
-            void sync()
+            void requestSync()
           }}
           onApplyToThis={async () => {
             if (!dirtyEvent) return
@@ -323,5 +320,22 @@ export const EditEvent = ({
         />
       )}
     </div>
+  )
+}
+
+const OverflowMenu = ({ onDelete }: { onDelete: () => void }) => {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <MoreHorizIcon className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem variant="destructive" onClick={onDelete}>
+          Delete event
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
