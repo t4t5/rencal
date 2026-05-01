@@ -1,6 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
-import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
@@ -20,13 +19,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
-import {
-  recurrenceToRpc,
-  rpcToCalendarEvent,
-  withDates,
-  type CalendarEvent,
-  type Recurrence,
-} from "@/lib/cal-events"
+import { withDates, type CalendarEvent } from "@/lib/cal-events"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -35,29 +28,32 @@ import {
   toAllDay,
   toTimedAtStartOfDay,
 } from "@/lib/event-time"
-import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
 
-import { RecurrenceConfirmDialog } from "./RecurrenceConfirmDialog"
-
 export const EditEvent = ({
   event,
+  onRequestSave,
   children,
 }: {
   event: CalendarEvent | null
+  /**
+   * Called once when the popover closes (component unmounts) if the event
+   * has been edited. The parent decides whether to save directly or first
+   * route through the recurrence-scope dialog.
+   */
+  onRequestSave: (current: CalendarEvent, original: CalendarEvent) => void
   children?: ReactNode
 }) => {
   const { calendars } = useCalendars()
-  const { setActiveEventId, setCalendarEvents } = useCalEvents()
+  const { setActiveEventId } = useCalEvents()
   const { requestSync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
 
-  const [pendingRecurrence, setPendingRecurrence] = useState<Recurrence | null>(null)
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
   useEffect(() => {
@@ -93,47 +89,21 @@ export const EditEvent = ({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [dirtyEvent, calendars, deleteDialogProps.open, triggerDelete])
 
-  const updateAndSyncEvent = async (current: CalendarEvent, original: CalendarEvent) => {
-    // Optimistically update the UI before the RPC call
-    setCalendarEvents((prev) => prev.map((e) => (e.id === current.id ? current : e)))
-
-    try {
-      await rpc.caldir.update_event({
-        id: current.id,
-        calendar_slug: original.calendar_slug,
-        new_calendar_slug:
-          current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
-        summary: current.summary,
-        description: current.description,
-        location: current.location,
-        start: toRpcEventTime(current.start),
-        end: toRpcEventTime(current.end),
-        recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
-        reminders: current.reminders,
-      })
-      await requestSync()
-    } catch (err) {
-      // Roll back the optimistic update so the UI matches what's on disk
-      setCalendarEvents((prev) => prev.map((e) => (e.id === original.id ? original : e)))
-      const message = err instanceof Error ? err.message : String(err)
-      toast.error("Failed to save event", { description: message })
-      console.error("update_event failed:", err)
-    }
-  }
-
   // Keep refs so the unmount cleanup always has the latest values
   const dirtyEventRef = useRef<CalendarEvent | null>(null)
-  const updateAndSyncEventRef = useRef(updateAndSyncEvent)
+  const onRequestSaveRef = useRef(onRequestSave)
 
   useEffect(() => {
     dirtyEventRef.current = dirtyEvent
   }, [dirtyEvent])
 
   useEffect(() => {
-    updateAndSyncEventRef.current = updateAndSyncEvent
+    onRequestSaveRef.current = onRequestSave
   })
 
-  // Save to caldir only when the popover/sheet closes (component unmounts)
+  // Save to caldir only when the popover/sheet closes (component unmounts).
+  // The parent decides whether to flush to disk directly or first route the
+  // edit through the recurrence-scope dialog.
   useEffect(() => {
     return () => {
       const current = dirtyEventRef.current
@@ -141,23 +111,13 @@ export const EditEvent = ({
       if (!current || !original) return
       if (JSON.stringify(current) === JSON.stringify(original)) return
 
-      void updateAndSyncEventRef.current(current, original)
+      onRequestSaveRef.current(current, original)
     }
   }, [])
 
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
-
-    const recurrence = rruleToRecurrence(rrule)
-
-    // If this is an instance of a recurring event, show dialog
-    if (dirtyEvent.recurring_event_id) {
-      setPendingRecurrence(recurrence)
-      return
-    }
-
-    // Otherwise, just update normally
-    setDirtyEvent({ ...dirtyEvent, recurrence })
+    setDirtyEvent({ ...dirtyEvent, recurrence: rruleToRecurrence(rrule) })
   }
 
   const handleReminderAdd = (mins: number) => {
@@ -261,64 +221,6 @@ export const EditEvent = ({
       />
 
       <DeleteConfirmDialog {...deleteDialogProps} />
-
-      {!!pendingRecurrence && (
-        <RecurrenceConfirmDialog
-          isOpen={!!pendingRecurrence}
-          onClose={() => setPendingRecurrence(null)}
-          onApplyToAll={async () => {
-            if (!dirtyEvent?.recurring_event_id) return
-
-            // Fetch parent event and update its recurrence
-            const parent = await rpc.caldir.get_event(
-              dirtyEvent.calendar_slug,
-              dirtyEvent.recurring_event_id,
-            )
-            if (!parent) return
-
-            await rpc.caldir.update_event({
-              ...parent,
-              new_calendar_slug: null,
-              recurrence: pendingRecurrence ? recurrenceToRpc(pendingRecurrence) : null,
-            })
-
-            setDirtyEvent({ ...dirtyEvent, master_recurrence: pendingRecurrence ?? null })
-            setPendingRecurrence(null)
-            void requestSync()
-          }}
-          onApplyToFuture={async () => {
-            if (!dirtyEvent?.recurring_event_id || !pendingRecurrence) return
-
-            const newMaster = await rpc.caldir.split_recurring_series_at({
-              calendar_slug: dirtyEvent.calendar_slug,
-              master_uid: dirtyEvent.recurring_event_id,
-              split_start: toRpcEventTime(dirtyEvent.start),
-              split_end: toRpcEventTime(dirtyEvent.end),
-              new_recurrence: recurrenceToRpc(pendingRecurrence),
-            })
-
-            // Suppress the unmount-save by aligning original with new dirty
-            const localMaster = rpcToCalendarEvent(newMaster)
-            setDirtyEvent(localMaster)
-            originalEventRef.current = localMaster
-
-            setPendingRecurrence(null)
-            void requestSync()
-          }}
-          onApplyToThis={async () => {
-            if (!dirtyEvent) return
-
-            // Detach from series and set own recurrence
-            setDirtyEvent({
-              ...dirtyEvent,
-              recurring_event_id: null,
-              recurrence: pendingRecurrence ?? null,
-              master_recurrence: null,
-            })
-            setPendingRecurrence(null)
-          }}
-        />
-      )}
     </div>
   )
 }

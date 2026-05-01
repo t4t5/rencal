@@ -13,6 +13,7 @@ import { DragRegion } from "@/components/ui/drag-region"
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
 import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
+import { RecurrenceEditProvider } from "@/contexts/RecurrenceEditContext"
 import { SyncProvider } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
@@ -25,11 +26,13 @@ export function AppWindow({ preload }: { preload: Preload }) {
   return (
     <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
       <SyncProvider>
-        <EventDraftProvider>
-          <CreateEventGateProvider>
-            <App />
-          </CreateEventGateProvider>
-        </EventDraftProvider>
+        <RecurrenceEditProvider>
+          <EventDraftProvider>
+            <CreateEventGateProvider>
+              <App />
+            </CreateEventGateProvider>
+          </EventDraftProvider>
+        </RecurrenceEditProvider>
         <MassDeleteConfirmDialog />
         <Toaster richColors position="bottom-right" />
       </SyncProvider>

@@ -325,6 +325,49 @@ fn event_time_sort_key(w: &RpcEventTime) -> Option<DateTime<Utc>> {
     rpc_time_to_core(w).ok().and_then(|et| et.to_utc())
 }
 
+/// Result of resolving an event id from `update_event`. Either we matched a
+/// real event on disk, or we synthesized an override skeleton from the master
+/// + the recurrence_id encoded in the synthetic instance id.
+enum ResolvedTarget {
+    OnDisk(caldir_core::event::Event),
+    SyntheticInstance(caldir_core::event::Event),
+}
+
+impl ResolvedTarget {
+    fn into_event(self) -> caldir_core::event::Event {
+        match self {
+            ResolvedTarget::OnDisk(e) | ResolvedTarget::SyntheticInstance(e) => e,
+        }
+    }
+}
+
+/// Try to resolve a synthetic recurring-instance id (`{uid}__{rid_ics}`) into
+/// an override skeleton that inherits the master's metadata but carries the
+/// parsed `recurrence_id`. Returns `None` when `id` doesn't have the synthetic
+/// shape, the calendar lookup fails, or no matching master is found.
+fn resolve_synthetic_instance(
+    calendar: &caldir_core::calendar::Calendar,
+    id: &str,
+) -> Option<ResolvedTarget> {
+    let (uid, rid_ics) = id.split_once("__")?;
+
+    let master = calendar.master_event_for(uid).ok().flatten()?;
+    let recurrence_id = EventTime::from_ics_string_like(rid_ics, &master.start).ok()?;
+
+    // Override skeleton — inherits all master metadata. The caller will
+    // overwrite summary/description/location/start/end/recurrence/reminders
+    // from the user input. `recurrence` is None because overrides never
+    // carry their own RRULE.
+    let skeleton = caldir_core::event::Event {
+        recurrence: None,
+        recurrence_id: Some(recurrence_id),
+        sequence: None,
+        updated: None,
+        ..master
+    };
+    Some(ResolvedTarget::SyntheticInstance(skeleton))
+}
+
 impl CalendarEvent {
     fn from_event(
         e: &caldir_core::event::Event,
@@ -576,13 +619,23 @@ impl CaldirApi for CaldirApiImpl {
         let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
-        // Find the existing event by unique_id
-        let existing = calendar
+        // Resolve the "existing" event for this id. Either it's already on disk
+        // (master VEVENT or override file), or it's a synthetic recurring
+        // instance — in which case we synthesize the override skeleton from the
+        // master + the recurrence_id encoded in the synthetic id.
+        let on_disk_match = calendar
             .events()
             .map_err(|e| e.to_string())?
             .into_iter()
             .find(|ce| ce.event.unique_id() == input.id)
+            .map(|ce| ResolvedTarget::OnDisk(ce.event.clone()));
+
+        let resolved = on_disk_match
+            .or_else(|| resolve_synthetic_instance(&calendar, &input.id))
             .ok_or_else(|| format!("Event not found: {}", input.id))?;
+
+        let is_synthetic = matches!(resolved, ResolvedTarget::SyntheticInstance { .. });
+        let existing_event = resolved.into_event();
 
         let start = rpc_time_to_core(&input.start)?;
         let end = rpc_time_to_core(&input.end)?;
@@ -601,23 +654,23 @@ impl CaldirApi for CaldirApiImpl {
 
         // Build updated event, preserving fields we don't modify
         let updated_event = caldir_core::event::Event {
-            uid: existing.event.uid.clone(),
+            uid: existing_event.uid.clone(),
             summary: input.summary,
             description: input.description,
             location: input.location,
             start,
             end,
-            status: existing.event.status.clone(),
+            status: existing_event.status.clone(),
             recurrence,
-            recurrence_id: existing.event.recurrence_id.clone(),
+            recurrence_id: existing_event.recurrence_id.clone(),
             reminders,
-            transparency: existing.event.transparency.clone(),
-            organizer: existing.event.organizer.clone(),
-            attendees: existing.event.attendees.clone(),
-            conference_url: existing.event.conference_url.clone(),
+            transparency: existing_event.transparency.clone(),
+            organizer: existing_event.organizer.clone(),
+            attendees: existing_event.attendees.clone(),
+            conference_url: existing_event.conference_url.clone(),
             updated: Some(Utc::now()),
-            sequence: existing.event.sequence.map(|s| s + 1).or(Some(1)),
-            custom_properties: existing.event.custom_properties.clone(),
+            sequence: existing_event.sequence.map(|s| s + 1).or(Some(1)),
+            custom_properties: existing_event.custom_properties.clone(),
         };
 
         // Check if we're moving the event to a different calendar
@@ -625,6 +678,14 @@ impl CaldirApi for CaldirApiImpl {
             .new_calendar_slug
             .as_ref()
             .is_some_and(|new_slug| new_slug != &input.calendar_slug);
+
+        if moving && is_synthetic {
+            return Err(
+                "Cannot move a recurring instance to another calendar; \
+                 move the whole series instead"
+                    .to_string(),
+            );
+        }
 
         if moving {
             let target_calendar =
@@ -641,11 +702,15 @@ impl CaldirApi for CaldirApiImpl {
 
             // Only delete from source after successful creation
             calendar
-                .delete_event(&existing.event.uid, existing.event.recurrence_id.as_ref())
+                .delete_event(&existing_event.uid, existing_event.recurrence_id.as_ref())
                 .map_err(|e| e.to_string())?;
         } else {
+            // For a synthetic instance with no on-disk override yet,
+            // calendar.update_event runs delete_event (no-op) + create_event,
+            // which writes the new override file. Subsequent edits to the
+            // same instance match the override on disk and update normally.
             calendar
-                .update_event(&existing.event.uid, &updated_event)
+                .update_event(&existing_event.uid, &updated_event)
                 .map_err(|e| e.to_string())?;
         }
 
