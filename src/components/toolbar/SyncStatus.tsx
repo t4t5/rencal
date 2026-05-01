@@ -30,7 +30,7 @@ export const SyncStatus = () => {
       return (
         <div className="relative">
           <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
-          {!!pendingCount && <BadgeCount count={pendingCount} />}
+          {!!pendingCount && <DiffCounterBadge count={pendingCount} />}
         </div>
       )
     }
@@ -65,7 +65,7 @@ export const SyncStatus = () => {
             className="relative flex items-center cursor-pointer"
           >
             <SyncingIcon className="size-4 text-muted-foreground" />
-            <BadgeCount count={pendingCount} />
+            <DiffCounterBadge count={pendingCount} />
           </TooltipTrigger>
           <TooltipContent className="max-w-64">
             <ChangesPreview pendingPreviews={pendingPreviews} />
@@ -84,7 +84,7 @@ export const SyncStatus = () => {
   )
 }
 
-const BadgeCount = ({ count }: { count: number }) => {
+const DiffCounterBadge = ({ count }: { count: number }) => {
   const { autoSyncEnabled } = useSettings()
 
   if (autoSyncEnabled) return null
