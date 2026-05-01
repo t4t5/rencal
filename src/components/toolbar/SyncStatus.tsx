@@ -5,6 +5,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { SyncPreview } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
@@ -84,6 +85,10 @@ export const SyncStatus = () => {
 }
 
 const BadgeCount = ({ count }: { count: number }) => {
+  const { autoSyncEnabled } = useSettings()
+
+  if (autoSyncEnabled) return null
+
   return (
     <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
       {count}
@@ -94,6 +99,9 @@ const BadgeCount = ({ count }: { count: number }) => {
 const ChangesPreview = ({ pendingPreviews }: { pendingPreviews: SyncPreview[] }) => {
   const { calendars } = useCalendars()
   const calendarName = (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
+
+  const { autoSyncEnabled } = useSettings()
+  if (autoSyncEnabled) return null
 
   return (
     <div className="flex flex-col gap-1">
