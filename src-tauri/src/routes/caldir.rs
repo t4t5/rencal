@@ -399,10 +399,8 @@ impl CalendarEvent {
             conference_url: e.conference_url.clone(),
             calendar_slug: calendar_slug.to_string(),
             color: e
-                .custom_properties
-                .iter()
-                .find(|(k, _)| k == "X-GOOGLE-COLOR-ID")
-                .and_then(|(_, v)| google_color_id_to_hex(v))
+                .custom_property("X-GOOGLE-COLOR-ID")
+                .and_then(google_color_id_to_hex)
                 .map(String::from),
             updated: e.updated.map(|dt| dt.to_rfc3339()),
         }
