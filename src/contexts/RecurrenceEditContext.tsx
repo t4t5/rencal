@@ -34,7 +34,7 @@ export function useRecurrenceEdit(): RecurrenceEditContextValue {
 }
 
 export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
-  const { setCalendarEvents } = useCalEvents()
+  const { setCalendarEvents, reloadEvents } = useCalEvents()
   const { requestSync } = useSync()
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
 
@@ -98,7 +98,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
 
   const handleApplyToAll = async () => {
     if (!pendingEdit) return
-    const { current } = pendingEdit
+    const { current, original } = pendingEdit
     if (!current.recurring_event_id) {
       closeDialog()
       return
@@ -107,7 +107,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
 
     try {
       const masterRpc = await rpc.caldir.get_event(
-        current.calendar_slug,
+        original.calendar_slug,
         current.recurring_event_id,
       )
       if (!masterRpc) return
@@ -133,9 +133,15 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         start: newMasterStart,
         end: newMasterEnd,
         reminders: current.reminders,
+        calendar_slug: current.calendar_slug,
       }
 
       await updateAndSyncEvent(updatedMaster, master, setCalendarEvents, requestSync)
+
+      // When moving recurring events between calendar, cache gets stale -> reload!
+      if (updatedMaster.calendar_slug !== master.calendar_slug) {
+        await reloadEvents()
+      }
     } catch (err) {
       reportError(err)
     }
