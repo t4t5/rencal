@@ -175,7 +175,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     [setDefaultDraftEvent, defaultReminders],
   )
 
-  const { setCalendarEvents } = useCalEvents()
+  const { setCalendarEvents, reloadEvents } = useCalEvents()
   const { requestSync } = useSync()
 
   const createDraftEvent = useCallback(async () => {
@@ -220,11 +220,24 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       reminders: draftReminders,
     })
 
-    setCalendarEvents((prev) =>
-      prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
-    )
+    if (draftEvent.recurrence) {
+      // create_event returns only the master VEVENT; refetch so the range is
+      // expanded into individual instances on the calendar grid.
+      await reloadEvents()
+    } else {
+      setCalendarEvents((prev) =>
+        prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
+      )
+    }
     void requestSync()
-  }, [draftEvent, draftReminders, requestSync, setDefaultDraftEvent, setCalendarEvents])
+  }, [
+    draftEvent,
+    draftReminders,
+    requestSync,
+    setDefaultDraftEvent,
+    setCalendarEvents,
+    reloadEvents,
+  ])
 
   const textValue = useMemo<EventTextContextType>(() => ({ text, setText }), [text, setText])
 

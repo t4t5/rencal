@@ -44,6 +44,7 @@ interface CalEventsContextType {
   setActiveEventId: Dispatch<SetStateAction<string | null>>
   toggleActiveEventId: (id: string) => void
   isInitialLoading: boolean
+  reloadEvents: () => Promise<void>
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -150,6 +151,8 @@ export function CalEventsProvider({
     }
   }, [])
 
+  const reloadEventsStable = useCallback(() => reloadEvents(), [])
+
   const value = useMemo<CalEventsContextType>(
     () => ({
       calendarEvents,
@@ -159,8 +162,9 @@ export function CalEventsProvider({
       setActiveEventId,
       toggleActiveEventId,
       isInitialLoading,
+      reloadEvents: reloadEventsStable,
     }),
-    [calendarEvents, activeEvent, toggleActiveEventId, isInitialLoading],
+    [calendarEvents, activeEvent, toggleActiveEventId, isInitialLoading, reloadEventsStable],
   )
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>
