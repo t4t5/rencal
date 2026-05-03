@@ -531,7 +531,7 @@ impl CaldirApi for CaldirApiImpl {
             }
         }
 
-        events.sort_by(|a, b| event_time_sort_key(&a.start).cmp(&event_time_sort_key(&b.start)));
+        events.sort_by_key(|a| event_time_sort_key(&a.start));
 
         Ok(events)
     }
@@ -830,7 +830,7 @@ impl CaldirApi for CaldirApiImpl {
             }
         }
 
-        invites.sort_by(|a, b| event_time_sort_key(&a.start).cmp(&event_time_sort_key(&b.start)));
+        invites.sort_by_key(|a| event_time_sort_key(&a.start));
         Ok(invites)
     }
 
