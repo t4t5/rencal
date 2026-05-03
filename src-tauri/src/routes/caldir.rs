@@ -325,22 +325,6 @@ fn event_time_sort_key(w: &RpcEventTime) -> Option<DateTime<Utc>> {
     rpc_time_to_core(w).ok().and_then(|et| et.to_utc())
 }
 
-/// Result of resolving an event id from `update_event`. Either we matched a
-/// real event on disk, or we synthesized an override skeleton from the master
-/// + the recurrence_id encoded in the synthetic instance id.
-enum ResolvedTarget {
-    OnDisk(caldir_core::event::Event),
-    SyntheticInstance(caldir_core::event::Event),
-}
-
-impl ResolvedTarget {
-    fn into_event(self) -> caldir_core::event::Event {
-        match self {
-            ResolvedTarget::OnDisk(e) | ResolvedTarget::SyntheticInstance(e) => e,
-        }
-    }
-}
-
 /// Try to resolve a synthetic recurring-instance id (`{uid}__{rid_ics}`) into
 /// an override skeleton that inherits the master's metadata but carries the
 /// parsed `recurrence_id`. Returns `None` when `id` doesn't have the synthetic
@@ -348,7 +332,7 @@ impl ResolvedTarget {
 fn resolve_synthetic_instance(
     calendar: &caldir_core::calendar::Calendar,
     id: &str,
-) -> Option<ResolvedTarget> {
+) -> Option<caldir_core::event::Event> {
     let (uid, rid_ics) = id.split_once("__")?;
 
     let master = calendar.master_event_for(uid).ok().flatten()?;
@@ -358,14 +342,13 @@ fn resolve_synthetic_instance(
     // overwrite summary/description/location/start/end/recurrence/reminders
     // from the user input. `recurrence` is None because overrides never
     // carry their own RRULE.
-    let skeleton = caldir_core::event::Event {
+    Some(caldir_core::event::Event {
         recurrence: None,
         recurrence_id: Some(recurrence_id),
         sequence: None,
         updated: None,
         ..master
-    };
-    Some(ResolvedTarget::SyntheticInstance(skeleton))
+    })
 }
 
 impl CalendarEvent {
@@ -618,19 +601,14 @@ impl CaldirApi for CaldirApiImpl {
         // (master VEVENT or override file), or it's a synthetic recurring
         // instance — in which case we synthesize the override skeleton from the
         // master + the recurrence_id encoded in the synthetic id.
-        let on_disk_match = calendar
+        let existing_event = calendar
             .events()
             .map_err(|e| e.to_string())?
             .into_iter()
             .find(|ce| ce.event.unique_id() == input.id)
-            .map(|ce| ResolvedTarget::OnDisk(ce.event.clone()));
-
-        let resolved = on_disk_match
+            .map(|ce| ce.event.clone())
             .or_else(|| resolve_synthetic_instance(&calendar, &input.id))
             .ok_or_else(|| format!("Event not found: {}", input.id))?;
-
-        let is_synthetic = matches!(resolved, ResolvedTarget::SyntheticInstance { .. });
-        let existing_event = resolved.into_event();
 
         let start = rpc_time_to_core(&input.start)?;
         let end = rpc_time_to_core(&input.end)?;
@@ -674,7 +652,7 @@ impl CaldirApi for CaldirApiImpl {
             .as_ref()
             .is_some_and(|new_slug| new_slug != &input.calendar_slug);
 
-        if moving && is_synthetic {
+        if moving && existing_event.recurrence_id.is_some() {
             return Err("Cannot move a recurring instance to another calendar; \
                  move the whole series instead"
                 .to_string());
