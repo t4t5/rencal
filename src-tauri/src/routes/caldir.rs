@@ -424,7 +424,7 @@ pub trait CaldirApi {
         end: String,
     ) -> TauResult<Vec<CalendarEvent>>;
     async fn get_event(calendar_slug: String, event_id: String)
-        -> TauResult<Option<CalendarEvent>>;
+    -> TauResult<Option<CalendarEvent>>;
     async fn create_event(input: CreateEventInput) -> TauResult<CalendarEvent>;
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
@@ -443,10 +443,7 @@ pub trait CaldirApi {
 
     async fn sync_preview(calendar_slugs: Vec<String>) -> TauResult<Vec<SyncPreview>>;
 
-    async fn sync(
-        calendar_slugs: Vec<String>,
-        allow_mass_delete: Vec<String>,
-    ) -> TauResult<()>;
+    async fn sync(calendar_slugs: Vec<String>, allow_mass_delete: Vec<String>) -> TauResult<()>;
 
     async fn discard(calendar_slugs: Vec<String>) -> TauResult<()>;
 
@@ -678,11 +675,9 @@ impl CaldirApi for CaldirApiImpl {
             .is_some_and(|new_slug| new_slug != &input.calendar_slug);
 
         if moving && is_synthetic {
-            return Err(
-                "Cannot move a recurring instance to another calendar; \
+            return Err("Cannot move a recurring instance to another calendar; \
                  move the whole series instead"
-                    .to_string(),
-            );
+                .to_string());
         }
 
         if moving {
@@ -708,7 +703,11 @@ impl CaldirApi for CaldirApiImpl {
             // which writes the new override file. Subsequent edits to the
             // same instance match the override on disk and update normally.
             calendar
-                .update_event(&existing_event.uid, &updated_event)
+                .update_event(
+                    &existing_event.uid,
+                    existing_event.recurrence_id.as_ref(),
+                    &updated_event,
+                )
                 .map_err(|e| e.to_string())?;
         }
 
@@ -864,7 +863,11 @@ impl CaldirApi for CaldirApiImpl {
             .ok_or_else(|| "Failed to update response".to_string())?;
 
         calendar
-            .update_event(&ce.event.uid, &updated_event)
+            .update_event(
+                &ce.event.uid,
+                ce.event.recurrence_id.as_ref(),
+                &updated_event,
+            )
             .map_err(|e| e.to_string())?;
 
         Ok(())
@@ -928,8 +931,8 @@ impl CaldirApi for CaldirApiImpl {
                 .filter(|d| d.kind == DiffKind::Delete)
                 .count() as u32;
 
-            let mass_delete_blocked = push_delete_count >= MASS_DELETE_THRESHOLD
-                && !allow_mass_delete.contains(slug);
+            let mass_delete_blocked =
+                push_delete_count >= MASS_DELETE_THRESHOLD && !allow_mass_delete.contains(slug);
 
             if mass_delete_blocked {
                 continue;
