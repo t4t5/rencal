@@ -39,11 +39,6 @@ export const EditEvent = ({
   children,
 }: {
   event: CalendarEvent | null
-  /**
-   * Called once when the popover closes (component unmounts) if the event
-   * has been edited. The parent decides whether to save directly or first
-   * route through the recurrence-scope dialog.
-   */
   onRequestSave: (current: CalendarEvent, original: CalendarEvent) => void
   children?: ReactNode
 }) => {
@@ -101,9 +96,7 @@ export const EditEvent = ({
     onRequestSaveRef.current = onRequestSave
   })
 
-  // Save to caldir only when the popover/sheet closes (component unmounts).
-  // The parent decides whether to flush to disk directly or first route the
-  // edit through the recurrence-scope dialog.
+  // Save to caldir only when the popover/sheet closes (component unmounts)
   useEffect(() => {
     return () => {
       const current = dirtyEventRef.current

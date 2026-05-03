@@ -16,12 +16,8 @@ import { updateAndSyncEvent } from "@/lib/save-event"
 type PendingEdit = { current: CalendarEvent; original: CalendarEvent }
 
 interface RecurrenceEditContextValue {
-  /**
-   * Save an edited event. Non-recurring events flush directly. Recurring
-   * instances are routed through a scope-picker dialog so the user chooses
-   * whether the change applies to only this occurrence, all future
-   * occurrences, or every occurrence.
-   */
+  // Non-recurring events save directly.
+  // Recurring events show a dialog ("Only this event", "All future events"...)
   requestSave: (current: CalendarEvent, original: CalendarEvent) => void
 }
 

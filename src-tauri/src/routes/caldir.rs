@@ -642,10 +642,6 @@ impl CaldirApi for CaldirApiImpl {
                 .delete_event(&existing_event.uid, existing_event.recurrence_id.as_ref())
                 .map_err(|e| e.to_string())?;
         } else {
-            // For a synthetic instance with no on-disk override yet,
-            // calendar.update_event runs delete_event (no-op) + create_event,
-            // which writes the new override file. Subsequent edits to the
-            // same instance match the override on disk and update normally.
             calendar
                 .update_event(
                     &existing_event.uid,

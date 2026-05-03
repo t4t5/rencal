@@ -9,12 +9,6 @@ import { toRpcEventTime } from "@/lib/event-time/rpc"
 export type RequestSync = () => Promise<void>
 export type SetCalendarEvents = Dispatch<SetStateAction<CalendarEvent[]>>
 
-/**
- * Save a single edited event by diffing `current` against `original` and
- * pushing the result through `update_event`. Optimistically updates the local
- * `calendarEvents` cache, rolls back and surfaces a toast on failure, and
- * triggers a sync afterwards.
- */
 export async function updateAndSyncEvent(
   current: CalendarEvent,
   original: CalendarEvent,
