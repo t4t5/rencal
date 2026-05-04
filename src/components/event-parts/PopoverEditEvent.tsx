@@ -3,6 +3,7 @@ import { useLayoutEffect, useRef, useState } from "react"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 
 import { getEventAnchor } from "@/lib/event-anchor"
 
@@ -10,6 +11,7 @@ import { EditEvent } from "./EditEvent"
 
 export function PopoverEditEvent() {
   const { activeEvent, setActiveEventId } = useCalEvents()
+  const { requestSave } = useRecurrenceEdit()
   const anchorRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
 
@@ -67,7 +69,7 @@ export function PopoverEditEvent() {
           e.preventDefault()
         }}
       >
-        <EditEvent event={activeEvent} />
+        <EditEvent event={activeEvent} onRequestSave={requestSave} />
       </PopoverContent>
     </Popover>
   )

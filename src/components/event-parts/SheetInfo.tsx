@@ -4,11 +4,13 @@ import { EditEvent } from "@/components/event-parts/EditEvent"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 
 import { DragRegion } from "../ui/drag-region"
 
 export function SheetEvent() {
   const { activeEvent, setActiveEventId } = useCalEvents()
+  const { requestSave } = useRecurrenceEdit()
   const isOpen = !!activeEvent
   const eventRef = useRef(activeEvent)
 
@@ -34,7 +36,7 @@ export function SheetEvent() {
     <FastSheet open={isOpen} onOpenChange={() => setActiveEventId(null)}>
       <FastSheetContent open={isOpen}>
         {displayEvent && (
-          <EditEvent event={displayEvent}>
+          <EditEvent event={displayEvent} onRequestSave={requestSave}>
             <DragRegion className="h-7 grow" />
           </EditEvent>
         )}

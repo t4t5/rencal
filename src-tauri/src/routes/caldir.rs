@@ -356,10 +356,8 @@ impl CalendarEvent {
             conference_url: e.conference_url.clone(),
             calendar_slug: calendar_slug.to_string(),
             color: e
-                .custom_properties
-                .iter()
-                .find(|(k, _)| k == "X-GOOGLE-COLOR-ID")
-                .and_then(|(_, v)| google_color_id_to_hex(v))
+                .custom_property("X-GOOGLE-COLOR-ID")
+                .and_then(google_color_id_to_hex)
                 .map(String::from),
             updated: e.updated.map(|dt| dt.to_rfc3339()),
         }
@@ -383,7 +381,7 @@ pub trait CaldirApi {
         end: String,
     ) -> TauResult<Vec<CalendarEvent>>;
     async fn get_event(calendar_slug: String, event_id: String)
-        -> TauResult<Option<CalendarEvent>>;
+    -> TauResult<Option<CalendarEvent>>;
     async fn create_event(input: CreateEventInput) -> TauResult<CalendarEvent>;
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
@@ -402,10 +400,7 @@ pub trait CaldirApi {
 
     async fn sync_preview(calendar_slugs: Vec<String>) -> TauResult<Vec<SyncPreview>>;
 
-    async fn sync(
-        calendar_slugs: Vec<String>,
-        allow_mass_delete: Vec<String>,
-    ) -> TauResult<()>;
+    async fn sync(calendar_slugs: Vec<String>, allow_mass_delete: Vec<String>) -> TauResult<()>;
 
     async fn discard(calendar_slugs: Vec<String>) -> TauResult<()>;
 
@@ -493,7 +488,7 @@ impl CaldirApi for CaldirApiImpl {
             }
         }
 
-        events.sort_by(|a, b| event_time_sort_key(&a.start).cmp(&event_time_sort_key(&b.start)));
+        events.sort_by_key(|a| event_time_sort_key(&a.start));
 
         Ok(events)
     }
@@ -576,12 +571,9 @@ impl CaldirApi for CaldirApiImpl {
         let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
-        // Find the existing event by unique_id
-        let existing = calendar
-            .events()
+        let existing_event = calendar
+            .event_by_unique_id(&input.id)
             .map_err(|e| e.to_string())?
-            .into_iter()
-            .find(|ce| ce.event.unique_id() == input.id)
             .ok_or_else(|| format!("Event not found: {}", input.id))?;
 
         let start = rpc_time_to_core(&input.start)?;
@@ -601,23 +593,23 @@ impl CaldirApi for CaldirApiImpl {
 
         // Build updated event, preserving fields we don't modify
         let updated_event = caldir_core::event::Event {
-            uid: existing.event.uid.clone(),
+            uid: existing_event.uid.clone(),
             summary: input.summary,
             description: input.description,
             location: input.location,
             start,
             end,
-            status: existing.event.status.clone(),
+            status: existing_event.status.clone(),
             recurrence,
-            recurrence_id: existing.event.recurrence_id.clone(),
+            recurrence_id: existing_event.recurrence_id.clone(),
             reminders,
-            transparency: existing.event.transparency.clone(),
-            organizer: existing.event.organizer.clone(),
-            attendees: existing.event.attendees.clone(),
-            conference_url: existing.event.conference_url.clone(),
+            transparency: existing_event.transparency.clone(),
+            organizer: existing_event.organizer.clone(),
+            attendees: existing_event.attendees.clone(),
+            conference_url: existing_event.conference_url.clone(),
             updated: Some(Utc::now()),
-            sequence: existing.event.sequence.map(|s| s + 1).or(Some(1)),
-            custom_properties: existing.event.custom_properties.clone(),
+            sequence: existing_event.sequence.map(|s| s + 1).or(Some(1)),
+            custom_properties: existing_event.custom_properties.clone(),
         };
 
         // Check if we're moving the event to a different calendar
@@ -625,6 +617,12 @@ impl CaldirApi for CaldirApiImpl {
             .new_calendar_slug
             .as_ref()
             .is_some_and(|new_slug| new_slug != &input.calendar_slug);
+
+        if moving && existing_event.recurrence_id.is_some() {
+            return Err("Cannot move a recurring instance to another calendar; \
+                 move the whole series instead"
+                .to_string());
+        }
 
         if moving {
             let target_calendar =
@@ -641,11 +639,15 @@ impl CaldirApi for CaldirApiImpl {
 
             // Only delete from source after successful creation
             calendar
-                .delete_event(&existing.event.uid, existing.event.recurrence_id.as_ref())
+                .delete_event(&existing_event.uid, existing_event.recurrence_id.as_ref())
                 .map_err(|e| e.to_string())?;
         } else {
             calendar
-                .update_event(&existing.event.uid, &updated_event)
+                .update_event(
+                    &existing_event.uid,
+                    existing_event.recurrence_id.as_ref(),
+                    &updated_event,
+                )
                 .map_err(|e| e.to_string())?;
         }
 
@@ -768,7 +770,7 @@ impl CaldirApi for CaldirApiImpl {
             }
         }
 
-        invites.sort_by(|a, b| event_time_sort_key(&a.start).cmp(&event_time_sort_key(&b.start)));
+        invites.sort_by_key(|a| event_time_sort_key(&a.start));
         Ok(invites)
     }
 
@@ -801,7 +803,11 @@ impl CaldirApi for CaldirApiImpl {
             .ok_or_else(|| "Failed to update response".to_string())?;
 
         calendar
-            .update_event(&ce.event.uid, &updated_event)
+            .update_event(
+                &ce.event.uid,
+                ce.event.recurrence_id.as_ref(),
+                &updated_event,
+            )
             .map_err(|e| e.to_string())?;
 
         Ok(())
@@ -865,8 +871,8 @@ impl CaldirApi for CaldirApiImpl {
                 .filter(|d| d.kind == DiffKind::Delete)
                 .count() as u32;
 
-            let mass_delete_blocked = push_delete_count >= MASS_DELETE_THRESHOLD
-                && !allow_mass_delete.contains(slug);
+            let mass_delete_blocked =
+                push_delete_count >= MASS_DELETE_THRESHOLD && !allow_mass_delete.contains(slug);
 
             if mass_delete_blocked {
                 continue;

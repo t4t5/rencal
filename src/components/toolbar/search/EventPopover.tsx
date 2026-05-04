@@ -11,6 +11,8 @@ import { EditEvent } from "@/components/event-parts/EditEvent"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
+import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
+
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import type { CalendarEvent } from "@/lib/cal-events"
 
@@ -34,6 +36,7 @@ export function EventPopover({
   side = "right",
 }: EventPopoverProps) {
   const isMd = useBreakpoint("md")
+  const { requestSave } = useRecurrenceEdit()
 
   if (!isMd) {
     return (
@@ -82,7 +85,7 @@ export function EventPopover({
           }
         }}
       >
-        <EditEvent event={activeEvent} />
+        <EditEvent event={activeEvent} onRequestSave={requestSave} />
       </PopoverContent>
     </Popover>
   )
@@ -99,6 +102,7 @@ function EventSheet({
 }) {
   const isOpen = !!activeEvent
   const eventRef = useRef(activeEvent)
+  const { requestSave } = useRecurrenceEdit()
 
   if (activeEvent) {
     eventRef.current = activeEvent
@@ -125,7 +129,7 @@ function EventSheet({
       }}
     >
       <FastSheetContent ref={eventDetailRef} open={isOpen}>
-        {displayEvent && <EditEvent event={displayEvent} />}
+        {displayEvent && <EditEvent event={displayEvent} onRequestSave={requestSave} />}
       </FastSheetContent>
     </FastSheet>
   )
