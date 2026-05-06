@@ -548,34 +548,9 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.9.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b932bbb715dde0bd3a65c7150a64fb296b5dfe72fcfd0060c894dcaee9ee0f87"
-dependencies = [
- "chrono",
- "chrono-tz",
- "config",
- "dirs 6.0.0",
- "humantime",
- "icalendar",
- "iso8601",
- "rrule",
- "serde",
- "serde_json",
- "shellexpand",
- "slug",
- "thiserror 2.0.18",
- "tokio",
- "toml 0.9.12+spec-1.1.0",
- "uuid",
- "which",
-]
-
-[[package]]
-name = "caldir-core"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "187687a23b7bc77ead6d20e625a25074826781ed115043df44c8dfbab88bb3b2"
+checksum = "2c50e0e5e1e6338ed4b43a4c7d71b21ab834321f408c4635cce0886e575f8156"
 dependencies = [
  "chrono",
  "chrono-tz",
@@ -3846,7 +3821,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 name = "reminder-core"
 version = "0.1.0"
 dependencies = [
- "caldir-core 0.9.0",
+ "caldir-core",
  "chrono",
  "dirs 5.0.1",
  "log",
@@ -3861,7 +3836,7 @@ name = "rencal"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "caldir-core 0.10.0",
+ "caldir-core",
  "chrono",
  "chrono-tz",
  "dirs 5.0.1",
