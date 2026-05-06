@@ -461,11 +461,11 @@ impl CaldirApi for CaldirApiImpl {
         let range_end: DateTime<Utc> =
             end.parse().map_err(|e: chrono::ParseError| e.to_string())?;
 
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let mut events = Vec::new();
 
         for slug in &calendar_slugs {
-            let calendar =
-                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+            let calendar = caldir.calendar(slug).map_err(|e| e.to_string())?;
 
             // Build a map of master recurrences keyed by uid
             let all_events = calendar.events().map_err(|e| e.to_string())?;
@@ -498,8 +498,8 @@ impl CaldirApi for CaldirApiImpl {
         calendar_slug: String,
         event_id: String,
     ) -> TauResult<Option<CalendarEvent>> {
-        let calendar =
-            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
         let found = calendar
             .events()
@@ -530,7 +530,9 @@ impl CaldirApi for CaldirApiImpl {
     }
 
     async fn create_event(self, input: CreateEventInput) -> TauResult<CalendarEvent> {
-        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir
+            .calendar(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
         let start = rpc_time_to_core(&input.start)?;
@@ -568,7 +570,9 @@ impl CaldirApi for CaldirApiImpl {
     }
 
     async fn update_event(self, input: UpdateEventInput) -> TauResult<()> {
-        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir
+            .calendar(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
         let existing_event = calendar
@@ -625,9 +629,9 @@ impl CaldirApi for CaldirApiImpl {
         }
 
         if moving {
-            let target_calendar =
-                caldir_core::calendar::Calendar::load(input.new_calendar_slug.as_ref().unwrap())
-                    .map_err(|e| e.to_string())?;
+            let target_calendar = caldir
+                .calendar(input.new_calendar_slug.as_ref().unwrap())
+                .map_err(|e| e.to_string())?;
 
             // New UID so remote providers treat it as a fresh event
             let moved_event = updated_event.with_new_uid();
@@ -655,8 +659,8 @@ impl CaldirApi for CaldirApiImpl {
     }
 
     async fn delete_event(self, calendar_slug: String, event_id: String) -> TauResult<()> {
-        let calendar =
-            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
         // Find the event to get its uid and recurrence_id
         let event = calendar
@@ -674,8 +678,8 @@ impl CaldirApi for CaldirApiImpl {
     }
 
     async fn delete_recurring_series(self, calendar_slug: String, uid: String) -> TauResult<()> {
-        let calendar =
-            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
         // Find all events with this uid (parent + instances)
         let events_to_delete: Vec<_> = calendar
@@ -698,7 +702,9 @@ impl CaldirApi for CaldirApiImpl {
         self,
         input: SplitRecurringSeriesInput,
     ) -> TauResult<CalendarEvent> {
-        let calendar = caldir_core::calendar::Calendar::load(&input.calendar_slug)
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir
+            .calendar(&input.calendar_slug)
             .map_err(|e| e.to_string())?;
 
         // Confirm the master exists before we split.
@@ -732,11 +738,11 @@ impl CaldirApi for CaldirApiImpl {
         calendar_slugs: Vec<String>,
         query: String,
     ) -> TauResult<Vec<CalendarEvent>> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let mut events = Vec::new();
 
         for slug in &calendar_slugs {
-            let calendar =
-                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+            let calendar = caldir.calendar(slug).map_err(|e| e.to_string())?;
 
             for ce in calendar.search_events(&query).map_err(|e| e.to_string())? {
                 events.push(CalendarEvent::from_event(&ce.event, slug, None));
@@ -749,12 +755,12 @@ impl CaldirApi for CaldirApiImpl {
     }
 
     async fn list_invites(self, calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let now = Utc::now();
         let mut invites = Vec::new();
 
         for slug in &calendar_slugs {
-            let calendar =
-                caldir_core::calendar::Calendar::load(slug).map_err(|e| e.to_string())?;
+            let calendar = caldir.calendar(slug).map_err(|e| e.to_string())?;
 
             let email = match calendar.account_email() {
                 Some(e) => e.to_string(),
@@ -780,8 +786,8 @@ impl CaldirApi for CaldirApiImpl {
         event_id: String,
         response: String,
     ) -> TauResult<()> {
-        let calendar =
-            caldir_core::calendar::Calendar::load(&calendar_slug).map_err(|e| e.to_string())?;
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
         let email = calendar
             .account_email()
@@ -817,11 +823,13 @@ impl CaldirApi for CaldirApiImpl {
         use caldir_core::date_range::DateRange;
         use caldir_core::diff::{CalendarDiff, DiffKind};
 
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let range = DateRange::default();
         let mut previews = Vec::with_capacity(calendar_slugs.len());
 
         for slug in &calendar_slugs {
-            let calendar = caldir_core::calendar::Calendar::load(slug)
+            let calendar = caldir
+                .calendar(slug)
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
             let diff = CalendarDiff::from_calendar(&calendar, &range)
@@ -853,10 +861,12 @@ impl CaldirApi for CaldirApiImpl {
         use caldir_core::date_range::DateRange;
         use caldir_core::diff::{CalendarDiff, DiffKind};
 
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let range = DateRange::default();
 
         for slug in &calendar_slugs {
-            let calendar = caldir_core::calendar::Calendar::load(slug)
+            let calendar = caldir
+                .calendar(slug)
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
             let diff = CalendarDiff::from_calendar(&calendar, &range)
@@ -864,6 +874,10 @@ impl CaldirApi for CaldirApiImpl {
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
             diff.apply_pull().map_err(|e| format!("[{}] {}", slug, e))?;
+
+            if calendar.is_read_only() {
+                continue;
+            }
 
             let push_delete_count = diff
                 .to_push
@@ -890,10 +904,12 @@ impl CaldirApi for CaldirApiImpl {
         use caldir_core::date_range::DateRange;
         use caldir_core::diff::CalendarDiff;
 
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
         let range = DateRange::default();
 
         for slug in &calendar_slugs {
-            let calendar = caldir_core::calendar::Calendar::load(slug)
+            let calendar = caldir
+                .calendar(slug)
                 .map_err(|e| format!("[{}] {}", slug, e))?;
 
             let diff = CalendarDiff::from_calendar(&calendar, &range)
@@ -1098,7 +1114,9 @@ impl CaldirApi for CaldirApiImpl {
     ) -> TauResult<Calendar> {
         use caldir_core::calendar::config::CalendarConfig;
 
-        let slug = caldir_core::calendar::Calendar::unique_slug_for(Some(&name))
+        let caldir = Caldir::load().map_err(|e| e.to_string())?;
+        let slug = caldir
+            .unique_slug_for(Some(&name))
             .map_err(|e| e.to_string())?;
 
         let config = CalendarConfig {
@@ -1108,7 +1126,7 @@ impl CaldirApi for CaldirApiImpl {
             remote: None,
         };
 
-        let cal = caldir_core::calendar::Calendar { slug, config };
+        let cal = caldir.new_calendar(&slug, config);
         cal.save_config().map_err(|e| e.to_string())?;
 
         Ok(Calendar::from(&cal))
@@ -1254,12 +1272,14 @@ async fn save_provider_calendars(
         .await
         .map_err(|e| format!("Failed to list calendars: {}", e))?;
 
+    let caldir = Caldir::load().map_err(|e| e.to_string())?;
     let mut calendars = Vec::new();
     for config in calendar_configs {
-        let slug = caldir_core::calendar::Calendar::unique_slug_for(config.name.as_deref())
+        let slug = caldir
+            .unique_slug_for(config.name.as_deref())
             .map_err(|e| e.to_string())?;
 
-        let cal = caldir_core::calendar::Calendar { slug, config };
+        let cal = caldir.new_calendar(&slug, config);
         cal.save_config().map_err(|e| e.to_string())?;
         calendars.push(Calendar::from(&cal));
     }

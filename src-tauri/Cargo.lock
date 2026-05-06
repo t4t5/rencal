@@ -572,6 +572,31 @@ dependencies = [
 ]
 
 [[package]]
+name = "caldir-core"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "187687a23b7bc77ead6d20e625a25074826781ed115043df44c8dfbab88bb3b2"
+dependencies = [
+ "chrono",
+ "chrono-tz",
+ "config",
+ "dirs 6.0.0",
+ "humantime",
+ "icalendar",
+ "iso8601",
+ "rrule",
+ "serde",
+ "serde_json",
+ "shellexpand",
+ "slug",
+ "thiserror 2.0.18",
+ "tokio",
+ "toml 0.9.12+spec-1.1.0",
+ "uuid",
+ "which",
+]
+
+[[package]]
 name = "camino"
 version = "1.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3821,7 +3846,7 @@ checksum = "dc897dd8d9e8bd1ed8cdad82b5966c3e0ecae09fb1907d58efaa013543185d0a"
 name = "reminder-core"
 version = "0.1.0"
 dependencies = [
- "caldir-core",
+ "caldir-core 0.9.0",
  "chrono",
  "dirs 5.0.1",
  "log",
@@ -3836,7 +3861,7 @@ name = "rencal"
 version = "0.0.1"
 dependencies = [
  "anyhow",
- "caldir-core",
+ "caldir-core 0.10.0",
  "chrono",
  "chrono-tz",
  "dirs 5.0.1",
