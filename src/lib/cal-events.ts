@@ -9,7 +9,7 @@
  * day, and place events without round-tripping through Temporal on every
  * render.
  */
-import type { CalendarEvent as RpcCalendarEvent, Recurrence as RpcRecurrence } from "@/rpc/bindings"
+import type { CalendarEvent as RpcCalendarEvent, RpcRecurrence } from "@/rpc/bindings"
 
 import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./event-time"
 import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"

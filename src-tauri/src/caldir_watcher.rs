@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use caldir_core::caldir::Caldir;
+use caldir_core::Caldir;
 use notify::event::ModifyKind;
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use tauri::{AppHandle, Emitter};
@@ -18,7 +18,7 @@ pub async fn run_watcher(app: AppHandle) {
         log::warn!("caldir watcher: failed to load caldir config");
         return;
     };
-    let watch_dir = caldir.data_path();
+    let watch_dir = caldir.data_dir();
     if !watch_dir.exists() {
         log::warn!("caldir watcher: {watch_dir:?} does not exist; watcher disabled");
         return;

@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 caldir-core = "0.10.1"
-chrono = "0.4.43"
+chrono = { version = "0.4.43", features = ["serde"] }
 dirs = "5"
 log = "0.4.29"
 rencal-config = { path = "../rencal-config" }
