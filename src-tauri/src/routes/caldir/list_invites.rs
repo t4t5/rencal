@@ -1,5 +1,6 @@
 use super::helpers::event_time_sort_key;
 use super::types::CalendarEvent;
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::Caldir;
 use chrono::Utc;
@@ -17,8 +18,8 @@ pub(super) async fn handler(calendar_slugs: Vec<String>) -> TauResult<Vec<Calend
             None => continue,
         };
 
-        for ce in calendar.events().map_err(|e| e.to_string())? {
-            let event = ce.event();
+        let parsed = EVENT_CACHE.events(&caldir, slug)?;
+        for event in parsed.iter() {
             let is_future = event
                 .end
                 .as_ref()

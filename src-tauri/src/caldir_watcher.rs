@@ -7,6 +7,8 @@ use tauri::{AppHandle, Emitter};
 use tokio::sync::mpsc;
 use tokio::time::sleep;
 
+use crate::event_cache::EVENT_CACHE;
+
 pub const CALDIR_CHANGED: &str = "caldir-changed";
 
 /// Watches the user's caldir directory recursively and emits `CALDIR_CHANGED`
@@ -59,6 +61,13 @@ pub async fn run_watcher(app: AppHandle) {
         // Coalesce bursts (e.g. sync writing many files in quick succession).
         sleep(Duration::from_millis(150)).await;
         while rx.try_recv().is_ok() {}
+
+        // Blow the parsed-event cache so the next read re-parses from disk.
+        // The bursts are already coalesced above, so we only do this once per
+        // settled change. We invalidate everything rather than parsing slugs
+        // from paths — the cost of re-parsing on next access is small, and
+        // this keeps the watcher simple.
+        EVENT_CACHE.invalidate_all();
 
         let _ = app.emit(CALDIR_CHANGED, ());
     }

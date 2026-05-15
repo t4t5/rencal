@@ -1,4 +1,5 @@
 mod caldir_watcher;
+mod event_cache;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 mod notifications;

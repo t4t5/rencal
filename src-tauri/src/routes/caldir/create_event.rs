@@ -1,6 +1,7 @@
 use super::types::{
     CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core,
 };
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Caldir, Event, Reminder};
 
@@ -39,6 +40,7 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     event.set_reminders(reminders);
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
+    EVENT_CACHE.invalidate(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(
         cal_event.event(),

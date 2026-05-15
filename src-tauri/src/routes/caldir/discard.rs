@@ -1,3 +1,4 @@
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Caldir, DateRange};
 
@@ -25,6 +26,7 @@ pub(super) async fn handler(calendar_slugs: Vec<String>) -> TauResult<()> {
         connection
             .discard_outgoing_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
+        EVENT_CACHE.invalidate(slug);
     }
 
     Ok(())

@@ -1,3 +1,4 @@
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Caldir, EventInstanceId, ParticipationStatus};
 
@@ -30,6 +31,7 @@ pub(super) async fn handler(
     cal_event
         .update(updated_event)
         .map_err(|e| e.to_string())?;
+    EVENT_CACHE.invalidate(&calendar_slug);
     Ok(())
 }
 

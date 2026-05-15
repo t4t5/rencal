@@ -1,7 +1,8 @@
 use super::helpers::event_time_sort_key;
 use super::types::{CalendarEvent, RpcRecurrence, core_recurrence_to_rpc};
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::Caldir;
+use caldir_core::{Caldir, expand_in_range};
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
@@ -21,25 +22,17 @@ pub(super) async fn handler(
     let mut events = Vec::new();
 
     for slug in &calendar_slugs {
-        let calendar = caldir.calendar(slug).map_err(|e| e.to_string())?;
-
-        // Build a map of master recurrences keyed by uid so each expanded
-        // instance can carry its master's recurrence for the frontend.
-        let all_events = calendar.events().map_err(|e| e.to_string())?;
-        let master_recurrences: HashMap<String, RpcRecurrence> = all_events
+        let parsed = EVENT_CACHE.events(&caldir, slug)?;
+        let master_recurrences: HashMap<String, RpcRecurrence> = parsed
             .iter()
-            .filter_map(|ce| {
-                ce.event()
-                    .recurrence
+            .filter_map(|e| {
+                e.recurrence
                     .as_ref()
-                    .map(|r| (ce.event().uid.as_str().to_string(), core_recurrence_to_rpc(r)))
+                    .map(|r| (e.uid.as_str().to_string(), core_recurrence_to_rpc(r)))
             })
             .collect();
 
-        for event in calendar
-            .expanded_events_in_range(range_start, range_end)
-            .map_err(|e| e.to_string())?
-        {
+        for event in expand_in_range(parsed.iter().cloned(), range_start, range_end) {
             let master_rec = master_recurrences.get(event.uid.as_str()).cloned();
             events.push(CalendarEvent::from_event(&event, slug, master_rec));
         }

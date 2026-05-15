@@ -1,5 +1,6 @@
 use super::helpers::sort_by_proximity_to_now;
 use super::types::CalendarEvent;
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::Caldir;
 
@@ -12,9 +13,8 @@ pub(super) async fn handler(
     let query_lower = query.to_lowercase();
 
     for slug in &calendar_slugs {
-        let calendar = caldir.calendar(slug).map_err(|e| e.to_string())?;
-        for ce in calendar.events().map_err(|e| e.to_string())? {
-            let event = ce.event();
+        let parsed = EVENT_CACHE.events(&caldir, slug)?;
+        for event in parsed.iter() {
             let summary_match = event
                 .summary
                 .as_deref()

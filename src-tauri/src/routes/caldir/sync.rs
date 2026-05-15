@@ -1,3 +1,4 @@
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Caldir, DateRange, EventChange};
 
@@ -33,6 +34,7 @@ pub(super) async fn handler(
         connection
             .apply_incoming_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
+        EVENT_CACHE.invalidate(slug);
 
         if connection.read_only() {
             continue;
@@ -55,6 +57,7 @@ pub(super) async fn handler(
             .apply_outgoing_diff(&diff)
             .await
             .map_err(|e| format!("[{}] {}", slug, e))?;
+        EVENT_CACHE.invalidate(slug);
     }
 
     Ok(())

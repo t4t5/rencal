@@ -1,4 +1,5 @@
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Caldir, Event, EventInstanceId, Reminder};
 use chrono::Utc;
@@ -64,9 +65,8 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
     }
 
     if moving {
-        let target_calendar = caldir
-            .calendar(input.new_calendar_slug.as_ref().unwrap())
-            .map_err(|e| e.to_string())?;
+        let new_slug = input.new_calendar_slug.as_ref().unwrap();
+        let target_calendar = caldir.calendar(new_slug).map_err(|e| e.to_string())?;
 
         // New UID so remote providers treat it as a fresh event
         let moved_event = updated_event.with_new_uid();
@@ -78,10 +78,13 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
 
         // Only delete from source after successful creation
         existing_ce.delete().map_err(|e| e.to_string())?;
+        EVENT_CACHE.invalidate(&input.calendar_slug);
+        EVENT_CACHE.invalidate(new_slug);
     } else {
         existing_ce
             .update(updated_event)
             .map_err(|e| e.to_string())?;
+        EVENT_CACHE.invalidate(&input.calendar_slug);
     }
 
     Ok(())
