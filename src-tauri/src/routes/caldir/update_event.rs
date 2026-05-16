@@ -10,7 +10,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
         .calendar(&input.calendar_slug)
         .map_err(|e| e.to_string())?;
 
-    let id: EventInstanceId = input.id.parse().map_err(|e: String| e)?;
+    let id = EventInstanceId::from(input.id.as_str());
     let mut existing_ce = calendar
         .event_by_instance_id(&id)
         .map_err(|e| e.to_string())?

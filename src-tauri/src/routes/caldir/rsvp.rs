@@ -15,7 +15,7 @@ pub(super) async fn handler(
         .ok_or_else(|| "Calendar has no account email".to_string())?
         .to_string();
 
-    let id: EventInstanceId = event_id.parse().map_err(|e: String| e)?;
+    let id = EventInstanceId::from(event_id.as_str());
     let mut cal_event = calendar
         .event_by_instance_id(&id)
         .map_err(|e| e.to_string())?
@@ -23,13 +23,8 @@ pub(super) async fn handler(
 
     let status = parse_participation_status(&response)?;
 
-    let updated_event = cal_event
-        .event()
-        .with_response(&email, status)
-        .ok_or_else(|| "Failed to update response".to_string())?;
-
     cal_event
-        .update(updated_event)
+        .update_attendee_status(&email, status)
         .map_err(|e| e.to_string())?;
     EVENT_CACHE.invalidate(&calendar_slug);
     Ok(())

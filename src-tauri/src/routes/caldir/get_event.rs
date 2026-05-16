@@ -8,7 +8,7 @@ pub(super) async fn handler(
     event_id: String,
 ) -> TauResult<Option<CalendarEvent>> {
     let caldir = Caldir::load().map_err(|e| e.to_string())?;
-    let id: EventInstanceId = event_id.parse().map_err(|e: String| e)?;
+    let id = EventInstanceId::from(event_id);
 
     let parsed = EVENT_CACHE.events(&caldir, &calendar_slug)?;
     let Some(event) = parsed.iter().find(|e| e.event_instance_id() == id) else {

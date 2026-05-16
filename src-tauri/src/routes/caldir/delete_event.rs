@@ -6,7 +6,7 @@ pub(super) async fn handler(calendar_slug: String, event_id: String) -> TauResul
     let caldir = Caldir::load().map_err(|e| e.to_string())?;
     let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
-    let id: EventInstanceId = event_id.parse().map_err(|e: String| e)?;
+    let id = EventInstanceId::from(event_id.as_str());
     let cal_event = calendar
         .event_by_instance_id(&id)
         .map_err(|e| e.to_string())?
