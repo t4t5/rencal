@@ -3,7 +3,7 @@ use super::types::{
 };
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::Caldir;
+use caldir_core::{Caldir, EventUid};
 
 pub(super) async fn handler(input: SplitRecurringSeriesInput) -> TauResult<CalendarEvent> {
     let caldir = Caldir::load().map_err(|e| e.to_string())?;
@@ -20,7 +20,12 @@ pub(super) async fn handler(input: SplitRecurringSeriesInput) -> TauResult<Calen
         .transpose()?;
 
     let new_master = calendar
-        .split_recurring_series_at(&input.master_uid, split_start, split_end, new_recurrence)
+        .split_recurring_series_at(
+            &EventUid::new(input.master_uid.as_str()),
+            split_start,
+            split_end,
+            new_recurrence,
+        )
         .map_err(|e| e.to_string())?;
     EVENT_CACHE.invalidate(&input.calendar_slug);
 
