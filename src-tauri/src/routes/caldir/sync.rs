@@ -8,7 +8,7 @@ const MASS_DELETE_THRESHOLD: u32 = 10;
 
 pub(super) async fn handler(allow_mass_delete: Vec<String>) -> TauResult<()> {
     let caldir = Caldir::load().map_err(|e| e.to_string())?;
-    let range = DateRange::default();
+    let range = DateRange::default_sync_window();
 
     for connection in caldir.connections() {
         let mut connection = connection.map_err(|e| e.to_string())?;

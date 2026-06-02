@@ -4,7 +4,7 @@ use caldir_core::{Caldir, DateRange, EventChange};
 
 pub(super) async fn handler() -> TauResult<Vec<SyncPreview>> {
     let caldir = Caldir::load().map_err(|e| e.to_string())?;
-    let range = DateRange::default();
+    let range = DateRange::default_sync_window();
     let mut previews = Vec::new();
 
     for connection in caldir.connections() {
