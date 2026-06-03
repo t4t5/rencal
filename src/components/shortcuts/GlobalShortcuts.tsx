@@ -148,14 +148,8 @@ function HotkeyBindingHost({ keys, onTrigger }: { keys: string; onTrigger: Short
   return null
 }
 
-// Single-character shortcuts must match the character the user *typed*, not the
-// physical key position. By default react-hotkeys-hook matches on `event.code`
-// (the US-QWERTY position), so on AZERTY the key labelled "z" fires the "w"
-// shortcut. `useKey: true` makes it also match `event.key`, but it does so
-// additively and modifier-blind: the physical key still matches, and `Ctrl+C`
-// would fire a bare "c" shortcut. We re-check here so the shortcut fires only
-// for the produced character with no command modifiers held — while still
-// relying on react-hotkeys-hook to suppress firing inside form fields.
+// Makes sure that single key shortcuts (like "C")
+// work regardless of keyboard layout (QWERTY, AZERTY, etc)
 function useCharHotkey(
   char: string,
   handler: ShortcutHandler,

@@ -2,9 +2,6 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-// Mirrors the shadcn Kbd component (https://ui.shadcn.com/docs/components/radix/kbd),
-// adapted to use our `bg-hover` token instead of the default `bg-muted`.
-
 function KbdGroup({ className, ...props }: React.ComponentProps<"kbd">) {
   return (
     <kbd

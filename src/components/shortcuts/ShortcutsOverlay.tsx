@@ -6,14 +6,6 @@ import { ShortcutDef, ShortcutGroup, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/sh
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 
-// Directional arrow keys render as a rotated arrow icon rather than a glyph.
-const ARROW_ROTATION: Record<string, string> = {
-  right: "",
-  left: "rotate-180",
-  up: "-rotate-90",
-  down: "rotate-90",
-}
-
 export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -32,7 +24,6 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
   )
 }
 
-/** A titled section listing every shortcut belonging to one group. */
 function ShortcutGroupSection({ group }: { group: ShortcutGroup }) {
   return (
     <div className="flex flex-col gap-1">
@@ -47,7 +38,6 @@ function ShortcutGroupSection({ group }: { group: ShortcutGroup }) {
   )
 }
 
-/** A single shortcut: its label on the left, its key bindings on the right. */
 function ShortcutRow({ shortcut }: { shortcut: ShortcutDef }) {
   return (
     <div className="flex items-center justify-between gap-4 py-0.5 text-sm">
@@ -67,7 +57,6 @@ function ShortcutRow({ shortcut }: { shortcut: ShortcutDef }) {
   )
 }
 
-/** Renders one binding (e.g. "mod+f") as a tight group of key chips. */
 function BindingChips({ keys }: { keys: string }) {
   return (
     <KbdGroup>
@@ -86,4 +75,11 @@ function BindingChips({ keys }: { keys: string }) {
       })}
     </KbdGroup>
   )
+}
+
+const ARROW_ROTATION: Record<string, string> = {
+  right: "",
+  left: "rotate-180",
+  up: "-rotate-90",
+  down: "rotate-90",
 }
