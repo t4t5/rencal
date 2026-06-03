@@ -6,6 +6,7 @@ import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { Main } from "@/components/main/Main"
+import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts"
 import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
@@ -18,8 +19,6 @@ import { SyncProvider } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useCalendarView } from "@/hooks/useCalendarView"
-import { useGlobalShortcuts } from "@/hooks/useGlobalShortcuts"
-import { CalendarView } from "@/lib/calendar-view"
 import { Preload } from "@/lib/preload-data"
 
 export function AppWindow({ preload }: { preload: Preload }) {
@@ -60,14 +59,4 @@ function App() {
       {!isMd && <SheetEvent />}
     </main>
   )
-}
-
-// Isolated so context updates in useGlobalShortcuts don't re-render <App />
-function GlobalShortcuts({
-  onChangeCalendarView,
-}: {
-  onChangeCalendarView: (calendarView: CalendarView) => void
-}) {
-  useGlobalShortcuts({ onChangeCalendarView })
-  return null
 }

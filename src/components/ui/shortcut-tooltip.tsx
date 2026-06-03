@@ -1,7 +1,8 @@
 import * as React from "react"
 
-import { cn, isMacOS } from "@/lib/utils"
+import { isMacOS } from "@/lib/utils"
 
+import { Kbd, KbdGroup } from "./kbd"
 import { Tooltip, TooltipContent, TooltipTrigger } from "./tooltip"
 
 const KEY_DISPLAY: Record<string, string> = {
@@ -20,7 +21,7 @@ const KEY_DISPLAY: Record<string, string> = {
   arrowright: "Right",
 }
 
-function formatHotkeyKey(key: string): string {
+export function formatHotkeyKey(key: string): string {
   if (key === "mod") return isMacOS ? "\u2318" : "Ctrl"
   if (key === "shift") return isMacOS ? "\u21E7" : "Shift"
   if (key === "alt") return isMacOS ? "\u2325" : "Alt"
@@ -47,23 +48,12 @@ export function ShortcutTooltip({
       <TooltipContent className="py-1 px-2">
         <span>{text}</span>
 
-        <div className="flex gap-1">
+        <KbdGroup>
           {keys.map((key) => (
-            <ShortcutKey key={key} shortcut={key} />
+            <Kbd key={key}>{key}</Kbd>
           ))}
-        </div>
+        </KbdGroup>
       </TooltipContent>
     </Tooltip>
-  )
-}
-
-export const ShortcutKey = ({ shortcut, className }: { shortcut: string; className?: string }) => {
-  return (
-    <span
-      key={shortcut}
-      className={cn("text-muted-foreground bg-hover px-1.5 py-0.5 rounded", className)}
-    >
-      {shortcut}
-    </span>
   )
 }

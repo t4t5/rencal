@@ -1,7 +1,7 @@
 import { type Dispatch, type RefObject, type SetStateAction, useState } from "react"
 
 import { Input } from "@/components/ui/input"
-import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
+import { Kbd } from "@/components/ui/kbd"
 
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
@@ -49,15 +49,16 @@ export function SearchInput({
     <div className="relative">
       <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
       {showShortcut && (
-        <ShortcutKey
-          shortcut="/"
+        <Kbd
           className={cn(
-            "absolute right-1.5 top-1/2 -translate-y-1/2 py-0 bg-hover transition-opacity duration-75",
+            "absolute right-1.5 top-1/2 -translate-y-1/2 transition-opacity duration-75",
             {
               "opacity-0": isFocused,
             },
           )}
-        />
+        >
+          /
+        </Kbd>
       )}
       <Input
         id={SEARCH_INPUT_EL_ID}

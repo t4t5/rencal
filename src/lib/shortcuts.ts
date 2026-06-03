@@ -1,0 +1,111 @@
+// Single source of truth for keyboard shortcuts.
+
+export interface ShortcutBinding {
+  keys: string
+  type: "char" | "hotkey"
+  allowShift?: boolean
+  hidden?: boolean
+}
+
+export interface ShortcutDef {
+  id: string
+  group: ShortcutGroup
+  label: string
+  bindings: readonly ShortcutBinding[]
+}
+
+export const SHORTCUT_GROUPS = ["Navigation", "View", "General"] as const
+export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number]
+
+export const SHORTCUTS = [
+  {
+    id: "today",
+    group: "Navigation",
+    label: "Go to today",
+    bindings: [{ keys: "t", type: "char" }],
+  },
+  {
+    id: "prev-day",
+    group: "Navigation",
+    label: "Previous day",
+    bindings: [
+      { keys: "left", type: "hotkey" },
+      { keys: "h", type: "char" },
+    ],
+  },
+  {
+    id: "next-day",
+    group: "Navigation",
+    label: "Next day",
+    bindings: [
+      { keys: "right", type: "hotkey" },
+      { keys: "l", type: "char" },
+    ],
+  },
+  {
+    id: "prev-week",
+    group: "Navigation",
+    label: "Previous week",
+    bindings: [
+      { keys: "up", type: "hotkey" },
+      { keys: "k", type: "char" },
+    ],
+  },
+  {
+    id: "next-week",
+    group: "Navigation",
+    label: "Next week",
+    bindings: [
+      { keys: "down", type: "hotkey" },
+      { keys: "j", type: "char" },
+    ],
+  },
+  {
+    id: "month",
+    group: "View",
+    label: "Month view",
+    bindings: [{ keys: "m", type: "char" }],
+  },
+  {
+    id: "week",
+    group: "View",
+    label: "Week view",
+    bindings: [{ keys: "w", type: "char" }],
+  },
+  {
+    id: "search",
+    group: "General",
+    label: "Search",
+    bindings: [
+      { keys: "mod+f", type: "hotkey" },
+      { keys: "mod+p", type: "hotkey", hidden: true },
+      { keys: "/", type: "char", allowShift: true },
+    ],
+  },
+  {
+    id: "new-event",
+    group: "General",
+    label: "New event",
+    bindings: [{ keys: "c", type: "char" }],
+  },
+  {
+    id: "settings",
+    group: "General",
+    label: "Settings",
+    bindings: [{ keys: "mod+comma", type: "hotkey" }],
+  },
+  {
+    id: "toggle-theme",
+    group: "General",
+    label: "Toggle theme",
+    bindings: [{ keys: "mod+shift+t", type: "hotkey" }],
+  },
+  {
+    id: "shortcuts",
+    group: "General",
+    label: "Keyboard shortcuts",
+    bindings: [{ keys: "?", type: "char", allowShift: true }],
+  },
+] as const satisfies readonly ShortcutDef[]
+
+export type ShortcutId = (typeof SHORTCUTS)[number]["id"]
