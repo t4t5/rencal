@@ -120,7 +120,6 @@ export function EventInfo({
           showTime={showTime}
           readOnly={readonly}
           onChange={onChangeDateTime}
-          onClose={onClose}
         />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
 

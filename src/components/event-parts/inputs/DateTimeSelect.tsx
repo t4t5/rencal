@@ -33,14 +33,12 @@ export const DateTimeSelect = ({
   showTime = true,
   readOnly,
   onChange,
-  onClose,
 }: {
   start: EventTime
   end: EventTime
   showTime?: boolean
   readOnly?: boolean
   onChange: (range: DateTimeRange) => void
-  onClose?: () => void
 }) => {
   const allDay = isAllDay(start)
 
@@ -70,7 +68,6 @@ export const DateTimeSelect = ({
           readOnly={readOnly}
           onChangeStartTime={handleStartTime}
           onChangeEndTime={handleEndTime}
-          onClose={onClose}
         />
       )}
       <DateSelect
@@ -92,7 +89,6 @@ const TimeSelect = ({
   readOnly,
   onChangeStartTime,
   onChangeEndTime,
-  onClose,
 }: {
   start: EventTime
   end: EventTime
@@ -100,7 +96,6 @@ const TimeSelect = ({
   readOnly?: boolean
   onChangeStartTime: (hour: number, minute: number) => void
   onChangeEndTime: (hour: number, minute: number) => void
-  onClose?: () => void
 }) => {
   return (
     <div
@@ -119,20 +114,13 @@ const TimeSelect = ({
           readOnly={readOnly}
           disabled={allDay}
           onChange={onChangeStartTime}
-          onClose={onClose}
         />
 
         <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
       </div>
 
       <div className="w-[111px] shrink-0">
-        <TimeInput
-          value={end}
-          readOnly={readOnly}
-          disabled={allDay}
-          onChange={onChangeEndTime}
-          onClose={onClose}
-        />
+        <TimeInput value={end} readOnly={readOnly} disabled={allDay} onChange={onChangeEndTime} />
       </div>
     </div>
   )

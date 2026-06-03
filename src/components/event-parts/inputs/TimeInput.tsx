@@ -91,14 +91,12 @@ export const TimeInput = ({
   readOnly,
   disabled,
   onChange,
-  onClose,
 }: {
   value: EventTime
   addon?: ReactNode
   readOnly?: boolean
   disabled?: boolean
   onChange: (hour: number, minute: number) => void
-  onClose?: () => void
 }) => {
   const { timeFormat } = useSettings()
   const [open, setOpen] = useState(false)
@@ -149,7 +147,6 @@ export const TimeInput = ({
 
     setOpen(false)
     setQuery("")
-    onClose?.()
   }
 
   return (
