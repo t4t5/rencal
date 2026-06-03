@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
+import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
@@ -43,7 +44,7 @@ export const EditEvent = ({
   children?: ReactNode
 }) => {
   const { calendars } = useCalendars()
-  const { setActiveEventId } = useCalEvents()
+  const { setActiveEventKey } = useCalEvents()
   const { requestSync } = useSync()
 
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
@@ -142,16 +143,16 @@ export const EditEvent = ({
 
   const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return
-    await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
-    setDirtyEvent({
-      ...dirtyEvent,
-      attendees: dirtyEvent.attendees.map((a) =>
-        a.email.toLowerCase() === calendar?.account?.toLowerCase()
-          ? { ...a, response_status: response }
-          : a,
-      ),
-    })
-    void requestSync()
+
+    try {
+      await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
+      void requestSync()
+      setActiveEventKey(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error("Failed to respond to invite", { description: message })
+      console.error("rsvp failed:", err)
+    }
   }
 
   return (
@@ -210,7 +211,7 @@ export const EditEvent = ({
         onRsvp={isAttendee ? handleRsvp : undefined}
         userResponseStatus={userResponseStatus}
         isPendingInvite={isPendingInvite}
-        onClose={() => setActiveEventId(null)}
+        onClose={() => setActiveEventKey(null)}
       />
 
       <DeleteConfirmDialog {...deleteDialogProps} />

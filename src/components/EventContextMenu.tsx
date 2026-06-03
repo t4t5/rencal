@@ -12,7 +12,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { isEventReadonly } from "@/lib/event-utils"
 
@@ -29,7 +29,7 @@ export function EventContextMenu({
   onOpenChange,
   children,
 }: EventContextMenuProps) {
-  const { setActiveEventId } = useCalEvents()
+  const { setActiveEventKey } = useCalEvents()
   const { calendars } = useCalendars()
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
 
@@ -46,7 +46,7 @@ export function EventContextMenu({
                 if (anchorRef.current) {
                   setEventAnchor(anchorRef.current)
                 }
-                setActiveEventId(event.id)
+                setActiveEventKey(eventKey(event))
               })
             }}
           >

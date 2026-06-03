@@ -16,7 +16,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import { fromDate, getLocalTzid, toViewerZonedDateTime } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
@@ -29,10 +29,10 @@ type MonthDayCellProps = {
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
   reservedAllDayHeight: number
-  activeEventId: string | null
+  activeEventKey: string | null
   isActiveDay: boolean
   onClick: () => void
-  onEventClick: (eventId: string) => void
+  onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }
@@ -42,7 +42,7 @@ export function MonthDayCell({
   timedEvents,
   hiddenAllDayCount,
   reservedAllDayHeight,
-  activeEventId,
+  activeEventKey,
   isActiveDay,
   onClick,
   onEventClick,
@@ -50,7 +50,7 @@ export function MonthDayCell({
   dimmed,
 }: MonthDayCellProps) {
   const { calendars } = useCalendars()
-  const { setActiveEventId } = useCalEvents()
+  const { setActiveEventKey } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
   const contextTargetRef = useRef<HTMLElement | null>(null)
@@ -77,7 +77,7 @@ export function MonthDayCell({
     const start = fromDate(startJs, tzid)
     const end = fromDate(endJs, tzid)
 
-    setActiveEventId(null)
+    setActiveEventKey(null)
     setIsDrafting(false)
     setDraftEvent({
       summary: "",
@@ -111,14 +111,14 @@ export function MonthDayCell({
           )}
           {visibleTimed.map((item) => (
             <MonthTimedEvent
-              key={item.event.id}
+              key={eventKey(item.event)}
               item={item}
-              isActive={item.event.id === activeEventId}
+              isActive={eventKey(item.event) === activeEventKey}
               isPending={isPendingEvent(item.event, calendars)}
               isDeclined={isDeclinedEvent(item.event, calendars)}
               isDraft={item.event === draftEvent}
               dimmed={dimmed}
-              onClick={() => onEventClick(item.event.id)}
+              onClick={() => onEventClick(eventKey(item.event))}
             />
           ))}
 

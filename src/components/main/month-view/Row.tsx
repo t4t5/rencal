@@ -7,7 +7,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 
 import { TopLeftDate } from "./TopLeftDate"
@@ -19,7 +19,7 @@ export const LANE_GAP = 3
 export const MonthWeekRow = memo(function MonthWeekRow({
   weekDays,
   layout,
-  activeEventId,
+  activeEventKey,
   activeDateKey,
   onDayClick,
   onEventClick,
@@ -28,10 +28,10 @@ export const MonthWeekRow = memo(function MonthWeekRow({
 }: {
   weekDays: MonthDay[]
   layout: WeekLayout
-  activeEventId: string | null
+  activeEventKey: string | null
   activeDateKey: string
   onDayClick: (date: Date) => void
-  onEventClick: (eventId: string) => void
+  onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }) {
@@ -67,14 +67,14 @@ export const MonthWeekRow = memo(function MonthWeekRow({
         {/* All-day events */}
         {allDayEvents.map((item) => (
           <MonthAllDayEvent
-            key={item.event.id}
+            key={eventKey(item.event)}
             item={item}
-            isActive={item.event.id === activeEventId}
+            isActive={eventKey(item.event) === activeEventKey}
             isPending={isPendingEvent(item.event, calendars)}
             isDeclined={isDeclinedEvent(item.event, calendars)}
             isDraft={item.event === draftEvent}
             dimmed={dimmed}
-            onClick={() => onEventClick(item.event.id)}
+            onClick={() => onEventClick(eventKey(item.event))}
           />
         ))}
 
@@ -95,7 +95,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               reservedAllDayHeight={
                 reservedLanes[colIndex] > 0 ? reservedLanes[colIndex] * LANE_HEIGHT - LANE_GAP : 0
               }
-              activeEventId={activeEventId}
+              activeEventKey={activeEventKey}
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
               onEventClick={onEventClick}

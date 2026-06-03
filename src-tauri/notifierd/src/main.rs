@@ -11,7 +11,9 @@
 
 #[cfg(not(target_os = "linux"))]
 fn main() {
-    eprintln!("rencal-notifierd is Linux-only; macOS and Windows run the reminder loop in-process.");
+    eprintln!(
+        "rencal-notifierd is Linux-only; macOS and Windows run the reminder loop in-process."
+    );
     std::process::exit(1);
 }
 

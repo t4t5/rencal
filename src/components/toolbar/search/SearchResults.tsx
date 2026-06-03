@@ -6,7 +6,7 @@ import { PopoverContent } from "@/components/ui/popover"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
 interface SearchResultsProps {
@@ -60,16 +60,19 @@ export function SearchResults({
             <CommandEmpty>No events found.</CommandEmpty>
           )}
           {results.map((event, index) => {
-            const isActive = activeEvent?.id === event.id
+            const key = eventKey(event)
+            const isActive = !!activeEvent && eventKey(activeEvent) === key
             return (
               <CommandItem
-                key={`${event.calendar_slug}-${event.id}`}
+                key={key}
                 value={String(index)}
                 ref={(el) => {
                   if (el) itemRefs.current.set(index, el)
                   else itemRefs.current.delete(index)
                 }}
-                onSelect={() => setActiveEvent((prev) => (prev?.id === event.id ? null : event))}
+                onSelect={() =>
+                  setActiveEvent((prev) => (prev && eventKey(prev) === key ? null : event))
+                }
                 className={cn("flex items-center gap-2 cursor-pointer", isActive && "bg-accent!")}
               >
                 <SearchResultEventBlock

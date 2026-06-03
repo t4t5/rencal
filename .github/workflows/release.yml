@@ -34,6 +34,7 @@ jobs:
             echo "Tag ${tag} does not exist, will release"
             echo "should_release=true" >> "$GITHUB_OUTPUT"
           fi
+          # Use latest github release for caldir-core + providers:
           caldir_tag=$(gh release view --repo t4t5/caldir --json tagName -q .tagName)
           echo "caldir_tag=${caldir_tag}" >> "$GITHUB_OUTPUT"
           echo "Using caldir ${caldir_tag}"

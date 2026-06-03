@@ -15,7 +15,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import {
   addDays,
@@ -47,12 +47,12 @@ type WeekTimeGridProps = {
   timedByDay: Map<string, WeekTimedEventLayout[]>
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
-  activeEventId: string | null
+  activeEventKey: string | null
   activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
   onScrollActiveChange: (date: Date) => void
-  onEventClick: (id: string) => void
+  onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }
@@ -62,7 +62,7 @@ export function WeekTimeGrid({
   timedByDay,
   allDayItems,
   maxAllDayLane,
-  activeEventId,
+  activeEventKey,
   activeDateKey,
   scrollContainerRef,
   onDayClick,
@@ -72,7 +72,7 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
-  const { setActiveEventId } = useCalEvents()
+  const { setActiveEventKey } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
   const { timeFormat } = useSettings()
@@ -234,7 +234,7 @@ export function WeekTimeGrid({
       end = fromDate(addHours(startJs, 1), tzid)
     }
 
-    setActiveEventId(null)
+    setActiveEventKey(null)
     setIsDrafting(false)
     setDraftEvent({
       summary: "",
@@ -317,16 +317,16 @@ export function WeekTimeGrid({
               ))}
               {allDayItems.map((item) => (
                 <WeekAllDayBar
-                  key={item.event.id}
+                  key={eventKey(item.event)}
                   item={item}
                   colOffset={1}
                   rowOffset={1}
-                  isActive={activeEventId === item.event.id}
+                  isActive={activeEventKey === eventKey(item.event)}
                   isPending={isPendingEvent(item.event, calendars)}
                   isDeclined={isDeclinedEvent(item.event, calendars)}
                   isDraft={item.event === draftEvent}
                   dimmed={dimmed}
-                  onClick={() => onEventClick(item.event.id)}
+                  onClick={() => onEventClick(eventKey(item.event))}
                 />
               ))}
             </>
@@ -371,9 +371,9 @@ export function WeekTimeGrid({
               >
                 {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
                   <WeekTimedEvent
-                    key={layout.event.id}
+                    key={eventKey(layout.event)}
                     layout={layout}
-                    isActive={activeEventId === layout.event.id}
+                    isActive={activeEventKey === eventKey(layout.event)}
                     isPending={isPendingEvent(layout.event, calendars)}
                     isDeclined={isDeclinedEvent(layout.event, calendars)}
                     isDraft={layout.event === draftEvent}

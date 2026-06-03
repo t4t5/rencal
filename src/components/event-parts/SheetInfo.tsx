@@ -9,7 +9,7 @@ import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 import { DragRegion } from "../ui/drag-region"
 
 export function SheetEvent() {
-  const { activeEvent, setActiveEventId } = useCalEvents()
+  const { activeEvent, setActiveEventKey } = useCalEvents()
   const { requestSave } = useRecurrenceEdit()
   const isOpen = !!activeEvent
   const eventRef = useRef(activeEvent)
@@ -33,7 +33,7 @@ export function SheetEvent() {
   const displayEvent = activeEvent ?? eventRef.current
 
   return (
-    <FastSheet open={isOpen} onOpenChange={() => setActiveEventId(null)}>
+    <FastSheet open={isOpen} onOpenChange={() => setActiveEventKey(null)}>
       <FastSheetContent open={isOpen}>
         {displayEvent && (
           <EditEvent event={displayEvent} onRequestSave={requestSave}>

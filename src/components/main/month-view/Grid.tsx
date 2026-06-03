@@ -15,7 +15,7 @@ export const LANE_GAP = 3
 export function MonthGrid({
   weeks,
   weekLayouts,
-  activeEventId,
+  activeEventKey,
   activeDateKey,
   anchorWeekIndex,
   scrollRef,
@@ -28,13 +28,13 @@ export function MonthGrid({
 }: {
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
-  activeEventId: string | null
+  activeEventKey: string | null
   activeDateKey: string
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
   isNavigating: () => boolean
   onDayClick: (date: Date) => void
-  onEventClick: (eventId: string) => void
+  onEventClick: (eventKey: string) => void
   onScrollMonthChange: (date: Date) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
@@ -242,7 +242,7 @@ export function MonthGrid({
             <MonthWeekRow
               weekDays={weeks[virtualRow.index]}
               layout={weekLayouts[virtualRow.index]}
-              activeEventId={activeEventId}
+              activeEventKey={activeEventKey}
               activeDateKey={activeDateKey}
               onDayClick={onDayClick}
               onEventClick={onEventClick}

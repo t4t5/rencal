@@ -7,6 +7,7 @@ import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
+import { eventKey } from "@/lib/cal-events"
 import { formatDateKey } from "@/lib/event-time"
 
 import { WeekTimeGrid } from "./WeekTimeGrid"
@@ -14,7 +15,7 @@ import { WeekTimeGrid } from "./WeekTimeGrid"
 export function WeekView() {
   const { calendars } = useCalendars()
   const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
+  const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { days } = useInfiniteDays({ scrollContainerRef, activeDate })
@@ -29,12 +30,12 @@ export function WeekView() {
         timedByDay={layout.timedByDay}
         allDayItems={layout.allDayItems}
         maxAllDayLane={layout.maxAllDayLane}
-        activeEventId={activeEvent?.id ?? null}
+        activeEventKey={activeEvent ? eventKey(activeEvent) : null}
         activeDateKey={formatDateKey(activeDate)}
         scrollContainerRef={scrollContainerRef}
         onDayClick={navigateToDate}
         onScrollActiveChange={navigateToDate}
-        onEventClick={toggleActiveEventId}
+        onEventClick={toggleActiveEventKey}
         draftEvent={draftCalEvent}
         dimmed={dimmed}
       />

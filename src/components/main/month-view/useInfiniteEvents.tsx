@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
-import { CalendarEvent } from "@/lib/cal-events"
+import { CalendarEvent, eventKey } from "@/lib/cal-events"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 
 function mergeEvents(
@@ -12,8 +12,8 @@ function mergeEvents(
   incoming: CalendarEvent[],
   position: "append" | "prepend",
 ): CalendarEvent[] {
-  const existingIds = new Set(prev.map((e) => e.id))
-  const filtered = incoming.filter((e) => !existingIds.has(e.id))
+  const existingKeys = new Set(prev.map(eventKey))
+  const filtered = incoming.filter((e) => !existingKeys.has(eventKey(e)))
   if (!filtered.length) return prev
   return position === "append" ? [...prev, ...filtered] : [...filtered, ...prev]
 }

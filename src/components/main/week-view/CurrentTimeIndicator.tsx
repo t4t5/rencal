@@ -3,36 +3,23 @@ import { useEffect, useState } from "react"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { cn } from "@/lib/utils"
-
 export function CurrentTimeIndicator() {
-  const [, setTick] = useState(0)
+  const { timeFormat } = useSettings()
+  const [now, setNow] = useState(() => new Date())
 
-  // Update time indicator every 60s
+  // The colon blinks via CSS, so we only need to tick state once per minute to
+  // reposition the indicator and update the displayed h:mm.
   useEffect(() => {
-    const interval = setInterval(() => setTick((t) => t + 1), 60_000)
+    const interval = setInterval(() => setNow(new Date()), 60_000)
     return () => clearInterval(interval)
   }, [])
 
-  const now = new Date()
   const currentMinutes = now.getHours() * 60 + now.getMinutes()
   const timeIndicatorTopPercent = (currentMinutes / 1440) * 100
 
-  const { timeFormat } = useSettings()
-  const [currentTime, setCurrentTime] = useState(new Date())
-  const [colonVisible, setColonVisible] = useState(true)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date())
-      setColonVisible((v) => !v)
-    }, 1_000)
-    return () => clearInterval(interval)
-  }, [])
-
-  const hour = format(currentTime, timeFormat === "12h" ? "h" : "H")
-  const minutes = format(currentTime, "mm")
-  const ampm = timeFormat === "12h" ? format(currentTime, "a").toLowerCase() : ""
+  const hour = format(now, timeFormat === "12h" ? "h" : "H")
+  const minutes = format(now, "mm")
+  const ampm = timeFormat === "12h" ? format(now, "a").toLowerCase() : ""
 
   return (
     <div
@@ -41,7 +28,7 @@ export function CurrentTimeIndicator() {
     >
       <span className="text-[11px] font-medium text-today shrink-0 leading-none">
         {hour}
-        <span className={cn(!colonVisible && "invisible")}>:</span>
+        <span style={{ animation: "colon-blink 1s steps(2, end) infinite" }}>:</span>
         {minutes}
         {ampm}
       </span>

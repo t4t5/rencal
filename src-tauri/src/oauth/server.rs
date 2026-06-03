@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use socket2::{Domain, Socket, Type};
 use std::collections::HashMap;
 use std::net::SocketAddr;
@@ -13,15 +13,16 @@ pub struct OAuthCallbackParams {
 
 const SUCCESS_RESPONSE: &str = r#"HTTP/1.1 200 OK
 Content-Type: text/html; charset=utf-8
+Connection: close
 
-<!DOCTYPE html>
+<!doctype html>
 <html>
 <head>
     <title>Authentication Successful</title>
 </head>
 <body>
     <h1>Authentication Successful</h1>
-    <p>This window will close automatically...</p>
+    <p>You can close this window and return to renCal.</p>
 </body>
 </html>
 "#;

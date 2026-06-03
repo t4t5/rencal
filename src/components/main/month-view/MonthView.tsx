@@ -10,6 +10,7 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
+import { eventKey } from "@/lib/cal-events"
 import { formatDateKey } from "@/lib/event-time"
 
 import { WeekDayLabels } from "./WeekDayLabels"
@@ -18,7 +19,7 @@ import { useInfiniteEvents } from "./useInfiniteEvents"
 export function MonthView() {
   const { calendars } = useCalendars()
   const { activeDate, navigateToDate, isNavigating } = useCalendarNavigation()
-  const { calendarEvents, toggleActiveEventId, activeEvent } = useCalEvents()
+  const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
 
   // TODO: respect calendar visibility
   const visibleCalendarIds = calendars.map((c) => c.slug)
@@ -49,13 +50,13 @@ export function MonthView() {
       <MonthGrid
         weeks={weeks}
         weekLayouts={weekLayouts}
-        activeEventId={activeEvent?.id ?? null}
+        activeEventKey={activeEvent ? eventKey(activeEvent) : null}
         activeDateKey={formatDateKey(activeDate)}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
         isNavigating={isNavigating}
         onDayClick={navigateToDate}
-        onEventClick={toggleActiveEventId}
+        onEventClick={toggleActiveEventKey}
         onScrollMonthChange={navigateToDate}
         draftEvent={draftCalEvent}
         dimmed={dimmed}

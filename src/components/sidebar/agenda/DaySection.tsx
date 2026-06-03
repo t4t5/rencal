@@ -8,7 +8,7 @@ import type { Calendar } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
@@ -24,17 +24,18 @@ export const DaySection = forwardRef<
     draftEvent: CalendarEvent | null
   }
 >(({ date, events, calendars, draftEvent }, ref) => {
-  const { activeEvent, toggleActiveEventId } = useCalEvents()
+  const { activeEvent, toggleActiveEventKey } = useCalEvents()
 
   const calendarBySlug = useMemo(() => new Map(calendars.map((c) => [c.slug, c])), [calendars])
 
   const getRowState = (event: CalendarEvent): RowState => {
-    const isDraft = event.id === draftEvent?.id
+    const key = eventKey(event)
+    const isDraft = !!draftEvent && key === eventKey(draftEvent)
 
     return {
       calendarColor: getCalendarColor(calendarBySlug.get(event.calendar_slug)),
       isDraft,
-      isActive: !isDraft && event.id === activeEvent?.id,
+      isActive: !isDraft && !!activeEvent && key === eventKey(activeEvent),
       isPending: isPendingEvent(event, calendars),
       isDeclined: isDeclinedEvent(event, calendars),
     }
@@ -42,7 +43,7 @@ export const DaySection = forwardRef<
 
   const handleSelect = (event: CalendarEvent, target: HTMLElement) => {
     setEventAnchor(target)
-    toggleActiveEventId(event.id)
+    toggleActiveEventKey(eventKey(event))
   }
 
   const allDayEvents = events.filter((e) => isAllDay(e.start))
@@ -59,7 +60,7 @@ export const DaySection = forwardRef<
           <div className="px-3 py-1 flex flex-wrap gap-1">
             {allDayEvents.map((event) => (
               <AllDayRow
-                key={event.id}
+                key={eventKey(event)}
                 event={event}
                 state={getRowState(event)}
                 onSelect={handleSelect}
@@ -70,7 +71,7 @@ export const DaySection = forwardRef<
 
         {timedEvents.map((event) => (
           <TimedRow
-            key={event.id}
+            key={eventKey(event)}
             event={event}
             state={getRowState(event)}
             onSelect={handleSelect}

@@ -6,6 +6,7 @@ import { UntitledEventText } from "@/components/ui/untitled-event-text"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
+import { eventKey } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
@@ -26,7 +27,7 @@ function WeekTimedEventImpl({
   isDeclined: boolean
   isDraft: boolean
   dimmed: boolean
-  onEventClick: (id: string) => void
+  onEventClick: (eventKey: string) => void
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
@@ -89,7 +90,7 @@ function WeekTimedEventImpl({
           : (e) => {
               e.stopPropagation()
               setEventAnchor(e.currentTarget)
-              onEventClick(layout.event.id)
+              onEventClick(eventKey(layout.event))
             }
       }
     >

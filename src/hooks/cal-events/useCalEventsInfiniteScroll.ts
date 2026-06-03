@@ -5,6 +5,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
+import { eventKey } from "@/lib/cal-events"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 
 export const useCalEventsInfiniteScroll = ({
@@ -38,8 +39,8 @@ export const useCalEventsInfiniteScroll = ({
       )
 
       setCalendarEvents((prev) => {
-        const existingIds = new Set(prev.map((e) => e.id))
-        const newEvents = prevEvents.filter((e) => !existingIds.has(e.id))
+        const existingKeys = new Set(prev.map(eventKey))
+        const newEvents = prevEvents.filter((e) => !existingKeys.has(eventKey(e)))
 
         if (newEvents.length) {
           return [...newEvents, ...prev]
@@ -77,8 +78,8 @@ export const useCalEventsInfiniteScroll = ({
       )
 
       setCalendarEvents((prev) => {
-        const existingIds = new Set(prev.map((e) => e.id))
-        const newEvents = nextEvents.filter((e) => !existingIds.has(e.id))
+        const existingKeys = new Set(prev.map(eventKey))
+        const newEvents = nextEvents.filter((e) => !existingKeys.has(eventKey(e)))
 
         if (newEvents.length) {
           return [...prev, ...newEvents]

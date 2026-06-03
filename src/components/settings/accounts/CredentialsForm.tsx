@@ -54,6 +54,7 @@ export const CredentialsForm = ({
               ghost={false}
               placeholder={field.label}
               value={fieldValues[field.id] ?? ""}
+              disabled={isConnecting}
               onChange={(e) => setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
             />
           ) : (
@@ -62,6 +63,7 @@ export const CredentialsForm = ({
               type="text"
               placeholder={field.label}
               value={fieldValues[field.id] ?? ""}
+              disabled={isConnecting}
               onChange={(e) => setFieldValues((prev) => ({ ...prev, [field.id]: e.target.value }))}
             />
           )}

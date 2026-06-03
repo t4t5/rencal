@@ -39,7 +39,7 @@ export function useSync() {
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
-  const { autoSyncEnabled } = useSettings()
+  const { autoSyncEnabled, settingsLoaded } = useSettings()
 
   const [isChecking, setIsChecking] = useState(false)
   const [isSyncing, setIsSyncing] = useState(false)
@@ -63,7 +63,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setIsChecking(true)
       setSyncError(null)
       try {
-        const previews = await rpc.caldir.sync_preview(calendarSlugs)
+        const previews = await rpc.caldir.sync_preview()
         const withWork = previews.filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
         setPendingPreviews(withWork)
         setIsChecking(false)
@@ -74,13 +74,10 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         }
 
         const tripped = previews.filter((p) => p.to_push_delete_count >= MASS_DELETE_THRESHOLD)
-        const safeSlugs = withWork
-          .map((p) => p.calendar_slug)
-          .filter((slug) => !tripped.some((t) => t.calendar_slug === slug))
 
-        if (safeSlugs.length > 0) {
+        if (withWork.length > 0) {
           setIsSyncing(true)
-          await rpc.caldir.sync(safeSlugs, [])
+          await rpc.caldir.sync([])
           setIsSyncing(false)
         }
 
@@ -115,7 +112,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rpc.caldir.sync(slugs, slugs)
+      await rpc.caldir.sync(slugs)
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : String(e))
@@ -134,7 +131,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rpc.caldir.discard(slugs)
+      await rpc.caldir.discard()
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(e instanceof Error ? e.message : String(e))
@@ -150,19 +147,20 @@ export function SyncProvider({ children }: { children: ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (!settingsLoaded) return
     void runSync(autoSyncEnabled)
-  }, [runSync, autoSyncEnabled])
+  }, [runSync, autoSyncEnabled, settingsLoaded])
 
   useEffect(() => {
     const unlisten = getCurrentWindow().onFocusChanged(({ payload: focused }) => {
-      if (focused) {
+      if (focused && settingsLoaded) {
         void runSync(autoSyncEnabled)
       }
     })
     return () => {
       unlisten.then((fn) => fn())
     }
-  }, [runSync, autoSyncEnabled])
+  }, [runSync, autoSyncEnabled, settingsLoaded])
 
   const value = useMemo<SyncContextType>(
     () => ({

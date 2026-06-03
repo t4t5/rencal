@@ -14,13 +14,13 @@ import {
   useState,
 } from "react"
 
+import { CALDIR_CHANGED } from "@/rpc/events"
+
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
-
-const CALDIR_CHANGED = "caldir-changed"
 
 // Cheap identity check used to skip no-op state updates after a reload. The
 // previous JSON.stringify-based dedup was correct but cost tens of ms per call
@@ -31,7 +31,7 @@ const CALDIR_CHANGED = "caldir-changed"
 function sameEventList(a: CalendarEvent[], b: CalendarEvent[]): boolean {
   if (a.length !== b.length) return false
   for (let i = 0; i < a.length; i++) {
-    if (a[i].id !== b[i].id || a[i].updated !== b[i].updated) return false
+    if (eventKey(a[i]) !== eventKey(b[i]) || a[i].updated !== b[i].updated) return false
   }
   return true
 }
@@ -41,8 +41,8 @@ interface CalEventsContextType {
   setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
   currentDateRangeRef: RefObject<DateRange | null>
   activeEvent: CalendarEvent | null
-  setActiveEventId: Dispatch<SetStateAction<string | null>>
-  toggleActiveEventId: (id: string) => void
+  setActiveEventKey: Dispatch<SetStateAction<string | null>>
+  toggleActiveEventKey: (key: string) => void
   isInitialLoading: boolean
   reloadEvents: () => Promise<void>
 }
@@ -74,14 +74,16 @@ export function CalEventsProvider({
   const currentDateRangeRef = useRef<DateRange | null>(initialRange ?? null)
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => initialEvents ?? [])
-  const [activeEventId, setActiveEventId] = useState<string | null>(null)
+  // Holds the active event's `eventKey` (calendar_slug + id), not the raw `id` —
+  // the same event can exist in two calendars, so `id` alone isn't unique.
+  const [activeEventKey, setActiveEventKey] = useState<string | null>(null)
   const [isInitialLoading, setIsInitialLoading] = useState(() => initialEvents === undefined)
   const skipNextEffectRef = useRef(initialEvents !== undefined)
 
-  const activeEvent = calendarEvents.find((e) => e.id === activeEventId) || null
+  const activeEvent = calendarEvents.find((e) => eventKey(e) === activeEventKey) || null
 
-  const toggleActiveEventId = useCallback((id: string) => {
-    setActiveEventId((prev) => (prev === id ? null : id))
+  const toggleActiveEventKey = useCallback((key: string) => {
+    setActiveEventKey((prev) => (prev === key ? null : key))
   }, [])
 
   // Single-in-flight + loop-on-stale-range. Without this, two failure modes appear:
@@ -159,12 +161,12 @@ export function CalEventsProvider({
       setCalendarEvents,
       currentDateRangeRef,
       activeEvent,
-      setActiveEventId,
-      toggleActiveEventId,
+      setActiveEventKey,
+      toggleActiveEventKey,
       isInitialLoading,
       reloadEvents: reloadEventsStable,
     }),
-    [calendarEvents, activeEvent, toggleActiveEventId, isInitialLoading, reloadEventsStable],
+    [calendarEvents, activeEvent, toggleActiveEventKey, isInitialLoading, reloadEventsStable],
   )
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>

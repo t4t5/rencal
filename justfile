@@ -6,61 +6,17 @@ default:
 install:
   pnpm install
 
-# Generate app icons from 1024x1024 master.png
-icons:
-  pnpm tauri icon src-tauri/icons/master.png
+# Format files
+format:
+  @just format-rust
 
-# See the size of dependencies:
-bundlesize:
-  npx vite-bundle-visualizer
-
-# Build caldir provider binaries (debug) into src-tauri/providers/
-build-providers:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  mkdir -p src-tauri/providers
-  providers=(google icloud outlook caldav webcal)
-  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
-  for p in "${providers[@]}"; do
-    cp "../caldir/target/debug/caldir-provider-$p" src-tauri/providers/
-  done
-
-# Build caldir provider binaries (release) into src-tauri/providers/
-build-providers-release:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  mkdir -p src-tauri/providers
-  providers=(google icloud outlook caldav webcal)
-  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
-  for p in "${providers[@]}"; do
-    cp "../caldir/target/release/caldir-provider-$p" src-tauri/providers/
-  done
+[working-directory: 'src-tauri']
+format-rust:
+  cargo fmt --all
 
 # Run app (dev mode)
 dev: build-providers
   pnpm tauri dev
-
-# Build the app for production
-build: build-providers-release
-  #!/usr/bin/env bash
-  set -euo pipefail
-  # Linux deb/rpm bundles ship the reminder daemon — build it first so
-  # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
-  if [[ "$(uname -s)" == "Linux" ]]; then
-    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
-  fi
-  NO_STRIP=true pnpm tauri build
-
-# Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
-notarize: build-providers-release
-  #!/usr/bin/env bash
-  set -euo pipefail
-  set -a && source .env && set +a
-  # Sign bundled provider binaries with hardened runtime + secure timestamp
-  for bin in src-tauri/providers/caldir-provider-*; do
-    codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
-  done
-  NO_STRIP=true pnpm tauri build
 
 # Generate TypeScript bindings from Rust types
 [working-directory: 'src-tauri']
@@ -88,6 +44,60 @@ test:
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:
   bun scripts/analyze-recording.ts {{path}}
+
+# Generate app icons from 1024x1024 master.png
+icons:
+  pnpm tauri icon src-tauri/icons/master.png
+
+# See the size of dependencies:
+bundlesize:
+  npx vite-bundle-visualizer
+
+# Build the app for production
+build: build-providers-release
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # Linux deb/rpm bundles ship the reminder daemon — build it first so
+  # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+  fi
+  NO_STRIP=true pnpm tauri build
+
+# Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
+notarize: build-providers-release
+  #!/usr/bin/env bash
+  set -euo pipefail
+  set -a && source .env && set +a
+  # Sign bundled provider binaries with hardened runtime + secure timestamp
+  for bin in src-tauri/providers/caldir-provider-*; do
+    codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
+  done
+  NO_STRIP=true pnpm tauri build
+
+# Build caldir provider binaries (debug) into src-tauri/providers/
+build-providers:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p src-tauri/providers
+  providers=(google icloud outlook caldav webcal)
+  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
+  for p in "${providers[@]}"; do
+    cp "../caldir/target/debug/caldir-provider-$p" src-tauri/providers/
+  done
+
+# Build caldir provider binaries (release) into src-tauri/providers/
+build-providers-release:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p src-tauri/providers
+  providers=(google icloud outlook caldav webcal)
+  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
+  for p in "${providers[@]}"; do
+    cp "../caldir/target/release/caldir-provider-$p" src-tauri/providers/
+  done
+
+# ---- NOTIFICATIONS
 
 # Create test event 2 min from now with 1m reminder, then run the app to see the notification
 test-notification:

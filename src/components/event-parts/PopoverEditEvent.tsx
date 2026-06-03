@@ -10,7 +10,7 @@ import { getEventAnchor } from "@/lib/event-anchor"
 import { EditEvent } from "./EditEvent"
 
 export function PopoverEditEvent() {
-  const { activeEvent, setActiveEventId } = useCalEvents()
+  const { activeEvent, setActiveEventKey } = useCalEvents()
   const { requestSave } = useRecurrenceEdit()
   const anchorRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
@@ -29,7 +29,7 @@ export function PopoverEditEvent() {
     <Popover
       open={!!activeEvent}
       onOpenChange={(open) => {
-        if (!open) setActiveEventId(null)
+        if (!open) setActiveEventKey(null)
       }}
     >
       <PopoverAnchor

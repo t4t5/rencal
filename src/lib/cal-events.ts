@@ -9,7 +9,7 @@
  * day, and place events without round-tripping through Temporal on every
  * render.
  */
-import type { CalendarEvent as RpcCalendarEvent, Recurrence as RpcRecurrence } from "@/rpc/bindings"
+import type { CalendarEvent as RpcCalendarEvent, RpcRecurrence } from "@/rpc/bindings"
 
 import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./event-time"
 import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
@@ -26,6 +26,18 @@ export interface CalendarEvent
   dateInfo: EventDateInfo
   recurrence: Recurrence | null
   master_recurrence: Recurrence | null
+}
+
+/**
+ * Stable, app-wide identity for an event. An event's `id`
+ * (`{uid}__{recurrence_id}` from the backend) is only unique *within* one
+ * calendar — the same series subscribed via two calendars (e.g. an Outlook
+ * account plus a WebCal mirror of it) yields two events with the same `id`.
+ * Namespacing by `calendar_slug` keeps identity unique everywhere it's used as a
+ * key: React list keys, infinite-scroll dedup, and the active-event tracker.
+ */
+export function eventKey(event: Pick<CalendarEvent, "id" | "calendar_slug">): string {
+  return `${event.calendar_slug}::${event.id}`
 }
 
 export function rpcToRecurrence(w: RpcRecurrence): Recurrence {

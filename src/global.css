@@ -135,7 +135,7 @@ body {
   --color-error: var(--error);
   --color-destructive: var(--destructive);
 
-  --shadow-button-border: inset 0 0 0 1px var(--border-button);
+  --shadow-button-border: inset 0 0 0 1px var(--border-button, transparent);
   --shadow-input-border: inset 0 0 0 1px var(--input);
   --shadow-tab-list: var(--tab-list-shadow);
 

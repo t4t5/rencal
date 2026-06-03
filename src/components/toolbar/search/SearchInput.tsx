@@ -3,7 +3,7 @@ import { type Dispatch, type RefObject, type SetStateAction, useState } from "re
 import { Input } from "@/components/ui/input"
 import { ShortcutKey } from "@/components/ui/shortcut-tooltip"
 
-import type { CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
 import { SearchIcon } from "@/icons/search"
@@ -88,7 +88,7 @@ export function SearchInput({
             e.preventDefault()
             const event = results[focusedIndex]
             if (event) {
-              setActiveEvent((prev) => (prev?.id === event.id ? null : event))
+              setActiveEvent((prev) => (prev && eventKey(prev) === eventKey(event) ? null : event))
             }
           }
         }}

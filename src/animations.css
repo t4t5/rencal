@@ -24,3 +24,14 @@
     transform: scale(1);
   }
 }
+
+@keyframes colon-blink {
+  0%,
+  49% {
+    visibility: visible;
+  }
+  50%,
+  100% {
+    visibility: hidden;
+  }
+}

@@ -8,9 +8,7 @@ mod delivered_cache;
 use std::path::{Path, PathBuf};
 use std::time::Duration as StdDuration;
 
-use caldir_core::caldir::Caldir;
-use caldir_core::caldir_config::TimeFormat;
-use caldir_core::event::{Event, EventTime};
+use caldir_core::{Caldir, Event, EventTime, TimeFormat};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 use rencal_config::RencalConfig;
 
@@ -113,7 +111,7 @@ pub fn check_and_notify(
     cache.evict_older_than(cutoff);
 
     let caldir = Caldir::load()?;
-    let time_format = caldir.config().time_format;
+    let time_format = caldir.config().time_format();
 
     // Scan range is over event *start* times, but reminders fire at
     // `start - minutes_before`. To cover every trigger that could land in
@@ -124,17 +122,27 @@ pub fn check_and_notify(
     let range_start = cutoff - Duration::minutes(MAX_REMINDER_AFTER_MINUTES);
     let range_end = now + Duration::minutes(MAX_REMINDER_BEFORE_MINUTES);
 
-    let calendars = caldir.calendars();
+    let calendar_results = caldir.calendars();
     log::debug!(
         "tick now={now} cutoff={cutoff} calendars={}",
-        calendars.len()
+        calendar_results.len()
     );
 
     let mut events = Vec::new();
-    for calendar in &calendars {
-        match calendar.events_in_range(range_start, range_end) {
+    for cal_result in calendar_results {
+        let calendar = match cal_result {
+            Ok(c) => c,
+            Err(e) => {
+                log::warn!("calendar load err: {e}");
+                continue;
+            }
+        };
+        match calendar.expanded_events_in_range(range_start, range_end) {
             Ok(es) => events.extend(es),
-            Err(e) => log::warn!("[{}] events_in_range err: {e}", calendar.slug),
+            Err(e) => {
+                let slug = calendar.slug().unwrap_or("?");
+                log::warn!("[{slug}] expanded_events_in_range err: {e}");
+            }
         }
     }
 
@@ -177,16 +185,20 @@ fn process_reminders(
     let mut fired = 0;
 
     for event in events {
+        let summary_str = event.summary.as_deref().unwrap_or("");
         let triggers = event.reminders.iter().filter_map(|r| {
-            if !is_supported_offset(r.minutes) {
+            if !is_supported_offset(r.minutes_before_start) {
                 log::debug!(
                     "skipping out-of-range reminder ({}min) on \"{}\"",
-                    r.minutes,
-                    event.summary
+                    r.minutes_before_start,
+                    summary_str
                 );
                 return None;
             }
-            Some((r.minutes, compute_trigger_time(event, r.minutes)?))
+            Some((
+                r.minutes_before_start,
+                compute_trigger_time(event, r.minutes_before_start)?,
+            ))
         });
 
         let Some((minutes, trigger)) = select_best_trigger(triggers, cutoff, now) else {
@@ -194,7 +206,7 @@ fn process_reminders(
         };
 
         let key = DeliveryKey {
-            event_id: event.unique_id(),
+            event_id: event.event_instance_id().to_string(),
             trigger,
         };
         if !cache.insert(key) {
@@ -205,17 +217,17 @@ fn process_reminders(
         if !notifications_enabled {
             log::debug!(
                 "notifications disabled — recorded \"{}\" {minutes}min trigger without firing",
-                event.summary
+                summary_str
             );
             continue;
         }
 
         log::info!(
             "FIRE \"{}\" {minutes}min before (trigger={trigger})",
-            event.summary
+            summary_str
         );
         let body = format_body(event, time_format, Local::now());
-        notifier.notify(&event.summary, &body, icon);
+        notifier.notify(summary_str, &body, icon);
         fired += 1;
     }
 
@@ -252,7 +264,7 @@ fn delivered_cache_path() -> Option<PathBuf> {
 }
 
 fn compute_trigger_time(event: &Event, minutes_before: i64) -> Option<DateTime<Utc>> {
-    let start_utc = event.start.resolve_instant_in_zone(&Local)?;
+    let start_utc = event.start.to_local_tz(&Local).with_timezone(&Utc);
     Some(start_utc - Duration::minutes(minutes_before))
 }
 
@@ -284,14 +296,9 @@ fn format_event_time(et: &EventTime, time_format: TimeFormat, now: DateTime<Loca
         return format_relative_date(*d, today);
     }
 
-    // Use resolve_instant_in_zone (not to_utc) so a floating "9am" displays as
+    // Use to_local_tz (not to_utc) so a floating "9am" displays as
     // 09:00 on the host instead of being projected through UTC.
-    let Some(local) = et
-        .resolve_instant_in_zone(&Local)
-        .map(|u| u.with_timezone(&Local))
-    else {
-        return String::new();
-    };
+    let local = et.to_local_tz(&Local);
 
     let time_part = match time_format {
         TimeFormat::H24 => local.format("%H:%M").to_string(),
@@ -458,7 +465,7 @@ mod tests {
 
     // ---- process_reminders -----------------------------------------------
 
-    use caldir_core::event::{Reminder, Reminders};
+    use caldir_core::{EventUid, Reminder};
     use std::sync::Mutex;
 
     #[derive(Default)]
@@ -482,18 +489,12 @@ mod tests {
     }
 
     fn make_event(uid: &str, start_utc: DateTime<Utc>, reminder_minutes: i64) -> Event {
-        let mut event = Event::new(
-            format!("Test {uid}"),
-            EventTime::DateTimeUtc(start_utc),
-            EventTime::DateTimeUtc(start_utc + Duration::minutes(30)),
-            None,
-            None,
-            None,
-            vec![Reminder {
-                minutes: reminder_minutes,
-            }],
-        );
-        event.uid = uid.to_string();
+        let mut event = Event::new(format!("Test {uid}"), EventTime::DateTimeUtc(start_utc));
+        event.end = Some(EventTime::DateTimeUtc(start_utc + Duration::minutes(30)));
+        event.reminders = vec![Reminder {
+            minutes_before_start: reminder_minutes,
+        }];
+        event.uid = EventUid::new(uid);
         event
     }
 
@@ -613,10 +614,14 @@ mod tests {
         // An event with both "1h before" and "30m before" reminders, both
         // triggers in the catch-up window: only one notification should fire.
         let mut event = make_event("evt-1", t(2026, 4, 29, 13, 0), 60);
-        event.reminders = Reminders(vec![
-            Reminder { minutes: 60 }, // trigger 12:00
-            Reminder { minutes: 30 }, // trigger 12:30
-        ]);
+        event.reminders = vec![
+            Reminder {
+                minutes_before_start: 60,
+            }, // trigger 12:00
+            Reminder {
+                minutes_before_start: 30,
+            }, // trigger 12:30
+        ];
 
         let mut cache = DeliveredCache::new();
         let notifier = TestNotifier::default();
@@ -643,7 +648,7 @@ mod tests {
         assert_eq!(fired, 0);
     }
 
-    // ---- EventTime::resolve_instant_in_zone ------------------------------
+    // ---- EventTime::to_local_tz (host-zone projection) -------------------
 
     use chrono::{FixedOffset, NaiveDateTime};
 
@@ -654,21 +659,29 @@ mod tests {
             .unwrap()
     }
 
+    fn project_to_utc<Tz: chrono::TimeZone>(et: &EventTime, host: &Tz) -> DateTime<Utc> {
+        et.to_local_tz(host).with_timezone(&Utc)
+    }
+
     #[test]
     fn floating_event_uses_host_zone_not_utc() {
         // The bug we're fixing: "9am floating" on a BST host should fire at
         // 09:00 local = 08:00 UTC, not at 09:00 UTC (= 10:00 local).
         let bst = FixedOffset::east_opt(3600).unwrap();
         let nine_am_floating = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let resolved = nine_am_floating.resolve_instant_in_zone(&bst).unwrap();
-        assert_eq!(resolved, t(2026, 7, 15, 8, 0));
+        assert_eq!(
+            project_to_utc(&nine_am_floating, &bst),
+            t(2026, 7, 15, 8, 0)
+        );
     }
 
     #[test]
     fn floating_event_in_utc_host_round_trips() {
         let nine_am_floating = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let resolved = nine_am_floating.resolve_instant_in_zone(&Utc).unwrap();
-        assert_eq!(resolved, t(2026, 7, 15, 9, 0));
+        assert_eq!(
+            project_to_utc(&nine_am_floating, &Utc),
+            t(2026, 7, 15, 9, 0)
+        );
     }
 
     #[test]
@@ -679,32 +692,26 @@ mod tests {
         // what to_utc would give.
         let cest = FixedOffset::east_opt(2 * 3600).unwrap();
         let tuesday = EventTime::Date(NaiveDate::from_ymd_opt(2026, 7, 14).unwrap());
-        let resolved = tuesday.resolve_instant_in_zone(&cest).unwrap();
-        assert_eq!(resolved, t(2026, 7, 13, 22, 0));
+        assert_eq!(project_to_utc(&tuesday, &cest), t(2026, 7, 13, 22, 0));
     }
 
     #[test]
     fn utc_event_is_unchanged_by_host_zone() {
         let bst = FixedOffset::east_opt(3600).unwrap();
         let utc_event = EventTime::DateTimeUtc(t(2026, 7, 15, 14, 30));
-        assert_eq!(
-            utc_event.resolve_instant_in_zone(&bst),
-            Some(t(2026, 7, 15, 14, 30))
-        );
+        assert_eq!(project_to_utc(&utc_event, &bst), t(2026, 7, 15, 14, 30));
     }
 
     #[test]
     fn zoned_event_uses_its_own_tzid_not_host_zone() {
         // Event explicitly zoned to America/Los_Angeles. Result should be the
-        // same UTC instant regardless of which host_tz we resolve from.
+        // same UTC instant regardless of which host_tz we project from.
         let zoned = EventTime::DateTimeZoned {
             datetime: naive(2026, 7, 15, 9, 0),
             tzid: "America/Los_Angeles".to_string(),
         };
-        let from_utc = zoned.resolve_instant_in_zone(&Utc).unwrap();
-        let from_bst = zoned
-            .resolve_instant_in_zone(&FixedOffset::east_opt(3600).unwrap())
-            .unwrap();
+        let from_utc = project_to_utc(&zoned, &Utc);
+        let from_bst = project_to_utc(&zoned, &FixedOffset::east_opt(3600).unwrap());
         assert_eq!(from_utc, from_bst);
         // 09:00 PDT = 16:00 UTC.
         assert_eq!(from_utc, t(2026, 7, 15, 16, 0));
@@ -716,7 +723,7 @@ mod tests {
         // BST should fire at 08:30 BST = 07:30 UTC.
         let bst = FixedOffset::east_opt(3600).unwrap();
         let nine_am = EventTime::DateTimeFloating(naive(2026, 7, 15, 9, 0));
-        let start = nine_am.resolve_instant_in_zone(&bst).unwrap();
+        let start = project_to_utc(&nine_am, &bst);
         let trigger = start - Duration::minutes(30);
         assert_eq!(trigger, t(2026, 7, 15, 7, 30));
     }
