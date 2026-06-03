@@ -20,6 +20,8 @@ export function Combobox({
   readOnly = false,
   disabled = false,
   onInputKeyDown,
+  highlightedValue,
+  onHighlightChange,
 }: {
   addon: ReactNode
   children: ReactNode
@@ -32,6 +34,13 @@ export function Combobox({
   readOnly?: boolean
   disabled?: boolean
   onInputKeyDown?: KeyboardEventHandler<HTMLInputElement>
+  /**
+   * The option (by its `CommandItem` value) that cmdk should mark as selected.
+   * cmdk highlights it and scrolls it into view on open — useful for opening
+   * the list focused on the current value rather than the first item.
+   */
+  highlightedValue?: string
+  onHighlightChange?: (value: string) => void
 }) {
   const anchorRef = useRef<HTMLDivElement>(null)
   const interactive = !readOnly && !disabled
@@ -79,7 +88,7 @@ export function Combobox({
           }
         }}
       >
-        <Command>
+        <Command value={highlightedValue} onValueChange={onHighlightChange}>
           <CommandList>{children}</CommandList>
         </Command>
       </PopoverContent>

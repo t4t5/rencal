@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react"
+import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
@@ -22,6 +22,15 @@ const quarterSlots = (hour: number): TimeOfDay[] => SLOT_MINUTES.map((minute) =>
 
 const slotKey = (t: TimeOfDay) =>
   `${String(t.hour).padStart(2, "0")}:${String(t.minute).padStart(2, "0")}`
+
+const LAST_SLOT = 23 * 60 + 45
+
+/** The 15-minute slot closest to a wallclock time, so off-grid times still
+ * map to a row we can highlight and scroll to (e.g. 09:07 → 09:00). */
+const nearestSlotKey = (hour: number, minute: number): string => {
+  const minutes = Math.min(Math.round((hour * 60 + minute) / 15) * 15, LAST_SLOT)
+  return slotKey({ hour: Math.floor(minutes / 60), minute: minutes % 60 })
+}
 
 /**
  * Candidate times for a typed query. Empty query → every 15-minute slot.
@@ -94,26 +103,27 @@ export const TimeInput = ({
   const { timeFormat } = useSettings()
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
-  const currentItemRef = useRef<HTMLDivElement>(null)
+  // The cmdk-selected row: highlighted and scrolled into view on open. Starts
+  // at the current value's slot, then follows the typed query / pointer.
+  const [highlighted, setHighlighted] = useState<string>()
 
   const { hour, minute } = wallclockTime(value)
   const currentLabel = isAllDay(value) ? "" : formatWallclockTime(hour, minute, timeFormat)
+  const currentSlotKey = isAllDay(value) ? undefined : nearestSlotKey(hour, minute)
   const options = getTimeOptions(query, timeFormat)
-
-  // On open, bring the current time into view so the list doesn't start at 00:00.
-  useEffect(() => {
-    if (!open) return
-
-    const id = requestAnimationFrame(() =>
-      currentItemRef.current?.scrollIntoView({ block: "center" }),
-    )
-
-    return () => cancelAnimationFrame(id)
-  }, [open])
 
   const handleOpenChange = (next: boolean) => {
     setOpen(next)
     setQuery("")
+    if (next) setHighlighted(currentSlotKey)
+  }
+
+  // Keep the highlight on the best match as the query changes, falling back to
+  // the current value when the query is cleared.
+  const handleQueryChange = (next: string) => {
+    setQuery(next)
+    const [best] = getTimeOptions(next, timeFormat)
+    setHighlighted(next.trim() ? best && slotKey(best) : currentSlotKey)
   }
 
   const commit = (t: TimeOfDay) => {
@@ -147,24 +157,25 @@ export const TimeInput = ({
       addon={addon}
       placeholder={currentLabel}
       query={open ? query : currentLabel}
-      setQuery={setQuery}
+      setQuery={handleQueryChange}
       open={open}
       setOpen={handleOpenChange}
       readOnly={readOnly}
       disabled={disabled}
       onInputKeyDown={handleKeyDown}
+      highlightedValue={highlighted}
+      onHighlightChange={setHighlighted}
     >
       {options.length ? (
         <CommandGroup>
           {options.map((t) => {
-            const isCurrent = !isAllDay(value) && t.hour === hour && t.minute === minute
+            const key = slotKey(t)
             return (
               <CommandItem
-                key={slotKey(t)}
-                value={slotKey(t)}
-                ref={isCurrent ? currentItemRef : undefined}
+                key={key}
+                value={key}
                 onSelect={() => commit(t)}
-                className={cn(isCurrent && "font-medium")}
+                className={cn(key === currentSlotKey && "font-medium")}
               >
                 {formatWallclockTime(t.hour, t.minute, timeFormat)}
               </CommandItem>
