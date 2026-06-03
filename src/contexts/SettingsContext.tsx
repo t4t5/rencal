@@ -1,5 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event"
-import { ReactNode, createContext, useContext, useEffect, useState } from "react"
+import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { TimeFormat } from "@/rpc/bindings"
@@ -25,6 +25,7 @@ interface SettingsContextType {
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
   autoSyncEnabled: boolean
   setAutoSyncEnabled: (enabled: boolean) => Promise<void>
+  reloadSettings: () => Promise<void>
   // False until persisted settings load, so startup consumers don't act on defaults.
   settingsLoaded: boolean
 }
@@ -44,29 +45,30 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [autoSyncEnabled, setAutoSyncEnabledState] = useState<boolean>(true)
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const [tf, reminders, cal, dir, notifs, autoSync] = await Promise.all([
-          rpc.caldir.get_time_format(),
-          rpc.caldir.get_default_reminders(),
-          rpc.caldir.get_default_calendar(),
-          rpc.caldir.get_calendar_dir(),
-          rpc.config.get_notifications_enabled(),
-          rpc.config.get_auto_sync_enabled(),
-        ])
-        setTimeFormatState(tf)
-        setDefaultRemindersState(reminders)
-        setDefaultCalendarState(cal)
-        setCalendarDirState(dir)
-        setNotificationsEnabledState(notifs)
-        setAutoSyncEnabledState(autoSync)
-        setSettingsLoaded(true)
-      } catch (e) {
-        console.error(e)
-      }
+  const reloadSettings = useCallback(async () => {
+    try {
+      const [tf, reminders, cal, dir, notifs, autoSync] = await Promise.all([
+        rpc.caldir.get_time_format(),
+        rpc.caldir.get_default_reminders(),
+        rpc.caldir.get_default_calendar(),
+        rpc.caldir.get_calendar_dir(),
+        rpc.config.get_notifications_enabled(),
+        rpc.config.get_auto_sync_enabled(),
+      ])
+      setTimeFormatState(tf)
+      setDefaultRemindersState(reminders)
+      setDefaultCalendarState(cal)
+      setCalendarDirState(dir)
+      setNotificationsEnabledState(notifs)
+      setAutoSyncEnabledState(autoSync)
+      setSettingsLoaded(true)
+    } catch (e) {
+      console.error(e)
     }
-    void loadSettings()
+  }, [])
+
+  useEffect(() => {
+    void reloadSettings()
 
     const unlistenTimeFormat = listen<TimeFormat>(TIME_FORMAT_CHANGED, (event) => {
       setTimeFormatState(event.payload)
@@ -95,7 +97,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       unlistenNotifications.then((fn) => fn())
       unlistenAutoSync.then((fn) => fn())
     }
-  }, [])
+  }, [reloadSettings])
 
   const setTimeFormat = async (tf: TimeFormat) => {
     setTimeFormatState(tf)
@@ -149,6 +151,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setNotificationsEnabled,
         autoSyncEnabled,
         setAutoSyncEnabled,
+        reloadSettings,
         settingsLoaded,
       }}
     >

@@ -72,7 +72,8 @@ pub trait CaldirApi {
         provider_name: String,
     ) -> TauResult<Vec<Calendar>>;
 
-    async fn connect_provider_with_credentials(
+    async fn connect_provider_with_credentials<R: Runtime>(
+        app_handle: AppHandle<R>,
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
     ) -> TauResult<Vec<Calendar>>;
@@ -193,12 +194,13 @@ impl CaldirApi for CaldirApiImpl {
         connect_provider::handler(app, provider_name).await
     }
 
-    async fn connect_provider_with_credentials(
+    async fn connect_provider_with_credentials<R: Runtime>(
         self,
+        app: AppHandle<R>,
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
     ) -> TauResult<Vec<Calendar>> {
-        connect_provider_with_credentials::handler(provider_name, credentials).await
+        connect_provider_with_credentials::handler(app, provider_name, credentials).await
     }
 
     async fn create_local_calendar(

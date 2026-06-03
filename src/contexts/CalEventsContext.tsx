@@ -14,13 +14,13 @@ import {
   useState,
 } from "react"
 
+import { CALDIR_CHANGED } from "@/rpc/events"
+
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
-
-const CALDIR_CHANGED = "caldir-changed"
 
 // Cheap identity check used to skip no-op state updates after a reload. The
 // previous JSON.stringify-based dedup was correct but cost tens of ms per call

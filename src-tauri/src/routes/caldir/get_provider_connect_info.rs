@@ -1,5 +1,4 @@
-use super::helpers::load_caldir;
-use super::helpers::map_fields;
+use super::helpers::{build_connect_options, load_caldir, map_fields};
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
 use crate::routes::TauResult;
 use caldir_core::ProviderSlug;
@@ -15,12 +14,7 @@ pub(super) async fn handler(provider_name: String) -> TauResult<ProviderConnectI
     let port: u16 = 8080;
     let redirect_uri = format!("http://localhost:{}/callback", port);
 
-    let mut options = serde_json::Map::new();
-    options.insert(
-        "redirect_uri".into(),
-        serde_json::Value::String(redirect_uri),
-    );
-    options.insert("hosted".into(), serde_json::Value::Bool(true));
+    let options = build_connect_options(true, &redirect_uri);
 
     let connect_response = provider
         .connect(options, serde_json::Map::new())

@@ -1,8 +1,9 @@
 use super::types::{
     Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime, rpc_time_to_core,
 };
+use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, Event, Status};
+use caldir_core::{Caldir, DateRange, Event, Status};
 use chrono::{DateTime, Utc};
 
 /// Load caldir with the bundled providers overlaid on top of any in `PATH`.
@@ -69,46 +70,126 @@ pub fn map_fields(fields: Vec<caldir_core::rpc::CredentialField>) -> Vec<Provide
         .collect()
 }
 
-/// Submit credentials to provider, list calendars, and save configs locally.
-pub async fn save_provider_calendars(
+pub fn build_connect_options(
+    hosted: bool,
+    redirect_uri: &str,
+) -> serde_json::Map<String, serde_json::Value> {
+    let mut options = serde_json::Map::new();
+    options.insert(
+        "redirect_uri".into(),
+        serde_json::Value::String(redirect_uri.to_string()),
+    );
+    options.insert("hosted".into(), serde_json::Value::Bool(hosted));
+    options
+}
+
+pub async fn save_connected_calendars(
     provider: &caldir_core::Provider,
-    options: serde_json::Map<String, serde_json::Value>,
-    credentials: serde_json::Map<String, serde_json::Value>,
+    account_identifier: Option<String>,
+    prefetched_calendars: Option<Vec<caldir_core::CalendarConfig>>,
 ) -> TauResult<Vec<Calendar>> {
-    use caldir_core::rpc::ConnectResponse;
+    let calendar_configs = if let Some(calendars) = prefetched_calendars {
+        calendars
+    } else {
+        let id = account_identifier.ok_or_else(|| {
+            "Provider completed without an account identifier or calendars".to_string()
+        })?;
 
-    let connect_response = provider
-        .connect(options, credentials)
-        .await
-        .map_err(|e| format!("Connect failed: {}", e))?;
-
-    let account_identifier = match connect_response {
-        ConnectResponse::Done {
-            account_identifier, ..
-        } => account_identifier.ok_or_else(|| {
-            "Provider completed without returning an account identifier".to_string()
-        })?,
-        _ => return Err("Provider did not complete authentication".to_string()),
+        provider
+            .provider_account(id)
+            .list_calendars()
+            .await
+            .map_err(|e| format!("Failed to list calendars: {}", e))?
     };
 
-    let provider_account = provider.provider_account(account_identifier);
+    let mut caldir = load_caldir()?;
+    let existing_connections: Vec<_> = caldir
+        .connections()
+        .into_iter()
+        .filter_map(Result::ok)
+        .collect();
 
-    let calendar_configs = provider_account
-        .list_calendars()
-        .await
-        .map_err(|e| format!("Failed to list calendars: {}", e))?;
-
-    let caldir = load_caldir()?;
     let mut calendars = Vec::new();
+    let mut created_slugs = Vec::new();
+    let mut first_writable_slug = None;
+
     for config in calendar_configs {
+        let already_connected = config.remote_config().is_some_and(|remote_cfg| {
+            existing_connections
+                .iter()
+                .any(|conn| conn.local().remote_config() == Some(remote_cfg))
+        });
+
+        if already_connected {
+            continue;
+        }
+
+        let is_read_only = config.read_only() == Some(true);
         let base_slug = caldir_core::Calendar::base_slug_for(config.name());
         let cal = caldir
             .create_calendar(&base_slug, Some(config))
             .map_err(|e| e.to_string())?;
+
+        if let Some(slug) = cal.slug() {
+            let slug = slug.to_string();
+
+            if first_writable_slug.is_none() && !is_read_only {
+                first_writable_slug = Some(slug.clone());
+            }
+
+            created_slugs.push(slug);
+        }
+
         calendars.push(Calendar::from(&cal));
     }
 
+    if caldir.config().default_calendar_slug().is_none()
+        && let Some(slug) = first_writable_slug
+    {
+        let mut config = caldir.config().clone();
+        config.set_default_calendar_slug(Some(slug));
+        caldir.save_config(config).map_err(|e| e.to_string())?;
+    }
+
+    if let Err(err) = pull_created_calendar_events(&caldir, &created_slugs).await {
+        log::warn!("failed to pull events after connecting provider: {err}");
+    }
+
     Ok(calendars)
+}
+
+async fn pull_created_calendar_events(caldir: &Caldir, calendar_slugs: &[String]) -> TauResult<()> {
+    if calendar_slugs.is_empty() {
+        return Ok(());
+    }
+
+    let range = DateRange::default_sync_window();
+
+    for connection in caldir.connections() {
+        let mut connection = connection.map_err(|e| e.to_string())?;
+        let slug = connection
+            .local()
+            .slug()
+            .ok_or_else(|| "calendar missing slug".to_string())?
+            .to_string();
+
+        if !calendar_slugs.contains(&slug) {
+            continue;
+        }
+
+        let diff = connection
+            .diff(&range)
+            .await
+            .map_err(|e| format!("[{}] {}", slug, e))?;
+
+        connection
+            .apply_incoming_diff(&diff)
+            .map_err(|e| format!("[{}] {}", slug, e))?;
+
+        EVENT_CACHE.invalidate(&slug);
+    }
+
+    Ok(())
 }
 
 #[cfg(test)]

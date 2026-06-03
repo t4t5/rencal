@@ -12,7 +12,7 @@ import {
 
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
-import { CALENDAR_DIR_CHANGED } from "@/rpc/events"
+import { CALDIR_CHANGED, CALENDAR_DIR_CHANGED } from "@/rpc/events"
 
 import { logger } from "@/lib/logger"
 
@@ -91,12 +91,16 @@ export function CalendarStateProvider({
       void loadCalendarsFromStore()
     }
 
-    const unlisten = listen(CALENDAR_DIR_CHANGED, () => {
+    const unlistenCalendarDir = listen(CALENDAR_DIR_CHANGED, () => {
+      void loadCalendarsFromStore()
+    })
+    const unlistenCaldir = listen(CALDIR_CHANGED, () => {
       void loadCalendarsFromStore()
     })
 
     return () => {
-      unlisten.then((fn) => fn())
+      unlistenCalendarDir.then((fn) => fn())
+      unlistenCaldir.then((fn) => fn())
     }
   }, [])
 
