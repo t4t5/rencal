@@ -20,22 +20,15 @@ pub(super) async fn handler(
 
     // Is recurring instance:
     if instance_id.recurrence_id().is_some() {
-        let mut found = false;
+        let mut result = Ok(());
 
         calendar
             .update_recurring_instance(&instance_id, |event| {
-                for attendee in &mut event.attendees {
-                    if attendee.email.eq_ignore_ascii_case(&user_email) {
-                        attendee.status = Some(status);
-                        found = true;
-                    }
-                }
+                result = event.set_attendee_status(&user_email, status);
             })
             .map_err(|e| e.to_string())?;
 
-        if !found {
-            return Err(format!("Attendee not found: {}", user_email));
-        }
+        result.map_err(|e| e.to_string())?;
     } else {
         let mut cal_event = calendar
             .event_by_instance_id(&instance_id)
