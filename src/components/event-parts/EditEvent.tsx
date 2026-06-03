@@ -1,5 +1,6 @@
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
+import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
@@ -142,7 +143,10 @@ export const EditEvent = ({
 
   const handleRsvp = async (response: ResponseStatus) => {
     if (!dirtyEvent) return
-    await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
+
+    const previous = dirtyEvent
+
+    // Optimistically reflect the response in the UI
     setDirtyEvent({
       ...dirtyEvent,
       attendees: dirtyEvent.attendees.map((a) =>
@@ -151,7 +155,16 @@ export const EditEvent = ({
           : a,
       ),
     })
-    void requestSync()
+
+    try {
+      await rpc.caldir.rsvp(previous.calendar_slug, previous.id, response)
+      void requestSync()
+    } catch (err) {
+      setDirtyEvent(previous)
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error("Failed to respond to invite", { description: message })
+      console.error("rsvp failed:", err)
+    }
   }
 
   return (
