@@ -1,10 +1,11 @@
+use super::helpers::load_caldir;
 use super::types::{CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, Event, Reminder};
+use caldir_core::{Event, Reminder};
 
 pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let calendar = caldir
         .calendar(&input.calendar_slug)
         .map_err(|e| e.to_string())?;

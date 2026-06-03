@@ -13,11 +13,20 @@ use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
 use tauri::Manager;
 use taurpc::Router;
 
 const MIN_WINDOW_WIDTH: f64 = 300.0;
 const MIN_WINDOW_HEIGHT: f64 = 600.0;
+
+static BUNDLED_PROVIDERS_DIR: OnceLock<PathBuf> = OnceLock::new();
+
+/// Directory of the providers bundled with this build, resolved at startup.
+pub fn bundled_providers_dir() -> Option<&'static Path> {
+    BUNDLED_PROVIDERS_DIR.get().map(PathBuf::as_path)
+}
 
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router() -> Router<tauri::Wry> {
@@ -28,7 +37,7 @@ pub fn create_router() -> Router<tauri::Wry> {
         .merge(ConfigApiImpl.into_handler())
 }
 
-/// Resolve the bundled providers directory and set `CALDIR_PROVIDER_PATH`.
+/// Resolve the bundled providers directory and remember it for `load_caldir`.
 fn setup_bundled_providers(app: &tauri::App) {
     let providers_dir = if cfg!(debug_assertions) {
         // In dev mode, Tauri doesn't copy resources — use the build output directly.
@@ -52,11 +61,7 @@ fn setup_bundled_providers(app: &tauri::App) {
         }
     }
 
-    // SAFETY: called from Tauri's setup hook before any caldir provider is
-    // spawned; no other thread reads CALDIR_PROVIDER_PATH concurrently.
-    unsafe {
-        std::env::set_var("CALDIR_PROVIDER_PATH", &providers_dir);
-    }
+    let _ = BUNDLED_PROVIDERS_DIR.set(providers_dir);
 }
 
 fn spawn_reminder_loop_if_needed(app: &tauri::App) {
@@ -130,7 +135,10 @@ pub async fn run() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_dialog::init())
         .setup(move |app| {
+            // Bundle default providers (google, icloud, caldav...)
             setup_bundled_providers(app);
+
+            // Enable systemd notifications:
             #[cfg(target_os = "linux")]
             {
                 linux_reminders::enable_notifierd_if_needed();
@@ -143,9 +151,15 @@ pub async fn run() {
                     }
                 });
             }
+
             spawn_reminder_loop_if_needed(app);
+
+            // Handle changing Omarchy theme:
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
+
+            // Handle caldir file changes:
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
+
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {
                     let _ = window.set_decorations(true);
@@ -159,6 +173,7 @@ pub async fn run() {
                     MIN_WINDOW_HEIGHT,
                 )));
             }
+
             Ok(())
         })
         .on_window_event(|window, event| {

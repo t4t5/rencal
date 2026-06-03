@@ -1,9 +1,10 @@
+use super::helpers::load_caldir;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, DateRange};
+use caldir_core::DateRange;
 
 pub(super) async fn handler() -> TauResult<()> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let range = DateRange::default_sync_window();
 
     for connection in caldir.connections() {

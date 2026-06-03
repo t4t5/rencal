@@ -1,13 +1,14 @@
+use super::helpers::load_caldir;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, DateRange, EventChange};
+use caldir_core::{DateRange, EventChange};
 
 /// Number of pending push deletions that triggers the mass-delete safeguard.
 /// Mirrors `caldir-cli`'s `guards::MASS_DELETE_THRESHOLD`.
 const MASS_DELETE_THRESHOLD: u32 = 10;
 
 pub(super) async fn handler(allow_mass_delete: Vec<String>) -> TauResult<()> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let range = DateRange::default_sync_window();
 
     for connection in caldir.connections() {

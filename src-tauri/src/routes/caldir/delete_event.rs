@@ -1,9 +1,10 @@
+use super::helpers::load_caldir;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, EventInstanceId};
+use caldir_core::EventInstanceId;
 
 pub(super) async fn handler(calendar_slug: String, event_id: String) -> TauResult<()> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
     let instance_id = EventInstanceId::from(event_id.as_str());

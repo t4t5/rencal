@@ -1,8 +1,8 @@
+use super::helpers::load_caldir;
 use crate::routes::TauResult;
-use caldir_core::Caldir;
 
 pub(super) async fn handler() -> TauResult<Vec<String>> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
 
     let mut names: Vec<String> = caldir
         .providers()

@@ -1,8 +1,9 @@
+use super::helpers::load_caldir;
 use super::helpers::{event_time_sort_key, is_visible};
 use super::types::{CalendarEvent, RpcRecurrence, core_recurrence_to_rpc};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, expand_in_range};
+use caldir_core::expand_in_range;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
@@ -16,7 +17,7 @@ pub(super) async fn handler(
         .map_err(|e: chrono::ParseError| e.to_string())?;
     let range_end: DateTime<Utc> = end.parse().map_err(|e: chrono::ParseError| e.to_string())?;
 
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let mut events = Vec::new();
 
     for slug in &calendar_slugs {

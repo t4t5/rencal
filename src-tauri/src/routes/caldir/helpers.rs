@@ -5,6 +5,16 @@ use crate::routes::TauResult;
 use caldir_core::{Caldir, Event, Status};
 use chrono::{DateTime, Utc};
 
+/// Load caldir with the bundled providers overlaid on top of any in `PATH`.
+pub(super) fn load_caldir() -> TauResult<Caldir> {
+    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+
+    Ok(match crate::bundled_providers_dir() {
+        Some(dir) => caldir.with_bundled_providers(dir),
+        None => caldir,
+    })
+}
+
 pub fn is_visible(event: &Event) -> bool {
     event.status != Status::Cancelled
 }
@@ -88,7 +98,7 @@ pub async fn save_provider_calendars(
         .await
         .map_err(|e| format!("Failed to list calendars: {}", e))?;
 
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let mut calendars = Vec::new();
     for config in calendar_configs {
         let base_slug = caldir_core::Calendar::base_slug_for(config.name());

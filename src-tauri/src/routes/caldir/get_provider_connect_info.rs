@@ -1,12 +1,13 @@
+use super::helpers::load_caldir;
 use super::helpers::map_fields;
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
 use crate::routes::TauResult;
-use caldir_core::{Caldir, ProviderSlug};
+use caldir_core::ProviderSlug;
 
 pub(super) async fn handler(provider_name: String) -> TauResult<ProviderConnectInfo> {
     use caldir_core::rpc::{ConnectResponse, ConnectStepKind, CredentialsData, SetupData};
 
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let provider = caldir
         .provider(&ProviderSlug::from(provider_name.as_str()))
         .map_err(|e| e.to_string())?;

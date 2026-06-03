@@ -52,10 +52,12 @@ communicates with the backend via taurpc.
 
 renCal bundles the Google, iCloud, Outlook, CalDAV, and WebCal caldir provider binaries so they work out of the box. The
 `just dev` / `just build` recipes compile them from `../caldir/` into `src-tauri/providers/`. At
-startup, `lib.rs` sets the `CALDIR_PROVIDER_PATH` env var to point at that directory. caldir-core's
-`discover_installed()` checks `CALDIR_PROVIDER_PATH` before `PATH`, so bundled providers are found
-alongside any user-installed ones. The providers are shipped as Tauri bundle resources (configured in
-`tauri.conf.json`).
+startup, `lib.rs::setup_bundled_providers` resolves that directory and stores it in the
+`BUNDLED_PROVIDERS_DIR` once-cell. Routes load caldir via the `load_caldir` helper, which calls
+`Caldir::with_bundled_providers(dir)` — caldir-core discovers providers from `PATH` first, then
+overlays the bundled ones, so bundled providers **override** any conflicting user-installed ones (they're
+version-matched to this build) while still allowing extra providers from `PATH`. The providers are
+shipped as Tauri bundle resources (configured in `tauri.conf.json`).
 
 ## Calendar Data (caldir)
 

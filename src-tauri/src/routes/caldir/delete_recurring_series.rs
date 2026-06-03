@@ -1,9 +1,9 @@
+use super::helpers::load_caldir;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::Caldir;
 
 pub(super) async fn handler(calendar_slug: String, uid: String) -> TauResult<()> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
 
     // Find all events with this uid (parent + instances). The mutation path

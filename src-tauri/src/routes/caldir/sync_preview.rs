@@ -1,9 +1,10 @@
+use super::helpers::load_caldir;
 use super::types::SyncPreview;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, DateRange, EventChange};
+use caldir_core::{DateRange, EventChange};
 
 pub(super) async fn handler() -> TauResult<Vec<SyncPreview>> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let range = DateRange::default_sync_window();
     let mut previews = Vec::new();
 

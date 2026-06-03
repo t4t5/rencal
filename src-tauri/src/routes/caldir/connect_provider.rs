@@ -1,8 +1,9 @@
+use super::helpers::load_caldir;
 use super::helpers::save_provider_calendars;
 use super::types::Calendar;
 use crate::oauth;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, ProviderSlug};
+use caldir_core::ProviderSlug;
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
 
@@ -12,7 +13,7 @@ pub(super) async fn handler<R: Runtime>(
 ) -> TauResult<Vec<Calendar>> {
     use caldir_core::rpc::{ConnectResponse, ConnectStepKind, HostedOAuthData, OAuthData};
 
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
+    let caldir = load_caldir()?;
     let provider = caldir
         .provider(&ProviderSlug::from(provider_name.as_str()))
         .map_err(|e| e.to_string())?;
