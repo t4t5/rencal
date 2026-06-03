@@ -125,7 +125,7 @@ const TimeSelect = ({
         <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
       </div>
 
-      <div className="w-36 shrink-0">
+      <div className="w-[111px] shrink-0">
         <TimeInput
           value={end}
           readOnly={readOnly}
