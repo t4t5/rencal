@@ -21,6 +21,7 @@ export {
   formatDateKey,
   formatShortDate,
   formatTime,
+  formatWallclockTime,
   getRelativeDayLabel,
   localDateToPlainDate,
   plainDateToLocalDate,

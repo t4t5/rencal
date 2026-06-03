@@ -35,6 +35,20 @@ export function formatTime(et: EventTime, timeFormat: TimeFormat): string {
   return getTimeFormatter(timeFormat).format(toViewerZonedDateTime(et).epochMilliseconds)
 }
 
+/**
+ * Format a wallclock hour (0–23) and minute per the 12h/24h setting,
+ * e.g. "15:30" (24h) or "3:30 PM" (12h). Zone-agnostic — it formats a
+ * time-of-day rather than an instant, so it's safe for time-picker option
+ * labels where there is no underlying EventTime.
+ */
+export function formatWallclockTime(hour: number, minute: number, timeFormat: TimeFormat): string {
+  const mm = String(minute).padStart(2, "0")
+  if (timeFormat === "24h") return `${String(hour).padStart(2, "0")}:${mm}`
+  const period = hour < 12 ? "AM" : "PM"
+  const h12 = hour % 12 === 0 ? 12 : hour % 12
+  return `${h12}:${mm} ${period}`
+}
+
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
 export function formatShortDate(et: EventTime | Date): string {
   const d = et instanceof Date ? et : toInteropDate(et)

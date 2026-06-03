@@ -1,6 +1,5 @@
 import { DatePicker } from "@/components/ui/date-picker"
-import { Input } from "@/components/ui/input"
-import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { InputGroupAddon } from "@/components/ui/input-group"
 
 import {
   dateInEventZone,
@@ -9,7 +8,6 @@ import {
   localDateToPlainDate,
   plainDateToLocalDate,
   shouldShowDisplayEndDate,
-  wallclockTime,
   type EventTime,
   type EventTimeRange,
   withRangeDisplayEndDate,
@@ -22,14 +20,9 @@ import { cn } from "@/lib/utils"
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
 
-export type DateTimeRange = EventTimeRange
+import { TimeInput } from "./TimeInput"
 
-/** "HH:mm" — wallclock in the event's own zone. Empty for all-day. */
-function formatHHMM(et: EventTime): string {
-  if (isAllDay(et)) return ""
-  const { hour, minute } = wallclockTime(et)
-  return `${String(hour).padStart(2, "0")}:${String(minute).padStart(2, "0")}`
-}
+export type DateTimeRange = EventTimeRange
 
 // To make sure time + dates are aligned
 const FIRST_INPUT_WIDTH = 140
@@ -51,17 +44,11 @@ export const DateTimeSelect = ({
 }) => {
   const allDay = isAllDay(start)
 
-  const handleStartTime = (time: string) => {
-    if (!time) return
-    const [h, m] = time.split(":").map(Number)
-    onChange(withRangeStartWallclockTime({ start, end }, h, m))
-  }
+  const handleStartTime = (hour: number, minute: number) =>
+    onChange(withRangeStartWallclockTime({ start, end }, hour, minute))
 
-  const handleEndTime = (time: string) => {
-    if (!time) return
-    const [h, m] = time.split(":").map(Number)
-    onChange(withRangeEndWallclockTime({ start, end }, h, m))
-  }
+  const handleEndTime = (hour: number, minute: number) =>
+    onChange(withRangeEndWallclockTime({ start, end }, hour, minute))
 
   const handleStartDate = (jsDate: Date | null) => {
     if (!jsDate) return
@@ -77,8 +64,8 @@ export const DateTimeSelect = ({
     <div className="flex flex-col gap-1">
       {showTime && (
         <TimeSelect
-          startHHMM={formatHHMM(start)}
-          endHHMM={formatHHMM(end)}
+          start={start}
+          end={end}
           allDay={allDay}
           readOnly={readOnly}
           onChangeStartTime={handleStartTime}
@@ -99,75 +86,54 @@ export const DateTimeSelect = ({
 }
 
 const TimeSelect = ({
-  startHHMM,
-  endHHMM,
+  start,
+  end,
   allDay,
   readOnly,
   onChangeStartTime,
   onChangeEndTime,
   onClose,
 }: {
-  startHHMM: string
-  endHHMM: string
+  start: EventTime
+  end: EventTime
   allDay: boolean
   readOnly?: boolean
-  onChangeStartTime: (time: string) => void
-  onChangeEndTime: (time: string) => void
+  onChangeStartTime: (hour: number, minute: number) => void
+  onChangeEndTime: (hour: number, minute: number) => void
   onClose?: () => void
 }) => {
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault()
-      onClose?.()
-    }
-  }
-
   return (
     <div
       className={cn("flex items-center", {
         "opacity-50": allDay,
       })}
     >
-      <div
-        className="flex items-center shrink-0"
-        style={{
-          width: FIRST_INPUT_WIDTH,
-        }}
-      >
-        <InputGroup
-          className={cn(
-            "h-control-height",
-            readOnly && "hover:border-transparent! focus-within:bg-transparent!",
-          )}
-        >
-          <InputGroupAddon>
-            <ClockIcon />
-          </InputGroupAddon>
-          <InputGroupInput
-            type="time"
-            placeholder="09:30"
-            value={startHHMM}
-            onChange={(e) => onChangeStartTime(e.target.value)}
-            onKeyDown={handleKeyDown}
-            readOnly={readOnly}
-            disabled={allDay}
-            className={cn("pl-1", readOnly && "hover:border-transparent! focus:bg-transparent!")}
-          />
-        </InputGroup>
+      <div className="flex items-center shrink-0" style={{ width: FIRST_INPUT_WIDTH }}>
+        <TimeInput
+          value={start}
+          addon={
+            <InputGroupAddon>
+              <ClockIcon />
+            </InputGroupAddon>
+          }
+          readOnly={readOnly}
+          disabled={allDay}
+          onChange={onChangeStartTime}
+          onClose={onClose}
+        />
 
         <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
       </div>
 
-      <Input
-        type="time"
-        placeholder="10:30"
-        className={cn("w-36", readOnly && "hover:border-transparent! focus:bg-transparent!")}
-        value={endHHMM}
-        onChange={(e) => onChangeEndTime(e.target.value)}
-        onKeyDown={handleKeyDown}
-        readOnly={readOnly}
-        disabled={allDay}
-      />
+      <div className="w-36 shrink-0">
+        <TimeInput
+          value={end}
+          readOnly={readOnly}
+          disabled={allDay}
+          onChange={onChangeEndTime}
+          onClose={onClose}
+        />
+      </div>
     </div>
   )
 }
