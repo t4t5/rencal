@@ -89,16 +89,25 @@ export function useAgendaKeyboardNav({
     }
   }, [activeEvent])
 
+  // Default selection: the first timed (non-all-day) event of the day. All-day
+  // chips sit in a separate row at the top and aren't where you usually want to
+  // land — fall back to them only if the day has nothing else.
+  const firstSelectableInDay = (dayItems: AgendaItem[]): AgendaItem | undefined =>
+    dayItems.find((it) => !isAllDay(it.event.start)) ?? dayItems[0]
+
   const firstIdInActiveDay = (): string | null => {
     const list = itemsRef.current
     if (!list.length) return null
     const activeKey = formatDateKey(activeDateRef.current)
-    // YYYY-MM-DD keys: lexical compare == chronological.
-    return (
-      list.find((it) => it.dateKey === activeKey)?.id ??
-      list.find((it) => it.dateKey > activeKey)?.id ??
-      list[list.length - 1].id
-    )
+
+    // YYYY-MM-DD keys: lexical compare == chronological. Prefer the active day,
+    // else the first day after it; fall back to the last item we have.
+    const targetDay = list.some((it) => it.dateKey === activeKey)
+      ? activeKey
+      : list.find((it) => it.dateKey > activeKey)?.dateKey
+    if (targetDay === undefined) return list[list.length - 1].id
+
+    return firstSelectableInDay(list.filter((it) => it.dateKey === targetDay))?.id ?? null
   }
 
   const scrollItemIntoView = (id: string) => {
