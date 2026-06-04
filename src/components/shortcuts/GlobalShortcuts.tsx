@@ -4,13 +4,16 @@ import { useHotkeys } from "react-hotkeys-hook"
 
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
 import {
+  clearRememberedAgendaItem,
   focusAgendaItem,
+  isAgendaItemFocused,
   isInNativeTabScope,
 } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
+import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -70,16 +73,26 @@ function useShortcutHandlers({
   openShortcutsOverlay: () => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
+  const { setSelectedEventKey } = useAgendaSelection()
   const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
   const { toggleTheme } = useTheme()
 
   const lastNavRef = useRef(0)
 
+  const clearAgendaFocus = () => {
+    if (!isAgendaItemFocused()) return
+    clearRememberedAgendaItem()
+    setSelectedEventKey(null)
+    const activeElement = document.activeElement as HTMLElement | null
+    activeElement?.blur()
+  }
+
   const throttledNavigate = (date: Date) => {
     const now = Date.now()
     if (now - lastNavRef.current < NAV_THROTTLE_MS) return
     lastNavRef.current = now
+    clearAgendaFocus()
     void navigateToDate(date)
   }
 
@@ -110,7 +123,10 @@ function useShortcutHandlers({
   }
 
   return {
-    today: () => void navigateToDate(new Date()),
+    today: () => {
+      clearAgendaFocus()
+      void navigateToDate(new Date())
+    },
     "prev-day": () => throttledNavigate(subDays(activeDate, 1)),
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),

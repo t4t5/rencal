@@ -18,6 +18,10 @@ export function rememberFocusedAgendaItem(item: HTMLElement): void {
   lastFocusedAgendaEventKey = item.dataset.eventKey ?? null
 }
 
+export function clearRememberedAgendaItem(): void {
+  lastFocusedAgendaEventKey = null
+}
+
 export function focusAgendaItem(delta: 1 | -1, activeDate: Date): void {
   const items = Array.from(document.querySelectorAll<HTMLElement>(AGENDA_ITEM_SELECTOR))
   if (!items.length) return
