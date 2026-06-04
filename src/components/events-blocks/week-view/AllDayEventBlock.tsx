@@ -1,6 +1,7 @@
 import { useRef, useState } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
+import { GUTTER_WIDTH } from "@/components/main/week-view/WeekTimeGrid"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
@@ -20,9 +21,9 @@ export function WeekAllDayBar({
   onClick,
 }: {
   item: AllDayLaneItem
-  /** Added to item.startCol/endCol so the bar aligns with the parent grid's day columns. */
+  // Added to item.startCol/endCol so bar aligns with the parent grid's day columns:
   colOffset: number
-  /** Added to item.lane so the bar lands on the right row in the parent grid. */
+  // Added to item.lane so bar lands on the right row in the parent grid:
   rowOffset: number
   isActive: boolean
   isPending: boolean
@@ -51,7 +52,7 @@ export function WeekAllDayBar({
         data-event-clickable={!isDraft || undefined}
         className={cn(
           getEventBlockClasses(highlighted, isDeclined),
-          "truncate px-1 py-px leading-4 rounded",
+          "flex items-center px-1 py-px leading-4 rounded",
           !isDraft && dimmed && "opacity-50",
           isDraft && "font-medium",
         )}
@@ -72,7 +73,10 @@ export function WeekAllDayBar({
               }
         }
       >
-        {item.event.summary || <UntitledEventText />}
+        {/* Make title in multi-day event sticky so it stays visible when user scrolls: */}
+        <span className="sticky truncate min-w-0" style={{ left: GUTTER_WIDTH + 4 }}>
+          {item.event.summary || <UntitledEventText />}
+        </span>
       </div>
     </div>
   )
