@@ -171,6 +171,16 @@ export function useAgendaKeyboardNav({
     select(null)
   }
 
+  // Only Tab enters keyboard mode. A plain click on a non-focusable child focuses
+  // the nearest focusable ancestor (this container), which would flip us into item
+  // navigation. Block the browser's focus-on-mousedown so clicking the agenda — or
+  // an event to open it — leaves the current focus alone. (No-op once we're already
+  // focused, so in-mode clicks behave normally.)
+  const onMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (scrollContainerRef.current === document.activeElement) return
+    e.preventDefault()
+  }
+
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     // Let global combos and shifted keys pass through.
     if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return
@@ -205,9 +215,12 @@ export function useAgendaKeyboardNav({
   return {
     agendaProps: {
       id: AGENDA_EL_ID,
-      tabIndex: 0,
+      // -1 keeps the agenda out of the natural tab order — it's focused only by the
+      // Tab shortcut's programmatic .focus(), never by sequential tabbing or clicks.
+      tabIndex: -1,
       onFocus,
       onBlur,
+      onMouseDown,
       onKeyDown,
     },
   }
