@@ -8,11 +8,13 @@ import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 import { getEventAnchor } from "@/lib/event-anchor"
 
 import { EditEvent } from "./EditEvent"
+import { useEventPopoverTabTrap } from "./useEventPopoverTabTrap"
 
 export function PopoverEditEvent() {
   const { activeEvent, setActiveEventKey } = useCalEvents()
   const { requestSave } = useRecurrenceEdit()
   const anchorRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
 
   useLayoutEffect(() => {
@@ -24,6 +26,8 @@ export function PopoverEditEvent() {
     const rect = el.getBoundingClientRect()
     setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
   }, [activeEvent])
+
+  useEventPopoverTabTrap({ enabled: !!activeEvent, contentRef })
 
   return (
     <Popover
@@ -38,6 +42,7 @@ export function PopoverEditEvent() {
         style={{ top: pos.top, left: pos.left, width: pos.width, height: 0 }}
       />
       <PopoverContent
+        ref={contentRef}
         data-event-popover
         data-native-tab-scope
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
