@@ -17,6 +17,8 @@ import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
+import { rememberFocusedAgendaItem } from "./useAgendaKeyboardNav"
+
 export const DaySection = forwardRef<
   HTMLDivElement,
   {
@@ -53,8 +55,10 @@ export const DaySection = forwardRef<
     toggleActiveEventKey(eventKey(event))
   }
 
-  const handleFocus = (event: CalendarEvent) => {
-    setSelectedEventKey(eventKey(event))
+  const handleFocus = (event: CalendarEvent, target: HTMLElement) => {
+    const key = eventKey(event)
+    rememberFocusedAgendaItem(target)
+    setSelectedEventKey(key)
     setActiveDate(date)
   }
 
@@ -137,7 +141,7 @@ type RowState = {
 
 type RowHandlers = {
   onSelect: (event: CalendarEvent, target: HTMLElement) => void
-  onFocus: (event: CalendarEvent) => void
+  onFocus: (event: CalendarEvent, target: HTMLElement) => void
   onBlur: (e: FocusEvent<HTMLElement>) => void
   onKeyDown: (event: CalendarEvent, e: KeyboardEvent<HTMLElement>) => void
 }
@@ -164,7 +168,7 @@ const AllDayRow = ({
       data-event-key={key}
       data-date-key={dateKey}
       data-all-day="true"
-      onFocus={() => onFocus(event)}
+      onFocus={(e) => onFocus(event, e.currentTarget)}
       onBlur={onBlur}
       onKeyDown={(e) => onKeyDown(event, e)}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
@@ -204,7 +208,7 @@ const TimedRow = ({
       data-agenda-item
       data-event-key={key}
       data-date-key={dateKey}
-      onFocus={() => onFocus(event)}
+      onFocus={(e) => onFocus(event, e.currentTarget)}
       onBlur={onBlur}
       onKeyDown={(e) => onKeyDown(event, e)}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
