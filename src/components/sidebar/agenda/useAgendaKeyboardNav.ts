@@ -11,9 +11,12 @@ import { formatDateKey, isAllDay } from "@/lib/event-time"
 // GlobalShortcuts focuses the agenda by id from its Tab handler.
 export const AGENDA_EL_ID = "agenda-scroll-container"
 
-// up/left = previous, down/right = next.
-const PREV_KEYS = new Set(["ArrowUp", "ArrowLeft", "k", "h"])
-const NEXT_KEYS = new Set(["ArrowDown", "ArrowRight", "j", "l"])
+// Vertical keys move the selection: up/k = previous, down/j = next.
+const PREV_KEYS = new Set(["ArrowUp", "k"])
+const NEXT_KEYS = new Set(["ArrowDown", "j"])
+
+// Horizontal keys (and Tab) exit keyboard mode, back to day navigation.
+const EXIT_KEYS = new Set(["ArrowLeft", "ArrowRight", "h", "l", "Tab"])
 
 const STICKY_HEADER_PX = 32 // DaySection's sticky DateBar (h-8)
 const SCROLL_PADDING_PX = 8
@@ -34,8 +37,9 @@ export interface GroupedDay {
   events: CalendarEvent[]
 }
 
-// Keyboard navigation for the agenda. While focused (Tab to enter, Escape to
-// leave), arrows + hjkl move the selection, Enter opens the event. Default
+// Keyboard navigation for the agenda. While focused (Tab to enter), up/down +
+// j/k move the selection and Enter opens the event; Escape, Tab, or any
+// horizontal key (left/right/h/l) exits back to day navigation. Default
 // selection is the first item in the active day.
 export function useAgendaKeyboardNav({
   eventsByDate,
@@ -196,6 +200,16 @@ export function useAgendaKeyboardNav({
       scrollContainerRef.current?.blur()
       return
     }
+
+    if (EXIT_KEYS.has(e.key)) {
+      // stopPropagation so the global day-nav hotkeys (h/l/←/→) and the Tab
+      // focus-agenda shortcut don't fire — Tab would otherwise re-focus us.
+      e.preventDefault()
+      e.stopPropagation()
+      scrollContainerRef.current?.blur()
+      return
+    }
+
     if (e.key === "Enter") {
       e.preventDefault()
       openSelected()
