@@ -67,20 +67,22 @@ export const MonthWeekRow = memo(function MonthWeekRow({
 
       <div className="grid grid-cols-7 grow min-h-0 relative">
         {/* All-day events */}
-        {allDayEvents.map((item) => (
-          <MonthAllDayEvent
-            key={eventKey(item.event)}
-            item={item}
-            highlighted={
-              eventKey(item.event) === activeEventKey || eventKey(item.event) === selectedEventKey
-            }
-            isPending={isPendingEvent(item.event, calendars)}
-            isDeclined={isDeclinedEvent(item.event, calendars)}
-            isDraft={item.event === draftEvent}
-            dimmed={dimmed}
-            onClick={() => onEventClick(eventKey(item.event))}
-          />
-        ))}
+        {allDayEvents.map((item) => {
+          const key = eventKey(item.event)
+
+          return (
+            <MonthAllDayEvent
+              key={key}
+              item={item}
+              highlighted={key === activeEventKey || key === selectedEventKey}
+              isPending={isPendingEvent(item.event, calendars)}
+              isDeclined={isDeclinedEvent(item.event, calendars)}
+              isDraft={item.event === draftEvent}
+              dimmed={dimmed}
+              onClick={() => onEventClick(key)}
+            />
+          )
+        })}
 
         {/* Timed events */}
         {weekDays.map((day, colIndex) => {

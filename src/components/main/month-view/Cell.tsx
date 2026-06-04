@@ -111,20 +111,22 @@ export function MonthDayCell({
           {reservedAllDayHeight > 0 && (
             <div style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }} />
           )}
-          {visibleTimed.map((item) => (
-            <MonthTimedEvent
-              key={eventKey(item.event)}
-              item={item}
-              highlighted={
-                eventKey(item.event) === activeEventKey || eventKey(item.event) === selectedEventKey
-              }
-              isPending={isPendingEvent(item.event, calendars)}
-              isDeclined={isDeclinedEvent(item.event, calendars)}
-              isDraft={item.event === draftEvent}
-              dimmed={dimmed}
-              onClick={() => onEventClick(eventKey(item.event))}
-            />
-          ))}
+          {visibleTimed.map((item) => {
+            const key = eventKey(item.event)
+
+            return (
+              <MonthTimedEvent
+                key={key}
+                item={item}
+                highlighted={key === activeEventKey || key === selectedEventKey}
+                isPending={isPendingEvent(item.event, calendars)}
+                isDeclined={isDeclinedEvent(item.event, calendars)}
+                isDraft={item.event === draftEvent}
+                dimmed={dimmed}
+                onClick={() => onEventClick(key)}
+              />
+            )
+          })}
 
           {totalHidden > 0 && (
             <div className="text-xs text-muted-foreground px-0.5 truncate shrink-0">

@@ -1,5 +1,5 @@
 import { format, isSameYear, isToday } from "date-fns"
-import { forwardRef, type FocusEvent, type KeyboardEvent, useMemo } from "react"
+import { forwardRef, type FocusEvent, type KeyboardEvent, type ReactNode, useMemo } from "react"
 
 import { focusEventPopoverField } from "@/components/event-parts/useEventPopoverTabTrap"
 import { AgendaAllDayEventBlock } from "@/components/events-blocks/agenda/AllDayEventBlock"
@@ -16,6 +16,7 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { AGENDA_ITEM_SELECTOR } from "@/lib/focus-selectors"
 import { cn } from "@/lib/utils"
 
 import { clearRememberedAgendaItem, rememberFocusedAgendaItem } from "./useAgendaKeyboardNav"
@@ -64,7 +65,7 @@ export const DaySection = forwardRef<
   }
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
-    if ((e.relatedTarget as HTMLElement | null)?.closest("[data-agenda-item]")) return
+    if ((e.relatedTarget as HTMLElement | null)?.closest(AGENDA_ITEM_SELECTOR)) return
     clearRememberedAgendaItem()
     setSelectedEventKey(null)
   }
@@ -154,33 +155,60 @@ type RowHandlers = {
   onKeyDown: (event: CalendarEvent, e: KeyboardEvent<HTMLElement>) => void
 }
 
-const AllDayRow = ({
+type RowProps = {
+  event: CalendarEvent
+  dateKey: string
+  state: RowState
+} & RowHandlers
+
+type AgendaEventRowShellProps = {
+  event: CalendarEvent
+  dateKey: string
+  state: RowState
+  allDay?: boolean
+  className?: string
+  children: ReactNode
+} & RowHandlers
+
+const AgendaEventRowShell = ({
   event,
   dateKey,
   state,
+  allDay,
+  className,
+  children,
   onSelect,
   onFocus,
   onBlur,
   onKeyDown,
-}: {
-  event: CalendarEvent
-  dateKey: string
-  state: RowState
-} & RowHandlers) => {
-  const { key, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
+}: AgendaEventRowShellProps) => (
+  <div
+    tabIndex={-1}
+    data-event-clickable={!state.isDraft || undefined}
+    data-agenda-item
+    data-event-key={state.key}
+    data-date-key={dateKey}
+    data-all-day={allDay || undefined}
+    onFocus={(e) => onFocus(event, e.currentTarget)}
+    onBlur={onBlur}
+    onKeyDown={(e) => onKeyDown(event, e)}
+    onClick={state.isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
+    className={className}
+  >
+    {children}
+  </div>
+)
+
+const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
+  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
   return (
-    <div
-      tabIndex={-1}
-      data-event-clickable={!isDraft || undefined}
-      data-agenda-item
-      data-event-key={key}
-      data-date-key={dateKey}
-      data-all-day="true"
-      onFocus={(e) => onFocus(event, e.currentTarget)}
-      onBlur={onBlur}
-      onKeyDown={(e) => onKeyDown(event, e)}
-      onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
+    <AgendaEventRowShell
+      event={event}
+      dateKey={dateKey}
+      state={state}
+      allDay
       className="rounded outline-none"
+      {...handlers}
     >
       <AgendaAllDayEventBlock
         event={event}
@@ -190,44 +218,27 @@ const AllDayRow = ({
         isDeclined={isDeclined}
         isDraft={isDraft}
       />
-    </div>
+    </AgendaEventRowShell>
   )
 }
 
-const TimedRow = ({
-  event,
-  dateKey,
-  state,
-  onSelect,
-  onFocus,
-  onBlur,
-  onKeyDown,
-}: {
-  event: CalendarEvent
-  dateKey: string
-  state: RowState
-} & RowHandlers) => {
-  const { key, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
+const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
+  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (
-    <div
-      tabIndex={-1}
-      data-event-clickable={!isDraft || undefined}
-      data-agenda-item
-      data-event-key={key}
-      data-date-key={dateKey}
-      onFocus={(e) => onFocus(event, e.currentTarget)}
-      onBlur={onBlur}
-      onKeyDown={(e) => onKeyDown(event, e)}
-      onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
+    <AgendaEventRowShell
+      event={event}
+      dateKey={dateKey}
+      state={state}
       className={cn("cursor-default hover:bg-secondary py-1 outline-none", {
         "bg-accent!": isActive || isSelected,
         "opacity-50": isPending || isDeclined || isDraft,
         "line-through": isDeclined,
       })}
+      {...handlers}
     >
       <AgendaTimedEventBlock event={event} calendarColor={calendarColor} />
-    </div>
+    </AgendaEventRowShell>
   )
 }
 

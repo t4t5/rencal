@@ -317,23 +317,24 @@ export function WeekTimeGrid({
                   />
                 </AllDayContextMenu>
               ))}
-              {allDayItems.map((item) => (
-                <WeekAllDayBar
-                  key={eventKey(item.event)}
-                  item={item}
-                  colOffset={1}
-                  rowOffset={1}
-                  highlighted={
-                    activeEventKey === eventKey(item.event) ||
-                    selectedEventKey === eventKey(item.event)
-                  }
-                  isPending={isPendingEvent(item.event, calendars)}
-                  isDeclined={isDeclinedEvent(item.event, calendars)}
-                  isDraft={item.event === draftEvent}
-                  dimmed={dimmed}
-                  onClick={() => onEventClick(eventKey(item.event))}
-                />
-              ))}
+              {allDayItems.map((item) => {
+                const key = eventKey(item.event)
+
+                return (
+                  <WeekAllDayBar
+                    key={key}
+                    item={item}
+                    colOffset={1}
+                    rowOffset={1}
+                    highlighted={key === activeEventKey || key === selectedEventKey}
+                    isPending={isPendingEvent(item.event, calendars)}
+                    isDeclined={isDeclinedEvent(item.event, calendars)}
+                    isDraft={item.event === draftEvent}
+                    dimmed={dimmed}
+                    onClick={() => onEventClick(key)}
+                  />
+                )
+              })}
             </>
           )}
         </div>
@@ -374,21 +375,22 @@ export function WeekTimeGrid({
                 }
                 onClick={() => onDayClick(day.date)}
               >
-                {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
-                  <WeekTimedEvent
-                    key={eventKey(layout.event)}
-                    layout={layout}
-                    highlighted={
-                      activeEventKey === eventKey(layout.event) ||
-                      selectedEventKey === eventKey(layout.event)
-                    }
-                    isPending={isPendingEvent(layout.event, calendars)}
-                    isDeclined={isDeclinedEvent(layout.event, calendars)}
-                    isDraft={layout.event === draftEvent}
-                    dimmed={dimmed}
-                    onEventClick={onEventClick}
-                  />
-                ))}
+                {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
+                  const key = eventKey(layout.event)
+
+                  return (
+                    <WeekTimedEvent
+                      key={key}
+                      layout={layout}
+                      highlighted={key === activeEventKey || key === selectedEventKey}
+                      isPending={isPendingEvent(layout.event, calendars)}
+                      isDeclined={isDeclinedEvent(layout.event, calendars)}
+                      isDraft={layout.event === draftEvent}
+                      dimmed={dimmed}
+                      onEventClick={onEventClick}
+                    />
+                  )
+                })}
 
                 {day.isToday && <CurrentTimeIndicator />}
               </div>

@@ -1,8 +1,10 @@
 import { useEffect, type RefObject } from "react"
 
-const EVENT_POPOVER_SELECTOR = "[data-event-popover]"
-const EVENT_EDIT_FIELDS_SELECTOR = "[data-event-edit-fields]"
-const NATIVE_TAB_SCOPE_SELECTOR = "[data-native-tab-scope]"
+import {
+  EVENT_EDIT_FIELDS_SELECTOR,
+  EVENT_POPOVER_SELECTOR,
+  NATIVE_TAB_SCOPE_SELECTOR,
+} from "@/lib/focus-selectors"
 
 const FOCUSABLE_SELECTOR = [
   "textarea:not([disabled]):not([readonly])",
