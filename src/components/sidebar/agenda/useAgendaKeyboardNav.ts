@@ -21,6 +21,10 @@ const EXIT_KEYS = new Set(["ArrowLeft", "ArrowRight", "h", "l", "Tab"])
 
 const STICKY_HEADER_PX = 32 // DaySection's sticky DateBar (h-8)
 const SCROLL_PADDING_PX = 8
+// All-day chips carry their selection outline on the pill itself, while their
+// ~4px top gap lives on the wrapping row's py-1. Inset a revealed chip by that
+// much so it rests the same distance below the bar as a timed row's text does.
+const ALLDAY_ROW_INSET_PX = 4
 
 // Window in which a just-closed popover counts as having "consumed" an Escape.
 const POPOVER_CLOSE_GRACE_MS = 250
@@ -118,11 +122,21 @@ export function useAgendaKeyboardNav({
 
     const cRect = container.getBoundingClientRect()
     const eRect = el.getBoundingClientRect()
-    const topBound = cRect.top + STICKY_HEADER_PX + SCROLL_PADDING_PX
+
+    // Reveal the item only when it's genuinely clipped — behind the sticky DateBar
+    // at the top, or past the container's bottom edge. An item already sitting just
+    // below the header stays put (avoids overshooting up when selecting the first
+    // all-day chip of a day). When we do reveal from the top, land it where day
+    // navigation would put it: a timed row flush under the header (its own py-1
+    // gives the gap), an all-day chip inset by the row's py-1.
+    const item = itemsRef.current.find((it) => it.id === id)
+    const revealInset = item && isAllDay(item.event.start) ? ALLDAY_ROW_INSET_PX : 0
+
+    const headerBottom = cRect.top + STICKY_HEADER_PX
     const bottomBound = cRect.bottom - SCROLL_PADDING_PX
 
-    if (eRect.top < topBound) {
-      container.scrollTop -= topBound - eRect.top
+    if (eRect.top < headerBottom) {
+      container.scrollTop -= headerBottom + revealInset - eRect.top
     } else if (eRect.bottom > bottomBound) {
       container.scrollTop += eRect.bottom - bottomBound
     }
