@@ -102,6 +102,18 @@ Both MonthView and WeekView use infinite scroll to navigate dates, and both upda
 - When days are prepended, correct `scrollLeft` by `added * dayWidth` so the viewport stays anchored on the same content (no visible jump).
 - After programmatic scrolls (initial scroll-to-now, smooth nav-into-view), suppress scroll-driven updates via `ignoreScrollUntilRef` (~500ms).
 
+## Agenda keyboard navigation
+
+The sidebar agenda (`src/components/sidebar/agenda/`) is keyboard-navigable so you can move through
+events without the mouse. `Tab` focuses the agenda; while it's focused, `j`/`k` (and `↓`/`↑`) move a
+selection between events, `Enter` opens the selected one, and `Escape`, `Tab`, or any horizontal key
+(`h`/`l`/`←`/`→`) hands control back to normal day navigation. Selection starts on the first event of
+the active day and keeps the active day in sync as it moves, scrolling just enough to keep the
+selected event comfortably in view under the sticky day header.
+
+The keyboard logic lives in `useAgendaKeyboardNav.ts`, with focus/selection state in
+`AgendaFocusContext`.
+
 ## Natural Language Event Input
 
 The header input parses natural language into structured event fields using `src/lib/magic-parser.ts` (`parseEventText`; `segmentEventText` locates the matched ranges for highlighting). Parsing is debounced (300ms) in `EventDraftContext.setText` and extracts three things in order:
