@@ -35,7 +35,7 @@ import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
 
 const HOUR_HEIGHT = 56
 const GRID_HEIGHT = 24 * HOUR_HEIGHT
-const GUTTER_WIDTH = 48
+export const GUTTER_WIDTH = 48
 const DAY_WIDTH_MIN = 100
 
 // How long to wait after a scroll event before considering the scroll "settled"
