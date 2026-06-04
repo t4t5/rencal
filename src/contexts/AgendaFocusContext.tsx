@@ -1,5 +1,7 @@
 import { ReactNode, createContext, useContext, useMemo, useState } from "react"
 
+import { eventKeyFromAgendaItemId } from "@/lib/agenda-item"
+
 // Two contexts on purpose: `isFocused` flips only when the agenda gains/loses
 // keyboard focus (rare), while `selectedItemId` changes on every j/k/arrow press.
 // GlobalShortcuts only needs `isFocused`, so keeping them separate stops it from
@@ -16,6 +18,9 @@ interface AgendaSelectionContextType {
   // eventKey alone wouldn't pick out a single row.
   selectedItemId: string | null
   setSelectedItemId: (id: string | null) => void
+  // The selected item's `eventKey`, for highlighting the event across the rest
+  // of the app (month/week views), where rows are keyed by event, not by day.
+  selectedEventKey: string | null
 }
 
 const AgendaFocusedContext = createContext({} as AgendaFocusedContextType)
@@ -34,7 +39,15 @@ export function AgendaFocusProvider({ children }: { children: ReactNode }) {
   const [selectedItemId, setSelectedItemId] = useState<string | null>(null)
 
   const focusedValue = useMemo(() => ({ isFocused, setIsFocused }), [isFocused])
-  const selectionValue = useMemo(() => ({ selectedItemId, setSelectedItemId }), [selectedItemId])
+
+  const selectedEventKey = useMemo(
+    () => (selectedItemId ? eventKeyFromAgendaItemId(selectedItemId) : null),
+    [selectedItemId],
+  )
+  const selectionValue = useMemo(
+    () => ({ selectedItemId, setSelectedItemId, selectedEventKey }),
+    [selectedItemId, selectedEventKey],
+  )
 
   return (
     <AgendaFocusedContext.Provider value={focusedValue}>

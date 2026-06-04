@@ -48,6 +48,7 @@ type WeekTimeGridProps = {
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
   activeEventKey: string | null
+  selectedEventKey: string | null
   activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Date) => void
@@ -63,6 +64,7 @@ export function WeekTimeGrid({
   allDayItems,
   maxAllDayLane,
   activeEventKey,
+  selectedEventKey,
   activeDateKey,
   scrollContainerRef,
   onDayClick,
@@ -321,7 +323,10 @@ export function WeekTimeGrid({
                   item={item}
                   colOffset={1}
                   rowOffset={1}
-                  isActive={activeEventKey === eventKey(item.event)}
+                  highlighted={
+                    activeEventKey === eventKey(item.event) ||
+                    selectedEventKey === eventKey(item.event)
+                  }
                   isPending={isPendingEvent(item.event, calendars)}
                   isDeclined={isDeclinedEvent(item.event, calendars)}
                   isDraft={item.event === draftEvent}
@@ -373,7 +378,10 @@ export function WeekTimeGrid({
                   <WeekTimedEvent
                     key={eventKey(layout.event)}
                     layout={layout}
-                    isActive={activeEventKey === eventKey(layout.event)}
+                    highlighted={
+                      activeEventKey === eventKey(layout.event) ||
+                      selectedEventKey === eventKey(layout.event)
+                    }
                     isPending={isPendingEvent(layout.event, calendars)}
                     isDeclined={isDeclinedEvent(layout.event, calendars)}
                     isDraft={layout.event === draftEvent}

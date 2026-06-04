@@ -13,7 +13,7 @@ export function WeekAllDayBar({
   item,
   colOffset,
   rowOffset,
-  isActive,
+  highlighted: highlightedByParent,
   isPending,
   isDeclined,
   isDraft,
@@ -25,7 +25,7 @@ export function WeekAllDayBar({
   colOffset: number
   // Added to item.lane so bar lands on the right row in the parent grid:
   rowOffset: number
-  isActive: boolean
+  highlighted: boolean
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
@@ -36,7 +36,7 @@ export function WeekAllDayBar({
   const [contextOpen, setContextOpen] = useState(false)
 
   const isDashed = isPending || isDeclined
-  const highlighted = isActive || contextOpen
+  const highlighted = highlightedByParent || contextOpen
   const fillsRow = item.endCol - item.startCol >= 7
 
   const inner = (

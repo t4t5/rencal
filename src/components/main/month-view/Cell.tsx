@@ -30,6 +30,7 @@ type MonthDayCellProps = {
   hiddenAllDayCount: number
   reservedAllDayHeight: number
   activeEventKey: string | null
+  selectedEventKey: string | null
   isActiveDay: boolean
   onClick: () => void
   onEventClick: (eventKey: string) => void
@@ -43,6 +44,7 @@ export function MonthDayCell({
   hiddenAllDayCount,
   reservedAllDayHeight,
   activeEventKey,
+  selectedEventKey,
   isActiveDay,
   onClick,
   onEventClick,
@@ -113,7 +115,9 @@ export function MonthDayCell({
             <MonthTimedEvent
               key={eventKey(item.event)}
               item={item}
-              isActive={eventKey(item.event) === activeEventKey}
+              highlighted={
+                eventKey(item.event) === activeEventKey || eventKey(item.event) === selectedEventKey
+              }
               isPending={isPendingEvent(item.event, calendars)}
               isDeclined={isDeclinedEvent(item.event, calendars)}
               isDraft={item.event === draftEvent}

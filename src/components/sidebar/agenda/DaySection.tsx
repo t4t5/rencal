@@ -9,6 +9,7 @@ import type { Calendar } from "@/rpc/bindings"
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { makeAgendaItemId } from "@/lib/agenda-item"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
@@ -35,7 +36,7 @@ export const DaySection = forwardRef<
   const getRowState = (event: CalendarEvent): RowState => {
     const key = eventKey(event)
     const isDraft = !!draftEvent && key === eventKey(draftEvent)
-    const itemId = `${dateKey}::${key}`
+    const itemId = makeAgendaItemId(dateKey, key)
 
     return {
       itemId,

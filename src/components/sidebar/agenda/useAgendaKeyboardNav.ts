@@ -4,6 +4,7 @@ import { useAgendaFocused, useAgendaSelection } from "@/contexts/AgendaFocusCont
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
+import { makeAgendaItemId } from "@/lib/agenda-item"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, isAllDay } from "@/lib/event-time"
@@ -69,7 +70,7 @@ export function useAgendaKeyboardNav({
       ...events.filter((e) => !isAllDay(e.start)),
     ]
     for (const event of ordered) {
-      items.push({ id: `${dateKey}::${eventKey(event)}`, dateKey, date, event })
+      items.push({ id: makeAgendaItemId(dateKey, eventKey(event)), dateKey, date, event })
     }
   }
   itemsRef.current = items

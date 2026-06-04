@@ -1,5 +1,6 @@
 import { useRef } from "react"
 
+import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
@@ -16,6 +17,7 @@ export function WeekView() {
   const { calendars } = useCalendars()
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
+  const { selectedEventKey } = useAgendaSelection()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { days } = useInfiniteDays({ scrollContainerRef, activeDate })
@@ -31,6 +33,7 @@ export function WeekView() {
         allDayItems={layout.allDayItems}
         maxAllDayLane={layout.maxAllDayLane}
         activeEventKey={activeEvent ? eventKey(activeEvent) : null}
+        selectedEventKey={selectedEventKey}
         activeDateKey={formatDateKey(activeDate)}
         scrollContainerRef={scrollContainerRef}
         onDayClick={navigateToDate}

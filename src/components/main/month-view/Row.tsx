@@ -20,6 +20,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   weekDays,
   layout,
   activeEventKey,
+  selectedEventKey,
   activeDateKey,
   onDayClick,
   onEventClick,
@@ -29,6 +30,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   weekDays: MonthDay[]
   layout: WeekLayout
   activeEventKey: string | null
+  selectedEventKey: string | null
   activeDateKey: string
   onDayClick: (date: Date) => void
   onEventClick: (eventKey: string) => void
@@ -69,7 +71,9 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           <MonthAllDayEvent
             key={eventKey(item.event)}
             item={item}
-            isActive={eventKey(item.event) === activeEventKey}
+            highlighted={
+              eventKey(item.event) === activeEventKey || eventKey(item.event) === selectedEventKey
+            }
             isPending={isPendingEvent(item.event, calendars)}
             isDeclined={isDeclinedEvent(item.event, calendars)}
             isDraft={item.event === draftEvent}
@@ -96,6 +100,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
                 reservedLanes[colIndex] > 0 ? reservedLanes[colIndex] * LANE_HEIGHT - LANE_GAP : 0
               }
               activeEventKey={activeEventKey}
+              selectedEventKey={selectedEventKey}
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
               onEventClick={onEventClick}
