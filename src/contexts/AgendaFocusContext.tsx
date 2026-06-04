@@ -3,9 +3,9 @@ import { ReactNode, createContext, useContext, useMemo, useState } from "react"
 import { eventKeyFromAgendaItemId } from "@/lib/agenda-item"
 
 // Two contexts on purpose: `isFocused` flips only when the agenda gains/loses
-// keyboard focus (rare), while `selectedItemId` changes on every j/k/arrow press.
-// GlobalShortcuts only needs `isFocused`, so keeping them separate stops it from
-// re-subscribing every hotkey on each selection move.
+// keyboard focus (rare), while `selectedItemId` changes on every Tab / Shift+Tab
+// press. Keeping them separate stops consumers that only care about focus from
+// re-rendering on each selection move.
 
 interface AgendaFocusedContextType {
   isFocused: boolean

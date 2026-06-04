@@ -12,13 +12,6 @@ import { formatDateKey, isAllDay } from "@/lib/event-time"
 // GlobalShortcuts focuses the agenda by id from its Tab handler.
 export const AGENDA_EL_ID = "agenda-scroll-container"
 
-// Vertical keys move the selection: up/k = previous, down/j = next.
-const PREV_KEYS = new Set(["ArrowUp", "k"])
-const NEXT_KEYS = new Set(["ArrowDown", "j"])
-
-// Horizontal keys (and Tab) exit keyboard mode, back to day navigation.
-const EXIT_KEYS = new Set(["ArrowLeft", "ArrowRight", "h", "l", "Tab"])
-
 const STICKY_HEADER_PX = 32 // DaySection's sticky DateBar (h-8)
 const SCROLL_PADDING_PX = 8
 // All-day chips carry their selection outline on the pill itself, while their
@@ -42,10 +35,10 @@ export interface GroupedDay {
   events: CalendarEvent[]
 }
 
-// Keyboard navigation for the agenda. While focused (Tab to enter), up/down +
-// j/k move the selection and Enter opens the event; Escape, Tab, or any
-// horizontal key (left/right/h/l) exits back to day navigation. Default
-// selection is the first item in the active day.
+// Keyboard navigation for the agenda. Tab enters the agenda and selects the
+// first timed event in the active day. Once focused, Tab advances the selection,
+// Shift+Tab moves it backwards, and Enter opens the selected event. Escape exits
+// back to normal app focus.
 export function useAgendaKeyboardNav({
   eventsByDate,
   scrollContainerRef,
@@ -210,6 +203,13 @@ export function useAgendaKeyboardNav({
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Tab") {
+      e.preventDefault()
+      e.stopPropagation()
+      move(e.shiftKey ? -1 : 1)
+      return
+    }
+
     // Let global combos and shifted keys pass through.
     if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return
 
@@ -225,29 +225,13 @@ export function useAgendaKeyboardNav({
       return
     }
 
-    if (EXIT_KEYS.has(e.key)) {
-      // stopPropagation so the global day-nav hotkeys (h/l/←/→) and the Tab
-      // focus-agenda shortcut don't fire — Tab would otherwise re-focus us.
-      e.preventDefault()
-      e.stopPropagation()
-      scrollContainerRef.current?.blur()
-      return
-    }
-
     if (e.key === "Enter") {
       e.preventDefault()
       openSelected()
       return
     }
 
-    const isPrev = PREV_KEYS.has(e.key)
-    const isNext = NEXT_KEYS.has(e.key)
-    if (!isPrev && !isNext) return // let other shortcuts (t/c/m/w/search) through
-
-    // Block the global day/week nav hotkeys bound on document.
-    e.preventDefault()
-    e.stopPropagation()
-    move(isPrev ? -1 : 1)
+    // Let other shortcuts (including hjkl/arrows for date navigation) pass through.
   }
 
   return {
