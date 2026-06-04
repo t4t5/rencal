@@ -141,8 +141,7 @@ const TimedRow = ({
       data-agenda-item={itemId}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
       className={cn("cursor-default hover:bg-secondary py-1", {
-        "bg-accent!": isActive,
-        "ring-2 ring-inset ring-ring": isSelected,
+        "bg-accent!": isActive || isSelected,
         "opacity-50": isPending || isDeclined || isDraft,
         "line-through": isDeclined,
       })}
