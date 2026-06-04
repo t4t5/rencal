@@ -24,6 +24,7 @@ const POPOVER_CLOSE_GRACE_MS = 250
 interface AgendaItem {
   id: string
   dateKey: string
+  date: Date
   event: CalendarEvent
 }
 
@@ -46,7 +47,7 @@ export function useAgendaKeyboardNav({
   const { setIsFocused } = useAgendaFocused()
   const { selectedItemId, setSelectedItemId } = useAgendaSelection()
   const { activeEvent, setActiveEventKey } = useCalEvents()
-  const { activeDate } = useCalendarNavigation()
+  const { activeDate, setActiveDate } = useCalendarNavigation()
 
   // Refs mirror state so handlers read fresh values without stale closures.
   const itemsRef = useRef<AgendaItem[]>([])
@@ -58,13 +59,13 @@ export function useAgendaKeyboardNav({
 
   // Flat list in DaySection's render order: all-day chips, then timed rows, per day.
   const items: AgendaItem[] = []
-  for (const { dateKey, events } of eventsByDate) {
+  for (const { dateKey, date, events } of eventsByDate) {
     const ordered = [
       ...events.filter((e) => isAllDay(e.start)),
       ...events.filter((e) => !isAllDay(e.start)),
     ]
     for (const event of ordered) {
-      items.push({ id: `${dateKey}::${eventKey(event)}`, dateKey, event })
+      items.push({ id: `${dateKey}::${eventKey(event)}`, dateKey, date, event })
     }
   }
   itemsRef.current = items
@@ -116,7 +117,17 @@ export function useAgendaKeyboardNav({
   const select = (id: string | null) => {
     setSelectedItemId(id)
     selectedIdRef.current = id
-    if (id) scrollItemIntoView(id)
+    if (!id) return
+
+    scrollItemIntoView(id)
+
+    // Make selected item's day active.
+    // Use setActiveDate, not navigateToDate (we already scroll the agenda ourselves)
+    const item = itemsRef.current.find((it) => it.id === id)
+    if (item && item.dateKey !== formatDateKey(activeDateRef.current)) {
+      activeDateRef.current = item.date
+      setActiveDate(item.date)
+    }
   }
 
   const move = (delta: number) => {
