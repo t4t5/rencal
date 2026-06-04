@@ -85,72 +85,74 @@ export function EventInfo({
   isPendingInvite?: boolean
 }) {
   return (
-    <div data-event-edit-fields className="flex flex-col gap-1 grow">
-      <div className="flex min-h-control-height items-center">
-        <Textarea
-          ref={summaryRef}
-          placeholder="Event Title"
-          value={summary ?? ""}
-          className={cn(
-            "text-base font-medium",
-            readonly && "hover:border-transparent! focus:bg-transparent!",
-          )}
-          readOnly={readonly}
-          onChange={(e) => onChangeSummary(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault()
-              onClose?.()
-            }
-          }}
-        />
-      </div>
-
-      <div className="flex flex-col gap-1">
-        <LocationInput
-          value={location}
-          onChange={onLocationChange}
-          onClose={onClose}
-          readOnly={readonly}
-        />
-
-        <DateTimeSelect
-          start={start}
-          end={end}
-          showTime={showTime}
-          readOnly={readonly}
-          onChange={onChangeDateTime}
-        />
-        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
-
-        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
-
-        {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
-        <AttendeesDisplay organizer={organizer} attendees={attendees} />
-
-        {!calendar?.read_only && (
-          <ReminderSelect
-            reminders={reminders ?? []}
-            onSelect={onReminderAdd}
-            onRemove={onReminderRemove}
-          />
-        )}
-
-        <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
-
-        <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
-
-        {onRsvp && (
-          <>
-            <Divider />
-            {isPendingInvite ? (
-              <RsvpBar onRsvp={onRsvp} />
-            ) : (
-              <RsvpSelect status={userResponseStatus} onRsvp={onRsvp} />
+    <div className="flex flex-col gap-1 grow">
+      <div data-event-edit-fields className="flex flex-col gap-1">
+        <div className="flex min-h-control-height items-center">
+          <Textarea
+            ref={summaryRef}
+            placeholder="Event Title"
+            value={summary ?? ""}
+            className={cn(
+              "text-base font-medium",
+              readonly && "hover:border-transparent! focus:bg-transparent!",
             )}
-          </>
-        )}
+            readOnly={readonly}
+            onChange={(e) => onChangeSummary(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault()
+                onClose?.()
+              }
+            }}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <LocationInput
+            value={location}
+            onChange={onLocationChange}
+            onClose={onClose}
+            readOnly={readonly}
+          />
+
+          <DateTimeSelect
+            start={start}
+            end={end}
+            showTime={showTime}
+            readOnly={readonly}
+            onChange={onChangeDateTime}
+          />
+          <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
+
+          <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
+
+          {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
+          <AttendeesDisplay organizer={organizer} attendees={attendees} />
+
+          {!calendar?.read_only && (
+            <ReminderSelect
+              reminders={reminders ?? []}
+              onSelect={onReminderAdd}
+              onRemove={onReminderRemove}
+            />
+          )}
+
+          <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
+
+          <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
+        </div>
       </div>
+
+      {onRsvp && (
+        <>
+          <Divider />
+          {isPendingInvite ? (
+            <RsvpBar onRsvp={onRsvp} />
+          ) : (
+            <RsvpSelect status={userResponseStatus} onRsvp={onRsvp} />
+          )}
+        </>
+      )}
     </div>
   )
 }

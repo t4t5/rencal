@@ -14,6 +14,7 @@ import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -74,7 +75,8 @@ function useShortcutHandlers({
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { setSelectedEventKey } = useAgendaSelection()
-  const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { activeEvent } = useCalEvents()
+  const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
   const { toggleTheme } = useTheme()
 
@@ -132,12 +134,12 @@ function useShortcutHandlers({
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
     "prev-event": (e) => {
-      if (isInNativeTabScope()) return
+      if (activeEvent || draftPopoverOpen || isInNativeTabScope()) return
       e.preventDefault()
       focusAgendaItem(-1, activeDate)
     },
     "next-event": (e) => {
-      if (isInNativeTabScope()) return
+      if (activeEvent || draftPopoverOpen || isInNativeTabScope()) return
       e.preventDefault()
       focusAgendaItem(1, activeDate)
     },

@@ -1,6 +1,7 @@
 import { format, isSameYear, isToday } from "date-fns"
 import { forwardRef, type FocusEvent, type KeyboardEvent, useMemo } from "react"
 
+import { focusEventPopoverField } from "@/components/event-parts/useEventPopoverTabTrap"
 import { AgendaAllDayEventBlock } from "@/components/events-blocks/agenda/AllDayEventBlock"
 import { AgendaTimedEventBlock } from "@/components/events-blocks/agenda/TimedEventBlock"
 
@@ -73,6 +74,12 @@ export const DaySection = forwardRef<
       e.preventDefault()
       setEventAnchor(e.currentTarget)
       setActiveEventKey(eventKey(event))
+      return
+    }
+
+    if (e.key === "Tab" && activeEvent) {
+      e.preventDefault()
+      focusEventPopoverField(e.shiftKey)
       return
     }
 
