@@ -17,7 +17,7 @@ import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
-import { rememberFocusedAgendaItem } from "./useAgendaKeyboardNav"
+import { clearRememberedAgendaItem, rememberFocusedAgendaItem } from "./useAgendaKeyboardNav"
 
 export const DaySection = forwardRef<
   HTMLDivElement,
@@ -64,6 +64,7 @@ export const DaySection = forwardRef<
 
   const handleBlur = (e: FocusEvent<HTMLElement>) => {
     if ((e.relatedTarget as HTMLElement | null)?.closest("[data-agenda-item]")) return
+    clearRememberedAgendaItem()
     setSelectedEventKey(null)
   }
 
