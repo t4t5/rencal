@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils"
 import { DaySection } from "./DaySection"
 import { GetStartedState } from "./GetStartedState"
 import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
+import { useAgendaKeyboardNav } from "./useAgendaKeyboardNav"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
@@ -48,6 +49,8 @@ export function Agenda() {
   })
 
   usePreserveScrollOnPrepend({ scrollContainerRef, sections: sectionsToRender })
+
+  const { agendaProps } = useAgendaKeyboardNav({ eventsByDate, scrollContainerRef })
 
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
     if (!sectionRefs.current) return
@@ -92,8 +95,9 @@ export function Agenda() {
   return (
     <div
       ref={scrollContainerRef}
+      {...agendaProps}
       className={cn(
-        "grow overflow-auto flex-col gap-6 select-none bg-background",
+        "grow overflow-auto flex-col gap-6 select-none bg-background outline-none",
         !hasInitiallyScrolled && "invisible",
       )}
     >

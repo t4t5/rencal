@@ -61,6 +61,12 @@ export const SHORTCUTS = [
     ],
   },
   {
+    id: "focus-agenda",
+    group: "Navigation",
+    label: "Focus agenda",
+    bindings: [{ keys: "tab", type: "hotkey" }],
+  },
+  {
     id: "month",
     group: "View",
     label: "Month view",

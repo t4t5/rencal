@@ -6,6 +6,7 @@ import { AgendaTimedEventBlock } from "@/components/events-blocks/agenda/TimedEv
 
 import type { Calendar } from "@/rpc/bindings"
 
+import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
@@ -25,17 +26,23 @@ export const DaySection = forwardRef<
   }
 >(({ date, events, calendars, draftEvent }, ref) => {
   const { activeEvent, toggleActiveEventKey } = useCalEvents()
+  const { selectedItemId } = useAgendaSelection()
 
   const calendarBySlug = useMemo(() => new Map(calendars.map((c) => [c.slug, c])), [calendars])
+
+  const dateKey = formatDateKey(date)
 
   const getRowState = (event: CalendarEvent): RowState => {
     const key = eventKey(event)
     const isDraft = !!draftEvent && key === eventKey(draftEvent)
+    const itemId = `${dateKey}::${key}`
 
     return {
+      itemId,
       calendarColor: getCalendarColor(calendarBySlug.get(event.calendar_slug)),
       isDraft,
       isActive: !isDraft && !!activeEvent && key === eventKey(activeEvent),
+      isSelected: itemId === selectedItemId,
       isPending: isPendingEvent(event, calendars),
       isDeclined: isDeclinedEvent(event, calendars),
     }
@@ -50,7 +57,7 @@ export const DaySection = forwardRef<
   const timedEvents = events.filter((e) => !isAllDay(e.start))
 
   return (
-    <div ref={ref} data-date={formatDateKey(date)} className="relative border-b border-b-divider">
+    <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">
       <DateBar date={date} />
 
       <div className="flex flex-col gap-1 pb-2">
@@ -83,8 +90,10 @@ export const DaySection = forwardRef<
 })
 
 type RowState = {
+  itemId: string
   calendarColor: string
   isActive: boolean
+  isSelected: boolean
   isDraft: boolean
   isPending: boolean
   isDeclined: boolean
@@ -99,12 +108,14 @@ const AllDayRow = ({
   state: RowState
   onSelect: (event: CalendarEvent, target: HTMLElement) => void
 }) => {
-  const { calendarColor, isActive, isDraft, isPending, isDeclined } = state
+  const { itemId, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
   return (
     <AgendaAllDayEventBlock
       event={event}
+      itemId={itemId}
       calendarColor={calendarColor}
       highlighted={isActive}
+      selected={isSelected}
       isDashed={isPending || isDeclined}
       isDeclined={isDeclined}
       isDraft={isDraft}
@@ -122,14 +133,16 @@ const TimedRow = ({
   state: RowState
   onSelect: (event: CalendarEvent, target: HTMLElement) => void
 }) => {
-  const { calendarColor, isActive, isDraft, isPending, isDeclined } = state
+  const { itemId, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (
     <div
       data-event-clickable={!isDraft || undefined}
+      data-agenda-item={itemId}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
       className={cn("cursor-default hover:bg-secondary py-1", {
         "bg-accent!": isActive,
+        "ring-2 ring-inset ring-ring": isSelected,
         "opacity-50": isPending || isDeclined || isDraft,
         "line-through": isDeclined,
       })}

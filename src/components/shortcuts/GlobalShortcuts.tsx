@@ -3,10 +3,12 @@ import { useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
+import { AGENDA_EL_ID } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
+import { useAgendaFocused } from "@/contexts/AgendaFocusContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -68,11 +70,15 @@ function useShortcutHandlers({
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
+  const { isFocused: isAgendaFocused } = useAgendaFocused()
   const { toggleTheme } = useTheme()
 
   const lastNavRef = useRef(0)
 
+  // While the agenda is focused, hjkl/arrows navigate agenda items instead of
+  // days/weeks — let the agenda's own handler own them.
   const throttledNavigate = (date: Date) => {
+    if (isAgendaFocused) return
     const now = Date.now()
     if (now - lastNavRef.current < NAV_THROTTLE_MS) return
     lastNavRef.current = now
@@ -111,6 +117,10 @@ function useShortcutHandlers({
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
+    "focus-agenda": (e) => {
+      e.preventDefault()
+      document.getElementById(AGENDA_EL_ID)?.focus()
+    },
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
     search: handleSearch,
