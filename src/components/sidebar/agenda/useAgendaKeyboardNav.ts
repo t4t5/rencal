@@ -1,4 +1,4 @@
-import { RefObject, useRef } from "react"
+import { RefObject, useEffect, useRef } from "react"
 
 import { useAgendaFocused, useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -8,16 +8,18 @@ import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, isAllDay } from "@/lib/event-time"
 
-// Stable id so GlobalShortcuts can focus the agenda from its Tab handler,
-// mirroring the getElementById pattern used for the search input.
+// GlobalShortcuts focuses the agenda by id from its Tab handler.
 export const AGENDA_EL_ID = "agenda-scroll-container"
 
-// hjkl + arrows all drive the vertical list: up/left = previous, down/right = next.
+// up/left = previous, down/right = next.
 const PREV_KEYS = new Set(["ArrowUp", "ArrowLeft", "k", "h"])
 const NEXT_KEYS = new Set(["ArrowDown", "ArrowRight", "j", "l"])
 
 const STICKY_HEADER_PX = 32 // DaySection's sticky DateBar (h-8)
 const SCROLL_PADDING_PX = 8
+
+// Window in which a just-closed popover counts as having "consumed" an Escape.
+const POPOVER_CLOSE_GRACE_MS = 250
 
 interface AgendaItem {
   id: string
@@ -31,12 +33,9 @@ export interface GroupedDay {
   events: CalendarEvent[]
 }
 
-/**
- * Makes the agenda a keyboard-navigable list. While the scroll container is
- * focused (Tab to enter, Escape to leave), arrow keys + hjkl move a "selected"
- * item up/down, Enter opens it. The default selection is the first item in the
- * currently active day.
- */
+// Keyboard navigation for the agenda. While focused (Tab to enter, Escape to
+// leave), arrows + hjkl move the selection, Enter opens the event. Default
+// selection is the first item in the active day.
 export function useAgendaKeyboardNav({
   eventsByDate,
   scrollContainerRef,
@@ -46,16 +45,18 @@ export function useAgendaKeyboardNav({
 }) {
   const { setIsFocused } = useAgendaFocused()
   const { selectedItemId, setSelectedItemId } = useAgendaSelection()
-  const { setActiveEventKey } = useCalEvents()
+  const { activeEvent, setActiveEventKey } = useCalEvents()
   const { activeDate } = useCalendarNavigation()
 
-  // Read latest values inside event handlers without stale closures.
+  // Refs mirror state so handlers read fresh values without stale closures.
   const itemsRef = useRef<AgendaItem[]>([])
   const selectedIdRef = useRef<string | null>(null)
   const activeDateRef = useRef(activeDate)
+  const activeEventRef = useRef(activeEvent)
+  const prevActiveEventRef = useRef(activeEvent)
+  const popoverClosedAtRef = useRef(0)
 
-  // Flatten into the same visual order DaySection renders: all-day chips first,
-  // then timed rows, day by day.
+  // Flat list in DaySection's render order: all-day chips, then timed rows, per day.
   const items: AgendaItem[] = []
   for (const { dateKey, events } of eventsByDate) {
     const ordered = [
@@ -69,12 +70,24 @@ export function useAgendaKeyboardNav({
   itemsRef.current = items
   selectedIdRef.current = selectedItemId
   activeDateRef.current = activeDate
+  activeEventRef.current = activeEvent
+
+  // When a keyboard-opened popover closes, return focus to the agenda. The live
+  // selection gates this so mouse-opened popovers don't steal focus.
+  useEffect(() => {
+    const had = prevActiveEventRef.current
+    prevActiveEventRef.current = activeEvent
+    if (had && !activeEvent && selectedIdRef.current) {
+      popoverClosedAtRef.current = Date.now()
+      scrollContainerRef.current?.focus()
+    }
+  }, [activeEvent])
 
   const firstIdInActiveDay = (): string | null => {
     const list = itemsRef.current
     if (!list.length) return null
     const activeKey = formatDateKey(activeDateRef.current)
-    // Date keys are YYYY-MM-DD, so lexical compare matches chronological order.
+    // YYYY-MM-DD keys: lexical compare == chronological.
     return (
       list.find((it) => it.dateKey === activeKey)?.id ??
       list.find((it) => it.dateKey > activeKey)?.id ??
@@ -140,16 +153,24 @@ export function useAgendaKeyboardNav({
     if (!stillValid) select(firstIdInActiveDay())
   }
 
-  const onBlur = () => {
+  const onBlur = (e: React.FocusEvent<HTMLDivElement>) => {
+    // Focus moving into the popover stays in keyboard mode so closing it returns here.
+    if ((e.relatedTarget as HTMLElement | null)?.closest("[data-event-popover]")) return
     setIsFocused(false)
     select(null)
   }
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    // Let global combos (mod+f, etc.) and shifted keys pass through.
+    // Let global combos and shifted keys pass through.
     if (e.shiftKey || e.metaKey || e.ctrlKey || e.altKey) return
 
     if (e.key === "Escape") {
+      // Escape that closes the popover shouldn't also exit the agenda. Radix may
+      // close it before this runs, so a just-closed popover counts too. Otherwise
+      // exit back to day nav.
+      const popoverConsumedEscape =
+        activeEventRef.current || Date.now() - popoverClosedAtRef.current < POPOVER_CLOSE_GRACE_MS
+      if (popoverConsumedEscape) return
       e.preventDefault()
       scrollContainerRef.current?.blur()
       return
@@ -162,9 +183,9 @@ export function useAgendaKeyboardNav({
 
     const isPrev = PREV_KEYS.has(e.key)
     const isNext = NEXT_KEYS.has(e.key)
-    if (!isPrev && !isNext) return // let t / c / m / w / search still work
+    if (!isPrev && !isNext) return // let other shortcuts (t/c/m/w/search) through
 
-    // Stop the global day/week navigation hotkeys (bound on document) from firing.
+    // Block the global day/week nav hotkeys bound on document.
     e.preventDefault()
     e.stopPropagation()
     move(isPrev ? -1 : 1)

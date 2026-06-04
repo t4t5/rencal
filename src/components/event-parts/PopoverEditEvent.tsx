@@ -38,12 +38,18 @@ export function PopoverEditEvent() {
         style={{ top: pos.top, left: pos.left, width: pos.width, height: 0 }}
       />
       <PopoverContent
+        data-event-popover
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
         side="right"
         align="center"
         sideOffset={8}
         collisionPadding={16}
         onOpenAutoFocus={(e) => e.preventDefault()}
+        onCloseAutoFocus={(e) => {
+          // Don't let Radix yank focus to a trigger/body on close.
+          // Needed for keyboard users to return focus to agenda
+          e.preventDefault()
+        }}
         onPointerDownOutside={(e) => {
           // If the click landed on an event element, let that element's
           // toggle handler manage the popover instead of auto-dismissing.
