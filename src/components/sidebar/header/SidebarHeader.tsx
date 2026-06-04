@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
 import { Card } from "@/components/ui/card"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
+import { useFocusTrap } from "@/hooks/useFocusTrap"
 import { cn } from "@/lib/utils"
 
 import { FlyAnimationProvider, FlyToMinical, useFlyAnimation } from "./FlyAnimation"
@@ -24,6 +25,11 @@ function SidebarHeaderContent() {
 
   const { cardRef, hideCard, onCollapsed, flyRef, isFlying, startFlight } = useFlyAnimation()
 
+  // While composing, keep Tab within the compose region (the natural-language
+  // input + the draft card) instead of escaping to the minical below.
+  const composeRef = useRef<HTMLDivElement>(null)
+  useFocusTrap(isDrafting, composeRef)
+
   const showDraft = (isDrafting && text.length > 0) || isFlying
 
   // Stay true briefly after showDraft flips false, so the card
@@ -37,7 +43,7 @@ function SidebarHeaderContent() {
   }, [showDraft])
 
   return (
-    <div className="flex flex-col p-4 pb-0">
+    <div ref={composeRef} className="flex flex-col p-4 pb-0">
       <SidebarToolbar />
 
       <div

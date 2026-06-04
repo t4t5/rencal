@@ -118,6 +118,12 @@ function useShortcutHandlers({
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
     "focus-agenda": (e) => {
+      // Tab jumps to the agenda only from the app's resting state (nothing focused).
+      // If the user is tabbing through a form — the event popover's date pickers,
+      // buttons, etc. — let the browser move focus to the next field instead.
+      // (react-hotkeys-hook already skips input/textarea/select, but not buttons.)
+      const active = document.activeElement
+      if (active && active !== document.body) return
       e.preventDefault()
       document.getElementById(AGENDA_EL_ID)?.focus()
     },
