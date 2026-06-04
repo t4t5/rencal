@@ -131,10 +131,15 @@ function useShortcutHandlers({
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
-    "focus-agenda": (e) => {
+    "prev-event": (e) => {
       if (isInNativeTabScope()) return
       e.preventDefault()
-      focusAgendaItem(e.shiftKey ? -1 : 1, activeDate)
+      focusAgendaItem(-1, activeDate)
+    },
+    "next-event": (e) => {
+      if (isInNativeTabScope()) return
+      e.preventDefault()
+      focusAgendaItem(1, activeDate)
     },
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
