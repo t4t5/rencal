@@ -34,7 +34,12 @@ export function SearchButton() {
           showShortcut={false}
         />
       ) : (
-        <Button id={SEARCH_BUTTON_EL_ID} variant="secondary" onClick={() => setIsSearching(true)}>
+        <Button
+          id={SEARCH_BUTTON_EL_ID}
+          variant="secondary"
+          onClick={() => setIsSearching(true)}
+          tabIndex={-1}
+        >
           <SearchIcon />
         </Button>
       )}

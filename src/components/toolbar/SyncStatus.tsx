@@ -61,6 +61,7 @@ export const SyncStatus = () => {
       return (
         <Tooltip>
           <TooltipTrigger
+            tabIndex={-1}
             onClick={() => void syncNow()}
             className="relative flex items-center cursor-pointer"
           >

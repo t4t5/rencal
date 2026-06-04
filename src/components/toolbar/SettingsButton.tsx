@@ -54,7 +54,7 @@ export async function openSettingsWindow() {
 export const SettingsButton = () => {
   return (
     <ShortcutTooltip text="Settings" shortcut="mod+comma">
-      <Button variant="ghost" onClick={() => openSettingsWindow()}>
+      <Button tabIndex={-1} variant="ghost" onClick={() => openSettingsWindow()}>
         <SettingsIcon className="size-4" />
       </Button>
     </ShortcutTooltip>

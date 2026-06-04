@@ -62,6 +62,7 @@ export function SearchInput({
       )}
       <Input
         id={SEARCH_INPUT_EL_ID}
+        tabIndex={-1}
         ref={inputRef}
         value={query}
         onChange={(e) => {
