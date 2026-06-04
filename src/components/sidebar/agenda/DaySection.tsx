@@ -1,5 +1,5 @@
 import { format, isSameYear, isToday } from "date-fns"
-import { forwardRef, useMemo } from "react"
+import { forwardRef, type FocusEvent, type KeyboardEvent, useMemo } from "react"
 
 import { AgendaAllDayEventBlock } from "@/components/events-blocks/agenda/AllDayEventBlock"
 import { AgendaTimedEventBlock } from "@/components/events-blocks/agenda/TimedEventBlock"
@@ -8,8 +8,8 @@ import type { Calendar } from "@/rpc/bindings"
 
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
-import { makeAgendaItemId } from "@/lib/agenda-item"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
@@ -26,24 +26,23 @@ export const DaySection = forwardRef<
     draftEvent: CalendarEvent | null
   }
 >(({ date, events, calendars, draftEvent }, ref) => {
-  const { activeEvent, toggleActiveEventKey } = useCalEvents()
-  const { selectedItemId } = useAgendaSelection()
+  const { activeEvent, setActiveEventKey, toggleActiveEventKey } = useCalEvents()
+  const { setActiveDate } = useCalendarNavigation()
+  const { selectedEventKey, setSelectedEventKey } = useAgendaSelection()
 
   const calendarBySlug = useMemo(() => new Map(calendars.map((c) => [c.slug, c])), [calendars])
-
   const dateKey = formatDateKey(date)
 
   const getRowState = (event: CalendarEvent): RowState => {
     const key = eventKey(event)
     const isDraft = !!draftEvent && key === eventKey(draftEvent)
-    const itemId = makeAgendaItemId(dateKey, key)
 
     return {
-      itemId,
+      key,
       calendarColor: getCalendarColor(calendarBySlug.get(event.calendar_slug)),
       isDraft,
       isActive: !isDraft && !!activeEvent && key === eventKey(activeEvent),
-      isSelected: itemId === selectedItemId,
+      isSelected: key === selectedEventKey,
       isPending: isPendingEvent(event, calendars),
       isDeclined: isDeclinedEvent(event, calendars),
     }
@@ -52,6 +51,34 @@ export const DaySection = forwardRef<
   const handleSelect = (event: CalendarEvent, target: HTMLElement) => {
     setEventAnchor(target)
     toggleActiveEventKey(eventKey(event))
+  }
+
+  const handleFocus = (event: CalendarEvent) => {
+    setSelectedEventKey(eventKey(event))
+    setActiveDate(date)
+  }
+
+  const handleBlur = (e: FocusEvent<HTMLElement>) => {
+    if ((e.relatedTarget as HTMLElement | null)?.closest("[data-agenda-item]")) return
+    setSelectedEventKey(null)
+  }
+
+  const handleKeyDown = (event: CalendarEvent, e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault()
+      setEventAnchor(e.currentTarget)
+      setActiveEventKey(eventKey(event))
+      return
+    }
+
+    if (e.key === "Escape") {
+      e.preventDefault()
+      if (activeEvent) {
+        setActiveEventKey(null)
+        return
+      }
+      e.currentTarget.blur()
+    }
   }
 
   const allDayEvents = events.filter((e) => isAllDay(e.start))
@@ -70,8 +97,12 @@ export const DaySection = forwardRef<
               <AllDayRow
                 key={eventKey(event)}
                 event={event}
+                dateKey={dateKey}
                 state={getRowState(event)}
                 onSelect={handleSelect}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+                onKeyDown={handleKeyDown}
               />
             ))}
           </div>
@@ -81,8 +112,12 @@ export const DaySection = forwardRef<
           <TimedRow
             key={eventKey(event)}
             event={event}
+            dateKey={dateKey}
             state={getRowState(event)}
             onSelect={handleSelect}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
           />
         ))}
       </div>
@@ -91,7 +126,7 @@ export const DaySection = forwardRef<
 })
 
 type RowState = {
-  itemId: string
+  key: string
   calendarColor: string
   isActive: boolean
   isSelected: boolean
@@ -100,48 +135,80 @@ type RowState = {
   isDeclined: boolean
 }
 
+type RowHandlers = {
+  onSelect: (event: CalendarEvent, target: HTMLElement) => void
+  onFocus: (event: CalendarEvent) => void
+  onBlur: (e: FocusEvent<HTMLElement>) => void
+  onKeyDown: (event: CalendarEvent, e: KeyboardEvent<HTMLElement>) => void
+}
+
 const AllDayRow = ({
   event,
+  dateKey,
   state,
   onSelect,
+  onFocus,
+  onBlur,
+  onKeyDown,
 }: {
   event: CalendarEvent
+  dateKey: string
   state: RowState
-  onSelect: (event: CalendarEvent, target: HTMLElement) => void
-}) => {
-  const { itemId, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
+} & RowHandlers) => {
+  const { key, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
   return (
-    <AgendaAllDayEventBlock
-      event={event}
-      itemId={itemId}
-      calendarColor={calendarColor}
-      highlighted={isActive}
-      selected={isSelected}
-      isDashed={isPending || isDeclined}
-      isDeclined={isDeclined}
-      isDraft={isDraft}
+    <div
+      tabIndex={-1}
+      data-event-clickable={!isDraft || undefined}
+      data-agenda-item
+      data-event-key={key}
+      data-date-key={dateKey}
+      data-all-day="true"
+      onFocus={() => onFocus(event)}
+      onBlur={onBlur}
+      onKeyDown={(e) => onKeyDown(event, e)}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
-    />
+      className="rounded outline-none"
+    >
+      <AgendaAllDayEventBlock
+        event={event}
+        calendarColor={calendarColor}
+        highlighted={isActive || isSelected}
+        isDashed={isPending || isDeclined}
+        isDeclined={isDeclined}
+        isDraft={isDraft}
+      />
+    </div>
   )
 }
 
 const TimedRow = ({
   event,
+  dateKey,
   state,
   onSelect,
+  onFocus,
+  onBlur,
+  onKeyDown,
 }: {
   event: CalendarEvent
+  dateKey: string
   state: RowState
-  onSelect: (event: CalendarEvent, target: HTMLElement) => void
-}) => {
-  const { itemId, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
+} & RowHandlers) => {
+  const { key, calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (
     <div
+      tabIndex={-1}
       data-event-clickable={!isDraft || undefined}
-      data-agenda-item={itemId}
+      data-agenda-item
+      data-event-key={key}
+      data-date-key={dateKey}
+      onFocus={() => onFocus(event)}
+      onBlur={onBlur}
+      onKeyDown={(e) => onKeyDown(event, e)}
       onClick={isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
-      className={cn("cursor-default hover:bg-secondary py-1", {
+      className={cn("cursor-default hover:bg-secondary py-1 outline-none", {
         "bg-accent!": isActive || isSelected,
         "opacity-50": isPending || isDeclined || isDraft,
         "line-through": isDeclined,

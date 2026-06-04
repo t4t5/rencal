@@ -3,7 +3,10 @@ import { useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
-import { AGENDA_EL_ID } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
+import {
+  focusAgendaItem,
+  isInNativeTabScope,
+} from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
@@ -113,14 +116,9 @@ function useShortcutHandlers({
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
     "focus-agenda": (e) => {
-      // Tab jumps to the agenda only from the app's resting state (nothing focused).
-      // If the user is tabbing through a form — the event popover's date pickers,
-      // buttons, etc. — let the browser move focus to the next field instead.
-      // (react-hotkeys-hook already skips input/textarea/select, but not buttons.)
-      const active = document.activeElement
-      if (active && active !== document.body) return
+      if (isInNativeTabScope()) return
       e.preventDefault()
-      document.getElementById(AGENDA_EL_ID)?.focus()
+      focusAgendaItem(e.shiftKey ? -1 : 1, activeDate)
     },
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
