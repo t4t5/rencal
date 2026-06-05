@@ -89,6 +89,7 @@ export function MonthDayCell({
       calendarId: defaultCalendarId,
       location: null,
       recurrence: null,
+      attendees: [],
     })
     setDraftAnchor(el)
     setDraftPopoverOpen(true)

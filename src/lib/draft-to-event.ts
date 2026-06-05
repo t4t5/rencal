@@ -9,6 +9,7 @@ interface DraftEvent {
   calendarId: string | null
   location: string | null
   recurrence: Recurrence | null
+  attendees?: CalendarEvent["attendees"]
 }
 
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
@@ -27,7 +28,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     master_recurrence: null,
     reminders: [],
     organizer: null,
-    attendees: [],
+    attendees: draft.attendees ?? [],
     conference_url: null,
     calendar_slug: draft.calendarId,
     color: null,
