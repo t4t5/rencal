@@ -97,7 +97,7 @@ export const SHORTCUTS = [
   {
     id: "new-event",
     group: "General",
-    label: "New event",
+    label: "Compose event",
     bindings: [{ keys: "c", type: "char" }],
   },
   {
