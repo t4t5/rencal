@@ -131,7 +131,7 @@ export function EventInfo({
 
         {(!!attendees?.length || !readonly) && (
           <>
-            <Divider />
+            {!!attendees?.length && <Divider />}
 
             <AttendeesDisplay
               organizer={organizer}
@@ -139,7 +139,8 @@ export function EventInfo({
               readOnly={readonly}
               onAttendeesChange={onAttendeesChange}
             />
-            <Divider />
+
+            {!!attendees?.length && <Divider />}
           </>
         )}
 

@@ -1,12 +1,15 @@
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
+import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { StatusDot } from "@/components/ui/status-dot"
 
 import { EventAttendee } from "@/rpc/bindings"
 
+import { cn } from "@/lib/utils"
+
 import { CloseIcon } from "@/icons/close"
+import { UserIcon } from "@/icons/user"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -81,7 +84,17 @@ export function AttendeesDisplay({
         ))}
 
       {canEdit && (
-        <InputGroup className="ml-7 w-auto">
+        <InputGroup
+          className={cn("w-auto", {
+            "ml-7": !!attendees?.length,
+          })}
+        >
+          {!attendees?.length && (
+            <InputGroupAddon>
+              <UserIcon />
+            </InputGroupAddon>
+          )}
+
           <InputGroupInput
             value={inputValue}
             placeholder={"Add participant"}
