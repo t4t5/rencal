@@ -28,6 +28,7 @@ target
 .codex
 
 recordings
+.claude/settings.local.json
 
 # Built provider binaries
 src-tauri/providers/
