@@ -1,6 +1,5 @@
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { StatusDot } from "@/components/ui/status-dot"
 
@@ -8,7 +7,6 @@ import { EventAttendee } from "@/rpc/bindings"
 
 import { cn } from "@/lib/utils"
 
-import { CloseIcon } from "@/icons/close"
 import { UserIcon } from "@/icons/user"
 
 import { RemoveItemButton } from "./RemoveItemButton"
