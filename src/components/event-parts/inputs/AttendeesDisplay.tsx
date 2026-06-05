@@ -11,6 +11,8 @@ import { cn } from "@/lib/utils"
 import { CloseIcon } from "@/icons/close"
 import { UserIcon } from "@/icons/user"
 
+import { RemoveItemButton } from "./RemoveItemButton"
+
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function AttendeesDisplay({
@@ -63,7 +65,7 @@ export function AttendeesDisplay({
 
   return (
     <div className="flex flex-col">
-      {organizer && (
+      {organizer && !!attendeeList.length && (
         <AttendeeRow
           attendee={
             attendeeList.find((a) => attendeeKey(a.email) === attendeeKey(organizer.email)) ??
@@ -138,22 +140,15 @@ function AttendeeRow({
   const displayName = attendee.name ?? attendee.email
 
   return (
-    <div className="group/attendee flex items-center gap-2 py-1 px-3 text-sm">
+    <div className="group flex items-center gap-2 py-1 px-3 text-sm">
       <StatusDot status={attendee.response_status} />
-      <span className="truncate">{displayName}</span>
-      {label && <span className="text-muted-foreground shrink-0">{label}</span>}
-      {onRemove && (
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          className="ml-auto size-5 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover/attendee:opacity-100 focus-visible:opacity-100"
-          onClick={onRemove}
-          aria-label={`Remove ${displayName}`}
-        >
-          <CloseIcon className="size-3" />
-        </Button>
-      )}
+
+      <div className="grow gap-2 items-center flex">
+        <span className="truncate">{displayName}</span>
+        {label && <span className="text-muted-foreground shrink-0">{label}</span>}
+      </div>
+
+      {onRemove && <RemoveItemButton onClick={onRemove} />}
     </div>
   )
 }
