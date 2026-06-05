@@ -31,6 +31,9 @@ export function AttendeesDisplay({
 
   const canEdit = !readOnly && !!onAttendeesChange
   const attendeeList = attendees ?? []
+  const organizerAttendee = organizer
+    ? attendeeList.find((a) => attendeeKey(a.email) === attendeeKey(organizer.email))
+    : null
   const hasAttendees = attendeeList.length > 0
 
   if (!hasAttendees && !canEdit) return null
@@ -65,15 +68,7 @@ export function AttendeesDisplay({
 
   return (
     <div className="flex flex-col">
-      {organizer && !!attendeeList.length && (
-        <AttendeeRow
-          attendee={
-            attendeeList.find((a) => attendeeKey(a.email) === attendeeKey(organizer.email)) ??
-            organizer
-          }
-          label="Organiser"
-        />
-      )}
+      {organizerAttendee && <AttendeeRow attendee={organizerAttendee} label="Organiser" />}
 
       {attendeeList
         .filter((a) => attendeeKey(a.email) !== (organizer ? attendeeKey(organizer.email) : null))
