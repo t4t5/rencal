@@ -1,8 +1,6 @@
 import { formatDateKey } from "@/lib/event-time"
 import { AGENDA_ITEM_SELECTOR, NATIVE_TAB_SCOPE_SELECTOR } from "@/lib/focus-selectors"
 
-export const AGENDA_EL_ID = "agenda-scroll-container"
-
 export function isInNativeTabScope(target: EventTarget | null = document.activeElement): boolean {
   return !!(target as HTMLElement | null)?.closest(NATIVE_TAB_SCOPE_SELECTOR)
 }

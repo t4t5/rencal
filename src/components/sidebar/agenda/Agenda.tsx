@@ -14,7 +14,6 @@ import { cn } from "@/lib/utils"
 import { DaySection } from "./DaySection"
 import { GetStartedState } from "./GetStartedState"
 import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
-import { AGENDA_EL_ID } from "./useAgendaKeyboardNav"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
@@ -93,7 +92,6 @@ export function Agenda() {
   return (
     <div
       ref={scrollContainerRef}
-      id={AGENDA_EL_ID}
       className={cn(
         "grow overflow-auto flex-col gap-6 select-none bg-background outline-none scroll-pt-8 scroll-pb-2",
         !hasInitiallyScrolled && "invisible",
