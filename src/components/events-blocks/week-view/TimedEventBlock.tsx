@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils"
 
 function WeekTimedEventImpl({
   layout,
-  isActive,
+  highlighted: highlightedByParent,
   isPending,
   isDeclined,
   isDraft,
@@ -22,7 +22,7 @@ function WeekTimedEventImpl({
   onEventClick,
 }: {
   layout: WeekTimedEventLayout
-  isActive: boolean
+  highlighted: boolean
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
@@ -40,7 +40,7 @@ function WeekTimedEventImpl({
   const widthPercent = 100 - leftPercent
 
   const isDashed = isPending || isDeclined
-  const highlighted = isActive || contextOpen
+  const highlighted = highlightedByParent || contextOpen
 
   const colors = getEventBlockColors({
     calendarColor: layout.calendarColor,

@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils"
 
 export function MonthAllDayEvent({
   item,
-  isActive,
+  highlighted: highlightedByParent,
   isPending,
   isDeclined,
   isDraft,
@@ -19,7 +19,7 @@ export function MonthAllDayEvent({
   onClick,
 }: {
   item: AllDayLaneItem
-  isActive: boolean
+  highlighted: boolean
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
@@ -29,7 +29,7 @@ export function MonthAllDayEvent({
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
-  const highlighted = isActive || contextOpen
+  const highlighted = highlightedByParent || contextOpen
   const isDashed = isPending || isDeclined
 
   const fillsRow = item.endCol - item.startCol === 7

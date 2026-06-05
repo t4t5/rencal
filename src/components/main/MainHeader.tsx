@@ -19,7 +19,7 @@ export function MainHeader() {
     <div className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
         <ShortcutTooltip text="Go to Today" shortcut="t">
-          <Button variant="secondary" onClick={() => navigateToDate(new Date())}>
+          <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(new Date())}>
             Today
           </Button>
         </ShortcutTooltip>
@@ -33,7 +33,7 @@ export function MainHeader() {
 
       <ReportBugButton />
 
-      <TabsList onMouseDown={(e) => e.preventDefault()}>
+      <TabsList onMouseDown={(e) => e.preventDefault()} tabIndex={-1}>
         <CalendarViewTab view="week" name="Week" shortcut="w" />
         <CalendarViewTab view="month" name="Month" shortcut="m" />
       </TabsList>
@@ -55,7 +55,9 @@ const CalendarViewTab = ({
   return (
     <ShortcutTooltip text={`${name} view`} shortcut={shortcut}>
       <span className="h-full">
-        <TabsTrigger value={view}>{name}</TabsTrigger>
+        <TabsTrigger value={view} tabIndex={-1}>
+          {name}
+        </TabsTrigger>
       </span>
     </ShortcutTooltip>
   )

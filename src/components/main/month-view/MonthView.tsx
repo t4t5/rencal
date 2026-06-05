@@ -3,6 +3,7 @@ import { useRef } from "react"
 
 import { MonthGrid } from "@/components/main/month-view/Grid"
 
+import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
@@ -20,6 +21,7 @@ export function MonthView() {
   const { calendars } = useCalendars()
   const { activeDate, navigateToDate, isNavigating } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
+  const { selectedEventKey } = useAgendaSelection()
 
   // TODO: respect calendar visibility
   const visibleCalendarIds = calendars.map((c) => c.slug)
@@ -51,6 +53,7 @@ export function MonthView() {
         weeks={weeks}
         weekLayouts={weekLayouts}
         activeEventKey={activeEvent ? eventKey(activeEvent) : null}
+        selectedEventKey={selectedEventKey}
         activeDateKey={formatDateKey(activeDate)}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}

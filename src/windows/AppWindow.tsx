@@ -11,6 +11,7 @@ import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
 
+import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
 import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
@@ -28,7 +29,9 @@ export function AppWindow({ preload }: { preload: Preload }) {
         <RecurrenceEditProvider>
           <EventDraftProvider>
             <CreateEventGateProvider>
-              <App />
+              <AgendaFocusProvider>
+                <App />
+              </AgendaFocusProvider>
             </CreateEventGateProvider>
           </EventDraftProvider>
         </RecurrenceEditProvider>

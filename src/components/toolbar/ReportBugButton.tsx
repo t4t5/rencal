@@ -10,6 +10,7 @@ export const ReportBugButton = () => {
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
+          tabIndex={-1}
           variant="ghost"
           className="text-muted-foreground"
           onClick={() => openUrl("https://github.com/t4t5/rencal/issues/new")}

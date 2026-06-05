@@ -22,10 +22,12 @@ export const ComposeEventInner = ({
   summaryRef,
   onCreated,
   onBeforeCreate,
+  onTabOut,
 }: {
   summaryRef?: Ref<HTMLTextAreaElement>
   onCreated: () => void
   onBeforeCreate?: (start: EventTime) => void
+  onTabOut?: () => void
 }) => {
   const { calendars } = useCalendars()
   const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
@@ -97,7 +99,15 @@ export const ComposeEventInner = ({
       </div>
 
       <div className="p-4 pt-0">
-        <Button onClick={onCreate} className="w-full">
+        <Button
+          onClick={onCreate}
+          onKeyDown={(e) => {
+            if (e.key !== "Tab" || e.shiftKey || !onTabOut) return
+            e.preventDefault()
+            onTabOut()
+          }}
+          className="w-full"
+        >
           Add Event
         </Button>
       </div>

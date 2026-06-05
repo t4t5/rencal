@@ -58,6 +58,9 @@ function SidebarHeaderContent() {
               <ComposeEventInner
                 onBeforeCreate={startFlight}
                 onCreated={() => setIsDrafting(false)}
+                onTabOut={() => {
+                  document.querySelector<HTMLInputElement>("[data-compose-event-input]")?.focus()
+                }}
               />
             </Card>
           )}

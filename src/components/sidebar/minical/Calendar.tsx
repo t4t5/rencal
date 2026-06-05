@@ -274,6 +274,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
         className,
       )}
       {...props}
+      tabIndex={-1}
     >
       {children}
       {dotColors && dotColors.length > 0 && (

@@ -1,6 +1,8 @@
 import { parse } from "date-fns"
 import { RefObject, useEffect, useEffectEvent, useRef } from "react"
 
+import { isAgendaItemFocused } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
+
 export function useJumpToScrolledDate({
   onSetActiveDate,
   datesWithEvents,
@@ -22,6 +24,12 @@ export function useJumpToScrolledDate({
   const handleIntersection = useEffectEvent((entries: IntersectionObserverEntry[]) => {
     // Skip if we're currently doing a programmatic navigation
     if (isNavigating()) return
+
+    // Keyboard agenda navigation scrolls focused rows into view. That can leave
+    // earlier day sections crossing the observer's top trigger zone after the
+    // focused row has already set activeDate to the selected event's date.
+    // While an agenda item is focused, the selection is the source of truth.
+    if (isAgendaItemFocused()) return
 
     // Skip if the container's geometry changed since the last callback. Two cases:
     //   - clientWidth/clientHeight: window resized — sections shift in/out of the

@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils"
 
 export function MonthTimedEvent({
   item,
-  isActive,
+  highlighted: highlightedByParent,
   isPending,
   isDeclined,
   isDraft,
@@ -21,7 +21,7 @@ export function MonthTimedEvent({
   onClick,
 }: {
   item: TimedEventItem
-  isActive: boolean
+  highlighted: boolean
   isPending: boolean
   isDeclined: boolean
   isDraft: boolean
@@ -32,7 +32,7 @@ export function MonthTimedEvent({
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()
 
-  const highlighted = isActive || contextOpen
+  const highlighted = highlightedByParent || contextOpen
 
   const colors = getEventBlockColors({
     calendarColor: item.color,

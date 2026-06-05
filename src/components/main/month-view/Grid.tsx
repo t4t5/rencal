@@ -16,6 +16,7 @@ export function MonthGrid({
   weeks,
   weekLayouts,
   activeEventKey,
+  selectedEventKey,
   activeDateKey,
   anchorWeekIndex,
   scrollRef,
@@ -29,6 +30,7 @@ export function MonthGrid({
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
   activeEventKey: string | null
+  selectedEventKey: string | null
   activeDateKey: string
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
@@ -243,6 +245,7 @@ export function MonthGrid({
               weekDays={weeks[virtualRow.index]}
               layout={weekLayouts[virtualRow.index]}
               activeEventKey={activeEventKey}
+              selectedEventKey={selectedEventKey}
               activeDateKey={activeDateKey}
               onDayClick={onDayClick}
               onEventClick={onEventClick}

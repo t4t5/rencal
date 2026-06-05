@@ -8,11 +8,13 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import { getDraftAnchor } from "@/lib/draft-anchor"
 
 import { ComposeEventInner } from "./ComposeEvent"
+import { useEventPopoverTabTrap } from "./useEventPopoverTabTrap"
 
 export function PopoverNewEvent() {
   const { draftPopoverOpen, setDraftPopoverOpen } = useEventDraft()
   const { activeEvent } = useCalEvents()
   const anchorRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const summaryRef = useRef<HTMLTextAreaElement>(null)
   const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
 
@@ -42,6 +44,8 @@ export function PopoverNewEvent() {
     }
   }, [activeEvent])
 
+  useEventPopoverTabTrap({ enabled: draftPopoverOpen, contentRef })
+
   return (
     <Popover
       open={draftPopoverOpen}
@@ -55,6 +59,7 @@ export function PopoverNewEvent() {
         style={{ top: pos.top, left: pos.left, width: pos.width, height: 0 }}
       />
       <PopoverContent
+        ref={contentRef}
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
         side="right"
         align="center"

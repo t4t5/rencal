@@ -74,6 +74,7 @@ const ArrowKeys = () => {
         variant="ghost"
         size="icon-sm"
         round
+        tabIndex={-1}
         onClick={() => navigateToDate(subMonths(activeDate, 1))}
       >
         <ChevronUpIcon className="size-4" />
@@ -82,6 +83,7 @@ const ArrowKeys = () => {
         variant="ghost"
         size="icon-sm"
         round
+        tabIndex={-1}
         onClick={() => navigateToDate(addMonths(activeDate, 1))}
       >
         <ChevronDownIcon className="size-4" />

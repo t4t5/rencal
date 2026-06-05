@@ -3,10 +3,18 @@ import { useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
+import {
+  clearRememberedAgendaItem,
+  focusAgendaItem,
+  isAgendaItemFocused,
+  isInteractiveElementFocused,
+} from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
+import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -66,16 +74,27 @@ function useShortcutHandlers({
   openShortcutsOverlay: () => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { setIsDrafting, setDefaultDraftEvent } = useEventDraft()
+  const { setSelectedEventKey } = useAgendaSelection()
+  const { activeEvent } = useCalEvents()
+  const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
   const { toggleTheme } = useTheme()
 
   const lastNavRef = useRef(0)
 
+  const clearAgendaFocus = () => {
+    if (!isAgendaItemFocused()) return
+    clearRememberedAgendaItem()
+    setSelectedEventKey(null)
+    const activeElement = document.activeElement as HTMLElement | null
+    activeElement?.blur()
+  }
+
   const throttledNavigate = (date: Date) => {
     const now = Date.now()
     if (now - lastNavRef.current < NAV_THROTTLE_MS) return
     lastNavRef.current = now
+    clearAgendaFocus()
     void navigateToDate(date)
   }
 
@@ -106,11 +125,24 @@ function useShortcutHandlers({
   }
 
   return {
-    today: () => void navigateToDate(new Date()),
+    today: () => {
+      clearAgendaFocus()
+      void navigateToDate(new Date())
+    },
     "prev-day": () => throttledNavigate(subDays(activeDate, 1)),
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
+    "prev-event": (e) => {
+      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
+      e.preventDefault()
+      focusAgendaItem(-1, activeDate)
+    },
+    "next-event": (e) => {
+      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
+      e.preventDefault()
+      focusAgendaItem(1, activeDate)
+    },
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
     search: handleSearch,

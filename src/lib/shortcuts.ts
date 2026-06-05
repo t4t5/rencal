@@ -25,6 +25,15 @@ export const SHORTCUTS = [
     bindings: [{ keys: "t", type: "char" }],
   },
   {
+    id: "next-day",
+    group: "Navigation",
+    label: "Next day",
+    bindings: [
+      { keys: "right", type: "hotkey" },
+      { keys: "l", type: "char" },
+    ],
+  },
+  {
     id: "prev-day",
     group: "Navigation",
     label: "Previous day",
@@ -34,12 +43,12 @@ export const SHORTCUTS = [
     ],
   },
   {
-    id: "next-day",
+    id: "next-week",
     group: "Navigation",
-    label: "Next day",
+    label: "Next week",
     bindings: [
-      { keys: "right", type: "hotkey" },
-      { keys: "l", type: "char" },
+      { keys: "down", type: "hotkey" },
+      { keys: "j", type: "char" },
     ],
   },
   {
@@ -52,13 +61,16 @@ export const SHORTCUTS = [
     ],
   },
   {
-    id: "next-week",
+    id: "next-event",
     group: "Navigation",
-    label: "Next week",
-    bindings: [
-      { keys: "down", type: "hotkey" },
-      { keys: "j", type: "char" },
-    ],
+    label: "Next event",
+    bindings: [{ keys: "tab", type: "hotkey" }],
+  },
+  {
+    id: "prev-event",
+    group: "Navigation",
+    label: "Previous event",
+    bindings: [{ keys: "shift+tab", type: "hotkey" }],
   },
   {
     id: "month",
@@ -85,7 +97,7 @@ export const SHORTCUTS = [
   {
     id: "new-event",
     group: "General",
-    label: "New event",
+    label: "Compose event",
     bindings: [{ keys: "c", type: "char" }],
   },
   {
