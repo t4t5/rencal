@@ -246,6 +246,7 @@ export function WeekTimeGrid({
       calendarId: defaultCalendarId,
       location: null,
       recurrence: null,
+      attendees: [],
     })
 
     if (opts.clickY != null) {

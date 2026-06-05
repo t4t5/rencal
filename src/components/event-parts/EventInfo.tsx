@@ -20,7 +20,7 @@ import { RsvpBar } from "./inputs/RsvpBar"
 import { RsvpSelect } from "./inputs/RsvpSelect"
 
 const Divider = () => (
-  <div className="my-2 px-3">
+  <div className="my-2 opacity-75">
     <hr />
   </div>
 )
@@ -46,6 +46,7 @@ export function EventInfo({
   onDescriptionChange,
   organizer,
   attendees,
+  onAttendeesChange,
   conferenceUrl,
   reminders,
   onReminderAdd,
@@ -76,6 +77,7 @@ export function EventInfo({
   onDescriptionChange: (description: string) => void
   organizer?: EventAttendee | null
   attendees?: EventAttendee[]
+  onAttendeesChange?: (attendees: EventAttendee[]) => void
   conferenceUrl?: string | null
   reminders?: number[]
   onReminderAdd: (mins: number) => void
@@ -126,7 +128,21 @@ export function EventInfo({
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
-        <AttendeesDisplay organizer={organizer} attendees={attendees} />
+
+        {(!!attendees?.length || !readonly) && (
+          <>
+            {!!attendees?.length && <Divider />}
+
+            <AttendeesDisplay
+              organizer={organizer}
+              attendees={attendees}
+              readOnly={readonly}
+              onAttendeesChange={onAttendeesChange}
+            />
+
+            {!!attendees?.length && <Divider />}
+          </>
+        )}
 
         {!calendar?.read_only && (
           <ReminderSelect
@@ -143,6 +159,7 @@ export function EventInfo({
         {onRsvp && (
           <>
             <Divider />
+
             {isPendingInvite ? (
               <RsvpBar onRsvp={onRsvp} />
             ) : (

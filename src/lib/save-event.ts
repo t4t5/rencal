@@ -32,6 +32,7 @@ export async function updateAndSyncEvent(
       end: toRpcEventTime(current.end),
       recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
+      attendees: current.attendees,
     })
     await requestSync()
   } catch (err) {

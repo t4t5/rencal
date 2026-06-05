@@ -8,7 +8,8 @@ import { InputGroupAddon } from "@/components/ui/input-group"
 import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons/bell"
-import { CloseIcon } from "@/icons/close"
+
+import { RemoveItemButton } from "./RemoveItemButton"
 
 const DEFAULT_REMINDER_VALUES = [
   0, // At time of event
@@ -153,13 +154,8 @@ const ReminderRow = ({
           <HumanDuration mins={mins} />
         </span>
       </div>
-      <button
-        type="button"
-        onClick={onRemove}
-        className="text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 rounded-xs outline-none focus-visible:ring-ring/50 focus-visible:ring-[3px]"
-      >
-        <CloseIcon className="size-4" />
-      </button>
+
+      <RemoveItemButton onClick={onRemove} />
     </div>
   )
 }

@@ -62,6 +62,21 @@ pub struct EventAttendee {
     pub response_status: Option<ResponseStatus>,
 }
 
+impl EventAttendee {
+    pub fn to_core(&self) -> Attendee {
+        Attendee {
+            email: self.email.clone(),
+            name: self.name.clone(),
+            status: self.response_status.as_ref().map(|s| match s {
+                ResponseStatus::Accepted => ParticipationStatus::Accepted,
+                ResponseStatus::Declined => ParticipationStatus::Declined,
+                ResponseStatus::Tentative => ParticipationStatus::Tentative,
+                ResponseStatus::NeedsAction => ParticipationStatus::NeedsAction,
+            }),
+        }
+    }
+}
+
 impl From<&Attendee> for EventAttendee {
     fn from(a: &Attendee) -> Self {
         EventAttendee {
@@ -155,6 +170,7 @@ pub struct CreateEventInput {
     pub end: RpcEventTime,
     pub recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
+    pub attendees: Vec<EventAttendee>,
 }
 
 /// Input for updating an event
@@ -171,6 +187,7 @@ pub struct UpdateEventInput {
     pub end: RpcEventTime,
     pub recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
+    pub attendees: Vec<EventAttendee>,
 }
 
 /// Input for splitting a recurring series at a given instance.

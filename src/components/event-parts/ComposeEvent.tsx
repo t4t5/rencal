@@ -89,6 +89,10 @@ export const ComposeEventInner = ({
             setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
           }}
           recurrence={recurrenceRRule}
+          attendees={draftEvent.attendees}
+          onAttendeesChange={(newAttendees) => {
+            setDraftEvent({ ...draftEvent, attendees: newAttendees })
+          }}
           onRecurrenceChange={(rrule) => {
             setDraftEvent({ ...draftEvent, recurrence: rruleToRecurrence(rrule) })
           }}

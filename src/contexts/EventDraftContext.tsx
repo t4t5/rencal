@@ -10,6 +10,7 @@ import {
 } from "react"
 
 import { rpc } from "@/rpc"
+import type { EventAttendee } from "@/rpc/bindings"
 
 import {
   type CalendarEvent,
@@ -41,6 +42,7 @@ interface DraftEvent {
   calendarId: string | null
   location: string | null
   recurrence: Recurrence | null
+  attendees: EventAttendee[]
 }
 
 interface EventTextContextType {
@@ -120,6 +122,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       calendarId: defaultCalendarId,
       location: null,
       recurrence: null,
+      attendees: [],
     }
   }, [defaultCalendarId])
 
@@ -197,7 +200,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       master_recurrence: null,
       reminders: draftReminders,
       organizer: null,
-      attendees: [],
+      attendees: draftEvent.attendees,
       conference_url: null,
       calendar_slug: draftEvent.calendarId,
       color: null,
@@ -218,6 +221,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       end: toRpcEventTime(draftEvent.end),
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
+      attendees: draftEvent.attendees,
     })
 
     if (draftEvent.recurrence) {

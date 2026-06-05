@@ -31,6 +31,7 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     event.location = input.location;
     event.recurrence = recurrence;
     event.reminders = reminders;
+    event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
     EVENT_CACHE.invalidate(&input.calendar_slug);

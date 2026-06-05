@@ -2,7 +2,7 @@ use super::helpers::load_caldir;
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{EventInstanceId, Reminder};
+use caldir_core::{Attendee, EventInstanceId, Reminder};
 use chrono::Utc;
 
 pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
@@ -24,6 +24,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
             minutes_before_start: m as i64,
         })
         .collect();
+    let input_attendees: Vec<Attendee> = input.attendees.iter().map(|a| a.to_core()).collect();
 
     let moving = input
         .new_calendar_slug
@@ -46,6 +47,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
                 event.start = start;
                 event.end = Some(end);
                 event.reminders = input_reminders;
+                event.attendees = input_attendees;
             })
             .map_err(|e| e.to_string())?;
 
@@ -73,6 +75,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
         updated_event.end = Some(end);
         updated_event.recurrence = input_recurrence;
         updated_event.reminders = input_reminders;
+        updated_event.attendees = input_attendees;
         updated_event.last_modified = Some(Utc::now());
         updated_event.sequence += 1;
 
