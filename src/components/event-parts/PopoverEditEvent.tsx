@@ -43,8 +43,6 @@ export function PopoverEditEvent() {
       />
       <PopoverContent
         ref={contentRef}
-        data-event-popover
-        data-native-tab-scope
         className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
         side="right"
         align="center"

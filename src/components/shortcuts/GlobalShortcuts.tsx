@@ -7,7 +7,7 @@ import {
   clearRememberedAgendaItem,
   focusAgendaItem,
   isAgendaItemFocused,
-  isInNativeTabScope,
+  isInteractiveElementFocused,
 } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
@@ -134,12 +134,12 @@ function useShortcutHandlers({
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
     "prev-event": (e) => {
-      if (activeEvent || draftPopoverOpen || isInNativeTabScope()) return
+      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
       e.preventDefault()
       focusAgendaItem(-1, activeDate)
     },
     "next-event": (e) => {
-      if (activeEvent || draftPopoverOpen || isInNativeTabScope()) return
+      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
       e.preventDefault()
       focusAgendaItem(1, activeDate)
     },

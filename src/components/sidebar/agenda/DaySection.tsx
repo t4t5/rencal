@@ -16,10 +16,13 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
-import { AGENDA_ITEM_SELECTOR } from "@/lib/focus-selectors"
 import { cn } from "@/lib/utils"
 
-import { clearRememberedAgendaItem, rememberFocusedAgendaItem } from "./useAgendaKeyboardNav"
+import {
+  AGENDA_ITEM_SELECTOR,
+  clearRememberedAgendaItem,
+  rememberFocusedAgendaItem,
+} from "./useAgendaKeyboardNav"
 
 export const DaySection = forwardRef<
   HTMLDivElement,

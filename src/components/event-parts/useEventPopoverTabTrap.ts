@@ -1,11 +1,5 @@
 import { useEffect, type RefObject } from "react"
 
-import {
-  EVENT_EDIT_FIELDS_SELECTOR,
-  EVENT_POPOVER_SELECTOR,
-  NATIVE_TAB_SCOPE_SELECTOR,
-} from "@/lib/focus-selectors"
-
 const FOCUSABLE_SELECTOR = [
   "textarea:not([disabled]):not([readonly])",
   "input:not([disabled]):not([readonly])",
@@ -14,10 +8,17 @@ const FOCUSABLE_SELECTOR = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",")
 
-function getFocusableElements(content: HTMLElement): HTMLElement[] {
-  const scope = content.querySelector<HTMLElement>(EVENT_EDIT_FIELDS_SELECTOR) ?? content
+const INTERACTIVE_FOCUS_SELECTOR = [
+  "input",
+  "textarea",
+  "select",
+  "button",
+  "[contenteditable='true']",
+  "[role='textbox']",
+].join(",")
 
-  return Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((el) => {
+function getFocusableElements(content: HTMLElement): HTMLElement[] {
+  return Array.from(content.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((el) => {
     if (el.tabIndex < 0) return false
     if (el.getAttribute("aria-disabled") === "true") return false
     if (el.getAttribute("aria-hidden") === "true") return false
@@ -31,11 +32,12 @@ function getFocusableElements(content: HTMLElement): HTMLElement[] {
   })
 }
 
-export function focusEventPopoverField(reverse = false): boolean {
-  const content = document.querySelector<HTMLElement>(EVENT_POPOVER_SELECTOR)
-  if (!content) return false
+let activePopoverContent: HTMLElement | null = null
 
-  const focusables = getFocusableElements(content)
+export function focusEventPopoverField(reverse = false): boolean {
+  if (!activePopoverContent) return false
+
+  const focusables = getFocusableElements(activePopoverContent)
   if (!focusables.length) return false
 
   focusables[reverse ? focusables.length - 1 : 0]?.focus()
@@ -52,6 +54,9 @@ export function useEventPopoverTabTrap({
   useEffect(() => {
     if (!enabled) return
 
+    const content = contentRef.current
+    activePopoverContent = content
+
     const handleTab = (e: KeyboardEvent) => {
       if (e.key !== "Tab") return
 
@@ -61,10 +66,9 @@ export function useEventPopoverTabTrap({
       if (!content) return
 
       const activeIsInsidePopover = activeElement ? content.contains(activeElement) : false
-      const activeIsInAnotherNativeTabScope =
-        activeElement?.closest(NATIVE_TAB_SCOPE_SELECTOR) && !activeIsInsidePopover
+      const activeIsInFormControl = activeElement?.closest(INTERACTIVE_FOCUS_SELECTOR)
 
-      if (activeIsInAnotherNativeTabScope) return
+      if (!activeIsInsidePopover && activeIsInFormControl) return
 
       const focusables = getFocusableElements(content)
       if (!focusables.length) return
@@ -87,6 +91,9 @@ export function useEventPopoverTabTrap({
     }
 
     window.addEventListener("keydown", handleTab, { capture: true })
-    return () => window.removeEventListener("keydown", handleTab, { capture: true })
+    return () => {
+      if (activePopoverContent === content) activePopoverContent = null
+      window.removeEventListener("keydown", handleTab, { capture: true })
+    }
   }, [enabled, contentRef])
 }

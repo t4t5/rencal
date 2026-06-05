@@ -1,8 +1,20 @@
 import { formatDateKey } from "@/lib/event-time"
-import { AGENDA_ITEM_SELECTOR, NATIVE_TAB_SCOPE_SELECTOR } from "@/lib/focus-selectors"
 
-export function isInNativeTabScope(target: EventTarget | null = document.activeElement): boolean {
-  return !!(target as HTMLElement | null)?.closest(NATIVE_TAB_SCOPE_SELECTOR)
+export const AGENDA_ITEM_SELECTOR = "[data-agenda-item]"
+
+const INTERACTIVE_FOCUS_SELECTOR = [
+  "input",
+  "textarea",
+  "select",
+  "button",
+  "[contenteditable='true']",
+  "[role='textbox']",
+].join(",")
+
+export function isInteractiveElementFocused(
+  target: EventTarget | null = document.activeElement,
+): boolean {
+  return !!(target as HTMLElement | null)?.closest(INTERACTIVE_FOCUS_SELECTOR)
 }
 
 export function isAgendaItemFocused(target: EventTarget | null = document.activeElement): boolean {

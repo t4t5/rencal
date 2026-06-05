@@ -37,7 +37,7 @@ function SidebarHeaderContent() {
   }, [showDraft])
 
   return (
-    <div data-native-tab-scope={isDrafting || undefined} className="flex flex-col p-4 pb-0">
+    <div className="flex flex-col p-4 pb-0">
       <SidebarToolbar />
 
       <div
