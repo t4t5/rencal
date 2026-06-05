@@ -160,7 +160,7 @@ export const EditEvent = ({
       <div className="flex justify-end px-1 pb-1">
         {children}
 
-        {!isReadonly && <OverflowMenu onDelete={() => triggerDelete(dirtyEvent)} />}
+        {!isReadonly && <OverflowMenu onDelete={() => triggerDelete(dirtyEvent)} tabIndex={-1} />}
       </div>
 
       <EventInfo
@@ -219,11 +219,11 @@ export const EditEvent = ({
   )
 }
 
-const OverflowMenu = ({ onDelete }: { onDelete: () => void }) => {
+const OverflowMenu = ({ onDelete, tabIndex }: { onDelete: () => void; tabIndex?: number }) => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
+        <Button variant="ghost" size="icon" className="h-7 w-7" tabIndex={tabIndex}>
           <MoreHorizIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>

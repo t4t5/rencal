@@ -18,6 +18,7 @@ function getFocusableElements(content: HTMLElement): HTMLElement[] {
   const scope = content.querySelector<HTMLElement>(EVENT_EDIT_FIELDS_SELECTOR) ?? content
 
   return Array.from(scope.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter((el) => {
+    if (el.tabIndex < 0) return false
     if (el.getAttribute("aria-disabled") === "true") return false
     if (el.getAttribute("aria-hidden") === "true") return false
 
