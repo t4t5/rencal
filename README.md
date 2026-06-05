@@ -15,10 +15,10 @@
 ## Features
 
 - **Local-first** — Your events are stored as plaintext `.ics` files. `grep` them, script
-  them or hand them to Claude Code. No database, no lock-in.
+  them or hand them to Claude Code.
 - **Connect any provider** — Two-way sync with your existing Google, iCloud, Outlook or CalDAV account.
 - **Natural-language input** — e.g. "lunch with Sarah tomorrow at 1pm".
-- **Keyboard-driven** — Vim motions (`hjkl`) for navigation, `m`/`w` to switch views.
+- **Keyboard-driven** — Vim motions (`hjkl`) for navigation. See all shortcuts with <kbd>?</kbd>.
 - **Themes** — Tokyo Night, Catppuccin Latte... It syncs with your Omarchy theme!
 
 ## Install
