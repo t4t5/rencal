@@ -67,7 +67,7 @@ function SidebarItem({
     <button
       onClick={onClick}
       className={cn(
-        "flex items-center gap-2 p-2 text-sm rounded-md w-full text-left text-muted-foreground transition-colors",
+        "flex items-center gap-2 p-2 text-sm rounded-md w-full text-left text-muted-foreground transition-colors focus-visible:outline-none",
         {
           "bg-secondary text-accent-foreground": isActive,
         },
