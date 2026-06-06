@@ -1,4 +1,4 @@
-import { type ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -20,6 +20,7 @@ import { Button } from "../ui/button"
 
 export const SyncStatus = () => {
   const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
+  const [isForcingSync, setIsForcingSync] = useState(false)
 
   const isOnline = useIsOnline()
 
@@ -39,13 +40,8 @@ export const SyncStatus = () => {
 
   let tooltipContent: ReactNode = <>Up-to-date</>
 
-  if (isSyncing) {
-    icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
-  }
-
-  if (!isOnline) {
-    icon = <CloudOffIcon className="size-4 text-error pointer-events-none" />
-    tooltipContent = <>No internet connection</>
+  if (isChecking) {
+    tooltipContent = <>Checking for changes...</>
   }
 
   if (syncError) {
@@ -57,13 +53,32 @@ export const SyncStatus = () => {
     tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
 
+  if (isSyncing || isForcingSync) {
+    icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
+    tooltipContent = <>Syncing...</>
+  }
+
+  if (!isOnline) {
+    icon = <CloudOffIcon className="size-4 text-error pointer-events-none" />
+    tooltipContent = <>No internet connection</>
+  }
+
+  const handleSyncNow = async () => {
+    setIsForcingSync(true)
+    try {
+      await syncNow()
+    } finally {
+      setIsForcingSync(false)
+    }
+  }
+
   const button = (
     <Button
       variant="ghost"
       size="icon"
       tabIndex={-1}
       className="relative"
-      onClick={pendingCount ? () => void syncNow() : undefined}
+      onClick={pendingCount ? () => void handleSyncNow() : undefined}
     >
       <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
 
@@ -75,7 +90,9 @@ export const SyncStatus = () => {
 
   return (
     <Tooltip>
-      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipTrigger asChild tabIndex={-1}>
+        {button}
+      </TooltipTrigger>
       <TooltipContent className="max-w-64 wrap-break-word">{tooltipContent}</TooltipContent>
     </Tooltip>
   )
