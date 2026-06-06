@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { rpc } from "@/rpc"
 
@@ -49,24 +50,22 @@ export function AccountsPage() {
   )
 }
 
-type AccountStatus = "checking" | "connected" | "disconnected"
+type AccountStatus = "pending" | "connected" | "disconnected"
 
 const statusColors: Record<AccountStatus, string> = {
-  checking: "bg-muted-foreground",
+  pending: "bg-muted-foreground",
   connected: "bg-success",
   disconnected: "bg-destructive",
 }
 
 const statusLabels: Record<AccountStatus, string> = {
-  checking: "Checking",
+  pending: "Connecting...",
   connected: "Connected",
-  disconnected: "Disconnected",
+  disconnected: "Failed to connect",
 }
 
 function Account({ account, provider }: { account: string; provider: string | null }) {
-  const [status, setStatus] = useState<AccountStatus>(
-    provider == null ? "disconnected" : "checking",
-  )
+  const [status, setStatus] = useState<AccountStatus>(provider == null ? "disconnected" : "pending")
 
   useEffect(() => {
     if (provider == null) {
@@ -75,7 +74,8 @@ function Account({ account, provider }: { account: string; provider: string | nu
     }
 
     let cancelled = false
-    setStatus("checking")
+
+    setStatus("pending")
 
     rpc.caldir
       .check_provider_connection(provider, account)
@@ -108,7 +108,12 @@ function Account({ account, provider }: { account: string; provider: string | nu
         <span className="heading text-sm">{displayName}</span>
 
         <div className="flex items-center gap-2">
-          <span className={cn("size-1.5 rounded-full", statusColor)} aria-label={statusLabel} />
+          <Tooltip>
+            <TooltipTrigger asChild tabIndex={-1}>
+              <span className={cn("size-1.5 rounded-full", statusColor)} aria-label={statusLabel} />
+            </TooltipTrigger>
+            <TooltipContent>{statusLabel}</TooltipContent>
+          </Tooltip>
           <span className="text-xs text-muted-foreground truncate">{account}</span>
         </div>
       </div>
