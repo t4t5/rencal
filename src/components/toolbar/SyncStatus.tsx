@@ -44,11 +44,6 @@ export const SyncStatus = () => {
     tooltipContent = <>Checking for changes...</>
   }
 
-  if (syncError) {
-    icon = <CloudWarningIcon className="size-4 text-warning pointer-events-none" />
-    tooltipContent = syncError
-  }
-
   if (pendingCount) {
     tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
@@ -56,6 +51,11 @@ export const SyncStatus = () => {
   if (isSyncing || isForcingSync) {
     icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
     tooltipContent = <>Syncing...</>
+  }
+
+  if (syncError) {
+    icon = <CloudWarningIcon className="size-4 text-warning pointer-events-none" />
+    tooltipContent = syncError
   }
 
   if (!isOnline) {
@@ -77,7 +77,7 @@ export const SyncStatus = () => {
       variant="ghost"
       size="icon"
       tabIndex={-1}
-      className="relative"
+      className="relative focus-visible:ring-0"
       onClick={pendingCount ? () => void handleSyncNow() : undefined}
     >
       <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
