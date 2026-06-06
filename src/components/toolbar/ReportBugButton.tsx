@@ -12,6 +12,7 @@ export const ReportBugButton = () => {
         <Button
           tabIndex={-1}
           variant="ghost"
+          size="icon"
           className="text-muted-foreground"
           onClick={() => openUrl("https://github.com/t4t5/rencal/issues/new")}
         >

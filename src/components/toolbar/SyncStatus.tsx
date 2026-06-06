@@ -9,9 +9,9 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
+import { cn } from "@/lib/utils"
 
 import { CloudIcon } from "@/icons/cloud"
-import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
@@ -29,13 +29,8 @@ export const SyncStatus = () => {
   )
 
   const StatusIcon = (): ReactNode => {
-    if (isChecking || isSyncing) {
-      return (
-        <div className="relative">
-          <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
-          {!!pendingCount && <DiffCounterBadge count={pendingCount} />}
-        </div>
-      )
+    if (isSyncing) {
+      return <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
     }
 
     if (!isOnline) {
@@ -60,34 +55,34 @@ export const SyncStatus = () => {
       )
     }
 
-    if (pendingCount > 0) {
-      return (
-        <Tooltip>
-          <TooltipTrigger
-            tabIndex={-1}
-            onClick={() => void syncNow()}
-            className="relative flex items-center cursor-pointer"
-          >
-            <SyncingIcon className="size-4 text-muted-foreground" />
-            <DiffCounterBadge count={pendingCount} />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64">
-            <ChangesPreview pendingPreviews={pendingPreviews} />
-          </TooltipContent>
-        </Tooltip>
-      )
-    }
-
-    return <CloudIcon className="size-4 text-muted-foreground" />
+    return (
+      <CloudIcon className={cn("size-5 text-muted-foreground", isChecking && "animate-pulse")} />
+    )
   }
 
-  return (
-    <Button variant="ghost">
+  const button = (
+    <Button variant="ghost" size="icon" tabIndex={-1}>
       <div style={{ animation: "scale-in 0.15s ease-out" }}>
         <StatusIcon />
       </div>
     </Button>
   )
+
+  if (!!pendingCount) {
+    return (
+      <Tooltip>
+        <TooltipTrigger tabIndex={-1} onClick={() => void syncNow()} className="relative">
+          {button}
+          <DiffCounterBadge count={pendingCount} />
+        </TooltipTrigger>
+        <TooltipContent className="max-w-64">
+          <ChangesPreview pendingPreviews={pendingPreviews} />
+        </TooltipContent>
+      </Tooltip>
+    )
+  } else {
+    return button
+  }
 }
 
 const DiffCounterBadge = ({ count }: { count: number }) => {
@@ -96,7 +91,7 @@ const DiffCounterBadge = ({ count }: { count: number }) => {
   if (autoSyncEnabled) return null
 
   return (
-    <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
+    <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
       {count}
     </span>
   )
