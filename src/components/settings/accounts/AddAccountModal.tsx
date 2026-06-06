@@ -20,11 +20,13 @@ export type ModalStep =
 export function AddAccountModal({
   onClose,
   showLocalOnlyOption,
+  initialStep,
 }: {
   onClose: () => void
   showLocalOnlyOption?: boolean
+  initialStep?: ModalStep
 }) {
-  const [step, setStep] = useState<ModalStep>({ kind: "select-provider" })
+  const [step, setStep] = useState<ModalStep>(initialStep ?? { kind: "select-provider" })
 
   return (
     <Modal onClose={onClose}>

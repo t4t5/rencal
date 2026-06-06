@@ -1,22 +1,33 @@
 import { useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { rpc } from "@/rpc"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
+import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
-import { AddAccountModal } from "./AddAccountModal"
+import { AddAccountModal, type ModalStep } from "./AddAccountModal"
+import { beginProviderConnection } from "./provider-connection"
 
 export function AccountsPage() {
   const { calendars } = useCalendars()
+  const { connect } = useConnectProvider()
   const [showAddAccount, setShowAddAccount] = useState(false)
+  const [reconnectStep, setReconnectStep] = useState<ModalStep | null>(null)
 
   const calendarsWithAccount = calendars.filter((c) => c.account != null)
   const calendarsByAccount = Object.groupBy(calendarsWithAccount, (c) => c.account!)
@@ -26,12 +37,30 @@ export function AccountsPage() {
     return { account, provider }
   })
 
+  function reconnect(provider: string | null) {
+    if (provider == null) return
+
+    beginProviderConnection({
+      provider,
+      connect,
+      onClose: () => setReconnectStep(null),
+      onSetStep: setReconnectStep,
+    }).catch((error: unknown) => {
+      console.error("Failed to start provider reconnection", error)
+    })
+  }
+
   return (
     <div className="flex flex-col gap-6">
       {!!accounts.length && (
         <div className="flex flex-col gap-4">
           {accounts.map(({ account, provider }) => (
-            <Account key={account} account={account} provider={provider} />
+            <Account
+              key={account}
+              account={account}
+              provider={provider}
+              onReconnect={() => reconnect(provider)}
+            />
           ))}
         </div>
       )}
@@ -46,6 +75,10 @@ export function AccountsPage() {
       </Button>
 
       {showAddAccount && <AddAccountModal onClose={() => setShowAddAccount(false)} />}
+
+      {reconnectStep != null && (
+        <AddAccountModal onClose={() => setReconnectStep(null)} initialStep={reconnectStep} />
+      )}
     </div>
   )
 }
@@ -64,7 +97,15 @@ const statusLabels: Record<AccountStatus, string> = {
   disconnected: "Failed to connect",
 }
 
-function Account({ account, provider }: { account: string; provider: string | null }) {
+function Account({
+  account,
+  provider,
+  onReconnect,
+}: {
+  account: string
+  provider: string | null
+  onReconnect: () => void
+}) {
   const [status, setStatus] = useState<AccountStatus>(provider == null ? "disconnected" : "pending")
 
   useEffect(() => {
@@ -121,9 +162,27 @@ function Account({ account, provider }: { account: string; provider: string | nu
             </TooltipTrigger>
             <TooltipContent>{statusLabel}</TooltipContent>
           </Tooltip>
+
           <span className="text-xs text-muted-foreground truncate">{account}</span>
         </div>
       </div>
+
+      <MoreMenu onReconnect={onReconnect} />
     </div>
+  )
+}
+
+const MoreMenu = ({ onReconnect }: { onReconnect: () => void }) => {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
+          <MoreHorizIcon className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onReconnect}>Reconnect...</DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
