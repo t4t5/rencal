@@ -33,31 +33,26 @@ export function AccountsPage() {
 
             return (
               <div key={account} className="flex items-center gap-3">
-                <div className="size-12 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                <div className="size-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
                   <ProviderIcon className="size-6" />
                 </div>
+
                 <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-                  <span className="text-sm">{displayName}</span>
+                  <span className="heading text-sm">{displayName}</span>
                   <span className="text-xs text-muted-foreground truncate">{account}</span>
                 </div>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        variant="secondary"
-                        disabled
-                        size="sm"
-                        onClick={() => {
-                          // TODO: Wire to backend disconnect RPC when available
-                        }}
-                        className="hidden"
-                      >
-                        Disconnect
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  <TooltipContent>Coming soon</TooltipContent>
-                </Tooltip>
+
+                <Button
+                  variant="secondary"
+                  disabled
+                  size="sm"
+                  onClick={() => {
+                    // TODO: Wire to backend disconnect RPC when available
+                  }}
+                  className="hidden"
+                >
+                  Disconnect
+                </Button>
               </div>
             )
           })}
