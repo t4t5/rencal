@@ -10,10 +10,13 @@ import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
 
+import { CloudIcon } from "@/icons/cloud"
 import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
+
+import { Button } from "../ui/button"
 
 export const SyncStatus = () => {
   const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
@@ -75,13 +78,15 @@ export const SyncStatus = () => {
       )
     }
 
-    return <CloudCheckIcon className="size-4 text-muted-foreground" />
+    return <CloudIcon className="size-4 text-muted-foreground" />
   }
 
   return (
-    <div style={{ animation: "scale-in 0.15s ease-out" }}>
-      <StatusIcon />
-    </div>
+    <Button variant="ghost">
+      <div style={{ animation: "scale-in 0.15s ease-out" }}>
+        <StatusIcon />
+      </div>
+    </Button>
   )
 }
 
