@@ -110,7 +110,14 @@ function Account({ account, provider }: { account: string; provider: string | nu
         <div className="flex items-center gap-2">
           <Tooltip>
             <TooltipTrigger asChild tabIndex={-1}>
-              <span className={cn("size-1.5 rounded-full", statusColor)} aria-label={statusLabel} />
+              <span
+                className={cn(
+                  "size-1.5 rounded-full",
+                  statusColor,
+                  status === "pending" && "animate-pulse",
+                )}
+                aria-label={statusLabel}
+              />
             </TooltipTrigger>
             <TooltipContent>{statusLabel}</TooltipContent>
           </Tooltip>
