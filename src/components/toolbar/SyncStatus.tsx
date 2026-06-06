@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import { type ReactNode } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -28,61 +28,57 @@ export const SyncStatus = () => {
     0,
   )
 
-  const StatusIcon = (): ReactNode => {
-    if (isSyncing) {
-      return <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
-    }
+  let icon = (
+    <CloudIcon
+      className={cn(
+        "size-5 text-muted-foreground pointer-events-none",
+        isChecking && "animate-pulse",
+      )}
+    />
+  )
 
-    if (!isOnline) {
-      return (
-        <Tooltip>
-          <TooltipTrigger className="flex items-center">
-            <CloudOffIcon className="size-4 text-error" />
-          </TooltipTrigger>
-          <TooltipContent>No internet connection</TooltipContent>
-        </Tooltip>
-      )
-    }
+  let tooltipContent: ReactNode = <>Up-to-date</>
 
-    if (syncError) {
-      return (
-        <Tooltip>
-          <TooltipTrigger className="flex items-center">
-            <CloudWarningIcon className="size-4 text-warning" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
-        </Tooltip>
-      )
-    }
+  if (isSyncing) {
+    icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
+  }
 
-    return (
-      <CloudIcon className={cn("size-5 text-muted-foreground", isChecking && "animate-pulse")} />
-    )
+  if (!isOnline) {
+    icon = <CloudOffIcon className="size-4 text-error pointer-events-none" />
+    tooltipContent = <>No internet connection</>
+  }
+
+  if (syncError) {
+    icon = <CloudWarningIcon className="size-4 text-warning pointer-events-none" />
+    tooltipContent = syncError
+  }
+
+  if (pendingCount) {
+    tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
 
   const button = (
-    <Button variant="ghost" size="icon" tabIndex={-1}>
-      <div style={{ animation: "scale-in 0.15s ease-out" }}>
-        <StatusIcon />
-      </div>
+    <Button
+      variant="ghost"
+      size="icon"
+      tabIndex={-1}
+      className="relative"
+      onClick={pendingCount ? () => void syncNow() : undefined}
+    >
+      <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
+
+      {!!pendingCount && <DiffCounterBadge count={pendingCount} />}
     </Button>
   )
 
-  if (!!pendingCount) {
-    return (
-      <Tooltip>
-        <TooltipTrigger tabIndex={-1} onClick={() => void syncNow()} className="relative">
-          {button}
-          <DiffCounterBadge count={pendingCount} />
-        </TooltipTrigger>
-        <TooltipContent className="max-w-64">
-          <ChangesPreview pendingPreviews={pendingPreviews} />
-        </TooltipContent>
-      </Tooltip>
-    )
-  } else {
-    return button
-  }
+  if (!tooltipContent) return button
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{button}</TooltipTrigger>
+      <TooltipContent className="max-w-64 wrap-break-word">{tooltipContent}</TooltipContent>
+    </Tooltip>
+  )
 }
 
 const DiffCounterBadge = ({ count }: { count: number }) => {
