@@ -1,4 +1,4 @@
-import { ReactNode } from "react"
+import { type ReactNode, useState } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -9,14 +9,18 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
+import { cn } from "@/lib/utils"
 
-import { CloudCheckIcon } from "@/icons/cloud-check"
+import { CloudIcon } from "@/icons/cloud"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
 
+import { Button } from "../ui/button"
+
 export const SyncStatus = () => {
   const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
+  const [isForcingSync, setIsForcingSync] = useState(false)
 
   const isOnline = useIsOnline()
 
@@ -25,63 +29,72 @@ export const SyncStatus = () => {
     0,
   )
 
-  const StatusIcon = (): ReactNode => {
-    if (isChecking || isSyncing) {
-      return (
-        <div className="relative">
-          <SyncingIcon className="size-4 text-muted-foreground animate-spin" />
-          {!!pendingCount && <DiffCounterBadge count={pendingCount} />}
-        </div>
-      )
-    }
+  let icon = (
+    <CloudIcon
+      className={cn(
+        "size-5 text-muted-foreground pointer-events-none",
+        isChecking && "animate-pulse",
+      )}
+    />
+  )
 
-    if (!isOnline) {
-      return (
-        <Tooltip>
-          <TooltipTrigger className="flex items-center">
-            <CloudOffIcon className="size-4 text-error" />
-          </TooltipTrigger>
-          <TooltipContent>No internet connection</TooltipContent>
-        </Tooltip>
-      )
-    }
+  let tooltipContent: ReactNode = <>Up-to-date</>
 
-    if (syncError) {
-      return (
-        <Tooltip>
-          <TooltipTrigger className="flex items-center">
-            <CloudWarningIcon className="size-4 text-warning" />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64 wrap-break-word">{syncError}</TooltipContent>
-        </Tooltip>
-      )
-    }
-
-    if (pendingCount > 0) {
-      return (
-        <Tooltip>
-          <TooltipTrigger
-            tabIndex={-1}
-            onClick={() => void syncNow()}
-            className="relative flex items-center cursor-pointer"
-          >
-            <SyncingIcon className="size-4 text-muted-foreground" />
-            <DiffCounterBadge count={pendingCount} />
-          </TooltipTrigger>
-          <TooltipContent className="max-w-64">
-            <ChangesPreview pendingPreviews={pendingPreviews} />
-          </TooltipContent>
-        </Tooltip>
-      )
-    }
-
-    return <CloudCheckIcon className="size-4 text-muted-foreground" />
+  if (isChecking) {
+    tooltipContent = <>Checking for changes...</>
   }
 
+  if (pendingCount) {
+    tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
+  }
+
+  if (isSyncing || isForcingSync) {
+    icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
+    tooltipContent = <>Syncing...</>
+  }
+
+  if (syncError) {
+    icon = <CloudWarningIcon className="size-4 text-warning pointer-events-none" />
+    tooltipContent = syncError
+  }
+
+  if (!isOnline) {
+    icon = <CloudOffIcon className="size-4 text-error pointer-events-none" />
+    tooltipContent = <>No internet connection</>
+  }
+
+  const handleSyncNow = async () => {
+    setIsForcingSync(true)
+    try {
+      await syncNow()
+    } finally {
+      setIsForcingSync(false)
+    }
+  }
+
+  const button = (
+    <Button
+      variant="ghost"
+      size="icon"
+      tabIndex={-1}
+      className="relative focus-visible:ring-0"
+      onClick={pendingCount ? () => void handleSyncNow() : undefined}
+    >
+      <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
+
+      {!!pendingCount && <DiffCounterBadge count={pendingCount} />}
+    </Button>
+  )
+
+  if (!tooltipContent) return button
+
   return (
-    <div style={{ animation: "scale-in 0.15s ease-out" }}>
-      <StatusIcon />
-    </div>
+    <Tooltip>
+      <TooltipTrigger asChild tabIndex={-1}>
+        {button}
+      </TooltipTrigger>
+      <TooltipContent className="max-w-64 wrap-break-word">{tooltipContent}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -91,7 +104,7 @@ const DiffCounterBadge = ({ count }: { count: number }) => {
   if (autoSyncEnabled) return null
 
   return (
-    <span className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
+    <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
       {count}
     </span>
   )
