@@ -8,6 +8,7 @@ import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { getProviderDisplayName, getProviderIcon, providerRequiresAccount } from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"
+import { beginProviderConnection } from "./provider-connection"
 
 export const ProviderList = ({
   onClose,
@@ -36,21 +37,12 @@ export const ProviderList = ({
   }, [])
 
   async function handleProviderClick(name: string) {
-    const info = await rpc.caldir.get_provider_connect_info(name)
-
-    if (info.step === "oauth_redirect" || info.step === "hosted_oauth") {
-      await connect(name)
-      onClose()
-    } else if (info.step === "needs_setup") {
-      onSetStep({
-        kind: "setup",
-        provider: name,
-        instructions: info.instructions ?? "",
-        fields: info.fields,
-      })
-    } else if (info.step === "credentials") {
-      onSetStep({ kind: "credentials", provider: name, fields: info.fields })
-    }
+    await beginProviderConnection({
+      provider: name,
+      connect,
+      onClose,
+      onSetStep,
+    })
   }
 
   return (
