@@ -1,6 +1,7 @@
 mod helpers;
 mod types;
 
+mod check_provider_connection;
 mod connect_provider;
 mod connect_provider_with_credentials;
 mod create_event;
@@ -66,6 +67,8 @@ pub trait CaldirApi {
     async fn list_providers() -> TauResult<Vec<String>>;
 
     async fn get_provider_connect_info(provider_name: String) -> TauResult<ProviderConnectInfo>;
+
+    async fn check_provider_connection(provider_name: String, account: String) -> TauResult<()>;
 
     async fn connect_provider<R: Runtime>(
         app_handle: AppHandle<R>,
@@ -184,6 +187,14 @@ impl CaldirApi for CaldirApiImpl {
         provider_name: String,
     ) -> TauResult<ProviderConnectInfo> {
         get_provider_connect_info::handler(provider_name).await
+    }
+
+    async fn check_provider_connection(
+        self,
+        provider_name: String,
+        account: String,
+    ) -> TauResult<()> {
+        check_provider_connection::handler(provider_name, account).await
     }
 
     async fn connect_provider<R: Runtime>(
