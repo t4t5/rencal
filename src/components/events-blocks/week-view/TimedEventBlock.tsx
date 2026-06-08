@@ -51,7 +51,6 @@ function WeekTimedEventImpl({
   })
 
   const mode = layout.displayMode
-  const isCompact = mode === "compact"
   const hasStripe = !isDashed && !isDraft
 
   const summary = layout.event.summary || <UntitledEventText />
@@ -64,8 +63,8 @@ function WeekTimedEventImpl({
       data-event-clickable={!isDraft || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
-        "absolute overflow-hidden rounded px-1 py-0.5",
-        hasStripe && (isCompact ? "pl-1.5" : "pl-2"),
+        "absolute overflow-hidden rounded px-1",
+        hasStripe && "pl-1.5",
         !isDraft && dimmed && "opacity-50",
         isDraft && "font-medium",
       )}
@@ -96,28 +95,41 @@ function WeekTimedEventImpl({
     >
       {hasStripe && (
         <div
-          className={cn("absolute left-0 top-0 bottom-0", isCompact ? "w-[2px]" : "w-[3px]")}
+          className={cn("absolute left-0 top-0 bottom-0 w-[2px]")}
           style={{ backgroundColor: colors.borderColor }}
         />
       )}
 
-      {mode === "compact" ? (
+      {mode === "xs" ? (
         <div className="flex items-baseline gap-1">
+          {/* Title + time on one line */}
           <span className="truncate font-medium leading-tight min-w-0 flex-1">{summary}</span>
           <span className="text-[10px] opacity-70 shrink-0 leading-tight">{startTime}</span>
         </div>
-      ) : mode === "standard" ? (
-        <>
+      ) : mode === "sm" ? (
+        <div>
+          {/* Title + time on separate lines, no padding */}
           <div className="truncate font-medium leading-tight">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">{startTime}</div>
-        </>
+          <div className="truncate opacity-80 leading-tight">
+            {startTime} - {endTime}
+          </div>
+        </div>
+      ) : mode === "md" ? (
+        <div className="py-0.5">
+          {/* Title + time on separate lines, with padding */}
+          <div className="font-medium leading-tight">{summary}</div>
+          <div className="truncate opacity-80 leading-tight">
+            {startTime} – {endTime}
+          </div>
+        </div>
       ) : (
-        <>
+        <div className="py-0.5">
+          {/* Title = 2 lines, time = 1 line, with padding */}
           <div className="font-medium leading-tight line-clamp-2">{summary}</div>
           <div className="truncate opacity-80 leading-tight">
             {startTime} – {endTime}
           </div>
-        </>
+        </div>
       )}
     </div>
   )

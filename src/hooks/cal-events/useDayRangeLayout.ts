@@ -11,7 +11,7 @@ import { DAY_MINUTES, daysDiff, MS_PER_DAY } from "@/lib/time"
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
 
-export type WeekEventDisplayMode = "compact" | "standard" | "expanded"
+export type WeekEventDisplayMode = "xs" | "sm" | "md" | "lg"
 
 export type WeekTimedEventLayout = {
   event: CalendarEvent
@@ -51,9 +51,10 @@ function computeTimedPosition(
 }
 
 function displayModeFor(durationMinutes: number): WeekEventDisplayMode {
-  if (durationMinutes < 30) return "compact"
-  if (durationMinutes < 60) return "standard"
-  return "expanded"
+  if (durationMinutes < 30) return "xs"
+  if (durationMinutes < 45) return "sm"
+  if (durationMinutes < 60) return "md"
+  return "lg"
 }
 
 /** Tolerance for float precision when comparing positions derived from minute-based math */
