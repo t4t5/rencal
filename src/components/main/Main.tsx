@@ -1,4 +1,5 @@
 import { MainHeader } from "@/components/main/MainHeader"
+import { BoardView } from "@/components/main/board-view/BoardView"
 import { MonthView } from "@/components/main/month-view/MonthView"
 import { WeekView } from "@/components/main/week-view/WeekView"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
@@ -26,6 +27,9 @@ export function Main({
         </TabsContent>
         <TabsContent value="month" className="h-full">
           <MonthView />
+        </TabsContent>
+        <TabsContent value="board" className="h-full">
+          <BoardView />
         </TabsContent>
       </div>
     </Tabs>

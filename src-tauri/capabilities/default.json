@@ -11,6 +11,7 @@
     "core:webview:allow-create-webview-window",
     "core:window:allow-center",
     "notification:default",
-    "dialog:allow-open"
+    "dialog:allow-open",
+    "core:window:allow-close"
   ]
 }

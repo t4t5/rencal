@@ -79,6 +79,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "m", type: "char" }],
   },
   {
+    id: "board",
+    group: "View",
+    label: "Board view",
+    bindings: [{ keys: "b", type: "char" }],
+  },
+  {
     id: "week",
     group: "View",
     label: "Week view",

@@ -145,6 +145,7 @@ function useShortcutHandlers({
     },
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
+    board: () => onChangeCalendarView("board"),
     search: handleSearch,
     "new-event": handleNewEvent,
     settings: (e) => {
