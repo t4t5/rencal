@@ -113,7 +113,7 @@ function useShortcutHandlers({
     button?.click()
   }
 
-  const handleNewEvent = (e: KeyboardEvent) => {
+  const handleComposeEvent = (e: KeyboardEvent) => {
     e.preventDefault()
 
     if (!canCreate) {
@@ -125,7 +125,7 @@ function useShortcutHandlers({
     setIsDrafting(true)
   }
 
-  const handleAddEventActiveDay = (e: KeyboardEvent) => {
+  const handleAddEventToActiveDay = (e: KeyboardEvent) => {
     e.preventDefault()
     openActiveDayDraft()
   }
@@ -152,8 +152,8 @@ function useShortcutHandlers({
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
     search: handleSearch,
-    "new-event": handleNewEvent,
-    "add-event-active-day": handleAddEventActiveDay,
+    "compose-event": handleComposeEvent,
+    "add-event": handleAddEventToActiveDay,
     settings: (e) => {
       e.preventDefault()
       void openSettingsWindow()

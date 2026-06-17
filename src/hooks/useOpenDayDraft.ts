@@ -21,7 +21,7 @@ export interface OpenDayDraftOptions {
 }
 
 /**
- * Opens the new-event draft popover for a given day, anchored to `anchor`.
+ * Opens the compose-event draft popover for a given day, anchored to `anchor`.
  * Shared by the month/week context menus and the "add event on active day" shortcut.
  */
 export function useOpenDayDraft() {
