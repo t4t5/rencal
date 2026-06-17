@@ -1,6 +1,5 @@
-// Lets the active day cell/column expose its "create event on this day" action
-// so the global "add event on active day" shortcut can trigger it without
-// reaching into the DOM. Mirrors the singleton pattern in `draft-anchor.ts`.
+// Lets active day cell expose its "create event on this day" action
+// so the global "add event on active day" shortcut can trigger it
 
 let _open: (() => void) | null = null
 
