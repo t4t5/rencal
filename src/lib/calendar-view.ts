@@ -1,6 +1,6 @@
 import z from "zod"
 
-export const calendarViewSchema = z.enum(["week", "month"])
+export const calendarViewSchema = z.enum(["week", "month", "board"])
 
 export type CalendarView = z.infer<typeof calendarViewSchema>
 
