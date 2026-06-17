@@ -1,0 +1,16 @@
+{
+  "name": "rencal-website",
+  "version": "0.0.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.40.0",
+    "astro": "6.4.5",
+    "starlight-theme-rapide": "^0.5.2"
+  }
+}
