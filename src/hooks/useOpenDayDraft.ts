@@ -1,4 +1,4 @@
-import { addHours, setHours, startOfDay } from "date-fns"
+import { setHours, startOfDay } from "date-fns"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
@@ -7,15 +7,18 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import { setDraftAnchor, type DraftAnchor } from "@/lib/draft-anchor"
 import {
   addDays,
+  addMinutes,
   allDayFromLocalDate,
+  DEFAULT_DURATION_MINS,
   fromDate,
-  getLocalTzid,
+  withViewerZone,
   type EventTime,
 } from "@/lib/event-time"
 
 export interface OpenDayDraftOptions {
   allDay?: boolean
-  startHour?: number
+  /** Start time for a timed draft; defaults to the current hour on `day`. */
+  start?: EventTime | null
   /** Anchor the popover at this viewport Y instead of the element's center. */
   clickY?: number
 }
@@ -35,16 +38,16 @@ export function useOpenDayDraft() {
       return
     }
 
-    const tzid = getLocalTzid()
     let start: EventTime
     let end: EventTime
     if (opts.allDay) {
       start = allDayFromLocalDate(day)
       end = addDays(start, 1)
     } else {
-      const startJs = setHours(startOfDay(day), opts.startHour ?? 0)
-      start = fromDate(startJs, tzid)
-      end = fromDate(addHours(startJs, 1), tzid)
+      start = opts.start
+        ? withViewerZone(opts.start)
+        : fromDate(setHours(startOfDay(day), new Date().getHours()))
+      end = addMinutes(start, DEFAULT_DURATION_MINS)
     }
 
     setActiveEventKey(null)

@@ -1,4 +1,4 @@
-import { format, startOfWeek } from "date-fns"
+import { format, setHours, startOfDay, startOfWeek } from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
@@ -297,7 +297,8 @@ export function WeekTimeGrid({
               key={day.dateKey}
               onCreateEvent={(el, clickY) => {
                 const startHour = getHourFromClickY(el, clickY)
-                openDayDraft(day.date, el, { allDay: false, startHour, clickY })
+                const start = fromDate(setHours(startOfDay(day.date), startHour))
+                openDayDraft(day.date, el, { allDay: false, start, clickY })
               }}
             >
               <div

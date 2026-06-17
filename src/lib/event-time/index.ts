@@ -34,6 +34,7 @@ export {
   toTimedAtStartOfDay,
   wallclockTime,
   withEventDate,
+  withViewerZone,
   withWallclockTime,
 } from "./edit"
 export { getLocalTzid } from "./local-zone"

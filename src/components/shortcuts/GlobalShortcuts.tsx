@@ -21,7 +21,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
-import { ACTIVE_DAY_EL_ID, getDayDraftStartHour } from "@/lib/active-day-draft"
+import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { CalendarView } from "@/lib/calendar-view"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
@@ -131,7 +131,7 @@ function useShortcutHandlers({
     e.preventDefault()
     const el = document.getElementById(ACTIVE_DAY_EL_ID)
     if (!el) return
-    openDayDraft(activeDate, el, { startHour: getDayDraftStartHour(activeDate, calendarEvents) })
+    openDayDraft(activeDate, el, { start: getLastEventEndTime(activeDate, calendarEvents) })
   }
 
   return {

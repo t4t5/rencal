@@ -26,6 +26,17 @@ export function toAllDay(et: EventTime): EventTime {
   return allDayDate(dateInViewerZone(et))
 }
 
+/**
+ * Re-express the same instant in the viewer's zone. All-day values have no clock
+ * to re-zone, so they pass through. Used when seeding a new event from an
+ * existing event's time so the draft reads in the viewer's local clock (matching
+ * the calendar grid) instead of the source event's stored zone.
+ */
+export function withViewerZone(et: EventTime): EventTime {
+  if (et.kind === "date") return et
+  return { kind: "datetime_zoned", value: toViewerZonedDateTime(et) }
+}
+
 export function addMinutes(et: EventTime, minutes: number): EventTime {
   switch (et.kind) {
     case "date":

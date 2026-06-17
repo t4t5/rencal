@@ -14,7 +14,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
-import { ACTIVE_DAY_EL_ID, getDayDraftStartHour } from "@/lib/active-day-draft"
+import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
@@ -58,7 +58,7 @@ export function MonthDayCell({
   const totalHidden = hiddenAllDayCount + hiddenTimedCount
 
   const handleCreateEvent = (el: HTMLElement) => {
-    openDayDraft(day.date, el, { startHour: getDayDraftStartHour(day.date, calendarEvents) })
+    openDayDraft(day.date, el, { start: getLastEventEndTime(day.date, calendarEvents) })
   }
 
   return (
