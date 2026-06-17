@@ -1,4 +1,12 @@
-import { addHours, format, setHours, startOfDay, startOfWeek } from "date-fns"
+import {
+  addHours,
+  format,
+  getHours,
+  setHours,
+  startOfDay,
+  startOfHour,
+  startOfWeek,
+} from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
@@ -16,6 +24,7 @@ import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import {
   addDays,
@@ -82,6 +91,7 @@ export function WeekTimeGrid({
   const N = days.length
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
+  const activeDayTargetRef = useRef<HTMLElement | null>(null)
 
   // Used to suppress the "update activeDate on scroll" logic during our own programmatic scrolls.
   const ignoreScrollUntilRef = useRef(0)
@@ -259,6 +269,21 @@ export function WeekTimeGrid({
     setDraftPopoverOpen(true)
   }
 
+  useEffect(() => {
+    const handleShortcut = () => {
+      const activeDay = days.find((day) => day.dateKey === activeDateKey)
+      if (!activeDayTargetRef.current || !activeDay) return
+
+      openCreatePopover(activeDay.date, activeDayTargetRef.current, {
+        allDay: false,
+        startHour: getHours(startOfHour(new Date())),
+      })
+    }
+
+    window.addEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+    return () => window.removeEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+  }, [activeDateKey, days, canCreate, defaultCalendarId])
+
   const getHourFromClickY = (el: HTMLElement, clientY: number) => {
     const rect = el.getBoundingClientRect()
     const fraction = (clientY - rect.top) / rect.height
@@ -374,6 +399,9 @@ export function WeekTimeGrid({
                     backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT}px)`,
                   } as React.CSSProperties
                 }
+                ref={(el) => {
+                  if (day.dateKey === activeDateKey) activeDayTargetRef.current = el
+                }}
                 onClick={() => onDayClick(day.date)}
               >
                 {(timedByDay.get(day.dateKey) ?? []).map((layout) => {

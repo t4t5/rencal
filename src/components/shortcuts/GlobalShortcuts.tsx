@@ -21,6 +21,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useTheme } from "@/hooks/useTheme"
 import { CalendarView } from "@/lib/calendar-view"
+import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 const NAV_THROTTLE_MS = 80
@@ -124,6 +125,11 @@ function useShortcutHandlers({
     setIsDrafting(true)
   }
 
+  const handleAddEventActiveDay = (e: KeyboardEvent) => {
+    e.preventDefault()
+    window.dispatchEvent(new Event(CREATE_EVENT_ON_ACTIVE_DAY))
+  }
+
   return {
     today: () => {
       clearAgendaFocus()
@@ -147,6 +153,7 @@ function useShortcutHandlers({
     week: () => onChangeCalendarView("week"),
     search: handleSearch,
     "new-event": handleNewEvent,
+    "add-event-active-day": handleAddEventActiveDay,
     settings: (e) => {
       e.preventDefault()
       void openSettingsWindow()

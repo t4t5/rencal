@@ -1,5 +1,5 @@
 import { addHours, getHours, setHours, startOfDay, startOfHour } from "date-fns"
-import { useRef } from "react"
+import { useEffect, useRef } from "react"
 
 import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
 import {
@@ -17,6 +17,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
 import { setDraftAnchor } from "@/lib/draft-anchor"
 import { fromDate, getLocalTzid, toViewerZonedDateTime } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
@@ -55,6 +56,7 @@ export function MonthDayCell({
   const { setActiveEventKey } = useCalEvents()
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
+  const cellRef = useRef<HTMLDivElement | null>(null)
   const contextTargetRef = useRef<HTMLElement | null>(null)
 
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
@@ -95,6 +97,17 @@ export function MonthDayCell({
     setDraftPopoverOpen(true)
   }
 
+  useEffect(() => {
+    if (!isActiveDay) return
+
+    const handleShortcut = () => {
+      if (cellRef.current) handleCreateEvent(cellRef.current)
+    }
+
+    window.addEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+    return () => window.removeEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+  }, [isActiveDay, timedEvents, canCreate, defaultCalendarId])
+
   return (
     <ContextMenu modal={false}>
       <ContextMenuTrigger asChild>
@@ -104,6 +117,7 @@ export function MonthDayCell({
             day.isWeekend && "bg-weekend",
             isActiveDay && "bg-accent",
           )}
+          ref={cellRef}
           onClick={onClick}
           onContextMenu={(e) => {
             contextTargetRef.current = e.currentTarget

@@ -101,6 +101,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "c", type: "char" }],
   },
   {
+    id: "add-event-active-day",
+    group: "General",
+    label: "Add event on active day",
+    bindings: [{ keys: "a", type: "char" }],
+  },
+  {
     id: "settings",
     group: "General",
     label: "Settings",
