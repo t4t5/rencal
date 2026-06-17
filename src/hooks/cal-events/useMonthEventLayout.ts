@@ -5,7 +5,7 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { isAllDay } from "@/lib/event-time"
+import { isSpanning } from "@/lib/event-utils"
 import { daysDiff, MS_PER_DAY } from "@/lib/time"
 
 import type { MonthDay } from "./useMonthGrid"
@@ -30,14 +30,6 @@ export type WeekLayout = {
   allDayItems: AllDayLaneItem[]
   maxLane: number
   timedByCol: TimedEventItem[][] // index 0-6 for each day column
-}
-
-/**
- * All-day events always occupy the all-day lane; timed events only span it if
- * they cross a day boundary.
- */
-function isSpanning(event: CalendarEvent): boolean {
-  return isAllDay(event.start) || event.dateInfo.lastDayMs - event.dateInfo.firstDayMs >= MS_PER_DAY
 }
 
 export function useMonthEventLayout(

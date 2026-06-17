@@ -1,5 +1,4 @@
-import { getHours, startOfHour } from "date-fns"
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 
 import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
 import {
@@ -9,16 +8,14 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
-import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
-import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
-import { registerActiveDayDraft } from "@/lib/active-day-draft"
+import { ACTIVE_DAY_EL_ID, getDayDraftStartHour } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { toViewerZonedDateTime } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -52,34 +49,17 @@ export function MonthDayCell({
   dimmed,
 }: MonthDayCellProps) {
   const { calendars } = useCalendars()
-  const { defaultCalendarId } = useEventDraft()
-  const { canCreate } = useCreateEventGate()
+  const { calendarEvents } = useCalEvents()
   const openDayDraft = useOpenDayDraft()
-  const cellRef = useRef<HTMLDivElement | null>(null)
   const contextTargetRef = useRef<HTMLElement | null>(null)
 
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
   const hiddenTimedCount = timedEvents.length - visibleTimed.length
   const totalHidden = hiddenAllDayCount + hiddenTimedCount
 
-  const getStartHour = () => {
-    const lastEvent = timedEvents.at(-1)
-    if (lastEvent) return toViewerZonedDateTime(lastEvent.event.end).hour
-    return getHours(startOfHour(new Date()))
-  }
-
   const handleCreateEvent = (el: HTMLElement) => {
-    openDayDraft(day.date, el, { startHour: getStartHour() })
+    openDayDraft(day.date, el, { startHour: getDayDraftStartHour(day.date, calendarEvents) })
   }
-
-  useEffect(() => {
-    if (!isActiveDay) return
-
-    registerActiveDayDraft(() => {
-      if (cellRef.current) handleCreateEvent(cellRef.current)
-    })
-    return () => registerActiveDayDraft(null)
-  }, [isActiveDay, timedEvents, canCreate, defaultCalendarId])
 
   return (
     <ContextMenu modal={false}>
@@ -90,7 +70,7 @@ export function MonthDayCell({
             day.isWeekend && "bg-weekend",
             isActiveDay && "bg-accent",
           )}
-          ref={cellRef}
+          id={isActiveDay ? ACTIVE_DAY_EL_ID : undefined}
           onClick={onClick}
           onContextMenu={(e) => {
             contextTargetRef.current = e.currentTarget
