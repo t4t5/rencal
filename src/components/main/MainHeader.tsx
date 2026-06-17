@@ -36,6 +36,7 @@ export function MainHeader() {
       <TabsList onMouseDown={(e) => e.preventDefault()} tabIndex={-1}>
         <CalendarViewTab view="week" name="Week" shortcut="w" />
         <CalendarViewTab view="month" name="Month" shortcut="m" />
+        <CalendarViewTab view="board" name="Board" shortcut="b" />
       </TabsList>
 
       <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />
