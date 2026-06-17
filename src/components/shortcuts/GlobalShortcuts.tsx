@@ -20,8 +20,8 @@ import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useTheme } from "@/hooks/useTheme"
+import { openActiveDayDraft } from "@/lib/active-day-draft"
 import { CalendarView } from "@/lib/calendar-view"
-import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 const NAV_THROTTLE_MS = 80
@@ -127,7 +127,7 @@ function useShortcutHandlers({
 
   const handleAddEventActiveDay = (e: KeyboardEvent) => {
     e.preventDefault()
-    window.dispatchEvent(new Event(CREATE_EVENT_ON_ACTIVE_DAY))
+    openActiveDayDraft()
   }
 
   return {

@@ -1,4 +1,4 @@
-import { addHours, getHours, setHours, startOfDay, startOfHour } from "date-fns"
+import { getHours, startOfHour } from "date-fns"
 import { useEffect, useRef } from "react"
 
 import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
@@ -9,17 +9,16 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
+import { registerActiveDayDraft } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
-import { setDraftAnchor } from "@/lib/draft-anchor"
-import { fromDate, getLocalTzid, toViewerZonedDateTime } from "@/lib/event-time"
+import { toViewerZonedDateTime } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -53,9 +52,9 @@ export function MonthDayCell({
   dimmed,
 }: MonthDayCellProps) {
   const { calendars } = useCalendars()
-  const { setActiveEventKey } = useCalEvents()
-  const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
-  const { canCreate, promptToConnect } = useCreateEventGate()
+  const { defaultCalendarId } = useEventDraft()
+  const { canCreate } = useCreateEventGate()
+  const openDayDraft = useOpenDayDraft()
   const cellRef = useRef<HTMLDivElement | null>(null)
   const contextTargetRef = useRef<HTMLElement | null>(null)
 
@@ -70,42 +69,16 @@ export function MonthDayCell({
   }
 
   const handleCreateEvent = (el: HTMLElement) => {
-    if (!canCreate) {
-      promptToConnect()
-      return
-    }
-    const startHour = getStartHour()
-    const startJs = setHours(startOfDay(day.date), startHour)
-    const endJs = addHours(startJs, 1)
-    const tzid = getLocalTzid()
-    const start = fromDate(startJs, tzid)
-    const end = fromDate(endJs, tzid)
-
-    setActiveEventKey(null)
-    setIsDrafting(false)
-    setDraftEvent({
-      summary: "",
-      description: null,
-      start,
-      end,
-      calendarId: defaultCalendarId,
-      location: null,
-      recurrence: null,
-      attendees: [],
-    })
-    setDraftAnchor(el)
-    setDraftPopoverOpen(true)
+    openDayDraft(day.date, el, { startHour: getStartHour() })
   }
 
   useEffect(() => {
     if (!isActiveDay) return
 
-    const handleShortcut = () => {
+    registerActiveDayDraft(() => {
       if (cellRef.current) handleCreateEvent(cellRef.current)
-    }
-
-    window.addEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
-    return () => window.removeEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+    })
+    return () => registerActiveDayDraft(null)
   }, [isActiveDay, timedEvents, canCreate, defaultCalendarId])
 
   return (

@@ -1,12 +1,4 @@
-import {
-  addHours,
-  format,
-  getHours,
-  setHours,
-  startOfDay,
-  startOfHour,
-  startOfWeek,
-} from "date-fns"
+import { format, getHours, startOfHour, startOfWeek } from "date-fns"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
@@ -14,7 +6,6 @@ import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventB
 
 import type { TimeFormat } from "@/rpc/bindings"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
@@ -23,18 +14,10 @@ import { useSettings } from "@/contexts/SettingsContext"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
+import { registerActiveDayDraft } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { CREATE_EVENT_ON_ACTIVE_DAY } from "@/lib/create-event-shortcut"
-import { setDraftAnchor } from "@/lib/draft-anchor"
-import {
-  addDays,
-  allDayFromLocalDate,
-  formatDateKey,
-  formatTime,
-  fromDate,
-  getLocalTzid,
-  type EventTime,
-} from "@/lib/event-time"
+import { formatDateKey, formatTime, fromDate } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -83,10 +66,10 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
-  const { setActiveEventKey } = useCalEvents()
-  const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
-  const { canCreate, promptToConnect } = useCreateEventGate()
+  const { defaultCalendarId } = useEventDraft()
+  const { canCreate } = useCreateEventGate()
   const { timeFormat } = useSettings()
+  const openDayDraft = useOpenDayDraft()
 
   const N = days.length
   const hasAllDay = allDayItems.length > 0
@@ -225,63 +208,18 @@ export function WeekTimeGrid({
     }
   }, [scrollContainerRef])
 
-  const openCreatePopover = (
-    day: Date,
-    el: HTMLElement,
-    opts: { allDay: boolean; startHour?: number; clickY?: number },
-  ) => {
-    if (!canCreate) {
-      promptToConnect()
-      return
-    }
-    const tzid = getLocalTzid()
-    let start: EventTime
-    let end: EventTime
-    if (opts.allDay) {
-      start = allDayFromLocalDate(day)
-      end = addDays(start, 1)
-    } else {
-      const startJs = setHours(startOfDay(day), opts.startHour ?? 0)
-      start = fromDate(startJs, tzid)
-      end = fromDate(addHours(startJs, 1), tzid)
-    }
-
-    setActiveEventKey(null)
-    setIsDrafting(false)
-    setDraftEvent({
-      summary: "",
-      description: null,
-      start,
-      end,
-      calendarId: defaultCalendarId,
-      location: null,
-      recurrence: null,
-      attendees: [],
-    })
-
-    if (opts.clickY != null) {
-      const { left, width } = el.getBoundingClientRect()
-      const y = opts.clickY
-      setDraftAnchor({ getBoundingClientRect: () => new DOMRect(left, y, width, 0) })
-    } else {
-      setDraftAnchor(el)
-    }
-    setDraftPopoverOpen(true)
-  }
-
   useEffect(() => {
-    const handleShortcut = () => {
-      const activeDay = days.find((day) => day.dateKey === activeDateKey)
-      if (!activeDayTargetRef.current || !activeDay) return
+    const activeDay = days.find((day) => day.dateKey === activeDateKey)
+    if (!activeDay) return
 
-      openCreatePopover(activeDay.date, activeDayTargetRef.current, {
-        allDay: false,
-        startHour: getHours(startOfHour(new Date())),
-      })
-    }
-
-    window.addEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
-    return () => window.removeEventListener(CREATE_EVENT_ON_ACTIVE_DAY, handleShortcut)
+    registerActiveDayDraft(() => {
+      if (activeDayTargetRef.current) {
+        openDayDraft(activeDay.date, activeDayTargetRef.current, {
+          startHour: getHours(startOfHour(new Date())),
+        })
+      }
+    })
+    return () => registerActiveDayDraft(null)
   }, [activeDateKey, days, canCreate, defaultCalendarId])
 
   const getHourFromClickY = (el: HTMLElement, clientY: number) => {
@@ -326,7 +264,7 @@ export function WeekTimeGrid({
                 <AllDayContextMenu
                   key={`${day.dateKey}-allday-bg`}
                   onCreateEvent={() =>
-                    openCreatePopover(day.date, contextTargetRef.current!, { allDay: true })
+                    openDayDraft(day.date, contextTargetRef.current!, { allDay: true })
                   }
                 >
                   <div
@@ -378,7 +316,7 @@ export function WeekTimeGrid({
               key={day.dateKey}
               onCreateEvent={(el, clickY) => {
                 const startHour = getHourFromClickY(el, clickY)
-                openCreatePopover(day.date, el, { allDay: false, startHour, clickY })
+                openDayDraft(day.date, el, { allDay: false, startHour, clickY })
               }}
             >
               <div
