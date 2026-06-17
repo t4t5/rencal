@@ -17,9 +17,13 @@ export function SettingsWindow() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        getCurrentWindow()
-          .close()
-          .catch(() => {})
+        setTimeout(() => {
+          if (!e.defaultPrevented) {
+            getCurrentWindow()
+              .close()
+              .catch(() => {})
+          }
+        }, 0)
       }
     }
     document.addEventListener("keydown", onKeyDown)
