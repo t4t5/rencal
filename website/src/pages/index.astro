@@ -20,14 +20,26 @@ const description = "A calendar for hackers"
     />
   </head>
   <body>
-    <header class="px-10 py-8">
+    <header class="px-10 py-8 flex justify-between items-center">
       <Logo class="h-[25px]" />
+
+      <nav class="uppercase flex gap-7 text-foreground">
+        <a href="/docs">Docs</a>
+        <a>GitHub</a>
+      </nav>
     </header>
 
     <main>
-      <h1>{title}</h1>
-      <p>{description}</p>
-      <a href="/docs/example/">Read the docs</a>
+      <div class="text-center flex flex-col items-center gap-7">
+        <h2 class="uppercase text-[40px]">A calendar for hackers</h2>
+
+        <p>Built for Omarchy + Linux</p>
+
+        <div class="flex gap-5">
+          <button class="primary">Install</button>
+          <button>Docs</button>
+        </div>
+      </div>
     </main>
   </body>
 </html>

@@ -2,9 +2,11 @@
 @import "./fonts.css";
 
 :root {
-  --accent-color: #f56213;
+  --primary: #f56213;
+  --background: #131313;
+  --foreground: #fff;
+  --muted: rgba(255, 255, 255, 0.7);
 
-  color-scheme: light dark;
   font-family:
     Inter,
     ui-sans-serif,
@@ -14,27 +16,45 @@
     sans-serif;
 }
 
+@theme inline {
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+}
+
 body {
+  background-color: var(--background);
+  color: var(--muted);
   min-height: 100vh;
   margin: 0;
 }
 
-h1 {
-  margin: 0;
-  font-size: clamp(3rem, 10vw, 6rem);
-  letter-spacing: -0.08em;
-  line-height: 0.9;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--foreground);
 }
 
-p {
-  margin: 1rem 0 0;
-  color: light-dark(#666666, #aaaaaa);
-  font-size: 1.125rem;
+button {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  gap: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
 }
 
-a {
-  display: inline-flex;
-  margin-top: 2rem;
-  color: inherit;
-  text-underline-offset: 0.3em;
+button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+button.primary {
+  background: var(--primary);
+  color: var(--background);
+}
+
+button.primary:hover {
+  background: #ff7b33;
 }
