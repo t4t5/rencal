@@ -1,4 +1,6 @@
 :root {
+  --accent-color: #f56213;
+
   color-scheme: light dark;
   font-family:
     Inter,
