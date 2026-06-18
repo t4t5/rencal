@@ -1,6 +1,8 @@
 ---
 import "../styles/index.css"
-import Logo from "../icons/rencal-logotype.astro"
+
+import Hero from "../components/landing/Hero.astro"
+import Header from "../components/landing/Header.astro"
 
 const title = "renCal"
 const description = "A calendar for hackers"
@@ -20,32 +22,10 @@ const description = "A calendar for hackers"
     />
   </head>
   <body>
-    <header class="px-10 py-8 flex justify-between items-center">
-      <Logo class="h-[25px]" />
-
-      <nav class="uppercase flex gap-7 text-foreground">
-        <a href="/docs">Docs</a>
-        <a>GitHub</a>
-      </nav>
-    </header>
+    <Header />
 
     <main>
-      <div class="text-center flex flex-col items-center gap-7">
-        <h2 class="uppercase text-[40px]">A calendar for hackers</h2>
-
-        <p>Built for Omarchy + Linux</p>
-
-        <div class="flex gap-5">
-          <button class="primary">Install</button>
-          <button>Docs</button>
-        </div>
-
-        <img
-          src="/screenshot.png"
-          alt="renCal screenshot"
-          class="mt-8 max-w-5xl w-full rounded-lg"
-        />
-      </div>
+      <Hero />
     </main>
   </body>
 </html>
