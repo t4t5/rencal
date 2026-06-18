@@ -1,26 +1,23 @@
-## Local-first
+## Plain files
 
-renCal stores every event as a plain `.ics` file on your computer. It works offline, backs up easily, and keeps your calendar data under your control.
+Every event is stored as an `.ics` file on your machine. It works offline, is human-readable, and can easily be backed up.
 
 ## Syncs with any provider
 
-Connect to Google Calendar, iCloud, Outlook, CalDAV servers, and more through a growing ecosystem of provider plugins.
+Connect to Google Calendar, iCloud, Outlook, and CalDAV servers through a growing ecosystem of provider plugins.
 
-## Agent-friendly
+## Natural input
 
-Your calendar is just files, so it works with the tools you already know: `grep`, shell scripts, git, and the caldir CLI. Let agents inspect or update your schedule without complex MCP servers or opaque APIs.
+Type events the way you say them: "lunch with Sarah tomorrow at 1" or "team sync every Monday"
 
-## Keyboard-first workflow
+## Agent-ready
 
-Navigate your calendar quickly with Vim-style motions and discoverable shortcuts. renCal is
-designed for people who would rather stay on the keyboard than reach for the mouse.
+Your calendar is just a directory. Use `grep`, shell scripts, git, or the caldir CLI. No complex MCP servers needed.
 
-## Natural-language support
+## Keyboard-first
 
-Create events the way you think about them: "lunch with Sarah tomorrow at 1pm" or "team sync
-every Monday at 9"
+Move around with Vim-style navigation and shortcuts built for power users.
 
-## Made for Omarchy
+## Omarchy native
 
-renCal feels at home on Omarchy, with beautiful built-in themes and automatic Omarchy theme
-integration. Your calendar can match the rest of your desktop instead of looking like a web app in disguise.
+Built for Omarchy Linux, with themes that fit the rest of your system (instead of looking like a borrowed web app)
