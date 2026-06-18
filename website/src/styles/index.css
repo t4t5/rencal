@@ -6,6 +6,7 @@
   --background: #131313;
   --foreground: #fff;
   --muted: rgba(255, 255, 255, 0.7);
+  --separator: #414141;
 
   font-family:
     Inter,
@@ -20,6 +21,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-primary: var(--primary);
+  --color-separator: var(--separator);
 }
 
 body {

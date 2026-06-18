@@ -3,6 +3,7 @@ import "../styles/index.css"
 
 import Hero from "../components/landing/Hero.astro"
 import Header from "../components/landing/Header.astro"
+import Features from "../components/landing/Features.astro"
 
 const title = "renCal"
 const description = "A calendar for hackers"
@@ -24,8 +25,9 @@ const description = "A calendar for hackers"
   <body>
     <Header />
 
-    <main>
+    <main class="flex flex-col gap-14">
       <Hero />
+      <Features />
     </main>
   </body>
 </html>
