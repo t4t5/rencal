@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./fonts.css";
 
 :root {
   --accent-color: #f56213;
