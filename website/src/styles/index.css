@@ -60,3 +60,7 @@ button.primary {
 button.primary:hover {
   background: #ff7b33;
 }
+
+hr {
+  border-color: var(--separator);
+}

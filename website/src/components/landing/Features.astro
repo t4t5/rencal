@@ -29,13 +29,13 @@ const features = [
   {
     title: "Omarchy native",
     description:
-      "Built for Omarchy Linux, with themes that fit the rest of your system (instead of looking like a borrowed web app)",
+      "Built for Omarchy Linux, with themes that adapt to the color palette of your system.",
   },
 ]
 ---
 
 <div class="flex justify-center">
-  <div class="grid grid-cols-3 gap-8 px-8 max-w-[1200px]">
+  <div class="grid grid-cols-3 gap-14 px-8 max-w-[1200px]">
     {
       features.map((feature) => (
         <FeatureCard title={feature.title} description={feature.description} />
