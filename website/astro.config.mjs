@@ -3,6 +3,8 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "astro/config"
 import starlightThemeRapide from "starlight-theme-rapide"
 
+import starlightRenTheme from "./src/starlight-ren-theme"
+
 export default defineConfig({
   vite: {
     plugins: [tailwindcss()],
@@ -10,7 +12,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: "renCal",
-      plugins: [starlightThemeRapide()],
+      plugins: [starlightThemeRapide(), starlightRenTheme()],
       customCss: ["/src/styles/fonts.css"],
       head: [
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },

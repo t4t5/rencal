@@ -38,6 +38,8 @@ h4,
 h5,
 h6 {
   color: var(--foreground);
+  font-weight: 400;
+  text-transform: uppercase;
 }
 
 button {

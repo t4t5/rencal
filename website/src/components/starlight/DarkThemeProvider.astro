@@ -1,0 +1,7 @@
+{/* Keep Starlight docs in dark mode regardless of system or stored preference. */}
+<script is:inline>
+  document.documentElement.dataset.theme = "dark";
+  try {
+    localStorage.removeItem("starlight-theme");
+  } catch {}
+</script>
