@@ -32,6 +32,10 @@ check:
   cargo check --workspace --manifest-path src-tauri/Cargo.toml
   cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
   @just typecheck
+  @just lint
+
+lint:
+  pnpm lint
 
 # Check TypeScript types only
 typecheck:
