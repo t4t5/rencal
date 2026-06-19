@@ -31,6 +31,16 @@ body {
   color: rgba(255, 255, 255, 0.7);
 }
 
+starlight-theme-select,
+starlight-rapide-theme-select {
+  display: none !important;
+  pointer-events: none;
+}
+
+.social-icons::after {
+  content: none !important;
+}
+
 .site-title,
 .sl-markdown-content h1,
 .sl-markdown-content h2,
@@ -74,6 +84,28 @@ body {
 summary,
 .sl-markdown-content .card {
   border-color: #414141;
+}
+
+site-search button[data-open-modal] {
+  background-color: #1f1f1f !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+}
+
+site-search button[data-open-modal]:hover {
+  border-color: transparent !important;
+}
+
+#starlight__search {
+  --pagefind-ui-background: #1f1f1f;
+  --pagefind-ui-border-width: 0px;
+  --sl-search-corners: 0px;
+}
+
+#starlight__search .pagefind-ui__search-input {
+  background-color: #1f1f1f !important;
+  border: 0 !important;
+  border-radius: 0 !important;
 }
 
 .sl-markdown-content a:not(.sl-anchor-link),
