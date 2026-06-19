@@ -2,7 +2,8 @@
 import config from "virtual:starlight/user-config"
 
 import Search from "virtual:starlight/components/Search"
-import SiteTitle from "virtual:starlight/components/SiteTitle"
+
+import Logo from "../../icons/rencal-logotype.astro"
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -13,7 +14,10 @@ const shouldRenderSearch =
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <SiteTitle />
+    <a href="/docs/" class="docs-title" aria-label="renCal docs">
+      <Logo class="docs-title__logo h-[25px]" />
+      <span class="docs-title__label">docs</span>
+    </a>
   </div>
   <div class="sl-flex print:hidden">
     {shouldRenderSearch && <Search />}
@@ -39,6 +43,32 @@ const shouldRenderSearch =
       padding: 0.25rem;
     }
 
+    .docs-title {
+      align-items: baseline;
+      color: var(--sl-color-white);
+      display: inline-flex;
+      gap: 0.5rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .docs-title__logo {
+      display: block;
+      flex: none;
+      height: 25px;
+      width: auto;
+    }
+
+    .docs-title__label {
+      color: #ffffff;
+      font-family: "Geist Mono", monospace;
+      font-weight: 300;
+      font-size: 32px;
+      opacity: 0.5;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
     @media (min-width: 50rem) {
       :global(:root[data-has-sidebar]) {
         --__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
@@ -51,9 +81,10 @@ const shouldRenderSearch =
         --__main-column-fr: calc(
           (
               100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
-                (2 * var(--__toc-width, var(--sl-nav-pad-x))) - var(--sl-content-inline-start, 0rem) -
-                var(--sl-content-width)
-            ) / 2
+                (2 * var(--__toc-width, var(--sl-nav-pad-x))) -
+                var(--sl-content-inline-start, 0rem) - var(--sl-content-width)
+            ) /
+            2
         );
         align-content: center;
         display: grid;
