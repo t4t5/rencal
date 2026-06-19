@@ -7,7 +7,7 @@ interface Props {
 const { title, description } = Astro.props
 ---
 
-<div class="flex flex-col gap-4">
-  <h3 class="uppercase text-xl">{title}</h3>
+<div class="flex flex-col gap-3 md:gap-4">
+  <h3 class="uppercase text-lg md:text-xl">{title}</h3>
   <p class="text-[15px]">{description}</p>
 </div>
