@@ -1,12 +1,15 @@
 ---
 import Logo from "../../icons/rencal-logotype.astro"
+import GitHubLogo from "../../icons/github.astro"
 ---
 
 <header class="px-10 py-8 flex justify-between items-center">
   <Logo class="h-[25px]" />
 
-  <nav class="uppercase flex gap-7 text-foreground">
+  <nav class="uppercase flex gap-7 text-foreground [&>a:hover]:underline">
     <a href="/docs">Docs</a>
-    <a href="https://github.com/t4t5/rencal" target="_blank">GitHub</a>
+    <a href="https://github.com/t4t5/rencal" target="_blank" aria-label="GitHub repo">
+      <GitHubLogo class="w-6" />
+    </a>
   </nav>
 </header>

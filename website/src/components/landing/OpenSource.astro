@@ -1,4 +1,8 @@
-<div class="p-5 flex flex-col items-center gap-8 pb-24">
+---
+import GitHubLogo from "../../icons/github.astro"
+---
+
+<div class="p-5 flex flex-col items-center gap-8">
   <h3 class="uppercase text-3xl">Free and open source</h3>
 
   <p>No subscriptions. No enshittification. Built in the open.</p>
@@ -7,7 +11,10 @@
     <button class="primary">Install</button>
 
     <a href="https://github.com/t4t5/rencal" target="_blank">
-      <button>Contribute</button>
+      <button class="flex items-center gap-2">
+        <GitHubLogo class="w-5" />
+        <span>Contribute</span>
+      </button>
     </a>
   </div>
 </div>

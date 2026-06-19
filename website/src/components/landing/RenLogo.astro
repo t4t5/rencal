@@ -1,0 +1,15 @@
+---
+interface Props {
+  class?: string
+}
+
+const { class: className } = Astro.props
+---
+
+<span class:list={["flex w-[11px] flex-none flex-col aspect-[4/5]", className]} aria-hidden="true">
+  <span class="flex h-[20%]">
+    <span class="w-1/4"></span>
+    <span class="flex-1 bg-current"></span>
+  </span>
+  <span class="w-1/4 flex-1 bg-current"></span>
+</span>

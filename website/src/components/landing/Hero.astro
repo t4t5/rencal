@@ -1,7 +1,16 @@
+---
+import OmarchyLogo from "../../icons/omarchy.astro"
+import LinuxLogo from "../../icons/linux.astro"
+---
+
 <div class="text-center flex flex-col items-center gap-7 border-b border-b-separator">
   <h2 class="uppercase text-[40px]">A calendar for hackers</h2>
 
-  <p>Built for Omarchy + Linux</p>
+  <div class="flex gap-3 items-center">
+    <OmarchyLogo class="h-4" />
+    <LinuxLogo class="h-4" />
+    <p>Built for Omarchy + Linux</p>
+  </div>
 
   <div class="flex gap-5">
     <button class="primary">Install</button>
