@@ -5,14 +5,29 @@ import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { SearchBar } from "@/components/toolbar/search/SearchBar"
 import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
-import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import { CalendarView } from "@/lib/calendar-view"
 
-export function MainHeader() {
+import { CheckIcon } from "@/icons/check"
+import { ChevronDownIcon } from "@/icons/chevron-down"
+
+export function MainHeader({
+  calendarView,
+  onChangeCalendarView,
+}: {
+  calendarView: CalendarView
+  onChangeCalendarView: (view: CalendarView) => void
+}) {
   const { navigateToDate } = useCalendarNavigation()
 
   return (
@@ -33,33 +48,54 @@ export function MainHeader() {
 
       <ReportBugButton />
 
-      <TabsList onMouseDown={(e) => e.preventDefault()} tabIndex={-1}>
-        <CalendarViewTab view="week" name="Week" shortcut="w" />
-        <CalendarViewTab view="month" name="Month" shortcut="m" />
-        <CalendarViewTab view="board" name="Board" shortcut="b" />
-      </TabsList>
+      <CalendarViewDropdown
+        calendarView={calendarView}
+        onChangeCalendarView={onChangeCalendarView}
+      />
 
       <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />
     </div>
   )
 }
 
-const CalendarViewTab = ({
-  view,
-  name,
-  shortcut,
+const CALENDAR_VIEW_OPTIONS: { view: CalendarView; name: string; shortcut: string }[] = [
+  { view: "week", name: "Week", shortcut: "W" },
+  { view: "month", name: "Month", shortcut: "M" },
+  { view: "board", name: "Board", shortcut: "B" },
+]
+
+const CalendarViewDropdown = ({
+  calendarView,
+  onChangeCalendarView,
 }: {
-  view: CalendarView
-  name: string
-  shortcut: string
+  calendarView: CalendarView
+  onChangeCalendarView: (view: CalendarView) => void
 }) => {
+  const currentView = CALENDAR_VIEW_OPTIONS.find((option) => option.view === calendarView)
+
   return (
-    <ShortcutTooltip text={`${name} view`} shortcut={shortcut}>
-      <span className="h-full">
-        <TabsTrigger value={view} tabIndex={-1}>
-          {name}
-        </TabsTrigger>
-      </span>
-    </ShortcutTooltip>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
+          {currentView?.name ?? "View"}
+          <ChevronDownIcon className="size-4 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {CALENDAR_VIEW_OPTIONS.map((option) => (
+          <DropdownMenuItem
+            key={option.view}
+            onSelect={() => onChangeCalendarView(option.view)}
+            className="gap-3"
+          >
+            <span className="flex size-4 items-center justify-center">
+              {calendarView === option.view && <CheckIcon className="size-4" />}
+            </span>
+            <span>{option.name}</span>
+            <DropdownMenuShortcut>{option.shortcut}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
