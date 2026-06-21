@@ -17,6 +17,10 @@
   --sl-color-accent: #f56213;
   --sl-color-accent-high: inherit;
   --sl-nav-height: 72px;
+
+  /* Our headings are already uppercase, so we can make them smaller */
+  --sl-text-h1: var(--sl-text-2xl);
+  --sl-text-h2: var(--sl-text-lg);
 }
 
 :root[data-theme="light"] {
