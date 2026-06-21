@@ -23,7 +23,7 @@ function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizo
   if (col === 0) {
     return (
       <div
-        className="pointer-events-none absolute left-0 right-0 top-0 z-20 h-0.5"
+        className="pointer-events-none absolute -top-px left-0 right-0 z-20 h-[3px]"
         style={{ backgroundColor: MONTH_BOUNDARY_COLOR }}
       />
     )
