@@ -1,0 +1,28 @@
+---
+import OmarchyLogo from "../../icons/omarchy.astro"
+import LinuxLogo from "../../icons/linux.astro"
+---
+
+<div class="text-center flex flex-col items-center gap-7 border-b border-b-separator px-4">
+  <h2 class="uppercase text-[30px] md:text-[40px] leading-tight pt-10 md:pt-6 text-pretty">
+    A modern open-source calendar
+  </h2>
+
+  <div class="flex gap-3 items-center">
+    <OmarchyLogo class="h-4" />
+    <LinuxLogo class="h-4" />
+    <p>Built for Omarchy + Linux</p>
+  </div>
+
+  <div class="flex gap-5">
+    <a href="/docs/installation">
+      <button class="primary">Install</button>
+    </a>
+
+    <a href="/docs">
+      <button>Docs</button>
+    </a>
+  </div>
+
+  <img src="/screenshot.png" alt="renCal screenshot" class="mt-8 max-w-5xl w-full rounded-lg" />
+</div>

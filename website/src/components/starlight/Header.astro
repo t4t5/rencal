@@ -1,0 +1,106 @@
+---
+import config from "virtual:starlight/user-config"
+
+import Search from "virtual:starlight/components/Search"
+
+import Logo from "../../icons/rencal-logotype.astro"
+
+/**
+ * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
+ */
+const shouldRenderSearch =
+  config.pagefind || config.components.Search !== "@astrojs/starlight/components/Search.astro"
+---
+
+<div class="header">
+  <div class="title-wrapper sl-flex">
+    <a href="/" class="docs-title" aria-label="renCal docs">
+      <Logo class="docs-title__logo h-[25px]" />
+    </a>
+  </div>
+  <div class="sl-flex print:hidden">
+    {shouldRenderSearch && <Search />}
+  </div>
+</div>
+
+<style>
+  @layer starlight.core {
+    .header {
+      align-items: center;
+      display: flex;
+      gap: var(--sl-nav-gap);
+      padding: 4px 8px;
+      justify-content: space-between;
+    }
+
+    @media (min-width: 768px) {
+      .header {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+    }
+
+    .title-wrapper {
+      /* Prevent long titles overflowing and covering the search and menu buttons on narrow viewports. */
+      margin: -0.25rem;
+      min-width: 0;
+      overflow: clip;
+      /* Avoid clipping focus ring around link inside title wrapper. */
+      padding: 0.25rem;
+    }
+
+    .docs-title {
+      align-items: baseline;
+      color: var(--sl-color-white);
+      display: inline-flex;
+      gap: 0.5rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .docs-title__logo {
+      display: block;
+      flex: none;
+      height: 25px;
+      width: auto;
+    }
+
+    .docs-title__label {
+      color: #ffffff;
+      font-family: "Geist Mono", monospace;
+      font-weight: 300;
+      font-size: 32px;
+      opacity: 0.5;
+      letter-spacing: -2px;
+      line-height: 1;
+    }
+
+    @media (min-width: 50rem) {
+      :global(:root[data-has-sidebar]) {
+        --__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
+      }
+      :global(:root:not([data-has-toc])) {
+        --__toc-width: 0rem;
+      }
+      .header {
+        --__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
+        --__main-column-fr: calc(
+          (
+              100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
+                (2 * var(--__toc-width, var(--sl-nav-pad-x))) -
+                var(--sl-content-inline-start, 0rem) - var(--sl-content-width)
+            ) /
+            2
+        );
+        align-content: center;
+        display: grid;
+        grid-template-columns:
+          minmax(
+            calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
+            auto
+          )
+          1fr;
+      }
+    }
+  }
+</style>

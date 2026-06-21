@@ -9,9 +9,9 @@ You are turning raw SVG markup the user provides into a React icon component in 
 
 1. **Get the SVG**: The user will give you raw SVG markup (often copy-pasted from Streamline, Figma, etc.).
 
-2. **Pick a filename**: Use a short kebab-case name describing the icon (e.g. `settings.tsx`, `arrow-right.tsx`). Ask the user if it's not obvious.
+2. **Pick a filename**: Use a short kebab-case name describing the icon (e.g. `settings.tsx`, `arrow-right.tsx`). Infer obvious icon names without asking. For common brand logos, use the brand name (e.g. GitHub → `github.tsx`). Ask the user only if the name is truly ambiguous.
 
-3. **Pick a component name**: PascalCase + `Icon` suffix (e.g. `SettingsIcon`, `ArrowRightIcon`).
+3. **Pick a component name**: PascalCase + `Icon` suffix (e.g. `SettingsIcon`, `ArrowRightIcon`, `GithubIcon`).
 
 4. **Transform the SVG**:
    - Wrap it in `export const <Name>Icon = ({ className }: { className?: string }) => (...)`
@@ -20,7 +20,22 @@ You are turning raw SVG markup the user provides into a React icon component in 
    - Strip noise: `id` attributes, `<desc>` tags, `<title>` tags, and any other vendor metadata.
    - Keep `strokeWidth`, `strokeLinecap`, `strokeLinejoin`, `d`, and other geometry-defining attributes.
 
-5. **Write the file** to `src/icons/<name>.tsx`.
+5. **Write the file** to `src/icons/<name>.tsx` immediately. Use `bash` with a quoted heredoc instead of the `write` tool to avoid slow line-by-line UI rendering:
+
+   ```bash
+   cat > src/icons/<name>.tsx <<'EOF'
+   ...
+   EOF
+   ```
+
+## Speed rules
+
+- Do not inspect existing icon files unless necessary.
+- Infer obvious icon names without asking.
+- For common brand logos, use the brand name.
+- Immediately write `src/icons/<name>.tsx` after transforming.
+- Prefer `bash` with a quoted heredoc for file creation; do not use the `write` tool unless bash is unavailable.
+- Do not run checks unless the user asks.
 
 ## Example
 

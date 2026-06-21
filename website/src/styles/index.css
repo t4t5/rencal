@@ -1,0 +1,68 @@
+@import "tailwindcss";
+@import "./fonts.css";
+
+:root {
+  --primary: #f56213;
+  --background: #131313;
+  --foreground: #fff;
+  --muted: rgba(255, 255, 255, 0.7);
+  --separator: #414141;
+
+  font-family:
+    Inter,
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    sans-serif;
+}
+
+@theme inline {
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-primary: var(--primary);
+  --color-separator: var(--separator);
+}
+
+body {
+  background-color: var(--background);
+  color: var(--muted);
+  min-height: 100vh;
+  margin: 0;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--foreground);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+button {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 12px;
+  gap: 10px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+button:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+button.primary {
+  background: var(--primary);
+  color: var(--background);
+}
+
+button.primary:hover {
+  background: #ff7b33;
+}
+
+hr {
+  border-color: var(--separator);
+}

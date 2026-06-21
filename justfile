@@ -18,6 +18,10 @@ format-rust:
 dev: build-providers
   pnpm tauri dev
 
+# Run website docs (dev mode)
+web:
+  pnpm --dir website dev
+
 # Generate TypeScript bindings from Rust types
 [working-directory: 'src-tauri']
 gen-types:

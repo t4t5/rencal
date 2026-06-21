@@ -1,0 +1,39 @@
+---
+import "../styles/index.css"
+
+import Hero from "../components/landing/Hero.astro"
+import Header from "../components/landing/Header.astro"
+import Features from "../components/landing/Features.astro"
+import OpenSource from "../components/landing/OpenSource.astro"
+import Footer from "../components/landing/Footer.astro"
+
+const title = "renCal"
+const description = "A modern open-source calendar"
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg?v=2" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <Header />
+
+    <main class="flex flex-col gap-14">
+      <Hero />
+      <Features />
+      <hr />
+      <OpenSource />
+      <Footer />
+    </main>
+  </body>
+</html>

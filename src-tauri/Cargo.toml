@@ -4,7 +4,7 @@ members = ["reminder-core", "notifierd", "rencal-config"]
 [package]
 name = "rencal"
 version = "0.0.1"
-description = "A calendar for hackers"
+description = "A modern open-source calendar"
 authors = ["you"]
 edition = "2024"
 default-run = "rencal"

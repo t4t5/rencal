@@ -1,0 +1,32 @@
+{/* Keep Starlight docs in dark mode regardless of system or stored preference. */}
+<script is:inline>
+  const setDarkTheme = () => {
+    document.documentElement.dataset.theme = "dark";
+    try {
+      localStorage.removeItem("starlight-theme");
+    } catch {}
+  };
+
+  setDarkTheme();
+
+  window.StarlightThemeProvider = {
+    updatePickers: setDarkTheme,
+  };
+
+  new MutationObserver(setDarkTheme).observe(document.documentElement, {
+    attributes: true,
+    attributeFilter: ["data-theme"],
+  });
+
+  document.addEventListener(
+    "click",
+    (event) => {
+      if (event.target.closest("starlight-theme-select, starlight-rapide-theme-select")) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setDarkTheme();
+      }
+    },
+    true,
+  );
+</script>
