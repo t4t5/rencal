@@ -61,6 +61,18 @@ export const SHORTCUTS = [
     ],
   },
   {
+    id: "next-month",
+    group: "Navigation",
+    label: "Next month",
+    bindings: [{ keys: "ctrl+d", type: "hotkey" }],
+  },
+  {
+    id: "prev-month",
+    group: "Navigation",
+    label: "Previous month",
+    bindings: [{ keys: "ctrl+u", type: "hotkey" }],
+  },
+  {
     id: "next-event",
     group: "Navigation",
     label: "Next event",

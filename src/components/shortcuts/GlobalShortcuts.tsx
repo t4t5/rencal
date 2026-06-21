@@ -1,4 +1,4 @@
-import { addDays, subDays } from "date-fns"
+import { addDays, addMonths, isSameDay, startOfMonth, subDays, subMonths } from "date-fns"
 import { useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
@@ -101,6 +101,15 @@ function useShortcutHandlers({
     void navigateToDate(date)
   }
 
+  const navigateToPreviousMonthStart = () => {
+    const monthStart = startOfMonth(activeDate)
+    throttledNavigate(isSameDay(activeDate, monthStart) ? subMonths(monthStart, 1) : monthStart)
+  }
+
+  const navigateToNextMonthStart = () => {
+    throttledNavigate(startOfMonth(addMonths(activeDate, 1)))
+  }
+
   const handleSearch = (e: KeyboardEvent) => {
     e.preventDefault()
 
@@ -143,6 +152,8 @@ function useShortcutHandlers({
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),
     "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
     "next-week": () => throttledNavigate(addDays(activeDate, 7)),
+    "prev-month": navigateToPreviousMonthStart,
+    "next-month": navigateToNextMonthStart,
     "prev-event": (e) => {
       if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
       e.preventDefault()

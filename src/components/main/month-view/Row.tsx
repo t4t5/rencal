@@ -13,8 +13,29 @@ import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { TopLeftDate } from "./TopLeftDate"
 
 const MAX_ALL_DAY_LANES = 3
+const MONTH_BOUNDARY_COLOR = "color-mix(in srgb, var(--foreground) 28%, var(--background))"
 export const LANE_HEIGHT = 20
 export const LANE_GAP = 3
+
+function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizontal?: boolean }) {
+  if (col < 0 || (col === 0 && !showHorizontal)) return null
+
+  if (col === 0) {
+    return (
+      <div
+        className="pointer-events-none absolute -top-px left-0 right-0 z-20 h-[3px]"
+        style={{ backgroundColor: MONTH_BOUNDARY_COLOR }}
+      />
+    )
+  }
+
+  return (
+    <div
+      className="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 -translate-x-px"
+      style={{ left: `${(col / 7) * 100}%`, backgroundColor: MONTH_BOUNDARY_COLOR }}
+    />
+  )
+}
 
 export const MonthWeekRow = memo(function MonthWeekRow({
   weekDays,
@@ -40,6 +61,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   const { calendars } = useCalendars()
 
   const allDayEvents = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
+  const monthStartCol = weekDays.findIndex((day) => day.date.getDate() === 1)
 
   // Per-column reserved lanes: a day only leaves space for all-day bars that actually span it
   const reservedLanes: number[] = Array(7).fill(0)
@@ -53,7 +75,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   return (
     <>
       {/* Day numbers */}
-      <div className="grid grid-cols-7">
+      <div className="grid grid-cols-7 relative">
         {weekDays.map((day) => (
           <TopLeftDate
             key={day.dateKey}
@@ -63,6 +85,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             onClick={() => onDayClick(day.date)}
           />
         ))}
+        <MonthBoundary col={monthStartCol} />
       </div>
 
       <div className="grid grid-cols-7 grow min-h-0 relative">
@@ -111,6 +134,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             />
           )
         })}
+        <MonthBoundary col={monthStartCol} showHorizontal={false} />
       </div>
     </>
   )
