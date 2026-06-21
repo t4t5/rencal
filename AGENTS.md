@@ -33,12 +33,13 @@ Important frontend paths:
 - `src/windows/`: app/settings windows
 - `src/lib/cal-events.ts`: RPC ↔ frontend event conversion
 - `src/lib/event-time.ts`: event date/time helpers
+- `src/lib/shortcuts.ts`: global keyboard shortcuts
 
 ## Frontend rules
 
 - Use pnpm for dependencies.
 - Use Tailwind v4 and shadcn components.
-- Use `react-icons` for icons.
+- Icons must be React components in `src/icons`
 - Use `cn` for conditional classes.
 - Prefer padding and flex gaps over margins.
 - Use absolute imports with `@/`.
