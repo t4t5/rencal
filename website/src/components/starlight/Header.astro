@@ -14,9 +14,8 @@ const shouldRenderSearch =
 
 <div class="header">
   <div class="title-wrapper sl-flex">
-    <a href="/docs/" class="docs-title" aria-label="renCal docs">
+    <a href="/" class="docs-title" aria-label="renCal docs">
       <Logo class="docs-title__logo h-[25px]" />
-      <span class="docs-title__label">docs</span>
     </a>
   </div>
   <div class="sl-flex print:hidden">
@@ -30,8 +29,15 @@ const shouldRenderSearch =
       align-items: center;
       display: flex;
       gap: var(--sl-nav-gap);
-      height: 100%;
+      padding: 4px 8px;
       justify-content: space-between;
+    }
+
+    @media (min-width: 768px) {
+      .header {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
     }
 
     .title-wrapper {

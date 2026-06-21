@@ -16,6 +16,7 @@
   --sl-color-accent-low: rgba(245, 98, 19, 0.16);
   --sl-color-accent: #f56213;
   --sl-color-accent-high: inherit;
+  --sl-nav-height: 72px;
 }
 
 :root[data-theme="light"] {
@@ -94,10 +95,30 @@ summary,
   }
 }
 
-site-search button[data-open-modal] {
+site-search button[data-open-modal],
+starlight-menu-button button {
+  height: 40px;
+  justify-content: center;
+  align-items: center;
+  color: white;
   background-color: #1f1f1f !important;
   border: 0 !important;
   border-radius: 0 !important;
+}
+
+site-search button[data-open-modal] {
+  display: flex;
+}
+
+@media (max-width: 49.999rem) {
+  site-search button[data-open-modal] {
+    width: 40px;
+  }
+}
+
+starlight-menu-button button {
+  top: 16px;
+  width: 40px;
 }
 
 site-search button[data-open-modal]:hover {
