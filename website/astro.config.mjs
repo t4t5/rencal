@@ -29,8 +29,24 @@ export default defineConfig({
         },
       ],
       sidebar: [
-        { label: "Docs", slug: "docs" },
-        { label: "Example", slug: "docs/example" },
+        {
+          label: "Introduction",
+          items: [
+            { label: "Overview", slug: "docs" },
+            { label: "Installation", slug: "docs/installation" },
+          ],
+        },
+        {
+          label: "Using renCal",
+          items: [
+            { label: "Getting Started", slug: "docs/getting-started" },
+            { label: "Calendars", slug: "docs/calendars" },
+          ],
+        },
+        {
+          label: "Help",
+          items: [{ label: "Troubleshooting", slug: "docs/troubleshooting" }],
+        },
       ],
     }),
   ],

@@ -15,7 +15,7 @@
   --sl-color-black: #131313;
   --sl-color-accent-low: rgba(245, 98, 19, 0.16);
   --sl-color-accent: #f56213;
-  --sl-color-accent-high: #ffb085;
+  --sl-color-accent-high: inherit;
 }
 
 :root[data-theme="light"] {
@@ -86,6 +86,14 @@ summary,
   border-color: #414141;
 }
 
+.sidebar-pane {
+  & ul ul li {
+    &:has(> a[aria-current="page"]) {
+      background-color: rgba(255, 255, 255, 0.1);
+    }
+  }
+}
+
 site-search button[data-open-modal] {
   background-color: #1f1f1f !important;
   border: 0 !important;
@@ -108,11 +116,11 @@ site-search button[data-open-modal]:hover {
   border-radius: 0 !important;
 }
 
-.sl-markdown-content a:not(.sl-anchor-link),
-.sidebar-content a[aria-current="page"],
-.right-sidebar a[aria-current="true"] {
-  color: #f56213;
-}
+/* .sl-markdown-content a:not(.sl-anchor-link), */
+/* .sidebar-content a[aria-current="page"], */
+/* .right-sidebar a[aria-current="true"] { */
+/*   color: #f56213; */
+/* } */
 
 .sl-markdown-content code:not(:where(.not-content *)) {
   color: #ffffff;
