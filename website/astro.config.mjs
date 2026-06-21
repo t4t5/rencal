@@ -5,7 +5,17 @@ import starlightThemeRapide from "starlight-theme-rapide"
 
 import starlightRenTheme from "./src/starlight-ren-theme"
 
+const userManualItems = [
+  { label: "Calendars", slug: "docs/calendars" },
+  { label: "Keyboard Shortcuts", slug: "docs/keyboard-shortcuts" },
+  { label: "Themes", slug: "docs/themes" },
+  { label: "Agents", slug: "docs/agents" },
+]
+
 export default defineConfig({
+  redirects: {
+    "/docs": `/${userManualItems[0].slug}`,
+  },
   vite: {
     plugins: [tailwindcss()],
   },
@@ -30,18 +40,12 @@ export default defineConfig({
       ],
       sidebar: [
         {
-          label: "Introduction",
-          items: [
-            { label: "Overview", slug: "docs" },
-            { label: "Installation", slug: "docs/installation" },
-          ],
+          label: "Getting started",
+          items: [{ label: "Installation", slug: "docs/installation" }],
         },
         {
-          label: "Using renCal",
-          items: [
-            { label: "Getting Started", slug: "docs/getting-started" },
-            { label: "Calendars", slug: "docs/calendars" },
-          ],
+          label: "User Manual",
+          items: userManualItems,
         },
         {
           label: "Help",
