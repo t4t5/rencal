@@ -249,3 +249,7 @@ img {
   border: 2px solid #79a0f7;
   border-radius: 4px;
 }
+
+video {
+  border-radius: 4px;
+}
