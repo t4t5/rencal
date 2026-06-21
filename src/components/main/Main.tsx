@@ -19,7 +19,7 @@ export function Main({
       onValueChange={(v) => onChangeCalendarView(calendarViewSchema.parse(v))}
       className="hidden sm:flex flex-col grow min-w-0"
     >
-      <MainHeader />
+      <MainHeader calendarView={calendarView} onChangeCalendarView={onChangeCalendarView} />
 
       <div className="h-[calc(100vh-64px)] select-none">
         <TabsContent value="week" className="h-full">
