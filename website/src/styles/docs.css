@@ -222,3 +222,7 @@ site-search button[data-open-modal]:hover {
 .sl-markdown-content .landing-docs__card p {
   margin: 0;
 }
+
+.toggle {
+  border-radius: 0 !important;
+}

@@ -15,42 +15,21 @@ If you installed from the AUR, make sure your system packages are up to date:
 yay -Syu
 ```
 
-## My calendars are missing
-
-Check that the account is connected in settings.
-
-If the account is connected but no calendars appear, try syncing again or reconnecting the provider.
-
 ## Events are not syncing
 
-Sync issues are usually caused by provider authentication, network access, or remote calendar permissions.
+Sync issues are usually caused by provider authentication or network access.
 
 Try these steps:
 
 1. Check your internet connection.
 2. Reconnect the calendar provider.
-3. Confirm the calendar still exists in the remote service.
-4. Make sure you have permission to edit the calendar if changes are not uploading.
+3. Check the error message in renCal. If it looks like a bug, [open an issue](https://github.com/t4t5/rencal/issues/new).
 
-## Natural language input parsed the wrong time
-
-If an event is created with the wrong date or time, edit the event manually and try a more explicit phrase next time.
-
-For example:
-
-```txt
-team sync tomorrow at 3pm
-```
-
-is usually clearer than:
-
-```txt
-team sync tomorrow afternoon
-```
+![Sync error](/docs/sync-error.png)
 
 ## Still stuck?
 
-Open an issue on [GitHub](https://github.com/t4t5/rencal/issues) with:
+[Open an issue](https://github.com/t4t5/rencal/issues/new) on GitHub with:
 
 - your operating system,
 - how you installed renCal,

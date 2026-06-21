@@ -3,6 +3,7 @@ title: Calendars
 description: How renCal stores and syncs calendar data.
 ---
 
-renCal uses [Caldir](https://caldir.org) to store calendars locally.
+renCal uses [Caldir](https://caldir.org) to store your calendars as directories, with each event a a standard `.ics` file.
 
-A calendar is a directory, and each event is a standard `.ics` file inside that directory.
+By default, the data is stored in `~/caldir/`. This can be updated in renCal's settings, or by
+editing `~/.config/caldir/config.toml`

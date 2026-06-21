@@ -17,13 +17,11 @@ After installing, launch **renCal** from your app launcher.
 
 Download the latest Linux package from the [GitHub Releases](https://github.com/t4t5/rencal/releases) page.
 
-Available package formats may include:
+Choose the package that matches your distribution:
 
 - AppImage
 - `.deb`
 - `.rpm`
-
-Choose the package that matches your distribution.
 
 ## macOS
 
