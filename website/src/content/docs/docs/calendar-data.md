@@ -1,5 +1,5 @@
 ---
-title: Calendars
+title: Calendar data
 description: How renCal stores and syncs calendar data.
 ---
 

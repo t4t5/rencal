@@ -151,6 +151,24 @@ site-search button[data-open-modal]:hover {
   color: #ffffff;
 }
 
+.sl-markdown-content kbd:not(:where(.not-content *)) {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid #414141;
+  border-bottom-color: rgba(255, 255, 255, 0.28);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  display: inline-flex;
+  font-family: "Geist Mono", monospace;
+  font-size: 0.85em;
+  line-height: 1;
+  margin: 0 1px;
+  min-width: 1.6em;
+  justify-content: center;
+  padding: 0.22em 0.45em;
+  vertical-align: 0.08em;
+}
+
 .sl-markdown-content .landing-docs {
   display: grid;
   gap: 1.25rem;
@@ -225,4 +243,9 @@ site-search button[data-open-modal]:hover {
 
 .toggle {
   border-radius: 0 !important;
+}
+
+img {
+  border: 2px solid #79a0f7;
+  border-radius: 4px;
 }

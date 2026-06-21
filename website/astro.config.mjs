@@ -6,7 +6,7 @@ import starlightThemeRapide from "starlight-theme-rapide"
 import starlightRenTheme from "./src/starlight-ren-theme"
 
 const userManualItems = [
-  { label: "Calendars", slug: "docs/calendars" },
+  { label: "Calendar Data", slug: "docs/calendar-data" },
   { label: "Keyboard Shortcuts", slug: "docs/keyboard-shortcuts" },
   { label: "Themes", slug: "docs/themes" },
   { label: "Agents", slug: "docs/agents" },
