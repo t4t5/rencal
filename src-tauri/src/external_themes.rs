@@ -1,11 +1,5 @@
 //! User-supplied CSS themes loaded from `~/.config/rencal/themes/`.
-//!
-//! Each `*.css` file in that directory becomes a selectable theme. The file
-//! holds a bare block of CSS custom-property declarations (no selector); the
-//! frontend wraps it in `[data-theme="user:<slug>"] { … }` when injecting, so
-//! authors never write the scoping selector themselves. This mirrors the
-//! Omarchy pipeline (see `crate::omarchy`): scan on demand, watch the dir, and
-//! emit on change so added/edited themes show up live.
+//! The frontend wraps it in `[data-theme="user:<slug>"] { … }` when injecting.
 
 use std::path::PathBuf;
 use std::time::Duration;
@@ -34,8 +28,7 @@ fn themes_dir() -> Option<PathBuf> {
     RencalConfig::config_dir().ok().map(|d| d.join("themes"))
 }
 
-/// Resolve the themes dir, creating it if missing so users have somewhere to
-/// drop files and the watcher has a directory to watch. Best-effort.
+// Create ~/.config/rencal/themes/ if it doesn't exist
 fn ensure_themes_dir() -> Option<PathBuf> {
     let dir = themes_dir()?;
     if !dir.exists() {
@@ -135,8 +128,7 @@ pub fn scan() -> Vec<ExternalTheme> {
     themes
 }
 
-/// Watches `~/.config/rencal/themes/` and emits `EXTERNAL_THEMES_CHANGED` with
-/// the full theme list whenever a file is added, edited, or removed.
+/// Watches `~/.config/rencal/themes/` and emits `EXTERNAL_THEMES_CHANGED` when anything changes
 pub async fn run_watcher(app: AppHandle) {
     let Some(watch_dir) = ensure_themes_dir() else {
         return;
