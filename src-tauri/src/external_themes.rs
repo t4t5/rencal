@@ -47,7 +47,25 @@ fn ensure_themes_dir() -> Option<PathBuf> {
 
 /// Drop a README so first-time users see the expected format.
 fn write_readme(dir: &std::path::Path) {
-    let readme = "renCal custom themes\n====================\n\nDrop a .css file in this folder and it shows up in Settings > Themes.\nThe filename becomes the theme name (override with a `@name` comment).\n\nA theme is a bare block of CSS variables — no selector needed:\n\n    /* @name My Theme */\n    --background: #0f1115;\n    --foreground: #e6e6e6;\n    --hover-tint: #ffffff;\n    --primary: #7c8cff;\n    --highlight: #7c8cff;\n\nSetting --background, --foreground, --hover-tint and --primary gets you most\nof a theme; hover/card/divider/etc. are derived automatically. Edits apply\nlive. See the full variable list in renCal's docs.\n";
+    let readme = r#"renCal custom themes
+====================
+
+Drop a .css file in this folder and it shows up in Settings > Themes.
+The filename becomes the theme name (override with a `@name` comment).
+
+A theme is a bare block of CSS variables — no selector needed:
+
+    /* @name My Theme */
+    --background: #0f1115;
+    --foreground: #e6e6e6;
+    --hover-tint: #ffffff;
+    --primary: #7c8cff;
+    --highlight: #7c8cff;
+
+Setting --background, --foreground, --hover-tint and --primary gets you most
+of a theme; hover/card/divider/etc. are derived automatically. Edits apply
+live. See the full variable list in renCal's docs.
+"#;
     let _ = std::fs::write(dir.join("README.txt"), readme);
 }
 
