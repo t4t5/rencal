@@ -16,11 +16,9 @@ pub const EXTERNAL_THEMES_CHANGED: &str = "external-themes-changed";
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 pub struct ExternalTheme {
-    /// Stable id, namespaced to avoid colliding with built-in themes.
     pub id: String,
-    /// Display name from an optional `@name` comment directive, else the filename.
+    /// Uses `@name` (or filename as fallback)
     pub name: String,
-    /// Raw file contents (a bare declaration block, no selector).
     pub css: String,
 }
 
@@ -38,7 +36,6 @@ fn ensure_themes_dir() -> Option<PathBuf> {
     Some(dir)
 }
 
-/// Drop a README so first-time users see the expected format.
 fn write_readme(dir: &std::path::Path) {
     let readme = r#"renCal custom themes
 ====================
@@ -78,8 +75,6 @@ fn slugify(input: &str) -> String {
     out
 }
 
-/// Pull a display name from a leading `@name <value>` directive in a comment,
-/// falling back to the provided default.
 fn parse_name(css: &str, fallback: &str) -> String {
     if let Some(idx) = css.find("@name") {
         let rest = &css[idx + "@name".len()..];

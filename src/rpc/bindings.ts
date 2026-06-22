@@ -22,19 +22,11 @@ export type CredentialFieldInput = { id: string; value: string }
 
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
 
-export type ExternalTheme = { 
+export type ExternalTheme = { id: string; 
 /**
- * Stable id, namespaced to avoid colliding with built-in themes.
+ * Uses `@name` (or filename as fallback)
  */
-id: string; 
-/**
- * Display name from an optional `@name` comment directive, else the filename.
- */
-name: string; 
-/**
- * Raw file contents (a bare declaration block, no selector).
- */
-css: string }
+name: string; css: string }
 
 export type OmarchyColors = { background: string; foreground: string; accent: string; cursor: string | null; selection_foreground: string | null; selection_background: string | null; color0: string; color1: string; color2: string; color3: string; color4: string; color5: string; color6: string; color7: string; color8: string; color9: string; color10: string; color11: string; color12: string; color13: string; color14: string; color15: string }
 
