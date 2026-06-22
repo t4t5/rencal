@@ -51,10 +51,6 @@ fn write_readme(dir: &std::path::Path) {
     let _ = std::fs::write(dir.join("README.txt"), readme);
 }
 
-pub fn themes_dir_string() -> Option<String> {
-    Some(ensure_themes_dir()?.to_string_lossy().into_owned())
-}
-
 /// Lowercase, collapse non-alphanumeric runs to single `-`, trim leading/trailing `-`.
 fn slugify(input: &str) -> String {
     let mut out = String::new();
