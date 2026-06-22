@@ -25,6 +25,8 @@ export default defineConfig({
       plugins: [starlightThemeRapide(), starlightRenTheme()],
       customCss: ["/src/styles/fonts.css"],
       head: [
+        { tag: "meta", attrs: { property: "og:image", content: "https://rencal.org/og.jpg" } },
+        { tag: "meta", attrs: { name: "twitter:image", content: "https://rencal.org/og.jpg" } },
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
         {
           tag: "link",

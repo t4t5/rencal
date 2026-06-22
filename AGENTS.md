@@ -17,6 +17,7 @@ Run `just check` after Rust / `src-tauri` changes.
 - React frontend: `src/`
 - taurpc bindings: `src/rpc/bindings.ts` generated from Rust
 - Frontend should use app-level types/helpers, not raw RPC types unless at the boundary.
+- Website & public docs: `website`
 
 Important backend paths:
 
