@@ -44,8 +44,8 @@ export function useTheme() {
     void getCurrentWindow().setTheme(getActiveAppearance(theme))
   }, [theme])
 
-  // Cache the resolved --background for index.html's flash-prevention. Deferred
-  // a frame so any runtime-injected user/omarchy styles are applied first.
+  // Cache the resolved --background for index.html's flash-prevention.
+  // Deferred by 1 frame so any runtime-injected user/omarchy styles are applied first.
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       const bg = getComputedStyle(document.body).getPropertyValue("--background").trim()

@@ -178,7 +178,10 @@ mod tests {
 
     #[test]
     fn parse_name_reads_directive_else_fallback() {
-        assert_eq!(parse_name("/* @name My Theme */\n--background: #000;", "file"), "My Theme");
+        assert_eq!(
+            parse_name("/* @name My Theme */\n--background: #000;", "file"),
+            "My Theme"
+        );
         assert_eq!(parse_name("--background: #000;", "file"), "file");
         // Trailing comment close is stripped, surrounding whitespace trimmed.
         assert_eq!(parse_name("/*@name   Solar  */", "file"), "Solar");

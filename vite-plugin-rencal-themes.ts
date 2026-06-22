@@ -3,11 +3,8 @@ import path from "node:path"
 import type { Plugin } from "vite"
 
 // Bundles the built-in theme files (src/themes/*.css) into a single virtual CSS
-// module, wrapping each in its `[data-theme="<filename>"] { … }` selector. This
-// lets theme files be authored as bare declaration blocks (no selector) — the
-// same format user themes use — while staying in the CSS bundle (no flash).
-//
-// The id ends in `.css` so Vite routes the output through its CSS pipeline.
+// module, wrapping each in its [data-theme] selector.
+// Id ends in `.css` so Vite routes the output through its CSS pipeline.
 const VIRTUAL_ID = "virtual:rencal-themes.css"
 const RESOLVED_ID = "\0virtual:rencal-themes.css"
 
