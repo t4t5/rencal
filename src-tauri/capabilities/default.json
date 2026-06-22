@@ -6,6 +6,7 @@
   "permissions": [
     "core:default",
     "opener:default",
+    "opener:allow-open-path",
     "core:window:allow-start-dragging",
     "core:window:allow-set-focus",
     "core:webview:allow-create-webview-window",

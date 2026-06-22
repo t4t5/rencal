@@ -1,4 +1,4 @@
-import { type Appearance, type ThemeId, getDeclaredAppearance } from "./manifest"
+import { type Appearance, getDeclaredAppearance } from "./manifest"
 
 function hexLuminance(hex: string): number {
   const h = hex.replace("#", "").trim()
@@ -23,6 +23,8 @@ export function appearanceFromComputedBackground(): Appearance {
   return "dark"
 }
 
-export function getActiveAppearance(id: ThemeId): Appearance {
+// Built-in themes declare their appearance; user/omarchy themes derive it from
+// the live --background once their styles are applied.
+export function getActiveAppearance(id: string): Appearance {
   return getDeclaredAppearance(id) ?? appearanceFromComputedBackground()
 }

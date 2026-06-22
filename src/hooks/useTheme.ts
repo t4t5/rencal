@@ -7,19 +7,22 @@ import { rpc } from "@/rpc"
 import { THEME_CHANGED } from "@/rpc/events"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
 
+import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
-import { THEME_IDS, type ThemeId } from "@/themes/manifest"
+import { THEME_IDS } from "@/themes/manifest"
 
-const themeSchema = z.enum(THEME_IDS)
-export type Theme = ThemeId
+// Theme id is a plain string: a built-in id or a user theme's `user:<slug>`.
+// An unknown id just renders the :root defaults, so no enum gate is needed.
+const themeSchema = z.string()
+export type Theme = string
+
+// index.html reads this to paint the right background before the CSS bundle loads.
+const BACKGROUND_CACHE_KEY = "themeBackground"
 
 function getDefaultTheme(): Theme {
   // Read default theme from index.html
-  const theme = document.body.dataset.defaultTheme
-  const parsed = themeSchema.safeParse(theme)
-  return parsed.success ? parsed.data : THEME_IDS[0]
+  return document.body.dataset.defaultTheme || THEME_IDS[0]
 }
 
 // Single mutator for theme. localStorage is a flash-prevention cache;
@@ -28,6 +31,7 @@ function getDefaultTheme(): Theme {
 // either store. On mount we reconcile from TOML (TOML wins on conflict).
 export function useTheme() {
   const [theme, setThemeLocal] = useLocalStorage("theme", themeSchema, getDefaultTheme())
+  const { descriptors } = useThemeRegistry()
   const themeRef = useRef(theme)
   themeRef.current = theme
 
@@ -40,7 +44,19 @@ export function useTheme() {
     void getCurrentWindow().setTheme(getActiveAppearance(theme))
   }, [theme])
 
-  useOmarchyTheme()
+  // Cache the resolved --background for index.html's flash-prevention. Deferred
+  // a frame so any runtime-injected user/omarchy styles are applied first.
+  useEffect(() => {
+    const raf = requestAnimationFrame(() => {
+      const bg = getComputedStyle(document.body).getPropertyValue("--background").trim()
+      if (bg) {
+        try {
+          localStorage.setItem(BACKGROUND_CACHE_KEY, bg)
+        } catch {}
+      }
+    })
+    return () => cancelAnimationFrame(raf)
+  }, [theme])
 
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {
@@ -103,9 +119,13 @@ export function useTheme() {
       })
   }
 
+  // Cycle through every registered theme (built-in + user), in display order.
   const toggleTheme = () => {
-    const i = THEME_IDS.indexOf(theme)
-    setTheme(THEME_IDS[(i + 1) % THEME_IDS.length])
+    const ids = descriptors.map((d) => d.id)
+    if (ids.length === 0) return
+    const i = ids.indexOf(themeRef.current)
+    const next = ids[(i + 1) % ids.length]
+    if (next) setTheme(next)
   }
 
   return { theme, setTheme, toggleTheme }

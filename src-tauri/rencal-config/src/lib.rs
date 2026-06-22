@@ -41,11 +41,16 @@ impl Default for RencalConfig {
 }
 
 impl RencalConfig {
+    /// `~/.config/rencal` — the directory holding all renCal user files
+    /// (config.toml, the `themes/` directory, etc.).
+    pub fn config_dir() -> Result<PathBuf, String> {
+        dirs::config_dir()
+            .ok_or_else(|| "Could not resolve user config directory".to_string())
+            .map(|d| d.join("rencal"))
+    }
+
     pub fn config_path() -> Result<PathBuf, String> {
-        let dir = dirs::config_dir()
-            .ok_or_else(|| "Could not resolve user config directory".to_string())?
-            .join("rencal");
-        Ok(dir.join("config.toml"))
+        Ok(Self::config_dir()?.join("config.toml"))
     }
 
     pub fn exists() -> bool {

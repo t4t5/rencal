@@ -1,5 +1,6 @@
 mod caldir_watcher;
 mod event_cache;
+mod external_themes;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 mod notifications;
@@ -13,6 +14,7 @@ use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
+use routes::themes::{ThemesApi, ThemesApiImpl};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use tauri::Manager;
@@ -35,6 +37,7 @@ pub fn create_router() -> Router<tauri::Wry> {
         .merge(OmarchyApiImpl.into_handler())
         .merge(PlatformApiImpl.into_handler())
         .merge(ConfigApiImpl.into_handler())
+        .merge(ThemesApiImpl.into_handler())
 }
 
 /// Resolve the bundled providers directory and remember it for `load_caldir`.
@@ -156,6 +159,9 @@ pub async fn run() {
 
             // Handle changing Omarchy theme:
             tokio::spawn(omarchy::run_watcher(app.handle().clone()));
+
+            // Handle user-supplied CSS themes in ~/.config/rencal/themes:
+            tokio::spawn(external_themes::run_watcher(app.handle().clone()));
 
             // Handle caldir file changes:
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));

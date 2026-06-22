@@ -1,39 +1,43 @@
 # Themes
 
-Themes live in `src/themes/` and override a small set of primitive CSS variables. Themes are scoped by `[data-theme="<id>"]` so they apply both to the whole app (when set on `<body>`) and to any opt-in subtree (e.g. the theme preview tile in settings). The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme's job is to change only what makes it distinct.
+A theme is a **bare block of CSS custom-property declarations** — no selector:
 
-Most tokens are **derived** from a handful of primitives via `color-mix()` (declared in the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. all fall out automatically. See `tokyonight.css` for a minimal example.
+```css
+--background: #0f0f0f;
+--foreground: #eaeaea;
+--hover-tint: #ffffff;
+--primary: #7c3aed;
+--highlight: #7c3aed;
+```
 
-## Adding a theme
+The `[data-theme="<id>"]` scope that lets themes coexist (so the app picks one on `<body>` and the settings preview tiles can render others) is added **for you**:
 
-1. **Create the CSS file**: `src/themes/mytheme.css`.
+- **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`).
+- **User themes** (`~/.config/rencal/themes/*.css`) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and wrapped + injected at runtime by `src/themes/ThemeRegistry.tsx`.
 
-   ```css
-   [data-theme="mytheme"] {
-     --background: #0f0f0f;
-     --foreground: #eaeaea;
-     --hover-tint: #ffffff;
-     --primary: #7c3aed;
-     --highlight: #7c3aed;
-   }
-   ```
+The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` (the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. fall out automatically. See `tokyonight.css` for a minimal example.
 
-2. **Import it** from `src/global.css` (add next to the other theme imports).
+## Adding a built-in theme
 
-3. **Register it** in `src/themes/manifest.ts`:
+1. **Create the file**: `src/themes/mytheme.css` — a bare declaration block (see above). The filename is the theme id.
+2. **Register it** in `src/themes/manifest.ts`:
 
    ```ts
-   { id: "mytheme", name: "My Theme" },
+   { id: "mytheme", name: "My Theme", appearance: "dark" },
    ```
 
-4. **Add a flash-prevention rule** in `index.html` pointing at the theme's background color. This runs before the CSS bundle loads, so it has to live inline:
+That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, `useTheme` picks it up, and Ctrl/Cmd+Shift+T cycles through every registered theme. (Flash-prevention is automatic: `useTheme` caches the active theme's `--background` and `index.html` repaints it on next launch.)
 
-   ```html
-   body[data-theme="mytheme"], body:not([data-theme])[data-default-theme="mytheme"] {
-   background-color: #0f0f0f; }
-   ```
+## User themes
 
-That's it. `useTheme` will pick up the new theme automatically, and Ctrl/Cmd+Shift+T cycles through all registered themes.
+End users add themes without touching the source. Drop a `.css` file into `~/.config/rencal/themes/` and it appears under **Settings → Themes → Custom themes**:
+
+- Same bare-declaration format as built-ins — **no selector**.
+- The filename becomes the display name; override it with a leading `/* @name My Theme */` comment.
+- Edits/additions/removals apply live (a Rust file-watcher re-emits the list).
+- Ids are namespaced `user:<slug>` so they never collide with built-ins.
+
+Most user themes only set variables, which is plain scoped CSS. If a theme adds **custom selectors** (the escape hatch below), they're scoped via native CSS nesting — supported in renCal's webview, but note it's the one feature a bare variable-only theme doesn't depend on.
 
 ## Primitives
 
@@ -116,6 +120,17 @@ If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and
 
 ## Escape hatch: custom CSS rules
 
-If primitive overrides aren't enough, theme files can include arbitrary CSS rules. Scope them with `[data-theme="yourtheme"]` (or use CSS nesting inside that selector) so they don't leak to other themes.
+If primitive overrides aren't enough, a theme file can include arbitrary CSS rules alongside its declarations. Write them as **nested selectors** — the file is already wrapped in the theme's `[data-theme="<id>"]` scope, so they won't leak to other themes:
+
+```css
+--primary: #7c3aed;
+
+.some-component {
+  /* automatically becomes [data-theme="<id>"] .some-component */
+  border-radius: 0;
+}
+```
+
+(Built-in themes get this flattened at build time; user themes rely on the webview's native CSS nesting.)
 
 Prefer primitives first — the derivation chain covers most visual-identity needs. You can also override a derived token directly (e.g., set `--divider` explicitly in `classic.css`) when the computed value isn't right for the theme. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.

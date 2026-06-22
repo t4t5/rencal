@@ -3,12 +3,9 @@
 
 @import "./animations.css";
 
-/* Themes */
-@import "./themes/ren.css";
-@import "./themes/classic.css";
-@import "./themes/catpuccin-latte.css";
-@import "./themes/tokyonight.css";
-@import "./themes/omarchy.css";
+/* Built-in themes (src/themes/*.css) are bundled and scoped by the
+   `rencal-themes` Vite plugin and imported as `virtual:rencal-themes.css`
+   in main.tsx, after this file so their [data-theme] rules win the cascade. */
 
 @font-face {
   font-family: "Geist Mono";

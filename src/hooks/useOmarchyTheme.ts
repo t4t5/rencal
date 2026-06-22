@@ -88,6 +88,10 @@ function applyOmarchyColors(c: OmarchyColors) {
   // do this itself because the appearance is derived from these colors.
   if (document.body.dataset.theme === "omarchy") {
     void getCurrentWindow().setTheme(appearanceFromHex(c.background))
+    // Keep index.html's flash-prevention cache in step with the live OS theme.
+    try {
+      localStorage.setItem("themeBackground", c.background)
+    } catch {}
   }
 }
 

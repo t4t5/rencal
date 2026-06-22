@@ -5,19 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>renCal</title>
     <style>
-      /* Flash-prevention before CSS loads. Add a rule per theme when
-         registering new themes in src/themes/manifest.ts. */
-      body[data-theme="classic"],
-      body:not([data-theme])[data-default-theme="classic"] {
-        background-color: #1a1b26;
-      }
-      body[data-theme="ren"],
-      body:not([data-theme])[data-default-theme="ren"] {
+      /* Fallback background before the CSS bundle loads, for a first-ever launch
+         with no cached background yet. The cached value (any active theme,
+         including user-supplied ones) is applied inline by the script below. */
+      html {
         background-color: #131313;
-      }
-      body[data-theme="omarchy"],
-      body:not([data-theme])[data-default-theme="omarchy"] {
-        background-color: #1a1b26;
       }
     </style>
   </head>
@@ -31,17 +23,17 @@
       } catch {
         document.body.dataset.theme = DEFAULT_THEME
       }
-      // For the Omarchy theme, apply the last-known background from cache so the
-      // flash-prevention rule above doesn't paint a stale color while React boots.
-      if (document.body.dataset.theme === "omarchy") {
-        try {
-          const cached = JSON.parse(localStorage.getItem("omarchyColors"))
-          if (cached && cached.background) {
-            document.body.style.setProperty("--background", cached.background)
-            document.documentElement.style.backgroundColor = cached.background
-          }
-        } catch {}
-      }
+      // Apply the active theme's last-known background so we don't flash a stale
+      // color before the CSS bundle (and any user-theme <style>) loads. Works
+      // for every theme — built-in, omarchy, or user-supplied — because
+      // useTheme caches the resolved --background on each change.
+      try {
+        const bg = localStorage.getItem("themeBackground")
+        if (bg) {
+          document.body.style.setProperty("--background", bg)
+          document.documentElement.style.backgroundColor = bg
+        }
+      } catch {}
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>

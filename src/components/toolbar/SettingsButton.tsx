@@ -10,11 +10,10 @@ import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
 import { getActiveAppearance } from "@/themes/appearance"
-import { THEME_IDS, type ThemeId } from "@/themes/manifest"
+import { THEME_IDS } from "@/themes/manifest"
 
-function activeThemeId(): ThemeId {
-  const id = document.body.dataset.theme
-  return (THEME_IDS as readonly string[]).includes(id ?? "") ? (id as ThemeId) : THEME_IDS[0]
+function activeThemeId(): string {
+  return document.body.dataset.theme || THEME_IDS[0]
 }
 
 export async function openSettingsWindow() {

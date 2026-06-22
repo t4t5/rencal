@@ -1,7 +1,5 @@
 import { Toaster } from "sonner"
 
-import "@/global.css"
-
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"

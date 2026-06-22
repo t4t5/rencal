@@ -14,6 +14,28 @@ export type ThemeId = (typeof themes)[number]["id"]
 
 export const THEME_IDS = themes.map((t) => t.id) as [ThemeId, ...ThemeId[]]
 
-export function getDeclaredAppearance(id: ThemeId): Appearance | null {
-  return themes.find((t) => t.id === id)?.appearance ?? null
+// Built-in themes ship a declared appearance; user themes don't, so the active
+// theme is identified by a plain string (built-in id or `user:<slug>`) and an
+// unknown id simply falls through to the :root defaults.
+export type ThemeSource = "builtin" | "external"
+
+export type ThemeDescriptor = {
+  id: string
+  name: string
+  appearance: Appearance | null
+  source: ThemeSource
+}
+
+export const BUILTIN_DESCRIPTORS: ThemeDescriptor[] = themes.map((t) => ({
+  id: t.id,
+  name: t.name,
+  appearance: t.appearance,
+  source: "builtin",
+}))
+
+export function getDeclaredAppearance(id: string): Appearance | null {
+  return (
+    (themes as readonly { id: string; appearance: Appearance | null }[]).find((t) => t.id === id)
+      ?.appearance ?? null
+  )
 }
