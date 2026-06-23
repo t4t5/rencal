@@ -3,6 +3,7 @@ import tailwindcss from "@tailwindcss/vite"
 import { defineConfig } from "astro/config"
 import starlightThemeRapide from "starlight-theme-rapide"
 
+import { site } from "./src/site"
 import starlightRenTheme from "./src/starlight-ren-theme"
 
 const userManualItems = [
@@ -21,12 +22,13 @@ export default defineConfig({
   },
   integrations: [
     starlight({
-      title: "renCal",
+      title: site.title,
       plugins: [starlightThemeRapide(), starlightRenTheme()],
       customCss: ["/src/styles/fonts.css"],
       head: [
-        { tag: "meta", attrs: { property: "og:image", content: "https://rencal.org/og.jpg" } },
-        { tag: "meta", attrs: { name: "twitter:image", content: "https://rencal.org/og.jpg" } },
+        { tag: "meta", attrs: { property: "og:image", content: site.ogImage } },
+        { tag: "meta", attrs: { name: "twitter:image", content: site.ogImage } },
+        { tag: "link", attrs: { rel: "icon", type: "image/svg+xml", href: site.favicon } },
         { tag: "link", attrs: { rel: "preconnect", href: "https://fonts.googleapis.com" } },
         {
           tag: "link",
@@ -36,7 +38,15 @@ export default defineConfig({
           tag: "link",
           attrs: {
             rel: "stylesheet",
-            href: "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap",
+            href: site.geistMonoStylesheet,
+          },
+        },
+        {
+          tag: "script",
+          attrs: {
+            defer: true,
+            "data-domain": site.analyticsDomain,
+            src: site.analyticsScript,
           },
         },
       ],
