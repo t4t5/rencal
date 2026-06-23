@@ -15,9 +15,10 @@ import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
@@ -76,6 +77,8 @@ function useShortcutHandlers({
   openShortcutsOverlay: () => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
+  const { activeGroup, setActiveGroup } = useCalendars()
+  const { groups } = useSettings()
   const { setSelectedEventKey } = useAgendaSelection()
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
@@ -143,6 +146,17 @@ function useShortcutHandlers({
     openDayDraft(activeDate, el, { start: getLastEventEndTime(activeDate, calendarEvents) })
   }
 
+  const switchGroup = (e: KeyboardEvent) => {
+    const groupNames = Object.keys(groups)
+    const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+    if (options.length < 2) return
+
+    e.preventDefault()
+    const activeIndex = options.indexOf(activeGroup)
+    const nextIndex = activeIndex === -1 ? 0 : (activeIndex + 1) % options.length
+    setActiveGroup(options[nextIndex])
+  }
+
   return {
     today: () => {
       clearAgendaFocus()
@@ -167,6 +181,7 @@ function useShortcutHandlers({
     month: () => onChangeCalendarView("month"),
     week: () => onChangeCalendarView("week"),
     board: () => onChangeCalendarView("board"),
+    "switch-group": switchGroup,
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,

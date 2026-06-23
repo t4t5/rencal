@@ -133,6 +133,7 @@ const GroupSwitcher = () => {
               {activeGroup === name && <CheckIcon className="size-4" />}
             </span>
             <span>{formatGroupName(name)}</span>
+            {activeGroup === name && <DropdownMenuShortcut>G</DropdownMenuShortcut>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
