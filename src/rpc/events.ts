@@ -7,3 +7,6 @@ export const CALDIR_CHANGED = "caldir-changed"
 export const THEME_CHANGED = "theme-changed"
 export const NOTIFICATIONS_ENABLED_CHANGED = "notifications-enabled-changed"
 export const AUTO_SYNC_ENABLED_CHANGED = "auto-sync-enabled-changed"
+// Emitted by the backend config watcher when ~/.config/rencal/config.toml
+// changes on disk (e.g. a hand-edit to the [groups] table).
+export const CONFIG_CHANGED = "config-changed"

@@ -14,7 +14,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { CalendarView } from "@/lib/calendar-view"
 
@@ -47,6 +48,8 @@ export function MainHeader({
       <DragRegion className="grow h-full" />
 
       <ReportBugButton />
+
+      <GroupSwitcher />
 
       <CalendarViewDropdown
         calendarView={calendarView}
@@ -93,6 +96,43 @@ const CalendarViewDropdown = ({
             </span>
             <span>{option.name}</span>
             <DropdownMenuShortcut>{option.shortcut}</DropdownMenuShortcut>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+// Capitalize for display; group names are lowercase config keys (e.g. "work").
+const formatGroupName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
+
+// Switches the active calendar group (app state). Hidden entirely when the user
+// hasn't defined any groups in config.toml, so the header is unchanged for them.
+const GroupSwitcher = () => {
+  const { activeGroup, setActiveGroup } = useCalendars()
+  const { groups } = useSettings()
+
+  const groupNames = Object.keys(groups)
+  if (groupNames.length === 0) return null
+
+  // "default" always first, the rest alphabetical.
+  const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
+          {formatGroupName(activeGroup)}
+          <ChevronDownIcon className="size-4 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        {options.map((name) => (
+          <DropdownMenuItem key={name} onSelect={() => setActiveGroup(name)} className="gap-3">
+            <span className="flex size-4 items-center justify-center">
+              {activeGroup === name && <CheckIcon className="size-4" />}
+            </span>
+            <span>{formatGroupName(name)}</span>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

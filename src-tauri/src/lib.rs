@@ -1,4 +1,5 @@
 mod caldir_watcher;
+mod config_watcher;
 mod event_cache;
 mod external_themes;
 #[cfg(target_os = "linux")]
@@ -165,6 +166,9 @@ pub async fn run() {
 
             // Handle caldir file changes:
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
+
+            // Handle ~/.config/rencal/config.toml changes (e.g. active group):
+            tokio::spawn(config_watcher::run_watcher(app.handle().clone()));
 
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {

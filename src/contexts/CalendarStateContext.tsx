@@ -9,12 +9,20 @@ import {
   useRef,
   useState,
 } from "react"
+import { z } from "zod"
 
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
 import { CALDIR_CHANGED, CALENDAR_DIR_CHANGED } from "@/rpc/events"
 
+import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { logger } from "@/lib/logger"
+
+// Which named group is active is client-side app state (persisted in
+// localStorage), not stored in config.toml. "default" means the special
+// default group (all calendars, unless config defines a `default` group).
+const activeGroupSchema = z.string()
+const ACTIVE_GROUP_KEY = "activeGroup"
 
 // --- Calendars context (changes rarely) ---
 
@@ -22,6 +30,8 @@ interface CalendarsContextType {
   calendars: Calendar[]
   isLoadingCalendars: boolean
   reloadCalendars: () => Promise<void>
+  activeGroup: string
+  setActiveGroup: (name: string) => void
 }
 
 const CalendarsContext = createContext({} as CalendarsContextType)
@@ -71,6 +81,11 @@ export function CalendarStateProvider({
   const [activeDate, setActiveDate] = useState<Date>(() => initialDate ?? new Date())
   const [calendars, setCalendars] = useState<Calendar[]>(() => initialCalendars ?? [])
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(() => initialCalendars === undefined)
+  const [activeGroup, setActiveGroup] = useLocalStorage(
+    ACTIVE_GROUP_KEY,
+    activeGroupSchema,
+    "default",
+  )
 
   const scrollToDateRef = useRef<((date: Date, behavior?: ScrollBehavior) => void) | null>(null)
   const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
@@ -157,8 +172,14 @@ export function CalendarStateProvider({
   }, [])
 
   const calendarsValue = useMemo(
-    () => ({ calendars, isLoadingCalendars, reloadCalendars: loadCalendarsFromStore }),
-    [calendars, isLoadingCalendars],
+    () => ({
+      calendars,
+      isLoadingCalendars,
+      reloadCalendars: loadCalendarsFromStore,
+      activeGroup,
+      setActiveGroup,
+    }),
+    [calendars, isLoadingCalendars, activeGroup, setActiveGroup],
   )
 
   const navigationValue = useMemo(

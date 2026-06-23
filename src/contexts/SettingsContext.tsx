@@ -6,6 +6,7 @@ import type { TimeFormat } from "@/rpc/bindings"
 import {
   AUTO_SYNC_ENABLED_CHANGED,
   CALENDAR_DIR_CHANGED,
+  CONFIG_CHANGED,
   DEFAULT_CALENDAR_CHANGED,
   DEFAULT_REMINDERS_CHANGED,
   NOTIFICATIONS_ENABLED_CHANGED,
@@ -25,6 +26,10 @@ interface SettingsContextType {
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
   autoSyncEnabled: boolean
   setAutoSyncEnabled: (enabled: boolean) => Promise<void>
+  // Named calendar groups from config.toml's [groups] table (read-only here;
+  // edited by hand in the file). Which group is active is app state — see
+  // activeGroup on useCalendars() in CalendarStateContext.
+  groups: Record<string, string[]>
   reloadSettings: () => Promise<void>
   // False until persisted settings load, so startup consumers don't act on defaults.
   settingsLoaded: boolean
@@ -43,17 +48,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [calendarDir, setCalendarDirState] = useState<string>("")
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true)
   const [autoSyncEnabled, setAutoSyncEnabledState] = useState<boolean>(true)
+  const [groups, setGroupsState] = useState<Record<string, string[]>>({})
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
 
   const reloadSettings = useCallback(async () => {
     try {
-      const [tf, reminders, cal, dir, notifs, autoSync] = await Promise.all([
+      const [tf, reminders, cal, dir, notifs, autoSync, groupsResult] = await Promise.all([
         rpc.caldir.get_time_format(),
         rpc.caldir.get_default_reminders(),
         rpc.caldir.get_default_calendar(),
         rpc.caldir.get_calendar_dir(),
         rpc.config.get_notifications_enabled(),
         rpc.config.get_auto_sync_enabled(),
+        rpc.config.get_groups(),
       ])
       setTimeFormatState(tf)
       setDefaultRemindersState(reminders)
@@ -61,6 +68,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setCalendarDirState(dir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
+      // The RPC type is Partial<Record<string, string[]>>; drop undefined values.
+      setGroupsState(
+        Object.fromEntries(
+          Object.entries(groupsResult).filter(([, v]) => v !== undefined),
+        ) as Record<string, string[]>,
+      )
       setSettingsLoaded(true)
     } catch (e) {
       console.error(e)
@@ -88,6 +101,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const unlistenAutoSync = listen<boolean>(AUTO_SYNC_ENABLED_CHANGED, (event) => {
       setAutoSyncEnabledState(event.payload)
     })
+    // config.toml changed on disk (e.g. a hand-edit to [groups]); re-read.
+    const unlistenConfig = listen(CONFIG_CHANGED, () => {
+      void reloadSettings()
+    })
 
     return () => {
       unlistenTimeFormat.then((fn) => fn())
@@ -96,6 +113,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       unlistenCalendarDir.then((fn) => fn())
       unlistenNotifications.then((fn) => fn())
       unlistenAutoSync.then((fn) => fn())
+      unlistenConfig.then((fn) => fn())
     }
   }, [reloadSettings])
 
@@ -151,6 +169,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setNotificationsEnabled,
         autoSyncEnabled,
         setAutoSyncEnabled,
+        groups,
         reloadSettings,
         settingsLoaded,
       }}
