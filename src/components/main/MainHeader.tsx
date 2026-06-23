@@ -106,17 +106,17 @@ const CalendarViewDropdown = ({
 // Capitalize for display; group names are lowercase config keys (e.g. "work").
 const formatGroupName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
-// Switches the active calendar group (app state). Hidden entirely when the user
-// hasn't defined any groups in config.toml, so the header is unchanged for them.
+// Switches the active calendar group (app state). Hidden entirely unless there
+// are at least two groups to switch between.
 const GroupSwitcher = () => {
   const { activeGroup, setActiveGroup } = useCalendars()
   const { groups } = useSettings()
 
   const groupNames = Object.keys(groups)
-  if (groupNames.length === 0) return null
 
   // "default" always first, the rest alphabetical.
   const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+  if (options.length < 2) return null
 
   return (
     <DropdownMenu modal={false}>
