@@ -37,6 +37,7 @@ interface CalendarNavigationContextType {
   setActiveDate: (date: Date) => void
   navigateToDate: (date: Date) => Promise<void>
   registerScrollToDate: (fn: (date: Date, behavior?: ScrollBehavior) => void) => void
+  registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
   isNavigating: () => boolean
   setIsNavigating: (value: boolean) => void
 }
@@ -108,6 +109,12 @@ export function CalendarStateProvider({
     scrollToDateRef.current = fn
   }, [])
 
+  // CalEventsContext wires this to ensureRangeLoaded so a jump to a distant date loads its
+  // events before navigateToDate scrolls there.
+  const registerLoadEventsForDate = useCallback((fn: (date: Date) => Promise<void>) => {
+    loadEventsForDateRef.current = fn
+  }, [])
+
   const isNavigating = useCallback(() => isNavigatingRef.current, [])
 
   const setIsNavigating = useCallback((value: boolean) => {
@@ -160,6 +167,7 @@ export function CalendarStateProvider({
       setActiveDate,
       navigateToDate,
       registerScrollToDate,
+      registerLoadEventsForDate,
       isNavigating,
       setIsNavigating,
     }),

@@ -1,5 +1,13 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
@@ -8,6 +16,7 @@ import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 
 import { MonthWeekRow } from "./Row"
+import { pickActiveMonth } from "./pickActiveMonth"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
 
@@ -68,24 +77,10 @@ export function MonthGrid({
     overscan: 3,
   })
 
-  // Give stable callbacks access to the latest render's values
-  const latestRef = useRef({
-    weeks,
-    activeDateKey,
-    anchorWeekIndex,
-    virtualizer,
-    isNavigating,
-    onScrollMonthChange,
-  })
-
-  latestRef.current = {
-    weeks,
-    activeDateKey,
-    anchorWeekIndex,
-    virtualizer,
-    isNavigating,
-    onScrollMonthChange,
-  }
+  // anchorWeekIndex shifts when weeks are prepended/appended; keep it in a ref so the
+  // one-time initial scroll can read the latest value without re-running on every shift.
+  const anchorWeekIndexRef = useRef(anchorWeekIndex)
+  anchorWeekIndexRef.current = anchorWeekIndex
 
   // Keep the viewport in place when weeks are prepended
   const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
@@ -128,7 +123,7 @@ export function MonthGrid({
 
     if (hasInitialized.current) return
 
-    const idx = latestRef.current.anchorWeekIndex
+    const idx = anchorWeekIndexRef.current
 
     if (idx < 0) return
 
@@ -170,101 +165,59 @@ export function MonthGrid({
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
-  // As the user scrolls, pick the dominant month in the viewport and bubble it up.
-  // Stay on the active month unless another has strictly more visible area.
+  // As the user scrolls, follow the active date to the dominant month (see
+  // docs/scroll-behaviour.md). useEffectEvent so the once-bound scroll listener always
+  // sees the latest render's weeks/virtualizer without re-subscribing.
+  const onScrollTick = useEffectEvent(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    // Ignore the settling scrolls right after the initial programmatic anchor scroll, and
+    // never follow while a deliberate navigation is driving the viewport.
+    if (Date.now() < ignoreScrollUntil.current || isNavigating() || weeks.length === 0) {
+      prevScrollTopRef.current = null
+      return
+    }
+
+    const viewTop = el.scrollTop
+    const viewBottom = viewTop + el.clientHeight
+    const prevTop = prevScrollTopRef.current
+    const direction: "up" | "down" | null =
+      prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
+    prevScrollTopRef.current = viewTop
+
+    // The first tick after mount/navigation only establishes the direction baseline.
+    if (direction === null) return
+
+    const target = pickActiveMonth({
+      virtualItems: virtualizer.getVirtualItems(),
+      weeks,
+      viewTop,
+      viewBottom,
+      activeDateKey,
+      direction,
+    })
+
+    if (target) {
+      debugMonthScroll("scroll-follow active month", {
+        from: activeDateKey,
+        to: formatDateKey(target),
+        direction,
+      })
+      onScrollMonthChange(target)
+    }
+  })
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
 
     let rafId: number | null = null
-
     const handleScroll = () => {
       if (rafId !== null) return
-
       rafId = requestAnimationFrame(() => {
         rafId = null
-        if (Date.now() < ignoreScrollUntil.current) {
-          prevScrollTopRef.current = null
-          return
-        }
-        const {
-          weeks: w,
-          activeDateKey: adk,
-          virtualizer: v,
-          isNavigating: isNav,
-          onScrollMonthChange: onChange,
-        } = latestRef.current
-        if (isNav() || w.length === 0) {
-          prevScrollTopRef.current = null
-          return
-        }
-
-        const viewTop = el.scrollTop
-        const viewBottom = viewTop + el.clientHeight
-        const prevTop = prevScrollTopRef.current
-
-        const direction: "up" | "down" | null =
-          prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
-
-        prevScrollTopRef.current = viewTop
-
-        // No baseline yet (first tick after mount or after a navigation/ignore window).
-        // Establish it now and skip emission so the next tick can be guarded.
-        if (direction === null) return
-
-        const monthCounts = new Map<string, number>()
-
-        // Track the 1st of each month that's currently in the viewport. We only navigate when
-        // the 1st is visible, so both scroll directions land on day 1 of the new month.
-        const monthFirstDay = new Map<string, Date>()
-
-        for (const item of v.getVirtualItems()) {
-          const top = Math.max(item.start, viewTop)
-          const bottom = Math.min(item.end, viewBottom)
-          if (bottom <= top) continue
-          const fraction = (bottom - top) / item.size
-          const week = w[item.index]
-          if (!week) continue
-          for (const day of week) {
-            const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
-            monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
-            if (day.date.getDate() === 1) monthFirstDay.set(key, day.date)
-          }
-        }
-
-        const activeKey = `${adk.slice(0, 4)}-${Number(adk.slice(5, 7)) - 1}`
-        let bestKey = activeKey
-        let bestCount = monthCounts.get(activeKey) ?? 0
-
-        for (const [key, count] of monthCounts) {
-          if (count > bestCount) {
-            bestKey = key
-            bestCount = count
-          }
-        }
-
-        if (bestKey !== activeKey) {
-          const target = monthFirstDay.get(bestKey)
-          // If the 1st of bestKey isn't in a fully visible row yet, wait for a later
-          // tick. Scroll-follow should never promote a half-clipped row to active.
-          if (target) {
-            const targetKey = formatDateKey(target)
-            if (direction === "up" && targetKey > adk) return
-            if (direction === "down" && targetKey < adk) return
-
-            const targetItem = v
-              .getVirtualItems()
-              .find((item) => w[item.index]?.some((day) => day.dateKey === targetKey))
-            if (!targetItem || targetItem.start < viewTop || targetItem.end > viewBottom) return
-
-            debugMonthScroll("scroll-follow active month", {
-              from: adk,
-              to: targetKey,
-              direction,
-            })
-            onChange(target)
-          }
-        }
+        onScrollTick()
       })
     }
 

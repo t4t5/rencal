@@ -18,8 +18,13 @@ import { CALDIR_CHANGED } from "@/rpc/events"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
+import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
+import {
+  getCalendarEventsForRange,
+  getStartRangeForDate,
+  mergeEvents,
+} from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
 
 // Cheap identity check used to skip no-op state updates after a reload. The
@@ -39,12 +44,13 @@ function sameEventList(a: CalendarEvent[], b: CalendarEvent[]): boolean {
 interface CalEventsContextType {
   calendarEvents: CalendarEvent[]
   setCalendarEvents: Dispatch<SetStateAction<CalendarEvent[]>>
-  currentDateRangeRef: RefObject<DateRange | null>
+  loadedRangeRef: RefObject<DateRange | null>
   activeEvent: CalendarEvent | null
   setActiveEventKey: Dispatch<SetStateAction<string | null>>
   toggleActiveEventKey: (key: string) => void
   isInitialLoading: boolean
   reloadEvents: () => Promise<void>
+  ensureRangeLoaded: (start: Date, end: Date) => Promise<void>
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -64,14 +70,12 @@ export function CalEventsProvider({
   initialEvents,
   initialRange,
 }: CalEventsProviderProps) {
-  const { calendars, isLoadingCalendars } = useCalendars()
-  const { activeDate } = useCalendarNavigation()
+  const { isLoadingCalendars } = useCalendars()
+  const { activeDate, registerLoadEventsForDate } = useCalendarNavigation()
 
-  // TODO: respect calendar visibility
-  const visibleCalendarIds = calendars.map((c) => c.slug)
-  // const visibleCalendarIds = calendars.filter((c) => c.isVisible).map((c) => c.id)
+  const visibleCalendarIds = useVisibleCalendarIds()
 
-  const currentDateRangeRef = useRef<DateRange | null>(initialRange ?? null)
+  const loadedRangeRef = useRef<DateRange | null>(initialRange ?? null)
 
   const [calendarEvents, setCalendarEvents] = useState<CalendarEvent[]>(() => initialEvents ?? [])
   // Holds the active event's `eventKey` (calendar_slug + id), not the raw `id` —
@@ -86,49 +90,116 @@ export function CalEventsProvider({
     setActiveEventKey((prev) => (prev === key ? null : key))
   }, [])
 
-  // Single-in-flight + loop-on-stale-range. Without this, two failure modes appear:
-  //   (1) Multiple concurrent reloads (e.g. CALDIR_CHANGED fires several times during startup,
-  //       plus the visibleCalendarKey effect) each await independently and each unconditionally
-  //       replaces calendarEvents at the end — clobbering each other.
-  //   (2) A reload captures `range` before its await, then onNearTop/onNearBottom extends
-  //       currentDateRangeRef.current during the await. The resolve then replaces the merged
-  //       (extended) state with events for the *old* range, removing the prepended/appended
-  //       events. The user sees the EventList drift as the prepend-shift effect reacts.
-  const isReloadingRef = useRef(false)
-  const reloadPendingRef = useRef(false)
-  const reloadEvents = useEffectEvent(async () => {
+  // All event loading funnels through one serialized worker so the month grid, the agenda,
+  // and jump navigation can't race on calendarEvents / the loaded range. `loadedRangeRef`
+  // is the *desired* range (only ever grows); `coveredRangeRef` is what calendarEvents
+  // actually holds. The worker reconciles the latter up to the former.
+  //
+  // Single-in-flight + loop-on-stale guards two failure modes:
+  //   (1) Concurrent loads (CALDIR_CHANGED firing repeatedly at startup, plus the
+  //       visibleCalendarKey effect and scroll-driven extensions) each replacing
+  //       calendarEvents and clobbering each other.
+  //   (2) A load capturing the range before its await while a scroll widens it during the
+  //       await, then applying events for the stale (narrower) range.
+  const coveredRangeRef = useRef<DateRange | null>(
+    initialEvents !== undefined ? (initialRange ?? null) : null,
+  )
+  const isSyncingRef = useRef(false)
+  const pendingForceRef = useRef(false)
+
+  const syncEvents = useEffectEvent(async (force: boolean) => {
+    // Best-effort: with no calendars the desired range still grew (callers widen it before
+    // calling us), so the grid keeps scrolling; there's just nothing to fetch.
     if (!visibleCalendarIds.length || !activeDate) return
 
-    if (isReloadingRef.current) {
-      reloadPendingRef.current = true
+    if (isSyncingRef.current) {
+      // A sync is already running; it re-reads the refs before finishing, so a widened range
+      // is picked up automatically. Only a force-reload needs to be flagged.
+      if (force) pendingForceRef.current = true
       return
     }
-    isReloadingRef.current = true
+    isSyncingRef.current = true
 
     try {
+      let doForce = force
       while (true) {
-        reloadPendingRef.current = false
-        const range = currentDateRangeRef.current ?? getStartRangeForDate(activeDate)
-        currentDateRangeRef.current = range
+        const desired = loadedRangeRef.current ?? getStartRangeForDate(activeDate)
+        loadedRangeRef.current = desired
+        const covered = coveredRangeRef.current
 
-        const events = await getCalendarEventsForRange(visibleCalendarIds, range.start, range.end)
+        if (doForce || !covered) {
+          // Full (re)fetch of the whole desired range.
+          const events = await getCalendarEventsForRange(
+            visibleCalendarIds,
+            desired.start,
+            desired.end,
+          )
+          const latest = loadedRangeRef.current!
+          // Range widened or a reload landed mid-flight → redo as a full fetch of the new
+          // range rather than applying a now-stale subset.
+          if (pendingForceRef.current || latest.start < desired.start || latest.end > desired.end) {
+            pendingForceRef.current = false
+            doForce = true
+            continue
+          }
+          setCalendarEvents((prev) => (sameEventList(prev, events) ? prev : events))
+          coveredRangeRef.current = desired
+        } else {
+          // Incremental: fetch only the slices outside what's already covered, then merge.
+          const needBefore = desired.start < covered.start
+          const needAfter = desired.end > covered.end
+          if (needBefore || needAfter) {
+            const [before, after] = await Promise.all([
+              needBefore
+                ? getCalendarEventsForRange(visibleCalendarIds, desired.start, covered.start)
+                : Promise.resolve<CalendarEvent[]>([]),
+              needAfter
+                ? getCalendarEventsForRange(visibleCalendarIds, covered.end, desired.end)
+                : Promise.resolve<CalendarEvent[]>([]),
+            ])
+            if (pendingForceRef.current) {
+              pendingForceRef.current = false
+              doForce = true
+              continue
+            }
+            setCalendarEvents((prev) => {
+              let next = prev
+              if (before.length) next = mergeEvents(next, before, "prepend")
+              if (after.length) next = mergeEvents(next, after, "append")
+              return next
+            })
+            coveredRangeRef.current = {
+              start: needBefore ? desired.start : covered.start,
+              end: needAfter ? desired.end : covered.end,
+            }
+          }
+        }
 
-        // If the range was extended during the await, our fetched events are a stale subset.
-        // Don't apply them — refetch with the latest range instead.
-        const latest = currentDateRangeRef.current!
-        const rangeChanged =
-          latest.start.getTime() !== range.start.getTime() ||
-          latest.end.getTime() !== range.end.getTime()
-        if (rangeChanged) continue
-
-        setCalendarEvents((prev) => (sameEventList(prev, events) ? prev : events))
-
-        if (!reloadPendingRef.current) break
+        // Synchronous tail (no await before the finally) → race-free with the lock release.
+        doForce = pendingForceRef.current
+        pendingForceRef.current = false
+        const latest = loadedRangeRef.current
+        const cov = coveredRangeRef.current
+        const coversLatest = !!cov && !!latest && cov.start <= latest.start && cov.end >= latest.end
+        if (!doForce && coversLatest) break
       }
     } finally {
-      isReloadingRef.current = false
+      isSyncingRef.current = false
     }
   })
+
+  // Refetch the whole loaded range (content on disk changed, or calendars toggled).
+  const reloadEvents = useCallback(() => syncEvents(true), [])
+
+  // Ensure [start, end] is covered, fetching only what's missing. Widens the desired range
+  // (never shrinks) and reconciles. Idempotent — safe to call on every scroll/range change.
+  const ensureRangeLoaded = useCallback((start: Date, end: Date) => {
+    const cur = loadedRangeRef.current
+    loadedRangeRef.current = cur
+      ? { start: start < cur.start ? start : cur.start, end: end > cur.end ? end : cur.end }
+      : { start, end }
+    return syncEvents(false)
+  }, [])
 
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
@@ -140,6 +211,7 @@ export function CalEventsProvider({
       reloadEvents().then(() => setIsInitialLoading(false))
     } else if (!isLoadingCalendars) {
       setCalendarEvents([])
+      coveredRangeRef.current = null
       setIsInitialLoading(false)
     }
   }, [visibleCalendarKey, isLoadingCalendars])
@@ -153,20 +225,35 @@ export function CalEventsProvider({
     }
   }, [])
 
-  const reloadEventsStable = useCallback(() => reloadEvents(), [])
+  // Let navigateToDate pull a distant date's events into range before it scrolls there.
+  // For dates already covered this resolves without fetching, so nearby jumps stay instant.
+  useEffect(() => {
+    registerLoadEventsForDate(async (date) => {
+      const range = getStartRangeForDate(date)
+      await ensureRangeLoaded(range.start, range.end)
+    })
+  }, [registerLoadEventsForDate, ensureRangeLoaded])
 
   const value = useMemo<CalEventsContextType>(
     () => ({
       calendarEvents,
       setCalendarEvents,
-      currentDateRangeRef,
+      loadedRangeRef,
       activeEvent,
       setActiveEventKey,
       toggleActiveEventKey,
       isInitialLoading,
-      reloadEvents: reloadEventsStable,
+      reloadEvents,
+      ensureRangeLoaded,
     }),
-    [calendarEvents, activeEvent, toggleActiveEventKey, isInitialLoading, reloadEventsStable],
+    [
+      calendarEvents,
+      activeEvent,
+      toggleActiveEventKey,
+      isInitialLoading,
+      reloadEvents,
+      ensureRangeLoaded,
+    ],
   )
 
   return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>

@@ -3,10 +3,26 @@ import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 
 import { rpc } from "@/rpc"
 
-import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { eventKey, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 import { DateRange } from "@/lib/types"
 
 export const MONTHS_TO_LOAD = 2
+
+/**
+ * Merge freshly-loaded events into an existing list, dropping any already present
+ * (by `eventKey`) and adding the rest to the front or back. Returns the same array
+ * reference when nothing new came in, so callers can skip no-op state updates.
+ */
+export function mergeEvents(
+  prev: CalendarEvent[],
+  incoming: CalendarEvent[],
+  position: "append" | "prepend",
+): CalendarEvent[] {
+  const existingKeys = new Set(prev.map(eventKey))
+  const filtered = incoming.filter((e) => !existingKeys.has(eventKey(e)))
+  if (!filtered.length) return prev
+  return position === "append" ? [...prev, ...filtered] : [...filtered, ...prev]
+}
 
 export const getStartRangeForDate = (date: Date): DateRange => {
   return {
