@@ -10,12 +10,13 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
+import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { eventKey } from "@/lib/cal-events"
 import { formatDateKey } from "@/lib/event-time"
 
 import { WeekDayLabels } from "./WeekDayLabels"
-import { useInfiniteEvents } from "./useInfiniteEvents"
+import { useInfiniteMonths } from "./useInfiniteMonths"
 
 export function MonthView() {
   const { calendars } = useCalendars()
@@ -23,12 +24,11 @@ export function MonthView() {
   const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
   const { selectedEventKey } = useAgendaSelection()
 
-  // TODO: respect calendar visibility
-  const visibleCalendarIds = calendars.map((c) => c.slug)
+  const visibleCalendarIds = useVisibleCalendarIds()
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
-  const { rangeStart, rangeEnd } = useInfiniteEvents({
+  const { rangeStart, rangeEnd } = useInfiniteMonths({
     scrollContainerRef: scrollRef,
     activeDate,
     visibleCalendarIds,

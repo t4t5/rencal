@@ -7,6 +7,7 @@ renCal is a Tauri v2 calendar app for Omarchy.
 - `just typecheck`: check frontend TypeScript
 - `just check`: check Rust/Tauri build
 - `just gen-types`: regenerate TypeScript taurpc bindings
+- `just debug [flags]`: run the app with `VITE_RENCAL_DEBUG` enabled
 
 Run `just typecheck` after frontend changes.
 Run `just check` after Rust / `src-tauri` changes.
@@ -47,6 +48,7 @@ Important frontend paths:
 - Only use relative imports for same-directory files, e.g. `./Sibling`.
 - Never use `../`.
 - Never use TypeScript `any`.
+- For debugging frontend complexity (like scroll behaviour), add targeted `console.debug` logs gated by `isDebugMode` from `@/lib/debug`. Then test the app with `just debug` or `just debug [flags]`.
 
 ## Rust / taurpc rules
 
@@ -63,27 +65,20 @@ Provider credential field IDs come from the caldir provider binaries.
 
 ## Event date/time rules
 
-Read `docs/event-time-system.md` before changing event date/time logic.
-
-Always use `EventTime` and helpers from `@/lib/event-time`.
-Never parse, format, or convert event start/end values with native `Date` or raw ISO-string helpers.
+- Read `docs/event-time-system.md` before changing event date/time logic.
+- Always use `EventTime` and helpers from `@/lib/event-time`.
+- Never parse, format, or convert event start/end values with native `Date` or raw ISO-string helpers.
 
 ## Navigation rules
 
-To change `activeDate`, prefer `navigateToDate`.
-Only use raw `setActiveDate` when intentionally suppressing navigation side effects.
-
-Before changing infinite scroll behavior, read:
-
-- `src/components/main/month-view/Grid.tsx`
-- `src/components/main/week-view/WeekTimeGrid.tsx`
+- To change `activeDate`, prefer `navigateToDate`.
+- Only use raw `setActiveDate` when intentionally suppressing navigation side effects.
 
 ## Feature-specific notes
 
-Before modifying these areas, read the relevant source/docs first:
-
-- Themes: `src/themes/README.md`, `src/themes/manifest.ts`, `src/global.css`
-- Omarchy theme: `src/hooks/useOmarchyTheme.ts`, `src/themes/omarchy.css`
+- Infinite scroll (in Month/Week views): `docs/scroll-behaviour.md`
 - Natural language input: `src/lib/magic-parser.ts`
 - Agenda keyboard nav: `src/components/sidebar/agenda/`
 - Notifications: `docs/notifications.md`, `src-tauri/reminder-core/`
+- Themes: `src/themes/README.md`, `src/themes/manifest.ts`, `src/global.css`
+- Omarchy theme: `src/hooks/useOmarchyTheme.ts`, `src/themes/omarchy.css`

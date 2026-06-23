@@ -1,12 +1,25 @@
 import { useVirtualizer } from "@tanstack/react-virtual"
-import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
+import {
+  RefObject,
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
+import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
+import { pickActiveMonth } from "./pickActiveMonth"
+
+const debugMonthScroll = createDebugLogger("month-scroll")
 
 const DEFAULT_ROW_HEIGHT = 150
 export const LANE_HEIGHT = 20
@@ -44,6 +57,10 @@ export function MonthGrid({
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
 
+  // Hide the grid until the initial anchor scroll lands, so the user never sees the
+  // pre-scroll frame (top of the grid) flash before it jumps to the active month.
+  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -65,53 +82,71 @@ export function MonthGrid({
     overscan: 3,
   })
 
-  // Give stable callbacks access to the latest render's values
-  const latestRef = useRef({
-    weeks,
-    activeDateKey,
-    anchorWeekIndex,
-    virtualizer,
-    isNavigating,
-    onScrollMonthChange,
-  })
-
-  latestRef.current = {
-    weeks,
-    activeDateKey,
-    anchorWeekIndex,
-    virtualizer,
-    isNavigating,
-    onScrollMonthChange,
-  }
+  // anchorWeekIndex shifts when weeks are prepended/appended; keep it in a ref so the
+  // one-time initial scroll can read the latest value without re-running on every shift.
+  const anchorWeekIndexRef = useRef(anchorWeekIndex)
+  anchorWeekIndexRef.current = anchorWeekIndex
 
   // Keep the viewport in place when weeks are prepended
   const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
+
   useLayoutEffect(() => {
     const curFirstKey = weeks[0]?.[0]?.dateKey
+
     const { firstKey: prevFirstKey, count: prevCount } = prevRef.current
+
     prevRef.current = { firstKey: curFirstKey, count: weeks.length }
+
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
+
     const added = weeks.length - prevCount
-    virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + added * rowHeight, {
-      align: "start",
+
+    const from = virtualizer.scrollOffset ?? 0
+    const to = from + added * rowHeight
+
+    debugMonthScroll("preserve offset after prepend", {
+      prevFirstKey,
+      curFirstKey,
+      added,
+      rowHeight,
+      from,
+      to,
     })
+
+    virtualizer.scrollToOffset(to, { align: "start" })
   })
 
-  // Scroll to anchor on mount and when rowHeight changes. anchorWeekIndex is NOT a dep —
-  // it shifts when weeks are prepended/appended and we don't want to jump back then.
-  // Must call measure() first: tanstack-virtual memoizes item sizes and does not
-  // re-run estimateSize when only the function reference changes.
+  // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when
+  // weeks are prepended/appended and we don't want to jump back then. Still call
+  // measure() on rowHeight/virtualizer changes because tanstack-virtual memoizes item sizes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   const prevScrollTopRef = useRef<number | null>(null)
+
   useEffect(() => {
     virtualizer.measure()
-    const idx = latestRef.current.anchorWeekIndex
-    if (idx < 0) return
-    virtualizer.scrollToIndex(idx, { align: "start" })
+
+    if (hasInitialized.current) return
+
+    const idx = anchorWeekIndexRef.current
+
+    if (idx < 0) {
+      // No anchor to position to — reveal as-is rather than stay hidden.
+      setHasInitiallyScrolled(true)
+      return
+    }
+
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
     prevScrollTopRef.current = null
+
+    debugMonthScroll("initial anchor scroll", { idx, rowHeight })
+
+    virtualizer.scrollToIndex(idx, { align: "start" })
+
+    // Reveal only after the scroll has actually painted, so the user never sees the
+    // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
+    requestAnimationFrame(() => requestAnimationFrame(() => setHasInitiallyScrolled(true)))
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
@@ -119,23 +154,79 @@ export function MonthGrid({
   // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+
+    // Don't override the initial anchor scroll while it's still settling. On open,
+    // isNavigating() is already true (the agenda's mount-time scroll sets the shared flag),
+    // and the anchor has just put the active month's first week at the top — we must not
+    // pull the viewport to the active *day*'s week instead (docs/scroll-behaviour.md).
+    if (Date.now() < ignoreScrollUntil.current) return
+
+    debugMonthScroll("navigation scroll check", { activeDateKey })
+
     const el = scrollRef.current
+
     if (!el) return
 
     const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
+
     if (weekIndex < 0) return
 
     const item = virtualizer.getVirtualItems().find((v) => v.index === weekIndex)
+
     if (item) {
       const viewStart = el.scrollTop
       const viewEnd = viewStart + el.clientHeight
       if (item.start >= viewStart && item.end <= viewEnd) return
     }
+
+    debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
+
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
-  // As the user scrolls, pick the dominant month in the viewport and bubble it up.
-  // Stay on the active month unless another has strictly more visible area.
+  // As the user scrolls, follow the active date to the dominant month (see
+  // docs/scroll-behaviour.md). useEffectEvent so the once-bound scroll listener always
+  // sees the latest render's weeks/virtualizer without re-subscribing.
+  const onScrollTick = useEffectEvent(() => {
+    const el = scrollRef.current
+    if (!el) return
+
+    // Ignore the settling scrolls right after the initial programmatic anchor scroll, and
+    // never follow while a deliberate navigation is driving the viewport.
+    if (Date.now() < ignoreScrollUntil.current || isNavigating() || weeks.length === 0) {
+      prevScrollTopRef.current = null
+      return
+    }
+
+    const viewTop = el.scrollTop
+    const viewBottom = viewTop + el.clientHeight
+    const prevTop = prevScrollTopRef.current
+    const direction: "up" | "down" | null =
+      prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
+    prevScrollTopRef.current = viewTop
+
+    // The first tick after mount/navigation only establishes the direction baseline.
+    if (direction === null) return
+
+    const target = pickActiveMonth({
+      virtualItems: virtualizer.getVirtualItems(),
+      weeks,
+      viewTop,
+      viewBottom,
+      activeDateKey,
+      direction,
+    })
+
+    if (target) {
+      debugMonthScroll("scroll-follow active month", {
+        from: activeDateKey,
+        to: formatDateKey(target),
+        direction,
+      })
+      onScrollMonthChange(target)
+    }
+  })
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -145,75 +236,7 @@ export function MonthGrid({
       if (rafId !== null) return
       rafId = requestAnimationFrame(() => {
         rafId = null
-        if (Date.now() < ignoreScrollUntil.current) {
-          prevScrollTopRef.current = null
-          return
-        }
-        const {
-          weeks: w,
-          activeDateKey: adk,
-          virtualizer: v,
-          isNavigating: isNav,
-          onScrollMonthChange: onChange,
-        } = latestRef.current
-        if (isNav() || w.length === 0) {
-          prevScrollTopRef.current = null
-          return
-        }
-
-        const viewTop = el.scrollTop
-        const viewBottom = viewTop + el.clientHeight
-        const prevTop = prevScrollTopRef.current
-        const direction: "up" | "down" | null =
-          prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
-        prevScrollTopRef.current = viewTop
-        // No baseline yet (first tick after mount or after a navigation/ignore window).
-        // Establish it now and skip emission so the next tick can be guarded.
-        if (direction === null) return
-        const monthCounts = new Map<string, number>()
-        // Track the 1st of each month that's currently in the viewport. We only navigate when
-        // the 1st is visible, so both scroll directions land on day 1 of the new month.
-        const monthFirstDay = new Map<string, Date>()
-        for (const item of v.getVirtualItems()) {
-          const top = Math.max(item.start, viewTop)
-          const bottom = Math.min(item.end, viewBottom)
-          if (bottom <= top) continue
-          const fraction = (bottom - top) / item.size
-          const week = w[item.index]
-          if (!week) continue
-          for (const day of week) {
-            const key = `${day.date.getFullYear()}-${day.date.getMonth()}`
-            monthCounts.set(key, (monthCounts.get(key) ?? 0) + fraction)
-            if (day.date.getDate() === 1) monthFirstDay.set(key, day.date)
-          }
-        }
-
-        const activeKey = `${adk.slice(0, 4)}-${Number(adk.slice(5, 7)) - 1}`
-        let bestKey = activeKey
-        let bestCount = monthCounts.get(activeKey) ?? 0
-        for (const [key, count] of monthCounts) {
-          if (count > bestCount) {
-            bestKey = key
-            bestCount = count
-          }
-        }
-        if (bestKey !== activeKey) {
-          const target = monthFirstDay.get(bestKey)
-          // If the 1st of bestKey isn't in a fully visible row yet, wait for a later
-          // tick. Scroll-follow should never promote a half-clipped row to active.
-          if (target) {
-            const targetKey = formatDateKey(target)
-            if (direction === "up" && targetKey > adk) return
-            if (direction === "down" && targetKey < adk) return
-
-            const targetItem = v
-              .getVirtualItems()
-              .find((item) => w[item.index]?.some((day) => day.dateKey === targetKey))
-            if (!targetItem || targetItem.start < viewTop || targetItem.end > viewBottom) return
-
-            onChange(target)
-          }
-        }
+        onScrollTick()
       })
     }
 
@@ -225,7 +248,13 @@ export function MonthGrid({
   }, [scrollRef])
 
   return (
-    <div ref={scrollRef} className="grow overflow-y-auto overflow-x-hidden relative">
+    <div
+      ref={scrollRef}
+      className={cn(
+        "grow overflow-y-auto overflow-x-hidden relative",
+        !hasInitiallyScrolled && "invisible",
+      )}
+    >
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
