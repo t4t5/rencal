@@ -53,8 +53,18 @@ export const useScrollBoundary = ({
 
       if (axis === "x" || axis === "both") {
         const { scrollLeft, scrollWidth, clientWidth } = container
+        const distanceFromRight = scrollWidth - scrollLeft - clientWidth
+
+        if (requireScrollAwayBeforeBoundary && !hasScrolledAwayFromBoundaryRef.current) {
+          if (scrollLeft >= threshold && distanceFromRight >= threshold) {
+            hasScrolledAwayFromBoundaryRef.current = true
+          } else {
+            return
+          }
+        }
+
         if (scrollLeft < threshold) onNearLeft?.()
-        if (scrollWidth - scrollLeft - clientWidth < threshold) onNearRight?.()
+        if (distanceFromRight < threshold) onNearRight?.()
       }
     }
 
