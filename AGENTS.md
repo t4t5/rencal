@@ -7,6 +7,7 @@ renCal is a Tauri v2 calendar app for Omarchy.
 - `just typecheck`: check frontend TypeScript
 - `just check`: check Rust/Tauri build
 - `just gen-types`: regenerate TypeScript taurpc bindings
+- `just debug [flags]`: run the app with `VITE_RENCAL_DEBUG` enabled
 
 Run `just typecheck` after frontend changes.
 Run `just check` after Rust / `src-tauri` changes.
@@ -47,6 +48,7 @@ Important frontend paths:
 - Only use relative imports for same-directory files, e.g. `./Sibling`.
 - Never use `../`.
 - Never use TypeScript `any`.
+- For debugging frontend complexity (like scroll behaviour), add targeted `console.debug` logs gated by `isDebugMode` from `@/lib/debug`. Then test the app with `just debug` or `just debug [flags]`.
 
 ## Rust / taurpc rules
 
