@@ -9,7 +9,7 @@ import { formatDateKey } from "@/lib/event-time"
 import { MonthWeekRow } from "./Row"
 
 const DEFAULT_ROW_HEIGHT = 150
-const DEBUG_MONTH_SCROLL = true
+const DEBUG_MONTH_SCROLL = false
 export const LANE_HEIGHT = 20
 export const LANE_GAP = 3
 

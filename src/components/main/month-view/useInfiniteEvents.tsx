@@ -8,7 +8,7 @@ import { CalendarEvent, eventKey } from "@/lib/cal-events"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 import { DateRange } from "@/lib/types"
 
-const DEBUG_MONTH_SCROLL = true
+const DEBUG_MONTH_SCROLL = false
 
 function debugMonthScroll(message: string, data?: Record<string, unknown>) {
   if (!DEBUG_MONTH_SCROLL) return
