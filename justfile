@@ -18,6 +18,10 @@ format-rust:
 dev: build-providers
   pnpm tauri dev
 
+# Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug month-scroll`.
+debug flags="*": build-providers
+  VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
+
 # Run website docs (dev mode)
 web:
   pnpm --dir website dev

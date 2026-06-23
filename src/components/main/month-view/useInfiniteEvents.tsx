@@ -6,9 +6,10 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { CalendarEvent, eventKey } from "@/lib/cal-events"
 import { getCalendarEventsForRange, MONTHS_TO_LOAD } from "@/lib/cal-events-range"
+import { isDebugMode } from "@/lib/debug"
 import { DateRange } from "@/lib/types"
 
-const DEBUG_MONTH_SCROLL = false
+const DEBUG_MONTH_SCROLL = isDebugMode("month-scroll")
 
 function debugMonthScroll(message: string, data?: Record<string, unknown>) {
   if (!DEBUG_MONTH_SCROLL) return

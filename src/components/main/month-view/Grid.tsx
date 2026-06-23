@@ -4,12 +4,13 @@ import { RefObject, useCallback, useEffect, useLayoutEffect, useRef, useState } 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { isDebugMode } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 
 import { MonthWeekRow } from "./Row"
 
 const DEFAULT_ROW_HEIGHT = 150
-const DEBUG_MONTH_SCROLL = false
+const DEBUG_MONTH_SCROLL = isDebugMode("month-scroll")
 export const LANE_HEIGHT = 20
 export const LANE_GAP = 3
 
