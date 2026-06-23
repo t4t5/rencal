@@ -89,14 +89,21 @@ export function MonthGrid({
 
   // Keep the viewport in place when weeks are prepended
   const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
+
   useLayoutEffect(() => {
     const curFirstKey = weeks[0]?.[0]?.dateKey
+
     const { firstKey: prevFirstKey, count: prevCount } = prevRef.current
+
     prevRef.current = { firstKey: curFirstKey, count: weeks.length }
+
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
+
     const added = weeks.length - prevCount
+
     const from = virtualizer.scrollOffset ?? 0
     const to = from + added * rowHeight
+
     debugMonthScroll("preserve offset after prepend", {
       prevFirstKey,
       curFirstKey,
@@ -105,6 +112,7 @@ export function MonthGrid({
       from,
       to,
     })
+
     virtualizer.scrollToOffset(to, { align: "start" })
   })
 
@@ -114,14 +122,20 @@ export function MonthGrid({
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   const prevScrollTopRef = useRef<number | null>(null)
+
   useEffect(() => {
     virtualizer.measure()
+
     if (hasInitialized.current) return
 
     const idx = latestRef.current.anchorWeekIndex
+
     if (idx < 0) return
+
     debugMonthScroll("initial anchor scroll", { idx, rowHeight })
+
     virtualizer.scrollToIndex(idx, { align: "start" })
+
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
     prevScrollTopRef.current = null
@@ -132,20 +146,27 @@ export function MonthGrid({
   // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+
     debugMonthScroll("navigation scroll check", { activeDateKey })
+
     const el = scrollRef.current
+
     if (!el) return
 
     const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
+
     if (weekIndex < 0) return
 
     const item = virtualizer.getVirtualItems().find((v) => v.index === weekIndex)
+
     if (item) {
       const viewStart = el.scrollTop
       const viewEnd = viewStart + el.clientHeight
       if (item.start >= viewStart && item.end <= viewEnd) return
     }
+
     debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
+
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
@@ -156,8 +177,10 @@ export function MonthGrid({
     if (!el) return
 
     let rafId: number | null = null
+
     const handleScroll = () => {
       if (rafId !== null) return
+
       rafId = requestAnimationFrame(() => {
         rafId = null
         if (Date.now() < ignoreScrollUntil.current) {
@@ -179,16 +202,22 @@ export function MonthGrid({
         const viewTop = el.scrollTop
         const viewBottom = viewTop + el.clientHeight
         const prevTop = prevScrollTopRef.current
+
         const direction: "up" | "down" | null =
           prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
+
         prevScrollTopRef.current = viewTop
+
         // No baseline yet (first tick after mount or after a navigation/ignore window).
         // Establish it now and skip emission so the next tick can be guarded.
         if (direction === null) return
+
         const monthCounts = new Map<string, number>()
+
         // Track the 1st of each month that's currently in the viewport. We only navigate when
         // the 1st is visible, so both scroll directions land on day 1 of the new month.
         const monthFirstDay = new Map<string, Date>()
+
         for (const item of v.getVirtualItems()) {
           const top = Math.max(item.start, viewTop)
           const bottom = Math.min(item.end, viewBottom)
@@ -206,12 +235,14 @@ export function MonthGrid({
         const activeKey = `${adk.slice(0, 4)}-${Number(adk.slice(5, 7)) - 1}`
         let bestKey = activeKey
         let bestCount = monthCounts.get(activeKey) ?? 0
+
         for (const [key, count] of monthCounts) {
           if (count > bestCount) {
             bestKey = key
             bestCount = count
           }
         }
+
         if (bestKey !== activeKey) {
           const target = monthFirstDay.get(bestKey)
           // If the 1st of bestKey isn't in a fully visible row yet, wait for a later
