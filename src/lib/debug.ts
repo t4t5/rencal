@@ -13,3 +13,12 @@ export function isDebugMode(namespace: string): boolean {
     (value) => DEBUG_ALL_VALUES.has(value.toLowerCase()) || value === namespace,
   )
 }
+
+export function createDebugLogger(namespace: string) {
+  const enabled = isDebugMode(namespace)
+
+  return (message: string, data?: Record<string, unknown>) => {
+    if (!enabled) return
+    console.debug(`[${namespace}] ${message}`, data ?? {})
+  }
+}
