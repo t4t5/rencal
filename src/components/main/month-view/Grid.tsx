@@ -9,8 +9,14 @@ import { formatDateKey } from "@/lib/event-time"
 import { MonthWeekRow } from "./Row"
 
 const DEFAULT_ROW_HEIGHT = 150
+const DEBUG_MONTH_SCROLL = true
 export const LANE_HEIGHT = 20
 export const LANE_GAP = 3
+
+function debugMonthScroll(message: string, data?: Record<string, unknown>) {
+  if (!DEBUG_MONTH_SCROLL) return
+  console.debug(`[MonthScroll] ${message}`, data ?? {})
+}
 
 export function MonthGrid({
   weeks,
@@ -92,22 +98,32 @@ export function MonthGrid({
     prevRef.current = { firstKey: curFirstKey, count: weeks.length }
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
     const added = weeks.length - prevCount
-    virtualizer.scrollToOffset((virtualizer.scrollOffset ?? 0) + added * rowHeight, {
-      align: "start",
+    const from = virtualizer.scrollOffset ?? 0
+    const to = from + added * rowHeight
+    debugMonthScroll("preserve offset after prepend", {
+      prevFirstKey,
+      curFirstKey,
+      added,
+      rowHeight,
+      from,
+      to,
     })
+    virtualizer.scrollToOffset(to, { align: "start" })
   })
 
-  // Scroll to anchor on mount and when rowHeight changes. anchorWeekIndex is NOT a dep —
-  // it shifts when weeks are prepended/appended and we don't want to jump back then.
-  // Must call measure() first: tanstack-virtual memoizes item sizes and does not
-  // re-run estimateSize when only the function reference changes.
+  // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when
+  // weeks are prepended/appended and we don't want to jump back then. Still call
+  // measure() on rowHeight/virtualizer changes because tanstack-virtual memoizes item sizes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   const prevScrollTopRef = useRef<number | null>(null)
   useEffect(() => {
     virtualizer.measure()
+    if (hasInitialized.current) return
+
     const idx = latestRef.current.anchorWeekIndex
     if (idx < 0) return
+    debugMonthScroll("initial anchor scroll", { idx, rowHeight })
     virtualizer.scrollToIndex(idx, { align: "start" })
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
@@ -119,6 +135,7 @@ export function MonthGrid({
   // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+    debugMonthScroll("navigation scroll check", { activeDateKey })
     const el = scrollRef.current
     if (!el) return
 
@@ -131,6 +148,7 @@ export function MonthGrid({
       const viewEnd = viewStart + el.clientHeight
       if (item.start >= viewStart && item.end <= viewEnd) return
     }
+    debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
@@ -211,6 +229,11 @@ export function MonthGrid({
               .find((item) => w[item.index]?.some((day) => day.dateKey === targetKey))
             if (!targetItem || targetItem.start < viewTop || targetItem.end > viewBottom) return
 
+            debugMonthScroll("scroll-follow active month", {
+              from: adk,
+              to: targetKey,
+              direction,
+            })
             onChange(target)
           }
         }

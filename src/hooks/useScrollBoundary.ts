@@ -11,6 +11,8 @@ type UseScrollBoundaryProps = {
   onNearBottom?: () => void
   onNearLeft?: () => void
   onNearRight?: () => void
+  checkOnMount?: boolean
+  requireScrollAwayBeforeBoundary?: boolean
 }
 
 export const useScrollBoundary = ({
@@ -22,8 +24,11 @@ export const useScrollBoundary = ({
   onNearBottom,
   onNearLeft,
   onNearRight,
+  checkOnMount = true,
+  requireScrollAwayBeforeBoundary = false,
 }: UseScrollBoundaryProps) => {
   const lastRunRef = useRef<number>(0)
+  const hasScrolledAwayFromBoundaryRef = useRef(false)
 
   useEffect(() => {
     const container = scrollContainerRef.current
@@ -32,8 +37,18 @@ export const useScrollBoundary = ({
     const checkBoundaries = () => {
       if (axis === "y" || axis === "both") {
         const { scrollTop, scrollHeight, clientHeight } = container
+        const distanceFromBottom = scrollHeight - scrollTop - clientHeight
+
+        if (requireScrollAwayBeforeBoundary && !hasScrolledAwayFromBoundaryRef.current) {
+          if (scrollTop >= threshold && distanceFromBottom >= threshold) {
+            hasScrolledAwayFromBoundaryRef.current = true
+          } else {
+            return
+          }
+        }
+
         if (scrollTop < threshold) onNearTop?.()
-        if (scrollHeight - scrollTop - clientHeight < threshold) onNearBottom?.()
+        if (distanceFromBottom < threshold) onNearBottom?.()
       }
 
       if (axis === "x" || axis === "both") {
@@ -55,14 +70,19 @@ export const useScrollBoundary = ({
 
     container.addEventListener("scroll", handleScroll, { passive: true })
 
-    // Check boundaries on mount
-    // (fixes issue where user scrolls very fast to top/bottom)
-    requestAnimationFrame(() => {
-      checkBoundaries()
-    })
+    // Check boundaries on mount when desired. Some virtualized views perform an
+    // initial programmatic scroll; checking before that scroll lands incorrectly
+    // treats the initial scrollTop=0 as user intent to prepend.
+    let rafId: number | null = null
+    if (checkOnMount) {
+      rafId = requestAnimationFrame(() => {
+        checkBoundaries()
+      })
+    }
 
     return () => {
       container.removeEventListener("scroll", handleScroll)
+      if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [
     scrollContainerRef,
@@ -73,5 +93,7 @@ export const useScrollBoundary = ({
     onNearBottom,
     onNearLeft,
     onNearRight,
+    checkOnMount,
+    requireScrollAwayBeforeBoundary,
   ])
 }
