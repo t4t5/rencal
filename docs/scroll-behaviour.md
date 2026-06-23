@@ -40,3 +40,36 @@ Two things move independently and must never be confused:
   visible, the viewport does not move.
 - These programmatic scrolls must not trigger the scroll-follow behavior above: a jump
   changes the active date directly, not as a reaction to what scrolls into view.
+
+## Week view
+
+The week view is a horizontally-scrollable strip of day columns, over a fixed 24-hour
+time grid. The same separation as the month view applies: the **scroll position**
+follows the user (and deliberate jumps); the **active date** follows the scroll but
+never controls it.
+
+### Infinite scrolling
+
+- The strip scrolls endlessly left and right; only the horizontal axis is infinite (the
+  vertical time axis is a fixed 24 hours). Days load lazily: as the user approaches the
+  left or right edge, earlier/later days are added.
+- When earlier days are prepended at the left, the viewport stays visually fixed — the
+  content the user was looking at must not jump.
+- Event loading follows the visible day range but is best-effort: it must never block
+  scrolling. The strip stays fully scrollable while events load, when no calendars are
+  visible, and when the calendar is empty.
+
+### Active date while scrolling
+
+- On open, the strip is positioned so the Monday of the active date's week is at the far
+  left, with the active day highlighted within that week.
+- As the user scrolls, the active date follows but the viewport is never programmatically
+  moved. The active date does not change mid-scroll; once scrolling settles, it becomes
+  the leftmost fully-visible day column.
+
+### Jump navigation
+
+- Deliberately jumping to a date sets the active date and, if that day's column is not
+  already fully visible, smooth-scrolls it into view. If it is already visible, the
+  viewport does not move.
+- These programmatic scrolls must not trigger the scroll-follow behavior above.
