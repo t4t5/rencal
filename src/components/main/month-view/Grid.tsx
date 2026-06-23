@@ -14,6 +14,7 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
+import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
 import { pickActiveMonth } from "./pickActiveMonth"
@@ -55,6 +56,10 @@ export function MonthGrid({
 }) {
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
+
+  // Hide the grid until the initial anchor scroll lands, so the user never sees the
+  // pre-scroll frame (top of the grid) flash before it jumps to the active month.
+  const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -125,15 +130,23 @@ export function MonthGrid({
 
     const idx = anchorWeekIndexRef.current
 
-    if (idx < 0) return
+    if (idx < 0) {
+      // No anchor to position to — reveal as-is rather than stay hidden.
+      setHasInitiallyScrolled(true)
+      return
+    }
+
+    hasInitialized.current = true
+    ignoreScrollUntil.current = Date.now() + 200
+    prevScrollTopRef.current = null
 
     debugMonthScroll("initial anchor scroll", { idx, rowHeight })
 
     virtualizer.scrollToIndex(idx, { align: "start" })
 
-    hasInitialized.current = true
-    ignoreScrollUntil.current = Date.now() + 200
-    prevScrollTopRef.current = null
+    // Reveal only after the scroll has actually painted, so the user never sees the
+    // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
+    requestAnimationFrame(() => requestAnimationFrame(() => setHasInitiallyScrolled(true)))
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
@@ -141,6 +154,12 @@ export function MonthGrid({
   // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+
+    // Don't override the initial anchor scroll while it's still settling. On open,
+    // isNavigating() is already true (the agenda's mount-time scroll sets the shared flag),
+    // and the anchor has just put the active month's first week at the top — we must not
+    // pull the viewport to the active *day*'s week instead (docs/scroll-behaviour.md).
+    if (Date.now() < ignoreScrollUntil.current) return
 
     debugMonthScroll("navigation scroll check", { activeDateKey })
 
@@ -229,7 +248,13 @@ export function MonthGrid({
   }, [scrollRef])
 
   return (
-    <div ref={scrollRef} className="grow overflow-y-auto overflow-x-hidden relative">
+    <div
+      ref={scrollRef}
+      className={cn(
+        "grow overflow-y-auto overflow-x-hidden relative",
+        !hasInitiallyScrolled && "invisible",
+      )}
+    >
       <div
         style={{
           height: `${virtualizer.getTotalSize()}px`,
