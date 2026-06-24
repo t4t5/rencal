@@ -1,9 +1,12 @@
 import { RefObject, useEffect, useMemo, useRef, useState } from "react"
 
 import { CalendarEvent } from "@/lib/cal-events"
+import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 
 import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
+
+const debug = createDebugLogger("agenda")
 
 export type Section = {
   date: Date
@@ -48,10 +51,21 @@ export function useGhostSection({
 
   // Scroll to ghost section after it renders, and remove it once it leaves the viewport:
   useEffect(() => {
+    debug("ghost effect", {
+      ghostDate: ghostDate ? formatDateKey(ghostDate) : null,
+      hasGhostRef: !!ghostRef.current,
+      hasContainer: !!scrollContainerRef.current,
+      behavior: ghostScrollBehaviorRef.current,
+    })
     if (!ghostDate || !ghostRef.current || !scrollContainerRef.current) return
 
     const el = ghostRef.current
     scrollSectionIntoContainer(scrollContainerRef.current, el, ghostScrollBehaviorRef.current)
+    debug("ghost scrolled", {
+      ghostDate: formatDateKey(ghostDate),
+      scrollTop: scrollContainerRef.current.scrollTop,
+      scrollHeight: scrollContainerRef.current.scrollHeight,
+    })
 
     let hasBeenVisible = false
     const observer = new IntersectionObserver(
@@ -70,11 +84,15 @@ export function useGhostSection({
   }, [ghostDate])
 
   const showGhost = (date: Date, behavior: ScrollBehavior) => {
+    debug("show ghost", { date: formatDateKey(date), behavior })
     ghostScrollBehaviorRef.current = behavior
     setGhostDate(date)
   }
 
-  const clearGhost = () => setGhostDate(null)
+  const clearGhost = () => {
+    debug("clear ghost", { ghostDate: ghostDate ? formatDateKey(ghostDate) : null })
+    setGhostDate(null)
+  }
 
   return {
     sectionsToRender,

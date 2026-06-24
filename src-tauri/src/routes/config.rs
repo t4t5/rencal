@@ -1,3 +1,5 @@
+use std::collections::BTreeMap;
+
 use rencal_config::RencalConfig;
 
 use crate::routes::TauResult;
@@ -13,6 +15,8 @@ pub trait ConfigApi {
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
     async fn get_auto_sync_enabled() -> TauResult<bool>;
     async fn set_auto_sync_enabled(enabled: bool) -> TauResult<()>;
+    async fn get_groups() -> TauResult<BTreeMap<String, Vec<String>>>;
+    async fn set_groups(groups: BTreeMap<String, Vec<String>>) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -50,6 +54,16 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_auto_sync_enabled(self, enabled: bool) -> TauResult<()> {
         let mut config = RencalConfig::load();
         config.auto_sync_enabled = enabled;
+        config.save()
+    }
+
+    async fn get_groups(self) -> TauResult<BTreeMap<String, Vec<String>>> {
+        Ok(RencalConfig::load().groups)
+    }
+
+    async fn set_groups(self, groups: BTreeMap<String, Vec<String>>) -> TauResult<()> {
+        let mut config = RencalConfig::load();
+        config.groups = groups;
         config.save()
     }
 }

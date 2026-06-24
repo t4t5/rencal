@@ -1,3 +1,5 @@
+import { SettingsContent } from "@/components/settings/SettingsContent"
+
 import { useTheme } from "@/hooks/useTheme"
 import { cn } from "@/lib/utils"
 
@@ -10,9 +12,9 @@ export function ThemesPage() {
   const { descriptors } = useThemeRegistry()
 
   return (
-    <div className="flex flex-col gap-6 max-w-[500px]">
+    <SettingsContent className="w-full mr-6 py-6">
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
-    </div>
+    </SettingsContent>
   )
 }
 
@@ -26,7 +28,7 @@ function ThemeGrid({
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {themes.map((t) => {
         const isActive = active === t.id
 

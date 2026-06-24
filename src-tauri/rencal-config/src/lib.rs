@@ -4,6 +4,7 @@
 //! `rencal-notifierd` daemon (via `reminder-core`) can read/write the same
 //! file without dragging Tauri/taurpc into a long-lived systemd service.
 
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use serde::{Deserialize, Serialize};
@@ -24,10 +25,16 @@ fn default_auto_sync_enabled() -> bool {
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
     pub theme: String,
+
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
+
     #[serde(default = "default_auto_sync_enabled")]
     pub auto_sync_enabled: bool,
+
+    /// Must come AFTER top-level configs since it adds [groups] table header:
+    #[serde(default)]
+    pub groups: BTreeMap<String, Vec<String>>,
 }
 
 impl Default for RencalConfig {
@@ -36,6 +43,7 @@ impl Default for RencalConfig {
             theme: default_theme(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
+            groups: BTreeMap::new(),
         }
     }
 }
@@ -77,5 +85,37 @@ impl RencalConfig {
         let contents =
             toml::to_string_pretty(self).map_err(|e| format!("Could not serialize config: {e}"))?;
         std::fs::write(&path, contents).map_err(|e| format!("Could not write config file: {e}"))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn serializes_with_valid_toml_field_ordering() {
+        let mut config = RencalConfig {
+            auto_sync_enabled: false,
+            ..Default::default()
+        };
+
+        config
+            .groups
+            .insert("work".to_string(), vec!["work-cal".to_string()]);
+
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+
+        assert!(!reparsed.auto_sync_enabled);
+        assert_eq!(
+            reparsed.groups.get("work"),
+            Some(&vec!["work-cal".to_string()])
+        );
+    }
+
+    #[test]
+    fn missing_groups_falls_back_to_empty() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert!(config.groups.is_empty());
     }
 }

@@ -40,7 +40,7 @@ export function SettingsSidebar({
   onTabChange: (tab: SettingsTab) => void
 }) {
   return (
-    <nav className="flex flex-col gap-1 w-[200px] shrink-0 py-5 px-4">
+    <nav className="flex flex-col gap-1 w-[200px] shrink-0 py-5 px-4 border-r border-r-divider">
       {NAV_ITEMS.map((item) => (
         <SidebarItem
           key={item.tab}
@@ -63,6 +63,7 @@ function SidebarItem({
   onClick: () => void
 }) {
   const { label, icon: Icon } = item
+
   return (
     <button
       onClick={onClick}

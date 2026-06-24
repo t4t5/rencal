@@ -1,6 +1,7 @@
 import { useId } from "react"
 
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
+import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
@@ -8,10 +9,10 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 export function RemindersPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <SettingsContent className="py-7">
       <NotificationsSection />
       <DefaultRemindersSection />
-    </div>
+    </SettingsContent>
   )
 }
 

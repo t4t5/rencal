@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 
+import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -51,7 +52,7 @@ export function AccountsPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <SettingsContent className="py-6 w-[400px]">
       {!!accounts.length && (
         <div className="flex flex-col gap-4">
           {accounts.map(({ account, provider }) => (
@@ -79,7 +80,7 @@ export function AccountsPage() {
       {reconnectStep != null && (
         <AddAccountModal onClose={() => setReconnectStep(null)} initialStep={reconnectStep} />
       )}
-    </div>
+    </SettingsContent>
   )
 }
 

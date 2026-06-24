@@ -28,6 +28,7 @@ export const CalendarSelect = ({
       <SelectTrigger className={cn("w-full pl-0", readOnly && "pointer-events-none")}>
         {calendar ? <CalendarItem calendar={calendar} /> : <span>Select Calendar</span>}
       </SelectTrigger>
+
       <SelectContent>
         {editableCalendars.map((cal) => (
           <SelectItem key={cal.slug} value={cal.slug}>

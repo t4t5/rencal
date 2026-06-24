@@ -103,6 +103,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "w", type: "char" }],
   },
   {
+    id: "switch-group",
+    group: "View",
+    label: "Switch group",
+    bindings: [{ keys: "g", type: "char" }],
+  },
+  {
     id: "search",
     group: "General",
     label: "Search",
