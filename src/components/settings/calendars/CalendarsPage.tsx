@@ -16,21 +16,52 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { getProviderDisplayName } from "@/lib/providers"
+import { cn } from "@/lib/utils"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
+import { PlusIcon } from "@/icons/plus"
 import { RssIcon } from "@/icons/rss"
+
+import { SettingsContent } from "../SettingsContent"
 
 export function CalendarsPage() {
   return (
-    <div className="flex">
+    <div className="flex grow">
       <GroupList />
       <CalendarsList />
     </div>
   )
 }
 
+// TODO: Make this dynamic:
+const GROUPS = ["Default", "Work"]
+const ACTIVE_GROUP = "Default"
+
 function GroupList() {
-  return <div className="w-[200px] border-r border-r-divider">Groups</div>
+  return (
+    <SettingsContent className="w-[220px] border-r border-r-divider gap-2 py-6">
+      <div className="flex justify-between items-center w-full">
+        <span className="text-sm text-muted-foreground">Groups</span>
+
+        <Button size="icon-sm" variant="ghost">
+          <PlusIcon className="size-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        {GROUPS.map((group) => (
+          <div
+            key={group}
+            className={cn("text-sm rounded-md text-muted-foreground px-3 py-2", {
+              "bg-secondary text-accent-foreground": ACTIVE_GROUP === group,
+            })}
+          >
+            {group}
+          </div>
+        ))}
+      </div>
+    </SettingsContent>
+  )
 }
 
 function CalendarsList() {
@@ -41,7 +72,7 @@ function CalendarsList() {
   const calendarsByProvider = Object.groupBy(remoteCalendars, (c) => c.provider as string)
 
   return (
-    <div className="flex flex-col gap-6 grow p-4">
+    <SettingsContent className="grow py-7">
       {!!calendars.length && (
         <div className="flex flex-col gap-4">
           {Object.entries(calendarsByProvider).map(([provider, cals]) => (
@@ -71,7 +102,7 @@ function CalendarsList() {
         </TooltipTrigger>
         <TooltipContent>Coming soon</TooltipContent>
       </Tooltip>
-    </div>
+    </SettingsContent>
   )
 }
 

@@ -63,6 +63,7 @@ function SidebarItem({
   onClick: () => void
 }) {
   const { label, icon: Icon } = item
+
   return (
     <button
       onClick={onClick}
