@@ -167,7 +167,7 @@ pub async fn run() {
             // Handle caldir file changes:
             tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
 
-            // Handle ~/.config/rencal/config.toml changes (e.g. active group):
+            // Handle ~/.config/rencal/config.toml changes:
             tokio::spawn(config_watcher::run_watcher(app.handle().clone()));
 
             if let Some(window) = app.get_webview_window("main") {

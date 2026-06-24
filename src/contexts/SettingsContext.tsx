@@ -4,12 +4,10 @@ import { ReactNode, createContext, useCallback, useContext, useEffect, useState 
 import { rpc } from "@/rpc"
 import type { TimeFormat } from "@/rpc/bindings"
 import {
-  AUTO_SYNC_ENABLED_CHANGED,
   CALENDAR_DIR_CHANGED,
-  CONFIG_CHANGED,
   DEFAULT_CALENDAR_CHANGED,
   DEFAULT_REMINDERS_CHANGED,
-  NOTIFICATIONS_ENABLED_CHANGED,
+  RENCAL_CONFIG_CHANGED,
   TIME_FORMAT_CHANGED,
 } from "@/rpc/events"
 
@@ -93,14 +91,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const unlistenCalendarDir = listen<string>(CALENDAR_DIR_CHANGED, (event) => {
       setCalendarDirState(event.payload)
     })
-    const unlistenNotifications = listen<boolean>(NOTIFICATIONS_ENABLED_CHANGED, (event) => {
-      setNotificationsEnabledState(event.payload)
-    })
-    const unlistenAutoSync = listen<boolean>(AUTO_SYNC_ENABLED_CHANGED, (event) => {
-      setAutoSyncEnabledState(event.payload)
-    })
-    // config.toml changed on disk (e.g. a hand-edit to [groups]); re-read.
-    const unlistenConfig = listen(CONFIG_CHANGED, () => {
+    // config.toml-backed settings (groups, notifications, auto-sync) don't get
+    // per-field events; any change to the file — a hand-edit or our own write —
+    // fires this and we re-read everything.
+    const unlistenConfig = listen(RENCAL_CONFIG_CHANGED, () => {
       void reloadSettings()
     })
 
@@ -109,8 +103,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       unlistenReminders.then((fn) => fn())
       unlistenDefaultCalendar.then((fn) => fn())
       unlistenCalendarDir.then((fn) => fn())
-      unlistenNotifications.then((fn) => fn())
-      unlistenAutoSync.then((fn) => fn())
       unlistenConfig.then((fn) => fn())
     }
   }, [reloadSettings])
@@ -143,19 +135,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setNotificationsEnabled = async (enabled: boolean) => {
     setNotificationsEnabledState(enabled)
     await rpc.config.set_notifications_enabled(enabled)
-    await emit(NOTIFICATIONS_ENABLED_CHANGED, enabled)
+    await emit(RENCAL_CONFIG_CHANGED)
   }
 
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
     await rpc.config.set_auto_sync_enabled(enabled)
-    await emit(AUTO_SYNC_ENABLED_CHANGED, enabled)
+    await emit(RENCAL_CONFIG_CHANGED)
   }
 
   const setGroups = async (nextGroups: Record<string, string[]>) => {
     setGroupsState(nextGroups)
     await rpc.config.set_groups(nextGroups)
-    await emit(CONFIG_CHANGED)
+    await emit(RENCAL_CONFIG_CHANGED)
   }
 
   return (

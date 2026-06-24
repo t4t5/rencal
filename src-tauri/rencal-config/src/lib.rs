@@ -25,14 +25,14 @@ fn default_auto_sync_enabled() -> bool {
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
     pub theme: String,
+
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
+
     #[serde(default = "default_auto_sync_enabled")]
     pub auto_sync_enabled: bool,
-    /// Named groups mapping a group name to the calendar slugs it shows.
-    /// Which group is *active* is client-side app state, not stored here.
-    /// Must stay the LAST field: it serializes as a `[groups]` table, and TOML
-    /// requires all top-level scalars to appear before any table header.
+
+    /// Must come AFTER top-level configs since it adds [groups] table header:
     #[serde(default)]
     pub groups: BTreeMap<String, Vec<String>>,
 }
@@ -94,12 +94,11 @@ mod tests {
 
     #[test]
     fn serializes_with_valid_toml_field_ordering() {
-        // The `groups` table must serialize after every top-level scalar,
-        // otherwise the round-trip below would re-parse a scalar like
-        // `auto_sync_enabled` as a member of `[groups]` and fail. This guards
-        // the field order.
-        let mut config = RencalConfig::default();
-        config.auto_sync_enabled = false;
+        let mut config = RencalConfig {
+            auto_sync_enabled: false,
+            ..Default::default()
+        };
+
         config
             .groups
             .insert("work".to_string(), vec!["work-cal".to_string()]);
@@ -116,7 +115,6 @@ mod tests {
 
     #[test]
     fn missing_groups_falls_back_to_empty() {
-        // A config written before groups existed has no `[groups]` table.
         let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
         assert!(config.groups.is_empty());
     }
