@@ -26,10 +26,10 @@ interface SettingsContextType {
   setNotificationsEnabled: (enabled: boolean) => Promise<void>
   autoSyncEnabled: boolean
   setAutoSyncEnabled: (enabled: boolean) => Promise<void>
-  // Named calendar groups from config.toml's [groups] table (read-only here;
-  // edited by hand in the file). Which group is active is app state — see
-  // activeGroup on useCalendars() in CalendarStateContext.
+  // Named calendar groups from config.toml's [groups] table. Which group is
+  // active is app state — see activeGroup on useCalendars() in CalendarStateContext.
   groups: Record<string, string[]>
+  setGroups: (groups: Record<string, string[]>) => Promise<void>
   reloadSettings: () => Promise<void>
   // False until persisted settings load, so startup consumers don't act on defaults.
   settingsLoaded: boolean
@@ -154,6 +154,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(AUTO_SYNC_ENABLED_CHANGED, enabled)
   }
 
+  const setGroups = async (nextGroups: Record<string, string[]>) => {
+    setGroupsState(nextGroups)
+    await rpc.config.set_groups(nextGroups)
+    await emit(CONFIG_CHANGED)
+  }
+
   return (
     <SettingsContext.Provider
       value={{
@@ -170,6 +176,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         autoSyncEnabled,
         setAutoSyncEnabled,
         groups,
+        setGroups,
         reloadSettings,
         settingsLoaded,
       }}

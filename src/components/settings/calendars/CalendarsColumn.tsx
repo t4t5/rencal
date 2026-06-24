@@ -23,8 +23,36 @@ import { getProviderDisplayName } from "@/lib/providers"
 import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
-export function CalendarsColumn() {
+const DEFAULT_GROUP = "default"
+
+export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
   const { calendars } = useCalendars()
+  const { groups, setGroups } = useSettings()
+
+  const allCalendarSlugs = calendars.map((calendar) => calendar.slug)
+  const visibleCalendarSlugs = groups[selectedGroup]
+  const selectedCalendarSlugs = visibleCalendarSlugs ?? allCalendarSlugs
+
+  const setCalendarEnabled = async (calendarSlug: string, enabled: boolean) => {
+    const nextSelectedSlugs = new Set(selectedCalendarSlugs)
+
+    if (enabled) {
+      nextSelectedSlugs.add(calendarSlug)
+    } else {
+      nextSelectedSlugs.delete(calendarSlug)
+    }
+
+    const nextGroups = { ...groups }
+    const nextSlugs = Array.from(nextSelectedSlugs)
+
+    if (selectedGroup === DEFAULT_GROUP && nextSlugs.length === allCalendarSlugs.length) {
+      delete nextGroups[DEFAULT_GROUP]
+    } else {
+      nextGroups[selectedGroup] = nextSlugs
+    }
+
+    await setGroups(nextGroups)
+  }
 
   const remoteCalendars = calendars.filter((c) => c.provider !== null)
   const localCalendars = calendars.filter((c) => c.provider === null)
@@ -39,11 +67,18 @@ export function CalendarsColumn() {
               key={provider}
               title={getProviderDisplayName(provider)}
               calendars={cals ?? []}
+              selectedCalendarSlugs={selectedCalendarSlugs}
+              onCalendarEnabledChange={setCalendarEnabled}
             />
           ))}
 
           {localCalendars.length > 0 && (
-            <CalendarAccount title="Local-only" calendars={localCalendars} />
+            <CalendarAccount
+              title="Local-only"
+              calendars={localCalendars}
+              selectedCalendarSlugs={selectedCalendarSlugs}
+              onCalendarEnabledChange={setCalendarEnabled}
+            />
           )}
         </div>
       )}
@@ -65,14 +100,28 @@ export function CalendarsColumn() {
   )
 }
 
-function CalendarAccount({ title, calendars }: { title: string; calendars: Calendar[] }) {
+function CalendarAccount({
+  title,
+  calendars,
+  selectedCalendarSlugs,
+  onCalendarEnabledChange,
+}: {
+  title: string
+  calendars: Calendar[]
+  selectedCalendarSlugs: string[]
+  onCalendarEnabledChange: (calendarSlug: string, enabled: boolean) => Promise<void>
+}) {
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm text-muted-foreground">{title}</span>
       <div className="flex flex-col gap-1">
         {calendars.map((calendar) => (
           <CalendarDropdownMenuWrapper key={calendar.slug} calendar={calendar}>
-            <TogglableCalendarItem calendar={calendar} />
+            <TogglableCalendarItem
+              calendar={calendar}
+              checked={selectedCalendarSlugs.includes(calendar.slug)}
+              onCheckedChange={(enabled) => onCalendarEnabledChange(calendar.slug, enabled)}
+            />
           </CalendarDropdownMenuWrapper>
         ))}
       </div>
@@ -82,15 +131,18 @@ function CalendarAccount({ title, calendars }: { title: string; calendars: Calen
 
 export function TogglableCalendarItem({
   calendar,
+  checked,
+  onCheckedChange,
   children,
 }: {
   calendar: Calendar
+  checked: boolean
+  onCheckedChange: (enabled: boolean) => void
   children?: ReactNode
 }) {
   const { name, slug } = calendar
   const id = `calendar-${slug}`
 
-  const checked = true // TODO: Replace with actual state
   const calendarColor = getCalendarColor(calendar)
   const calendarColorStyle = { "--calendar-color": calendarColor } as CSSProperties
 
@@ -100,7 +152,7 @@ export function TogglableCalendarItem({
         <Checkbox
           id={id}
           checked={checked}
-          onCheckedChange={() => {}}
+          onCheckedChange={(value) => onCheckedChange(value === true)}
           style={calendarColorStyle}
           className="cursor-pointer data-[state=checked]:border-[var(--calendar-color)] data-[state=checked]:bg-[var(--calendar-color)]"
         />
