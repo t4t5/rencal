@@ -106,8 +106,8 @@ const CalendarViewDropdown = ({
 // Capitalize for display; group names are lowercase config keys (e.g. "work").
 const formatGroupName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
 
-// Switches the active calendar group (app state). Hidden entirely unless there
-// are at least two groups to switch between.
+// Switches the active calendar group (app state).
+// Hidden unless there are at least 2 groups to switch between.
 const GroupSwitcher = () => {
   const { activeGroup, setActiveGroup } = useCalendars()
   const { groups } = useSettings()
@@ -126,14 +126,15 @@ const GroupSwitcher = () => {
           <ChevronDownIcon className="size-4 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
+
       <DropdownMenuContent align="end" className="w-48">
         {options.map((name) => (
           <DropdownMenuItem key={name} onSelect={() => setActiveGroup(name)} className="gap-3">
             <span className="flex size-4 items-center justify-center">
               {activeGroup === name && <CheckIcon className="size-4" />}
             </span>
+
             <span>{formatGroupName(name)}</span>
-            {activeGroup === name && <DropdownMenuShortcut>G</DropdownMenuShortcut>}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
