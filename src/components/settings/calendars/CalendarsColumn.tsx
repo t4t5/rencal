@@ -1,14 +1,15 @@
-import { ReactNode } from "react"
+import { CSSProperties, ReactNode } from "react"
 
-import { CalendarItem } from "@/components/event-parts/inputs/CalendarSelect"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Label } from "@/components/ui/label"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Calendar } from "@/rpc/bindings"
@@ -16,6 +17,7 @@ import { Calendar } from "@/rpc/bindings"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
@@ -70,10 +72,45 @@ function CalendarAccount({ title, calendars }: { title: string; calendars: Calen
       <div className="flex flex-col gap-1">
         {calendars.map((calendar) => (
           <CalendarDropdownMenuWrapper key={calendar.slug} calendar={calendar}>
-            <CalendarItem calendar={calendar} />
+            <TogglableCalendarItem calendar={calendar} />
           </CalendarDropdownMenuWrapper>
         ))}
       </div>
+    </div>
+  )
+}
+
+export function TogglableCalendarItem({
+  calendar,
+  children,
+}: {
+  calendar: Calendar
+  children?: ReactNode
+}) {
+  const { name, slug } = calendar
+  const id = `calendar-${slug}`
+
+  const checked = true // TODO: Replace with actual state
+  const calendarColor = getCalendarColor(calendar)
+  const calendarColorStyle = { "--calendar-color": calendarColor } as CSSProperties
+
+  return (
+    <div className="flex items-center justify-between group max-w-full min-w-0">
+      <div className="flex items-center gap-2 min-w-0">
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={() => {}}
+          style={calendarColorStyle}
+          className="cursor-pointer data-[state=checked]:border-[var(--calendar-color)] data-[state=checked]:bg-[var(--calendar-color)]"
+        />
+
+        <Label htmlFor={id} className="cursor-pointer text-sm text-foreground truncate">
+          {name || slug}
+        </Label>
+      </div>
+
+      {children}
     </div>
   )
 }
