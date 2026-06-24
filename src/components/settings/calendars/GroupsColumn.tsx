@@ -1,5 +1,11 @@
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 import { cn } from "@/lib/utils"
 
@@ -25,14 +31,36 @@ export function GroupsColumn() {
         {GROUPS.map((group) => (
           <div
             key={group}
-            className={cn("text-sm rounded-md text-muted-foreground px-3 py-2", {
-              "bg-secondary text-accent-foreground": ACTIVE_GROUP === group,
-            })}
+            className={cn(
+              "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-3 py-2 group",
+              {
+                "bg-secondary text-accent-foreground": ACTIVE_GROUP === group,
+              },
+            )}
           >
-            {group}
+            <span className="overflow-hidden text-ellipsis">{group}</span>
+            <MoreMenu />
           </div>
         ))}
       </div>
     </SettingsContent>
+  )
+}
+
+const MoreMenu = () => {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-xs" className="invisible group-hover:visible">
+          <MoreHorizIcon className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent>
+        <DropdownMenuItem onClick={() => {}}>Edit</DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onClick={() => {}}>
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
