@@ -1,6 +1,7 @@
 import { open } from "@tauri-apps/plugin-dialog"
 import { useId } from "react"
 
+import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
@@ -19,11 +20,11 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 export function GeneralPage() {
   return (
-    <div className="flex flex-col gap-6">
+    <SettingsContent>
       <TimeFormatSection />
       <DataDirectorySection />
       <AutoSyncSection />
-    </div>
+    </SettingsContent>
   )
 }
 
@@ -31,7 +32,7 @@ const TimeFormatSection = () => {
   const { timeFormat, setTimeFormat } = useSettings()
 
   return (
-    <div className="flex flex-col gap-2 w-[300px]">
+    <div className="flex flex-col gap-2 w-[150px]">
       <label className="text-sm">Time format</label>
       <Select value={timeFormat} onValueChange={(v) => setTimeFormat(v as TimeFormat)}>
         <SelectTrigger className="w-full" ghost={false}>
@@ -64,8 +65,7 @@ const AutoSyncSection = () => {
         </Label>
       </div>
       <p className="text-xs text-muted-foreground pl-7">
-        When off, renCal only checks for changes and shows a counter — click the sync icon to apply
-        them.
+        Uncheck if you prefer to manually push/pull changes.
       </p>
     </div>
   )

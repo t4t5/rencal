@@ -21,6 +21,19 @@ import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
 export function CalendarsPage() {
+  return (
+    <div className="flex">
+      <GroupList />
+      <CalendarsList />
+    </div>
+  )
+}
+
+function GroupList() {
+  return <div className="w-[200px] border-r border-r-divider">Groups</div>
+}
+
+function CalendarsList() {
   const { calendars } = useCalendars()
 
   const remoteCalendars = calendars.filter((c) => c.provider !== null)
@@ -28,11 +41,11 @@ export function CalendarsPage() {
   const calendarsByProvider = Object.groupBy(remoteCalendars, (c) => c.provider as string)
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-6 grow p-4">
       {!!calendars.length && (
         <div className="flex flex-col gap-4">
           {Object.entries(calendarsByProvider).map(([provider, cals]) => (
-            <CalendarGroup
+            <CalendarAccount
               key={provider}
               title={getProviderDisplayName(provider)}
               calendars={cals ?? []}
@@ -40,7 +53,7 @@ export function CalendarsPage() {
           ))}
 
           {localCalendars.length > 0 && (
-            <CalendarGroup title="Local-only" calendars={localCalendars} />
+            <CalendarAccount title="Local-only" calendars={localCalendars} />
           )}
         </div>
       )}
@@ -62,7 +75,7 @@ export function CalendarsPage() {
   )
 }
 
-function CalendarGroup({ title, calendars }: { title: string; calendars: Calendar[] }) {
+function CalendarAccount({ title, calendars }: { title: string; calendars: Calendar[] }) {
   return (
     <div className="flex flex-col gap-2">
       <span className="text-sm text-muted-foreground">{title}</span>
@@ -91,7 +104,7 @@ function CalendarDropdownMenuWrapper({
     <div className="flex items-center gap-3">
       <div className="grow">{children}</div>
 
-      {isDefault && <span className="text-xs text-muted-foreground">Default</span>}
+      {isDefault && <span className="text-sm text-muted-foreground">Default</span>}
 
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
