@@ -17,12 +17,13 @@ import { GetStartedState } from "./GetStartedState"
 import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
+import { usePreserveActiveDateOnGroupChange } from "./usePreserveActiveDateOnGroupChange"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
 
 const debug = createDebugLogger("agenda")
 
 export function Agenda() {
-  const { calendars, isLoadingCalendars } = useCalendars()
+  const { calendars, isLoadingCalendars, activeGroup } = useCalendars()
 
   const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
     useCalendarNavigation()
@@ -87,6 +88,16 @@ export function Agenda() {
   useEffect(() => {
     registerScrollToDate(scrollToDate)
   }, [])
+
+  usePreserveActiveDateOnGroupChange({
+    activeGroup,
+    activeDate,
+    events,
+    isInitialLoading,
+    isLoadingCalendars,
+    scrollToDate,
+    setIsNavigating,
+  })
 
   const hasInitiallyScrolled = useInitialScrollToActiveDate({
     hasEvents: eventsByDate.length > 0,
