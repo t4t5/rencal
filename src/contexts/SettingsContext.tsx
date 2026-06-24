@@ -13,6 +13,8 @@ import {
   TIME_FORMAT_CHANGED,
 } from "@/rpc/events"
 
+import { normalizeCalendarGroups } from "@/lib/calendar-groups"
+
 interface SettingsContextType {
   timeFormat: TimeFormat
   setTimeFormat: (tf: TimeFormat) => Promise<void>
@@ -69,11 +71,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
       // The RPC type is Partial<Record<string, string[]>>; drop undefined values.
-      setGroupsState(
-        Object.fromEntries(
-          Object.entries(groupsResult).filter(([, v]) => v !== undefined),
-        ) as Record<string, string[]>,
-      )
+      setGroupsState(normalizeCalendarGroups(groupsResult))
       setSettingsLoaded(true)
     } catch (e) {
       console.error(e)

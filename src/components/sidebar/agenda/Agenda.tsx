@@ -8,6 +8,7 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
+import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -17,6 +18,8 @@ import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
+
+const debug = createDebugLogger("agenda")
 
 export function Agenda() {
   const { calendars, isLoadingCalendars } = useCalendars()
@@ -50,12 +53,27 @@ export function Agenda() {
   usePreserveScrollOnPrepend({ scrollContainerRef, sections: sectionsToRender })
 
   const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
-    if (!sectionRefs.current) return
+    if (!sectionRefs.current) {
+      debug("scrollToDate skipped: no sectionRefs", { date: formatDateKey(date), behavior })
+      return
+    }
 
     const targetDateStr = formatDateKey(date)
     const section = sectionRefs.current.get(targetDateStr)
 
     const container = scrollContainerRef.current
+    debug("scrollToDate", {
+      targetDate: targetDateStr,
+      behavior,
+      foundSection: !!section,
+      hasContainer: !!container,
+      sectionRefCount: sectionRefs.current.size,
+      firstSection: sectionsToRender[0] ? formatDateKey(sectionsToRender[0].date) : null,
+      lastSection: sectionsToRender.at(-1) ? formatDateKey(sectionsToRender.at(-1)!.date) : null,
+      scrollTop: container?.scrollTop,
+      scrollHeight: container?.scrollHeight,
+      clientHeight: container?.clientHeight,
+    })
     if (section && container) {
       // Remove ghost synchronously so the scroll target measures the final layout.
       // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
@@ -75,6 +93,25 @@ export function Agenda() {
     activeDate,
     scrollToDate,
     setIsNavigating,
+  })
+
+  useEffect(() => {
+    const container = scrollContainerRef.current
+    debug("agenda render state", {
+      activeDate: formatDateKey(activeDate),
+      events: events.length,
+      eventsByDate: eventsByDate.length,
+      sections: sectionsToRender.length,
+      firstSection: sectionsToRender[0] ? formatDateKey(sectionsToRender[0].date) : null,
+      lastSection: sectionsToRender.at(-1) ? formatDateKey(sectionsToRender.at(-1)!.date) : null,
+      datesWithEventsIncludesActive: datesWithEvents.includes(formatDateKey(activeDate)),
+      isInitialLoading,
+      isLoadingCalendars,
+      hasInitiallyScrolled,
+      scrollTop: container?.scrollTop,
+      scrollHeight: container?.scrollHeight,
+      clientHeight: container?.clientHeight,
+    })
   })
 
   if (isInitialLoading || isLoadingCalendars) {

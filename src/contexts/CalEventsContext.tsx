@@ -17,6 +17,7 @@ import {
 import { CALDIR_CHANGED } from "@/rpc/events"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
@@ -72,6 +73,7 @@ export function CalEventsProvider({
 }: CalEventsProviderProps) {
   const { isLoadingCalendars } = useCalendars()
   const { activeDate, registerLoadEventsForDate } = useCalendarNavigation()
+  const { settingsLoaded } = useSettings()
 
   const visibleCalendarIds = useVisibleCalendarIds()
 
@@ -203,6 +205,11 @@ export function CalEventsProvider({
 
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
+    // `useVisibleCalendarIds` returns [] until settings/groups have loaded. Don't treat
+    // that transient startup state as "no visible calendars", otherwise the preloaded
+    // agenda data is cleared before the one-shot initial scroll runs.
+    if (!settingsLoaded) return
+
     if (skipNextEffectRef.current) {
       skipNextEffectRef.current = false
       return
@@ -214,7 +221,7 @@ export function CalEventsProvider({
       coveredRangeRef.current = null
       setIsInitialLoading(false)
     }
-  }, [visibleCalendarKey, isLoadingCalendars])
+  }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
 
   useEffect(() => {
     const unlisten = listen(CALDIR_CHANGED, () => {

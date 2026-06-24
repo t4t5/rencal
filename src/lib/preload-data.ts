@@ -3,6 +3,11 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
+import {
+  getStoredActiveGroup,
+  getVisibleCalendarSlugs,
+  normalizeCalendarGroups,
+} from "@/lib/calendar-groups"
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"
 
@@ -16,8 +21,15 @@ export type Preload = {
 export async function preloadCalendarData(): Promise<Preload> {
   try {
     const initialDate = new Date()
-    const initialCalendars = await rpc.caldir.list_calendars()
-    const slugs = initialCalendars.map((c) => c.slug)
+    const [initialCalendars, groupsResult] = await Promise.all([
+      rpc.caldir.list_calendars(),
+      rpc.config.get_groups(),
+    ])
+    const slugs = getVisibleCalendarSlugs({
+      calendars: initialCalendars,
+      groups: normalizeCalendarGroups(groupsResult),
+      activeGroup: getStoredActiveGroup(localStorage),
+    })
 
     if (slugs.length === 0) {
       return { initialCalendars, initialEvents: [], initialDate }
