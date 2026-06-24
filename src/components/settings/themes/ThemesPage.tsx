@@ -10,7 +10,7 @@ export function ThemesPage() {
   const { descriptors } = useThemeRegistry()
 
   return (
-    <div className="flex flex-col gap-6 max-w-[500px]">
+    <div className="flex flex-col gap-6">
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
     </div>
   )
@@ -26,7 +26,7 @@ function ThemeGrid({
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="grid grid-cols-2 gap-3">
+    <div className="grid grid-cols-3 gap-3">
       {themes.map((t) => {
         const isActive = active === t.id
 
