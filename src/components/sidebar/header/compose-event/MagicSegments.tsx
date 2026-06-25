@@ -131,7 +131,8 @@ const MagicSegmentsOverlay = ({
       <div
         className="absolute inset-y-0"
         style={{
-          left: 13,
+          // Align with where the input's text starts: border (1px) + px-2 padding (8px).
+          left: 8,
           transform: `translateX(${-scrollLeft}px)`,
         }}
       >
