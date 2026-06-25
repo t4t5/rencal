@@ -253,3 +253,7 @@ img {
 video {
   border-radius: 4px;
 }
+
+.sl-markdown-content strong {
+  color: white;
+}

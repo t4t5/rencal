@@ -26,10 +26,3 @@ Choose the package that matches your distribution:
 ## macOS
 
 Download the latest `.dmg` from [GitHub Releases](https://github.com/t4t5/rencal/releases), open it, and drag renCal into `/Applications`.
-
-## Updating
-
-How you update depends on how you installed renCal:
-
-- **AUR:** update with your normal Arch package update flow.
-- **Release download:** download and install the latest release.
