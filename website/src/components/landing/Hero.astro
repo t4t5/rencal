@@ -24,5 +24,27 @@ import LinuxLogo from "../../icons/linux.astro"
     </a>
   </div>
 
-  <img src="/screenshot.png" alt="renCal screenshot" class="mt-8 max-w-5xl w-full rounded-lg" />
+  <div
+    class="relative mt-8 w-[calc(100%+1rem)] self-start overflow-hidden border border-separator border-b-0 border-r-0 rounded-none rounded-tl-md md:mx-0 md:w-full md:max-w-5xl md:self-auto md:rounded-t-md md:border-x"
+  >
+    <img
+      src="/demo-poster.avif"
+      alt="renCal screenshot"
+      width="960"
+      height="500"
+      class="w-[180vw] max-w-none rounded-none md:w-full md:rounded-lg"
+    />
+    <video
+      class="absolute inset-0 h-full w-[180vw] max-w-none rounded-none object-cover object-left-top opacity-0 transition-opacity md:w-full md:rounded-lg"
+      autoplay
+      loop
+      muted
+      playsinline
+      preload="metadata"
+      aria-label="renCal demo"
+      oncanplay="this.classList.remove('opacity-0')"
+    >
+      <source src="/demo.mp4" type="video/mp4" />
+    </video>
+  </div>
 </div>
