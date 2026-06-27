@@ -5,6 +5,8 @@ export interface ShortcutBinding {
   type: "char" | "hotkey"
   allowShift?: boolean
   hidden?: boolean
+  // react-hotkeys-hook ignores hotkeys inside inputs by default; opt in per binding.
+  enableOnFormTags?: boolean
 }
 
 export interface ShortcutDef {
@@ -147,6 +149,13 @@ export const SHORTCUTS = [
     group: "General",
     label: "Keyboard shortcuts",
     bindings: [{ keys: "?", type: "char", allowShift: true }],
+  },
+  {
+    id: "command-palette",
+    group: "General",
+    label: "Open command palette",
+    // enableOnFormTags so mod+k works (and toggles closed) while an input is focused.
+    bindings: [{ keys: "mod+k", type: "hotkey", enableOnFormTags: true }],
   },
 ] as const satisfies readonly ShortcutDef[]
 
