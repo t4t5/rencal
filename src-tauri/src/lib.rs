@@ -92,6 +92,16 @@ pub async fn run() {
         }
     }
 
+    // Fix Nvidia issue (see https://github.com/t4t5/rencal/issues/45)
+    #[cfg(target_os = "linux")]
+    if std::path::Path::new("/proc/driver/nvidia/version").exists()
+        && std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none()
+    {
+        unsafe {
+            std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
+    }
+
     // Single-instance: on Linux we use a Unix socket because
     // `tauri-plugin-single-instance` panics under our runtime config (zbus
     // pulls in the tokio feature transitively from xdg-portal). On
