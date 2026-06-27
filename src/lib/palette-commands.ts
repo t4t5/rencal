@@ -37,7 +37,6 @@ export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
   { id: "board", group: "View" },
   { id: "switch-group", group: "View", label: "Switch group…", submenu: "group" },
   { id: "today", group: "Navigation" },
-  { id: "search", group: "General" },
   { id: "toggle-theme", group: "General", label: "Set theme…", submenu: "theme" },
   { id: "settings", group: "General" },
   { id: "shortcuts", group: "General" },

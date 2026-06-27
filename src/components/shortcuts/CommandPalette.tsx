@@ -23,7 +23,7 @@ import {
   PALETTE_COMMANDS,
   type PaletteSubmenu,
   type SubmenuConfig,
-} from "@/lib/commands"
+} from "@/lib/palette-commands"
 import { ShortcutDef, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { CheckIcon } from "@/icons/check"

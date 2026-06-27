@@ -26,7 +26,7 @@ import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
-import { type PaletteSubmenu, type SubmenuConfig } from "@/lib/commands"
+import { type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
