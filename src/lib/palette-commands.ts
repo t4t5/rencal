@@ -26,7 +26,6 @@ export interface SubmenuConfig {
 }
 
 export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
-  { id: "compose-event", group: "Calendar", label: "Create event" },
   { id: "add-event", group: "Calendar" },
   { id: "month", group: "View" },
   { id: "week", group: "View" },
