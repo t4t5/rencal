@@ -64,7 +64,7 @@ export function GlobalShortcuts({
   // Each maps a `submenu` id to the list its command drills into. Group is
   // omitted when there's nothing to switch between, hiding its root command.
   const submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>> = {
-    theme: {
+    themes: {
       heading: "Theme",
       placeholder: "Search themes…",
       empty: "No themes found.",
@@ -74,7 +74,7 @@ export function GlobalShortcuts({
     },
   }
   if (groupOptions.length >= 2) {
-    submenus.group = {
+    submenus["calendar-groups"] = {
       heading: "Group",
       placeholder: "Search groups…",
       empty: "No groups found.",
