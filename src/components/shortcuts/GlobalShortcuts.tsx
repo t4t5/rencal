@@ -27,6 +27,8 @@ import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { CalendarView } from "@/lib/calendar-view"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
+import { useThemeRegistry } from "@/themes/ThemeRegistry"
+
 const NAV_THROTTLE_MS = 80
 
 type ShortcutHandler = (e?: KeyboardEvent) => void
@@ -40,10 +42,14 @@ export function GlobalShortcuts({
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
 
+  const { theme, setTheme, toggleTheme } = useTheme()
+  const { descriptors } = useThemeRegistry()
+
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
     openShortcutsOverlay: () => setOverlayOpen(true),
     toggleCommandPalette: () => setPaletteOpen((open) => !open),
+    toggleTheme,
   })
 
   return (
@@ -69,7 +75,14 @@ export function GlobalShortcuts({
       )}
 
       <ShortcutsOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} />
-      <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} handlers={handlers} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        handlers={handlers}
+        themes={descriptors}
+        currentTheme={theme}
+        onSelectTheme={setTheme}
+      />
     </>
   )
 }
@@ -78,10 +91,12 @@ function useShortcutHandlers({
   onChangeCalendarView,
   openShortcutsOverlay,
   toggleCommandPalette,
+  toggleTheme,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
+  toggleTheme: () => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { activeGroup, setActiveGroup } = useCalendars()
@@ -90,7 +105,6 @@ function useShortcutHandlers({
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
-  const { toggleTheme } = useTheme()
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)

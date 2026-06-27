@@ -135,7 +135,7 @@ export const SHORTCUTS = [
   {
     id: "settings",
     group: "General",
-    label: "Settings",
+    label: "Go to settings",
     bindings: [{ keys: "mod+comma", type: "hotkey" }],
   },
   {
@@ -147,7 +147,7 @@ export const SHORTCUTS = [
   {
     id: "shortcuts",
     group: "General",
-    label: "Keyboard shortcuts",
+    label: "Show keyboard shortcuts",
     bindings: [{ keys: "?", type: "char", allowShift: true }],
   },
   {
