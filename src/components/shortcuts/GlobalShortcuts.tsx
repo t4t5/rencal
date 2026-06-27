@@ -24,7 +24,9 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
+import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
+import { type PaletteSubmenu, type SubmenuConfig } from "@/lib/commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
@@ -44,13 +46,43 @@ export function GlobalShortcuts({
 
   const { theme, setTheme, toggleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
+  const { groups } = useSettings()
+  const { activeGroup, setActiveGroup } = useCalendars()
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
     openShortcutsOverlay: () => setOverlayOpen(true),
     toggleCommandPalette: () => setPaletteOpen((open) => !open),
     toggleTheme,
+    groups,
+    activeGroup,
+    setActiveGroup,
   })
+
+  const groupOptions = getGroupOptions(groups)
+
+  // Each maps a `submenu` id to the list its command drills into. Group is
+  // omitted when there's nothing to switch between, hiding its root command.
+  const submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>> = {
+    theme: {
+      heading: "Theme",
+      placeholder: "Search themes…",
+      empty: "No themes found.",
+      items: descriptors.map((d) => ({ id: d.id, label: d.name })),
+      activeId: theme,
+      onSelect: setTheme,
+    },
+  }
+  if (groupOptions.length >= 2) {
+    submenus.group = {
+      heading: "Group",
+      placeholder: "Search groups…",
+      empty: "No groups found.",
+      items: groupOptions.map((name) => ({ id: name, label: formatGroupName(name) })),
+      activeId: activeGroup,
+      onSelect: setActiveGroup,
+    }
+  }
 
   return (
     <>
@@ -79,9 +111,7 @@ export function GlobalShortcuts({
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         handlers={handlers}
-        themes={descriptors}
-        currentTheme={theme}
-        onSelectTheme={setTheme}
+        submenus={submenus}
       />
     </>
   )
@@ -92,15 +122,19 @@ function useShortcutHandlers({
   openShortcutsOverlay,
   toggleCommandPalette,
   toggleTheme,
+  groups,
+  activeGroup,
+  setActiveGroup,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
   toggleTheme: () => void
+  groups: CalendarGroups
+  activeGroup: string
+  setActiveGroup: (name: string) => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { activeGroup, setActiveGroup } = useCalendars()
-  const { groups } = useSettings()
   const { setSelectedEventKey } = useAgendaSelection()
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
@@ -168,8 +202,7 @@ function useShortcutHandlers({
   }
 
   const switchGroup = (e?: KeyboardEvent) => {
-    const groupNames = Object.keys(groups)
-    const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+    const options = getGroupOptions(groups)
     if (options.length < 2) return
 
     e?.preventDefault()

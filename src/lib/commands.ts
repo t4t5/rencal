@@ -7,7 +7,7 @@ export type CommandGroup = (typeof COMMAND_GROUPS)[number]
 
 // Sub-pages the palette can drill into. Selecting a command with a `submenu`
 // opens a second screen (e.g. a theme picker) instead of running its shortcut.
-export type PaletteSubmenu = "theme"
+export type PaletteSubmenu = "theme" | "group"
 
 export interface PaletteCommand {
   id: ShortcutId
@@ -18,13 +18,24 @@ export interface PaletteCommand {
   submenu?: PaletteSubmenu
 }
 
+// Drives a sub-page: a searchable list of options with the active one checked.
+// Built at render time from live app state (themes, groups, …).
+export interface SubmenuConfig {
+  heading: string
+  placeholder: string
+  empty: string
+  items: readonly { id: string; label: string }[]
+  activeId: string
+  onSelect: (id: string) => void
+}
+
 export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
   { id: "compose-event", group: "Calendar", label: "Create event" },
   { id: "add-event", group: "Calendar" },
   { id: "month", group: "View" },
   { id: "week", group: "View" },
   { id: "board", group: "View" },
-  { id: "switch-group", group: "View" },
+  { id: "switch-group", group: "View", label: "Switch group…", submenu: "group" },
   { id: "today", group: "Navigation" },
   { id: "search", group: "General" },
   { id: "toggle-theme", group: "General", label: "Set theme…", submenu: "theme" },
