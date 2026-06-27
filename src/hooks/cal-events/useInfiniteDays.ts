@@ -4,6 +4,7 @@ import { RefObject, useCallback, useEffect, useMemo, useState } from "react"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
+import { useToday } from "@/hooks/useToday"
 import { formatDateKey } from "@/lib/event-time"
 
 import type { MonthDay } from "./useMonthGrid"
@@ -43,6 +44,7 @@ export function useInfiniteDays({
   visibleCalendarIds: string[]
 }): { days: MonthDay[] } {
   const { ensureRangeLoaded } = useCalEvents()
+  const today = useToday()
 
   const [rangeStart, setRangeStart] = useState(() => initialRangeStart(activeDate))
   const [count, setCount] = useState(INITIAL_RANGE_DAYS)
@@ -58,9 +60,8 @@ export function useInfiniteDays({
   }
 
   const days = useMemo(() => {
-    const today = new Date()
     return Array.from({ length: count }, (_, i) => buildDay(addDays(rangeStart, i), today))
-  }, [rangeStart, count])
+  }, [rangeStart, count, today])
 
   // Keep loaded events in step with the rendered days. The end is exclusive (start of the
   // day after the last rendered day) so the final day's events are covered, matching the

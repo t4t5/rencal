@@ -1,6 +1,7 @@
 import { addDays, isSameDay, startOfWeek } from "date-fns"
 import { useMemo } from "react"
 
+import { useToday } from "@/hooks/useToday"
 import { formatDateKey } from "@/lib/event-time"
 
 export type MonthDay = {
@@ -15,10 +16,11 @@ export type MonthDay = {
  * Both should be the 1st of a month (e.g. from startOfMonth).
  */
 export function useMonthGrid(rangeStart: Date, rangeEnd: Date) {
+  const today = useToday()
+
   return useMemo(() => {
     const gridStart = startOfWeek(rangeStart, { weekStartsOn: 1 })
     const gridEnd = startOfWeek(rangeEnd, { weekStartsOn: 1 })
-    const today = new Date()
 
     const weeks: MonthDay[][] = []
     let current = gridStart
@@ -39,5 +41,5 @@ export function useMonthGrid(rangeStart: Date, rangeEnd: Date) {
     }
 
     return weeks
-  }, [rangeStart, rangeEnd])
+  }, [rangeStart, rangeEnd, today])
 }
