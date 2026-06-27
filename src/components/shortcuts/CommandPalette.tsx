@@ -46,8 +46,6 @@ export function CommandPalette({
   open: boolean
   onOpenChange: (open: boolean) => void
   handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
-  // A submenu is only navigable when present here (e.g. groups are omitted when
-  // there's nothing to switch between), so its root command is hidden too.
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
 }) {
   const [page, setPage] = useState<Page>("root")
@@ -135,68 +133,85 @@ export function CommandPalette({
                 ))}
               </CommandGroup>
             ) : (
-              COMMAND_GROUPS.map((group) => (
-                <CommandGroup key={group} heading={group}>
-                  {PALETTE_COMMANDS.filter(
-                    (command) =>
-                      command.group === group && (!command.submenu || submenus[command.submenu]),
-                  ).map((command) => {
-                    const def = SHORTCUT_BY_ID[command.id]
-                    const label = command.label ?? def.label
-                    const binding = def.bindings.find((b) => !b.hidden)
-
-                    return (
-                      <CommandItem
-                        key={command.id}
-                        value={label}
-                        keywords={[group]}
-                        onSelect={() =>
-                          command.submenu
-                            ? goToPage(command.submenu)
-                            : run(() => handlers[command.id]())
-                        }
-                      >
-                        <span>{label}</span>
-                        {command.submenu ? (
-                          <ChevronRightIcon className="ml-auto size-4 opacity-50" />
-                        ) : (
-                          binding && (
-                            <span className="ml-auto">
-                              <ShortcutKeys keys={binding.keys} />
-                            </span>
-                          )
-                        )}
-                      </CommandItem>
-                    )
-                  })}
-                </CommandGroup>
-              ))
+              <RootCommands submenus={submenus} goToPage={goToPage} run={run} handlers={handlers} />
             )}
           </CommandList>
 
-          <div className="text-muted-foreground flex items-center gap-4 border-t px-3 py-2 text-xs">
-            <span className="flex items-center gap-1.5">
-              <KbdGroup>
-                <Kbd>
-                  <ArrowRightIcon className="-rotate-90" />
-                </Kbd>
-                <Kbd>
-                  <ArrowRightIcon className="rotate-90" />
-                </Kbd>
-              </KbdGroup>
-              navigate
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Kbd>Enter</Kbd>
-              select
-            </span>
-            <span className="flex items-center gap-1.5">
-              <Kbd>Esc</Kbd>
-              {page === "root" ? "close" : "back"}
-            </span>
-          </div>
+          <PaletteFooter page={page} />
         </Command>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function RootCommands({
+  submenus,
+  goToPage,
+  run,
+  handlers,
+}: {
+  submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
+  goToPage: (next: Page) => void
+  run: (action: () => void) => void
+  handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
+}) {
+  return COMMAND_GROUPS.map((group) => (
+    <CommandGroup key={group} heading={group}>
+      {PALETTE_COMMANDS.filter(
+        (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
+      ).map((command) => {
+        const def = SHORTCUT_BY_ID[command.id]
+        const label = command.label ?? def.label
+        const binding = def.bindings.find((b) => !b.hidden)
+
+        return (
+          <CommandItem
+            key={command.id}
+            value={label}
+            keywords={[group]}
+            onSelect={() =>
+              command.submenu ? goToPage(command.submenu) : run(() => handlers[command.id]())
+            }
+          >
+            <span>{label}</span>
+            {command.submenu ? (
+              <ChevronRightIcon className="ml-auto size-4 opacity-50" />
+            ) : (
+              binding && (
+                <span className="ml-auto">
+                  <ShortcutKeys keys={binding.keys} />
+                </span>
+              )
+            )}
+          </CommandItem>
+        )
+      })}
+    </CommandGroup>
+  ))
+}
+
+function PaletteFooter({ page }: { page: Page }) {
+  return (
+    <div className="text-muted-foreground flex items-center gap-4 border-t px-3 py-2 text-xs">
+      <span className="flex items-center gap-1.5">
+        <KbdGroup>
+          <Kbd>
+            <ArrowRightIcon className="-rotate-90" />
+          </Kbd>
+          <Kbd>
+            <ArrowRightIcon className="rotate-90" />
+          </Kbd>
+        </KbdGroup>
+        navigate
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Kbd>Enter</Kbd>
+        select
+      </span>
+      <span className="flex items-center gap-1.5">
+        <Kbd>Esc</Kbd>
+        {page === "root" ? "close" : "back"}
+      </span>
+    </div>
   )
 }

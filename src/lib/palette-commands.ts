@@ -14,8 +14,6 @@ export interface PaletteCommand {
   submenu?: PaletteSubmenu
 }
 
-// Drives a sub-page: a searchable list of options with the active one checked.
-// Built at render time from live app state (themes, groups, …).
 export interface SubmenuConfig {
   heading: string
   placeholder: string
