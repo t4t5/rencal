@@ -5,6 +5,8 @@ export interface ShortcutBinding {
   type: "char" | "hotkey"
   allowShift?: boolean
   hidden?: boolean
+  // react-hotkeys-hook ignores hotkeys inside inputs by default; opt in per binding.
+  enableOnFormTags?: boolean
 }
 
 export interface ShortcutDef {
@@ -87,19 +89,19 @@ export const SHORTCUTS = [
   {
     id: "month",
     group: "View",
-    label: "Month view",
+    label: "Display month view",
     bindings: [{ keys: "m", type: "char" }],
   },
   {
     id: "board",
     group: "View",
-    label: "Board view",
+    label: "Display board view",
     bindings: [{ keys: "b", type: "char" }],
   },
   {
     id: "week",
     group: "View",
-    label: "Week view",
+    label: "Display week view",
     bindings: [{ keys: "w", type: "char" }],
   },
   {
@@ -133,7 +135,7 @@ export const SHORTCUTS = [
   {
     id: "settings",
     group: "General",
-    label: "Settings",
+    label: "Go to settings",
     bindings: [{ keys: "mod+comma", type: "hotkey" }],
   },
   {
@@ -145,8 +147,15 @@ export const SHORTCUTS = [
   {
     id: "shortcuts",
     group: "General",
-    label: "Keyboard shortcuts",
+    label: "Show keyboard shortcuts",
     bindings: [{ keys: "?", type: "char", allowShift: true }],
+  },
+  {
+    id: "command-palette",
+    group: "General",
+    label: "Open command palette",
+    // enableOnFormTags so mod+k works (and toggles closed) while an input is focused.
+    bindings: [{ keys: "mod+k", type: "hotkey", enableOnFormTags: true }],
   },
 ] as const satisfies readonly ShortcutDef[]
 
