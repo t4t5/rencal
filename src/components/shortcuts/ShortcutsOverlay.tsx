@@ -1,10 +1,7 @@
+import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Kbd, KbdGroup } from "@/components/ui/kbd"
-import { formatHotkeyKey } from "@/components/ui/shortcut-tooltip"
 
 import { ShortcutDef, ShortcutGroup, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts"
-
-import { ArrowRightIcon } from "@/icons/arrow-right"
 
 export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
@@ -49,37 +46,10 @@ function ShortcutRow({ shortcut }: { shortcut: ShortcutDef }) {
           .map((binding, i) => (
             <span key={binding.keys} className="flex items-center gap-1.5">
               {i > 0 && <span className="text-muted-foreground text-xs">or</span>}
-              <BindingChips keys={binding.keys} />
+              <ShortcutKeys keys={binding.keys} />
             </span>
           ))}
       </div>
     </div>
   )
-}
-
-function BindingChips({ keys }: { keys: string }) {
-  return (
-    <KbdGroup>
-      {keys.split("+").map((part, i) => {
-        const rotation = ARROW_ROTATION[part]
-
-        return (
-          <Kbd key={`${part}-${i}`}>
-            {rotation === undefined ? (
-              formatHotkeyKey(part)
-            ) : (
-              <ArrowRightIcon className={rotation} />
-            )}
-          </Kbd>
-        )
-      })}
-    </KbdGroup>
-  )
-}
-
-const ARROW_ROTATION: Record<string, string> = {
-  right: "",
-  left: "rotate-180",
-  up: "-rotate-90",
-  down: "rotate-90",
 }

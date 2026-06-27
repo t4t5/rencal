@@ -2,6 +2,7 @@ import { addDays, addMonths, isSameDay, startOfMonth, subDays, subMonths } from 
 import { useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
+import { CommandPalette } from "@/components/shortcuts/CommandPalette"
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
 import {
   clearRememberedAgendaItem,
@@ -23,12 +24,16 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
+import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
+import { type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
+
+import { useThemeRegistry } from "@/themes/ThemeRegistry"
 
 const NAV_THROTTLE_MS = 80
 
-type ShortcutHandler = (e: KeyboardEvent) => void
+type ShortcutHandler = (e?: KeyboardEvent) => void
 
 // Isolated so context updates in the shortcut handlers don't re-render <App />.
 export function GlobalShortcuts({
@@ -37,11 +42,47 @@ export function GlobalShortcuts({
   onChangeCalendarView: (view: CalendarView) => void
 }) {
   const [overlayOpen, setOverlayOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
+
+  const { theme, setTheme, toggleTheme } = useTheme()
+  const { descriptors } = useThemeRegistry()
+  const { groups } = useSettings()
+  const { activeGroup, setActiveGroup } = useCalendars()
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
     openShortcutsOverlay: () => setOverlayOpen(true),
+    toggleCommandPalette: () => setPaletteOpen((open) => !open),
+    toggleTheme,
+    groups,
+    activeGroup,
+    setActiveGroup,
   })
+
+  const groupOptions = getGroupOptions(groups)
+
+  // Each maps a `submenu` id to the list its command drills into. Group is
+  // omitted when there's nothing to switch between, hiding its root command.
+  const submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>> = {
+    themes: {
+      heading: "Theme",
+      placeholder: "Search themes…",
+      empty: "No themes found.",
+      items: descriptors.map((d) => ({ id: d.id, label: d.name })),
+      activeId: theme,
+      onSelect: setTheme,
+    },
+  }
+  if (groupOptions.length >= 2) {
+    submenus["calendar-groups"] = {
+      heading: "Group",
+      placeholder: "Search groups…",
+      empty: "No groups found.",
+      items: groupOptions.map((name) => ({ id: name, label: formatGroupName(name) })),
+      activeId: activeGroup,
+      onSelect: setActiveGroup,
+    }
+  }
 
   return (
     <>
@@ -58,6 +99,7 @@ export function GlobalShortcuts({
             <HotkeyBindingHost
               key={`${shortcut.id}:${binding.keys}`}
               keys={binding.keys}
+              enableOnFormTags={binding.enableOnFormTags}
               onTrigger={handlers[shortcut.id]}
             />
           ),
@@ -65,6 +107,12 @@ export function GlobalShortcuts({
       )}
 
       <ShortcutsOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} />
+      <CommandPalette
+        open={paletteOpen}
+        onOpenChange={setPaletteOpen}
+        handlers={handlers}
+        submenus={submenus}
+      />
     </>
   )
 }
@@ -72,18 +120,25 @@ export function GlobalShortcuts({
 function useShortcutHandlers({
   onChangeCalendarView,
   openShortcutsOverlay,
+  toggleCommandPalette,
+  toggleTheme,
+  groups,
+  activeGroup,
+  setActiveGroup,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
   openShortcutsOverlay: () => void
+  toggleCommandPalette: () => void
+  toggleTheme: () => void
+  groups: CalendarGroups
+  activeGroup: string
+  setActiveGroup: (name: string) => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { activeGroup, setActiveGroup } = useCalendars()
-  const { groups } = useSettings()
   const { setSelectedEventKey } = useAgendaSelection()
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
-  const { toggleTheme } = useTheme()
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)
@@ -113,8 +168,8 @@ function useShortcutHandlers({
     throttledNavigate(startOfMonth(addMonths(activeDate, 1)))
   }
 
-  const handleSearch = (e: KeyboardEvent) => {
-    e.preventDefault()
+  const handleSearch = (e?: KeyboardEvent) => {
+    e?.preventDefault()
 
     const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
 
@@ -127,8 +182,8 @@ function useShortcutHandlers({
     button?.click()
   }
 
-  const handleComposeEvent = (e: KeyboardEvent) => {
-    e.preventDefault()
+  const handleComposeEvent = (e?: KeyboardEvent) => {
+    e?.preventDefault()
 
     if (!canCreate) {
       promptToConnect()
@@ -139,19 +194,18 @@ function useShortcutHandlers({
     setIsDrafting(true)
   }
 
-  const handleAddEventToActiveDay = (e: KeyboardEvent) => {
-    e.preventDefault()
+  const handleAddEventToActiveDay = (e?: KeyboardEvent) => {
+    e?.preventDefault()
     const el = document.getElementById(ACTIVE_DAY_EL_ID)
     if (!el) return
     openDayDraft(activeDate, el, { start: getLastEventEndTime(activeDate, calendarEvents) })
   }
 
-  const switchGroup = (e: KeyboardEvent) => {
-    const groupNames = Object.keys(groups)
-    const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+  const switchGroup = (e?: KeyboardEvent) => {
+    const options = getGroupOptions(groups)
     if (options.length < 2) return
 
-    e.preventDefault()
+    e?.preventDefault()
     const activeIndex = options.indexOf(activeGroup)
     const nextIndex = activeIndex === -1 ? 0 : (activeIndex + 1) % options.length
     setActiveGroup(options[nextIndex])
@@ -170,12 +224,12 @@ function useShortcutHandlers({
     "next-month": navigateToNextMonthStart,
     "prev-event": (e) => {
       if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
-      e.preventDefault()
+      e?.preventDefault()
       focusAgendaItem(-1, activeDate)
     },
     "next-event": (e) => {
       if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
-      e.preventDefault()
+      e?.preventDefault()
       focusAgendaItem(1, activeDate)
     },
     month: () => onChangeCalendarView("month"),
@@ -186,16 +240,20 @@ function useShortcutHandlers({
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
     settings: (e) => {
-      e.preventDefault()
+      e?.preventDefault()
       void openSettingsWindow()
     },
     "toggle-theme": (e) => {
-      e.preventDefault()
+      e?.preventDefault()
       toggleTheme()
     },
     shortcuts: (e) => {
-      e.preventDefault()
+      e?.preventDefault()
       openShortcutsOverlay()
+    },
+    "command-palette": (e) => {
+      e?.preventDefault()
+      toggleCommandPalette()
     },
   }
 }
@@ -213,8 +271,16 @@ function CharBindingHost({
   return null
 }
 
-function HotkeyBindingHost({ keys, onTrigger }: { keys: string; onTrigger: ShortcutHandler }) {
-  useHotkeys(keys, onTrigger)
+function HotkeyBindingHost({
+  keys,
+  enableOnFormTags,
+  onTrigger,
+}: {
+  keys: string
+  enableOnFormTags?: boolean
+  onTrigger: ShortcutHandler
+}) {
+  useHotkeys(keys, onTrigger, { enableOnFormTags })
   return null
 }
 

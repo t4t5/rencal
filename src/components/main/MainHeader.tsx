@@ -17,6 +17,7 @@ import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
 
 import { CheckIcon } from "@/icons/check"
@@ -103,19 +104,13 @@ const CalendarViewDropdown = ({
   )
 }
 
-// Capitalize for display; group names are lowercase config keys (e.g. "work").
-const formatGroupName = (name: string) => name.charAt(0).toUpperCase() + name.slice(1)
-
 // Switches the active calendar group (app state).
 // Hidden unless there are at least 2 groups to switch between.
 const GroupSwitcher = () => {
   const { activeGroup, setActiveGroup } = useCalendars()
   const { groups } = useSettings()
 
-  const groupNames = Object.keys(groups)
-
-  // "default" always first, the rest alphabetical.
-  const options = ["default", ...groupNames.filter((name) => name !== "default").sort()]
+  const options = getGroupOptions(groups)
   if (options.length < 2) return null
 
   return (

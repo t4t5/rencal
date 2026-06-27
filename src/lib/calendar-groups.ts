@@ -11,6 +11,19 @@ export function normalizeCalendarGroups(groups: Partial<Record<string, string[]>
   )
 }
 
+// Selectable group names: "default" first, the rest alphabetical.
+export function getGroupOptions(groups: CalendarGroups): string[] {
+  const named = Object.keys(groups)
+    .filter((name) => name !== DEFAULT_GROUP)
+    .sort()
+  return [DEFAULT_GROUP, ...named]
+}
+
+// Capitalize for display; group names are lowercase config keys (e.g. "work").
+export function formatGroupName(name: string): string {
+  return name.charAt(0).toUpperCase() + name.slice(1)
+}
+
 export function getStoredActiveGroup(storage: Storage): string {
   const item = storage.getItem(ACTIVE_GROUP_KEY)
   if (item === null) return DEFAULT_GROUP
