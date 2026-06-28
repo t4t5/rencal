@@ -56,6 +56,13 @@ export function formatShortDate(et: EventTime | Date): string {
   return format(d, pattern)
 }
 
+/** "Thursday, 5 November" (adds the year when not the current year). */
+export function formatLongDate(et: EventTime | Date): string {
+  const d = et instanceof Date ? et : toInteropDate(et)
+  const pattern = getYear(d) !== getYear(new Date()) ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
+  return format(d, pattern)
+}
+
 /** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
 export function getRelativeDayLabel(et: EventTime | Date): string {
   const d = et instanceof Date ? et : toInteropDate(et)

@@ -27,6 +27,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "t", type: "char" }],
   },
   {
+    id: "go-to-date",
+    group: "Navigation",
+    label: "Go to date",
+    bindings: [{ keys: ".", type: "char" }],
+  },
+  {
     id: "next-day",
     group: "Navigation",
     label: "Next day",

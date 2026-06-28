@@ -26,7 +26,7 @@ import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
-import { type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
+import { type PalettePage, type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
@@ -43,7 +43,9 @@ export function GlobalShortcuts({
 }) {
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
+  const [palettePage, setPalettePage] = useState<"root" | PalettePage>("root")
 
+  const { navigateToDate } = useCalendarNavigation()
   const { theme, setTheme, toggleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
   const { groups } = useSettings()
@@ -52,7 +54,14 @@ export function GlobalShortcuts({
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
     openShortcutsOverlay: () => setOverlayOpen(true),
-    toggleCommandPalette: () => setPaletteOpen((open) => !open),
+    toggleCommandPalette: () => {
+      setPalettePage("root")
+      setPaletteOpen((open) => !open)
+    },
+    openGoToDate: () => {
+      setPalettePage("go-to-date")
+      setPaletteOpen(true)
+    },
     toggleTheme,
     groups,
     activeGroup,
@@ -110,8 +119,10 @@ export function GlobalShortcuts({
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
+        requestedPage={palettePage}
         handlers={handlers}
         submenus={submenus}
+        onGoToDate={(date) => void navigateToDate(date)}
       />
     </>
   )
@@ -121,6 +132,7 @@ function useShortcutHandlers({
   onChangeCalendarView,
   openShortcutsOverlay,
   toggleCommandPalette,
+  openGoToDate,
   toggleTheme,
   groups,
   activeGroup,
@@ -129,6 +141,7 @@ function useShortcutHandlers({
   onChangeCalendarView: (view: CalendarView) => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
+  openGoToDate: () => void
   toggleTheme: () => void
   groups: CalendarGroups
   activeGroup: string
@@ -215,6 +228,10 @@ function useShortcutHandlers({
     today: () => {
       clearAgendaFocus()
       void navigateToDate(new Date())
+    },
+    "go-to-date": (e) => {
+      e?.preventDefault()
+      openGoToDate()
     },
     "prev-day": () => throttledNavigate(subDays(activeDate, 1)),
     "next-day": () => throttledNavigate(addDays(activeDate, 1)),

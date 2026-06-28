@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
 import {
@@ -18,9 +18,12 @@ import {
 } from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
+import { formatLongDate, toInteropDate } from "@/lib/event-time"
+import { parseEventText } from "@/lib/magic-parser"
 import {
   COMMAND_GROUPS,
   PALETTE_COMMANDS,
+  type PalettePage,
   type PaletteSubmenu,
   type SubmenuConfig,
 } from "@/lib/palette-commands"
@@ -35,18 +38,23 @@ const SHORTCUT_BY_ID = Object.fromEntries(SHORTCUTS.map((s) => [s.id, s])) as Re
   ShortcutDef
 >
 
-type Page = "root" | PaletteSubmenu
+type Page = "root" | PaletteSubmenu | PalettePage
 
 export function CommandPalette({
   open,
   onOpenChange,
+  requestedPage = "root",
   handlers,
   submenus,
+  onGoToDate,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
+  // Page to land on when the palette opens (e.g. "." jumps straight to dates).
+  requestedPage?: "root" | PalettePage
   handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
+  onGoToDate: (date: Date) => void
 }) {
   const [page, setPage] = useState<Page>("root")
   const [search, setSearch] = useState("")
@@ -55,13 +63,16 @@ export function CommandPalette({
   // doesn't fight with focus that actions like search/compose set themselves.
   const pendingRef = useRef<(() => void) | null>(null)
 
-  // Always reopen at the root page with a clear query.
+  // Land on the requested page when opening; reset to root with a clear query
+  // when closing.
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setPage(requestedPage)
+    } else {
       setPage("root")
       setSearch("")
     }
-  }, [open])
+  }, [open, requestedPage])
 
   const goToPage = (next: Page) => {
     setSearch("")
@@ -81,7 +92,9 @@ export function CommandPalette({
     }
   }
 
-  const submenu = page === "root" ? null : (submenus[page] ?? null)
+  // The date page drives its own dynamic content rather than a static submenu.
+  const isDatePage = page === "go-to-date"
+  const submenu = page === "root" || isDatePage ? null : (submenus[page] ?? null)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -108,32 +121,47 @@ export function CommandPalette({
           <DialogDescription>Search for a command to run</DialogDescription>
         </DialogHeader>
 
-        <Command onKeyDown={handleKeyDown}>
+        {/* cmdk's fuzzy filter would hide the date page's single dynamic result
+            (its label rarely matches the typed query), so disable it there. */}
+        <Command shouldFilter={!isDatePage} onKeyDown={handleKeyDown}>
           <CommandInput
-            placeholder={submenu ? submenu.placeholder : "Type a command…"}
+            placeholder={
+              isDatePage ? "Type a date…" : submenu ? submenu.placeholder : "Type a command…"
+            }
             value={search}
             onValueChange={setSearch}
           />
 
           <CommandList>
-            <CommandEmpty>{submenu ? submenu.empty : "No commands found."}</CommandEmpty>
-
-            {submenu ? (
-              <CommandGroup heading={submenu.heading}>
-                {submenu.items.map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={item.label}
-                    keywords={[submenu.heading]}
-                    onSelect={() => run(() => submenu.onSelect(item.id))}
-                  >
-                    <span>{item.label}</span>
-                    {item.id === submenu.activeId && <CheckIcon className="ml-auto size-4" />}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+            {isDatePage ? (
+              <GoToDatePage search={search} onSelect={(date) => run(() => onGoToDate(date))} />
             ) : (
-              <RootCommands submenus={submenus} goToPage={goToPage} run={run} handlers={handlers} />
+              <>
+                <CommandEmpty>{submenu ? submenu.empty : "No commands found."}</CommandEmpty>
+
+                {submenu ? (
+                  <CommandGroup heading={submenu.heading}>
+                    {submenu.items.map((item) => (
+                      <CommandItem
+                        key={item.id}
+                        value={item.label}
+                        keywords={[submenu.heading]}
+                        onSelect={() => run(() => submenu.onSelect(item.id))}
+                      >
+                        <span>{item.label}</span>
+                        {item.id === submenu.activeId && <CheckIcon className="ml-auto size-4" />}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                ) : (
+                  <RootCommands
+                    submenus={submenus}
+                    goToPage={goToPage}
+                    run={run}
+                    handlers={handlers}
+                  />
+                )}
+              </>
             )}
           </CommandList>
 
@@ -163,18 +191,17 @@ function RootCommands({
         const def = SHORTCUT_BY_ID[command.id]
         const label = command.label ?? def.label
         const binding = def.bindings.find((b) => !b.hidden)
+        const drill = command.submenu ?? command.page
 
         return (
           <CommandItem
             key={command.id}
             value={label}
             keywords={[group]}
-            onSelect={() =>
-              command.submenu ? goToPage(command.submenu) : run(() => handlers[command.id]())
-            }
+            onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]()))}
           >
             <span>{label}</span>
-            {command.submenu ? (
+            {drill ? (
               <ChevronRightIcon className="ml-auto size-4 opacity-50" />
             ) : (
               binding && (
@@ -188,6 +215,30 @@ function RootCommands({
       })}
     </CommandGroup>
   ))
+}
+
+function GoToDatePage({ search, onSelect }: { search: string; onSelect: (date: Date) => void }) {
+  const date = useMemo(() => {
+    const start = parseEventText(search).start
+    return start ? toInteropDate(start) : null
+  }, [search])
+
+  if (!date) {
+    return (
+      <div className="text-muted-foreground px-3 py-6 text-center text-sm">
+        {search ? "No matching date" : "Type a date…"}
+      </div>
+    )
+  }
+
+  return (
+    <CommandGroup heading="Go to date">
+      {/* A constant value keeps cmdk's selection stable as the label changes. */}
+      <CommandItem value="go-to-date-result" onSelect={() => onSelect(date)}>
+        {formatLongDate(date)}
+      </CommandItem>
+    </CommandGroup>
+  )
 }
 
 function PaletteFooter({ page }: { page: Page }) {
