@@ -256,7 +256,7 @@ function GoToDatePage({ search, onSelect }: { search: string; onSelect: (date: D
   if (!date) {
     return (
       <div className="text-muted-foreground px-3 py-6 text-center text-sm">
-        {search ? "No matching date" : "Type a date…"}
+        {search ? "No matching date" : `e.g. "5 Sep", "next sunday"...`}
       </div>
     )
   }
