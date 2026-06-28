@@ -50,7 +50,6 @@ export function CommandPalette({
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  // Page to land on when the palette opens (e.g. "." jumps straight to dates).
   requestedPage?: "root" | PalettePage
   handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
@@ -59,12 +58,11 @@ export function CommandPalette({
   const [page, setPage] = useState<Page>("root")
   const [search, setSearch] = useState("")
 
-  // Defer the action until the dialog has fully closed so Radix's focus restore
-  // doesn't fight with focus that actions like search/compose set themselves.
+  // Defer the action until the dialog has fully closed
+  // (so Radix's focus restore doesn't fight focus that actions like search/compose set themselves)
   const pendingRef = useRef<(() => void) | null>(null)
 
-  // Land on the requested page when opening; reset to root with a clear query
-  // when closing.
+  // Land on the requested page when opening:
   useEffect(() => {
     if (open) {
       setPage(requestedPage)
@@ -93,8 +91,9 @@ export function CommandPalette({
   }
 
   // The date page drives its own dynamic content rather than a static submenu.
-  const isDatePage = page === "go-to-date"
-  const submenu = page === "root" || isDatePage ? null : (submenus[page] ?? null)
+  const isGoToDatePage = page === "go-to-date"
+
+  const submenu = page === "root" || isGoToDatePage ? null : (submenus[page] ?? null)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,54 +120,85 @@ export function CommandPalette({
           <DialogDescription>Search for a command to run</DialogDescription>
         </DialogHeader>
 
-        {/* cmdk's fuzzy filter would hide the date page's single dynamic result
-            (its label rarely matches the typed query), so disable it there. */}
-        <Command shouldFilter={!isDatePage} onKeyDown={handleKeyDown}>
+        {/* cmdk's fuzzy filter would hide the date page's single dynamic result, so we disable it: */}
+        <Command shouldFilter={!isGoToDatePage} onKeyDown={handleKeyDown}>
           <CommandInput
             placeholder={
-              isDatePage ? "Type a date…" : submenu ? submenu.placeholder : "Type a command…"
+              isGoToDatePage ? "Type a date…" : submenu ? submenu.placeholder : "Type a command…"
             }
             value={search}
             onValueChange={setSearch}
           />
 
           <CommandList>
-            {isDatePage ? (
-              <GoToDatePage search={search} onSelect={(date) => run(() => onGoToDate(date))} />
-            ) : (
-              <>
-                <CommandEmpty>{submenu ? submenu.empty : "No commands found."}</CommandEmpty>
-
-                {submenu ? (
-                  <CommandGroup heading={submenu.heading}>
-                    {submenu.items.map((item) => (
-                      <CommandItem
-                        key={item.id}
-                        value={item.label}
-                        keywords={[submenu.heading]}
-                        onSelect={() => run(() => submenu.onSelect(item.id))}
-                      >
-                        <span>{item.label}</span>
-                        {item.id === submenu.activeId && <CheckIcon className="ml-auto size-4" />}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                ) : (
-                  <RootCommands
-                    submenus={submenus}
-                    goToPage={goToPage}
-                    run={run}
-                    handlers={handlers}
-                  />
-                )}
-              </>
-            )}
+            <CommandListContent
+              isGoToDatePage={isGoToDatePage}
+              submenu={submenu}
+              search={search}
+              submenus={submenus}
+              goToPage={goToPage}
+              run={run}
+              handlers={handlers}
+              onGoToDate={onGoToDate}
+            />
           </CommandList>
 
           <PaletteFooter page={page} />
         </Command>
       </DialogContent>
     </Dialog>
+  )
+}
+
+function CommandListContent({
+  isGoToDatePage,
+  submenu,
+  search,
+  submenus,
+  goToPage,
+  run,
+  handlers,
+  onGoToDate,
+}: {
+  isGoToDatePage: boolean
+  submenu: SubmenuConfig | null
+  search: string
+  submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
+  goToPage: (next: Page) => void
+  run: (action: () => void) => void
+  handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
+  onGoToDate: (date: Date) => void
+}) {
+  if (isGoToDatePage) {
+    return <GoToDatePage search={search} onSelect={(date) => run(() => onGoToDate(date))} />
+  }
+
+  if (submenu) {
+    return (
+      <>
+        <CommandEmpty>{submenu.empty}</CommandEmpty>
+        <CommandGroup heading={submenu.heading}>
+          {submenu.items.map((item) => (
+            <CommandItem
+              key={item.id}
+              value={item.label}
+              keywords={[submenu.heading]}
+              onSelect={() => run(() => submenu.onSelect(item.id))}
+            >
+              <span>{item.label}</span>
+              {item.id === submenu.activeId && <CheckIcon className="ml-auto size-4" />}
+            </CommandItem>
+          ))}
+        </CommandGroup>
+      </>
+    )
+  }
+
+  return (
+    <>
+      <CommandEmpty>No commands found.</CommandEmpty>
+      <RootCommands submenus={submenus} goToPage={goToPage} run={run} handlers={handlers} />
+    </>
   )
 }
 
