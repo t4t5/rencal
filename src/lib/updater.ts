@@ -6,14 +6,8 @@ import { isMacOS } from "@/lib/utils"
 
 export type { Update }
 
-/**
- * Checks GitHub releases for a newer signed build.
- *
- * Returns the available `Update`, or `null` when there's nothing to do:
- * non-macOS (Linux installs are package-manager managed and can't self-update),
- * dev builds, the app is already up to date, or the check failed — we never
- * nag the user when a check fails.
- */
+// Checks GitHub releases for a newer signed build.
+// (macOS only)
 export async function checkForUpdate(): Promise<Update | null> {
   if (!isMacOS || !import.meta.env.PROD) return null
 
@@ -24,10 +18,6 @@ export async function checkForUpdate(): Promise<Update | null> {
   }
 }
 
-/**
- * Shows a native "Download it?" prompt for an available update. On confirm,
- * downloads + installs the signed bundle and relaunches into the new version.
- */
 export async function promptAndInstall(update: Update): Promise<void> {
   const confirmed = await ask(
     `renCal v${update.version} is available. Download and install it now?`,
