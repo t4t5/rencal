@@ -8,6 +8,7 @@ import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts"
 import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
+import { UpdateChecker } from "@/components/update/UpdateChecker"
 
 import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
@@ -34,6 +35,7 @@ export function AppWindow({ preload }: { preload: Preload }) {
           </EventDraftProvider>
         </RecurrenceEditProvider>
         <MassDeleteConfirmDialog />
+        <UpdateChecker />
         <Toaster richColors position="bottom-right" />
       </SyncProvider>
     </CalEventsProvider>

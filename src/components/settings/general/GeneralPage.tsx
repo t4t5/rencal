@@ -1,5 +1,6 @@
+import { getVersion } from "@tauri-apps/api/app"
 import { open } from "@tauri-apps/plugin-dialog"
-import { useId } from "react"
+import { useEffect, useId, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
@@ -18,12 +19,16 @@ import type { TimeFormat } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
+
 export function GeneralPage() {
   return (
     <SettingsContent>
       <TimeFormatSection />
       <DataDirectorySection />
       <AutoSyncSection />
+      <hr />
+      <AboutSection />
     </SettingsContent>
   )
 }
@@ -89,6 +94,32 @@ const DataDirectorySection = () => {
           Change
         </Button>
       </div>
+    </div>
+  )
+}
+
+const AboutSection = () => {
+  const [version, setVersion] = useState<string | null>(null)
+  const [update, setUpdate] = useState<Update | null>(null)
+
+  useEffect(() => {
+    void getVersion().then(setVersion)
+    void checkForUpdate().then(setUpdate)
+  }, [])
+
+  return (
+    <div className="flex flex-col gap-2 w-[400px]">
+      <label className="text-sm">About</label>
+      <p className="text-xs text-muted-foreground">renCal{version ? ` v${version}` : ""}</p>
+      {update && (
+        <button
+          type="button"
+          onClick={() => void promptAndInstall(update)}
+          className="text-xs text-primary hover:underline cursor-pointer w-fit"
+        >
+          {"There's an update available"}
+        </button>
+      )}
     </div>
   )
 }

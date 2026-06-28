@@ -50,6 +50,12 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2
         version: 2.5.2
+      '@tauri-apps/plugin-process':
+        specifier: 2.3.1
+        version: 2.3.1
+      '@tauri-apps/plugin-updater':
+        specifier: 2.10.1
+        version: 2.10.1
       chrono-node:
         specifier: ^2.9.0
         version: 2.9.0
@@ -1476,6 +1482,12 @@ packages:
 
   '@tauri-apps/plugin-opener@2.5.2':
     resolution: {integrity: sha512-ei/yRRoCklWHImwpCcDK3VhNXx+QXM9793aQ64YxpqVF0BDuuIlXhZgiAkc15wnPVav+IbkYhmDJIv5R326Mew==}
+
+  '@tauri-apps/plugin-process@2.3.1':
+    resolution: {integrity: sha512-nCa4fGVaDL/B9ai03VyPOjfAHRHSBz5v6F/ObsB73r/dA3MHHhZtldaDMIc0V/pnUw9ehzr2iEG+XkSEyC0JJA==}
+
+  '@tauri-apps/plugin-updater@2.10.1':
+    resolution: {integrity: sha512-NFYMg+tWOZPJdzE/PpFj2qfqwAWwNS3kXrb1tm1gnBJ9mYzZ4WDRrwy8udzWoAnfGCHLuePNLY1WVCNHnh3eRA==}
 
   '@trivago/prettier-plugin-sort-imports@6.0.0':
     resolution: {integrity: sha512-Xarx55ow0R8oC7ViL5fPmDsg1EBa1dVhyZFVbFXNtPPJyW2w9bJADIla8YFSaNG9N06XfcklA9O9vmw4noNxkQ==}
@@ -3517,6 +3529,14 @@ snapshots:
   '@tauri-apps/plugin-opener@2.5.2':
     dependencies:
       '@tauri-apps/api': 2.9.0
+
+  '@tauri-apps/plugin-process@2.3.1':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
+
+  '@tauri-apps/plugin-updater@2.10.1':
+    dependencies:
+      '@tauri-apps/api': 2.10.1
 
   '@trivago/prettier-plugin-sort-imports@6.0.0(prettier@3.6.2)':
     dependencies:
