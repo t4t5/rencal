@@ -12,6 +12,9 @@
     "core:window:allow-center",
     "notification:default",
     "dialog:allow-open",
+    "dialog:allow-ask",
+    "updater:default",
+    "process:default",
     "core:window:allow-close"
   ]
 }

@@ -24,6 +24,7 @@
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": true,
     "targets": "all",
     "resources": [
       "providers/caldir-provider-google",
@@ -55,6 +56,12 @@
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service"
         }
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "pubkey": "REPLACE_WITH_UPDATER_PUBLIC_KEY",
+      "endpoints": ["https://github.com/t4t5/rencal/releases/latest/download/latest.json"]
     }
   }
 }
