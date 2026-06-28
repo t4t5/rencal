@@ -33,7 +33,12 @@ export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
   { id: "month", group: "View" },
   { id: "week", group: "View" },
   { id: "board", group: "View" },
-  { id: "switch-group", group: "View", label: "Switch group…", submenu: "calendar-groups" },
+  {
+    id: "switch-group",
+    group: "View",
+    label: "Switch calendar group…",
+    submenu: "calendar-groups",
+  },
   { id: "go-to-date", group: "Navigation", label: "Go to date…", page: "go-to-date" },
   { id: "today", group: "Navigation" },
   { id: "toggle-theme", group: "General", label: "Set theme…", submenu: "themes" },
