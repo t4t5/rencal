@@ -70,7 +70,7 @@ build: build-providers-release
   if [[ "$(uname -s)" == "Linux" ]]; then
     cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
   fi
-  NO_STRIP=true pnpm tauri build
+  NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: build-providers-release
@@ -81,7 +81,8 @@ notarize: build-providers-release
   for bin in src-tauri/providers/caldir-provider-*; do
     codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
   done
-  NO_STRIP=true pnpm tauri build
+  # Updater artifacts (and their signing key) are produced in CI, not here.
+  NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
 # Build caldir provider binaries (debug) into src-tauri/providers/
 build-providers:
