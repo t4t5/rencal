@@ -19,6 +19,7 @@ export { DEFAULT_DURATION_MINS } from "./constants"
 export { allDayDate, allDayFromLocalDate, fromDate, nowZoned, plainDate } from "./constructors"
 export {
   formatDateKey,
+  formatLongDate,
   formatShortDate,
   formatTime,
   formatWallclockTime,

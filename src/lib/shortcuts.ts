@@ -21,12 +21,6 @@ export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number]
 
 export const SHORTCUTS = [
   {
-    id: "today",
-    group: "Navigation",
-    label: "Go to today",
-    bindings: [{ keys: "t", type: "char" }],
-  },
-  {
     id: "next-day",
     group: "Navigation",
     label: "Next day",
@@ -87,6 +81,18 @@ export const SHORTCUTS = [
     bindings: [{ keys: "shift+tab", type: "hotkey" }],
   },
   {
+    id: "today",
+    group: "Navigation",
+    label: "Go to today",
+    bindings: [{ keys: "t", type: "char" }],
+  },
+  {
+    id: "go-to-date",
+    group: "Navigation",
+    label: "Go to date...",
+    bindings: [{ keys: ".", type: "char" }],
+  },
+  {
     id: "month",
     group: "View",
     label: "Display month view",
@@ -107,7 +113,7 @@ export const SHORTCUTS = [
   {
     id: "switch-group",
     group: "View",
-    label: "Switch group",
+    label: "Switch calendar group",
     bindings: [{ keys: "g", type: "char" }],
   },
   {
@@ -115,7 +121,7 @@ export const SHORTCUTS = [
     group: "General",
     label: "Search",
     bindings: [
-      { keys: "mod+f", type: "hotkey" },
+      { keys: "mod+f", type: "hotkey", hidden: true },
       { keys: "mod+p", type: "hotkey", hidden: true },
       { keys: "/", type: "char", allowShift: true },
     ],

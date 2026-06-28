@@ -5,13 +5,18 @@ export type CommandGroup = (typeof COMMAND_GROUPS)[number]
 
 export type PaletteSubmenu = "themes" | "calendar-groups"
 
+// Special sub-pages that drive their own dynamic content (no static SubmenuConfig).
+export type PalettePage = "go-to-date"
+
 export interface PaletteCommand {
   id: ShortcutId
   group: CommandGroup
   // Override of the shortcut's label in the palette:
   label?: string
-  // Opens a sub-page instead of running the shortcut:
+  // Drills into a static, filterable list:
   submenu?: PaletteSubmenu
+  // Drills into a special dynamic page (no SubmenuConfig):
+  page?: PalettePage
 }
 
 export interface SubmenuConfig {
@@ -28,7 +33,13 @@ export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
   { id: "month", group: "View" },
   { id: "week", group: "View" },
   { id: "board", group: "View" },
-  { id: "switch-group", group: "View", label: "Switch group…", submenu: "calendar-groups" },
+  {
+    id: "switch-group",
+    group: "View",
+    label: "Switch calendar group…",
+    submenu: "calendar-groups",
+  },
+  { id: "go-to-date", group: "Navigation", label: "Go to date…", page: "go-to-date" },
   { id: "today", group: "Navigation" },
   { id: "toggle-theme", group: "General", label: "Set theme…", submenu: "themes" },
   { id: "settings", group: "General" },
