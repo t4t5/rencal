@@ -29,14 +29,14 @@ const shouldRenderSearch =
       align-items: center;
       display: flex;
       gap: var(--sl-nav-gap);
-      padding: 4px 8px;
+      padding: 2px 8px;
       justify-content: space-between;
     }
 
     @media (min-width: 768px) {
       .header {
-        padding-left: 16px;
-        padding-right: 16px;
+        padding-left: 24px;
+        padding-right: 24px;
       }
     }
 
@@ -83,6 +83,8 @@ const shouldRenderSearch =
         --__toc-width: 0rem;
       }
       .header {
+        padding-left: 16px;
+        padding-right: 16px;
         --__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
         --__main-column-fr: calc(
           (
