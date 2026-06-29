@@ -9,7 +9,6 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
-import { cn } from "@/lib/utils"
 
 import { CloudIcon } from "@/icons/cloud"
 import { CloudOffIcon } from "@/icons/cloud-off"
@@ -31,10 +30,8 @@ export const SyncStatus = () => {
 
   let icon = (
     <CloudIcon
-      className={cn(
-        "size-5 text-muted-foreground pointer-events-none",
-        isChecking && "animate-pulse",
-      )}
+      className="size-5 text-muted-foreground pointer-events-none"
+      isLoading={isChecking}
     />
   )
 
