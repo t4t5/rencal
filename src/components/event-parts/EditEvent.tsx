@@ -191,7 +191,6 @@ export const EditEvent = ({
             )
           }
         }}
-        showTime={!all_day}
         location={location}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
