@@ -35,6 +35,22 @@ impl Drop for InstanceGuard {
     }
 }
 
+impl InstanceGuard {
+    /// Take ownership of the accept-listener so it can be moved into the
+    /// background accept thread (see [`spawn_listener`]).
+    ///
+    /// The guard itself — which holds the socket *path* and unlinks it on
+    /// `Drop` — must be kept alive by the caller for the whole process
+    /// lifetime. Dropping it early unlinks a still-listening socket and
+    /// orphans it: the file disappears while the listener lives on, so every
+    /// later launch fails to `connect`, assumes it is the first instance, and
+    /// spawns yet another resident process. That is precisely the leak this
+    /// type exists to prevent, so never let the guard drop before exit.
+    pub fn take_listener(&mut self) -> Option<UnixListener> {
+        self.listener.take()
+    }
+}
+
 fn socket_path() -> PathBuf {
     if let Some(runtime) = dirs::runtime_dir() {
         // XDG_RUNTIME_DIR is already per-user (mode 0700, owned by the user),
@@ -80,15 +96,14 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
 }
 
 /// Spawn a thread that listens for `focus\n` messages and invokes `on_focus`
-/// for each. Consumes the listener out of the guard; the guard still holds
-/// the path so cleanup on Drop still works.
-pub fn spawn_listener<F>(guard: &mut InstanceGuard, on_focus: F)
+/// for each. Takes ownership of the `listener` (extracted from the guard via
+/// [`InstanceGuard::take_listener`]) and holds it for the process lifetime;
+/// the guard stays with the caller so the socket file is unlinked only at
+/// real shutdown.
+pub fn spawn_listener<F>(listener: UnixListener, on_focus: F)
 where
     F: Fn() + Send + 'static,
 {
-    let Some(listener) = guard.listener.take() else {
-        return;
-    };
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
