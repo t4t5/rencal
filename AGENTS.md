@@ -82,3 +82,9 @@ Provider credential field IDs come from the caldir provider binaries.
 - Notifications: `docs/notifications.md`, `src-tauri/reminder-core/`
 - Themes: `src/themes/README.md`, `src/themes/manifest.ts`, `src/global.css`
 - Omarchy theme: `src/hooks/useOmarchyTheme.ts`, `src/themes/omarchy.css`
+
+## Website rules
+
+- `website` is a standalone Astro project (Tailwind v4 + Starlight) with its own `package.json` / `pnpm-lock.yaml`; CI builds it with `pnpm install --ignore-workspace`.
+- Manage website deps with `--ignore-workspace` (e.g. `cd website && pnpm add --ignore-workspace <pkg>`). The repo root has a `pnpm-workspace.yaml`, so a plain `pnpm add` writes the dep to the root `pnpm-lock.yaml` instead of `website/pnpm-lock.yaml`, which breaks CI's `--frozen-lockfile` build.
+- The website uses relative imports (no `@/` alias); the `src/` Frontend rules above don't apply here.
