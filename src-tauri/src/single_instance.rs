@@ -1,21 +1,9 @@
-//! Linux single-instance via Unix domain socket.
+//! Linux-only single-instance fallback.
 //!
-//! `tauri-plugin-single-instance` uses `zbus::blocking` on Linux, which —
-//! combined with the `zbus/tokio` feature pulled in transitively by
-//! `tauri-plugin-dialog`'s `xdg-portal` feature — panics from a tokio context
-//! ("Cannot start a runtime from within a runtime"). The plugin works fine on
-//! macOS/Windows (no zbus there); we use this socket-based stand-in only on
-//! Linux.
-//!
-//! Protocol: a single socket at `$XDG_RUNTIME_DIR/rencal.sock` (or, when
-//! `XDG_RUNTIME_DIR` is unset, `/tmp/rencal-<uid>.sock` — UID-namespaced so
-//! a second user on a multi-user host doesn't collide with the first).
-//! On startup, we try to connect:
-//! - `Ok` → another instance is alive; we send `focus\n` and exit.
-//! - `Err` → either no instance, or a stale socket file from a prior crash.
-//!   Remove the file and bind. The bound listener is held for the process
-//!   lifetime; a background thread accepts connections and forwards focus
-//!   requests via the supplied callback.
+//! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
+//! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
+//! socket; later launches send `focus\n` to it and exit. Debug and release use
+//! separate sockets so `tauri dev` does not fight the installed app.
 
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -44,15 +32,23 @@ impl InstanceGuard {
 }
 
 fn socket_path() -> PathBuf {
+    // Dev rencal (launched with "just dev") & prod rencal (installed with aur)
+    // use different sockets so that both can run at the same time:
+    let name = if cfg!(debug_assertions) {
+        "rencal-dev"
+    } else {
+        "rencal"
+    };
+
     if let Some(runtime) = dirs::runtime_dir() {
         // XDG_RUNTIME_DIR is already per-user (mode 0700, owned by the user),
         // so a bare filename is safe.
-        return runtime.join("rencal.sock");
+        return runtime.join(format!("{name}.sock"));
     }
     // Fallback: /tmp is shared across users. Namespace by euid so each user
     // gets their own socket instead of fighting over a single global one.
     let uid = unsafe { libc::geteuid() };
-    std::env::temp_dir().join(format!("rencal-{uid}.sock"))
+    std::env::temp_dir().join(format!("{name}-{uid}.sock"))
 }
 
 /// Either acquire the single-instance role (returning a guard + listener),
