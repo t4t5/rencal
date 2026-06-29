@@ -5,6 +5,7 @@ import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
+import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/time"
 import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons/bell"
@@ -18,18 +19,38 @@ const DEFAULT_REMINDER_VALUES = [
   60, // 1 hour before
 ]
 
+const REMINDER_UNITS = [
+  { pattern: /^(m|min|mins|minute|minutes)$/i, toMinutes: (num: number) => num },
+  { pattern: /^(h|hr|hrs|hour|hours)$/i, toMinutes: (num: number) => num * HOUR_MINUTES },
+  { pattern: /^(d|day|days)$/i, toMinutes: (num: number) => num * DAY_MINUTES },
+  { pattern: /^(w|wk|wks|week|weeks)$/i, toMinutes: (num: number) => num * WEEK_MINUTES },
+  { pattern: /^(mo|mon|month|months)$/i, toMinutes: (num: number) => num * MONTH_MINUTES },
+]
+
+function uniqueValues(values: number[]): number[] {
+  return [...new Set(values)]
+}
+
 function getQueryValues(query: string): number[] {
-  const match = query.match(/^(\d+)/)
+  const match = query.trim().match(/^(\d+)\s*([a-z]*)/i)
   if (!match) return []
 
   const num = parseInt(match[1], 10)
   if (num <= 0) return []
 
-  return [
+  const unitQuery = match[2]
+  if (unitQuery) {
+    const unit = REMINDER_UNITS.find(({ pattern }) => pattern.test(unitQuery))
+    return unit ? [unit.toMinutes(num)] : []
+  }
+
+  return uniqueValues([
     num, // minutes
-    num * 60, // hours
-    num * 60 * 24, // days
-  ]
+    num * HOUR_MINUTES, // hours
+    num * DAY_MINUTES, // days
+    num * WEEK_MINUTES, // weeks
+    num * MONTH_MINUTES, // months
+  ])
 }
 
 function humanDuration(mins: number): string {
@@ -46,11 +67,16 @@ function humanDuration(mins: number): string {
     return `On day of event (${h}:${m})`
   }
 
-  const days = Math.floor(mins / 1440)
-  const hours = Math.floor((mins % 1440) / 60)
-  const minutes = mins % 60
+  const months = Math.floor(mins / MONTH_MINUTES)
+  const weeks = Math.floor((mins % MONTH_MINUTES) / WEEK_MINUTES)
+  const days = Math.floor((mins % WEEK_MINUTES) / DAY_MINUTES)
+  const hours = Math.floor((mins % DAY_MINUTES) / HOUR_MINUTES)
+  const minutes = mins % HOUR_MINUTES
 
-  return formatDuration({ days, hours, minutes }, { format: ["days", "hours", "minutes"] })
+  return formatDuration(
+    { months, weeks, days, hours, minutes },
+    { format: ["months", "weeks", "days", "hours", "minutes"] },
+  )
 }
 
 export function ReminderSelect({
