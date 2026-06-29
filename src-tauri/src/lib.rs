@@ -112,13 +112,8 @@ pub async fn run() {
         None => return, // existing instance was signaled to focus; we exit.
     };
 
-    // Take the accept-listener out of the guard so it can be moved into the
-    // setup closure, while `instance_guard` itself stays on this stack frame
-    // for the whole process lifetime. The guard unlinks the socket file on
-    // Drop, so it must outlive the app: if it were moved into `setup`, Tauri
-    // would drop it once setup returns, unlink the live socket, and every
-    // later launch would fail to connect and become its own resident
-    // instance — the multi-process leak we're avoiding.
+    // Keep the guard on this frame for the whole process; dropping it early
+    // removes the socket and breaks single-instance detection.
     #[cfg(target_os = "linux")]
     let instance_listener = instance_guard.take_listener();
 
