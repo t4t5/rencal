@@ -112,6 +112,11 @@ pub async fn run() {
         None => return, // existing instance was signaled to focus; we exit.
     };
 
+    // Keep the guard on this frame for the whole process; dropping it early
+    // removes the socket and breaks single-instance detection.
+    #[cfg(target_os = "linux")]
+    let instance_listener = instance_guard.take_listener();
+
     let router = create_router();
 
     let builder = tauri::Builder::default();
@@ -158,14 +163,16 @@ pub async fn run() {
             #[cfg(target_os = "linux")]
             {
                 linux_reminders::enable_notifierd_if_needed();
-                let app_handle = app.handle().clone();
-                single_instance::spawn_listener(&mut instance_guard, move || {
-                    if let Some(window) = app_handle.get_webview_window("main") {
-                        let _ = window.unminimize();
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
-                });
+                if let Some(listener) = instance_listener {
+                    let app_handle = app.handle().clone();
+                    single_instance::spawn_listener(listener, move || {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.unminimize();
+                            let _ = window.show();
+                            let _ = window.set_focus();
+                        }
+                    });
+                }
             }
 
             spawn_reminder_loop_if_needed(app);

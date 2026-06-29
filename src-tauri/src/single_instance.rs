@@ -35,6 +35,14 @@ impl Drop for InstanceGuard {
     }
 }
 
+impl InstanceGuard {
+    /// Take the listener for the accept thread. The caller keeps the guard so
+    /// the socket survives for the whole process (see [`spawn_listener`]).
+    pub fn take_listener(&mut self) -> Option<UnixListener> {
+        self.listener.take()
+    }
+}
+
 fn socket_path() -> PathBuf {
     if let Some(runtime) = dirs::runtime_dir() {
         // XDG_RUNTIME_DIR is already per-user (mode 0700, owned by the user),
@@ -79,16 +87,11 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     }
 }
 
-/// Spawn a thread that listens for `focus\n` messages and invokes `on_focus`
-/// for each. Consumes the listener out of the guard; the guard still holds
-/// the path so cleanup on Drop still works.
-pub fn spawn_listener<F>(guard: &mut InstanceGuard, on_focus: F)
+/// Spawn a thread that listens for `focus\n` messages and invokes `on_focus` for each.
+pub fn spawn_listener<F>(listener: UnixListener, on_focus: F)
 where
     F: Fn() + Send + 'static,
 {
-    let Some(listener) = guard.listener.take() else {
-        return;
-    };
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
