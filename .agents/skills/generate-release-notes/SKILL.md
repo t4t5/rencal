@@ -1,5 +1,5 @@
 ---
-name: release-notes
+name: generate-release-notes
 description: Draft short project release notes from git tag diffs. Use when asked to summarize changes between releases/tags, especially when release notes should reference pull request numbers.
 ---
 
@@ -38,16 +38,32 @@ Use this skill to draft concise release notes for renCal from git history.
 
 ## Output style
 
-- Return short bullet-form notes.
-- Mention the compared range when helpful, e.g. `v0.1.0 since v0.0.6`.
+- Return short bullet-form notes grouped under these headings, omitting any empty section:
+  - `### ✨ New features`
+  - `### 🛠️ Improvements`
+  - `### 🐛 Bug fixes`
+- Mention the compared range before the grouped notes when helpful, e.g. `v0.1.0 since v0.0.6`.
 - Each bullet should describe user-visible impact first, then cite the PR/commit at the end.
+- Use HTML `<kbd>` tags for keyboard shortcuts, e.g. `<kbd>Ctrl</kbd><kbd>K</kbd>` or `<kbd>.</kbd>`.
 - Avoid internal implementation details unless they explain a visible improvement.
 - Keep wording release-note friendly: concise, polished, and understandable to users.
 
 ## Example
 
 ```markdown
-- Added keyboard navigation for agenda events with `Tab` / `Shift+Tab`, `Enter` to open, and `Esc` to exit. (#30)
-- Multi-day events in week view now keep their titles visible while scrolling horizontally. (#29)
-- Updated shortcut documentation to point users to the `?` shortcuts overlay. (a26cd24)
+### ✨ New features
+
+- Added a <kbd>Ctrl</kbd><kbd>K</kbd> command palette for quickly switching themes, switching calendar groups, and performing other actions. (#47)
+- Added “Go to date…” so you can jump directly to a specific date from the command palette or with <kbd>.</kbd>. (#50)
+
+### 🛠️ Improvements
+
+- Reminders now support weeks and months, not just shorter intervals. (#52)
+- All-day event editing: disabled time fields look cleaner, and unchecking all-day restores the previously selected time. (#53)
+
+### 🐛 Bug fixes
+
+- Fixed a startup crash affecting some Nvidia driver setups. (#46)
+- Fixed Linux single-instance handling so repeated launches focus the existing app instead of leaking extra WebKit processes. (#51)
+- Fixed stale “today” state so the calendar updates correctly after the day changes. (098e366)
 ```
