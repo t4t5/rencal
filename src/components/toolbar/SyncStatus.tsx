@@ -11,6 +11,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useIsOnline } from "@/hooks/useIsOnline"
 
 import { CloudIcon } from "@/icons/cloud"
+import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
@@ -28,16 +29,17 @@ export const SyncStatus = () => {
     0,
   )
 
-  let icon = (
-    <CloudIcon
-      className="size-5 text-muted-foreground pointer-events-none"
-      isLoading={isChecking}
-    />
-  )
+  let icon = <CloudCheckIcon className="size-5 text-muted-foreground pointer-events-none" />
 
   let tooltipContent: ReactNode = <>Up-to-date</>
 
   if (isChecking) {
+    icon = (
+      <CloudIcon
+        className="size-5 text-muted-foreground pointer-events-none"
+        isLoading={isChecking}
+      />
+    )
     tooltipContent = <>Checking for changes...</>
   }
 
