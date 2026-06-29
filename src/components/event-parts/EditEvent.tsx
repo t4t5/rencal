@@ -20,6 +20,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
+import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
 import {
   addMinutes,
@@ -127,6 +128,12 @@ export const EditEvent = ({
     setDirtyEvent({ ...dirtyEvent, reminders: dirtyEvent.reminders.filter((m) => m !== mins) })
   }
 
+  const lastTimedRange = useLastTimedRange(
+    dirtyEvent?.start ?? null,
+    dirtyEvent?.end ?? null,
+    event?.id,
+  )
+
   if (!dirtyEvent) return null
 
   const { summary, description, start, end, location, calendar_slug, recurrence } = dirtyEvent
@@ -187,11 +194,14 @@ export const EditEvent = ({
           } else {
             const timedStart = isAllDay(start) ? toTimedAtStartOfDay(start) : start
             setDirtyEvent(
-              withDates(dirtyEvent, timedStart, addMinutes(timedStart, DEFAULT_DURATION_MINS)),
+              withDates(
+                dirtyEvent,
+                lastTimedRange?.start ?? timedStart,
+                lastTimedRange?.end ?? addMinutes(timedStart, DEFAULT_DURATION_MINS),
+              ),
             )
           }
         }}
-        showTime={!all_day}
         location={location}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation || null })

@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
+import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -30,11 +31,18 @@ export const ComposeEventInner = ({
   onTabOut?: () => void
 }) => {
   const { calendars } = useCalendars()
-  const { draftEvent, setDraftEvent, draftReminders, setDraftReminders, createDraftEvent } =
-    useEventDraft()
+  const {
+    draftEvent,
+    setDraftEvent,
+    draftReminders,
+    setDraftReminders,
+    createDraftEvent,
+    draftPopoverOpen,
+  } = useEventDraft()
 
   const { summary, description, start, end, location, calendarId, recurrence } = draftEvent
   const allDay = isAllDay(start)
+  const lastTimedRange = useLastTimedRange(start, end, draftPopoverOpen)
 
   const recurrenceRRule = recurrence ? rrulestr(recurrence.rrule) : null
 
@@ -77,8 +85,8 @@ export const ComposeEventInner = ({
               const timedStart = isAllDay(start) ? toTimedAtStartOfDay(start) : start
               setDraftEvent({
                 ...draftEvent,
-                start: timedStart,
-                end: addMinutes(timedStart, DEFAULT_DURATION_MINS),
+                start: lastTimedRange?.start ?? timedStart,
+                end: lastTimedRange?.end ?? addMinutes(timedStart, DEFAULT_DURATION_MINS),
               })
             }
           }}
