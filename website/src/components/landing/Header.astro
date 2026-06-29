@@ -4,13 +4,16 @@ import GitHubLogo from "../../icons/github.astro"
 ---
 
 <header class="px-6 md:px-10 py-6 flex justify-between items-center">
-  <h1 aria-label="renCal">
-    <Logo class="h-[25px]" />
-    <span class="sr-only">renCal</span>
-  </h1>
+  <a href="/">
+    <h1 aria-label="renCal">
+      <Logo class="h-[25px]" />
+      <span class="sr-only">renCal</span>
+    </h1>
+  </a>
 
   <nav class="uppercase flex gap-7 text-foreground [&>a:hover]:underline">
     <a href="/docs/calendar-data">Docs</a>
+    <a href="/releases">Releases</a>
     <a href="https://github.com/t4t5/rencal" target="_blank" aria-label="GitHub repo">
       <GitHubLogo class="w-6" />
     </a>

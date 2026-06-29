@@ -1,0 +1,79 @@
+/*
+ * Styles for GitHub-rendered release notes injected via `set:html`.
+ * These must be global (not Astro-scoped) to reach the injected markup.
+ */
+
+.release-body {
+  line-height: 1.6;
+}
+
+.release-body > * {
+  margin: 0;
+}
+
+.release-body > * + * {
+  margin-top: 0.85rem;
+}
+
+.release-body h1,
+.release-body h2,
+.release-body h3,
+.release-body h4 {
+  font-size: 1.125rem;
+  margin-top: 1.5rem;
+}
+
+.release-body ul,
+.release-body ol {
+  padding-left: 1.25rem;
+}
+
+.release-body ul {
+  list-style: disc;
+}
+
+.release-body ol {
+  list-style: decimal;
+}
+
+.release-body li {
+  margin-top: 0.35rem;
+}
+
+.release-body li::marker {
+  color: var(--muted);
+}
+
+.release-body a {
+  color: var(--primary);
+}
+
+.release-body a:hover {
+  text-decoration: underline;
+}
+
+.release-body code {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.875em;
+  background: rgba(255, 255, 255, 0.07);
+  padding: 0.1em 0.35em;
+  border-radius: 3px;
+}
+
+.release-body pre {
+  padding: 1rem;
+  border-radius: 6px;
+  overflow-x: auto;
+}
+
+/* Shiki already styles code inside <pre>; reset the inline-code chrome there. */
+.release-body pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.85rem;
+}
+
+.release-body hr {
+  border: none;
+  border-top: 1px solid var(--separator);
+}
