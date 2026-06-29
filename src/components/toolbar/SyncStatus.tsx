@@ -44,6 +44,7 @@ export const SyncStatus = () => {
   }
 
   if (pendingCount) {
+    icon = <CloudIcon className="size-5 text-muted-foreground pointer-events-none" />
     tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
 
@@ -77,7 +78,7 @@ export const SyncStatus = () => {
       size="icon"
       tabIndex={-1}
       className="relative focus-visible:ring-0"
-      onClick={pendingCount ? () => void handleSyncNow() : undefined}
+      onClick={() => void handleSyncNow()}
     >
       <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
 
