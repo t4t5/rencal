@@ -9,9 +9,9 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
-import { cn } from "@/lib/utils"
 
 import { CloudIcon } from "@/icons/cloud"
+import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
@@ -29,22 +29,22 @@ export const SyncStatus = () => {
     0,
   )
 
-  let icon = (
-    <CloudIcon
-      className={cn(
-        "size-5 text-muted-foreground pointer-events-none",
-        isChecking && "animate-pulse",
-      )}
-    />
-  )
+  let icon = <CloudCheckIcon className="size-5 text-muted-foreground pointer-events-none" />
 
   let tooltipContent: ReactNode = <>Up-to-date</>
 
   if (isChecking) {
+    icon = (
+      <CloudIcon
+        className="size-5 text-muted-foreground pointer-events-none"
+        isLoading={isChecking}
+      />
+    )
     tooltipContent = <>Checking for changes...</>
   }
 
   if (pendingCount) {
+    icon = <CloudIcon className="size-5 text-muted-foreground pointer-events-none" />
     tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
 
@@ -78,7 +78,7 @@ export const SyncStatus = () => {
       size="icon"
       tabIndex={-1}
       className="relative focus-visible:ring-0"
-      onClick={pendingCount ? () => void handleSyncNow() : undefined}
+      onClick={() => void handleSyncNow()}
     >
       <div style={{ animation: "scale-in 0.15s ease-out" }}>{icon}</div>
 
