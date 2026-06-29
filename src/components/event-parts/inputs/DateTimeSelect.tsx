@@ -1,8 +1,7 @@
-import { useRef } from "react"
-
 import { DatePicker } from "@/components/ui/date-picker"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
+import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import {
   dateInEventZone,
   displayEndDate,
@@ -43,13 +42,8 @@ export const DateTimeSelect = ({
   onChange: (range: DateTimeRange) => void
 }) => {
   const allDay = isAllDay(start)
-  const lastTimedRange = useRef<DateTimeRange | null>(null)
-
-  if (!allDay) {
-    lastTimedRange.current = { start, end }
-  }
-
-  const visibleTimeRange = allDay ? (lastTimedRange.current ?? { start, end }) : { start, end }
+  const lastTimedRange = useLastTimedRange(start, end)
+  const visibleTimeRange = allDay ? (lastTimedRange ?? { start, end }) : { start, end }
 
   const handleStartTime = (hour: number, minute: number) =>
     onChange(withRangeStartWallclockTime({ start, end }, hour, minute))
