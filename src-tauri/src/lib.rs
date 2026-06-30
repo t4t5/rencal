@@ -234,13 +234,11 @@ pub async fn run() {
                 has_visible_windows,
                 ..
             } = _event
+                && !has_visible_windows
+                && let Some(window) = _app_handle.get_webview_window("main")
             {
-                if !has_visible_windows {
-                    if let Some(window) = _app_handle.get_webview_window("main") {
-                        let _ = window.show();
-                        let _ = window.set_focus();
-                    }
-                }
+                let _ = window.show();
+                let _ = window.set_focus();
             }
         });
 }
