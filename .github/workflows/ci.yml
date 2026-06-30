@@ -54,5 +54,13 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Create provider placeholders
+        run: |
+          mkdir -p src-tauri/providers
+          for provider in google icloud outlook caldav webcal; do
+            touch "src-tauri/providers/caldir-provider-${provider}"
+            chmod +x "src-tauri/providers/caldir-provider-${provider}"
+          done
+
       - name: Run just check
         run: just check
