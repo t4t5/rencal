@@ -4,6 +4,8 @@ mod event_cache;
 mod external_themes;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
+#[cfg(target_os = "macos")]
+mod menu;
 mod notifications;
 mod oauth;
 mod omarchy;
@@ -129,6 +131,12 @@ pub async fn run() {
             let _ = window.set_focus();
         }
     }));
+
+    // Native macOS menu bar
+    #[cfg(target_os = "macos")]
+    let builder = builder
+        .menu(menu::build_menu)
+        .on_menu_event(menu::handle_menu_event);
 
     builder
         .plugin(
