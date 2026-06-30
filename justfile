@@ -26,6 +26,11 @@ debug flags="*": build-providers
 web:
   pnpm --dir website dev
 
+# Force deploy website (used to update /releases)
+deploy-web:
+  gh workflow run website.yml --ref main 
+  gh run watch
+
 # Generate TypeScript bindings from Rust types
 [working-directory: 'src-tauri']
 gen-types:
