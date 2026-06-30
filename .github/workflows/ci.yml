@@ -6,7 +6,11 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        runner: [ubuntu-22.04, macos-latest]
+    runs-on: ${{ matrix.runner }}
     env:
       RUSTFLAGS: -D warnings
     steps:
@@ -35,6 +39,7 @@ jobs:
           tool: just
 
       - name: Install Linux system dependencies
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
