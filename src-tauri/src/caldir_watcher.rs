@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::time::Duration;
 
 use caldir_core::Caldir;
@@ -9,26 +10,25 @@ use tokio::time::sleep;
 
 use crate::event_cache::EVENT_CACHE;
 
+// When calendar data in the user's caldir changes:
 pub const CALDIR_CHANGED: &str = "caldir-changed";
 
-/// Emitted by the frontend after the user picks a new calendar directory.
-/// Mirrors `CALENDAR_DIR_CHANGED` in `src/rpc/events.ts`.
+// When user picks new base caldir directory:
 const CALENDAR_DIR_CHANGED: &str = "calendar-dir-changed";
 
+fn is_ics_event_file(path: &Path) -> bool {
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .is_some_and(|ext| ext.eq_ignore_ascii_case("ics"))
+}
+
 /// Watches the user's caldir directory recursively and emits `CALDIR_CHANGED`
-/// whenever anything inside changes. The frontend uses this to keep the event
-/// list in sync with the directory — whether the change came from renCal, a
-/// CLI tool, a git pull, or another editor.
-///
-/// The watched directory can change at runtime (the user can repoint the
-/// calendar dir in settings), so this re-establishes the watch on the new
-/// directory whenever `CALENDAR_DIR_CHANGED` fires. Without re-pointing, the
-/// watcher would keep observing the old directory and the event cache would go
-/// stale on the next external edit to the new one.
+/// whenever an `.ics` event file is created, deleted, or modified.
 pub async fn run_watcher(app: AppHandle) {
     // Fires whenever the calendar dir changes, so we can tear down the watch on
     // the old directory and re-point at the new one.
     let (dir_tx, mut dir_rx) = mpsc::unbounded_channel::<()>();
+
     app.listen(CALENDAR_DIR_CHANGED, move |_| {
         let _ = dir_tx.send(());
     });
@@ -72,7 +72,8 @@ async fn watch_current_dir(app: &AppHandle, dir_rx: &mut mpsc::UnboundedReceiver
                     | EventKind::Modify(ModifyKind::Data(_))
                     | EventKind::Modify(ModifyKind::Name(_))
             );
-            if is_real_change {
+            // Only `.ics` event files matter — skip `.caldir/` sync state, `.git/`, etc.
+            if is_real_change && event.paths.iter().any(|p| is_ics_event_file(p)) {
                 let _ = tx.send(());
             }
         }
