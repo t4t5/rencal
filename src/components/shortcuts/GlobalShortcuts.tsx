@@ -1,5 +1,6 @@
+import { listen } from "@tauri-apps/api/event"
 import { addDays, addMonths, isSameDay, startOfMonth, subDays, subMonths } from "date-fns"
-import { useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
 import { CommandPalette } from "@/components/shortcuts/CommandPalette"
@@ -67,6 +68,13 @@ export function GlobalShortcuts({
     activeGroup,
     setActiveGroup,
   })
+
+  // Native macOS menu items emit `menu-action` with a ShortcutId; dispatch it
+  // through the same handler table the keyboard shortcuts use.
+  useEffect(() => {
+    const unlisten = listen<ShortcutId>("menu-action", (e) => handlers[e.payload]?.())
+    return () => void unlisten.then((off) => off())
+  }, [handlers])
 
   const groupOptions = getGroupOptions(groups)
 
