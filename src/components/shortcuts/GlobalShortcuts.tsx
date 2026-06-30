@@ -69,8 +69,7 @@ export function GlobalShortcuts({
     setActiveGroup,
   })
 
-  // Native macOS menu items emit `menu-action` with a ShortcutId; dispatch it
-  // through the same handler table the keyboard shortcuts use.
+  // Native macOS menu items (emit `menu-action` with a ShortcutId)
   useEffect(() => {
     const unlisten = listen<ShortcutId>("menu-action", (e) => handlers[e.payload]?.())
     return () => void unlisten.then((off) => off())

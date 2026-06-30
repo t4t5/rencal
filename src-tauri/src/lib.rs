@@ -132,7 +132,7 @@ pub async fn run() {
         }
     }));
 
-    // Native macOS menu bar (other platforms use custom titlebars, no global menu).
+    // Native macOS menu bar
     #[cfg(target_os = "macos")]
     let builder = builder
         .menu(menu::build_menu)

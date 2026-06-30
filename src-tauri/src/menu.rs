@@ -1,13 +1,4 @@
 //! Native macOS application menu.
-//!
-//! Surfaces renCal's key actions in the macOS menu bar. Custom items emit a
-//! `menu-action` event carrying a frontend `ShortcutId`; the React side
-//! dispatches it through the same handler table the keyboard shortcuts use
-//! (see `src/components/shortcuts/GlobalShortcuts.tsx`). Help links are opened
-//! directly here via the opener plugin.
-//!
-//! This module is compiled on macOS only — other platforms use custom
-//! titlebars without a global menu bar.
 
 use tauri::{
     AppHandle, Emitter, Runtime,
@@ -18,14 +9,11 @@ use tauri_plugin_opener::OpenerExt;
 const WEBSITE_URL: &str = "https://rencal.org";
 const ISSUES_URL: &str = "https://github.com/t4t5/rencal/issues/new";
 
-/// Builds the full application menu. Item ids match frontend `ShortcutId`s so
-/// the frontend can dispatch them directly.
 pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let settings = MenuItemBuilder::with_id("settings", "Settings…")
         .accelerator("CmdOrCtrl+,")
         .build(handle)?;
 
-    // First submenu becomes the application menu on macOS (titled with the app name).
     let app_menu = SubmenuBuilder::new(handle, "renCal")
         .about(None)
         .separator()
@@ -49,8 +37,6 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .close_window()
         .build()?;
 
-    // Standard editing items — kept so copy/paste/undo work in text inputs
-    // once we replace Tauri's default menu.
     let edit_menu = SubmenuBuilder::new(handle, "Edit")
         .undo()
         .redo()
@@ -116,9 +102,6 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     )
 }
 
-/// Routes menu clicks. Help links open in the browser; every other custom item
-/// is forwarded to the frontend as a `menu-action` event (only the calendar
-/// window listens). Predefined items handle themselves and don't reach here.
 pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
     match event.id().as_ref() {
         "help-website" => {
