@@ -37,6 +37,7 @@ export function useTheme() {
 
   useEffect(() => {
     document.body.dataset.theme = theme
+    document.body.style.removeProperty("--background")
     // Sync OS window chrome (macOS titlebar text, Windows DWM chrome) to the
     // theme's light/dark appearance. For omarchy this depends on the
     // dynamically-injected --background, which may not be applied yet on
