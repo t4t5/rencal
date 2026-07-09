@@ -264,14 +264,21 @@ fn should_remind(event: &Event, account_email: Option<&str>) -> bool {
         return false;
     }
 
+    // If user has no email address, always remind:
     let Some(account_email) = account_email else {
         return true;
     };
 
-    !event.attendees.iter().any(|attendee| {
-        attendee.email.eq_ignore_ascii_case(account_email)
-            && attendee.status == Some(ParticipationStatus::Declined)
-    })
+    // If they have email address,
+    // find their attendance status:
+    let user_attendee = event
+        .attendees
+        .iter()
+        .find(|attendee| attendee.email.eq_ignore_ascii_case(account_email));
+
+    // If user is not in attendee list -> remind (they might use different email)
+    // If user is in list -> remind (unless they've explicitly declined)
+    user_attendee.is_none_or(|attendee| attendee.status != Some(ParticipationStatus::Declined))
 }
 
 fn delivered_cache_path() -> Option<PathBuf> {
@@ -564,7 +571,10 @@ mod tests {
     #[test]
     fn should_remind_allows_declines_for_other_attendees() {
         let mut event = make_event("evt-other-declined", t(2026, 4, 29, 12, 30), 60);
-        event.attendees = vec![attendee("someone@example.com", ParticipationStatus::Declined)];
+        event.attendees = vec![attendee(
+            "someone@example.com",
+            ParticipationStatus::Declined,
+        )];
 
         assert!(should_remind(&event, Some("me@example.com")));
     }
