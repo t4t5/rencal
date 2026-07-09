@@ -1,4 +1,3 @@
-import { listen } from "@tauri-apps/api/event"
 import {
   Dispatch,
   ReactNode,
@@ -13,8 +12,6 @@ import {
   useRef,
   useState,
 } from "react"
-
-import { CALDIR_CHANGED } from "@/rpc/events"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -71,7 +68,7 @@ export function CalEventsProvider({
   initialEvents,
   initialRange,
 }: CalEventsProviderProps) {
-  const { isLoadingCalendars } = useCalendars()
+  const { caldirChangeCount, isLoadingCalendars } = useCalendars()
   const { activeDate, registerLoadEventsForDate } = useCalendarNavigation()
   const { settingsLoaded } = useSettings()
 
@@ -98,9 +95,8 @@ export function CalEventsProvider({
   // actually holds. The worker reconciles the latter up to the former.
   //
   // Single-in-flight + loop-on-stale guards two failure modes:
-  //   (1) Concurrent loads (CALDIR_CHANGED firing repeatedly at startup, plus the
-  //       visibleCalendarKey effect and scroll-driven extensions) each replacing
-  //       calendarEvents and clobbering each other.
+  //   (1) Concurrent loads (visibleCalendarKey changes plus scroll-driven extensions)
+  //       each replacing calendarEvents and clobbering each other.
   //   (2) A load capturing the range before its await while a scroll widens it during the
   //       await, then applying events for the stale (narrower) range.
   const coveredRangeRef = useRef<DateRange | null>(
@@ -221,16 +217,7 @@ export function CalEventsProvider({
       coveredRangeRef.current = null
       setIsInitialLoading(false)
     }
-  }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
-
-  useEffect(() => {
-    const unlisten = listen(CALDIR_CHANGED, () => {
-      void reloadEvents()
-    })
-    return () => {
-      unlisten.then((fn) => fn())
-    }
-  }, [])
+  }, [visibleCalendarKey, caldirChangeCount, isLoadingCalendars, settingsLoaded])
 
   // Let navigateToDate pull a distant date's events into range before it scrolls there.
   // For dates already covered this resolves without fetching, so nearby jumps stay instant.
