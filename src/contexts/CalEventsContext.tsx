@@ -68,7 +68,7 @@ export function CalEventsProvider({
   initialEvents,
   initialRange,
 }: CalEventsProviderProps) {
-  const { caldirChangeCount, isLoadingCalendars } = useCalendars()
+  const { calendars, isLoadingCalendars } = useCalendars()
   const { activeDate, registerLoadEventsForDate } = useCalendarNavigation()
   const { settingsLoaded } = useSettings()
 
@@ -217,7 +217,7 @@ export function CalEventsProvider({
       coveredRangeRef.current = null
       setIsInitialLoading(false)
     }
-  }, [visibleCalendarKey, caldirChangeCount, isLoadingCalendars, settingsLoaded])
+  }, [visibleCalendarKey, calendars, isLoadingCalendars, settingsLoaded])
 
   // Let navigateToDate pull a distant date's events into range before it scrolls there.
   // For dates already covered this resolves without fetching, so nearby jumps stay instant.

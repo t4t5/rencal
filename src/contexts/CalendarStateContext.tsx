@@ -30,7 +30,6 @@ interface CalendarsContextType {
   calendars: Calendar[]
   isLoadingCalendars: boolean
   reloadCalendars: () => Promise<void>
-  caldirChangeCount: number
   activeGroup: string
   setActiveGroup: (name: string) => void
 }
@@ -82,7 +81,6 @@ export function CalendarStateProvider({
   const [activeDate, setActiveDate] = useState<Date>(() => initialDate ?? new Date())
   const [calendars, setCalendars] = useState<Calendar[]>(() => initialCalendars ?? [])
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(() => initialCalendars === undefined)
-  const [caldirChangeCount, setCaldirChangeCount] = useState(0)
   const [activeGroup, setActiveGroup] = useLocalStorage(
     ACTIVE_GROUP_KEY,
     activeGroupSchema,
@@ -113,7 +111,7 @@ export function CalendarStateProvider({
       void loadCalendarsFromStore()
     })
     const unlistenCaldir = listen(CALDIR_CHANGED, () => {
-      void loadCalendarsFromStore().then(() => setCaldirChangeCount((count) => count + 1))
+      void loadCalendarsFromStore()
     })
 
     return () => {
@@ -178,11 +176,10 @@ export function CalendarStateProvider({
       calendars,
       isLoadingCalendars,
       reloadCalendars: loadCalendarsFromStore,
-      caldirChangeCount,
       activeGroup,
       setActiveGroup,
     }),
-    [calendars, isLoadingCalendars, caldirChangeCount, activeGroup, setActiveGroup],
+    [calendars, isLoadingCalendars, activeGroup, setActiveGroup],
   )
 
   const navigationValue = useMemo(
