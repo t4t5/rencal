@@ -1,4 +1,4 @@
-import { CSSProperties, ReactNode } from "react"
+import { CSSProperties, ReactNode, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { Calendar } from "@/rpc/bindings"
 
@@ -23,11 +22,14 @@ import { getProviderDisplayName } from "@/lib/providers"
 import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
+import { AddSubscriptionModal } from "./AddSubscriptionModal"
+
 const DEFAULT_GROUP = "default"
 
 export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
   const { calendars } = useCalendars()
   const { groups, setGroups } = useSettings()
+  const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false)
 
   const allCalendarSlugs = calendars.map((calendar) => calendar.slug)
   const visibleCalendarSlugs = groups[selectedGroup]
@@ -85,17 +87,18 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
 
       {!calendars.length && <div className="text-sm text-muted-foreground">No calendars yet.</div>}
 
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="self-start hidden">
-            <Button variant="secondary" className="gap-2" disabled>
-              <RssIcon className="size-4" />
-              Add subscription
-            </Button>
-          </span>
-        </TooltipTrigger>
-        <TooltipContent>Coming soon</TooltipContent>
-      </Tooltip>
+      <Button
+        variant="secondary"
+        className="self-start gap-2"
+        onClick={() => setShowAddSubscriptionModal(true)}
+      >
+        <RssIcon className="size-4" />
+        Add subscription
+      </Button>
+
+      {showAddSubscriptionModal && (
+        <AddSubscriptionModal onClose={() => setShowAddSubscriptionModal(false)} />
+      )}
     </SettingsContent>
   )
 }
