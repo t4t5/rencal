@@ -8,7 +8,7 @@ mod delivered_cache;
 use std::path::{Path, PathBuf};
 use std::time::Duration as StdDuration;
 
-use caldir_core::{Caldir, Event, EventTime, TimeFormat};
+use caldir_core::{Caldir, Event, EventTime, ParticipationStatus, Status, TimeFormat};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 use rencal_config::RencalConfig;
 
@@ -137,8 +137,12 @@ pub fn check_and_notify(
                 continue;
             }
         };
+        let account_email = calendar.remote_email().map(str::to_owned);
         match calendar.expanded_events_in_range(range_start, range_end) {
-            Ok(es) => events.extend(es),
+            Ok(es) => events.extend(
+                es.into_iter()
+                    .filter(|event| should_remind(event, account_email.as_deref())),
+            ),
             Err(e) => {
                 let slug = calendar.slug().unwrap_or("?");
                 log::warn!("[{slug}] expanded_events_in_range err: {e}");
@@ -253,6 +257,28 @@ fn select_best_trigger(
         .into_iter()
         .filter(|(_, t)| *t > window_start && *t <= now)
         .max_by_key(|(_, t)| *t)
+}
+
+fn should_remind(event: &Event, account_email: Option<&str>) -> bool {
+    if event.status == Status::Cancelled {
+        return false;
+    }
+
+    // If user has no email address, always remind:
+    let Some(account_email) = account_email else {
+        return true;
+    };
+
+    // If they have email address,
+    // find their attendance status:
+    let user_attendee = event
+        .attendees
+        .iter()
+        .find(|attendee| attendee.email.eq_ignore_ascii_case(account_email));
+
+    // If user is not in attendee list -> remind (they might use different email)
+    // If user is in list -> remind (unless they've explicitly declined)
+    user_attendee.is_none_or(|attendee| attendee.status != Some(ParticipationStatus::Declined))
 }
 
 fn delivered_cache_path() -> Option<PathBuf> {
@@ -465,7 +491,7 @@ mod tests {
 
     // ---- process_reminders -----------------------------------------------
 
-    use caldir_core::{EventUid, Reminder};
+    use caldir_core::{Attendee, EventUid, Reminder};
     use std::sync::Mutex;
 
     #[derive(Default)]
@@ -498,6 +524,14 @@ mod tests {
         event
     }
 
+    fn attendee(email: &str, status: ParticipationStatus) -> Attendee {
+        Attendee {
+            email: email.to_string(),
+            name: None,
+            status: Some(status),
+        }
+    }
+
     fn run(
         now: DateTime<Utc>,
         events: &[Event],
@@ -516,6 +550,55 @@ mod tests {
             None,
             TimeFormat::H24,
         )
+    }
+
+    #[test]
+    fn should_remind_skips_cancelled_events() {
+        let mut event = make_event("evt-cancelled", t(2026, 4, 29, 12, 30), 60);
+        event.status = Status::Cancelled;
+
+        assert!(!should_remind(&event, Some("me@example.com")));
+    }
+
+    #[test]
+    fn should_remind_skips_declined_events_for_account() {
+        let mut event = make_event("evt-declined", t(2026, 4, 29, 12, 30), 60);
+        event.attendees = vec![attendee("ME@example.com", ParticipationStatus::Declined)];
+
+        assert!(!should_remind(&event, Some("me@example.com")));
+    }
+
+    #[test]
+    fn should_remind_allows_declines_for_other_attendees() {
+        let mut event = make_event("evt-other-declined", t(2026, 4, 29, 12, 30), 60);
+        event.attendees = vec![attendee(
+            "someone@example.com",
+            ParticipationStatus::Declined,
+        )];
+
+        assert!(should_remind(&event, Some("me@example.com")));
+    }
+
+    #[test]
+    fn should_remind_allows_non_declined_account_statuses() {
+        for status in [
+            ParticipationStatus::Accepted,
+            ParticipationStatus::Tentative,
+            ParticipationStatus::NeedsAction,
+        ] {
+            let mut event = make_event("evt-ok", t(2026, 4, 29, 12, 30), 60);
+            event.attendees = vec![attendee("me@example.com", status)];
+
+            assert!(should_remind(&event, Some("me@example.com")));
+        }
+    }
+
+    #[test]
+    fn should_remind_allows_declined_events_when_account_is_unknown() {
+        let mut event = make_event("evt-local", t(2026, 4, 29, 12, 30), 60);
+        event.attendees = vec![attendee("me@example.com", ParticipationStatus::Declined)];
+
+        assert!(should_remind(&event, None));
     }
 
     /// A tick runs at 12:00 with no events present,
