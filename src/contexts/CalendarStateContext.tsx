@@ -1,4 +1,6 @@
 import { listen } from "@tauri-apps/api/event"
+import { ask, open } from "@tauri-apps/plugin-dialog"
+import { exit } from "@tauri-apps/plugin-process"
 import {
   ReactNode,
   createContext,
@@ -73,6 +75,44 @@ interface CalendarStateProviderProps {
   initialDate?: Date
 }
 
+async function loadCalendarsWithAccessGrant(): Promise<Calendar[]> {
+  while (true) {
+    try {
+      return await rpc.caldir.list_calendars()
+    } catch (error) {
+      const calendarDir = await rpc.caldir.get_calendar_dir().catch(() => "your caldir directory")
+      logger.warn("Failed to access caldir; prompting for folder access", error)
+
+      const shouldSelect = await ask(
+        `renCal could not access ${calendarDir}.\n\nIf this app is sandboxed, select that exact calendar folder to grant access.`,
+        {
+          title: "Grant calendar folder access",
+          kind: "warning",
+          okLabel: "Select Folder",
+          cancelLabel: "Quit",
+        },
+      )
+
+      if (!shouldSelect) {
+        await exit(0)
+        throw error
+      }
+
+      const selected = await open({
+        directory: true,
+        multiple: false,
+        title: `Select ${calendarDir}`,
+      })
+
+      if (typeof selected !== "string") {
+        continue
+      }
+
+      logger.debug("Calendar folder selected for access grant", selected)
+    }
+  }
+}
+
 export function CalendarStateProvider({
   children,
   initialCalendars,
@@ -94,7 +134,7 @@ export function CalendarStateProvider({
 
   const loadCalendarsFromStore = async () => {
     try {
-      const result = await rpc.caldir.list_calendars()
+      const result = await loadCalendarsWithAccessGrant()
       logger.debug("Calendars loaded from store:", result.length)
       setCalendars(result)
     } finally {

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=renCal
+Comment=A modern open-source calendar
+Exec=rencal
+Icon=org.ren.rencal
+Terminal=false
+Categories=Office;Calendar;
+StartupNotify=true

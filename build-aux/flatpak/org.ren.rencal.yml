@@ -1,0 +1,55 @@
+app-id: org.ren.rencal
+runtime: org.gnome.Platform
+runtime-version: "49"
+sdk: org.gnome.Sdk
+command: rencal
+
+sdk-extensions:
+  - org.freedesktop.Sdk.Extension.node22
+  - org.freedesktop.Sdk.Extension.rust-stable
+
+build-options:
+  append-path: /usr/lib/sdk/node22/bin:/usr/lib/sdk/rust-stable/bin
+  build-args:
+    - --share=network
+  env:
+    CARGO_HOME: /run/build/rencal/cargo
+    PNPM_HOME: /run/build/rencal/pnpm
+    XDG_CACHE_HOME: /run/build/rencal/cache
+
+finish-args:
+  - --share=ipc
+  - --share=network
+  - --socket=fallback-x11
+  - --socket=wayland
+  - --device=dri
+  - --talk-name=org.freedesktop.Notifications
+  - --filesystem=xdg-config/caldir:ro
+
+modules:
+  - name: rencal
+    buildsystem: simple
+    build-options:
+      env:
+        NO_STRIP: "true"
+    build-commands:
+      - corepack pnpm@10.23.0 install --frozen-lockfile
+      - 'corepack pnpm@10.23.0 tauri build --no-bundle --config ''{ "build": { "beforeBuildCommand": "corepack pnpm@10.23.0 build" }, "bundle": { "createUpdaterArtifacts": false } }'''
+      - install -Dm755 src-tauri/target/release/rencal /app/bin/rencal
+      - install -d /app/lib/renCal/providers /app/lib/renCal/icons
+      - install -Dm755 src-tauri/providers/caldir-provider-* /app/lib/renCal/providers/
+      - install -Dm644 src-tauri/icons/128x128.png /app/lib/renCal/icons/128x128.png
+      - install -Dm644 build-aux/flatpak/org.ren.rencal.desktop /app/share/applications/org.ren.rencal.desktop
+      - install -Dm644 build-aux/flatpak/org.ren.rencal.metainfo.xml /app/share/metainfo/org.ren.rencal.metainfo.xml
+      - install -Dm644 src-tauri/icons/32x32.png /app/share/icons/hicolor/32x32/apps/org.ren.rencal.png
+      - install -Dm644 src-tauri/icons/64x64.png /app/share/icons/hicolor/64x64/apps/org.ren.rencal.png
+      - install -Dm644 src-tauri/icons/128x128.png /app/share/icons/hicolor/128x128/apps/org.ren.rencal.png
+    sources:
+      - type: dir
+        path: ../..
+        skip:
+          - .git
+          - .cargo
+          - node_modules
+          - dist
+          - src-tauri/target

@@ -66,6 +66,18 @@ icons:
 bundlesize:
   npx vite-bundle-visualizer
 
+# Build a local Flatpak for testing (requires flatpak-builder)
+flatpak-build:
+  flatpak-builder --force-clean --user --install-deps-from=flathub build-dir build-aux/flatpak/org.ren.rencal.yml
+
+# Build and install a local Flatpak for testing (requires flatpak-builder)
+flatpak-install:
+  flatpak-builder --force-clean --user --install --install-deps-from=flathub build-dir build-aux/flatpak/org.ren.rencal.yml
+
+# Run the locally installed Flatpak
+flatpak-run:
+  flatpak run org.ren.rencal
+
 # Build the app for production
 build: build-providers-release
   #!/usr/bin/env bash

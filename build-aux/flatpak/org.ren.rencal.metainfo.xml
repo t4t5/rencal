@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+  <id>org.ren.rencal</id>
+  <name>renCal</name>
+  <summary>A modern open-source calendar</summary>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>MIT</project_license>
+  <description>
+    <p>renCal is a local calendar app built around caldir calendar directories.</p>
+  </description>
+  <launchable type="desktop-id">org.ren.rencal.desktop</launchable>
+  <categories>
+    <category>Office</category>
+    <category>Calendar</category>
+  </categories>
+  <url type="homepage">https://github.com/t4t5/rencal</url>
+  <releases>
+    <release version="0.4.2" date="2026-07-08" />
+  </releases>
+  <content_rating type="oars-1.1" />
+</component>
