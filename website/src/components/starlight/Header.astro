@@ -3,7 +3,7 @@ import config from "virtual:starlight/user-config"
 
 import Search from "virtual:starlight/components/Search"
 
-import Logo from "../../icons/rencal-logotype.astro"
+import Logo from "../../icons/rencal-logo.astro"
 
 /**
  * Render the `Search` component if Pagefind is enabled or the default search component has been overridden.
@@ -15,7 +15,7 @@ const shouldRenderSearch =
 <div class="header">
   <div class="title-wrapper sl-flex">
     <a href="/" class="docs-title" aria-label="renCal docs">
-      <Logo class="docs-title__logo h-[25px]" />
+      <Logo class="docs-title__logo" />
     </a>
   </div>
   <div class="sl-flex print:hidden">
@@ -61,7 +61,7 @@ const shouldRenderSearch =
     .docs-title__logo {
       display: block;
       flex: none;
-      height: 25px;
+      height: 51px;
       width: auto;
     }
 

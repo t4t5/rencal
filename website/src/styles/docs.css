@@ -16,7 +16,7 @@
   --sl-color-accent-low: rgba(245, 98, 19, 0.16);
   --sl-color-accent: #f56213;
   --sl-color-accent-high: inherit;
-  --sl-nav-height: 68px;
+  --sl-nav-height: 78px;
 
   /* Our headings are already uppercase, so we can make them smaller */
   --sl-text-h1: var(--sl-text-2xl);
@@ -121,7 +121,7 @@ site-search button[data-open-modal] {
 }
 
 starlight-menu-button button {
-  top: 14px;
+  top: 19px;
   width: 40px;
 }
 
