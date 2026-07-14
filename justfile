@@ -58,9 +58,9 @@ test:
 analyze path:
   bun scripts/analyze-recording.ts {{path}}
 
-# Generate app icons from 1024x1024 master.png
+# Generate platform-specific app icons from src-tauri/icons-src/*.svg
 icons:
-  pnpm tauri icon src-tauri/icons/master.png
+  scripts/generate-icons.sh
 
 # See the size of dependencies:
 bundlesize:
