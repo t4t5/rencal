@@ -13,6 +13,7 @@ mod get_config;
 mod get_event;
 mod get_provider_connect_info;
 mod list_calendars;
+mod list_contacts;
 mod list_events;
 mod list_invites;
 mod list_providers;
@@ -25,7 +26,7 @@ mod sync_preview;
 mod update_event;
 
 pub use types::{
-    Calendar, CalendarEvent, CreateEventInput, CredentialFieldInput, ProviderConnectInfo,
+    Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput, ProviderConnectInfo,
     SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
@@ -35,6 +36,7 @@ use tauri::{AppHandle, Runtime};
 #[taurpc::procedures(path = "caldir", export_to = "../src/rpc/bindings.ts")]
 pub trait CaldirApi {
     async fn list_calendars() -> TauResult<Vec<Calendar>>;
+    async fn list_contacts() -> TauResult<Vec<Contact>>;
     async fn list_events(
         calendar_slugs: Vec<String>,
         start: String,
@@ -103,6 +105,10 @@ pub struct CaldirApiImpl;
 impl CaldirApi for CaldirApiImpl {
     async fn list_calendars(self) -> TauResult<Vec<Calendar>> {
         list_calendars::handler().await
+    }
+
+    async fn list_contacts(self) -> TauResult<Vec<Contact>> {
+        list_contacts::handler().await
     }
 
     async fn list_events(
