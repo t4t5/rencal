@@ -93,6 +93,26 @@ impl From<&Attendee> for EventAttendee {
 }
 
 #[derive(Serialize, Deserialize, Type)]
+pub struct IcsPreview {
+    pub events: Vec<CalendarEvent>,
+    pub override_count: u32,
+    pub skipped_count: u32,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct ImportEventEdit {
+    pub id: String,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
+    pub recurrence: Option<RpcRecurrence>,
+    pub reminders: Vec<i32>,
+    pub attendees: Vec<EventAttendee>,
+}
+
+#[derive(Serialize, Deserialize, Type)]
 pub struct CalendarEvent {
     pub id: String,
     pub recurring_event_id: Option<String>,

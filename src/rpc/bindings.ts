@@ -28,6 +28,10 @@ export type ExternalTheme = { id: string;
  */
 name: string; css: string }
 
+export type IcsPreview = { events: CalendarEvent[]; override_count: number; skipped_count: number }
+
+export type ImportEventEdit = { id: string; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[] }
+
 export type OmarchyColors = { background: string; foreground: string; accent: string; cursor: string | null; selection_foreground: string | null; selection_background: string | null; color0: string; color1: string; color2: string; color3: string; color4: string; color5: string; color6: string; color7: string; color8: string; color9: string; color10: string; color11: string; color12: string; color13: string; color14: string; color15: string }
 
 export type ProviderConnectInfo = { step: ProviderConnectStepKind; fields: ProviderField[]; instructions: string | null }
@@ -104,7 +108,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
  */
 new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[] }
 
-const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_ics":["path"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_groups":[],"get_notifications_enabled":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}', 'themes':'{"list_external":[]}' }
+const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"import_ics":["path","calendar_slug","edits"],"list_calendars":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_ics":["path"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_groups":[],"get_notifications_enabled":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}', 'themes':'{"list_external":[]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
@@ -119,11 +123,12 @@ get_default_reminders: () => Promise<number[]>,
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
 get_provider_connect_info: (providerName: string) => Promise<ProviderConnectInfo>, 
 get_time_format: () => Promise<TimeFormat>, 
+import_ics: (path: string, calendarSlug: string, edits: ImportEventEdit[]) => Promise<number>, 
 list_calendars: () => Promise<Calendar[]>, 
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<string[]>, 
-preview_ics: (path: string) => Promise<CalendarEvent[]>, 
+preview_ics: (path: string) => Promise<IcsPreview>, 
 rsvp: (calendarSlug: string, eventId: string, response: string) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
 set_calendar_dir: (path: string) => Promise<null>, 

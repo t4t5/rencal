@@ -27,6 +27,8 @@ const Divider = () => (
 
 export function EventInfo({
   readonly,
+  dateTimeReadOnly,
+  recurrenceReadOnly,
   summaryRef,
   summary,
   onChangeSummary,
@@ -57,6 +59,8 @@ export function EventInfo({
   onClose,
 }: {
   readonly?: boolean
+  dateTimeReadOnly?: boolean
+  recurrenceReadOnly?: boolean
   summaryRef?: React.Ref<HTMLTextAreaElement>
   summary?: string | null
   onChangeSummary: (summary: string) => void
@@ -120,12 +124,20 @@ export function EventInfo({
           start={start}
           end={end}
           showTime={showTime}
-          readOnly={readonly}
+          readOnly={readonly || dateTimeReadOnly}
           onChange={onChangeDateTime}
         />
-        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
+        <AllDayCheckbox
+          checked={allDay}
+          onCheckedChange={onAllDayChange}
+          readOnly={readonly || dateTimeReadOnly}
+        />
 
-        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
+        <RepeatSelect
+          value={recurrence}
+          onChange={onRecurrenceChange}
+          readOnly={readonly || recurrenceReadOnly}
+        />
 
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
 

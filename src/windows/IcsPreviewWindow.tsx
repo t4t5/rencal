@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
 
 import { rpc } from "@/rpc"
+import type { ImportEventEdit } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -45,6 +46,8 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
   useTheme()
 
   const [events, setEvents] = useState<CalendarEvent[] | null>(null)
+  const [overrideCount, setOverrideCount] = useState(0)
+  const [skippedCount, setSkippedCount] = useState(0)
   const [activeIndex, setActiveIndex] = useState(0)
   const [calendarId, setCalendarId] = useState<string | null>(null)
   const [isAdding, setIsAdding] = useState(false)
@@ -53,9 +56,18 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
   useEffect(() => {
     rpc.caldir
       .preview_ics(filePath)
-      .then((rpcEvents) => setEvents(rpcEvents.map(rpcToCalendarEvent)))
+      .then((preview) => {
+        setOverrideCount(preview.override_count)
+        setSkippedCount(preview.skipped_count)
+        setEvents(
+          preview.events.map((rpcEvent) => {
+            const event = rpcToCalendarEvent(rpcEvent)
+            return event.reminders.length ? event : { ...event, reminders: defaultReminders }
+          }),
+        )
+      })
       .catch((err) => setError(String(err)))
-  }, [filePath])
+  }, [defaultReminders, filePath])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -79,6 +91,7 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
   const targetCalendar = editableCalendars.find((cal) => cal.slug === targetCalendarId)
 
   const event = events?.[activeIndex]
+  const lockSeriesShape = overrideCount > 0 && !!event?.recurrence
 
   const updateEvent = (updated: CalendarEvent) => {
     setEvents((prev) => prev?.map((e, i) => (i === activeIndex ? updated : e)) ?? prev)
@@ -89,19 +102,18 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
     setIsAdding(true)
     setError(null)
     try {
-      for (const e of events) {
-        await rpc.caldir.create_event({
-          calendar_slug: targetCalendarId,
-          summary: e.summary,
-          description: e.description,
-          location: e.location,
-          start: toRpcEventTime(e.start),
-          end: toRpcEventTime(e.end),
-          recurrence: e.recurrence ? recurrenceToRpc(e.recurrence) : null,
-          reminders: e.reminders.length ? e.reminders : defaultReminders,
-          attendees: e.attendees,
-        })
-      }
+      const edits: ImportEventEdit[] = events.map((e) => ({
+        id: e.id,
+        summary: e.summary,
+        description: e.description,
+        location: e.location,
+        start: toRpcEventTime(e.start),
+        end: toRpcEventTime(e.end),
+        recurrence: e.recurrence ? recurrenceToRpc(e.recurrence) : null,
+        reminders: e.reminders,
+        attendees: e.attendees,
+      }))
+      await rpc.caldir.import_ics(filePath, targetCalendarId, edits)
       closeWindow()
     } catch (err) {
       setError(String(err))
@@ -150,6 +162,22 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
         </div>
       )}
 
+      {(overrideCount > 0 || skippedCount > 0) && (
+        <div className="flex flex-col gap-1 px-4 text-sm text-muted-foreground">
+          {overrideCount > 0 && (
+            <p>
+              Includes {overrideCount} modified {overrideCount === 1 ? "occurrence" : "occurrences"}
+              .
+            </p>
+          )}
+          {skippedCount > 0 && (
+            <p>
+              Skipped {skippedCount} unparseable {skippedCount === 1 ? "event" : "events"}.
+            </p>
+          )}
+        </div>
+      )}
+
       <div className="grow overflow-y-auto p-2">
         <EventInfo
           summary={event.summary}
@@ -158,6 +186,8 @@ export function IcsPreviewWindow({ filePath }: { filePath: string }) {
           start={event.start}
           end={event.end}
           onChangeDateTime={({ start, end }) => updateEvent(withDates(event, start, end))}
+          dateTimeReadOnly={lockSeriesShape}
+          recurrenceReadOnly={lockSeriesShape}
           allDay={isAllDay(event.start)}
           onAllDayChange={(checked) => {
             if (checked) {
