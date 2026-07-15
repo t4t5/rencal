@@ -2,6 +2,7 @@ mod caldir_watcher;
 mod config_watcher;
 mod event_cache;
 mod external_themes;
+mod ics_open;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 #[cfg(target_os = "macos")]
@@ -104,14 +105,21 @@ pub async fn run() {
         }
     }
 
+    // An .ics file passed on the command line (e.g. from a file manager's
+    // "Open with"). Opened in a preview window once the app is up, or handed
+    // to the existing instance below.
+    let cli_ics_path = ics_open::ics_path_from_args(std::env::args().skip(1), None)
+        .map(|p| p.to_string_lossy().into_owned());
+
     // Single-instance: on Linux we use a Unix socket because
     // `tauri-plugin-single-instance` panics under our runtime config (zbus
     // pulls in the tokio feature transitively from xdg-portal). On
     // macOS/Windows the plugin's native impl is fine.
     #[cfg(target_os = "linux")]
-    let mut instance_guard = match single_instance::try_acquire_or_signal() {
+    let mut instance_guard = match single_instance::try_acquire_or_signal(cli_ics_path.as_deref())
+    {
         Some(g) => g,
-        None => return, // existing instance was signaled to focus; we exit.
+        None => return, // existing instance was signaled; we exit.
     };
 
     // Keep the guard on this frame for the whole process; dropping it early
@@ -124,7 +132,16 @@ pub async fn run() {
     let builder = tauri::Builder::default();
 
     #[cfg(not(target_os = "linux"))]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
+    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+        // A second launch with an .ics file opens a preview instead of
+        // just focusing the main window.
+        let ics_path =
+            ics_open::ics_path_from_args(args.into_iter().skip(1), Some(std::path::Path::new(&cwd)));
+        if let Some(path) = ics_path {
+            ics_open::open_preview_window(app.clone(), path.to_string_lossy().into_owned());
+            return;
+        }
+
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.unminimize();
             let _ = window.show();
@@ -172,15 +189,27 @@ pub async fn run() {
             {
                 linux_reminders::enable_notifierd_if_needed();
                 if let Some(listener) = instance_listener {
-                    let app_handle = app.handle().clone();
-                    single_instance::spawn_listener(listener, move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let _ = window.unminimize();
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
-                    });
+                    let focus_handle = app.handle().clone();
+                    let open_handle = app.handle().clone();
+                    single_instance::spawn_listener(
+                        listener,
+                        move || {
+                            if let Some(window) = focus_handle.get_webview_window("main") {
+                                let _ = window.unminimize();
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                            }
+                        },
+                        move |path| {
+                            ics_open::open_preview_window(open_handle.clone(), path);
+                        },
+                    );
                 }
+            }
+
+            // Opened via an .ics file (cold start): show its preview window.
+            if let Some(path) = cli_ics_path {
+                ics_open::open_preview_window(app.handle().clone(), path);
             }
 
             spawn_reminder_loop_if_needed(app);
@@ -229,6 +258,19 @@ pub async fn run() {
         .build(tauri::generate_context!())
         .expect("error while building tauri application")
         .run(|_app_handle, _event| {
+            // Finder delivers file-opens as Opened events, not argv.
+            #[cfg(target_os = "macos")]
+            if let tauri::RunEvent::Opened { urls } = &_event {
+                for url in urls {
+                    if let Ok(path) = url.to_file_path() {
+                        ics_open::open_preview_window(
+                            _app_handle.clone(),
+                            path.to_string_lossy().into_owned(),
+                        );
+                    }
+                }
+            }
+
             #[cfg(target_os = "macos")]
             if let tauri::RunEvent::Reopen {
                 has_visible_windows,

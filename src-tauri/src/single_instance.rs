@@ -2,8 +2,9 @@
 //!
 //! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
-//! socket; later launches send `focus\n` to it and exit. Debug and release use
-//! separate sockets so `tauri dev` does not fight the installed app.
+//! socket; later launches send `focus\n` (or `open <path>\n` when launched
+//! with an .ics file) to it and exit. Debug and release use separate sockets
+//! so `tauri dev` does not fight the installed app.
 
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -53,12 +54,18 @@ fn socket_path() -> PathBuf {
 
 /// Either acquire the single-instance role (returning a guard + listener),
 /// or signal the existing instance and return `None` so the caller can exit.
-pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
+/// `open_path` is an .ics file this launch was asked to open; it's forwarded
+/// to the existing instance instead of a plain focus.
+pub fn try_acquire_or_signal(open_path: Option<&str>) -> Option<InstanceGuard> {
     let path = socket_path();
 
-    // Existing instance? Send focus and bail.
+    // Existing instance? Signal it and bail.
     if let Ok(mut stream) = UnixStream::connect(&path) {
-        let _ = stream.write_all(b"focus\n");
+        let msg = match open_path {
+            Some(file) => format!("open {file}\n"),
+            None => "focus\n".to_string(),
+        };
+        let _ = stream.write_all(msg.as_bytes());
         return None;
     }
 
@@ -83,18 +90,23 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     }
 }
 
-/// Spawn a thread that listens for `focus\n` messages and invokes `on_focus` for each.
-pub fn spawn_listener<F>(listener: UnixListener, on_focus: F)
+/// Spawn a thread that listens for messages from later launches:
+/// `focus\n` invokes `on_focus`, `open <path>\n` invokes `on_open`.
+pub fn spawn_listener<F, G>(listener: UnixListener, on_focus: F, on_open: G)
 where
     F: Fn() + Send + 'static,
+    G: Fn(String) + Send + 'static,
 {
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
             let mut buf = String::new();
             let _ = stream.read_to_string(&mut buf);
-            if buf.trim() == "focus" {
+            let msg = buf.trim();
+            if msg == "focus" {
                 on_focus();
+            } else if let Some(path) = msg.strip_prefix("open ") {
+                on_open(path.to_string());
             }
         }
     });

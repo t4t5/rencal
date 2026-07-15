@@ -12,10 +12,12 @@ mod discard;
 mod get_config;
 mod get_event;
 mod get_provider_connect_info;
+mod import_ics;
 mod list_calendars;
 mod list_events;
 mod list_invites;
 mod list_providers;
+mod preview_ics;
 mod rsvp;
 mod search_events;
 mod set_config;
@@ -25,8 +27,8 @@ mod sync_preview;
 mod update_event;
 
 pub use types::{
-    Calendar, CalendarEvent, CreateEventInput, CredentialFieldInput, ProviderConnectInfo,
-    SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    Calendar, CalendarEvent, CreateEventInput, CredentialFieldInput, IcsPreview, ImportEventEdit,
+    ProviderConnectInfo, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -42,6 +44,12 @@ pub trait CaldirApi {
     ) -> TauResult<Vec<CalendarEvent>>;
     async fn get_event(calendar_slug: String, event_id: String)
     -> TauResult<Option<CalendarEvent>>;
+    async fn preview_ics(path: String) -> TauResult<IcsPreview>;
+    async fn import_ics(
+        path: String,
+        calendar_slug: String,
+        edits: Vec<ImportEventEdit>,
+    ) -> TauResult<u32>;
     async fn create_event(input: CreateEventInput) -> TauResult<CalendarEvent>;
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
@@ -120,6 +128,19 @@ impl CaldirApi for CaldirApiImpl {
         event_id: String,
     ) -> TauResult<Option<CalendarEvent>> {
         get_event::handler(calendar_slug, event_id).await
+    }
+
+    async fn preview_ics(self, path: String) -> TauResult<IcsPreview> {
+        preview_ics::handler(path).await
+    }
+
+    async fn import_ics(
+        self,
+        path: String,
+        calendar_slug: String,
+        edits: Vec<ImportEventEdit>,
+    ) -> TauResult<u32> {
+        import_ics::handler(path, calendar_slug, edits).await
     }
 
     async fn create_event(self, input: CreateEventInput) -> TauResult<CalendarEvent> {

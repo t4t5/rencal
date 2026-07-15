@@ -13,13 +13,22 @@ import { preloadCalendarData } from "@/lib/preload-data"
 
 import { ThemeProvider } from "@/themes/ThemeRegistry"
 import { AppWindow } from "@/windows/AppWindow"
+import { IcsPreviewWindow } from "@/windows/IcsPreviewWindow"
 import { SettingsWindow } from "@/windows/SettingsWindow"
 
 const params = new URLSearchParams(window.location.search)
 const appWindow = params.get("appWindow")
+const icsFilePath = params.get("file")
+
+function windowContent(preload: Awaited<ReturnType<typeof preloadCalendarData>>) {
+  if (appWindow === "settings") return <SettingsWindow />
+  if (appWindow === "icsPreview" && icsFilePath) return <IcsPreviewWindow filePath={icsFilePath} />
+  return <AppWindow preload={preload} />
+}
 
 async function bootstrap() {
-  const preload = appWindow === "settings" ? {} : await preloadCalendarData()
+  const isMainWindow = appWindow !== "settings" && appWindow !== "icsPreview"
+  const preload = isMainWindow ? await preloadCalendarData() : {}
 
   const rootEl = document.getElementById("root")
 
@@ -33,7 +42,7 @@ async function bootstrap() {
             initialCalendars={preload.initialCalendars}
             initialDate={preload.initialDate}
           >
-            {appWindow === "settings" ? <SettingsWindow /> : <AppWindow preload={preload} />}
+            {windowContent(preload)}
           </CalendarStateProvider>
         </SettingsProvider>
       </ThemeProvider>
