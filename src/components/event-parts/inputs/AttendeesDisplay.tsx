@@ -5,6 +5,7 @@ import { Command, CommandItem, CommandList } from "@/components/ui/command"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { StatusDot } from "@/components/ui/status-dot"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { EventAttendee } from "@/rpc/bindings"
 
@@ -242,8 +243,9 @@ function AttendeeRow({
   onRemove?: () => void
 }) {
   const displayName = attendee.name ?? attendee.email
+  const showEmailTooltip = !!attendee.name && attendee.name !== attendee.email
 
-  return (
+  const row = (
     <div className="group flex items-center gap-2 py-1 px-3 text-sm">
       <StatusDot status={attendee.response_status} />
 
@@ -254,5 +256,14 @@ function AttendeeRow({
 
       {onRemove && <RemoveItemButton onClick={onRemove} />}
     </div>
+  )
+
+  if (!showEmailTooltip) return row
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>{row}</TooltipTrigger>
+      <TooltipContent>{attendee.email}</TooltipContent>
+    </Tooltip>
   )
 }
