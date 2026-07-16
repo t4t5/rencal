@@ -19,6 +19,7 @@ const CSS_VARS = [
   "--highlight",
   "--hover-tint",
   "--muted",
+  "--popover-tint",
   "--success",
   "--warning",
   "--error",
@@ -46,6 +47,7 @@ function pickForeground(c: OmarchyColors): string {
 
 function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], string> {
   const fg = pickForeground(c)
+  const popoverTint = appearanceFromHex(c.background) === "light" ? "white" : "black"
   return {
     "--background": c.background,
     "--foreground": fg,
@@ -54,6 +56,7 @@ function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], str
     "--highlight": c.color1,
     "--hover-tint": fg,
     "--muted": `color-mix(in srgb, ${fg} 55%, transparent)`,
+    "--popover-tint": popoverTint,
     "--success": c.color2,
     "--warning": c.color3,
     "--error": c.color1,

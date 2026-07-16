@@ -59,6 +59,8 @@
 
   --hover-tint: white;
   --hover-mix: 5%;
+  --popover-tint: black;
+  --popover-mix: 4%;
 
   --tab-gap: 0;
   --tab-list-shadow: none;
@@ -84,7 +86,7 @@ body {
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
 
-  --popover: var(--card);
+  --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
   --popover-foreground: var(--foreground);
 
   --destructive: var(--error);
