@@ -36,6 +36,14 @@ pub struct RpcRecurrence {
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
+pub struct Contact {
+    pub email: String,
+    pub name: Option<String>,
+    pub count: u32,
+    pub last_seen: String,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
 pub enum TimeFormat {
     #[serde(rename = "24h")]
     H24,

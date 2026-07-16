@@ -13,6 +13,7 @@
 
 --hover-tint: #484f7f;
 --hover-mix: 10%;
+--popover-tint: white;
 
 --primary: var(--theme-lavender);
 --today: var(--theme-blue);

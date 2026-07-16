@@ -62,10 +62,12 @@ These are the variables theme files override. Everything else (`--hover`, `--car
 
 The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`, `--input`, …) are all built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
 
-| Variable       | Purpose                                                           |
-| -------------- | ----------------------------------------------------------------- |
-| `--hover-tint` | Color mixed over the background to produce hover / surface layers |
-| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)   |
+| Variable         | Purpose                                                           |
+| ---------------- | ----------------------------------------------------------------- |
+| `--hover-tint`   | Color mixed over the background to produce hover / surface layers |
+| `--hover-mix`    | Percentage of tint per layer (each derived token adds one more)   |
+| `--popover-tint` | Popover depth tint (`black` for dark themes, `white` for light)   |
+| `--popover-mix`  | Percentage of popover tint mixed into the background              |
 
 ### Structure
 
