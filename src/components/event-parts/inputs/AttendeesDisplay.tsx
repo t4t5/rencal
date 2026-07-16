@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react"
+import type { KeyboardEvent } from "react"
 
 import { Command, CommandItem, CommandList } from "@/components/ui/command"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
@@ -36,9 +37,11 @@ export function AttendeesDisplay({
   const canEdit = !readOnly && !!onAttendeesChange
   const contacts = useContacts(canEdit)
   const attendeeList = attendees ?? []
+
   const organizerAttendee = organizer
     ? attendeeList.find((a) => attendeeKey(a.email) === attendeeKey(organizer.email))
     : null
+
   const hasAttendees = attendeeList.length > 0
   const excludeEmails = useMemo(
     () => [
@@ -47,10 +50,12 @@ export function AttendeesDisplay({
     ],
     [attendeeList, organizer?.email],
   )
+
   const suggestions = useMemo(
     () => suggestContacts(contacts, inputValue, excludeEmails),
     [contacts, excludeEmails, inputValue],
   )
+
   const showSuggestions =
     canEdit && !suggestionsDismissed && inputValue.trim().length > 0 && suggestions.length > 0
 
@@ -84,12 +89,14 @@ export function AttendeesDisplay({
 
   const addSuggestedAttendee = (index: number) => {
     const contact = suggestions[index]
+
     if (!contact) return
 
     onAttendeesChange?.([
       ...attendeeList,
       { name: contact.name, email: contact.email, response_status: "needs-action" },
     ])
+
     setInputValue("")
     setHasInvalidEmail(false)
     setHighlightedIndex(0)
@@ -98,6 +105,40 @@ export function AttendeesDisplay({
 
   const removeAttendee = (email: string) => {
     onAttendeesChange?.(attendeeList.filter((attendee) => attendeeKey(attendee.email) !== email))
+  }
+
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" && suggestions.length > 0) {
+      e.preventDefault()
+      setHighlightedIndex((index) => (index + 1) % suggestions.length)
+      return
+    }
+
+    if (e.key === "ArrowUp" && suggestions.length > 0) {
+      e.preventDefault()
+      setHighlightedIndex((index) => (index === 0 ? suggestions.length - 1 : index - 1))
+      return
+    }
+
+    if (e.key === "Escape" && showSuggestions) {
+      e.preventDefault()
+      setSuggestionsDismissed(true)
+      setHighlightedIndex(0)
+      return
+    }
+
+    if (e.key === "Enter" && showSuggestions) {
+      e.preventDefault()
+      addSuggestedAttendee(highlightedIndex)
+      return
+    }
+
+    if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
+      if (inputValue.trim()) {
+        e.preventDefault()
+        addAttendee()
+      }
+    }
   }
 
   return (
@@ -119,7 +160,7 @@ export function AttendeesDisplay({
           <PopoverAnchor asChild>
             <InputGroup
               className={cn("w-auto", {
-                "ml-7": !!attendees?.length,
+                "mt-1": !!attendees?.length,
               })}
             >
               {!attendees?.length && (
@@ -142,41 +183,7 @@ export function AttendeesDisplay({
                 onBlur={() => {
                   if (inputValue.trim()) addAttendee()
                 }}
-                onKeyDown={(e) => {
-                  if (e.key === "ArrowDown" && suggestions.length > 0) {
-                    e.preventDefault()
-                    setHighlightedIndex((index) => (index + 1) % suggestions.length)
-                    return
-                  }
-
-                  if (e.key === "ArrowUp" && suggestions.length > 0) {
-                    e.preventDefault()
-                    setHighlightedIndex((index) =>
-                      index === 0 ? suggestions.length - 1 : index - 1,
-                    )
-                    return
-                  }
-
-                  if (e.key === "Escape" && showSuggestions) {
-                    e.preventDefault()
-                    setSuggestionsDismissed(true)
-                    setHighlightedIndex(0)
-                    return
-                  }
-
-                  if (e.key === "Enter" && showSuggestions) {
-                    e.preventDefault()
-                    addSuggestedAttendee(highlightedIndex)
-                    return
-                  }
-
-                  if (e.key === "Enter" || e.key === "," || e.key === "Tab") {
-                    if (inputValue.trim()) {
-                      e.preventDefault()
-                      addAttendee()
-                    }
-                  }
-                }}
+                onKeyDown={onKeyDown}
               />
             </InputGroup>
           </PopoverAnchor>
