@@ -10,14 +10,12 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { EventAttendee } from "@/rpc/bindings"
 
 import { useContacts } from "@/hooks/useContacts"
-import { suggestContacts } from "@/lib/contact-suggestions"
+import { isValidContactEmail, suggestContacts } from "@/lib/contact-suggestions"
 import { cn } from "@/lib/utils"
 
 import { UserIcon } from "@/icons/user"
 
 import { RemoveItemButton } from "./RemoveItemButton"
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export function AttendeesDisplay({
   organizer,
@@ -70,7 +68,7 @@ export function AttendeesDisplay({
       return
     }
 
-    if (!EMAIL_RE.test(email)) {
+    if (!isValidContactEmail(email)) {
       setHasInvalidEmail(true)
       return
     }
@@ -91,7 +89,7 @@ export function AttendeesDisplay({
   const addSuggestedAttendee = (index: number) => {
     const contact = suggestions[index]
 
-    if (!contact) return
+    if (!contact || !isValidContactEmail(contact.email)) return
 
     onAttendeesChange?.([
       ...attendeeList,

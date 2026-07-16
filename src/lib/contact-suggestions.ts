@@ -1,5 +1,7 @@
 import type { Contact } from "@/rpc/bindings"
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 export function suggestContacts(
   contacts: Contact[],
   query: string,
@@ -19,7 +21,9 @@ export function suggestContacts(
     }))
     .filter(
       (item): item is { contact: Contact; index: number; rank: number } =>
-        item.rank !== null && !excluded.has(normalizeEmail(item.contact.email)),
+        item.rank !== null &&
+        isValidContactEmail(item.contact.email) &&
+        !excluded.has(normalizeEmail(item.contact.email)),
     )
     .sort((a, b) => a.rank - b.rank || a.index - b.index)
     .slice(0, limit)
@@ -43,6 +47,10 @@ function matchRank(contact: Contact, query: string): number | null {
 
 function nameWords(name: string): string[] {
   return name.split(/\s+/).filter(Boolean)
+}
+
+export function isValidContactEmail(email: string): boolean {
+  return EMAIL_RE.test(normalizeEmail(email))
 }
 
 function normalizeEmail(email: string): string {

@@ -31,6 +31,17 @@ describe("suggestContacts", () => {
     ).toEqual(["zara@example.com", "sam@example.com", "person-alex@example.com"])
   })
 
+  it("filters invalid email-like contact values", () => {
+    const contactsWithInvalidEmail = [
+      contact("tristan@example.com", "Tristan", 10),
+      contact("/andm3ndgynjj5ndm3ndgynkmkgsbdxwst...", "Tristan", 8),
+    ]
+
+    expect(suggestContacts(contactsWithInvalidEmail, "tristan", []).map((c) => c.email)).toEqual([
+      "tristan@example.com",
+    ])
+  })
+
   it("keeps backend order within the same rank and respects limit", () => {
     expect(suggestContacts(contacts, "@example", [], 2).map((c) => c.email)).toEqual([
       "zara@example.com",
