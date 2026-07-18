@@ -15,7 +15,7 @@ import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import {
@@ -31,8 +31,9 @@ export const DaySection = forwardRef<
     events: CalendarEvent[]
     calendars: Calendar[]
     draftEvent: CalendarEvent | null
+    onDeleteEvent: (event: CalendarEvent) => void
   }
->(({ date, events, calendars, draftEvent }, ref) => {
+>(({ date, events, calendars, draftEvent, onDeleteEvent }, ref) => {
   const { activeEvent, setActiveEventKey, toggleActiveEventKey } = useCalEvents()
   const { setActiveDate } = useCalendarNavigation()
   const { selectedEventKey, setSelectedEventKey } = useAgendaSelection()
@@ -74,6 +75,15 @@ export const DaySection = forwardRef<
   }
 
   const handleKeyDown = (event: CalendarEvent, e: KeyboardEvent<HTMLElement>) => {
+    if (e.key === "Delete" || e.key === "Backspace") {
+      const isDraft = !!draftEvent && eventKey(draftEvent) === eventKey(event)
+      if (activeEvent || isDraft || isEventReadonly(event, calendars)) return
+
+      e.preventDefault()
+      onDeleteEvent(event)
+      return
+    }
+
     if (e.key === "Enter") {
       e.preventDefault()
       setEventAnchor(e.currentTarget)

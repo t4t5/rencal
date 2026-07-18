@@ -1,6 +1,8 @@
 import { useEffect, useEffectEvent, useRef } from "react"
 import { flushSync } from "react-dom"
 
+import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
+
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
@@ -8,6 +10,7 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
+import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -29,6 +32,7 @@ export function Agenda() {
     useCalendarNavigation()
 
   const { calendarEvents: events, isInitialLoading } = useCalEvents()
+  const { triggerDelete, deleteDialogProps } = useDeleteEvent()
   const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
 
@@ -172,9 +176,11 @@ export function Agenda() {
             date={date}
             calendars={calendars}
             draftEvent={draftCalEvent}
+            onDeleteEvent={triggerDelete}
           />
         )
       })}
+      <DeleteConfirmDialog {...deleteDialogProps} />
     </div>
   )
 }

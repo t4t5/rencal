@@ -16,7 +16,11 @@ struct ContactAgg {
 
 pub(super) async fn handler() -> TauResult<Vec<Contact>> {
     let caldir = load_caldir()?;
-    let calendars: Vec<_> = caldir.calendars().into_iter().filter_map(Result::ok).collect();
+    let calendars: Vec<_> = caldir
+        .calendars()
+        .into_iter()
+        .filter_map(Result::ok)
+        .collect();
 
     let own_addresses: HashSet<String> = calendars
         .iter()
