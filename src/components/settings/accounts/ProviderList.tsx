@@ -60,7 +60,7 @@ export const ProviderList = ({
             disabled={isConnecting}
             onClick={() => handleProviderClick(name)}
           >
-            {!isCaldav && <Icon className="size-4" />}
+            {!isCaldav && Icon && <Icon className="size-4" />}
             {displayName}
           </Button>
         )

@@ -1,7 +1,6 @@
 import { IconType } from "@/lib/types"
 
 import { AppleIcon } from "@/icons/apple"
-import { CalendarIcon } from "@/icons/calendar"
 import { EtesyncIcon } from "@/icons/etesync"
 import { GoogleIcon } from "@/icons/google"
 import { MicrosoftIcon } from "@/icons/microsoft"
@@ -33,9 +32,9 @@ export const providerToIcon: Record<string, IconType> = {
   etesync: EtesyncIcon,
 }
 
-export const getProviderIcon = (name: string | null) => {
-  if (!name) return CalendarIcon
-  return providerToIcon[name] ?? CalendarIcon
+export const getProviderIcon = (name: string | null): IconType | null => {
+  if (!name) return null
+  return providerToIcon[name] ?? null
 }
 
 const providersWithoutAccount = new Set(["webcal"])
