@@ -2,8 +2,11 @@ import { IconType } from "@/lib/types"
 
 import { AppleIcon } from "@/icons/apple"
 import { CalendarIcon } from "@/icons/calendar"
+import { EtesyncIcon } from "@/icons/etesync"
 import { GoogleIcon } from "@/icons/google"
 import { MicrosoftIcon } from "@/icons/microsoft"
+import { ProtonIcon } from "@/icons/proton-logo"
+import { TutaIcon } from "@/icons/tuta"
 
 export const providerDisplayName: Record<string, string> = {
   google: "Google",
@@ -25,6 +28,9 @@ export const providerToIcon: Record<string, IconType> = {
   google: GoogleIcon,
   icloud: AppleIcon,
   outlook: MicrosoftIcon,
+  proton: ProtonIcon,
+  tuta: TutaIcon,
+  etesync: EtesyncIcon,
 }
 
 export const getProviderIcon = (name: string | null) => {
