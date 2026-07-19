@@ -40,3 +40,17 @@ export const getProviderIcon = (name: string | null): IconType | null => {
 const providersWithoutAccount = new Set(["webcal"])
 
 export const providerRequiresAccount = (name: string) => !providersWithoutAccount.has(name)
+
+const coreAccountProviders = ["google", "icloud", "outlook"]
+const fallbackAccountProvider = "caldav"
+
+export const orderAccountProviders = (providers: string[]) => {
+  const available = new Set(providers)
+  const core = coreAccountProviders.filter((provider) => available.has(provider))
+  const discovered = providers.filter(
+    (provider) => !coreAccountProviders.includes(provider) && provider !== fallbackAccountProvider,
+  )
+  const fallback = available.has(fallbackAccountProvider) ? [fallbackAccountProvider] : []
+
+  return [...core, ...discovered, ...fallback]
+}

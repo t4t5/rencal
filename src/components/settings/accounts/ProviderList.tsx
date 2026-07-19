@@ -5,7 +5,12 @@ import { Button } from "@/components/ui/button"
 import { rpc } from "@/rpc"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getProviderDisplayName, getProviderIcon, providerRequiresAccount } from "@/lib/providers"
+import {
+  getProviderDisplayName,
+  getProviderIcon,
+  orderAccountProviders,
+  providerRequiresAccount,
+} from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"
 import { beginProviderConnection } from "./provider-connection"
@@ -23,16 +28,7 @@ export const ProviderList = ({
 
   useEffect(() => {
     rpc.caldir.list_providers().then((all) => {
-      const filtered = all.filter(providerRequiresAccount)
-
-      // We want "caldav" to be shown last:
-      const sorted = filtered.sort((a, b) => {
-        if (a === "caldav") return 1
-        if (b === "caldav") return -1
-        return 0
-      })
-
-      setProviders(sorted)
+      setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
     })
   }, [])
 
