@@ -1,11 +1,11 @@
 import { IconType } from "@/lib/types"
 
-import { AppleIcon } from "@/icons/apple"
-import { EtesyncIcon } from "@/icons/etesync"
-import { GoogleIcon } from "@/icons/google"
-import { MicrosoftIcon } from "@/icons/microsoft"
-import { ProtonIcon } from "@/icons/proton-logo"
-import { TutaIcon } from "@/icons/tuta"
+import { AppleIcon } from "@/icons/providers/apple"
+import { EtesyncIcon } from "@/icons/providers/etesync"
+import { GoogleIcon } from "@/icons/providers/google"
+import { MicrosoftIcon } from "@/icons/providers/microsoft"
+import { ProtonIcon } from "@/icons/providers/proton"
+import { TutaIcon } from "@/icons/providers/tuta"
 
 export const providerDisplayName: Record<string, string> = {
   google: "Google",
