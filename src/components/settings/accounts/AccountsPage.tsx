@@ -18,6 +18,7 @@ import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
+import { CalendarIcon } from "@/icons/calendar"
 import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
@@ -134,7 +135,7 @@ function Account({
     }
   }, [account, provider])
 
-  const ProviderIcon = getProviderIcon(provider)
+  const ProviderIcon = getProviderIcon(provider) ?? CalendarIcon
   const displayName = getProviderDisplayName(provider)
 
   const statusLabel = statusLabels[status]
@@ -143,7 +144,7 @@ function Account({
   return (
     <div className="flex items-center gap-3">
       <div className="size-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-        <ProviderIcon className="size-6" />
+        {ProviderIcon && <ProviderIcon className="size-6" />}
       </div>
 
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
