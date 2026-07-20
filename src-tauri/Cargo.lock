@@ -551,7 +551,7 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.11.2"
+version = "0.12.0"
 dependencies = [
  "async-trait",
  "chrono",
@@ -565,6 +565,7 @@ dependencies = [
  "rrule",
  "serde",
  "serde_json",
+ "sha2",
  "slug",
  "tempfile",
  "thiserror 2.0.18",

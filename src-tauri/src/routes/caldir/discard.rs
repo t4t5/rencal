@@ -8,7 +8,7 @@ pub(super) async fn handler() -> TauResult<()> {
     let range = DateRange::default_sync_window();
 
     for connection in caldir.connections() {
-        let connection = connection.map_err(|e| e.to_string())?;
+        let mut connection = connection.map_err(|e| e.to_string())?;
         let slug = connection
             .local()
             .slug()
