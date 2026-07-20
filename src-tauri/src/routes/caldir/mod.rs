@@ -6,6 +6,7 @@ mod connect_provider;
 mod connect_provider_with_credentials;
 mod create_event;
 mod create_local_calendar;
+mod delete_calendar;
 mod delete_event;
 mod delete_recurring_series;
 mod discard;
@@ -86,6 +87,10 @@ pub trait CaldirApi {
 
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
+    async fn delete_calendar<R: Runtime>(
+        app_handle: AppHandle<R>,
+        calendar_slug: String,
+    ) -> TauResult<()>;
 
     async fn get_time_format() -> TauResult<TimeFormat>;
     async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
@@ -232,6 +237,14 @@ impl CaldirApi for CaldirApiImpl {
 
     async fn rename_calendar(self, calendar_slug: String, name: String) -> TauResult<()> {
         rename_calendar::handler(calendar_slug, name).await
+    }
+
+    async fn delete_calendar<R: Runtime>(
+        self,
+        app: AppHandle<R>,
+        calendar_slug: String,
+    ) -> TauResult<()> {
+        delete_calendar::handler(app, calendar_slug).await
     }
 
     async fn get_time_format(self) -> TauResult<TimeFormat> {

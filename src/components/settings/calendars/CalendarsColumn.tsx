@@ -4,6 +4,14 @@ import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -182,6 +190,7 @@ function CalendarDropdownMenuWrapper({
   const { reloadCalendars } = useCalendars()
   const { defaultCalendar, setDefaultCalendar } = useSettings()
   const [showRenameModal, setShowRenameModal] = useState(false)
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const isDefault = defaultCalendar === calendar.slug
 
   const renameCalendar = async (name: string) => {
@@ -211,6 +220,9 @@ function CalendarDropdownMenuWrapper({
           <DropdownMenuItem onClick={() => setShowRenameModal(true)}>
             Rename calendar
           </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
+            {calendar.provider === null ? "Delete calendar" : "Disconnect calendar"}
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -221,6 +233,73 @@ function CalendarDropdownMenuWrapper({
           onSubmit={renameCalendar}
         />
       )}
+
+      {showDeleteDialog && (
+        <DeleteCalendarDialog
+          calendar={calendar}
+          onClose={() => setShowDeleteDialog(false)}
+          onDeleted={reloadCalendars}
+        />
+      )}
     </div>
+  )
+}
+
+function DeleteCalendarDialog({
+  calendar,
+  onClose,
+  onDeleted,
+}: {
+  calendar: Calendar
+  onClose: () => void
+  onDeleted: () => Promise<void>
+}) {
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const calendarName = calendar.name || calendar.slug
+  const isLocal = calendar.provider === null
+
+  const deleteCalendar = async () => {
+    setIsDeleting(true)
+    setError(null)
+
+    try {
+      await rpc.caldir.delete_calendar(calendar.slug)
+      await onDeleted()
+      onClose()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+      setIsDeleting(false)
+    }
+  }
+
+  return (
+    <Dialog open onOpenChange={(isOpen) => !isOpen && !isDeleting && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isLocal ? "Delete calendar" : "Disconnect calendar"}</DialogTitle>
+          <DialogDescription>
+            {isLocal
+              ? `Are you sure you want to delete "${calendarName}"? All events will be permanently deleted.`
+              : `Disconnect "${calendarName}"? This will delete the directory from this computer.`}
+          </DialogDescription>
+        </DialogHeader>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DialogFooter className="flex gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isDeleting} autoFocus>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={() => void deleteCalendar()} disabled={isDeleting}>
+            {isDeleting
+              ? isLocal
+                ? "Deleting..."
+                : "Disconnecting..."
+              : isLocal
+                ? "Delete calendar"
+                : "Disconnect calendar"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
