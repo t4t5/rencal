@@ -1,7 +1,6 @@
 use super::helpers::load_caldir;
 use crate::caldir_watcher::CALDIR_CHANGED;
 use crate::routes::TauResult;
-use caldir_core::CalendarConfig;
 use tauri::{AppHandle, Emitter, Runtime};
 
 pub(super) async fn handler<R: Runtime>(
@@ -14,23 +13,9 @@ pub(super) async fn handler<R: Runtime>(
     }
 
     let caldir = load_caldir()?;
-    let mut calendar = None;
-
-    for candidate in caldir.calendars() {
-        let candidate = candidate.map_err(|e| e.to_string())?;
-        if candidate.slug() == Some(calendar_slug.as_str()) {
-            calendar = Some(candidate);
-            break;
-        }
-    }
-
-    let calendar = calendar.ok_or_else(|| format!("Calendar not found: {calendar_slug}"))?;
-    let config = CalendarConfig::new(
-        calendar.name().map(String::from),
-        Some(color),
-        calendar.read_only_setting(),
-        calendar.remote_config().cloned(),
-    );
+    let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
+    let mut config = calendar.config().cloned().unwrap_or_default();
+    config.set_color(Some(color));
 
     config
         .write(&calendar.config_path())
