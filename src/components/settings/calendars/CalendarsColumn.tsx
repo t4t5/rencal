@@ -11,7 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 
-import { Calendar } from "@/rpc/bindings"
+import { rpc } from "@/rpc"
+import type { Calendar } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -23,6 +24,7 @@ import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
 import { AddSubscriptionModal } from "./AddSubscriptionModal"
+import { RenameCalendarModal } from "./RenameCalendarModal"
 
 const DEFAULT_GROUP = "default"
 
@@ -177,8 +179,15 @@ function CalendarDropdownMenuWrapper({
   calendar: Calendar
   children: ReactNode
 }) {
+  const { reloadCalendars } = useCalendars()
   const { defaultCalendar, setDefaultCalendar } = useSettings()
+  const [showRenameModal, setShowRenameModal] = useState(false)
   const isDefault = defaultCalendar === calendar.slug
+
+  const renameCalendar = async (name: string) => {
+    await rpc.caldir.rename_calendar(calendar.slug, name)
+    await reloadCalendars()
+  }
 
   return (
     <div className="flex items-center gap-3">
@@ -199,8 +208,19 @@ function CalendarDropdownMenuWrapper({
           >
             Set as default
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowRenameModal(true)}>
+            Rename calendar
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
+
+      {showRenameModal && (
+        <RenameCalendarModal
+          calendar={calendar}
+          onClose={() => setShowRenameModal(false)}
+          onSubmit={renameCalendar}
+        />
+      )}
     </div>
   )
 }
