@@ -381,7 +381,11 @@ impl CalendarEvent {
                 response_status: None,
             }),
             attendees: e.attendees.iter().map(EventAttendee::from).collect(),
-            conference_url: e.x_property("X-GOOGLE-CONFERENCE").map(String::from),
+            conference_url: e
+                .x_property("X-GOOGLE-CONFERENCE")
+                .or_else(|| e.x_property("X-OUTLOOK-CONFERENCE"))
+                .or_else(|| e.x_property("X-PM-CONFERENCE-URL"))
+                .map(String::from),
             calendar_slug: calendar_slug.to_string(),
             color: e
                 .x_property("X-GOOGLE-COLOR-ID")
