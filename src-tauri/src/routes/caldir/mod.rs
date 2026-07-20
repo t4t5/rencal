@@ -21,6 +21,7 @@ mod list_providers;
 mod rename_calendar;
 mod rsvp;
 mod search_events;
+mod set_calendar_color;
 mod set_config;
 mod split_recurring_series_at;
 mod sync;
@@ -87,6 +88,11 @@ pub trait CaldirApi {
 
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
+    async fn set_calendar_color<R: Runtime>(
+        app_handle: AppHandle<R>,
+        calendar_slug: String,
+        color: String,
+    ) -> TauResult<()>;
     async fn delete_calendar<R: Runtime>(
         app_handle: AppHandle<R>,
         calendar_slug: String,
@@ -237,6 +243,15 @@ impl CaldirApi for CaldirApiImpl {
 
     async fn rename_calendar(self, calendar_slug: String, name: String) -> TauResult<()> {
         rename_calendar::handler(calendar_slug, name).await
+    }
+
+    async fn set_calendar_color<R: Runtime>(
+        self,
+        app: AppHandle<R>,
+        calendar_slug: String,
+        color: String,
+    ) -> TauResult<()> {
+        set_calendar_color::handler(app, calendar_slug, color).await
     }
 
     async fn delete_calendar<R: Runtime>(

@@ -32,6 +32,7 @@ import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
 import { AddSubscriptionModal } from "./AddSubscriptionModal"
+import { ChangeCalendarColorModal } from "./ChangeCalendarColorModal"
 import { RenameCalendarModal } from "./RenameCalendarModal"
 
 const DEFAULT_GROUP = "default"
@@ -190,11 +191,17 @@ function CalendarDropdownMenuWrapper({
   const { reloadCalendars } = useCalendars()
   const { defaultCalendar, setDefaultCalendar } = useSettings()
   const [showRenameModal, setShowRenameModal] = useState(false)
+  const [showColorModal, setShowColorModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const isDefault = defaultCalendar === calendar.slug
 
   const renameCalendar = async (name: string) => {
     await rpc.caldir.rename_calendar(calendar.slug, name)
+    await reloadCalendars()
+  }
+
+  const changeCalendarColor = async (color: string) => {
+    await rpc.caldir.set_calendar_color(calendar.slug, color)
     await reloadCalendars()
   }
 
@@ -220,6 +227,9 @@ function CalendarDropdownMenuWrapper({
           <DropdownMenuItem onClick={() => setShowRenameModal(true)}>
             Rename calendar
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowColorModal(true)}>
+            Change calendar color
+          </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
             {calendar.provider === null ? "Delete calendar" : "Disconnect calendar"}
           </DropdownMenuItem>
@@ -231,6 +241,14 @@ function CalendarDropdownMenuWrapper({
           calendar={calendar}
           onClose={() => setShowRenameModal(false)}
           onSubmit={renameCalendar}
+        />
+      )}
+
+      {showColorModal && (
+        <ChangeCalendarColorModal
+          calendar={calendar}
+          onClose={() => setShowColorModal(false)}
+          onSubmit={changeCalendarColor}
         />
       )}
 
