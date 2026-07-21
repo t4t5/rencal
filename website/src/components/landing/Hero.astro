@@ -1,17 +1,26 @@
 ---
 import OmarchyLogo from "../../icons/omarchy.astro"
 import LinuxLogo from "../../icons/linux.astro"
+import AppleLogo from "../../icons/apple.astro"
+import WindowsLogo from "../../icons/windows.astro"
 ---
 
 <div class="text-center flex flex-col items-center gap-7 border-b border-b-separator px-4">
   <h2 class="uppercase text-[30px] md:text-[40px] leading-tight pt-10 md:pt-6 text-pretty">
-    A modern open-source calendar
+    A calendar for hackers
   </h2>
 
-  <div class="flex gap-3 items-center">
+  <div id="linux-availability" class="flex gap-3 items-center">
     <OmarchyLogo class="h-4" />
     <LinuxLogo class="h-4" />
     <p>Built for Omarchy + Linux</p>
+  </div>
+
+  <div id="platform-availability" class="hidden gap-3 items-center">
+    <AppleLogo class="h-4" />
+    <WindowsLogo class="h-4" />
+    <LinuxLogo class="h-4" />
+    <p>Available for macOS, Windows, Linux</p>
   </div>
 
   <div class="flex gap-5">
@@ -48,3 +57,16 @@ import LinuxLogo from "../../icons/linux.astro"
     </video>
   </div>
 </div>
+
+<script>
+  const linuxAvailability = document.querySelector("#linux-availability")
+  const platformAvailability = document.querySelector("#platform-availability")
+  const userAgent = navigator.userAgent.toLowerCase()
+  const isMacOs = userAgent.includes("macintosh")
+  const isWindows = userAgent.includes("windows")
+
+  if (isMacOs || isWindows) {
+    linuxAvailability?.classList.add("hidden")
+    platformAvailability?.classList.replace("hidden", "flex")
+  }
+</script>

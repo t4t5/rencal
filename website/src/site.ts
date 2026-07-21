@@ -1,6 +1,6 @@
 export const site = {
   title: "renCal",
-  description: "A modern open-source calendar",
+  description: "A calendar for hackers",
   ogImage: "https://rencal.org/og.jpg",
   favicon: "/favicon.svg?v=2",
   geistMonoStylesheet:
