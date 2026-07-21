@@ -12,7 +12,16 @@ editing `~/.config/caldir/config.toml` directly.
 
 <img src="/docs/connect-calendar.png" alt="Connect calendar dialog" width="520" />
 
-renCal comes bundled with support for **Google Calendar**, **iCloud Calendar**, **Outlook Calendar** and **CalDAV** servers.
+renCal comes bundled with support for:
 
-More providers can be added using the [provider protocol](https://caldir.org/providers/#provider-protocol). RenCal will by default pick up any
-binary that starts with `caldir-provider-*` in your `$PATH`.
+- **Google Calendar**
+- **iCloud Calendar**
+- **Outlook Calendar**
+- **other CalDAV servers**
+
+More providers can be added using the [provider protocol](https://caldir.org/providers/#provider-protocol), for example:
+
+- [Proton Calendar Provider](https://github.com/t4t5/caldir-provider-proton)
+- [Tuta Calendar Provider](https://github.com/t4t5/caldir-provider-tuta)
+
+RenCal will by default pick up any binary that starts with `caldir-provider-*` in your `$PATH`.
