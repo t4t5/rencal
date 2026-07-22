@@ -141,7 +141,7 @@ install-notifierd: build-notifierd
   sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
     src-tauri/notifierd/rencal-notifierd.service \
     > ~/.config/systemd/user/rencal-notifierd.service
-  install -Dm644 src-tauri/icons/128x128.png ~/.local/share/icons/hicolor/128x128/apps/rencal.png
+  install -Dm644 src-tauri/icons/linux/icon.svg ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
   systemctl --user daemon-reload
   systemctl --user enable --now rencal-notifierd.service
   -systemctl --user restart rencal-notifierd.service
@@ -153,7 +153,7 @@ uninstall-notifierd:
   -systemctl --user disable --now rencal-notifierd.service
   rm -f ~/.local/bin/rencal-notifierd
   rm -f ~/.config/systemd/user/rencal-notifierd.service
-  rm -f ~/.local/share/icons/hicolor/128x128/apps/rencal.png
+  rm -f ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
   systemctl --user daemon-reload
 
 # Tail the reminder daemon's logs
