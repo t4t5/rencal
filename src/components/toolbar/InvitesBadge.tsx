@@ -12,7 +12,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { eventKey, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { formatTime, toInteropDate } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -26,7 +26,7 @@ export function InvitesBadge() {
 
     rpc.caldir
       .list_invites(slugs)
-      .then((events) => setInvites(events.map(rpcToCalendarEvent)))
+      .then((events) => setInvites(rpcToCalendarEvents(events)))
       .catch(console.error)
   }, [calendars])
 
