@@ -3,7 +3,7 @@ import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 
 import { rpc } from "@/rpc"
 
-import { eventKey, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { DateRange } from "@/lib/types"
 
 export const MONTHS_TO_LOAD = 2
@@ -46,5 +46,5 @@ export async function getCalendarEventsForRange(
     dateToUtcInstant(start),
     dateToUtcInstant(end),
   )
-  return events.map(rpcToCalendarEvent)
+  return rpcToCalendarEvents(events)
 }
