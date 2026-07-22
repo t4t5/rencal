@@ -1,3 +1,4 @@
+mod caldir_access;
 mod caldir_watcher;
 mod config_watcher;
 mod event_cache;

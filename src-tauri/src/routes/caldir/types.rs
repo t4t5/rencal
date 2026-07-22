@@ -43,15 +43,12 @@ pub struct Contact {
     pub last_seen: String,
 }
 
-/// Whether the configured caldir data dir is reachable from this process.
-/// Only ever `NeedsPermission` inside a sandbox (flatpak), where an ungranted
-/// path is invisible and the grant must be made from outside, then the app
-/// restarted.
+/// Whether renCal can access the canonical configured caldir directory.
 #[derive(Clone, Serialize, Deserialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum DataDirStatus {
-    Ok,
-    NeedsPermission { path: String, command: String },
+    Ready { path: String },
+    NeedsAuthorization { path: String },
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]

@@ -44,6 +44,10 @@ pub(super) async fn set_default_calendar(slug: Option<String>) -> TauResult<()> 
 }
 
 pub(super) async fn set_calendar_dir(path: String) -> TauResult<()> {
+    if crate::caldir_access::is_flatpak() {
+        return set_calendar_dir_from_portal(path).await;
+    }
+
     let mut caldir = load_caldir()?;
     let mut config = caldir.config().clone();
 
@@ -52,5 +56,25 @@ pub(super) async fn set_calendar_dir(path: String) -> TauResult<()> {
 
     EVENT_CACHE.invalidate_all();
 
+    Ok(())
+}
+
+pub(super) async fn authorize_data_dir(portal_path: String) -> TauResult<()> {
+    if !crate::caldir_access::is_flatpak() {
+        return Err("Data directory authorization is only required in Flatpak.".to_string());
+    }
+
+    crate::caldir_access::authorize_configured_dir(portal_path)?;
+    EVENT_CACHE.invalidate_all();
+    Ok(())
+}
+
+pub(super) async fn set_calendar_dir_from_portal(portal_path: String) -> TauResult<()> {
+    if !crate::caldir_access::is_flatpak() {
+        return Err("Portal data directories are only used in Flatpak.".to_string());
+    }
+
+    crate::caldir_access::set_calendar_dir_from_portal(portal_path)?;
+    EVENT_CACHE.invalidate_all();
     Ok(())
 }

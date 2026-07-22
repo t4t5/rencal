@@ -8,12 +8,7 @@ use chrono::{DateTime, Utc};
 
 /// Load caldir with the bundled providers overlaid on top of any in `PATH`.
 pub(super) fn load_caldir() -> TauResult<Caldir> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
-
-    Ok(match crate::bundled_providers_dir() {
-        Some(dir) => caldir.with_bundled_providers(dir),
-        None => caldir,
-    })
+    crate::caldir_access::load_caldir()
 }
 
 pub fn is_visible(event: &Event) -> bool {

@@ -78,11 +78,21 @@ const AutoSyncSection = () => {
 
 const DataDirectorySection = () => {
   const { calendarDir, setCalendarDir } = useSettings()
+  const [changing, setChanging] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const onChange = async () => {
-    const selected = await open({ directory: true, multiple: false })
-    if (typeof selected !== "string") return
-    await setCalendarDir(selected)
+    setError(null)
+    try {
+      const selected = await open({ directory: true, multiple: false, recursive: true })
+      if (typeof selected !== "string") return
+      setChanging(true)
+      await setCalendarDir(selected)
+    } catch (changeError) {
+      setError(changeError instanceof Error ? changeError.message : String(changeError))
+    } finally {
+      setChanging(false)
+    }
   }
 
   return (
@@ -90,10 +100,11 @@ const DataDirectorySection = () => {
       <label className="text-sm">Data directory</label>
       <div className="flex gap-2">
         <Input value={calendarDir} readOnly ghost={false} className="flex-1" />
-        <Button variant="secondary" onClick={onChange}>
-          Change
+        <Button variant="secondary" onClick={onChange} disabled={changing}>
+          {changing ? "Checking…" : "Change"}
         </Button>
       </div>
+      {error && <p className="text-destructive text-xs">{error}</p>}
     </div>
   )
 }

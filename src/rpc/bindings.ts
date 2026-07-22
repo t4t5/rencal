@@ -23,12 +23,9 @@ export type CreateEventInput = { calendar_slug: string; summary: string; descrip
 export type CredentialFieldInput = { id: string; value: string }
 
 /**
- * Whether the configured caldir data dir is reachable from this process.
- * Only ever `NeedsPermission` inside a sandbox (flatpak), where an ungranted
- * path is invisible and the grant must be made from outside, then the app
- * restarted.
+ * Whether renCal can access the canonical configured caldir directory.
  */
-export type DataDirStatus = { kind: "ok" } | { kind: "needs_permission"; path: string; command: string }
+export type DataDirStatus = { kind: "ready"; path: string } | { kind: "needs_authorization"; path: string }
 
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
 
@@ -114,8 +111,9 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
  */
 new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[] }
 
-const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"get_calendar_dir":[],"get_data_dir_status":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_groups":[],"get_notifications_enabled":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}', 'themes':'{"list_external":[]}' }
-export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
+const ARGS_MAP = { 'caldir':'{"authorize_data_dir":["portal_path"],"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"get_calendar_dir":[],"get_data_dir_status":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_calendar_dir_from_portal":["portal_path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_groups":[],"get_notifications_enabled":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[]}', 'themes':'{"list_external":[]}' }
+export type Router = { "caldir": {authorize_data_dir: (portalPath: string) => Promise<null>, 
+check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
@@ -141,6 +139,7 @@ rsvp: (calendarSlug: string, eventId: string, response: string) => Promise<null>
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
 set_calendar_color: (calendarSlug: string, color: string) => Promise<null>, 
 set_calendar_dir: (path: string) => Promise<null>, 
+set_calendar_dir_from_portal: (portalPath: string) => Promise<null>, 
 set_default_calendar: (slug: string | null) => Promise<null>, 
 set_default_reminders: (minutes: number[]) => Promise<null>, 
 set_time_format: (timeFormat: TimeFormat) => Promise<null>, 

@@ -71,7 +71,21 @@ impl Notifier for NotifySendNotifier {
 /// Fires once immediately on entry so a freshly-launched host (GUI or daemon)
 /// fires any catch-up reminders right away instead of waiting up to ~60s.
 pub async fn run_reminder_loop<N: Notifier>(notifier: N, icon: Option<PathBuf>) {
-    if let Err(e) = check_and_notify(&notifier, icon.as_deref()) {
+    run_reminder_loop_with_loader(notifier, icon, || {
+        Caldir::load().map_err(|error| error.to_string())
+    })
+    .await;
+}
+
+/// Run reminders with a host-provided caldir loader. The GUI uses this to
+/// resolve Flatpak Documents portal access; the standalone daemon keeps using
+/// [`run_reminder_loop`] and the canonical host path.
+pub async fn run_reminder_loop_with_loader<N, F>(notifier: N, icon: Option<PathBuf>, load_caldir: F)
+where
+    N: Notifier,
+    F: Fn() -> Result<Caldir, String> + Send + Sync + 'static,
+{
+    if let Err(e) = check_and_notify_with_loader(&notifier, icon.as_deref(), &load_caldir) {
         log::error!("Reminder check error: {e}");
     }
 
@@ -80,10 +94,22 @@ pub async fn run_reminder_loop<N: Notifier>(notifier: N, icon: Option<PathBuf>) 
         let secs_remaining = 60 - now.timestamp() % 60;
         tokio::time::sleep(StdDuration::from_secs(secs_remaining as u64)).await;
 
-        if let Err(e) = check_and_notify(&notifier, icon.as_deref()) {
+        if let Err(e) = check_and_notify_with_loader(&notifier, icon.as_deref(), &load_caldir) {
             log::error!("Reminder check error: {e}");
         }
     }
+}
+
+fn check_and_notify_with_loader<F>(
+    notifier: &dyn Notifier,
+    icon: Option<&Path>,
+    load_caldir: &F,
+) -> Result<(), Box<dyn std::error::Error>>
+where
+    F: Fn() -> Result<Caldir, String>,
+{
+    let caldir = load_caldir().map_err(std::io::Error::other)?;
+    check_and_notify_with_caldir(notifier, icon, &caldir)
 }
 
 /// Scan all calendars for reminders due in the catch-up window and fire
@@ -98,6 +124,15 @@ pub fn check_and_notify(
     notifier: &dyn Notifier,
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    let caldir = Caldir::load()?;
+    check_and_notify_with_caldir(notifier, icon, &caldir)
+}
+
+pub fn check_and_notify_with_caldir(
+    notifier: &dyn Notifier,
+    icon: Option<&Path>,
+    caldir: &Caldir,
+) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
     let notifications_enabled = RencalConfig::load().notifications_enabled;
 
@@ -110,7 +145,6 @@ pub fn check_and_notify(
     let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
     cache.evict_older_than(cutoff);
 
-    let caldir = Caldir::load()?;
     let time_format = caldir.config().time_format();
 
     // Scan range is over event *start* times, but reminders fire at

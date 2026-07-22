@@ -45,13 +45,21 @@ pub async fn run_reminder_loop(app: AppHandle) {
 
     #[cfg(not(target_os = "linux"))]
     {
-        reminder_core::run_reminder_loop(TauriNotifier { app }, icon).await;
+        reminder_core::run_reminder_loop_with_loader(TauriNotifier { app }, icon, || {
+            crate::caldir_access::load_caldir()
+        })
+        .await;
     }
 
     #[cfg(target_os = "linux")]
     {
         let _ = app;
-        reminder_core::run_reminder_loop(reminder_core::NotifySendNotifier, icon).await;
+        reminder_core::run_reminder_loop_with_loader(
+            reminder_core::NotifySendNotifier,
+            icon,
+            crate::caldir_access::load_caldir,
+        )
+        .await;
     }
 }
 

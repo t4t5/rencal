@@ -1,7 +1,6 @@
 use std::path::Path;
 use std::time::Duration;
 
-use caldir_core::Caldir;
 use notify::event::ModifyKind;
 use notify::{Event, EventKind, RecursiveMode, Watcher};
 use tauri::{AppHandle, Emitter, Listener};
@@ -46,8 +45,8 @@ pub async fn run_watcher(app: AppHandle) {
 /// calendar dir changes (signalled via `dir_rx`) or the watch can't be set up.
 /// On a setup failure it parks on `dir_rx` so the caller doesn't busy-loop.
 async fn watch_current_dir(app: &AppHandle, dir_rx: &mut mpsc::UnboundedReceiver<()>) {
-    let Ok(caldir) = Caldir::load() else {
-        log::warn!("caldir watcher: failed to load caldir config");
+    let Ok(caldir) = crate::caldir_access::load_caldir() else {
+        log::warn!("caldir watcher: data directory is not currently accessible");
         let _ = dir_rx.recv().await;
         return;
     };

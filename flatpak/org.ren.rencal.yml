@@ -14,10 +14,6 @@ finish-args:
   - --filesystem=xdg-config/caldir:create
   # Share renCal settings and custom themes across package formats.
   - --filesystem=xdg-config/rencal:create
-  # Default caldir data dir. Users with a custom dir get an in-app prompt
-  # with the `flatpak override` command to grant it (see DataDirGate).
-  - --filesystem=~/caldir:create
-
 modules:
   - name: rencal
     buildsystem: simple

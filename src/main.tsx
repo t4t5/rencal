@@ -1,15 +1,17 @@
 // Global styles first, then the built-in themes (whose [data-theme] rules must
 // win over the :root defaults declared in global.css).
-import React from "react"
+import React, { ReactNode, useEffect, useState } from "react"
 import ReactDOM from "react-dom/client"
 
 import "@/global.css"
 import "virtual:rencal-themes.css"
 
+import { DataDirGate } from "@/components/setup/DataDirGate"
+
 import { CalendarStateProvider } from "@/contexts/CalendarStateContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 
-import { preloadCalendarData } from "@/lib/preload-data"
+import { Preload, preloadCalendarData } from "@/lib/preload-data"
 
 import { ThemeProvider } from "@/themes/ThemeRegistry"
 import { AppWindow } from "@/windows/AppWindow"
@@ -19,8 +21,6 @@ const params = new URLSearchParams(window.location.search)
 const appWindow = params.get("appWindow")
 
 async function bootstrap() {
-  const preload = appWindow === "settings" ? {} : await preloadCalendarData()
-
   const rootEl = document.getElementById("root")
 
   if (!rootEl) return null
@@ -28,16 +28,46 @@ async function bootstrap() {
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
       <ThemeProvider>
-        <SettingsProvider>
-          <CalendarStateProvider
-            initialCalendars={preload.initialCalendars}
-            initialDate={preload.initialDate}
-          >
-            {appWindow === "settings" ? <SettingsWindow /> : <AppWindow preload={preload} />}
-          </CalendarStateProvider>
-        </SettingsProvider>
+        {appWindow === "settings" ? (
+          <AppProviders>
+            <SettingsWindow />
+          </AppProviders>
+        ) : (
+          <DataDirGate>
+            <MainWindowRoot />
+          </DataDirGate>
+        )}
       </ThemeProvider>
     </React.StrictMode>,
+  )
+}
+
+function MainWindowRoot() {
+  const [preload, setPreload] = useState<Preload | null>(null)
+
+  useEffect(() => {
+    void preloadCalendarData().then(setPreload)
+  }, [])
+
+  if (!preload) return null
+
+  return (
+    <AppProviders preload={preload}>
+      <AppWindow preload={preload} />
+    </AppProviders>
+  )
+}
+
+function AppProviders({ children, preload = {} }: { children: ReactNode; preload?: Preload }) {
+  return (
+    <SettingsProvider>
+      <CalendarStateProvider
+        initialCalendars={preload.initialCalendars}
+        initialDate={preload.initialDate}
+      >
+        {children}
+      </CalendarStateProvider>
+    </SettingsProvider>
   )
 }
 

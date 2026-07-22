@@ -35,22 +35,12 @@ pub(super) async fn get_calendar_dir() -> TauResult<String> {
 }
 
 pub(super) async fn get_data_dir_status() -> TauResult<DataDirStatus> {
-    let caldir = load_caldir()?;
-    let data_dir = caldir.data_dir();
-
-    if data_dir.exists() {
-        return Ok(DataDirStatus::Ok);
-    }
-
-    // FLATPAK_ID is set for every flatpak-sandboxed process. Outside a sandbox
-    // a missing dir is not a permission problem (caldir creates it on demand).
-    let app_id = match std::env::var("FLATPAK_ID") {
-        Ok(id) if !id.is_empty() => id,
-        _ => return Ok(DataDirStatus::Ok),
-    };
-
+    let data_dir = crate::caldir_access::configured_host_path()?;
     let path = tildify(&data_dir.to_string_lossy());
-    let command = format!("flatpak override --user --filesystem={path} {app_id}");
 
-    Ok(DataDirStatus::NeedsPermission { path, command })
+    if crate::caldir_access::has_valid_access()? {
+        Ok(DataDirStatus::Ready { path })
+    } else {
+        Ok(DataDirStatus::NeedsAuthorization { path })
+    }
 }

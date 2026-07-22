@@ -111,6 +111,8 @@ pub trait CaldirApi {
     async fn set_calendar_dir(path: String) -> TauResult<()>;
 
     async fn get_data_dir_status() -> TauResult<DataDirStatus>;
+    async fn authorize_data_dir(portal_path: String) -> TauResult<()>;
+    async fn set_calendar_dir_from_portal(portal_path: String) -> TauResult<()>;
 }
 
 #[derive(Clone)]
@@ -294,5 +296,13 @@ impl CaldirApi for CaldirApiImpl {
 
     async fn get_data_dir_status(self) -> TauResult<DataDirStatus> {
         get_config::get_data_dir_status().await
+    }
+
+    async fn authorize_data_dir(self, portal_path: String) -> TauResult<()> {
+        set_config::authorize_data_dir(portal_path).await
+    }
+
+    async fn set_calendar_dir_from_portal(self, portal_path: String) -> TauResult<()> {
+        set_config::set_calendar_dir_from_portal(portal_path).await
     }
 }
