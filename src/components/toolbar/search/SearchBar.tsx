@@ -8,7 +8,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useOnClickOutside } from "@/hooks/useOnClickOutside"
-import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 
 import { EventPopover } from "./EventPopover"
@@ -102,7 +102,7 @@ export function SearchBar({
 
       setIsLoading(true)
       void rpc.caldir.search_events(calendarSlugs, query).then((found) => {
-        setResults(found.map(rpcToCalendarEvent))
+        setResults(rpcToCalendarEvents(found))
         setIsLoading(false)
       })
     },

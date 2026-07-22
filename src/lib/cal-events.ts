@@ -61,6 +61,24 @@ export function rpcToCalendarEvent(w: RpcCalendarEvent): CalendarEvent {
   }
 }
 
+/**
+ * Convert a batch of RPC events, skipping any that fail to parse (e.g. a
+ * non-IANA TZID like "GMT+0100" from an external sync) instead of rejecting
+ * the whole load.
+ */
+export function rpcToCalendarEvents(rpcEvents: RpcCalendarEvent[]): CalendarEvent[] {
+  const converted: CalendarEvent[] = []
+  for (const rpcEvent of rpcEvents) {
+    try {
+      converted.push(rpcToCalendarEvent(rpcEvent))
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.warn(`Skipping event "${rpcEvent.summary}" (${eventKey(rpcEvent)}): ${message}`)
+    }
+  }
+  return converted
+}
+
 export function calendarEventToRpc(e: CalendarEvent): RpcCalendarEvent {
   return {
     ...e,
