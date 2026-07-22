@@ -1,0 +1,33 @@
+id: org.ren.rencal
+runtime: org.gnome.Platform
+runtime-version: "48"
+sdk: org.gnome.Sdk
+command: rencal
+
+finish-args:
+  - --socket=wayland
+  - --socket=fallback-x11
+  - --share=ipc
+  - --device=dri
+  - --share=network
+
+modules:
+  - name: rencal
+    buildsystem: simple
+    build-commands:
+      - bsdtar -xf renCal.deb data.tar.gz
+      - bsdtar -xzf data.tar.gz
+      - install -Dm755 usr/bin/rencal /app/bin/rencal
+      - install -d /app/lib
+      - cp -r usr/lib/renCal /app/lib/renCal
+      - install -Dm644 usr/share/applications/renCal.desktop /app/share/applications/org.ren.rencal.desktop
+      - |
+        for size in 32x32 128x128 256x256@2; do
+          install -Dm644 usr/share/icons/hicolor/$size/apps/rencal.png \
+            /app/share/icons/hicolor/$size/apps/org.ren.rencal.png
+        done
+      - sed -i 's/Icon=rencal/Icon=org.ren.rencal/' /app/share/applications/org.ren.rencal.desktop
+    sources:
+      - type: file
+        path: ../src-tauri/target/release/bundle/deb/renCal_amd64.deb
+        dest-filename: renCal.deb

@@ -38,7 +38,10 @@ gen-types:
 
 # Test production version of app (needs build first)
 start:
-  src-tauri/target/release/bundle/appimage/renCal_0.0.1_amd64.AppImage
+  #!/usr/bin/env bash
+  set -euo pipefail
+  version=$(node -p "require('./package.json').version")
+  "src-tauri/target/release/bundle/appimage/renCal_${version}_amd64.AppImage"
 
 # Check Rust and TypeScript types
 check:
@@ -76,6 +79,11 @@ build: build-providers-release
     cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
   fi
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    version=$(node -p "require('./package.json').version")
+    deb_dir=src-tauri/target/release/bundle/deb
+    ln -f "$deb_dir/renCal_${version}_amd64.deb" "$deb_dir/renCal_amd64.deb"
+  fi
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: build-providers-release
