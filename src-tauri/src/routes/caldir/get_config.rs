@@ -1,6 +1,6 @@
 use super::helpers::load_caldir;
 use super::helpers::tildify;
-use super::types::TimeFormat;
+use super::types::{DataDirStatus, TimeFormat};
 use crate::routes::TauResult;
 use caldir_core::TimeFormat as CoreTimeFormat;
 
@@ -32,4 +32,25 @@ pub(super) async fn get_default_calendar() -> TauResult<Option<String>> {
 pub(super) async fn get_calendar_dir() -> TauResult<String> {
     let caldir = load_caldir()?;
     Ok(tildify(&caldir.config().data_dir().to_string_lossy()))
+}
+
+pub(super) async fn get_data_dir_status() -> TauResult<DataDirStatus> {
+    let caldir = load_caldir()?;
+    let data_dir = caldir.data_dir();
+
+    if data_dir.exists() {
+        return Ok(DataDirStatus::Ok);
+    }
+
+    // FLATPAK_ID is set for every flatpak-sandboxed process. Outside a sandbox
+    // a missing dir is not a permission problem (caldir creates it on demand).
+    let app_id = match std::env::var("FLATPAK_ID") {
+        Ok(id) if !id.is_empty() => id,
+        _ => return Ok(DataDirStatus::Ok),
+    };
+
+    let path = tildify(&data_dir.to_string_lossy());
+    let command = format!("flatpak override --user --filesystem={path} {app_id}");
+
+    Ok(DataDirStatus::NeedsPermission { path, command })
 }

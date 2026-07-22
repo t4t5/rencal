@@ -29,8 +29,8 @@ mod sync_preview;
 mod update_event;
 
 pub use types::{
-    Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput, ProviderConnectInfo,
-    SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput, DataDirStatus,
+    ProviderConnectInfo, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -109,6 +109,8 @@ pub trait CaldirApi {
 
     async fn get_calendar_dir() -> TauResult<String>;
     async fn set_calendar_dir(path: String) -> TauResult<()>;
+
+    async fn get_data_dir_status() -> TauResult<DataDirStatus>;
 }
 
 #[derive(Clone)]
@@ -288,5 +290,9 @@ impl CaldirApi for CaldirApiImpl {
     }
     async fn set_calendar_dir(self, path: String) -> TauResult<()> {
         set_config::set_calendar_dir(path).await
+    }
+
+    async fn get_data_dir_status(self) -> TauResult<DataDirStatus> {
+        get_config::get_data_dir_status().await
     }
 }

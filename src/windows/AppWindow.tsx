@@ -4,6 +4,7 @@ import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { Main } from "@/components/main/Main"
+import { DataDirGate } from "@/components/setup/DataDirGate"
 import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts"
 import { Sidebar } from "@/components/sidebar/Sidebar"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
@@ -29,7 +30,9 @@ export function AppWindow({ preload }: { preload: Preload }) {
           <EventDraftProvider>
             <CreateEventGateProvider>
               <AgendaFocusProvider>
-                <App />
+                <DataDirGate>
+                  <App />
+                </DataDirGate>
               </AgendaFocusProvider>
             </CreateEventGateProvider>
           </EventDraftProvider>

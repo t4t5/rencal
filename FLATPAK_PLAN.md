@@ -197,14 +197,64 @@ flatpak override --user --filesystem=~/calendar org.ren.rencal
 4. `flatpak run org.ren.rencal` — expect the watcher to report `~/calendar`,
    events to load, and provider sync to reuse existing host credentials.
 
+## Iteration 3: in-app "grant access" screen (simplified, no portals)
+
+**Decision: detect the missing grant and show the user the exact
+`flatpak override` command** instead of a portal flow. A sandboxed app cannot
+grant itself access to a known path; the FileChooser/Documents-portal route
+would work but routes all I/O through a FUSE mount with real downsides for us
+(no inotify events for host-side edits, portal-path plumbing into providers).
+The static override keeps full fidelity — real path, real inotify, providers
+untouched — at the cost of one copy-pasted command. A portal upgrade can layer
+on top later; it replaces the same screen.
+
+### Manifest
+
+Grant the _default_ data dir statically so a fresh install works with zero
+prompts; only custom dirs need the override:
+
+```yaml
+# Default caldir data dir (users with a custom dir get an in-app prompt)
+- --filesystem=~/caldir:create
+```
+
+### Backend
+
+- Sandbox detection: `FLATPAK_ID` env var (set for every sandboxed process).
+- New taurpc route `caldir.get_data_dir_status()` returning
+  `Ok | NeedsPermission { path, command }`: `NeedsPermission` when sandboxed
+  and the configured data dir doesn't exist (an ungranted path is simply
+  invisible in the sandbox).
+- `command` is the full copyable string, built in the backend where
+  `FLATPAK_ID` provides the app id:
+  `flatpak override --user --filesystem=<path> org.ren.rencal`.
+- No watcher changes: `caldir_watcher.rs` already idles when the dir is
+  missing and re-points on `CALENDAR_DIR_CHANGED`.
+
+### Frontend
+
+- On startup in `AppWindow`, call `get_data_dir_status()`; on `NeedsPermission`
+  render a blocking access screen: explain the sandbox can't see `<path>`,
+  show the command with a copy button, note that renCal must be **restarted**
+  after running it (overrides only apply at sandbox launch).
+- Re-check the status when the calendar dir setting changes, so pointing the
+  app at an ungranted dir from Settings shows the same screen.
+
+### Test sequence
+
+1. `flatpak override --user --reset org.ren.rencal`, rebuild, run — expect the
+   access screen for `~/calendar` with the copyable command.
+2. Run the command, restart — expect events to load normally.
+3. Outside flatpak (`just debug`): status is always `Ok`, no behavior change.
+
 ## Decisions deferred (informed by the test run)
 
-1. **Data dir grant for distribution**: the config is shared (decided above),
-   but an arbitrary user-chosen data dir can't be statically whitelisted.
-   Options: default `--filesystem=home` (Flathub frowns on it), document the
-   one-time `flatpak override` (rough UX), or an in-app first-run flow that
-   requests access via the FileChooser portal (portals don't persist watched-dir
-   access well). Decide after the shared-config iteration works.
+1. **Portal-based grant flow**: an in-app FileChooser/Documents-portal flow
+   (picker + stored host-path→doc-path mapping) could replace the copy-paste
+   command in Iteration 3 with a native dialog. Deferred: doc-portal FUSE
+   mounts drop inotify events for host-side edits (breaks the watcher's core
+   purpose) and the portal path must be plumbed into spawned providers.
+   Revisit only if the override UX proves too rough for real users.
 2. **Notifier daemon**: flatpak can't install systemd user units. Options:
    run notifierd as a background process of the app + `--talk-name=org.freedesktop.Notifications`,
    use the Background portal for autostart, or accept no reminders in flatpak.
