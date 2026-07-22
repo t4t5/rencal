@@ -5,37 +5,15 @@ import "../styles/releases.css"
 import { createMarkdownProcessor } from "@astrojs/markdown-remark"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
+import type { GitHubRelease } from "../lib/github"
+import { getReleases } from "../lib/github"
 import { site } from "../site"
-
-const REPO = "t4t5/rencal"
-interface GitHubRelease {
-  name: string | null
-  tag_name: string
-  html_url: string
-  published_at: string | null
-  body: string | null
-  draft: boolean
-  prerelease: boolean
-}
 
 // Fetched at build time (Astro static output) — the result is baked into the
 // generated HTML, so visitors never hit the GitHub API.
-const headers: Record<string, string> = {
-  "User-Agent": "rencal-website",
-  Accept: "application/vnd.github+json",
-}
-if (process.env.GITHUB_TOKEN) {
-  headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`
-}
-
-let releases: GitHubRelease[] = []
+let releases: GitHubRelease[]
 try {
-  const res = await fetch(`https://api.github.com/repos/${REPO}/releases?per_page=100`, { headers })
-  if (!res.ok) {
-    throw new Error(`GitHub API responded ${res.status}`)
-  }
-  // API returns newest-first; drop drafts.
-  releases = ((await res.json()) as GitHubRelease[]).filter((release) => !release.draft)
+  releases = await getReleases()
 } catch (error) {
   throw new Error("Failed to fetch releases from GitHub", { cause: error })
 }
@@ -66,28 +44,30 @@ const entries = await Promise.all(
 <BaseLayout title={`Releases · ${site.title}`} description={`Release notes for ${site.title}.`}>
   <section class="mx-auto flex w-full max-w-3xl flex-col px-6 md:px-10 pt-6">
     <div class="flex flex-col gap-8">
-      {entries.map((entry) => (
-        <>
-          <article class="flex flex-col gap-2">
-            <div class="flex flex-col gap-1">
-              <h3 class="text-2xl">
-                <a href={entry.url} class="hover:underline" target="_blank">
-                  {entry.title}
-                </a>
-                {entry.prerelease && (
-                  <span class="ml-3 border border-primary px-2 py-0.5 align-middle text-xs text-primary uppercase">
-                    Pre-release
-                  </span>
-                )}
-              </h3>
-              {entry.date && <p class="text-sm text-muted opacity-70">{entry.date}</p>}
-            </div>
+      {
+        entries.map((entry) => (
+          <>
+            <article class="flex flex-col gap-2">
+              <div class="flex flex-col gap-1">
+                <h3 class="text-2xl">
+                  <a href={entry.url} class="hover:underline" target="_blank">
+                    {entry.title}
+                  </a>
+                  {entry.prerelease && (
+                    <span class="ml-3 border border-primary px-2 py-0.5 align-middle text-xs text-primary uppercase">
+                      Pre-release
+                    </span>
+                  )}
+                </h3>
+                {entry.date && <p class="text-sm text-muted opacity-70">{entry.date}</p>}
+              </div>
 
-            <div class="release-body" set:html={entry.bodyHtml} />
-          </article>
-          <hr />
-        </>
-      ))}
+              <div class="release-body" set:html={entry.bodyHtml} />
+            </article>
+            <hr />
+          </>
+        ))
+      }
     </div>
   </section>
 </BaseLayout>

@@ -2,15 +2,24 @@
 import RenLogo from "./RenLogo.astro"
 ---
 
-<div class="flex justify-between px-8 pb-6">
-  <p class="text-sm text-muted opacity-70">
-    Built by <a href="https://t4t5.com" class="text-foreground underline" target="_blank">T4T5</a> +
-    <a
-      href="https://github.com/t4t5/rencal/graphs/contributors"
-      class="hover:underline"
-      target="_blank">contributors</a
-    >
-  </p>
+<div class="flex flex-col gap-4 px-8 pb-6 sm:flex-row sm:items-center sm:justify-between">
+  <div class="flex flex-col gap-3 text-sm text-muted sm:flex-row sm:items-center sm:gap-6">
+    <p class="opacity-70">
+      Built by <a href="https://t4t5.com" class="text-foreground underline" target="_blank">T4T5</a>
+      +
+      <a
+        href="https://github.com/t4t5/rencal/graphs/contributors"
+        class="hover:underline"
+        target="_blank">contributors</a
+      >
+    </p>
+
+    <nav class="flex gap-4 text-foreground" aria-label="Footer">
+      <a href="/download" class="hover:underline">Download</a>
+      <a href="/docs/calendar-data" class="hover:underline">Docs</a>
+      <a href="/releases" class="hover:underline">Releases</a>
+    </nav>
+  </div>
 
   <a href="https://ren.org" target="_blank">
     <RenLogo class="opacity-50" />
