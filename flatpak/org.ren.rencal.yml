@@ -10,6 +10,10 @@ finish-args:
   - --share=ipc
   - --device=dri
   - --share=network
+  # Share config with the host caldir CLI and other caldir apps.
+  - --filesystem=xdg-config/caldir:create
+  # Share renCal settings and custom themes across package formats.
+  - --filesystem=xdg-config/rencal:create
 
 modules:
   - name: rencal
