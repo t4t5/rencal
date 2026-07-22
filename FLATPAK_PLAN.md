@@ -107,18 +107,104 @@ flatpak run --env=WEBKIT_DISABLE_DMABUF_RENDERER=1 org.ren.rencal  # if blank/gl
 
 | Area              | Expectation                                                                                                                                                                  |
 | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Window renders    | Should work (GNOME runtime has webkit2gtk-4.1)                                                                                                                               |
-| Caldir directory  | **Will break.** Sandbox has no `--filesystem` access; XDG dirs are redirected to `~/.var/app/org.ren.rencal/`. The app will see an empty/missing caldir.                     |
+| Window renders    | ✅ Confirmed working (GNOME runtime has webkit2gtk-4.1)                                                                                                                      |
+| Caldir directory  | ❌ **Confirmed broken.** See "Iteration 2" below: the sandbox cannot see the host's caldir config or calendar data until both receive explicit filesystem grants.            |
 | Provider binaries | Spawning `/app/lib/renCal/providers/*` should work (children share the sandbox), but sync also depends on caldir paths above.                                                |
 | OAuth login       | Browser open goes through the URI portal (`tauri-plugin-opener`) — probably works. Localhost redirect needs `--share=network`.                                               |
 | Notifications     | `rencal-notifierd` is not shipped and there's no systemd inside the sandbox — reminders won't fire. In-app `tauri-plugin-notification` may work via the notification portal. |
 | Updater           | `tauri-plugin-updater` cannot self-update a flatpak. Expect a failed check; flatpak builds should eventually disable it at build time.                                       |
 | Single instance   | dbus-based; `--session-bus` access is granted by default, likely fine.                                                                                                       |
 
+## Iteration 2: share the host caldir config
+
+**Decision: the flatpak shares the host's config** — both `~/.config/caldir`
+(so renCal, the `caldir` CLI, and any other caldir tool read/write the same
+config and provider credentials) and `~/.config/rencal` (renCal settings +
+custom themes). Per-app sandboxed config would silently fork the user's
+calendar setup, which contradicts caldir's plaintext/shared design. The fix is
+entirely in the flatpak manifest — no application or caldir-core changes.
+
+### What the first run showed
+
+The watcher warned: `"/home/t4t5/caldir" does not exist`. Two independent
+layers of breakage:
+
+1. **Config access** (the actual problem hit): flatpak always sets
+   `XDG_CONFIG_HOME=$HOME/.var/app/org.ren.rencal/config` inside the sandbox.
+   caldir-core resolves its config via `dirs::config_dir()`
+   (`caldir-core/src/utils/paths.rs`), so it looked in the app-private dir,
+   found no `config.toml`, and fell back to the default `~/caldir` data dir.
+   Flatpak's `xdg-config/caldir` filesystem permission fixes this by bind-mounting
+   the host config directory at the sandbox's `$XDG_CONFIG_HOME/caldir`.
+2. **Data dir access**: even knowing the right data dir (`~/calendar`), the
+   sandbox can't read it without a `--filesystem` grant.
+
+### Fix, part 1: manifest config permissions
+
+Do not reset `XDG_CONFIG_HOME`. Flatpak's `xdg-config/<dir>` permission maps a
+host XDG config subdirectory into the sandbox's existing XDG config directory.
+For a default host setup, the effective mapping is:
+
+```text
+host ~/.config/caldir
+  → sandbox $XDG_CONFIG_HOME/caldir
+  → ~/.var/app/org.ren.rencal/config/caldir
+```
+
+This is a bind mount, not a copy: reads and writes operate on the host's config
+and provider credentials. It also respects a custom host `$XDG_CONFIG_HOME`.
+caldir-core, `RencalConfig`, and spawned provider binaries can continue using
+`dirs::config_dir()` normally, while unrelated XDG config remains sandboxed.
+
+**Omarchy theme integration is out of scope for the flatpak** — Omarchy users
+install via AUR. `~/.config/omarchy/current` stays unmounted; the omarchy
+watcher just idles on a missing dir.
+
+Add to `finish-args`:
+
+```yaml
+# Share the host's caldir config (config.toml + provider credentials)
+- --filesystem=xdg-config/caldir:create
+# Share renCal's own config (~/.config/rencal: settings + custom themes)
+- --filesystem=xdg-config/rencal:create
+```
+
+Both mounts are read-write: providers need to write token refreshes, and rencal
+creates its config and `themes/` directory on startup.
+
+The `:create` suffix matters for fresh installs: without it, flatpak silently
+skips the bind mount when the host directory doesn't exist yet, so the app's
+first write would create a sandbox-private directory and fork the config from
+the host. `:create` makes flatpak create the host-side directory before
+mounting it.
+
+### Fix, part 2: calendar data permission
+
+The **data dir** is an arbitrary user-chosen path (`~/calendar` here), so the
+manifest can't grant it statically. While testing, grant it per-machine:
+
+```sh
+flatpak override --user --filesystem=~/calendar org.ren.rencal
+```
+
+### Test sequence
+
+1. Add the two `--filesystem=xdg-config/*` grants to the manifest, then rebuild:
+   `flatpak-builder --user --install --force-clean build-dir flatpak/org.ren.rencal.yml`
+2. Confirm the host config is visible through Flatpak's mapping:
+   `flatpak run --command=sh org.ren.rencal -c 'test -f "$XDG_CONFIG_HOME/caldir/config.toml"'`
+3. `flatpak override --user --filesystem=~/calendar org.ren.rencal`
+4. `flatpak run org.ren.rencal` — expect the watcher to report `~/calendar`,
+   events to load, and provider sync to reuse existing host credentials.
+
 ## Decisions deferred (informed by the test run)
 
-1. **Caldir access**: broad `--filesystem=~/<caldir-path>`, a portal-based
-   picker, or defaulting the caldir into the app's own sandbox data dir.
+1. **Data dir grant for distribution**: the config is shared (decided above),
+   but an arbitrary user-chosen data dir can't be statically whitelisted.
+   Options: default `--filesystem=home` (Flathub frowns on it), document the
+   one-time `flatpak override` (rough UX), or an in-app first-run flow that
+   requests access via the FileChooser portal (portals don't persist watched-dir
+   access well). Decide after the shared-config iteration works.
 2. **Notifier daemon**: flatpak can't install systemd user units. Options:
    run notifierd as a background process of the app + `--talk-name=org.freedesktop.Notifications`,
    use the Background portal for autostart, or accept no reminders in flatpak.
