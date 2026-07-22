@@ -119,6 +119,15 @@ build-providers-release:
     cp "../caldir/target/release/caldir-provider-$p" src-tauri/providers/
   done
 
+# Build a flatpak package
+build-flatpak:
+  flatpak install flathub org.gnome.Platform//48 org.gnome.Sdk//48
+  flatpak-builder --user --install --force-clean build-dir flatpak/org.ren.rencal.yml
+
+# Start the flatpak app:
+start-flatpak:
+  flatpak run org.ren.rencal
+
 # ---- NOTIFICATIONS
 
 # Create test event 2 min from now with 1m reminder, then run the app to see the notification
