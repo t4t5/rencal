@@ -9,8 +9,6 @@
  * day, and place events without round-tripping through Temporal on every
  * render.
  */
-import { toast } from "sonner"
-
 import type { CalendarEvent as RpcCalendarEvent, RpcRecurrence } from "@/rpc/bindings"
 
 import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./event-time"
@@ -63,14 +61,10 @@ export function rpcToCalendarEvent(w: RpcCalendarEvent): CalendarEvent {
   }
 }
 
-// Events whose skip warning has already been toasted this session, so periodic
-// reloads of the same broken event don't re-warn on every sync.
-const warnedSkippedEventKeys = new Set<string>()
-
 /**
  * Convert a batch of RPC events, skipping any that fail to parse (e.g. a
  * non-IANA TZID like "GMT+0100" from an external sync) instead of rejecting
- * the whole load. Each skipped event is reported once per session as a toast.
+ * the whole load.
  */
 export function rpcToCalendarEvents(rpcEvents: RpcCalendarEvent[]): CalendarEvent[] {
   const converted: CalendarEvent[] = []
@@ -80,11 +74,6 @@ export function rpcToCalendarEvents(rpcEvents: RpcCalendarEvent[]): CalendarEven
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       console.warn(`Skipping event "${rpcEvent.summary}" (${eventKey(rpcEvent)}): ${message}`)
-      const key = eventKey(rpcEvent)
-      if (!warnedSkippedEventKeys.has(key)) {
-        warnedSkippedEventKeys.add(key)
-        toast.warning(`Couldn't display "${rpcEvent.summary}"`, { description: message })
-      }
     }
   }
   return converted
