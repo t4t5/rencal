@@ -35,7 +35,8 @@ export default defineConfig(async () => ({
       : undefined,
     watch: {
       // 3. tell Vite to ignore watching `src-tauri`
-      ignored: ["**/src-tauri/**"],
+      // flatpak dirs contain symlinks into /run that crash the watcher
+      ignored: ["**/src-tauri/**", "**/build-dir/**", "**/.flatpak-builder/**"],
     },
   },
 }))
