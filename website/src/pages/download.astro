@@ -79,10 +79,15 @@ if (latestRelease) {
       >
       </div>
 
-      <button hidden data-platform-mac class="outline text-[17px] flex items-center py-3! px-4!">
+      <a
+        href={macDownloads[0]?.href ?? releasesUrl}
+        hidden
+        data-platform-mac
+        class="outline text-[17px] flex items-center py-3! px-4! gap-3"
+      >
         <DownloadIcon class="h-4 w-4 relative top-[-1px]" />
         <span>Download renCal for Mac</span>
-      </button>
+      </a>
 
       <h2 class="text-2xl" hidden data-platform-linux>Download renCal</h2>
 
