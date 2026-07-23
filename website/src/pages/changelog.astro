@@ -1,6 +1,6 @@
 ---
 import "../styles/index.css"
-import "../styles/releases.css"
+import "../styles/changelog.css"
 
 import { createMarkdownProcessor } from "@astrojs/markdown-remark"
 
@@ -41,7 +41,7 @@ const entries = await Promise.all(
 )
 ---
 
-<BaseLayout title={`Releases · ${site.title}`} description={`Release notes for ${site.title}.`}>
+<BaseLayout title={`Changelog · ${site.title}`} description={`Release notes for ${site.title}.`}>
   <section class="mx-auto flex w-full max-w-3xl flex-col px-6 md:px-10 pt-6">
     <div class="flex flex-col gap-8">
       {
