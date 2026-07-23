@@ -44,6 +44,16 @@ const macDownloads: DownloadRow[] = [
   { label: "Installer (dmg)", architecture: "Apple Silicon", href: assetUrl(/_aarch64\.dmg$/) },
 ]
 
+const dateFormat = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})
+
+const releaseDate = latestRelease?.published_at
+  ? dateFormat.format(new Date(latestRelease.published_at))
+  : null
+
 if (latestRelease) {
   const missing = [...linuxDownloads, ...macDownloads].filter((row) => !row.href)
   if (missing.length > 0) {
@@ -70,6 +80,7 @@ if (latestRelease) {
             <a class="text-primary hover:underline" href="/changelog">
               {latestRelease.tag_name}
             </a>
+            {releaseDate && <span class="text-muted">({releaseDate})</span>}
           </p>
         ) : (
           <p class="text-sm text-muted">
