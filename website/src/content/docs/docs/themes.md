@@ -1,21 +1,31 @@
 ---
 title: Themes
-description: Customize how renCal looks
+description: Choose a built-in theme, follow Omarchy, or add a custom renCal theme.
 ---
 
-Change renCal's theme from the settings, or press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd> to cycle through them.
+Choose a theme under **Settings → Themes**. Press <kbd>Cmd/Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>T</kbd> to cycle through the available themes.
 
-| Theme: Gruvbox                                                                                                                         | Theme: Catpuccin Light                                                                                                                                 | Theme: Hackerman                                                                                                                           |
-| -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| <img src="/docs/theme-gruvbox.png" alt="Gruvbox theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-catpuccin-light.png" alt="Catpuccin Light theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-hackerman.png" alt="Hackerman theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> |
+renCal includes:
 
-The "Omarchy" theme updates automatically when your system theme changes:
+- **Omarchy (Auto)**
+- **Ren**
+- **Catpuccin Latte**
+- **Tokyo Night**
+- **Classic**
+
+![Theme selector in renCal settings](/docs/settings-themes.png)
+
+## Omarchy theme
+
+The **Omarchy (Auto)** theme follows the active Omarchy system palette. When the system theme changes, renCal updates without needing to restart.
 
 <video src="/docs/omarchy-theme.mp4" autoplay loop muted playsinline></video>
 
-## Add your own theme
+If Omarchy is not installed or its colour file is unavailable, renCal falls back to its default colours.
 
-Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal watches this folder, so new files, edits, and removals show up automatically in the settings.
+## Add a custom theme
+
+Create a `.css` file in `~/.config/rencal/themes/`. The filename becomes the theme name; use an `@name` comment to override it.
 
 ```css
 /* @name My Theme */
@@ -27,4 +37,6 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --hover-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--muted`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives surfaces, dividers, hover states, and other colors from those values.
+Most themes only need `--background`, `--foreground`, `--muted`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives surfaces, dividers, hover states, and related colours from them.
+
+The file contains bare declarations—do not wrap them in a selector. New themes and saved edits appear in Settings automatically, and removing the file removes the theme.

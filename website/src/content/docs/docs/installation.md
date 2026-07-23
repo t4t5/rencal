@@ -3,16 +3,40 @@ title: Installation
 description: Install and update renCal on Linux and macOS.
 ---
 
-Install renCal from the [download page](/download).
+Download the latest release from the [renCal download page](/download).
 
-## Reminders support
+## Linux
 
-On Linux, the AUR, `.deb`, and `.rpm` packages also install `rencal-notifierd`, a background service that can notify you when events are coming up.
+### Arch Linux and Omarchy
 
-If you're using the AppImage or are on macOS, you currently need to keep renCal running to receive reminder notifications.
+Install the AUR package:
 
-## Updating renCal
+```bash
+yay -S rencal-bin
+```
 
-- **AUR**: update with `yay -Syu`.
-- **`.deb` / `.rpm` / AppImage**: install the latest package from the [download page](/download) over the existing version.
-- **macOS**: renCal prompts you in-app when a new version is available.
+### Debian, Ubuntu, Fedora, and other distributions
+
+The download page provides x64 `.deb`, `.rpm`, and AppImage builds.
+
+- Use `.deb` on Debian and Ubuntu-based distributions.
+- Use `.rpm` on Fedora and other RPM-based distributions.
+- Use the AppImage when you do not want to install a system package.
+
+The AUR, `.deb`, and `.rpm` packages include the background reminder service. AppImage reminders require renCal to remain running.
+
+## macOS
+
+Download the Apple Silicon `.dmg`, open it, and drag renCal into **Applications**.
+
+The app is signed and notarized. On first use, macOS may ask for permission to show notifications.
+
+## Update renCal
+
+- **AUR:** update with your normal system upgrade, such as `yay -Syu`.
+- **`.deb`, `.rpm`, and AppImage:** download the newest package and install or replace the existing version.
+- **macOS:** renCal checks for signed updates and offers to install them in the app.
+
+Your calendar data and preferences are kept separately from the application, so updating renCal does not replace them.
+
+Once installed, follow the [Quick start](/docs/quick-start/) guide.
