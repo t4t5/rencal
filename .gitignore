@@ -35,3 +35,7 @@ src-tauri/providers/
 
 # Local cargo config (path overrides for sibling caldir checkout)
 .cargo/
+
+# Flatpak build output
+build-dir/
+.flatpak-builder/

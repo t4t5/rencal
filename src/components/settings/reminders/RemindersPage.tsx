@@ -9,7 +9,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 export function RemindersPage() {
   return (
-    <SettingsContent className="py-7">
+    <SettingsContent>
       <NotificationsSection />
       <DefaultRemindersSection />
     </SettingsContent>

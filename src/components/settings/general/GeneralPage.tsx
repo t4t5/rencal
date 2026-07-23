@@ -57,8 +57,8 @@ const AutoSyncSection = () => {
   const id = useId()
 
   return (
-    <div className="flex flex-col gap-2 w-[400px]">
-      <div className="flex items-center gap-3">
+    <div className="flex flex-col gap-1 w-[400px]">
+      <div className="flex items-center gap-2">
         <Checkbox
           id={id}
           checked={autoSyncEnabled}

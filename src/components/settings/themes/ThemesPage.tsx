@@ -1,7 +1,7 @@
 import { SettingsContent } from "@/components/settings/SettingsContent"
 
 import { useTheme } from "@/hooks/useTheme"
-import { cn } from "@/lib/utils"
+import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
@@ -12,7 +12,7 @@ export function ThemesPage() {
   const { descriptors } = useThemeRegistry()
 
   return (
-    <SettingsContent className="w-full mr-6 py-6">
+    <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
     </SettingsContent>
   )

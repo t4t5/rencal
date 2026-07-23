@@ -66,9 +66,9 @@ export function GroupsColumn({
   }
 
   return (
-    <SettingsContent className="w-[220px] border-r border-r-divider gap-2 py-6 grow-0">
+    <SettingsContent className="w-[220px] border-r border-r-divider gap-2 py-[15px] grow-0 px-2">
       <div className="flex justify-between items-center w-full">
-        <span className="text-sm text-muted-foreground">Groups</span>
+        <span className="text-sm text-muted-foreground pl-1 heading">Groups</span>
 
         <Button size="icon-sm" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
           <PlusIcon className="size-4" />
@@ -89,7 +89,7 @@ export function GroupsColumn({
                 if (event.key === "Enter" || event.key === " ") onSelect(group)
               }}
               className={cn(
-                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-3 py-2 group text-left cursor-pointer",
+                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-2 py-2 group text-left cursor-pointer",
                 {
                   "bg-secondary text-accent-foreground": selectedGroup === group,
                 },
