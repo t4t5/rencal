@@ -126,6 +126,13 @@ starlight-menu-button button {
   outline: none !important;
 }
 
+/* Desktop search bar keeps a background; mobile icon button stays transparent */
+@media (min-width: 50rem) {
+  site-search button[data-open-modal] {
+    background-color: #1f1f1f !important;
+  }
+}
+
 site-search button[data-open-modal] svg {
   font-size: 1.4rem;
 }
