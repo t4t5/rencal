@@ -99,6 +99,17 @@ summary,
   }
 }
 
+/* Starlight bumps up sidebar font sizes in the mobile menu; keep them closer to desktop */
+@media (max-width: 49.999rem) {
+  .sidebar-content .large {
+    font-size: var(--sl-text-base);
+  }
+
+  .sidebar-content a {
+    font-size: var(--sl-text-sm);
+  }
+}
+
 site-search button[data-open-modal],
 starlight-menu-button button {
   height: 40px;
