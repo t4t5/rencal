@@ -85,18 +85,16 @@ if (latestRelease) {
         <LinuxLogo slot="icon" class="h-5 w-5" />
 
         <InstallRow label="Arch / Omarchy (AUR)">
-          <div class="flex items-center gap-3">
-            <code class="text-sm text-muted">{aurCommand}</code>
-            <button
-              type="button"
-              data-copy-command={aurCommand}
-              aria-label="Copy the renCal AUR install command"
-              class="text-muted hover:text-foreground"
-            >
-              <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
-              <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
-            </button>
-          </div>
+          <button
+            type="button"
+            data-copy-command={aurCommand}
+            aria-label="Copy the renCal AUR install command"
+            class="text-muted hover:text-foreground flex items-center gap-5! bg-transparent! p-0! normal-case!"
+          >
+            <code class="text-sm">{aurCommand}</code>
+            <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
+            <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
+          </button>
         </InstallRow>
 
         {
