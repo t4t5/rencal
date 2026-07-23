@@ -2,13 +2,12 @@
 import "../styles/index.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
+import CopyButton from "../components/CopyButton.astro"
 import InstallPlatform from "../components/download/InstallPlatform.astro"
 import InstallRow from "../components/download/InstallRow.astro"
 import type { GitHubRelease } from "../lib/github"
 import { getLatestRelease } from "../lib/github"
 import AppleLogo from "../icons/apple.astro"
-import CheckIcon from "../icons/check.astro"
-import CopyIcon from "../icons/copy.astro"
 import DownloadIcon from "../icons/download.astro"
 import LinuxLogo from "../icons/linux.astro"
 import { site } from "../site"
@@ -106,16 +105,11 @@ if (latestRelease) {
           <LinuxLogo slot="icon" class="h-5 w-5" />
 
           <InstallRow label="Arch / Omarchy (AUR)">
-            <button
-              type="button"
-              data-copy-command={aurCommand}
-              aria-label="Copy the renCal AUR install command"
-              class="text-muted hover:text-foreground flex items-center gap-5! bg-transparent! p-0! normal-case!"
-            >
-              <code class="text-sm">{aurCommand}</code>
-              <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
-              <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
-            </button>
+            <CopyButton
+              command={aurCommand}
+              label="Copy the renCal AUR install command"
+              showCommand
+            />
           </InstallRow>
 
           {
@@ -176,26 +170,6 @@ if (latestRelease) {
         for (const element of document.querySelectorAll("[data-platform-linux]")) {
           element.removeAttribute("hidden")
         }
-      }
-
-      for (const button of document.querySelectorAll("[data-copy-command]")) {
-        button.addEventListener("click", async () => {
-          const command = button.getAttribute("data-copy-command")
-          if (!command) return
-
-          try {
-            await navigator.clipboard.writeText(command)
-          } catch {
-            return
-          }
-
-          button.querySelector("[data-icon-copy]")?.setAttribute("hidden", "")
-          button.querySelector("[data-icon-check]")?.removeAttribute("hidden")
-          window.setTimeout(() => {
-            button.querySelector("[data-icon-copy]")?.removeAttribute("hidden")
-            button.querySelector("[data-icon-check]")?.setAttribute("hidden", "")
-          }, 1800)
-        })
       }
     </script>
   </div>

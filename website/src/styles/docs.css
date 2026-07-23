@@ -188,12 +188,13 @@ site-search button[data-open-modal]:hover {
   color: #ffffff;
   display: inline-flex;
   font-family: "Geist Mono", monospace;
-  font-size: 0.85em;
+  font-size: 0.8em;
   line-height: 1;
   margin: 0 1px;
   min-width: 1.6em;
   justify-content: center;
   padding: 0.22em 0.45em;
+  border-radius: 4px;
   vertical-align: 0.08em;
 }
 
