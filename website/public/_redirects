@@ -1,2 +1,3 @@
 # Cloudflare Pages redirects
 /releases /changelog 301
+/docs /docs/installation 302
