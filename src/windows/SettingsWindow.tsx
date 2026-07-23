@@ -36,7 +36,11 @@ export function SettingsWindow() {
 
   return (
     <div className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}>
-      <DragRegion className="absolute top-0 left-0 right-0 h-7! border-b border-b-divider" />
+      <DragRegion
+        className={cn("absolute top-0 left-0 right-0 h-7! border-b border-b-divider", {
+          hidden: !isMacOS,
+        })}
+      />
 
       <ShortcutTooltip text="Close" shortcut="escape">
         <button
