@@ -67,115 +67,145 @@ if (latestRelease) {
 ---
 
 <BaseLayout
-  title={`Download · ${site.title}`}
-  description={`Download the latest version of ${site.title} for Linux and macOS.`}
+  title={`Download - ${site.title}`}
+  description={`Download the latest version of ${site.title}.`}
 >
-  <section class="mx-auto flex w-full max-w-4xl flex-col gap-10 px-6 pt-6 md:px-10 md:pt-10">
-    <div class="flex flex-col gap-3">
-      <h2 class="text-3xl md:text-4xl">Download renCal</h2>
-      {
-        latestRelease ? (
-          <p class="text-sm">
-            Latest version:{" "}
-            <a class="text-primary hover:underline" href="/changelog">
-              {latestRelease.tag_name}
-            </a>
-            {releaseDate && <span class="text-muted">({releaseDate})</span>}
-          </p>
-        ) : (
-          <p class="text-sm text-muted">
-            Direct download details are temporarily unavailable. The links below will take you to
-            GitHub Releases instead.
-          </p>
-        )
+  <div class="flex flex-col items-center">
+    <div class="flex flex-col items-center gap-4">
+      <div
+        class="w-[195px] h-[195px] bg-contain"
+        style={{
+          backgroundImage: "url(/app-icon.png)",
+        }}
+      >
+      </div>
+
+      <button hidden data-platform-mac class="outline text-[17px] flex items-center py-3! px-4!">
+        <DownloadIcon class="h-4 w-4 relative top-[-1px]" />
+        <span>Download renCal for Mac</span>
+      </button>
+
+      <h2 class="text-2xl" hidden data-platform-linux>Download renCal</h2>
+
+      <p>
+        <span hidden data-platform-mac>Apple Silicon</span>
+
+        {
+          latestRelease && (
+            <span>
+              •
+              <a class="text-primary hover:underline" href="/changelog">
+                {latestRelease.tag_name}
+              </a>
+            </span>
+          )
+        }
+
+        {releaseDate && <span class="text-muted">({releaseDate})</span>}
+      </p>
+    </div>
+
+    <section class="mx-auto flex w-full max-w-4xl flex-col gap-4 px-6 pt-10 md:px-10 md:pt-18">
+      <div class="flex flex-col gap-3" hidden data-platform-mac>
+        <h2 class="text-muted!">Other platforms:</h2>
+      </div>
+
+      <div class="flex flex-col gap-8" data-platform-sections>
+        <InstallPlatform platform="linux" label="Linux">
+          <LinuxLogo slot="icon" class="h-5 w-5" />
+
+          <InstallRow label="Arch / Omarchy (AUR)">
+            <button
+              type="button"
+              data-copy-command={aurCommand}
+              aria-label="Copy the renCal AUR install command"
+              class="text-muted hover:text-foreground flex items-center gap-5! bg-transparent! p-0! normal-case!"
+            >
+              <code class="text-sm">{aurCommand}</code>
+              <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
+              <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
+            </button>
+          </InstallRow>
+
+          {
+            linuxDownloads.map((row) => (
+              <InstallRow label={row.label}>
+                <a
+                  href={row.href ?? releasesUrl}
+                  aria-label={`Download renCal for Linux, ${row.label}, ${row.architecture}`}
+                  class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+                >
+                  <DownloadIcon class="h-4 w-4" />
+                  {row.architecture}
+                </a>
+              </InstallRow>
+            ))
+          }
+        </InstallPlatform>
+
+        <InstallPlatform platform="macos" label="Mac">
+          <AppleLogo slot="icon" class="h-5 w-5" />
+
+          {
+            macDownloads.map((row) => (
+              <InstallRow label={row.label}>
+                <a
+                  href={row.href ?? releasesUrl}
+                  aria-label={`Download renCal for macOS, ${row.architecture}`}
+                  class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+                >
+                  <DownloadIcon class="h-4 w-4" />
+                  {row.architecture}
+                </a>
+              </InstallRow>
+            ))
+          }
+        </InstallPlatform>
+      </div>
+    </section>
+
+    <script is:inline>
+      const userAgent = navigator.userAgent
+      const isTouchAppleDevice = /iPhone|iPad|iPod/.test(userAgent) || navigator.maxTouchPoints > 1
+      const isMac = /Macintosh|Mac OS X/.test(userAgent) && !isTouchAppleDevice
+      const isLinux = /Linux/.test(userAgent) && !/Android/.test(userAgent)
+
+      // Linux comes first in the markup; move the Mac section up for Mac visitors.
+      if (isMac) {
+        for (const element of document.querySelectorAll("[data-platform-mac]")) {
+          element.removeAttribute("hidden")
+        }
+
+        const sections = document.querySelector("[data-platform-sections]")
+        const macSection = document.querySelector('[data-platform="macos"]')
+        if (sections && macSection) sections.prepend(macSection)
       }
-    </div>
 
-    <div class="flex flex-col gap-8" data-platform-sections>
-      <InstallPlatform platform="linux" label="Linux">
-        <LinuxLogo slot="icon" class="h-5 w-5" />
-
-        <InstallRow label="Arch / Omarchy (AUR)">
-          <button
-            type="button"
-            data-copy-command={aurCommand}
-            aria-label="Copy the renCal AUR install command"
-            class="text-muted hover:text-foreground flex items-center gap-5! bg-transparent! p-0! normal-case!"
-          >
-            <code class="text-sm">{aurCommand}</code>
-            <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
-            <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
-          </button>
-        </InstallRow>
-
-        {
-          linuxDownloads.map((row) => (
-            <InstallRow label={row.label}>
-              <a
-                href={row.href ?? releasesUrl}
-                aria-label={`Download renCal for Linux, ${row.label}, ${row.architecture}`}
-                class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
-              >
-                <DownloadIcon class="h-4 w-4" />
-                {row.architecture}
-              </a>
-            </InstallRow>
-          ))
+      if (isLinux) {
+        for (const element of document.querySelectorAll("[data-platform-linux]")) {
+          element.removeAttribute("hidden")
         }
-      </InstallPlatform>
+      }
 
-      <InstallPlatform platform="macos" label="Mac">
-        <AppleLogo slot="icon" class="h-5 w-5" />
+      for (const button of document.querySelectorAll("[data-copy-command]")) {
+        button.addEventListener("click", async () => {
+          const command = button.getAttribute("data-copy-command")
+          if (!command) return
 
-        {
-          macDownloads.map((row) => (
-            <InstallRow label={row.label}>
-              <a
-                href={row.href ?? releasesUrl}
-                aria-label={`Download renCal for macOS, ${row.architecture}`}
-                class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
-              >
-                <DownloadIcon class="h-4 w-4" />
-                {row.architecture}
-              </a>
-            </InstallRow>
-          ))
-        }
-      </InstallPlatform>
-    </div>
-  </section>
+          try {
+            await navigator.clipboard.writeText(command)
+          } catch {
+            return
+          }
 
-  <script is:inline>
-    const userAgent = navigator.userAgent
-    const isTouchAppleDevice = /iPhone|iPad|iPod/.test(userAgent) || navigator.maxTouchPoints > 1
-    const isMac = /Macintosh|Mac OS X/.test(userAgent) && !isTouchAppleDevice
-    const isLinux = /Linux/.test(userAgent) && !/Android/.test(userAgent)
-
-    // Linux comes first in the markup; move the Mac section up for Mac visitors.
-    if (isMac && !isLinux) {
-      const sections = document.querySelector("[data-platform-sections]")
-      const macSection = document.querySelector('[data-platform="macos"]')
-      if (sections && macSection) sections.prepend(macSection)
-    }
-
-    for (const button of document.querySelectorAll("[data-copy-command]")) {
-      button.addEventListener("click", async () => {
-        const command = button.getAttribute("data-copy-command")
-        if (!command) return
-
-        try {
-          await navigator.clipboard.writeText(command)
-        } catch {
-          return
-        }
-
-        button.querySelector("[data-icon-copy]")?.setAttribute("hidden", "")
-        button.querySelector("[data-icon-check]")?.removeAttribute("hidden")
-        window.setTimeout(() => {
-          button.querySelector("[data-icon-copy]")?.removeAttribute("hidden")
-          button.querySelector("[data-icon-check]")?.setAttribute("hidden", "")
-        }, 1800)
-      })
-    }
-  </script>
+          button.querySelector("[data-icon-copy]")?.setAttribute("hidden", "")
+          button.querySelector("[data-icon-check]")?.removeAttribute("hidden")
+          window.setTimeout(() => {
+            button.querySelector("[data-icon-copy]")?.removeAttribute("hidden")
+            button.querySelector("[data-icon-check]")?.setAttribute("hidden", "")
+          }, 1800)
+        })
+      }
+    </script>
+  </div>
 </BaseLayout>

@@ -63,6 +63,16 @@ button.primary:hover {
   background: #ff7b33;
 }
 
+button.outline {
+  background: transparent;
+  color: var(--foreground);
+  border: 1px solid var(--foreground);
+}
+
+button.outline:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
 hr {
   border-color: var(--separator);
 }
