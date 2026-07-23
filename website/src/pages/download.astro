@@ -2,6 +2,8 @@
 import "../styles/index.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
+import InstallPlatform from "../components/download/InstallPlatform.astro"
+import InstallRow from "../components/download/InstallRow.astro"
 import type { GitHubRelease } from "../lib/github"
 import { getLatestRelease } from "../lib/github"
 import AppleLogo from "../icons/apple.astro"
@@ -79,18 +81,10 @@ if (latestRelease) {
     </div>
 
     <div class="flex flex-col gap-8" data-platform-sections>
-      <section
-        data-platform="linux"
-        aria-labelledby="linux-heading"
-        class="flex flex-col divide-y divide-separator border border-separator"
-      >
-        <div class="flex items-center gap-3 px-5 py-5">
-          <LinuxLogo class="h-5 w-5" />
-          <h3 id="linux-heading" class="text-lg uppercase">Linux</h3>
-        </div>
+      <InstallPlatform platform="linux" label="Linux">
+        <LinuxLogo slot="icon" class="h-5 w-5" />
 
-        <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-          <span>Arch / Omarchy (AUR)</span>
+        <InstallRow label="Arch / Omarchy (AUR)">
           <div class="flex items-center gap-3">
             <code class="text-sm text-muted">{aurCommand}</code>
             <button
@@ -103,12 +97,11 @@ if (latestRelease) {
               <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
             </button>
           </div>
-        </div>
+        </InstallRow>
 
         {
           linuxDownloads.map((row) => (
-            <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-              <span>{row.label}</span>
+            <InstallRow label={row.label}>
               <a
                 href={row.href ?? releasesUrl}
                 aria-label={`Download renCal for Linux, ${row.label}, ${row.architecture}`}
@@ -117,25 +110,17 @@ if (latestRelease) {
                 <DownloadIcon class="h-4 w-4" />
                 {row.architecture}
               </a>
-            </div>
+            </InstallRow>
           ))
         }
-      </section>
+      </InstallPlatform>
 
-      <section
-        data-platform="macos"
-        aria-labelledby="macos-heading"
-        class="flex flex-col divide-y divide-separator border border-separator"
-      >
-        <div class="flex items-center gap-3 px-5 py-5">
-          <AppleLogo class="h-5 w-5" />
-          <h3 id="macos-heading" class="text-lg uppercase">Mac</h3>
-        </div>
+      <InstallPlatform platform="macos" label="Mac">
+        <AppleLogo slot="icon" class="h-5 w-5" />
 
         {
           macDownloads.map((row) => (
-            <div class="flex flex-wrap items-center justify-between gap-4 px-5 py-4">
-              <span>{row.label}</span>
+            <InstallRow label={row.label}>
               <a
                 href={row.href ?? releasesUrl}
                 aria-label={`Download renCal for macOS, ${row.architecture}`}
@@ -144,10 +129,10 @@ if (latestRelease) {
                 <DownloadIcon class="h-4 w-4" />
                 {row.architecture}
               </a>
-            </div>
+            </InstallRow>
           ))
         }
-      </section>
+      </InstallPlatform>
     </div>
   </section>
 
