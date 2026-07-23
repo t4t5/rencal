@@ -12,7 +12,7 @@ export function ThemesPage() {
   const { descriptors } = useThemeRegistry()
 
   return (
-    <SettingsContent className="w-full mr-6 py-6">
+    <SettingsContent className="w-full">
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
     </SettingsContent>
   )

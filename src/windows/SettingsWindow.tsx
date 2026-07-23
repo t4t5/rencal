@@ -32,11 +32,11 @@ export function SettingsWindow() {
 
   const activeItem = NAV_ITEMS.find((item) => item.tab === activeTab)
   if (!activeItem) return null
-  const { label, page: ActivePage } = activeItem
+  const { page: ActivePage } = activeItem
 
   return (
-    <div className={cn("flex h-screen", { "pt-8": isMacOS })}>
-      <DragRegion className="absolute top-0 left-0 right-0 h-5!" />
+    <div className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}>
+      <DragRegion className="absolute top-0 left-0 right-0 h-7! border-b border-b-divider" />
 
       <ShortcutTooltip text="Close" shortcut="escape">
         <button
@@ -45,16 +45,21 @@ export function SettingsWindow() {
               .close()
               .catch(() => {})
           }
-          className="absolute top-2 right-2 z-50 rounded-sm p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring"
+          className={cn(
+            "absolute top-[3px] right-2 z-50 rounded-sm p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring",
+            { hidden: isMacOS },
+          )}
           aria-label="Close"
         >
           <CloseIcon className="size-4" />
         </button>
       </ShortcutTooltip>
 
-      <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <div className="flex h-screen">
+        <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <ActivePage />
+        <ActivePage />
+      </div>
     </div>
   )
 }

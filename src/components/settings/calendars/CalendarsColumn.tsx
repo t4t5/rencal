@@ -72,7 +72,7 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
   const calendarsByProvider = Object.groupBy(remoteCalendars, (c) => c.provider as string)
 
   return (
-    <SettingsContent className="grow py-7">
+    <SettingsContent className="grow py-5">
       {!!calendars.length && (
         <div className="flex flex-col gap-4">
           {Object.entries(calendarsByProvider).map(([provider, cals]) => (
