@@ -1,0 +1,73 @@
+---
+import "../styles/index.css"
+import "../styles/changelog.css"
+
+import { createMarkdownProcessor } from "@astrojs/markdown-remark"
+
+import BaseLayout from "../layouts/BaseLayout.astro"
+import type { GitHubRelease } from "../lib/github"
+import { getReleases } from "../lib/github"
+import { site } from "../site"
+
+// Fetched at build time (Astro static output) — the result is baked into the
+// generated HTML, so visitors never hit the GitHub API.
+let releases: GitHubRelease[]
+try {
+  releases = await getReleases()
+} catch (error) {
+  throw new Error("Failed to fetch releases from GitHub", { cause: error })
+}
+
+if (releases.length === 0) {
+  throw new Error("GitHub returned no published releases")
+}
+
+const dateFormat = new Intl.DateTimeFormat("en-US", {
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+})
+
+const md = await createMarkdownProcessor()
+
+const entries = await Promise.all(
+  releases.map(async (release) => ({
+    title: release.name || release.tag_name,
+    url: release.html_url,
+    date: release.published_at ? dateFormat.format(new Date(release.published_at)) : null,
+    prerelease: release.prerelease,
+    bodyHtml: release.body ? (await md.render(release.body)).code : "",
+  })),
+)
+---
+
+<BaseLayout title={`Changelog - ${site.title}`} description={`Release notes for ${site.title}.`}>
+  <section class="mx-auto flex w-full max-w-3xl flex-col px-6 md:px-10 pt-6">
+    <div class="flex flex-col gap-8">
+      {
+        entries.map((entry) => (
+          <>
+            <article class="flex flex-col gap-2">
+              <div class="flex flex-col gap-1">
+                <h3 class="text-2xl">
+                  <a href={entry.url} class="hover:underline" target="_blank">
+                    {entry.title}
+                  </a>
+                  {entry.prerelease && (
+                    <span class="ml-3 border border-primary px-2 py-0.5 align-middle text-xs text-primary uppercase">
+                      Pre-release
+                    </span>
+                  )}
+                </h3>
+                {entry.date && <p class="text-sm text-muted opacity-70">{entry.date}</p>}
+              </div>
+
+              <div class="release-body" set:html={entry.bodyHtml} />
+            </article>
+            <hr />
+          </>
+        ))
+      }
+    </div>
+  </section>
+</BaseLayout>

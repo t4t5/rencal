@@ -99,15 +99,42 @@ summary,
   }
 }
 
+/* Starlight bumps up sidebar font sizes in the mobile menu; keep them closer to desktop */
+@media (max-width: 49.999rem) {
+  .sidebar-content .large {
+    font-size: var(--sl-text-base);
+  }
+
+  .sidebar-content a {
+    font-size: var(--sl-text-sm);
+  }
+}
+
 site-search button[data-open-modal],
 starlight-menu-button button {
   height: 40px;
   justify-content: center;
   align-items: center;
   color: white;
-  background-color: #1f1f1f !important;
   border: 0 !important;
   border-radius: 0 !important;
+}
+
+site-search button[data-open-modal],
+starlight-menu-button button {
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+/* Desktop search bar keeps a background; mobile icon button stays transparent */
+@media (min-width: 50rem) {
+  site-search button[data-open-modal] {
+    background-color: #1f1f1f !important;
+  }
+}
+
+site-search button[data-open-modal] svg {
+  font-size: 1.4rem;
 }
 
 site-search button[data-open-modal] {
@@ -123,6 +150,7 @@ site-search button[data-open-modal] {
 starlight-menu-button button {
   top: 19px;
   width: 40px;
+  margin-right: 4px;
 }
 
 site-search button[data-open-modal]:hover {
@@ -160,12 +188,13 @@ site-search button[data-open-modal]:hover {
   color: #ffffff;
   display: inline-flex;
   font-family: "Geist Mono", monospace;
-  font-size: 0.85em;
+  font-size: 0.8em;
   line-height: 1;
   margin: 0 1px;
   min-width: 1.6em;
   justify-content: center;
   padding: 0.22em 0.45em;
+  border-radius: 4px;
   vertical-align: 0.08em;
 }
 

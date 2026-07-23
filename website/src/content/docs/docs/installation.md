@@ -1,28 +1,18 @@
 ---
 title: Installation
-description: Install renCal on Omarchy, Arch Linux, and other platforms.
+description: Install and update renCal on Linux and macOS.
 ---
 
-## Omarchy / Arch Linux
+Install renCal from the [download page](/download).
 
-Install renCal from the AUR:
+## Reminders support
 
-```bash
-yay -S rencal
-```
+On Linux, the AUR, `.deb`, and `.rpm` packages also install `rencal-notifierd`, a background service that can notify you when events are coming up.
 
-After installing, launch **renCal** from your app launcher.
+If you're using the AppImage or are on macOS, you currently need to keep renCal running to receive reminder notifications.
 
-## Other Linux distributions
+## Updating renCal
 
-Download the latest Linux package from the [GitHub Releases](https://github.com/t4t5/rencal/releases) page.
-
-Choose the package that matches your distribution:
-
-- AppImage
-- `.deb`
-- `.rpm`
-
-## macOS
-
-Download the latest `.dmg` from [GitHub Releases](https://github.com/t4t5/rencal/releases), open it, and drag renCal into `/Applications`.
+- **AUR**: update with `yay -Syu`.
+- **`.deb` / `.rpm` / AppImage**: install the latest package from the [download page](/download) over the existing version.
+- **macOS**: renCal prompts you in-app when a new version is available.

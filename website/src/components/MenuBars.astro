@@ -1,0 +1,57 @@
+---
+// Animated hamburger → X icon (Obsidian-style morph).
+// Driven by an ancestor element's `aria-expanded` attribute.
+---
+
+<span class="menu-bars">
+  <span class="bar"></span>
+  <span class="bar"></span>
+  <span class="bar"></span>
+</span>
+
+<style>
+  .menu-bars {
+    position: relative;
+    display: block;
+    width: 24px;
+    height: 16px;
+  }
+
+  .bar {
+    position: absolute;
+    left: 0;
+    height: 2px;
+    width: 24px;
+    border-radius: 9999px;
+    background-color: currentColor;
+    transition: all 0.1s ease-in-out;
+  }
+
+  .bar:nth-child(1) {
+    top: 0;
+    transform-origin: 3px 1px;
+  }
+
+  .bar:nth-child(2) {
+    top: 7px;
+  }
+
+  .bar:nth-child(3) {
+    top: 14px;
+    transform-origin: 3px 1px;
+  }
+
+  :global([aria-expanded="true"]) .bar:nth-child(1) {
+    transform: rotate(45deg);
+    width: 26px;
+  }
+
+  :global([aria-expanded="true"]) .bar:nth-child(2) {
+    background-color: transparent;
+  }
+
+  :global([aria-expanded="true"]) .bar:nth-child(3) {
+    transform: rotate(-45deg);
+    width: 26px;
+  }
+</style>

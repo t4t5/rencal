@@ -1,0 +1,21 @@
+---
+interface Props {
+  platform: string
+  label: string
+}
+
+const { platform, label } = Astro.props
+const headingId = `${platform}-heading`
+---
+
+<section
+  data-platform={platform}
+  aria-labelledby={headingId}
+  class="flex flex-col divide-y divide-separator border border-separator"
+>
+  <div class="flex items-center gap-3 px-5 py-5">
+    <slot name="icon" />
+    <h3 id={headingId} class="text-lg uppercase">{label}</h3>
+  </div>
+  <slot />
+</section>

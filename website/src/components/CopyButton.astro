@@ -1,0 +1,25 @@
+---
+import CheckIcon from "../icons/check.astro"
+import CopyIcon from "../icons/copy.astro"
+
+interface Props {
+  command: string
+  label: string
+  showCommand?: boolean
+}
+
+const { command, label, showCommand = false } = Astro.props
+---
+
+<button
+  type="button"
+  data-copy-command={command}
+  aria-label={label}
+  class="text-muted hover:text-foreground flex items-center gap-5! bg-transparent! p-0! normal-case!"
+>
+  {showCommand && <code class="text-sm">{command}</code>}
+  <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
+  <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
+</button>
+
+<script src="../lib/copy-button.js"></script>

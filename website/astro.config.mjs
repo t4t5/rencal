@@ -6,16 +6,29 @@ import starlightThemeRapide from "starlight-theme-rapide"
 import { site } from "./src/site"
 import starlightRenTheme from "./src/starlight-ren-theme"
 
-const userManualItems = [
-  { label: "Calendar Data", slug: "docs/calendar-data" },
-  { label: "Keyboard Shortcuts", slug: "docs/keyboard-shortcuts" },
-  { label: "Themes", slug: "docs/themes" },
-  { label: "Agents", slug: "docs/agents" },
+const sidebarItems = [
+  {
+    label: "Getting started",
+    items: [{ label: "Installation", slug: "docs/installation" }],
+  },
+  {
+    label: "User Manual",
+    items: [
+      { label: "Calendar Data", slug: "docs/calendar-data" },
+      { label: "Keyboard Shortcuts", slug: "docs/keyboard-shortcuts" },
+      { label: "Themes", slug: "docs/themes" },
+      { label: "Agents", slug: "docs/agents" },
+    ],
+  },
+  {
+    label: "Help",
+    items: [{ label: "Troubleshooting", slug: "docs/troubleshooting" }],
+  },
 ]
 
 export default defineConfig({
   redirects: {
-    "/docs": `/${userManualItems[0].slug}`,
+    "/docs": `/${sidebarItems[0].items[0].slug}`,
   },
   vite: {
     plugins: [tailwindcss()],
@@ -50,20 +63,7 @@ export default defineConfig({
           },
         },
       ],
-      sidebar: [
-        {
-          label: "Getting started",
-          items: [{ label: "Installation", slug: "docs/installation" }],
-        },
-        {
-          label: "User Manual",
-          items: userManualItems,
-        },
-        {
-          label: "Help",
-          items: [{ label: "Troubleshooting", slug: "docs/troubleshooting" }],
-        },
-      ],
+      sidebar: sidebarItems,
     }),
   ],
 })
