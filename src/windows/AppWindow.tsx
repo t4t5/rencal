@@ -48,7 +48,7 @@ function App() {
   const isMd = useBreakpoint("md")
 
   return (
-    <main className="flex h-screen overflow-hidden">
+    <main className="flex h-screen overflow-clip">
       <GlobalShortcuts onChangeCalendarView={setCalendarView} />
       <DragRegion className="absolute h-4! w-full" />
 

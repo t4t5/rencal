@@ -163,6 +163,19 @@ function useShortcutHandlers({
 
   const lastNavRef = useRef(0)
 
+  // Tab / Shift-Tab drive event navigation.
+  // Defer to the browser's native Tab handling ONLY when focus
+  // is genuinely inside a tabbable control
+  const shouldDeferEventNav = (): boolean => {
+    if (activeEvent || draftPopoverOpen) return true
+    const active = document.activeElement as HTMLElement | null
+    if (!isInteractiveElementFocused(active)) return false
+    // tabIndex >= 0 → a real tab stop; leave it to the browser.
+    if (active && active.tabIndex >= 0) return true
+    active?.blur()
+    return false
+  }
+
   const clearAgendaFocus = () => {
     if (!isAgendaItemFocused()) return
     clearRememberedAgendaItem()
@@ -247,12 +260,12 @@ function useShortcutHandlers({
     "prev-month": navigateToPreviousMonthStart,
     "next-month": navigateToNextMonthStart,
     "prev-event": (e) => {
-      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
+      if (shouldDeferEventNav()) return
       e?.preventDefault()
       focusAgendaItem(-1, activeDate)
     },
     "next-event": (e) => {
-      if (activeEvent || draftPopoverOpen || isInteractiveElementFocused()) return
+      if (shouldDeferEventNav()) return
       e?.preventDefault()
       focusAgendaItem(1, activeDate)
     },
