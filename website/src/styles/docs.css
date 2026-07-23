@@ -105,9 +105,18 @@ starlight-menu-button button {
   justify-content: center;
   align-items: center;
   color: white;
-  background-color: #1f1f1f !important;
   border: 0 !important;
   border-radius: 0 !important;
+}
+
+site-search button[data-open-modal],
+starlight-menu-button button {
+  background-color: transparent !important;
+  outline: none !important;
+}
+
+site-search button[data-open-modal] svg {
+  font-size: 1.4rem;
 }
 
 site-search button[data-open-modal] {
@@ -123,6 +132,7 @@ site-search button[data-open-modal] {
 starlight-menu-button button {
   top: 19px;
   width: 40px;
+  margin-right: 4px;
 }
 
 site-search button[data-open-modal]:hover {

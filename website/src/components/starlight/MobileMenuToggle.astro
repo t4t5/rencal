@@ -1,0 +1,86 @@
+---
+import MenuBars from "../MenuBars.astro"
+---
+
+<starlight-menu-button class="print:hidden">
+  <button
+    aria-expanded="false"
+    aria-label={Astro.locals.t("menuButton.accessibleLabel")}
+    aria-controls="starlight__sidebar"
+    class="sl-flex md:sl-hidden"
+  >
+    <MenuBars />
+  </button>
+</starlight-menu-button>
+
+<script>
+  class StarlightMenuButton extends HTMLElement {
+    btn = this.querySelector("button")!
+
+    constructor() {
+      super()
+      // Toggle `aria-expanded` state when a user clicks the button.
+      this.btn.addEventListener("click", () => this.toggleExpanded())
+
+      // Close the menu when a user presses the escape key.
+      const parentNav = this.closest("nav")
+      if (parentNav) {
+        parentNav.addEventListener("keyup", (e) => this.closeOnEscape(e))
+      }
+    }
+
+    setExpanded(expanded: boolean) {
+      this.setAttribute("aria-expanded", String(expanded))
+      this.btn.setAttribute("aria-expanded", String(expanded))
+      document.body.toggleAttribute("data-mobile-menu-expanded", expanded)
+    }
+
+    toggleExpanded() {
+      this.setExpanded(this.getAttribute("aria-expanded") !== "true")
+    }
+
+    closeOnEscape(e: KeyboardEvent) {
+      if (e.code === "Escape") {
+        this.setExpanded(false)
+        this.btn.focus()
+      }
+    }
+  }
+
+  customElements.define("starlight-menu-button", StarlightMenuButton)
+</script>
+
+<style>
+  @layer starlight.core {
+    button {
+      position: fixed;
+      top: calc((var(--sl-nav-height) - var(--sl-menu-button-size)) / 2);
+      inset-inline-end: var(--sl-nav-pad-x);
+      z-index: var(--sl-z-index-navbar);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      width: var(--sl-menu-button-size);
+      height: var(--sl-menu-button-size);
+      padding: 0.5rem;
+      background-color: transparent;
+      color: var(--sl-color-white);
+      cursor: pointer;
+    }
+  }
+</style>
+
+<style is:global>
+  @layer starlight.core {
+    [data-mobile-menu-expanded] {
+      overflow: hidden;
+    }
+
+    @media (min-width: 50rem) {
+      [data-mobile-menu-expanded] {
+        overflow: auto;
+      }
+    }
+  }
+</style>

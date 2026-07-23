@@ -10,6 +10,7 @@ export default function starlightRenTheme(): StarlightPlugin {
             ...config.components,
             Header: "./src/components/starlight/Header.astro",
             MobileMenuFooter: "./src/components/starlight/MobileMenuFooter.astro",
+            MobileMenuToggle: "./src/components/starlight/MobileMenuToggle.astro",
             ThemeProvider: "./src/components/starlight/DarkThemeProvider.astro",
             ThemeSelect: "./src/components/starlight/ThemeSelect.astro",
           },
