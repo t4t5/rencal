@@ -202,6 +202,11 @@ body {
   text-transform: var(--font-heading-transform, none);
 }
 
+@utility bodytext {
+  font-family: var(--font-body);
+  text-transform: var(--font-body-transform, none);
+}
+
 @utility button {
   font-family: var(--font-button);
   text-transform: var(--font-button-transform, none);

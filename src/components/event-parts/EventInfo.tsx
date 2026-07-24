@@ -145,7 +145,7 @@ export function EventInfo({
           <Button
             type="button"
             variant="ghost"
-            className="w-full justify-start px-2 font-normal text-muted-foreground"
+            className="w-full justify-start px-2 text-muted-foreground bodytext!"
             onClick={onRequestMeet}
           >
             <VideoIcon />
