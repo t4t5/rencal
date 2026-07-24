@@ -5,12 +5,11 @@ import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDispl
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
+import { GoogleMeetItem } from "@/components/event-parts/inputs/GoogleMeetItem"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
-import { RemoveItemButton } from "@/components/event-parts/inputs/RemoveItemButton"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
 import { Button } from "@/components/ui/button"
-import { InputGroupAddon } from "@/components/ui/input-group"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
@@ -18,7 +17,6 @@ import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-import { GoogleMeetIcon } from "@/icons/google-meet"
 import { VideoIcon } from "@/icons/video"
 
 import { NotesInput } from "./inputs/NotesInput"
@@ -140,16 +138,7 @@ export function EventInfo({
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
 
         {conferenceUrl === "" && (
-          <div className="group flex h-control-height items-center justify-between rounded-md p-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
-            <div className="flex min-w-0 items-center gap-2">
-              <InputGroupAddon>
-                <GoogleMeetIcon />
-              </InputGroupAddon>
-              <span>Google Meet</span>
-            </div>
-
-            {!readonly && onRemoveMeetRequest && <RemoveItemButton onClick={onRemoveMeetRequest} />}
-          </div>
+          <GoogleMeetItem readonly={readonly} onRemove={onRemoveMeetRequest} />
         )}
 
         {conferenceUrl == null && calendar?.provider === "google" && !readonly && onRequestMeet && (
