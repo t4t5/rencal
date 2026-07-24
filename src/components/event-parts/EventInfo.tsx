@@ -3,11 +3,7 @@ import { RRule, RRuleSet } from "rrule"
 import { AllDayCheckbox } from "@/components/event-parts/inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDisplay"
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
-import {
-  ConferenceItem,
-  ConferenceRequestButton,
-} from "@/components/event-parts/inputs/ConferenceItem"
-import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
+import { ConferenceDisplay } from "@/components/event-parts/inputs/ConferenceDisplay"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
@@ -16,7 +12,6 @@ import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@/rpc/bindings"
 
-import { calendarConferenceProvider } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -93,8 +88,6 @@ export function EventInfo({
   userResponseStatus?: ResponseStatus | null
   isPendingInvite?: boolean
 }) {
-  const conferenceProvider = calendarConferenceProvider(calendar)
-
   return (
     <div className="flex flex-col gap-1 grow">
       <div className="flex min-h-control-height items-center">
@@ -136,24 +129,12 @@ export function EventInfo({
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
-        {conference?.status === "live" && <ConferenceLink conference={conference} />}
-
-        {conference?.status === "requested" && (
-          <ConferenceItem
-            provider={conference.provider}
-            readonly={readonly}
-            onRemove={onConferenceChange ? () => onConferenceChange(null) : undefined}
-          />
-        )}
-
-        {conference == null && conferenceProvider && !readonly && onConferenceChange && (
-          <ConferenceRequestButton
-            provider={conferenceProvider}
-            onClick={() =>
-              onConferenceChange({ status: "requested", provider: conferenceProvider })
-            }
-          />
-        )}
+        <ConferenceDisplay
+          conference={conference}
+          calendar={calendar}
+          readonly={readonly}
+          onConferenceChange={onConferenceChange}
+        />
 
         {(!!attendees?.length || !readonly) && (
           <>
