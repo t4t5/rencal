@@ -10,7 +10,7 @@ import {
 } from "react"
 
 import { rpc } from "@/rpc"
-import type { EventAttendee, EventConference } from "@/rpc/bindings"
+import type { EventAttendee } from "@/rpc/bindings"
 
 import {
   type CalendarEvent,
@@ -18,6 +18,7 @@ import {
   recurrenceToRpc,
   rpcToCalendarEvent,
 } from "@/lib/cal-events"
+import { conferenceToRpc, type EventConference } from "@/lib/conference"
 import {
   addMinutes,
   computeEventDateInfo,
@@ -224,7 +225,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
       attendees: draftEvent.attendees,
-      conference: draftEvent.conference,
+      conference: conferenceToRpc(draftEvent.conference),
     })
 
     if (draftEvent.recurrence) {

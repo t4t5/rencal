@@ -11,6 +11,7 @@
  */
 import type { CalendarEvent as RpcCalendarEvent, RpcRecurrence } from "@/rpc/bindings"
 
+import { conferenceToRpc, rpcToConference, type EventConference } from "./conference"
 import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./event-time"
 import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
 
@@ -20,12 +21,16 @@ export interface Recurrence {
 }
 
 export interface CalendarEvent
-  extends Omit<RpcCalendarEvent, "start" | "end" | "recurrence" | "master_recurrence"> {
+  extends Omit<
+    RpcCalendarEvent,
+    "start" | "end" | "recurrence" | "master_recurrence" | "conference"
+  > {
   start: EventTime
   end: EventTime
   dateInfo: EventDateInfo
   recurrence: Recurrence | null
   master_recurrence: Recurrence | null
+  conference: EventConference | null
 }
 
 /**
@@ -58,6 +63,7 @@ export function rpcToCalendarEvent(w: RpcCalendarEvent): CalendarEvent {
     dateInfo: computeEventDateInfo(start, end),
     recurrence: w.recurrence ? rpcToRecurrence(w.recurrence) : null,
     master_recurrence: w.master_recurrence ? rpcToRecurrence(w.master_recurrence) : null,
+    conference: rpcToConference(w.conference),
   }
 }
 
@@ -86,6 +92,7 @@ export function calendarEventToRpc(e: CalendarEvent): RpcCalendarEvent {
     end: toRpcEventTime(e.end),
     recurrence: e.recurrence ? recurrenceToRpc(e.recurrence) : null,
     master_recurrence: e.master_recurrence ? recurrenceToRpc(e.master_recurrence) : null,
+    conference: conferenceToRpc(e.conference),
   }
 }
 

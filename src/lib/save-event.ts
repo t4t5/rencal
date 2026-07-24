@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { rpc } from "@/rpc"
 
 import { eventKey, recurrenceToRpc, type CalendarEvent } from "@/lib/cal-events"
+import { conferenceToRpc } from "@/lib/conference"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 
 export type RequestSync = () => Promise<void>
@@ -33,7 +34,7 @@ export async function updateAndSyncEvent(
       recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
       attendees: current.attendees,
-      conference: current.conference,
+      conference: conferenceToRpc(current.conference),
     })
     await requestSync()
   } catch (err) {

@@ -10,8 +10,9 @@ import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@/rpc/bindings"
+import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
+import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 

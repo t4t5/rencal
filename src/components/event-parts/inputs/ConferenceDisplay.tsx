@@ -3,9 +3,14 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { Button } from "@/components/ui/button"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
-import type { Calendar, ConferenceProvider, EventConference } from "@/rpc/bindings"
+import type { Calendar } from "@/rpc/bindings"
 
-import { calendarConferenceProvider, conferenceLabel } from "@/lib/conference"
+import {
+  calendarConferenceProvider,
+  conferenceLabel,
+  type ConferenceProvider,
+  type EventConference,
+} from "@/lib/conference"
 
 import { GoogleMeetIcon } from "@/icons/google-meet"
 import { VideoIcon } from "@/icons/video"
