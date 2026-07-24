@@ -5,11 +5,13 @@ import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDispl
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
-import { GoogleMeetItem } from "@/components/event-parts/inputs/GoogleMeetItem"
+import {
+  GoogleMeetItem,
+  GoogleMeetRequestButton,
+} from "@/components/event-parts/inputs/GoogleMeetItem"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
-import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@/rpc/bindings"
@@ -17,8 +19,6 @@ import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@
 import { calendarSupportsMeet } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
-
-import { GoogleMeetIcon } from "@/icons/google-meet"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -143,15 +143,7 @@ export function EventInfo({
         )}
 
         {conference == null && calendarSupportsMeet(calendar) && !readonly && onRequestMeet && (
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full justify-start px-2 text-muted-foreground bodytext!"
-            onClick={onRequestMeet}
-          >
-            <GoogleMeetIcon />
-            Add Google Meet
-          </Button>
+          <GoogleMeetRequestButton onClick={onRequestMeet} />
         )}
 
         {(!!attendees?.length || !readonly) && (

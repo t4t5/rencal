@@ -33,7 +33,7 @@ export function RecurrenceConfirmDialog({
             Only this event
           </Button>
           <Button variant="outline" onClick={onApplyToFuture}>
-            This and all future events
+            This and future events
           </Button>
           <Button onClick={onApplyToAll}>All events</Button>
         </DialogFooter>
