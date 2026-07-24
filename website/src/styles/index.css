@@ -64,13 +64,15 @@ button.primary:hover {
   background: #ff7b33;
 }
 
-button.outline {
+button.outline,
+.button-outline {
   background: transparent;
   color: var(--foreground);
   border: 1px solid var(--foreground);
 }
 
-button.outline:hover {
+button.outline:hover,
+.button-outline:hover {
   background: rgba(255, 255, 255, 0.05);
 }
 
