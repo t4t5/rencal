@@ -2,18 +2,18 @@ use caldir_core::{Calendar, Event, XProperty};
 
 use super::types::{ConferenceProvider, EventConference};
 
-pub const GOOGLE_MEET_X_PROP: &str = "X-GOOGLE-CONFERENCE";
-const OUTLOOK_MEET_X_PROP: &str = "X-OUTLOOK-CONFERENCE";
-const PROTON_MEET_X_PROP: &str = "X-PM-CONFERENCE-URL";
+pub const GOOGLE_CONFERENCE_PROP: &str = "X-GOOGLE-CONFERENCE";
+const OUTLOOK_CONFERENCE_PROP: &str = "X-OUTLOOK-CONFERENCE";
+const PROTON_CONFERENCE_PROP: &str = "X-PM-CONFERENCE-URL";
 
-const CONFERENCE_X_PROPS: [(&str, ConferenceProvider); 3] = [
-    (GOOGLE_MEET_X_PROP, ConferenceProvider::Google),
-    (OUTLOOK_MEET_X_PROP, ConferenceProvider::Outlook),
-    (PROTON_MEET_X_PROP, ConferenceProvider::Proton),
+const CONFERENCE_PROPS: [(&str, ConferenceProvider); 3] = [
+    (GOOGLE_CONFERENCE_PROP, ConferenceProvider::Google),
+    (OUTLOOK_CONFERENCE_PROP, ConferenceProvider::Outlook),
+    (PROTON_CONFERENCE_PROP, ConferenceProvider::Proton),
 ];
 
 pub fn conference_from_event(event: &Event) -> Option<EventConference> {
-    CONFERENCE_X_PROPS.iter().find_map(|(property, provider)| {
+    CONFERENCE_PROPS.iter().find_map(|(property, provider)| {
         event.x_property(property).map(|value| match value {
             // If key exists but value is empty:
             // -> conference was requested but not yet created
@@ -29,17 +29,21 @@ pub fn conference_from_event(event: &Event) -> Option<EventConference> {
 }
 
 pub fn apply_conference_request(event: &mut Event, calendar: &Calendar, requested: bool) {
-    let is_google = calendar
+    let conference_property = match calendar
         .remote_config()
-        .is_some_and(|config| config.provider_slug().as_str() == "google");
+        .map(|config| config.provider_slug().as_str())
+    {
+        Some("google") => GOOGLE_CONFERENCE_PROP,
+        Some(_) | None => return, // Conference requests are unsupported for other providers.
+    };
 
-    if requested && is_google && event.x_property(GOOGLE_MEET_X_PROP).is_none() {
+    if requested && event.x_property(conference_property).is_none() {
         event
             .x_properties
-            .push(XProperty::new(GOOGLE_MEET_X_PROP, ""));
+            .push(XProperty::new(conference_property, ""));
     } else if !requested {
-        event
-            .x_properties
-            .retain(|property| !(property.name == GOOGLE_MEET_X_PROP && property.value.is_empty()));
+        event.x_properties.retain(|property| {
+            !(property.name == conference_property && property.value.is_empty())
+        });
     }
 }
