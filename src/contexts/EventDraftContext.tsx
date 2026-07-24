@@ -225,7 +225,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
       attendees: draftEvent.attendees,
-      request_google_meet: draftEvent.requestGoogleMeet,
+      conference: draftConference(draftEvent),
     })
 
     if (draftEvent.recurrence) {

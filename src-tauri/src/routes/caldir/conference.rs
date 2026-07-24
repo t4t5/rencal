@@ -28,22 +28,48 @@ pub fn conference_from_event(event: &Event) -> Option<EventConference> {
     })
 }
 
-pub fn apply_conference_request(event: &mut Event, calendar: &Calendar, requested: bool) {
-    let conference_property = match calendar
-        .remote_config()
-        .map(|config| config.provider_slug().as_str())
-    {
-        Some("google") => GOOGLE_CONFERENCE_PROP,
-        Some(_) | None => return, // Conference requests are unsupported for other providers.
+pub fn apply_conference(
+    event: &mut Event,
+    calendar: &Calendar,
+    conference: Option<&EventConference>,
+) {
+    event.x_properties.retain(|property| {
+        !CONFERENCE_PROPS
+            .iter()
+            .any(|(conference_property, _)| property.name == *conference_property)
+    });
+
+    let Some(conference) = conference else {
+        return;
     };
 
-    if requested && event.x_property(conference_property).is_none() {
-        event
-            .x_properties
-            .push(XProperty::new(conference_property, ""));
-    } else if !requested {
-        event.x_properties.retain(|property| {
-            !(property.name == conference_property && property.value.is_empty())
-        });
-    }
+    let (provider, value) = match conference {
+        EventConference::Requested { provider } => {
+            // Google is currently the only provider whose sync adapter supports
+            // creating conferences.
+            let calendar_provider = match calendar
+                .remote_config()
+                .map(|config| config.provider_slug().as_str())
+            {
+                Some("google") => ConferenceProvider::Google,
+                Some(_) | None => return,
+            };
+
+            if provider != &calendar_provider {
+                return;
+            }
+
+            (*provider, "")
+        }
+        EventConference::Live { provider, url } => (*provider, url.as_str()),
+    };
+
+    let conference_property = CONFERENCE_PROPS
+        .iter()
+        .find_map(|(property, candidate)| (*candidate == provider).then_some(*property))
+        .expect("every conference provider has an x-property");
+
+    event
+        .x_properties
+        .push(XProperty::new(conference_property, value));
 }
