@@ -1,17 +1,8 @@
-import type { CalendarEvent, Recurrence } from "@/lib/cal-events"
-import { computeEventDateInfo, type EventTime } from "@/lib/event-time"
+import type { DraftEvent } from "@/contexts/EventDraftContext"
 
-interface DraftEvent {
-  summary: string
-  description: string | null
-  start: EventTime
-  end: EventTime
-  calendarId: string | null
-  location: string | null
-  recurrence: Recurrence | null
-  attendees?: CalendarEvent["attendees"]
-  requestGoogleMeet: boolean
-}
+import type { CalendarEvent } from "@/lib/cal-events"
+import { draftConference } from "@/lib/conference"
+import { computeEventDateInfo } from "@/lib/event-time"
 
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
   if (draft.calendarId == null) return null
@@ -29,8 +20,8 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     master_recurrence: null,
     reminders: [],
     organizer: null,
-    attendees: draft.attendees ?? [],
-    conference_url: draft.requestGoogleMeet ? "" : null,
+    attendees: draft.attendees,
+    conference: draftConference(draft),
     calendar_slug: draft.calendarId,
     color: null,
     updated: null,

@@ -6,12 +6,14 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference_url: string | null; calendar_slug: string; color: string | null; 
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**
  * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
  * Used by the frontend to cheaply detect content changes for reload dedup.
  */
 updated: string | null }
+
+export type ConferenceProvider = "google" | "outlook" | "proton"
 
 export type Contact = { email: string; name: string | null; count: number; last_seen: string }
 
@@ -23,6 +25,8 @@ export type CreateEventInput = { calendar_slug: string; summary: string; descrip
 export type CredentialFieldInput = { id: string; value: string }
 
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
+
+export type EventConference = { status: "requested"; provider: ConferenceProvider } | { status: "live"; provider: ConferenceProvider; url: string }
 
 export type ExternalTheme = { id: string; 
 /**

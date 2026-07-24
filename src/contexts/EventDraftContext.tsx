@@ -18,6 +18,7 @@ import {
   recurrenceToRpc,
   rpcToCalendarEvent,
 } from "@/lib/cal-events"
+import { draftConference } from "@/lib/conference"
 import {
   addMinutes,
   computeEventDateInfo,
@@ -34,7 +35,7 @@ import { useCalendars } from "./CalendarStateContext"
 import { useSettings } from "./SettingsContext"
 import { useSync } from "./SyncContext"
 
-interface DraftEvent {
+export interface DraftEvent {
   summary: string
   description: string | null
   start: EventTime
@@ -203,7 +204,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       reminders: draftReminders,
       organizer: null,
       attendees: draftEvent.attendees,
-      conference_url: draftEvent.requestGoogleMeet ? "" : null,
+      conference: draftConference(draftEvent),
       calendar_slug: draftEvent.calendarId,
       color: null,
       updated: null,

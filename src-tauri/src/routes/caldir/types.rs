@@ -3,6 +3,8 @@ use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
+use super::conference::conference_from_event;
+
 #[derive(Serialize, Deserialize, Type)]
 pub struct Calendar {
     pub slug: String,
@@ -115,12 +117,34 @@ pub struct CalendarEvent {
     pub reminders: Vec<i32>,
     pub organizer: Option<EventAttendee>,
     pub attendees: Vec<EventAttendee>,
-    pub conference_url: Option<String>,
+    pub conference: Option<EventConference>,
     pub calendar_slug: String,
     pub color: Option<String>,
     /// RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
     /// Used by the frontend to cheaply detect content changes for reload dedup.
     pub updated: Option<String>,
+}
+
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Type)]
+pub enum ConferenceProvider {
+    #[serde(rename = "google")]
+    Google,
+    #[serde(rename = "outlook")]
+    Outlook,
+    #[serde(rename = "proton")]
+    Proton,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "status", rename_all = "lowercase")]
+pub enum EventConference {
+    Requested {
+        provider: ConferenceProvider,
+    },
+    Live {
+        provider: ConferenceProvider,
+        url: String,
+    },
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -383,11 +407,7 @@ impl CalendarEvent {
                 response_status: None,
             }),
             attendees: e.attendees.iter().map(EventAttendee::from).collect(),
-            conference_url: e
-                .x_property("X-GOOGLE-CONFERENCE")
-                .or_else(|| e.x_property("X-OUTLOOK-CONFERENCE"))
-                .or_else(|| e.x_property("X-PM-CONFERENCE-URL"))
-                .map(String::from),
+            conference: conference_from_event(e),
             calendar_slug: calendar_slug.to_string(),
             color: e
                 .x_property("X-GOOGLE-COLOR-ID")

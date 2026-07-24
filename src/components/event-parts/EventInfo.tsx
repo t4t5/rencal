@@ -12,12 +12,13 @@ import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
+import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@/rpc/bindings"
 
+import { calendarSupportsMeet } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-import { VideoIcon } from "@/icons/video"
+import { GoogleMeetIcon } from "@/icons/google-meet"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -51,7 +52,7 @@ export function EventInfo({
   organizer,
   attendees,
   onAttendeesChange,
-  conferenceUrl,
+  conference,
   onRequestMeet,
   onRemoveMeetRequest,
   reminders,
@@ -84,7 +85,7 @@ export function EventInfo({
   organizer?: EventAttendee | null
   attendees?: EventAttendee[]
   onAttendeesChange?: (attendees: EventAttendee[]) => void
-  conferenceUrl?: string | null
+  conference?: EventConference | null
   onRequestMeet?: () => void
   onRemoveMeetRequest?: () => void
   reminders?: number[]
@@ -135,20 +136,20 @@ export function EventInfo({
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
-        {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
+        {conference?.status === "live" && <ConferenceLink conference={conference} />}
 
-        {conferenceUrl === "" && (
+        {conference?.status === "requested" && (
           <GoogleMeetItem readonly={readonly} onRemove={onRemoveMeetRequest} />
         )}
 
-        {conferenceUrl == null && calendar?.provider === "google" && !readonly && onRequestMeet && (
+        {conference == null && calendarSupportsMeet(calendar) && !readonly && onRequestMeet && (
           <Button
             type="button"
             variant="ghost"
             className="w-full justify-start px-2 text-muted-foreground bodytext!"
             onClick={onRequestMeet}
           >
-            <VideoIcon />
+            <GoogleMeetIcon />
             Add Google Meet
           </Button>
         )}

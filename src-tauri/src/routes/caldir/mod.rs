@@ -1,3 +1,4 @@
+mod conference;
 mod helpers;
 mod types;
 

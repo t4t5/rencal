@@ -22,7 +22,7 @@ function eventBetween(startDate: Date, endDate: Date): CalendarEvent {
     reminders: [],
     organizer: null,
     attendees: [],
-    conference_url: null,
+    conference: null,
     calendar_slug: "calendar",
     color: null,
     updated: null,

@@ -8,6 +8,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
+import { calendarSupportsMeet, draftConference } from "@/lib/conference"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -40,8 +41,7 @@ export const ComposeEventInner = ({
     draftPopoverOpen,
   } = useEventDraft()
 
-  const { summary, description, start, end, location, calendarId, recurrence, requestGoogleMeet } =
-    draftEvent
+  const { summary, description, start, end, location, calendarId, recurrence } = draftEvent
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end, draftPopoverOpen)
 
@@ -68,7 +68,7 @@ export const ComposeEventInner = ({
           allDay={allDay}
           location={location}
           calendar={calendar}
-          conferenceUrl={requestGoogleMeet ? "" : null}
+          conference={draftConference(draftEvent)}
           onRequestMeet={() => {
             setDraftEvent({ ...draftEvent, requestGoogleMeet: true })
           }}
@@ -106,8 +106,7 @@ export const ComposeEventInner = ({
             setDraftEvent({
               ...draftEvent,
               calendarId: newCalendarId,
-              requestGoogleMeet:
-                newCalendar?.provider === "google" ? draftEvent.requestGoogleMeet : false,
+              requestGoogleMeet: calendarSupportsMeet(newCalendar) && draftEvent.requestGoogleMeet,
             })
           }}
           recurrence={recurrenceRRule}
