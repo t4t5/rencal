@@ -1,4 +1,4 @@
-use super::conference::apply_google_meet_request;
+use super::conference::apply_conference_request;
 use super::helpers::load_caldir;
 use super::types::{CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::event_cache::EVENT_CACHE;
@@ -33,7 +33,7 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     event.recurrence = recurrence;
     event.reminders = reminders;
     event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();
-    apply_google_meet_request(&mut event, &calendar, input.request_google_meet);
+    apply_conference_request(&mut event, &calendar, input.request_google_meet);
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
     EVENT_CACHE.invalidate(&input.calendar_slug);
