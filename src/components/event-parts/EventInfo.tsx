@@ -3,12 +3,12 @@ import { RRule, RRuleSet } from "rrule"
 import { AllDayCheckbox } from "@/components/event-parts/inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDisplay"
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
+import {
+  ConferenceItem,
+  ConferenceRequestButton,
+} from "@/components/event-parts/inputs/ConferenceItem"
 import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
-import {
-  GoogleMeetItem,
-  GoogleMeetRequestButton,
-} from "@/components/event-parts/inputs/GoogleMeetItem"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, EventConference, ResponseStatus } from "@/rpc/bindings"
 
-import { calendarSupportsMeet } from "@/lib/conference"
+import { calendarConferenceProvider } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -53,8 +53,7 @@ export function EventInfo({
   attendees,
   onAttendeesChange,
   conference,
-  onRequestMeet,
-  onRemoveMeetRequest,
+  onConferenceChange,
   reminders,
   onReminderAdd,
   onReminderRemove,
@@ -86,8 +85,7 @@ export function EventInfo({
   attendees?: EventAttendee[]
   onAttendeesChange?: (attendees: EventAttendee[]) => void
   conference?: EventConference | null
-  onRequestMeet?: () => void
-  onRemoveMeetRequest?: () => void
+  onConferenceChange?: (conference: EventConference | null) => void
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
@@ -95,6 +93,8 @@ export function EventInfo({
   userResponseStatus?: ResponseStatus | null
   isPendingInvite?: boolean
 }) {
+  const conferenceProvider = calendarConferenceProvider(calendar)
+
   return (
     <div className="flex flex-col gap-1 grow">
       <div className="flex min-h-control-height items-center">
@@ -139,11 +139,20 @@ export function EventInfo({
         {conference?.status === "live" && <ConferenceLink conference={conference} />}
 
         {conference?.status === "requested" && (
-          <GoogleMeetItem readonly={readonly} onRemove={onRemoveMeetRequest} />
+          <ConferenceItem
+            provider={conference.provider}
+            readonly={readonly}
+            onRemove={onConferenceChange ? () => onConferenceChange(null) : undefined}
+          />
         )}
 
-        {conference == null && calendarSupportsMeet(calendar) && !readonly && onRequestMeet && (
-          <GoogleMeetRequestButton onClick={onRequestMeet} />
+        {conference == null && conferenceProvider && !readonly && onConferenceChange && (
+          <ConferenceRequestButton
+            provider={conferenceProvider}
+            onClick={() =>
+              onConferenceChange({ status: "requested", provider: conferenceProvider })
+            }
+          />
         )}
 
         {(!!attendees?.length || !readonly) && (

@@ -10,7 +10,7 @@ import {
 } from "react"
 
 import { rpc } from "@/rpc"
-import type { EventAttendee } from "@/rpc/bindings"
+import type { EventAttendee, EventConference } from "@/rpc/bindings"
 
 import {
   type CalendarEvent,
@@ -18,7 +18,6 @@ import {
   recurrenceToRpc,
   rpcToCalendarEvent,
 } from "@/lib/cal-events"
-import { draftConference } from "@/lib/conference"
 import {
   addMinutes,
   computeEventDateInfo,
@@ -44,7 +43,7 @@ export interface DraftEvent {
   location: string | null
   recurrence: Recurrence | null
   attendees: EventAttendee[]
-  requestGoogleMeet: boolean
+  conference: EventConference | null
 }
 
 interface EventTextContextType {
@@ -125,7 +124,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       location: null,
       recurrence: null,
       attendees: [],
-      requestGoogleMeet: false,
+      conference: null,
     }
   }, [defaultCalendarId])
 
@@ -204,7 +203,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       reminders: draftReminders,
       organizer: null,
       attendees: draftEvent.attendees,
-      conference: draftConference(draftEvent),
+      conference: draftEvent.conference,
       calendar_slug: draftEvent.calendarId,
       color: null,
       updated: null,
@@ -225,7 +224,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
       attendees: draftEvent.attendees,
-      conference: draftConference(draftEvent),
+      conference: draftEvent.conference,
     })
 
     if (draftEvent.recurrence) {

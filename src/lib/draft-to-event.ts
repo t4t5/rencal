@@ -1,7 +1,6 @@
 import type { DraftEvent } from "@/contexts/EventDraftContext"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import { draftConference } from "@/lib/conference"
 import { computeEventDateInfo } from "@/lib/event-time"
 
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
@@ -21,7 +20,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     reminders: [],
     organizer: null,
     attendees: draft.attendees,
-    conference: draftConference(draft),
+    conference: draft.conference,
     calendar_slug: draft.calendarId,
     color: null,
     updated: null,

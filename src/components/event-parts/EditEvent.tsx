@@ -22,7 +22,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
-import { calendarSupportsMeet, REQUESTED_MEET } from "@/lib/conference"
+import { conferenceForCalendar } from "@/lib/conference"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -213,10 +213,7 @@ export const EditEvent = ({
           setDirtyEvent({
             ...dirtyEvent,
             calendar_slug: newCalendarId,
-            conference:
-              dirtyEvent.conference?.status === "requested" && !calendarSupportsMeet(newCalendar)
-                ? null
-                : dirtyEvent.conference,
+            conference: conferenceForCalendar(dirtyEvent.conference, newCalendar),
           })
         }}
         organizer={dirtyEvent.organizer}
@@ -225,11 +222,8 @@ export const EditEvent = ({
           setDirtyEvent({ ...dirtyEvent, attendees: newAttendees })
         }}
         conference={dirtyEvent.conference}
-        onRequestMeet={() => {
-          setDirtyEvent({ ...dirtyEvent, conference: REQUESTED_MEET })
-        }}
-        onRemoveMeetRequest={() => {
-          setDirtyEvent({ ...dirtyEvent, conference: null })
+        onConferenceChange={(conference) => {
+          setDirtyEvent({ ...dirtyEvent, conference })
         }}
         recurrence={recurrenceRRule}
         onRecurrenceChange={handleRecurrenceChange}

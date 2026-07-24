@@ -1,20 +1,20 @@
 import type { Calendar, ConferenceProvider, EventConference } from "@/rpc/bindings"
 
-import type { DraftEvent } from "@/contexts/EventDraftContext"
-
-export const REQUESTED_MEET: EventConference = {
-  status: "requested",
-  provider: "google",
+export const conferenceLabel: Record<ConferenceProvider, string> = {
+  google: "Google Meet",
+  outlook: "Meeting",
+  proton: "Meeting",
 }
 
-export const conferenceJoinLabel: Record<ConferenceProvider, string> = {
-  google: "Join Google Meet",
-  outlook: "Join Meeting",
-  proton: "Join Meeting",
-}
+/** The conference provider renCal can provision for events on this calendar, if any. */
+export const calendarConferenceProvider = (calendar?: Calendar): ConferenceProvider | null =>
+  calendar?.provider === "google" ? "google" : null
 
-export const calendarSupportsMeet = (calendar?: Calendar) => calendar?.provider === "google"
-
-export const draftConference = (
-  draft: Pick<DraftEvent, "requestGoogleMeet">,
-): EventConference | null => (draft.requestGoogleMeet ? REQUESTED_MEET : null)
+/** Drop a requested conference when the target calendar can't provision it. */
+export const conferenceForCalendar = (
+  conference: EventConference | null,
+  calendar?: Calendar,
+): EventConference | null =>
+  conference?.status === "requested" && conference.provider !== calendarConferenceProvider(calendar)
+    ? null
+    : conference
