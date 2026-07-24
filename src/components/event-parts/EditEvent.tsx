@@ -216,6 +216,12 @@ export const EditEvent = ({
           setDirtyEvent({ ...dirtyEvent, attendees: newAttendees })
         }}
         conferenceUrl={dirtyEvent.conference_url}
+        onRequestMeet={() => {
+          setDirtyEvent({ ...dirtyEvent, conference_url: "" })
+        }}
+        onRemoveMeetRequest={() => {
+          setDirtyEvent({ ...dirtyEvent, conference_url: null })
+        }}
         recurrence={recurrenceRRule}
         onRecurrenceChange={handleRecurrenceChange}
         reminders={dirtyEvent.reminders}

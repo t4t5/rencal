@@ -7,13 +7,19 @@ import { ConferenceLink } from "@/components/event-parts/inputs/ConferenceLink"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
+import { RemoveItemButton } from "@/components/event-parts/inputs/RemoveItemButton"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
+import { Button } from "@/components/ui/button"
+import { InputGroupAddon } from "@/components/ui/input-group"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
 import type { EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
+
+import { GoogleMeetIcon } from "@/icons/google-meet"
+import { VideoIcon } from "@/icons/video"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -48,6 +54,8 @@ export function EventInfo({
   attendees,
   onAttendeesChange,
   conferenceUrl,
+  onRequestMeet,
+  onRemoveMeetRequest,
   reminders,
   onReminderAdd,
   onReminderRemove,
@@ -79,6 +87,8 @@ export function EventInfo({
   attendees?: EventAttendee[]
   onAttendeesChange?: (attendees: EventAttendee[]) => void
   conferenceUrl?: string | null
+  onRequestMeet?: () => void
+  onRemoveMeetRequest?: () => void
   reminders?: number[]
   onReminderAdd: (mins: number) => void
   onReminderRemove: (mins: number) => void
@@ -128,6 +138,31 @@ export function EventInfo({
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
 
         {conferenceUrl && <ConferenceLink url={conferenceUrl} />}
+
+        {conferenceUrl === "" && (
+          <div className="group flex h-control-height items-center justify-between rounded-md p-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
+            <div className="flex min-w-0 items-center gap-2">
+              <InputGroupAddon>
+                <GoogleMeetIcon />
+              </InputGroupAddon>
+              <span>Google Meet</span>
+            </div>
+
+            {!readonly && onRemoveMeetRequest && <RemoveItemButton onClick={onRemoveMeetRequest} />}
+          </div>
+        )}
+
+        {conferenceUrl == null && calendar?.provider === "google" && !readonly && onRequestMeet && (
+          <Button
+            type="button"
+            variant="ghost"
+            className="w-full justify-start px-2 font-normal text-muted-foreground"
+            onClick={onRequestMeet}
+          >
+            <VideoIcon />
+            Add Google Meet
+          </Button>
+        )}
 
         {(!!attendees?.length || !readonly) && (
           <>

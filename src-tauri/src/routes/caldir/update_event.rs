@@ -2,8 +2,21 @@ use super::helpers::load_caldir;
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Attendee, EventInstanceId, Reminder};
+use caldir_core::{Attendee, Event, EventInstanceId, Reminder, XProperty};
 use chrono::Utc;
+
+fn request_google_meet(event: &mut Event, calendar: &caldir_core::Calendar, requested: bool) {
+    if requested
+        && event.x_property("X-GOOGLE-CONFERENCE").is_none()
+        && calendar
+            .remote_config()
+            .is_some_and(|config| config.provider_slug().as_str() == "google")
+    {
+        event
+            .x_properties
+            .push(XProperty::new("X-GOOGLE-CONFERENCE", ""));
+    }
+}
 
 pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
     let caldir = load_caldir()?;
@@ -82,6 +95,11 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
         if moving {
             let new_slug = input.new_calendar_slug.as_ref().unwrap();
             let target_calendar = caldir.calendar(new_slug).map_err(|e| e.to_string())?;
+            request_google_meet(
+                &mut updated_event,
+                &target_calendar,
+                input.request_google_meet,
+            );
 
             // New UID so remote providers treat it as a fresh event
             let moved_event = updated_event.with_new_uid();
@@ -99,6 +117,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
             EVENT_CACHE.invalidate(&input.calendar_slug);
             EVENT_CACHE.invalidate(new_slug);
         } else {
+            request_google_meet(&mut updated_event, &calendar, input.request_google_meet);
             existing_calendar_event
                 .update(updated_event)
                 .map_err(|e| e.to_string())?;

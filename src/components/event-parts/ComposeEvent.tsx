@@ -40,7 +40,8 @@ export const ComposeEventInner = ({
     draftPopoverOpen,
   } = useEventDraft()
 
-  const { summary, description, start, end, location, calendarId, recurrence } = draftEvent
+  const { summary, description, start, end, location, calendarId, recurrence, requestGoogleMeet } =
+    draftEvent
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end, draftPopoverOpen)
 
@@ -67,6 +68,13 @@ export const ComposeEventInner = ({
           allDay={allDay}
           location={location}
           calendar={calendar}
+          conferenceUrl={requestGoogleMeet ? "" : null}
+          onRequestMeet={() => {
+            setDraftEvent({ ...draftEvent, requestGoogleMeet: true })
+          }}
+          onRemoveMeetRequest={() => {
+            setDraftEvent({ ...draftEvent, requestGoogleMeet: false })
+          }}
           onDescriptionChange={(newDescription) => {
             setDraftEvent({ ...draftEvent, description: newDescription || null })
           }}
@@ -94,7 +102,13 @@ export const ComposeEventInner = ({
             setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
           }}
           onCalendarChange={(newCalendarId) => {
-            setDraftEvent({ ...draftEvent, calendarId: newCalendarId })
+            const newCalendar = calendars.find((cal) => cal.slug === newCalendarId)
+            setDraftEvent({
+              ...draftEvent,
+              calendarId: newCalendarId,
+              requestGoogleMeet:
+                newCalendar?.provider === "google" ? draftEvent.requestGoogleMeet : false,
+            })
           }}
           recurrence={recurrenceRRule}
           attendees={draftEvent.attendees}

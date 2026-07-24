@@ -2,7 +2,7 @@ use super::helpers::load_caldir;
 use super::types::{CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Event, Reminder};
+use caldir_core::{Event, Reminder, XProperty};
 
 pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent> {
     let caldir = load_caldir()?;
@@ -32,6 +32,15 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     event.recurrence = recurrence;
     event.reminders = reminders;
     event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();
+    if input.request_google_meet
+        && calendar
+            .remote_config()
+            .is_some_and(|config| config.provider_slug().as_str() == "google")
+    {
+        event
+            .x_properties
+            .push(XProperty::new("X-GOOGLE-CONFERENCE", ""));
+    }
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
     EVENT_CACHE.invalidate(&input.calendar_slug);

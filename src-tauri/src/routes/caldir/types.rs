@@ -179,6 +179,7 @@ pub struct CreateEventInput {
     pub recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
     pub attendees: Vec<EventAttendee>,
+    pub request_google_meet: bool,
 }
 
 /// Input for updating an event
@@ -196,6 +197,7 @@ pub struct UpdateEventInput {
     pub recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
     pub attendees: Vec<EventAttendee>,
+    pub request_google_meet: bool,
 }
 
 /// Input for splitting a recurring series at a given instance.

@@ -13,6 +13,7 @@ import {
 import { rpc } from "@/rpc"
 import { SyncPreview } from "@/rpc/bindings"
 
+import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -39,6 +40,7 @@ export function useSync() {
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
+  const { reloadEvents } = useCalEvents()
   const { autoSyncEnabled, settingsLoaded } = useSettings()
 
   const [isChecking, setIsChecking] = useState(false)
@@ -78,6 +80,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
         if (withWork.length > 0) {
           setIsSyncing(true)
           await rpc.caldir.sync([])
+          await reloadEvents()
           setIsSyncing(false)
         }
 
@@ -97,7 +100,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setIsChecking(false)
       setIsSyncing(false)
     },
-    [calendars],
+    [calendars, reloadEvents],
   )
 
   const requestSync = useCallback(() => runSync(autoSyncEnabledRef.current), [runSync])

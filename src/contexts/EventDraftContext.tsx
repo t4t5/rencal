@@ -43,6 +43,7 @@ interface DraftEvent {
   location: string | null
   recurrence: Recurrence | null
   attendees: EventAttendee[]
+  requestGoogleMeet: boolean
 }
 
 interface EventTextContextType {
@@ -123,6 +124,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       location: null,
       recurrence: null,
       attendees: [],
+      requestGoogleMeet: false,
     }
   }, [defaultCalendarId])
 
@@ -201,7 +203,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       reminders: draftReminders,
       organizer: null,
       attendees: draftEvent.attendees,
-      conference_url: null,
+      conference_url: draftEvent.requestGoogleMeet ? "" : null,
       calendar_slug: draftEvent.calendarId,
       color: null,
       updated: null,
@@ -222,6 +224,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
       reminders: draftReminders,
       attendees: draftEvent.attendees,
+      request_google_meet: draftEvent.requestGoogleMeet,
     })
 
     if (draftEvent.recurrence) {

@@ -33,6 +33,7 @@ export async function updateAndSyncEvent(
       recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
       reminders: current.reminders,
       attendees: current.attendees,
+      request_google_meet: current.conference_url === "",
     })
     await requestSync()
   } catch (err) {

@@ -10,6 +10,7 @@ interface DraftEvent {
   location: string | null
   recurrence: Recurrence | null
   attendees?: CalendarEvent["attendees"]
+  requestGoogleMeet: boolean
 }
 
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
@@ -29,7 +30,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     reminders: [],
     organizer: null,
     attendees: draft.attendees ?? [],
-    conference_url: null,
+    conference_url: draft.requestGoogleMeet ? "" : null,
     calendar_slug: draft.calendarId,
     color: null,
     updated: null,

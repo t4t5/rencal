@@ -61,6 +61,7 @@ export function useOpenDayDraft() {
       location: null,
       recurrence: null,
       attendees: [],
+      requestGoogleMeet: false,
     })
 
     if (opts.clickY != null) {

@@ -42,6 +42,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
         calendarId: draftEvent.calendarId,
         recurrence: draftEvent.recurrence,
         attendees: draftEvent.attendees,
+        requestGoogleMeet: draftEvent.requestGoogleMeet,
       })
     }
     if (!isDrafting || !deferredText) return null
@@ -53,6 +54,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
     draftEvent.calendarId,
     draftEvent.recurrence,
     draftEvent.attendees,
+    draftEvent.requestGoogleMeet,
     deferredSummary,
     deferredDescription,
     deferredLocation,
