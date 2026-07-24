@@ -59,28 +59,22 @@ export const ComposeEventInner = ({
     <>
       <div className="p-2">
         <EventInfo
+          onClose={onCreate}
           summaryRef={summaryRef}
           summary={summary}
-          onClose={onCreate}
-          description={description}
-          start={start}
-          end={end}
-          allDay={allDay}
-          location={location}
-          calendar={calendar}
-          conference={draftEvent.conference}
-          onConferenceChange={(conference) => {
-            setDraftEvent({ ...draftEvent, conference })
-          }}
-          onDescriptionChange={(newDescription) => {
-            setDraftEvent({ ...draftEvent, description: newDescription || null })
-          }}
-          onLocationChange={(newLocation) => {
-            setDraftEvent({ ...draftEvent, location: newLocation || null })
-          }}
           onChangeSummary={(newSummary) => {
             setDraftEvent({ ...draftEvent, summary: newSummary })
           }}
+          description={description}
+          onDescriptionChange={(newDescription) => {
+            setDraftEvent({ ...draftEvent, description: newDescription || null })
+          }}
+          start={start}
+          end={end}
+          onChangeDateTime={({ start: newStart, end: newEnd }) => {
+            setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
+          }}
+          allDay={allDay}
           onAllDayChange={(checked) => {
             if (checked) {
               const allDayStart = toAllDay(start)
@@ -95,9 +89,15 @@ export const ComposeEventInner = ({
               })
             }
           }}
-          onChangeDateTime={({ start: newStart, end: newEnd }) => {
-            setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
+          location={location}
+          onLocationChange={(newLocation) => {
+            setDraftEvent({ ...draftEvent, location: newLocation || null })
           }}
+          conference={draftEvent.conference}
+          onConferenceChange={(conference) => {
+            setDraftEvent({ ...draftEvent, conference })
+          }}
+          calendar={calendar}
           onCalendarChange={(newCalendarId) => {
             const newCalendar = calendars.find((cal) => cal.slug === newCalendarId)
             setDraftEvent({
@@ -106,11 +106,11 @@ export const ComposeEventInner = ({
               conference: conferenceForCalendar(draftEvent.conference, newCalendar),
             })
           }}
-          recurrence={recurrenceRRule}
           attendees={draftEvent.attendees}
           onAttendeesChange={(newAttendees) => {
             setDraftEvent({ ...draftEvent, attendees: newAttendees })
           }}
+          recurrence={recurrenceRRule}
           onRecurrenceChange={(rrule) => {
             setDraftEvent({ ...draftEvent, recurrence: rruleToRecurrence(rrule) })
           }}
