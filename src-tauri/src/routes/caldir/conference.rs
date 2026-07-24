@@ -2,7 +2,7 @@ use caldir_core::{Calendar, Event, XProperty};
 
 use super::types::{ConferenceProvider, EventConference};
 
-pub const GOOGLE_CONFERENCE_PROP: &str = "X-GOOGLE-CONFERENCE";
+const GOOGLE_CONFERENCE_PROP: &str = "X-GOOGLE-CONFERENCE";
 const OUTLOOK_CONFERENCE_PROP: &str = "X-OUTLOOK-CONFERENCE";
 const PROTON_CONFERENCE_PROP: &str = "X-PM-CONFERENCE-URL";
 

@@ -49,6 +49,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
                 event.end = Some(end);
                 event.reminders = input_reminders;
                 event.attendees = input_attendees;
+                apply_conference(event, &calendar, input.conference.as_ref());
             })
             .map_err(|e| e.to_string())?;
 
