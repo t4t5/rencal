@@ -14,11 +14,10 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { formatDateKey, getRelativeDayLabel } from "@/lib/event-time"
+import { coversFullDay, formatDateKey, getRelativeDayLabel } from "@/lib/event-time"
 import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
-import { getAgendaEventDisplay, type TimedAgendaEventDisplayMode } from "./agendaEventDisplay"
 import {
   AGENDA_ITEM_SELECTOR,
   clearRememberedAgendaItem,
@@ -108,16 +107,10 @@ export const DaySection = forwardRef<
     }
   }
 
-  const displayedEvents = events.map((event) => ({
-    event,
-    displayMode: getAgendaEventDisplay(event, dateKey),
-  }))
-
-  const allDayEvents = displayedEvents.filter(({ displayMode }) => displayMode === "all-day")
-
-  const timedEvents = displayedEvents.flatMap(({ event, displayMode }) =>
-    displayMode === "all-day" ? [] : [{ event, displayMode }],
-  )
+  // A timed event that covers this entire day (e.g. the middle of a
+  // multi-day span) is shown as an all-day chip, not a timed row.
+  const allDayEvents = events.filter((e) => coversFullDay(e.start, e.end, dateKey))
+  const timedEvents = events.filter((e) => !coversFullDay(e.start, e.end, dateKey))
 
   return (
     <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">
@@ -128,7 +121,7 @@ export const DaySection = forwardRef<
 
         {allDayEvents.length > 0 && (
           <div className="px-3 py-1 flex flex-wrap gap-1">
-            {allDayEvents.map(({ event }) => (
+            {allDayEvents.map((event) => (
               <AllDayRow
                 key={eventKey(event)}
                 event={event}
@@ -143,12 +136,11 @@ export const DaySection = forwardRef<
           </div>
         )}
 
-        {timedEvents.map(({ event, displayMode }) => (
+        {timedEvents.map((event) => (
           <TimedRow
             key={eventKey(event)}
             event={event}
             dateKey={dateKey}
-            displayMode={displayMode}
             state={getRowState(event)}
             onSelect={handleSelect}
             onFocus={handleFocus}
@@ -245,13 +237,7 @@ const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
   )
 }
 
-const TimedRow = ({
-  event,
-  dateKey,
-  state,
-  displayMode,
-  ...handlers
-}: RowProps & { displayMode: TimedAgendaEventDisplayMode }) => {
+const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
   const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (
@@ -266,11 +252,7 @@ const TimedRow = ({
       })}
       {...handlers}
     >
-      <AgendaTimedEventBlock
-        event={event}
-        calendarColor={calendarColor}
-        displayMode={displayMode}
-      />
+      <AgendaTimedEventBlock event={event} calendarColor={calendarColor} dateKey={dateKey} />
     </AgendaEventRowShell>
   )
 }

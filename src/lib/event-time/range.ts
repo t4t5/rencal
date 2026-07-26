@@ -3,6 +3,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { allDayDate } from "./constructors"
 import { addDays, addMinutes, dateInEventZone, withEventDate, withWallclockTime } from "./edit"
 import { startOfDayMs } from "./layout"
+import { getLocalTzid } from "./local-zone"
 import {
   dateInViewerZone,
   instantForOrdering,
@@ -44,6 +45,27 @@ export function* enumerateLocalDateKeys(start: EventTime, end: EventTime): Gener
     yield current.toString()
     current = current.add({ days: 1 })
   }
+}
+
+/**
+ * Whether the event covers the given viewer-local day from midnight to
+ * midnight. All-day events cover every day they occupy; a timed event covers
+ * a day fully only when its span passes over that day without starting or
+ * ending mid-day. Assumes dateKey is a day the event occupies (as enumerated
+ * by enumerateLocalDateKeys).
+ */
+export function coversFullDay(start: EventTime, end: EventTime, dateKey: string): boolean {
+  if (isAllDay(start)) return true
+
+  const day = Temporal.PlainDate.from(dateKey)
+  const tzid = getLocalTzid()
+  const dayStartMs = day.toZonedDateTime(tzid).epochMilliseconds
+  const nextDayStartMs = day.add({ days: 1 }).toZonedDateTime(tzid).epochMilliseconds
+
+  return (
+    instantForOrdering(start).epochMilliseconds <= dayStartMs &&
+    instantForOrdering(end).epochMilliseconds >= nextDayStartMs
+  )
 }
 
 export function withRangeStartWallclockTime(

@@ -1,7 +1,5 @@
-import { format } from "date-fns"
 import { memo } from "react"
 
-import { TimedAgendaEventDisplayMode } from "@/components/sidebar/agenda/agendaEventDisplay"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { TimeFormat } from "@/rpc/bindings"
@@ -10,21 +8,21 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
+import { formatDateKey, formatTime, isSameDay } from "@/lib/event-time"
 
 export const AgendaTimedEventBlock = memo(function EventRow({
   event,
   calendarColor,
-  displayMode,
+  dateKey,
 }: {
   event: CalendarEvent
   calendarColor: string
-  displayMode: TimedAgendaEventDisplayMode
+  dateKey: string
 }) {
   const { timeFormat } = useSettings()
 
   const colors = getEventBlockColors({ calendarColor, eventColor: event.color })
-  const timeLabel = getTimeLabel(event, displayMode, timeFormat)
+  const timeLabel = getTimeLabel(event, dateKey, timeFormat)
 
   return (
     <div className="flex gap-3 pl-3.5 pr-2">
@@ -37,30 +35,19 @@ export const AgendaTimedEventBlock = memo(function EventRow({
   )
 })
 
-function getTimeLabel(
-  event: CalendarEvent,
-  displayMode: TimedAgendaEventDisplayMode,
-  timeFormat: TimeFormat,
-): string {
+/**
+ * A multi-day timed event only appears as a timed row on the days it partially
+ * covers (fully covered days render as all-day chips), so a row that isn't a
+ * same-day range shows just the boundary it touches.
+ */
+function getTimeLabel(event: CalendarEvent, dateKey: string, timeFormat: TimeFormat): string {
   const { start, end } = event
 
-  if (displayMode === "starts-at") {
-    return `Starts at ${formatTime(start, timeFormat)}`
-  }
-
-  if (displayMode === "ends-at") {
-    return `Ends at ${formatTime(end, timeFormat)}`
-  }
-
-  const startTime = formatTime(start, timeFormat)
-  const endTime = formatTime(end, timeFormat)
-
   if (isSameDay(start, end)) {
-    return `${startTime} - ${endTime}`
+    return `${formatTime(start, timeFormat)} - ${formatTime(end, timeFormat)}`
   }
 
-  const startDate = format(toInteropDate(start), "MMM d,")
-  const endDate = format(toInteropDate(end), "MMM d,")
-
-  return `${startDate} ${startTime} - ${endDate} ${endTime}`
+  return formatDateKey(start) === dateKey
+    ? `Starts at ${formatTime(start, timeFormat)}`
+    : `Ends at ${formatTime(end, timeFormat)}`
 }

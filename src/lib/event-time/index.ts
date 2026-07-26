@@ -49,6 +49,7 @@ export {
   toViewerZonedDateTime,
 } from "./projections"
 export {
+  coversFullDay,
   displayEndDate,
   enumerateLocalDateKeys,
   normalizeAllDayRange,
