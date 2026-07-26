@@ -1,10 +1,14 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import { allDayDate } from "./constructors"
-import { formatDateKey } from "./display"
 import { addDays, addMinutes, dateInEventZone, withEventDate, withWallclockTime } from "./edit"
 import { startOfDayMs } from "./layout"
-import { instantForOrdering, isAllDay } from "./projections"
+import {
+  dateInViewerZone,
+  instantForOrdering,
+  isAllDay,
+  toViewerZonedDateTime,
+} from "./projections"
 import type { EventTime, EventTimeRange } from "./types"
 
 /**
@@ -17,27 +21,28 @@ export function normalizeAllDayRange(start: EventTime, end: EventTime): EventTim
 }
 
 /**
- * The viewer-local date keys (YYYY-MM-DD) this event occupies. For timed
- * events that is a single key. For all-day events that is start inclusive
- * through end exclusive, following iCalendar's DTEND convention.
+ * The viewer-local date keys (YYYY-MM-DD) this event occupies. The end is
+ * exclusive, so a timed event ending exactly at midnight does not occupy that
+ * new day, and an all-day event stops before its DTEND date.
  */
 export function* enumerateLocalDateKeys(start: EventTime, end: EventTime): Generator<string> {
-  if (!isAllDay(start)) {
-    yield formatDateKey(start)
-    return
+  const firstDate = dateInViewerZone(start)
+  let lastDate = dateInViewerZone(end)
+  const endIsExclusiveDate =
+    isAllDay(start) ||
+    toViewerZonedDateTime(end).toPlainTime().equals(Temporal.PlainTime.from("00:00"))
+
+  if (endIsExclusiveDate && Temporal.PlainDate.compare(lastDate, firstDate) > 0) {
+    lastDate = lastDate.subtract({ days: 1 })
+  }
+  if (Temporal.PlainDate.compare(lastDate, firstDate) < 0) {
+    lastDate = firstDate
   }
 
-  const startKey = formatDateKey(start)
-  const endKey = formatDateKey(end)
-  if (startKey >= endKey) {
-    yield startKey
-    return
-  }
-
-  let current: EventTime = start
-  while (formatDateKey(current) < endKey) {
-    yield formatDateKey(current)
-    current = addDays(current, 1)
+  let current = firstDate
+  while (Temporal.PlainDate.compare(current, lastDate) <= 0) {
+    yield current.toString()
+    current = current.add({ days: 1 })
   }
 }
 

@@ -258,11 +258,34 @@ describe("normalizeAllDayRange", () => {
 })
 
 describe("enumerateLocalDateKeys", () => {
-  it("timed event yields a single key", () => {
+  it("single-day timed event yields a single key", () => {
     const tz = getLocalTzid()
     const start = zoned("2026-04-28T09:00:00", tz)
     const end = zoned("2026-04-28T10:00:00", tz)
     expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual(["2026-04-28"])
+  })
+
+  it("multi-day timed event enumerates every occupied day", () => {
+    const tz = getLocalTzid()
+    const start = zoned("2026-04-28T19:00:00", tz)
+    const end = zoned("2026-05-01T05:00:00", tz)
+    expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual([
+      "2026-04-28",
+      "2026-04-29",
+      "2026-04-30",
+      "2026-05-01",
+    ])
+  })
+
+  it("timed event ending at midnight excludes the end date", () => {
+    const tz = getLocalTzid()
+    const start = zoned("2026-04-28T19:00:00", tz)
+    const end = zoned("2026-05-01T00:00:00", tz)
+    expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual([
+      "2026-04-28",
+      "2026-04-29",
+      "2026-04-30",
+    ])
   })
 
   it("all-day three-day enumerates start through end-exclusive", () => {

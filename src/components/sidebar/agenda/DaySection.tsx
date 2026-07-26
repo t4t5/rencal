@@ -14,10 +14,11 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { formatDateKey, getRelativeDayLabel, isAllDay } from "@/lib/event-time"
+import { formatDateKey, getRelativeDayLabel } from "@/lib/event-time"
 import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
+import { getAgendaEventDisplay, type AgendaEventDisplay } from "./agendaEventDisplay"
 import {
   AGENDA_ITEM_SELECTOR,
   clearRememberedAgendaItem,
@@ -107,8 +108,19 @@ export const DaySection = forwardRef<
     }
   }
 
-  const allDayEvents = events.filter((e) => isAllDay(e.start))
-  const timedEvents = events.filter((e) => !isAllDay(e.start))
+  const displayedEvents = events.map((event) => ({
+    event,
+    displayMode: getAgendaEventDisplay(event, dateKey),
+  }))
+  const allDayEvents = displayedEvents.filter(({ displayMode }) => displayMode === "all-day")
+  const timedEvents = displayedEvents.filter(
+    (
+      displayed,
+    ): displayed is {
+      event: CalendarEvent
+      displayMode: Exclude<AgendaEventDisplay, "all-day">
+    } => displayed.displayMode !== "all-day",
+  )
 
   return (
     <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">
@@ -119,7 +131,7 @@ export const DaySection = forwardRef<
 
         {allDayEvents.length > 0 && (
           <div className="px-3 py-1 flex flex-wrap gap-1">
-            {allDayEvents.map((event) => (
+            {allDayEvents.map(({ event }) => (
               <AllDayRow
                 key={eventKey(event)}
                 event={event}
@@ -134,11 +146,12 @@ export const DaySection = forwardRef<
           </div>
         )}
 
-        {timedEvents.map((event) => (
+        {timedEvents.map(({ event, displayMode }) => (
           <TimedRow
             key={eventKey(event)}
             event={event}
             dateKey={dateKey}
+            displayMode={displayMode}
             state={getRowState(event)}
             onSelect={handleSelect}
             onFocus={handleFocus}
@@ -235,7 +248,13 @@ const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
   )
 }
 
-const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
+const TimedRow = ({
+  event,
+  dateKey,
+  state,
+  displayMode,
+  ...handlers
+}: RowProps & { displayMode: Exclude<AgendaEventDisplay, "all-day"> }) => {
   const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (
@@ -250,7 +269,11 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
       })}
       {...handlers}
     >
-      <AgendaTimedEventBlock event={event} calendarColor={calendarColor} />
+      <AgendaTimedEventBlock
+        event={event}
+        calendarColor={calendarColor}
+        displayMode={displayMode}
+      />
     </AgendaEventRowShell>
   )
 }
