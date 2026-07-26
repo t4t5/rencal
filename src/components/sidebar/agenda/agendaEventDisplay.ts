@@ -9,12 +9,13 @@ import {
   isAllDay,
 } from "@/lib/event-time"
 
-export type AgendaEventDisplay = "all-day" | "time-range" | "starts-at" | "ends-at"
+export type AgendaEventDisplayMode = "all-day" | "time-range" | "starts-at" | "ends-at"
+export type TimedAgendaEventDisplayMode = Exclude<AgendaEventDisplayMode, "all-day">
 
 export function getAgendaEventDisplay(
   event: Pick<CalendarEvent, "start" | "end">,
   dateKey: string,
-): AgendaEventDisplay {
+): AgendaEventDisplayMode {
   // All-day event:
   if (isAllDay(event.start)) return "all-day"
 

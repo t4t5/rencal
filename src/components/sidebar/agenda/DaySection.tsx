@@ -18,7 +18,7 @@ import { formatDateKey, getRelativeDayLabel } from "@/lib/event-time"
 import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
-import { getAgendaEventDisplay, type AgendaEventDisplay } from "./agendaEventDisplay"
+import { getAgendaEventDisplay, type TimedAgendaEventDisplayMode } from "./agendaEventDisplay"
 import {
   AGENDA_ITEM_SELECTOR,
   clearRememberedAgendaItem,
@@ -112,13 +112,15 @@ export const DaySection = forwardRef<
     event,
     displayMode: getAgendaEventDisplay(event, dateKey),
   }))
+
   const allDayEvents = displayedEvents.filter(({ displayMode }) => displayMode === "all-day")
+
   const timedEvents = displayedEvents.filter(
     (
       displayed,
     ): displayed is {
       event: CalendarEvent
-      displayMode: Exclude<AgendaEventDisplay, "all-day">
+      displayMode: TimedAgendaEventDisplayMode
     } => displayed.displayMode !== "all-day",
   )
 
@@ -254,7 +256,7 @@ const TimedRow = ({
   state,
   displayMode,
   ...handlers
-}: RowProps & { displayMode: Exclude<AgendaEventDisplay, "all-day"> }) => {
+}: RowProps & { displayMode: TimedAgendaEventDisplayMode }) => {
   const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
 
   return (

@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 import { memo } from "react"
 
+import { TimedAgendaEventDisplayMode } from "@/components/sidebar/agenda/agendaEventDisplay"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import type { TimeFormat } from "@/rpc/bindings"
@@ -11,8 +12,6 @@ import { CalendarEvent } from "@/lib/cal-events"
 import { getEventBlockColors } from "@/lib/event-styles"
 import { formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
 
-type DisplayMode = "time-range" | "starts-at" | "ends-at"
-
 export const AgendaTimedEventBlock = memo(function EventRow({
   event,
   calendarColor,
@@ -20,7 +19,7 @@ export const AgendaTimedEventBlock = memo(function EventRow({
 }: {
   event: CalendarEvent
   calendarColor: string
-  displayMode: DisplayMode
+  displayMode: TimedAgendaEventDisplayMode
 }) {
   const { timeFormat } = useSettings()
 
@@ -40,7 +39,7 @@ export const AgendaTimedEventBlock = memo(function EventRow({
 
 function getTimeLabel(
   event: CalendarEvent,
-  displayMode: DisplayMode,
+  displayMode: TimedAgendaEventDisplayMode,
   timeFormat: TimeFormat,
 ): string {
   const { start, end } = event
