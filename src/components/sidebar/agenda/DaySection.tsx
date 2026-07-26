@@ -115,13 +115,8 @@ export const DaySection = forwardRef<
 
   const allDayEvents = displayedEvents.filter(({ displayMode }) => displayMode === "all-day")
 
-  const timedEvents = displayedEvents.filter(
-    (
-      displayed,
-    ): displayed is {
-      event: CalendarEvent
-      displayMode: TimedAgendaEventDisplayMode
-    } => displayed.displayMode !== "all-day",
+  const timedEvents = displayedEvents.flatMap(({ event, displayMode }) =>
+    displayMode === "all-day" ? [] : [{ event, displayMode }],
   )
 
   return (
