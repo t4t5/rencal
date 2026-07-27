@@ -38,9 +38,9 @@ export function ConferenceDisplay({
   onConferenceChange?: (conference: EventConference | null) => void
 }) {
   if (conference?.status === "live") {
-    return (
-      <ConferenceLink url={conference.url} label={conferenceLabel[conference.provider]} showUrl />
-    )
+    const label = conferenceLabel[conference.provider]
+
+    return <ConferenceLink url={conference.url} label={label} showUrl />
   }
 
   if (conference?.status === "requested") {
