@@ -16,6 +16,31 @@ export const conferenceLabel: Record<ConferenceProvider, string> = {
   proton: "Meeting",
 }
 
+/** A meeting link found in free-form event text, unlike a stored `EventConference`. */
+export type DetectedConference = { url: string; label: string }
+
+const meetingUrlPatterns: [label: string, pattern: RegExp][] = [
+  ["Zoom", /https?:\/\/(?:[\w-]+\.)*(?:zoom\.us|zoomgov\.com)\/(?:j|my|s|w|wc)\/[^\s<>"']+/i],
+  ["Google Meet", /https?:\/\/meet\.google\.com\/[^\s<>"']+/i],
+  ["Microsoft Teams", /https?:\/\/teams\.(?:microsoft|live)\.com\/[^\s<>"']+/i],
+  ["Webex", /https?:\/\/(?:[\w-]+\.)*webex\.com\/[^\s<>"']+/i],
+  ["Jitsi", /https?:\/\/meet\.jit\.si\/[^\s<>"']+/i],
+  ["Whereby", /https?:\/\/(?:www\.)?whereby\.com\/[^\s<>"']+/i],
+  ["Proton Meet", /https?:\/\/meet\.proton\.me\/[^\s<>"']+/i],
+]
+
+/** Find a known meeting link in free-form text, e.g. an event location holding a Zoom URL. */
+export const detectConference = (text: string | null | undefined): DetectedConference | null => {
+  if (!text) return null
+
+  for (const [label, pattern] of meetingUrlPatterns) {
+    const match = text.match(pattern)
+    if (match) return { label, url: match[0].replace(/[),.;:!?\]]+$/, "") }
+  }
+
+  return null
+}
+
 /** The conference provider renCal can provision for events on this calendar, if any. */
 export const calendarConferenceProvider = (calendar?: Calendar): ConferenceProvider | null =>
   calendar?.provider === "google" ? "google" : null

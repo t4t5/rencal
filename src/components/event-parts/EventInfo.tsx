@@ -132,6 +132,7 @@ export function EventInfo({
 
         <ConferenceDisplay
           conference={conference}
+          location={location}
           calendar={calendar}
           readonly={readonly}
           onConferenceChange={onConferenceChange}

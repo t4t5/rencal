@@ -6,6 +6,7 @@ import {
   calendarConferenceProvider,
   conferenceForCalendar,
   conferenceToRpc,
+  detectConference,
   rpcToConference,
   type EventConference,
 } from "@/lib/conference"
@@ -44,6 +45,45 @@ describe("conferenceForCalendar", () => {
     }
 
     expect(conferenceForCalendar(live, calendar("google"))).toEqual(live)
+  })
+})
+
+describe("detectConference", () => {
+  it.each([
+    ["https://us02web.zoom.us/j/123456789?pwd=abc123", "Zoom"],
+    ["https://company.zoom.us/my/room", "Zoom"],
+    ["https://meet.google.com/abc-defg-hij", "Google Meet"],
+    ["https://teams.microsoft.com/l/meetup-join/xyz", "Microsoft Teams"],
+    ["https://teams.live.com/meet/123", "Microsoft Teams"],
+    ["https://company.webex.com/meet/someone", "Webex"],
+    ["https://meet.jit.si/SomeRoom", "Jitsi"],
+    ["https://whereby.com/some-room", "Whereby"],
+    ["https://meet.proton.me/example", "Proton Meet"],
+  ])("detects %s as %s", (url, label) => {
+    expect(detectConference(url)).toEqual({ url, label })
+  })
+
+  it("extracts the link from surrounding text", () => {
+    expect(detectConference("Join here: https://zoom.us/j/99887766 (passcode 1234)")).toEqual({
+      url: "https://zoom.us/j/99887766",
+      label: "Zoom",
+    })
+  })
+
+  it("trims trailing punctuation from the link", () => {
+    expect(detectConference("(https://meet.google.com/abc-defg-hij)")).toEqual({
+      url: "https://meet.google.com/abc-defg-hij",
+      label: "Google Meet",
+    })
+  })
+
+  it("ignores locations without a meeting link", () => {
+    expect(detectConference("Room 4B, Main Office")).toBeNull()
+    expect(detectConference("https://zoom.us")).toBeNull()
+    expect(detectConference("https://example.com/zoom.us/j/123")).toBeNull()
+    expect(detectConference("")).toBeNull()
+    expect(detectConference(null)).toBeNull()
+    expect(detectConference(undefined)).toBeNull()
   })
 })
 
