@@ -1,6 +1,7 @@
 import { formatDateKey } from "@/lib/event-time"
 
 export const AGENDA_ITEM_SELECTOR = "[data-agenda-item]"
+export const AGENDA_SCROLL_CONTAINER_SELECTOR = "[data-agenda-scroll-container]"
 
 const INTERACTIVE_FOCUS_SELECTOR = [
   "input",

@@ -11,15 +11,25 @@ export function scrollSectionIntoContainer(
   section: HTMLElement,
   behavior: ScrollBehavior,
 ) {
+  scrollElementIntoContainer(container, section, behavior)
+}
+
+export function scrollElementIntoContainer(
+  container: HTMLElement,
+  element: HTMLElement,
+  behavior: ScrollBehavior,
+  topOffset = 0,
+) {
   const containerRect = container.getBoundingClientRect()
-  const sectionRect = section.getBoundingClientRect()
-  const top = sectionRect.top - containerRect.top + container.scrollTop
-  debug("scrollSectionIntoContainer", {
+  const elementRect = element.getBoundingClientRect()
+  const top = elementRect.top - containerRect.top + container.scrollTop - topOffset
+  debug("scrollElementIntoContainer", {
     behavior,
+    topOffset,
     fromScrollTop: container.scrollTop,
     toTop: top,
     containerTop: containerRect.top,
-    sectionTop: sectionRect.top,
+    elementTop: elementRect.top,
     containerHeight: container.clientHeight,
     scrollHeight: container.scrollHeight,
   })

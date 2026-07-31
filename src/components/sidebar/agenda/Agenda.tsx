@@ -144,6 +144,7 @@ export function Agenda() {
   return (
     <div
       ref={scrollContainerRef}
+      data-agenda-scroll-container
       className={cn(
         "grow overflow-auto flex-col gap-6 select-none bg-background outline-none scroll-pt-8 scroll-pb-2",
         !hasInitiallyScrolled && "invisible",

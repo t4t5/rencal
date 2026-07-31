@@ -1,6 +1,10 @@
 import { useCallback } from "react"
 
-import { AGENDA_ITEM_SELECTOR } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
+import { scrollElementIntoContainer } from "@/components/sidebar/agenda/scrollSectionIntoContainer"
+import {
+  AGENDA_ITEM_SELECTOR,
+  AGENDA_SCROLL_CONTAINER_SELECTOR,
+} from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
@@ -34,6 +38,13 @@ export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
       })
 
       if (!row?.dataset.eventKey) return
+
+      const container = row.closest<HTMLElement>(AGENDA_SCROLL_CONTAINER_SELECTOR)
+      if (container) {
+        const scrollPaddingTop =
+          Number.parseFloat(getComputedStyle(container).scrollPaddingTop) || 0
+        scrollElementIntoContainer(container, row, "instant", scrollPaddingTop)
+      }
 
       setEventAnchor(row)
       setActiveEventKey(row.dataset.eventKey)
