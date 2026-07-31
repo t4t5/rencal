@@ -271,7 +271,7 @@ function GoToDatePage({ search, onSelect }: { search: string; onSelect: (date: D
   )
 }
 
-export function PaletteFooter({ escAction }: { escAction: "close" | "back" }) {
+function PaletteFooter({ escAction }: { escAction: "close" | "back" }) {
   return (
     <div className="text-muted-foreground flex items-center gap-4 border-t px-3 py-2 text-xs">
       <span className="flex items-center gap-1.5">
