@@ -219,8 +219,10 @@ function CalendarDropdownMenuWrapper({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            disabled={isDefault}
-            onClick={() => void setDefaultCalendar(calendar.slug)}
+            disabled={isDefault || calendar.read_only === true}
+            onClick={() => {
+              if (!calendar.read_only) void setDefaultCalendar(calendar.slug)
+            }}
           >
             Set as default
           </DropdownMenuItem>
