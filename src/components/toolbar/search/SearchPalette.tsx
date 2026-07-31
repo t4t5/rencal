@@ -109,7 +109,7 @@ export function SearchPalette({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="gap-0 overflow-hidden p-0 sm:max-w-xl"
+        className="mt-[20px] self-start gap-0 overflow-hidden p-0 sm:max-w-2xl"
         onCloseAutoFocus={(e) => {
           if (!pendingRef.current) return
           e.preventDefault()
@@ -123,7 +123,10 @@ export function SearchPalette({
           <DialogDescription>Search visible calendars for an event</DialogDescription>
         </DialogHeader>
 
-        <Command shouldFilter={false}>
+        <Command
+          shouldFilter={false}
+          className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]>svg]:size-5 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-input]]:text-base"
+        >
           <CommandInput
             placeholder="Search your events..."
             value={query}
@@ -141,14 +144,14 @@ export function SearchPalette({
           />
 
           {query.length >= 2 && (
-            <CommandList>
+            <CommandList className="max-h-[400px]">
               {!isLoading && results.length === 0 && <CommandEmpty>No events found.</CommandEmpty>}
               {results.map((event) => (
                 <CommandItem
                   key={eventKey(event)}
                   value={eventKey(event)}
                   onSelect={() => selectEvent(event)}
-                  className="flex cursor-pointer items-center gap-2"
+                  className="flex cursor-pointer items-center gap-2 px-3 py-2.5"
                 >
                   <SearchResultEventBlock
                     event={event}
