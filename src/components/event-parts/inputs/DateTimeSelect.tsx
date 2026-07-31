@@ -31,19 +31,20 @@ const FIRST_INPUT_WIDTH = 140
 export const DateTimeSelect = ({
   start,
   end,
-  showTime = true,
   readOnly,
   onChange,
 }: {
   start: EventTime
   end: EventTime
-  showTime?: boolean
   readOnly?: boolean
   onChange: (range: DateTimeRange) => void
 }) => {
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end)
-  const visibleTimeRange = allDay ? (lastTimedRange ?? { start, end }) : { start, end }
+  // An all-day event with no remembered timed range has no times to show —
+  // hide the time row entirely instead of rendering empty inputs.
+  const visibleTimeRange = allDay ? lastTimedRange : { start, end }
+  const timeRowVisible = visibleTimeRange !== null
 
   const handleStartTime = (hour: number, minute: number) =>
     onChange(withRangeStartWallclockTime({ start, end }, hour, minute))
@@ -63,7 +64,7 @@ export const DateTimeSelect = ({
 
   return (
     <div className="flex flex-col gap-1">
-      {showTime && (
+      {timeRowVisible && (
         <TimeSelect
           start={visibleTimeRange.start}
           end={visibleTimeRange.end}
@@ -77,6 +78,7 @@ export const DateTimeSelect = ({
         startDate={plainDateToLocalDate(dateInEventZone(start))}
         endDate={plainDateToLocalDate(displayEndDate({ start, end }))}
         showEndDate={shouldShowDisplayEndDate({ start, end })}
+        icon={timeRowVisible ? null : <ClockIcon />}
         readOnly={readOnly}
         onChangeStart={handleStartDate}
         onChangeEnd={handleEndDate}
@@ -133,6 +135,7 @@ const DateSelect = ({
   startDate,
   endDate,
   showEndDate,
+  icon,
   readOnly,
   onChangeStart,
   onChangeEnd,
@@ -140,6 +143,7 @@ const DateSelect = ({
   startDate: Date
   endDate: Date
   showEndDate: boolean
+  icon?: React.ReactNode
   readOnly?: boolean
   onChangeStart: (date: Date | null) => void
   onChangeEnd: (date: Date | null) => void
@@ -152,7 +156,7 @@ const DateSelect = ({
           width: FIRST_INPUT_WIDTH,
         }}
       >
-        <InputGroupAddon />
+        <InputGroupAddon>{icon}</InputGroupAddon>
         <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
       </div>
 

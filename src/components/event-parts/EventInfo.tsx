@@ -36,7 +36,6 @@ export function EventInfo({
   onChangeDateTime,
   allDay,
   onAllDayChange,
-  showTime,
   location,
   onLocationChange,
   calendar,
@@ -74,7 +73,6 @@ export function EventInfo({
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
-  showTime?: boolean
   description?: string | null
   onDescriptionChange: (description: string) => void
   organizer?: EventAttendee | null
@@ -119,13 +117,7 @@ export function EventInfo({
           readOnly={readonly}
         />
 
-        <DateTimeSelect
-          start={start}
-          end={end}
-          showTime={showTime}
-          readOnly={readonly}
-          onChange={onChangeDateTime}
-        />
+        <DateTimeSelect start={start} end={end} readOnly={readonly} onChange={onChangeDateTime} />
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
 
         <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
