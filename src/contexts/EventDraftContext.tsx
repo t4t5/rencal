@@ -10,7 +10,7 @@ import {
 } from "react"
 
 import { rpc } from "@/rpc"
-import type { EventAttendee } from "@/rpc/bindings"
+import type { Calendar, EventAttendee } from "@/rpc/bindings"
 
 import {
   type CalendarEvent,
@@ -98,16 +98,22 @@ function getClosestNextHour(): EventTime {
   return { kind: "datetime_zoned", value: z }
 }
 
+function getDefaultCalendarId(calendars: Calendar[], configuredDefault: string | null) {
+  const defaultCalendar = calendars.find(
+    (calendar) => calendar.slug === configuredDefault && !calendar.read_only,
+  )
+  const fallbackCalendar = calendars.find((calendar) => !calendar.read_only)
+
+  return defaultCalendar?.slug ?? fallbackCalendar?.slug ?? null
+}
+
 export function EventDraftProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
   const { defaultCalendar, defaultReminders } = useSettings()
   const [isDrafting, setIsDrafting] = useState(false)
   const [draftPopoverOpen, _setDraftPopoverOpen] = useState(false)
 
-  const defaultCalendarId =
-    (defaultCalendar && calendars.some((c) => c.slug === defaultCalendar)
-      ? defaultCalendar
-      : calendars[0]?.slug) ?? null
+  const defaultCalendarId = getDefaultCalendarId(calendars, defaultCalendar)
 
   const [text, _setText] = useState("")
   const [draftReminders, setDraftReminders] = useState<number[]>([])
