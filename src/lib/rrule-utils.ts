@@ -38,15 +38,13 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
 }
 
 /** For a recurring master, shift start/end to the occurrence nearest to now. */
-export function withNearestOccurrence(event: CalendarEvent): CalendarEvent {
+export function withNearestOccurrence(event: CalendarEvent, now = new Date()): CalendarEvent {
   if (!event.recurrence) return event
 
   try {
     const masterStart = toInteropDate(event.start)
     const rule = createRRuleWithDtstart(event.recurrence.rrule, masterStart)
     const exdateKeys = new Set(event.recurrence.exdates.map(formatDateKey))
-    const now = new Date()
-
     const findIncludedOccurrence = (direction: "after" | "before"): Date | null => {
       let occurrence = direction === "after" ? rule.after(now, true) : rule.before(now, true)
 

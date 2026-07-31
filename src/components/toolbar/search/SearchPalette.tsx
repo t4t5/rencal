@@ -26,7 +26,7 @@ import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { withNearestOccurrence } from "@/lib/rrule-utils"
+import { prepareSearchResults } from "@/lib/search-results"
 
 export function SearchPalette({
   open,
@@ -78,7 +78,7 @@ export function SearchPalette({
         .search_events(visibleCalendarIds, query)
         .then((found) => {
           if (requestId !== requestIdRef.current) return
-          setResults(rpcToCalendarEvents(found).map(withNearestOccurrence))
+          setResults(prepareSearchResults(rpcToCalendarEvents(found)))
         })
         .catch((error: unknown) => {
           if (requestId !== requestIdRef.current) return
