@@ -3,13 +3,20 @@ import TextareaAutosizeComponent from "react-textarea-autosize"
 
 import { cn } from "@/lib/utils"
 
-export function Textarea({ className, ...props }: React.ComponentProps<typeof TextareaInner>) {
+export function Textarea({
+  className,
+  readOnly,
+  ...props
+}: React.ComponentProps<typeof TextareaInner>) {
   return (
     <div
       role="group"
-      className="group/input-group w-full border border-transparent hover:border-input min-h-control-height h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md"
+      className={cn(
+        "group/input-group w-full border border-transparent hover:border-input min-h-control-height h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md",
+        readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+      )}
     >
-      <TextareaInner {...props} className={cn("h-full", className)} />
+      <TextareaInner {...props} readOnly={readOnly} className={cn("h-full", className)} />
     </div>
   )
 }

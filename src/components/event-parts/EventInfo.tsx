@@ -14,7 +14,6 @@ import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
 import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
-import { cn } from "@/lib/utils"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -97,10 +96,7 @@ export function EventInfo({
             ref={summaryRef}
             placeholder="Event Title"
             value={summary ?? ""}
-            className={cn(
-              "text-base font-medium",
-              readonly && "hover:border-transparent! focus:bg-transparent!",
-            )}
+            className="text-base font-medium"
             readOnly={readonly}
             onChange={(e) => onChangeSummary(e.target.value)}
             onKeyDown={(e) => {
