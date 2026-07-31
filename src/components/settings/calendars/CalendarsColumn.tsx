@@ -168,10 +168,10 @@ export function TogglableCalendarItem({
           checked={checked}
           onCheckedChange={(value) => onCheckedChange(value === true)}
           style={calendarColorStyle}
-          className="cursor-pointer data-[state=checked]:border-[var(--calendar-color)] data-[state=checked]:bg-[var(--calendar-color)]"
+          className="data-[state=checked]:border-[var(--calendar-color)] data-[state=checked]:bg-[var(--calendar-color)]"
         />
 
-        <Label htmlFor={id} className="cursor-pointer text-sm text-foreground truncate">
+        <Label htmlFor={id} className="text-sm text-foreground truncate">
           {name || slug}
         </Label>
       </div>

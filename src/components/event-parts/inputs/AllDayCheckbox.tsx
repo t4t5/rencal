@@ -28,7 +28,6 @@ export const AllDayCheckbox = ({
         <Checkbox
           id={id}
           checked={checked}
-          className="cursor-pointer"
           onCheckedChange={() => {
             onCheckedChange(!checked)
           }}
@@ -38,7 +37,7 @@ export const AllDayCheckbox = ({
 
       <Label
         htmlFor={id}
-        className={cn("cursor-pointer text-muted-foreground", {
+        className={cn("text-muted-foreground", {
           "text-sidebar-primary-foreground": checked,
         })}
       >

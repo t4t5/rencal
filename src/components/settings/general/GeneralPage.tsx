@@ -63,9 +63,8 @@ const AutoSyncSection = () => {
           id={id}
           checked={autoSyncEnabled}
           onCheckedChange={(checked) => void setAutoSyncEnabled(checked === true)}
-          className="cursor-pointer"
         />
-        <Label htmlFor={id} className="cursor-pointer text-sm">
+        <Label htmlFor={id} className="text-sm">
           Automatic sync
         </Label>
       </div>

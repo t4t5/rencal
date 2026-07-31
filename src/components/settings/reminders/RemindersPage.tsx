@@ -27,9 +27,8 @@ const NotificationsSection = () => {
           id={id}
           checked={notificationsEnabled}
           onCheckedChange={(checked) => void setNotificationsEnabled(checked === true)}
-          className="cursor-pointer"
         />
-        <Label htmlFor={id} className="cursor-pointer text-sm">
+        <Label htmlFor={id} className="text-sm">
           Enable notifications
         </Label>
       </div>

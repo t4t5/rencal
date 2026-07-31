@@ -89,7 +89,7 @@ export function GroupsColumn({
                 if (event.key === "Enter" || event.key === " ") onSelect(group)
               }}
               className={cn(
-                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-2 py-2 group text-left cursor-pointer",
+                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-2 py-2 group text-left",
                 {
                   "bg-secondary text-accent-foreground": selectedGroup === group,
                 },

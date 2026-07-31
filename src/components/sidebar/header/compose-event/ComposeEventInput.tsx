@@ -76,7 +76,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         }}
         className={cn(
           "w-full",
-          !isDrafting && "cursor-pointer caret-transparent",
+          !isDrafting && "caret-transparent",
           showText && displayText && "pr-9",
         )}
       />

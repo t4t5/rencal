@@ -17,6 +17,7 @@ export function SearchButton() {
       <ShortcutTooltip text="Search" shortcut="/">
         <Button
           id={SEARCH_BUTTON_EL_ID}
+          size="icon"
           variant="secondary"
           tabIndex={-1}
           onClick={() => setOpen(true)}

@@ -68,7 +68,7 @@ export function ChangeCalendarColorModal({
               value={hue}
               aria-label="Calendar color hue"
               onChange={(event) => changeHue(Number(event.target.value))}
-              className="h-3 w-full cursor-pointer appearance-none rounded-full bg-[linear-gradient(to_right,#e05252,#e0e052,#52e052,#52e0e0,#5252e0,#e052e0,#e05252)] [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-sm"
+              className="h-3 w-full appearance-none rounded-full bg-[linear-gradient(to_right,#e05252,#e0e052,#52e052,#52e0e0,#5252e0,#e052e0,#e05252)] [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-sm"
             />
           </div>
 

@@ -151,7 +151,7 @@ export function SearchPalette({
                   key={eventKey(event)}
                   value={eventKey(event)}
                   onSelect={() => selectEvent(event)}
-                  className="flex cursor-pointer items-center gap-2 px-3 py-1.5"
+                  className="flex items-center gap-2 px-3 py-1.5"
                 >
                   <SearchResultEventBlock
                     event={event}

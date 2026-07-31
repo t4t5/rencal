@@ -49,7 +49,7 @@ export function InvitesBadge() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="flex size-6 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white cursor-pointer hover:bg-red-600 transition-colors outline-none">
+        <button className="flex size-6 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white hover:bg-red-600 transition-colors outline-none">
           {invites.length}
         </button>
       </PopoverTrigger>
