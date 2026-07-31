@@ -10,12 +10,14 @@ const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date
 function recurringEvent({
   rrule = "FREQ=WEEKLY;BYDAY=MO",
   exdates = [],
+  startDate = "2020-06-01",
 }: {
   rrule?: string
   exdates?: EventTime[]
+  startDate?: string
 } = {}): CalendarEvent {
-  const start = date("2020-01-06")
-  const end = date("2020-01-07")
+  const start = date(startDate)
+  const end = date(start.value.add({ days: 1 }).toString())
 
   return {
     id: "weekly-event",
@@ -56,6 +58,14 @@ describe("withNearestOccurrence", () => {
     expect(formatDateKey(shifted.end)).toBe("2026-08-04")
   })
 
+  it("keeps the DTSTART weekday when BYDAY is omitted across DST", () => {
+    const winterNow = new Date(2026, 0, 30, 12)
+    const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY" }), winterNow)
+
+    expect(formatDateKey(shifted.start)).toBe("2026-02-02")
+    expect(formatDateKey(shifted.end)).toBe("2026-02-03")
+  })
+
   it("skips excluded occurrences", () => {
     const shifted = withNearestOccurrence(recurringEvent({ exdates: [date("2026-08-03")] }))
 
@@ -66,8 +76,8 @@ describe("withNearestOccurrence", () => {
   it("uses the last occurrence when a finite series has ended", () => {
     const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY;COUNT=3" }))
 
-    expect(formatDateKey(shifted.start)).toBe("2020-01-20")
-    expect(formatDateKey(shifted.end)).toBe("2020-01-21")
+    expect(formatDateKey(shifted.start)).toBe("2020-06-15")
+    expect(formatDateKey(shifted.end)).toBe("2020-06-16")
   })
 
   it("returns the master unchanged when its rule cannot be parsed", () => {

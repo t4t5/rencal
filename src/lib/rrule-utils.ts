@@ -1,19 +1,50 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { RRule, RRuleSet, rrulestr } from "rrule"
 
 import { type CalendarEvent, type Recurrence, withDates } from "./cal-events"
 import {
   addDays,
-  formatDateKey,
+  dateInEventZone,
   fromDate,
   getLocalTzid,
-  localDateToPlainDate,
   toInteropDate,
+  type EventTime,
+  wallclockTime,
 } from "./event-time"
 
 const MAX_EXDATE_SKIPS = 32
 
+/** Project an event's wall-clock fields into the fake-UTC space rrule.js expects. */
+function eventTimeToRRuleDate(eventTime: EventTime): Date {
+  const date = dateInEventZone(eventTime)
+  const time = wallclockTime(eventTime)
+  return new Date(Date.UTC(date.year, date.month - 1, date.day, time.hour, time.minute))
+}
+
+/** Project a viewer-local JS Date into the same fake-UTC wall-clock space. */
+function localDateToRRuleDate(date: Date): Date {
+  return new Date(
+    Date.UTC(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      date.getHours(),
+      date.getMinutes(),
+      date.getSeconds(),
+      date.getMilliseconds(),
+    ),
+  )
+}
+
+function rruleDateToPlainDate(date: Date): Temporal.PlainDate {
+  return new Temporal.PlainDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+}
+
 /**
  * Parse an RRULE string and create an RRule with the correct dtstart.
+ *
+ * rrule.js performs calendar math on Date's UTC fields, so callers must encode
+ * wall-clock values with Date.UTC instead of passing a real local-time instant.
  *
  * rrulestr() has a bug where it initializes BY* fields to the current date/time
  * when they're not in the RRULE string. We only extract the recurrence-defining
@@ -42,14 +73,18 @@ export function withNearestOccurrence(event: CalendarEvent, now = new Date()): C
   if (!event.recurrence) return event
 
   try {
-    const masterStart = toInteropDate(event.start)
+    const masterStart = eventTimeToRRuleDate(event.start)
     const rule = createRRuleWithDtstart(event.recurrence.rrule, masterStart)
-    const exdateKeys = new Set(event.recurrence.exdates.map(formatDateKey))
+    const exdateTimes = new Set(
+      event.recurrence.exdates.map((exdate) => eventTimeToRRuleDate(exdate).getTime()),
+    )
+    const rruleNow = localDateToRRuleDate(now)
     const findIncludedOccurrence = (direction: "after" | "before"): Date | null => {
-      let occurrence = direction === "after" ? rule.after(now, true) : rule.before(now, true)
+      let occurrence =
+        direction === "after" ? rule.after(rruleNow, true) : rule.before(rruleNow, true)
 
       for (let i = 0; occurrence && i < MAX_EXDATE_SKIPS; i++) {
-        if (!exdateKeys.has(formatDateKey(occurrence))) return occurrence
+        if (!exdateTimes.has(occurrence.getTime())) return occurrence
         occurrence =
           direction === "after" ? rule.after(occurrence, false) : rule.before(occurrence, false)
       }
@@ -60,7 +95,7 @@ export function withNearestOccurrence(event: CalendarEvent, now = new Date()): C
     const occurrence = findIncludedOccurrence("after") ?? findIncludedOccurrence("before")
     if (!occurrence) return event
 
-    const dayDelta = localDateToPlainDate(masterStart).until(localDateToPlainDate(occurrence)).days
+    const dayDelta = dateInEventZone(event.start).until(rruleDateToPlainDate(occurrence)).days
     return withDates(event, addDays(event.start, dayDelta), addDays(event.end, dayDelta))
   } catch {
     return event
