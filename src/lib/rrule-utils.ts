@@ -1,7 +1,16 @@
 import { RRule, RRuleSet, rrulestr } from "rrule"
 
-import type { Recurrence } from "./cal-events"
-import { fromDate, getLocalTzid, toInteropDate } from "./event-time"
+import { type CalendarEvent, type Recurrence, withDates } from "./cal-events"
+import {
+  addDays,
+  formatDateKey,
+  fromDate,
+  getLocalTzid,
+  localDateToPlainDate,
+  toInteropDate,
+} from "./event-time"
+
+const MAX_EXDATE_SKIPS = 32
 
 /**
  * Parse an RRULE string and create an RRule with the correct dtstart.
@@ -26,6 +35,38 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
     byminute: rruleString.includes("BYMINUTE") ? parsed.options.byminute : undefined,
     dtstart,
   })
+}
+
+/** For a recurring master, shift start/end to the occurrence nearest to now. */
+export function withNearestOccurrence(event: CalendarEvent): CalendarEvent {
+  if (!event.recurrence) return event
+
+  try {
+    const masterStart = toInteropDate(event.start)
+    const rule = createRRuleWithDtstart(event.recurrence.rrule, masterStart)
+    const exdateKeys = new Set(event.recurrence.exdates.map(formatDateKey))
+    const now = new Date()
+
+    const findIncludedOccurrence = (direction: "after" | "before"): Date | null => {
+      let occurrence = direction === "after" ? rule.after(now, true) : rule.before(now, true)
+
+      for (let i = 0; occurrence && i < MAX_EXDATE_SKIPS; i++) {
+        if (!exdateKeys.has(formatDateKey(occurrence))) return occurrence
+        occurrence =
+          direction === "after" ? rule.after(occurrence, false) : rule.before(occurrence, false)
+      }
+
+      return null
+    }
+
+    const occurrence = findIncludedOccurrence("after") ?? findIncludedOccurrence("before")
+    if (!occurrence) return event
+
+    const dayDelta = localDateToPlainDate(masterStart).until(localDateToPlainDate(occurrence)).days
+    return withDates(event, addDays(event.start, dayDelta), addDays(event.end, dayDelta))
+  } catch {
+    return event
+  }
 }
 
 /**

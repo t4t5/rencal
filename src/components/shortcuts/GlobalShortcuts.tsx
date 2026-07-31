@@ -13,7 +13,6 @@ import {
 } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
-import { SEARCH_INPUT_EL_ID } from "@/components/toolbar/search/SearchInput"
 
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -203,16 +202,7 @@ function useShortcutHandlers({
 
   const handleSearch = (e?: KeyboardEvent) => {
     e?.preventDefault()
-
-    const input = document.getElementById(SEARCH_INPUT_EL_ID) as HTMLInputElement | null
-
-    if (input) {
-      input.focus()
-      return
-    }
-
-    const button = document.getElementById(SEARCH_BUTTON_EL_ID) as HTMLButtonElement | null
-    button?.click()
+    document.getElementById(SEARCH_BUTTON_EL_ID)?.click()
   }
 
   const handleComposeEvent = (e?: KeyboardEvent) => {

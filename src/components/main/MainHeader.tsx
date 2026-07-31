@@ -2,7 +2,7 @@ import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { ReportBugButton } from "@/components/toolbar/ReportBugButton"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
-import { SearchBar } from "@/components/toolbar/search/SearchBar"
+import { SearchButton } from "@/components/toolbar/search/SearchButton"
 import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
 import {
@@ -57,7 +57,7 @@ export function MainHeader({
         onChangeCalendarView={onChangeCalendarView}
       />
 
-      <SearchBar className="w-56 starting:w-56" eventPopoverSide="left" />
+      <SearchButton />
     </div>
   )
 }

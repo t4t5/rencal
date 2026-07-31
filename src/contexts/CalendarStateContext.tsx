@@ -45,7 +45,7 @@ export function useCalendars() {
 interface CalendarNavigationContextType {
   activeDate: Date
   setActiveDate: (date: Date) => void
-  navigateToDate: (date: Date) => Promise<void>
+  navigateToDate: (date: Date, behavior?: ScrollBehavior) => Promise<void>
   registerScrollToDate: (fn: (date: Date, behavior?: ScrollBehavior) => void) => void
   registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
   isNavigating: () => boolean
@@ -120,9 +120,12 @@ export function CalendarStateProvider({
     }
   }, [])
 
-  const registerScrollToDate = useCallback((fn: (date: Date) => void) => {
-    scrollToDateRef.current = fn
-  }, [])
+  const registerScrollToDate = useCallback(
+    (fn: (date: Date, behavior?: ScrollBehavior) => void) => {
+      scrollToDateRef.current = fn
+    },
+    [],
+  )
 
   // CalEventsContext wires this to ensureRangeLoaded so a jump to a distant date loads its
   // events before navigateToDate scrolls there.
@@ -139,7 +142,7 @@ export function CalendarStateProvider({
   const lastNavigateTimeRef = useRef(0)
   const RAPID_NAV_THRESHOLD_MS = 200
 
-  const navigateToDate = useCallback(async (date: Date) => {
+  const navigateToDate = useCallback(async (date: Date, behaviorOverride?: ScrollBehavior) => {
     // Cancel any pending timeout from a previous navigation
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current)
@@ -150,7 +153,7 @@ export function CalendarStateProvider({
     const now = Date.now()
     const isRapid = now - lastNavigateTimeRef.current < RAPID_NAV_THRESHOLD_MS
     lastNavigateTimeRef.current = now
-    const behavior: ScrollBehavior = isRapid ? "instant" : "smooth"
+    const behavior: ScrollBehavior = behaviorOverride ?? (isRapid ? "instant" : "smooth")
 
     isNavigatingRef.current = true
 

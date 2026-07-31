@@ -30,8 +30,6 @@ export function SidebarToolbar() {
           <InvitesBadge />
           <SettingsButton />
 
-          <div className="w-10" />
-
           <SearchButton />
         </div>
       )}
