@@ -9,8 +9,8 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { recurrenceToRpc, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { addMinutes, instantForOrdering, wallclockTime, withWallclockTime } from "@/lib/event-time"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
+import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
 import { updateAndSyncEvent } from "@/lib/save-event"
 
 type PendingEdit = { current: CalendarEvent; original: CalendarEvent }
@@ -110,17 +110,12 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       if (!masterRpc) return
       const master = rpcToCalendarEvent(masterRpc)
 
-      // Apply only the wall-clock time-of-day delta — the master's anchor
-      // date stays put. Date moves on the instance are silently ignored
-      // for the "all events" scope, matching Google Calendar's behavior.
-      const { hour, minute } = wallclockTime(current.start)
-      const newMasterStart = withWallclockTime(master.start, hour, minute)
-      const durationMins = Math.round(
-        (instantForOrdering(current.end).epochMilliseconds -
-          instantForOrdering(current.start).epochMilliseconds) /
-          60000,
+      // Apply the occurrence's edited range while retaining the master's anchor
+      // date. This also preserves date-only values when toggling the series all-day.
+      const { start: newMasterStart, end: newMasterEnd } = anchorRangeToRecurringMaster(
+        current,
+        master.start,
       )
-      const newMasterEnd = addMinutes(newMasterStart, durationMins)
 
       const updatedMaster: CalendarEvent = {
         ...master,
