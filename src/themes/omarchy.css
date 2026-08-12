@@ -1,5 +1,6 @@
 /* The Omarchy theme's primitives are injected at runtime from
-   ~/.config/omarchy/current/theme/colors.toml via src/hooks/useOmarchyTheme.ts,
+   ~/.local/state/omarchy/current/theme/colors.toml (quattro) or
+   ~/.config/omarchy/current/theme/colors.toml (v3) via src/hooks/useOmarchyTheme.ts,
    which writes a [data-theme="omarchy"] rule into a managed <style> element
    appended to <head>. The values below act as a fallback for users who
    aren't on Omarchy (so the theme still has a coherent look in the settings

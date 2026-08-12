@@ -5,8 +5,6 @@ import { useEffect } from "react"
 import { rpc } from "@/rpc"
 import type { OmarchyColors } from "@/rpc/bindings"
 
-import { appearanceFromHex } from "@/themes/appearance"
-
 const OMARCHY_THEME_CHANGED = "omarchy-theme-changed"
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
@@ -33,33 +31,32 @@ function luminance(hex: string): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 }
 
-// Some Omarchy themes set `cursor` to a brighter variant of the body text
+// Some Omarchy themes set `bright_foreground` to a brighter variant of the body text
 // (tokyo-night, catppuccin), others to an accent tint (catppuccin-latte's
 // rosewater, rose-pine's pale gray) that reads poorly as primary text.
-// Pick whichever of cursor/foreground contrasts the background more.
+// Pick whichever foreground variant contrasts the background more.
 function pickForeground(c: OmarchyColors): string {
-  if (!c.cursor) return c.foreground
   const bg = luminance(c.background)
   const fgContrast = Math.abs(luminance(c.foreground) - bg)
-  const cursorContrast = Math.abs(luminance(c.cursor) - bg)
-  return cursorContrast > fgContrast ? c.cursor : c.foreground
+  const brightFgContrast = Math.abs(luminance(c.bright_foreground) - bg)
+  return brightFgContrast > fgContrast ? c.bright_foreground : c.foreground
 }
 
 function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], string> {
   const fg = pickForeground(c)
-  const popoverTint = appearanceFromHex(c.background) === "light" ? "white" : "black"
+  const popoverTint = c.mode === "light" ? "white" : "black"
   return {
     "--background": c.background,
     "--foreground": fg,
     "--primary": c.accent,
-    "--today": c.color4,
-    "--highlight": c.color1,
+    "--today": c.blue,
+    "--highlight": c.red,
     "--hover-tint": fg,
     "--muted": `color-mix(in srgb, ${fg} 55%, transparent)`,
     "--popover-tint": popoverTint,
-    "--success": c.color2,
-    "--warning": c.color3,
-    "--error": c.color1,
+    "--success": c.green,
+    "--warning": c.yellow,
+    "--error": c.red,
   }
 }
 
@@ -88,9 +85,9 @@ function applyOmarchyColors(c: OmarchyColors) {
     localStorage.setItem(CACHE_KEY, JSON.stringify(c))
   } catch {}
   // Sync OS window chrome if omarchy is the active theme. useTheme can't
-  // do this itself because the appearance is derived from these colors.
+  // do this itself because the appearance comes from Omarchy's palette.
   if (document.body.dataset.theme === "omarchy") {
-    void getCurrentWindow().setTheme(appearanceFromHex(c.background))
+    void getCurrentWindow().setTheme(c.mode)
     // Keep index.html's flash-prevention cache in step with the live OS theme.
     try {
       localStorage.setItem("themeBackground", c.background)

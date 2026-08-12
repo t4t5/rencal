@@ -114,11 +114,11 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 
 ## Omarchy auto-sync
 
-The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.config/omarchy/current/theme/colors.toml` at runtime and writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. A Rust file-watcher (see `src-tauri/src/omarchy.rs`) re-emits on every OS theme change, so running `omarchy-theme-next` repaints renCal live without a restart.
+The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.local/state/omarchy/current/theme/colors.toml` on Omarchy quattro or `~/.config/omarchy/current/theme/colors.toml` on v3, then writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. The Rust integration in `src-tauri/src/omarchy.rs` normalizes v3 ANSI, v4 semantic, and hybrid palettes into one shape. Its file-watcher re-emits on every OS theme change, so changing the Omarchy theme repaints renCal live without a restart.
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 
-If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. The color mapping from `colors.toml` keys to CSS variables lives in `src/hooks/useOmarchyTheme.ts` — tweak it there.
+If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 
 ## Escape hatch: custom CSS rules
 
