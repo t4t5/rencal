@@ -29,10 +29,10 @@ export function RecurrenceConfirmDialog({
           <DialogDescription>This event is part of a recurring series.</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
-          <Button variant="outline" onClick={onApplyToThis}>
+          <Button variant="secondary" onClick={onApplyToThis}>
             Only this event
           </Button>
-          <Button variant="outline" onClick={onApplyToFuture}>
+          <Button variant="secondary" onClick={onApplyToFuture}>
             This and future events
           </Button>
           <Button onClick={onApplyToAll}>All events</Button>

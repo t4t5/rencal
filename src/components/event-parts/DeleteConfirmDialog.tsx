@@ -8,11 +8,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+import { cn } from "@/lib/utils"
+
 type DeleteConfirmDialogProps = {
   open: boolean
   isRecurring: boolean
   onClose: () => void
   onDeleteThis: () => void
+  onDeleteFuture: () => void
   onDeleteAll: () => void
 }
 
@@ -21,13 +24,14 @@ export function DeleteConfirmDialog({
   isRecurring,
   onClose,
   onDeleteThis,
+  onDeleteFuture,
   onDeleteAll,
 }: DeleteConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent>
+      <DialogContent className={cn(isRecurring && "sm:max-w-xl")}>
         <DialogHeader>
-          <DialogTitle>Delete event</DialogTitle>
+          <DialogTitle>{isRecurring ? "Delete recurring event" : "Delete event"}</DialogTitle>
           <DialogDescription>
             {isRecurring
               ? "This event is part of a recurring series. Which events do you want to delete?"
@@ -35,21 +39,16 @@ export function DeleteConfirmDialog({
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={onClose}
-            autoFocus
-            className="focus:border-ring focus:ring-ring/50 focus:ring-[3px]"
-          >
-            Cancel
-          </Button>
           {isRecurring ? (
             <>
-              <Button onClick={onDeleteThis} variant="destructive">
-                Delete This Event Only
+              <Button variant="secondary" onClick={onDeleteThis}>
+                Only this event
               </Button>
-              <Button onClick={onDeleteAll} variant="destructive">
-                Delete All Events
+              <Button variant="destructive" onClick={onDeleteFuture}>
+                This and future events
+              </Button>
+              <Button variant="destructive" onClick={onDeleteAll}>
+                All events
               </Button>
             </>
           ) : (

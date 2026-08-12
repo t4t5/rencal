@@ -26,7 +26,7 @@ export const DatePicker = ({
     <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
+          variant="input"
           className={cn(
             "justify-between group cursor-default! transition-none font-[inherit] normal-case focus-visible:border-transparent! focus-visible:ring-0! focus-visible:bg-secondary px-2!",
             readOnly && "pointer-events-none",
