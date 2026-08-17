@@ -1,4 +1,3 @@
-import { formatDuration } from "date-fns"
 import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
@@ -73,10 +72,16 @@ function humanDuration(mins: number): string {
   const hours = Math.floor((mins % DAY_MINUTES) / HOUR_MINUTES)
   const minutes = mins % HOUR_MINUTES
 
-  return formatDuration(
-    { months, weeks, days, hours, minutes },
-    { format: ["months", "weeks", "days", "hours", "minutes"] },
-  )
+  return [
+    { value: months, unit: "month" },
+    { value: weeks, unit: "week" },
+    { value: days, unit: "day" },
+    { value: hours, unit: "hour" },
+    { value: minutes, unit: "minute" },
+  ]
+    .filter(({ value }) => value > 0)
+    .map(({ value, unit }) => `${value} ${unit}${value === 1 ? "" : "s"}`)
+    .join(", ")
 }
 
 export function ReminderSelect({

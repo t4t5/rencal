@@ -17,8 +17,8 @@ import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import {
   atTime,
-  formatDay,
   formatWallclockTime,
+  formatWeekday,
   getViewerTzid,
   startOfWeek,
 } from "@/lib/event-time"
@@ -403,7 +403,7 @@ const DayHeaders = ({
       onClick={() => onDayClick(day.date)}
     >
       <span className="text-[11px] text-muted-foreground uppercase">
-        {formatDay(day.date, "EEE")}
+        {formatWeekday(day.date, "short")}
       </span>
       <span
         className={cn(
@@ -412,7 +412,7 @@ const DayHeaders = ({
           dimmed && "opacity-50",
         )}
       >
-        {formatDay(day.date, "d")}
+        {day.date.day}
       </span>
     </div>
   ))

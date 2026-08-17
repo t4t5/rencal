@@ -38,7 +38,7 @@ Conversion happens at the frontend boundary in `src/lib/cal-events.ts` using `sr
 The viewer's IANA zone comes from `getViewerTzid()` in `src/lib/event-time/local-zone.ts`. It is seeded from `Intl` once and then kept current by the Rust-side watcher (`src-tauri/src/tz_watcher.rs`), which emits `SYSTEM_TZ_CHANGED` when `/etc/localtime` changes. The webview's own zone is fixed at launch, so app code never uses JS `Date` components to determine a calendar day.
 
 - Use `today()` or `useToday()` for the current viewer-zone day and `Temporal.Now.zonedDateTimeISO(getViewerTzid())` for the current wallclock.
-- Use `dateInViewerZone(et)` to project an event onto the viewer's calendar, and use `formatDay` or the other event-time display helpers to render days.
+- Use `dateInViewerZone(et)` to project an event onto the viewer's calendar, and use the event-time display helpers to render days.
 - `CalEventsContext` recomputes every event's `dateInfo` when the zone changes; other cached zone-dependent values must subscribe with `useViewerTzid()` or `subscribeViewerTzid()`.
 
 ## Rules

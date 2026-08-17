@@ -25,12 +25,14 @@ export {
 export { allDayDate, atTime, fromDate, nowZoned, today } from "./constructors"
 export { dateKeyToPlainDate, epochDay, startOfWeek } from "./day"
 export {
-  formatDay,
   formatDateKey,
+  formatDayMonth,
   formatLongDate,
+  formatMonth,
   formatShortDate,
   formatTime,
   formatWallclockTime,
+  formatWeekday,
   getRelativeDayLabel,
 } from "./display"
 export {

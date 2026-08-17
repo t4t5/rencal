@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
-import { formatDay } from "@/lib/event-time"
+import { formatMonth } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"
@@ -61,8 +61,8 @@ const CurrentMonth = () => {
 
   return (
     <h2 className="text-2xl font-bold heading">
-      {formatDay(activeDate, "MMMM")}{" "}
-      <span className="text-highlight font-normal">{formatDay(activeDate, "yyyy")}</span>
+      {formatMonth(activeDate, "long")}{" "}
+      <span className="text-highlight font-normal">{activeDate.year}</span>
     </h2>
   )
 }

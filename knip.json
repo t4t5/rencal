@@ -1,4 +1,8 @@
 {
   "ignoreExportsUsedInFile": true,
-  "ignore": ["src/components/ui/**", "src/components/sidebar/minical/Calendar.tsx"]
+  "ignore": ["src/components/ui/**", "website/**", "scripts/**", "src/themes/*.css"],
+  "ignoreDependencies": ["prettier-plugin-astro"],
+  "ignoreIssues": {
+    "src/rpc/bindings.ts": ["types"]
+  }
 }

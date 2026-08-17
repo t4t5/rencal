@@ -1,5 +1,5 @@
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { formatDay } from "@/lib/event-time"
+import { formatMonth } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function TopLeftDate({
@@ -23,7 +23,7 @@ export function TopLeftDate({
       onClick={onClick}
     >
       {day.date.day === 1 && (
-        <span className="text-xs text-muted-foreground">{formatDay(day.date, "MMMM")}</span>
+        <span className="text-xs text-muted-foreground">{formatMonth(day.date, "long")}</span>
       )}
       <span
         className={cn(
@@ -33,7 +33,7 @@ export function TopLeftDate({
           dimmed && "opacity-50",
         )}
       >
-        {formatDay(day.date, "d")}
+        {day.date.day}
       </span>
     </div>
   )

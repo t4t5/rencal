@@ -13,7 +13,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
-import { dateInViewerZone, formatDay, formatTime } from "@/lib/event-time"
+import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesBadge() {
@@ -90,8 +90,8 @@ function InviteCard({
   const startDate = dateInViewerZone(invite.start)
   const dateStr =
     invite.start.kind === "date"
-      ? formatDay(startDate, "EEE, d MMM")
-      : `${formatDay(startDate, "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
+      ? formatShortDate(startDate)
+      : `${formatShortDate(startDate)} ${formatTime(invite.start, timeFormat)}`
 
   return (
     <div className="flex flex-col border-b last:border-b-0">

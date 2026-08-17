@@ -1,9 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill"
 import * as chrono from "chrono-node"
-import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/lib/cal-events"
 import {
+  addMinutes,
   allDayDate,
   DEFAULT_DURATION_MINS,
   fromDate,
@@ -230,25 +230,23 @@ export function parseEventText(
   const { summary: finalSummary, location } = parseLocation(summary)
 
   const allDay = !result.start.isCertain("hour")
-
-  const startDate = allDay ? startOfDay(result.start.date()) : result.start.date()
-
-  const endDate = allDay
-    ? startOfDay(addDays(result.end ? result.end.date() : result.start.date(), 1))
-    : result.end
-      ? result.end.date()
-      : addMinutes(startDate, DEFAULT_DURATION_MINS)
-
-  // Convert to EventTime: all-day → PlainDate, timed → ZonedDateTime
-  // anchored in the viewer's local zone (chrono produces local-zone Dates).
   const tzid = getViewerTzid()
-  const toEt = (d: Date): EventTime =>
-    allDay ? allDayDate(jsDateToPlainDate(d)) : fromDate(d, tzid)
+
+  let start: EventTime, end: EventTime
+  if (allDay) {
+    const startDate = jsDateToPlainDate(result.start.date())
+    const endDate = (result.end ? jsDateToPlainDate(result.end.date()) : startDate).add({ days: 1 })
+    start = allDayDate(startDate)
+    end = allDayDate(endDate)
+  } else {
+    start = fromDate(result.start.date(), tzid)
+    end = result.end ? fromDate(result.end.date(), tzid) : addMinutes(start, DEFAULT_DURATION_MINS)
+  }
 
   return {
     summary: finalSummary,
-    start: toEt(startDate),
-    end: toEt(endDate),
+    start,
+    end,
     recurrence,
     location,
     chronoMatchText: result.text,

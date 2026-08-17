@@ -17,7 +17,7 @@ import { setEventAnchor } from "@/lib/event-anchor"
 import {
   coversFullDay,
   formatDateKey,
-  formatDay,
+  formatDayMonth,
   getRelativeDayLabel,
   today,
 } from "@/lib/event-time"
@@ -268,8 +268,7 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
 }
 
 const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
-  const currentDay = today()
-  const isToday = date.equals(currentDay)
+  const isToday = date.equals(today())
 
   return (
     <div
@@ -280,7 +279,7 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
     >
       <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
       <span className={cn("text-muted-foreground numerical", { "text-today": isToday })}>
-        {formatDay(date, date.year === currentDay.year ? "d MMM" : "d MMM yyyy")}
+        {formatDayMonth(date)}
       </span>
     </div>
   )

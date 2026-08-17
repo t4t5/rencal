@@ -1,4 +1,3 @@
-import { format, getWeek } from "date-fns"
 import { ComponentProps, createContext, memo, useContext, useEffect, useRef } from "react"
 import {
   Day,
@@ -159,7 +158,10 @@ function Calendar({
         MonthCaption: ({ className, ...captionProps }) => {
           return (
             <MonthCaption {...captionProps} className="text-2xl font-bold pl-4">
-              {format(captionProps.calendarMonth.date, "MMMM yyyy")}
+              {captionProps.calendarMonth.date.toLocaleString("default", {
+                month: "long",
+                year: "numeric",
+              })}
             </MonthCaption>
           )
         },
@@ -176,8 +178,7 @@ function Calendar({
           const { week } = weekProps
           const { isSelected } = useDayPicker()
 
-          const currentWeekNumber = getWeek(plainDateToJsDate(today()), { weekStartsOn: 1 })
-          const isCurrentWeek = week.weekNumber === currentWeekNumber
+          const isCurrentWeek = week.days.some((d) => jsDateToPlainDate(d.date).equals(today()))
           const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
           return (

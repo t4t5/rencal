@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
-import { formatDay } from "@/lib/event-time"
+import { formatShortDate } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
@@ -22,7 +22,7 @@ export const DatePicker = ({
 }) => {
   const [open, setOpen] = useState(false)
 
-  const formattedDate = date ? formatDay(date, "EEE d MMM") : null
+  const formattedDate = date ? formatShortDate(date) : null
 
   return (
     <Popover open={readOnly ? false : open} onOpenChange={setOpen}>

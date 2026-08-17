@@ -1,23 +1,44 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { format } from "date-fns"
 
 import type { TimeFormat } from "@/rpc/bindings"
 
 import { today } from "./constructors"
 import { epochDay } from "./day"
-import { plainDateToJsDate } from "./js-date"
 import { getViewerTzid } from "./local-zone"
 import { dateInViewerZone, isAllDay, toViewerZonedDateTime } from "./projections"
 import type { EventTime } from "./types"
+
+type DatePartStyle = "short" | "long"
+
+const weekdayFormatters: Record<DatePartStyle, Intl.DateTimeFormat> = {
+  short: new Intl.DateTimeFormat("en-GB", { weekday: "short", timeZone: "UTC" }),
+  long: new Intl.DateTimeFormat("en-GB", { weekday: "long", timeZone: "UTC" }),
+}
+
+const monthFormatters: Record<DatePartStyle, Intl.DateTimeFormat> = {
+  short: new Intl.DateTimeFormat("en-GB", { month: "short", timeZone: "UTC" }),
+  long: new Intl.DateTimeFormat("en-GB", { month: "long", timeZone: "UTC" }),
+}
+
+function epochMilliseconds(date: Temporal.PlainDate): number {
+  return date.toZonedDateTime("UTC").epochMilliseconds
+}
+
+function yearSuffix(date: Temporal.PlainDate): string {
+  return date.year !== today().year ? ` ${date.year}` : ""
+}
 
 /** "YYYY-MM-DD" in the viewer's local zone. Used as a stable grouping key. */
 export function formatDateKey(value: EventTime | Temporal.PlainDate): string {
   return (value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)).toString()
 }
 
-/** Format a calendar day without leaking JS Date beyond the date-fns boundary. */
-export function formatDay(date: Temporal.PlainDate, pattern: string): string {
-  return format(plainDateToJsDate(date), pattern)
+export function formatWeekday(date: Temporal.PlainDate, style: DatePartStyle): string {
+  return weekdayFormatters[style].format(epochMilliseconds(date))
+}
+
+export function formatMonth(date: Temporal.PlainDate, style: DatePartStyle): string {
+  return monthFormatters[style].format(epochMilliseconds(date))
 }
 
 let timeFormatters: Partial<Record<TimeFormat, Intl.DateTimeFormat>> = {}
@@ -65,15 +86,18 @@ export function formatWallclockTime(hour: number, minute: number, timeFormat: Ti
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
 export function formatShortDate(value: EventTime | Temporal.PlainDate): string {
   const date = value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)
-  const pattern = date.year !== today().year ? "EEE, d MMM yyyy" : "EEE, d MMM"
-  return formatDay(date, pattern)
+  return `${formatWeekday(date, "short")}, ${date.day} ${formatMonth(date, "short")}${yearSuffix(date)}`
 }
 
 /** "Thursday, 5 November" (adds the year when not the current year). */
 export function formatLongDate(value: EventTime | Temporal.PlainDate): string {
   const date = value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)
-  const pattern = date.year !== today().year ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
-  return formatDay(date, pattern)
+  return `${formatWeekday(date, "long")}, ${date.day} ${formatMonth(date, "long")}${yearSuffix(date)}`
+}
+
+/** "28 Apr" or "28 Apr 2027" if not the current year. */
+export function formatDayMonth(date: Temporal.PlainDate): string {
+  return `${date.day} ${formatMonth(date, "short")}${yearSuffix(date)}`
 }
 
 /** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
@@ -83,5 +107,5 @@ export function getRelativeDayLabel(value: EventTime | Temporal.PlainDate): stri
   if (diffDays === 0) return "Today"
   if (diffDays === 1) return "Tomorrow"
   if (diffDays === -1) return "Yesterday"
-  return formatDay(date, "EEEE")
+  return formatWeekday(date, "long")
 }
