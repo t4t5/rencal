@@ -222,6 +222,36 @@ describe("getEventDayRange", () => {
     expect(firstMs).toBe(lastMs)
   })
 
+  it("detects viewer-zone midnight after the system timezone changes", () => {
+    const original = getLocalTzid()
+    const other = original === "America/New_York" ? "Europe/London" : "America/New_York"
+    try {
+      setLocalTzid(other)
+      const start = zoned("2026-08-17T22:00:00", other)
+      const end = zoned("2026-08-18T00:00:00", other)
+      const { firstMs, lastMs } = getEventDayRange(start, end)
+      expect(firstMs).toBe(lastMs)
+    } finally {
+      setLocalTzid(original)
+    }
+  })
+
+  it("uses calendar arithmetic for exclusive ends across DST", () => {
+    const originalProcessTz = process.env.TZ
+    const originalViewerTz = getLocalTzid()
+    try {
+      process.env.TZ = "Europe/London"
+      setLocalTzid("Europe/London")
+
+      const { lastMs } = getEventDayRange(date("2026-03-28"), date("2026-03-30"))
+      expect(lastMs).toBe(new Date(2026, 2, 29).getTime())
+    } finally {
+      if (originalProcessTz === undefined) delete process.env.TZ
+      else process.env.TZ = originalProcessTz
+      setLocalTzid(originalViewerTz)
+    }
+  })
+
   it("timed event spanning midnight covers two days", () => {
     const tz = getLocalTzid()
     const start = zoned("2026-04-28T22:00:00", tz)
