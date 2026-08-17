@@ -1,4 +1,3 @@
-import { format } from "date-fns"
 import { useEffect, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
@@ -12,9 +11,9 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { useLocalTzid } from "@/hooks/useLocalTzid"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
-import { formatTime, localDateInViewerZone } from "@/lib/event-time"
+import { dateInViewerZone, formatDay, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesBadge() {
@@ -22,7 +21,7 @@ export function InvitesBadge() {
   const [invites, setInvites] = useState<CalendarEvent[]>([])
 
   // Invite rows show viewer-zone dates/times; re-render them on timezone change.
-  useLocalTzid()
+  useViewerTzid()
 
   useEffect(() => {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
@@ -88,11 +87,11 @@ function InviteCard({
   const organizerName = invite.organizer?.name ?? organizerEmail
   const initial = organizerName.charAt(0).toUpperCase()
 
-  const startDate = localDateInViewerZone(invite.start)
+  const startDate = dateInViewerZone(invite.start)
   const dateStr =
     invite.start.kind === "date"
-      ? format(startDate, "EEE, d MMM")
-      : `${format(startDate, "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
+      ? formatDay(startDate, "EEE, d MMM")
+      : `${formatDay(startDate, "EEE, d MMM")} ${formatTime(invite.start, timeFormat)}`
 
   return (
     <div className="flex flex-col border-b last:border-b-0">

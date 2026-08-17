@@ -15,8 +15,9 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
-import { useLocalTzid } from "@/hooks/useLocalTzid"
-import { formatDateKey, todayLocalDate } from "@/lib/event-time"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
+import { formatDateKey, today } from "@/lib/event-time"
+import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"
@@ -48,13 +49,13 @@ function Calendar({
 
   // Subscribe to timezone changes: the current-week/weekday highlights and the
   // `today` prop below all derive from the viewer's zone.
-  useLocalTzid()
+  useViewerTzid()
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       fixedWeeks
-      today={todayLocalDate()}
+      today={plainDateToJsDate(today())}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -175,7 +176,7 @@ function Calendar({
           const { week } = weekProps
           const { isSelected } = useDayPicker()
 
-          const currentWeekNumber = getWeek(todayLocalDate())
+          const currentWeekNumber = getWeek(plainDateToJsDate(today()), { weekStartsOn: 1 })
           const isCurrentWeek = week.weekNumber === currentWeekNumber
           const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
@@ -201,7 +202,7 @@ function Calendar({
         Weekday: ({ className, children, ...weekdayProps }) => {
           const weekdayName = typeof children === "string" ? children : ""
           const weekdayNumber = WEEKDAY_SHORT.indexOf(weekdayName as (typeof WEEKDAY_SHORT)[number])
-          const isCurrentWeekday = weekdayNumber === todayLocalDate().getDay()
+          const isCurrentWeekday = weekdayNumber === today().dayOfWeek % 7
           const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
 
           return (
@@ -253,7 +254,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
     if (modifiers.focused) ref.current?.focus()
   }, [modifiers.focused])
 
-  const dateKey = formatDateKey(day.date)
+  const dateKey = formatDateKey(jsDateToPlainDate(day.date))
   const dotColors = eventDotsByDate.get(dateKey)
 
   return (

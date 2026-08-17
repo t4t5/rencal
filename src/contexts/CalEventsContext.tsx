@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import {
   Dispatch,
   ReactNode,
@@ -23,7 +24,7 @@ import {
   getStartRangeForDate,
   mergeEvents,
 } from "@/lib/cal-events-range"
-import { subscribeLocalTzid } from "@/lib/event-time"
+import { subscribeViewerTzid } from "@/lib/event-time"
 import { DateRange } from "@/lib/types"
 
 // Cheap identity check used to skip no-op state updates after a reload. The
@@ -49,7 +50,7 @@ interface CalEventsContextType {
   toggleActiveEventKey: (key: string) => void
   isInitialLoading: boolean
   reloadEvents: () => Promise<void>
-  ensureRangeLoaded: (start: Date, end: Date) => Promise<void>
+  ensureRangeLoaded: (start: Temporal.PlainDate, end: Temporal.PlainDate) => Promise<void>
 }
 
 const CalEventsContext = createContext({} as CalEventsContextType)
@@ -136,7 +137,11 @@ export function CalEventsProvider({
           const latest = loadedRangeRef.current!
           // Range widened or a reload landed mid-flight → redo as a full fetch of the new
           // range rather than applying a now-stale subset.
-          if (pendingForceRef.current || latest.start < desired.start || latest.end > desired.end) {
+          if (
+            pendingForceRef.current ||
+            Temporal.PlainDate.compare(latest.start, desired.start) < 0 ||
+            Temporal.PlainDate.compare(latest.end, desired.end) > 0
+          ) {
             pendingForceRef.current = false
             doForce = true
             continue
@@ -145,8 +150,8 @@ export function CalEventsProvider({
           coveredRangeRef.current = desired
         } else {
           // Incremental: fetch only the slices outside what's already covered, then merge.
-          const needBefore = desired.start < covered.start
-          const needAfter = desired.end > covered.end
+          const needBefore = Temporal.PlainDate.compare(desired.start, covered.start) < 0
+          const needAfter = Temporal.PlainDate.compare(desired.end, covered.end) > 0
           if (needBefore || needAfter) {
             const [before, after] = await Promise.all([
               needBefore
@@ -179,7 +184,11 @@ export function CalEventsProvider({
         pendingForceRef.current = false
         const latest = loadedRangeRef.current
         const cov = coveredRangeRef.current
-        const coversLatest = !!cov && !!latest && cov.start <= latest.start && cov.end >= latest.end
+        const coversLatest =
+          !!cov &&
+          !!latest &&
+          Temporal.PlainDate.compare(cov.start, latest.start) <= 0 &&
+          Temporal.PlainDate.compare(cov.end, latest.end) >= 0
         if (!doForce && coversLatest) break
       }
     } finally {
@@ -192,10 +201,13 @@ export function CalEventsProvider({
 
   // Ensure [start, end] is covered, fetching only what's missing. Widens the desired range
   // (never shrinks) and reconciles. Idempotent — safe to call on every scroll/range change.
-  const ensureRangeLoaded = useCallback((start: Date, end: Date) => {
+  const ensureRangeLoaded = useCallback((start: Temporal.PlainDate, end: Temporal.PlainDate) => {
     const cur = loadedRangeRef.current
     loadedRangeRef.current = cur
-      ? { start: start < cur.start ? start : cur.start, end: end > cur.end ? end : cur.end }
+      ? {
+          start: Temporal.PlainDate.compare(start, cur.start) < 0 ? start : cur.start,
+          end: Temporal.PlainDate.compare(end, cur.end) > 0 ? end : cur.end,
+        }
       : { start, end }
     return syncEvents(false)
   }, [])
@@ -225,7 +237,7 @@ export function CalEventsProvider({
   // are unchanged on disk — only the projections shift.
   useEffect(
     () =>
-      subscribeLocalTzid(() => {
+      subscribeViewerTzid(() => {
         setCalendarEvents((prev) => prev.map((e) => withDates(e, e.start, e.end)))
       }),
     [],

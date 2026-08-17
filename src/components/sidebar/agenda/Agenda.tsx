@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useEffectEvent, useRef } from "react"
 import { flushSync } from "react-dom"
 
@@ -57,37 +58,39 @@ export function Agenda() {
 
   usePreserveScrollOnPrepend({ scrollContainerRef, sections: sectionsToRender })
 
-  const scrollToDate = useEffectEvent((date: Date, behavior: ScrollBehavior = "smooth") => {
-    if (!sectionRefs.current) {
-      debug("scrollToDate skipped: no sectionRefs", { date: formatDateKey(date), behavior })
-      return
-    }
+  const scrollToDate = useEffectEvent(
+    (date: Temporal.PlainDate, behavior: ScrollBehavior = "smooth") => {
+      if (!sectionRefs.current) {
+        debug("scrollToDate skipped: no sectionRefs", { date: formatDateKey(date), behavior })
+        return
+      }
 
-    const targetDateStr = formatDateKey(date)
-    const section = sectionRefs.current.get(targetDateStr)
+      const targetDateStr = formatDateKey(date)
+      const section = sectionRefs.current.get(targetDateStr)
 
-    const container = scrollContainerRef.current
-    debug("scrollToDate", {
-      targetDate: targetDateStr,
-      behavior,
-      foundSection: !!section,
-      hasContainer: !!container,
-      sectionRefCount: sectionRefs.current.size,
-      firstSection: sectionsToRender[0] ? formatDateKey(sectionsToRender[0].date) : null,
-      lastSection: sectionsToRender.at(-1) ? formatDateKey(sectionsToRender.at(-1)!.date) : null,
-      scrollTop: container?.scrollTop,
-      scrollHeight: container?.scrollHeight,
-      clientHeight: container?.clientHeight,
-    })
-    if (section && container) {
-      // Remove ghost synchronously so the scroll target measures the final layout.
-      // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
-      flushSync(() => clearGhost())
-      scrollSectionIntoContainer(container, section, behavior)
-    } else {
-      showGhost(date, behavior)
-    }
-  })
+      const container = scrollContainerRef.current
+      debug("scrollToDate", {
+        targetDate: targetDateStr,
+        behavior,
+        foundSection: !!section,
+        hasContainer: !!container,
+        sectionRefCount: sectionRefs.current.size,
+        firstSection: sectionsToRender[0] ? formatDateKey(sectionsToRender[0].date) : null,
+        lastSection: sectionsToRender.at(-1) ? formatDateKey(sectionsToRender.at(-1)!.date) : null,
+        scrollTop: container?.scrollTop,
+        scrollHeight: container?.scrollHeight,
+        clientHeight: container?.clientHeight,
+      })
+      if (section && container) {
+        // Remove ghost synchronously so the scroll target measures the final layout.
+        // Otherwise the ghost's height shifts the target up after we scroll, leaving us scrolled past it.
+        flushSync(() => clearGhost())
+        scrollSectionIntoContainer(container, section, behavior)
+      } else {
+        showGhost(date, behavior)
+      }
+    },
+  )
 
   useEffect(() => {
     registerScrollToDate(scrollToDate)

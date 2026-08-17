@@ -1,10 +1,12 @@
-import { format } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { formatDay } from "@/lib/event-time"
+import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
 export const DatePicker = ({
@@ -13,14 +15,14 @@ export const DatePicker = ({
   className,
   readOnly,
 }: {
-  date: Date | null
-  setDate: (date: Date | null) => void
+  date: Temporal.PlainDate | null
+  setDate: (date: Temporal.PlainDate | null) => void
   className?: string
   readOnly?: boolean
 }) => {
   const [open, setOpen] = useState(false)
 
-  const formattedDate = date ? format(date, "EEE d MMM") : null
+  const formattedDate = date ? formatDay(date, "EEE d MMM") : null
 
   return (
     <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
@@ -39,11 +41,11 @@ export const DatePicker = ({
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar
           mode="single"
-          selected={date ?? undefined}
-          defaultMonth={date ?? undefined}
+          selected={date ? plainDateToJsDate(date) : undefined}
+          defaultMonth={date ? plainDateToJsDate(date) : undefined}
           captionLayout="dropdown"
           onSelect={(date) => {
-            setDate(date ?? null)
+            setDate(date ? jsDateToPlainDate(date) : null)
             setOpen(false)
           }}
         />

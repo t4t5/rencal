@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { listen } from "@tauri-apps/api/event"
 import {
   ReactNode,
@@ -17,6 +18,7 @@ import { CALDIR_CHANGED, CALENDAR_DIR_CHANGED } from "@/rpc/events"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
+import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 
 // Which named group is active is client-side app state (persisted in
@@ -43,11 +45,11 @@ export function useCalendars() {
 // --- Navigation context (changes on every date navigation) ---
 
 interface CalendarNavigationContextType {
-  activeDate: Date
-  setActiveDate: (date: Date) => void
-  navigateToDate: (date: Date, behavior?: ScrollBehavior) => Promise<void>
-  registerScrollToDate: (fn: (date: Date, behavior?: ScrollBehavior) => void) => void
-  registerLoadEventsForDate: (fn: (date: Date) => Promise<void>) => void
+  activeDate: Temporal.PlainDate
+  setActiveDate: (date: Temporal.PlainDate) => void
+  navigateToDate: (date: Temporal.PlainDate, behavior?: ScrollBehavior) => Promise<void>
+  registerScrollToDate: (fn: (date: Temporal.PlainDate, behavior?: ScrollBehavior) => void) => void
+  registerLoadEventsForDate: (fn: (date: Temporal.PlainDate) => Promise<void>) => void
   isNavigating: () => boolean
   setIsNavigating: (value: boolean) => void
 }
@@ -70,7 +72,7 @@ export function useCalendarState() {
 interface CalendarStateProviderProps {
   children: ReactNode
   initialCalendars?: Calendar[]
-  initialDate?: Date
+  initialDate?: Temporal.PlainDate
 }
 
 export function CalendarStateProvider({
@@ -78,7 +80,7 @@ export function CalendarStateProvider({
   initialCalendars,
   initialDate,
 }: CalendarStateProviderProps) {
-  const [activeDate, setActiveDate] = useState<Date>(() => initialDate ?? new Date())
+  const [activeDate, setActiveDate] = useState<Temporal.PlainDate>(() => initialDate ?? today())
   const [calendars, setCalendars] = useState<Calendar[]>(() => initialCalendars ?? [])
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(() => initialCalendars === undefined)
   const [activeGroup, setActiveGroup] = useLocalStorage(
@@ -87,8 +89,10 @@ export function CalendarStateProvider({
     DEFAULT_GROUP,
   )
 
-  const scrollToDateRef = useRef<((date: Date, behavior?: ScrollBehavior) => void) | null>(null)
-  const loadEventsForDateRef = useRef<((date: Date) => Promise<void>) | null>(null)
+  const scrollToDateRef = useRef<
+    ((date: Temporal.PlainDate, behavior?: ScrollBehavior) => void) | null
+  >(null)
+  const loadEventsForDateRef = useRef<((date: Temporal.PlainDate) => Promise<void>) | null>(null)
   const isNavigatingRef = useRef(false)
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -121,7 +125,7 @@ export function CalendarStateProvider({
   }, [])
 
   const registerScrollToDate = useCallback(
-    (fn: (date: Date, behavior?: ScrollBehavior) => void) => {
+    (fn: (date: Temporal.PlainDate, behavior?: ScrollBehavior) => void) => {
       scrollToDateRef.current = fn
     },
     [],
@@ -129,9 +133,12 @@ export function CalendarStateProvider({
 
   // CalEventsContext wires this to ensureRangeLoaded so a jump to a distant date loads its
   // events before navigateToDate scrolls there.
-  const registerLoadEventsForDate = useCallback((fn: (date: Date) => Promise<void>) => {
-    loadEventsForDateRef.current = fn
-  }, [])
+  const registerLoadEventsForDate = useCallback(
+    (fn: (date: Temporal.PlainDate) => Promise<void>) => {
+      loadEventsForDateRef.current = fn
+    },
+    [],
+  )
 
   const isNavigating = useCallback(() => isNavigatingRef.current, [])
 
@@ -142,37 +149,40 @@ export function CalendarStateProvider({
   const lastNavigateTimeRef = useRef(0)
   const RAPID_NAV_THRESHOLD_MS = 200
 
-  const navigateToDate = useCallback(async (date: Date, behaviorOverride?: ScrollBehavior) => {
-    // Cancel any pending timeout from a previous navigation
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current)
-    }
+  const navigateToDate = useCallback(
+    async (date: Temporal.PlainDate, behaviorOverride?: ScrollBehavior) => {
+      // Cancel any pending timeout from a previous navigation
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current)
+      }
 
-    // Use instant scrolling when navigations happen in quick succession
-    // to avoid stacking smooth scroll animations (causes GPU artifacts)
-    const now = Date.now()
-    const isRapid = now - lastNavigateTimeRef.current < RAPID_NAV_THRESHOLD_MS
-    lastNavigateTimeRef.current = now
-    const behavior: ScrollBehavior = behaviorOverride ?? (isRapid ? "instant" : "smooth")
+      // Use instant scrolling when navigations happen in quick succession
+      // to avoid stacking smooth scroll animations (causes GPU artifacts)
+      const now = Date.now()
+      const isRapid = now - lastNavigateTimeRef.current < RAPID_NAV_THRESHOLD_MS
+      lastNavigateTimeRef.current = now
+      const behavior: ScrollBehavior = behaviorOverride ?? (isRapid ? "instant" : "smooth")
 
-    isNavigatingRef.current = true
+      isNavigatingRef.current = true
 
-    // Load events for the target date first (this handles distant date navigation)
-    if (loadEventsForDateRef.current) {
-      await loadEventsForDateRef.current(date)
-    }
+      // Load events for the target date first (this handles distant date navigation)
+      if (loadEventsForDateRef.current) {
+        await loadEventsForDateRef.current(date)
+      }
 
-    // Use requestAnimationFrame to ensure DOM has updated before scrolling
-    requestAnimationFrame(() => {
-      setActiveDate(date)
-      scrollToDateRef.current?.(date, behavior)
-    })
+      // Use requestAnimationFrame to ensure DOM has updated before scrolling
+      requestAnimationFrame(() => {
+        setActiveDate(date)
+        scrollToDateRef.current?.(date, behavior)
+      })
 
-    // Clear flag after scroll animation completes
-    navigationTimeoutRef.current = setTimeout(() => {
-      isNavigatingRef.current = false
-    }, 500)
-  }, [])
+      // Clear flag after scroll animation completes
+      navigationTimeoutRef.current = setTimeout(() => {
+        isNavigatingRef.current = false
+      }, 500)
+    },
+    [],
+  )
 
   const calendarsValue = useMemo(
     () => ({

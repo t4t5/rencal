@@ -7,7 +7,7 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
-import { type EventTime, formatDateKey, localDateInViewerZone } from "@/lib/event-time"
+import { type EventTime, formatDateKey, dateInViewerZone } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
@@ -119,7 +119,7 @@ const useJumpToStartDate = ({
       return
     }
     if (prevStartKeyRef.current !== null && prevStartKeyRef.current !== draftStartKey) {
-      void navigateToDate(localDateInViewerZone(draftStart))
+      void navigateToDate(dateInViewerZone(draftStart))
     }
     prevStartKeyRef.current = draftStartKey
   }, [isDrafting, draftStartKey])

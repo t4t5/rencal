@@ -48,6 +48,7 @@ check:
 
 # Check TypeScript types only
 typecheck:
+  pnpm lint
   pnpm typecheck
 
 # Run frontend tests

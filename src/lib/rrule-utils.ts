@@ -6,7 +6,7 @@ import {
   addDays,
   dateInEventZone,
   fromDate,
-  getLocalTzid,
+  getViewerTzid,
   toViewerZonedDateTime,
   type EventTime,
   wallclockTime,
@@ -21,17 +21,17 @@ function eventTimeToRRuleDate(eventTime: EventTime): Date {
   return new Date(Date.UTC(date.year, date.month - 1, date.day, time.hour, time.minute))
 }
 
-/** Project a viewer-local JS Date into the same fake-UTC wall-clock space. */
-function localDateToRRuleDate(date: Date): Date {
+/** Project a wallclock into the same fake-UTC space rrule.js expects. */
+function localDateToRRuleDate(date: Temporal.PlainDateTime): Date {
   return new Date(
     Date.UTC(
-      date.getFullYear(),
-      date.getMonth(),
-      date.getDate(),
-      date.getHours(),
-      date.getMinutes(),
-      date.getSeconds(),
-      date.getMilliseconds(),
+      date.year,
+      date.month - 1,
+      date.day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
     ),
   )
 }
@@ -69,7 +69,10 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
 }
 
 /** For a recurring master, shift start/end to the occurrence nearest to now. */
-export function withNearestOccurrence(event: CalendarEvent, now = new Date()): CalendarEvent {
+export function withNearestOccurrence(
+  event: CalendarEvent,
+  now: Temporal.PlainDateTime = Temporal.Now.zonedDateTimeISO(getViewerTzid()).toPlainDateTime(),
+): CalendarEvent {
   if (!event.recurrence) return event
 
   try {
@@ -138,7 +141,7 @@ export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | 
     const rrules = rrule.rrules()
     if (rrules.length === 0) return null
 
-    const tzid = getLocalTzid()
+    const tzid = getViewerTzid()
     return {
       rrule: stripRRulePrefix(rrules[0].toString()),
       exdates: rrule.exdates().map((d) => fromDate(d, tzid)),

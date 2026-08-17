@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "lint": "eslint src",
     "preview": "vite preview",
     "tauri": "tauri",
     "typecheck": "tsc --noEmit",
@@ -52,7 +53,9 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.6",
+    "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-react": "^4.6.0",
+    "eslint": "^10.8.1",
     "husky": "^9.1.7",
     "lint-staged": "^16.2.6",
     "prettier": "^3.6.2",

@@ -1,4 +1,4 @@
-import { format, setHours, startOfDay, startOfWeek } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
@@ -15,7 +15,14 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { formatDateKey, formatTime, fromDate, nowLocalDate } from "@/lib/event-time"
+import {
+  atTime,
+  formatDateKey,
+  formatDay,
+  formatWallclockTime,
+  getViewerTzid,
+  startOfWeek,
+} from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -41,8 +48,8 @@ type WeekTimeGridProps = {
   selectedEventKey: string | null
   activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
-  onDayClick: (date: Date) => void
-  onScrollActiveChange: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
+  onScrollActiveChange: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
@@ -124,13 +131,13 @@ export function WeekTimeGrid({
 
     suppressScrollTracking()
     const hasToday = days.some((d) => d.isToday)
-    const now = nowLocalDate()
-    const targetHour = hasToday ? now.getHours() + now.getMinutes() / 60 : 8
+    const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
+    const targetHour = hasToday ? now.hour + now.minute / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
 
     const activeDay = days.find((d) => d.dateKey === activeDateKey)
     if (activeDay) {
-      const weekStartKey = formatDateKey(startOfWeek(activeDay.date, { weekStartsOn: 1 }))
+      const weekStartKey = formatDateKey(startOfWeek(activeDay.date))
       const mondayIdx = days.findIndex((d) => d.dateKey === weekStartKey)
       if (mondayIdx !== -1) el.scrollLeft = mondayIdx * dayWidth
     }
@@ -161,7 +168,7 @@ export function WeekTimeGrid({
 
     if (columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
       const activeDay = currentDays[idx]
-      const weekStartKey = formatDateKey(startOfWeek(activeDay.date, { weekStartsOn: 1 }))
+      const weekStartKey = formatDateKey(startOfWeek(activeDay.date))
       const mondayIdx = currentDays.findIndex((d) => d.dateKey === weekStartKey)
       const targetIdx = mondayIdx !== -1 ? mondayIdx : idx
 
@@ -302,7 +309,7 @@ export function WeekTimeGrid({
               key={day.dateKey}
               onCreateEvent={(el, clickY) => {
                 const startHour = getHourFromClickY(el, clickY)
-                const start = fromDate(setHours(startOfDay(day.date), startHour))
+                const start = atTime(day.date, startHour)
                 openDayDraft(day.date, el, { allDay: false, start, clickY })
               }}
             >
@@ -358,15 +365,13 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
   return (
     <div className="relative" style={{ height: GRID_HEIGHT }}>
       {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => {
-        const d = new Date()
-        d.setHours(h, 0, 0, 0)
         return (
           <span
             key={h}
             className="absolute right-1.5 text-[11px] text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
-            {formatTime(fromDate(d), timeFormat)}
+            {formatWallclockTime(h, 0, timeFormat)}
           </span>
         )
       })}
@@ -383,7 +388,7 @@ const DayHeaders = ({
   days: MonthDay[]
   activeDateKey: string
   dimmed: boolean
-  onDayClick: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
 }) => {
   return days.map((day) => (
     <div
@@ -395,7 +400,9 @@ const DayHeaders = ({
       style={{ gridRow: 1 }}
       onClick={() => onDayClick(day.date)}
     >
-      <span className="text-[11px] text-muted-foreground uppercase">{format(day.date, "EEE")}</span>
+      <span className="text-[11px] text-muted-foreground uppercase">
+        {formatDay(day.date, "EEE")}
+      </span>
       <span
         className={cn(
           "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
@@ -403,7 +410,7 @@ const DayHeaders = ({
           dimmed && "opacity-50",
         )}
       >
-        {format(day.date, "d")}
+        {formatDay(day.date, "d")}
       </span>
     </div>
   ))

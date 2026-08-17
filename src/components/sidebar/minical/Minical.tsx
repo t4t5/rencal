@@ -1,9 +1,11 @@
-import { addMonths, format, subMonths } from "date-fns"
 import { useCallback } from "react"
 
 import { Button } from "@/components/ui/button"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+
+import { formatDay } from "@/lib/event-time"
+import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronUpIcon } from "@/icons/chevron-up"
@@ -19,7 +21,7 @@ export function Minical() {
 
   const handleDateSelect = useCallback(
     (date: Date) => {
-      navigateToDate(date)
+      navigateToDate(jsDateToPlainDate(date))
       // Remove focus from the day button so global shortcuts (arrows, etc.) work
       if (document.activeElement instanceof HTMLElement) {
         document.activeElement.blur()
@@ -38,9 +40,9 @@ export function Minical() {
       <EventDotsProvider value={eventDotsByDate}>
         <Calendar
           mode="single"
-          selected={activeDate}
+          selected={plainDateToJsDate(activeDate)}
           onSelect={handleDateSelect}
-          month={activeDate}
+          month={plainDateToJsDate(activeDate)}
           onMonthChange={handleDateSelect}
           className="bg-transparent p-0"
           required
@@ -59,8 +61,8 @@ const CurrentMonth = () => {
 
   return (
     <h2 className="text-2xl font-bold heading">
-      {format(activeDate, "MMMM")}{" "}
-      <span className="text-highlight font-normal">{format(activeDate, "yyyy")}</span>
+      {formatDay(activeDate, "MMMM")}{" "}
+      <span className="text-highlight font-normal">{formatDay(activeDate, "yyyy")}</span>
     </h2>
   )
 }
@@ -75,7 +77,7 @@ const ArrowKeys = () => {
         size="icon-sm"
         round
         tabIndex={-1}
-        onClick={() => navigateToDate(subMonths(activeDate, 1))}
+        onClick={() => navigateToDate(activeDate.subtract({ months: 1 }))}
       >
         <ChevronUpIcon className="size-4" />
       </Button>
@@ -84,7 +86,7 @@ const ArrowKeys = () => {
         size="icon-sm"
         round
         tabIndex={-1}
-        onClick={() => navigateToDate(addMonths(activeDate, 1))}
+        onClick={() => navigateToDate(activeDate.add({ months: 1 }))}
       >
         <ChevronDownIcon className="size-4" />
       </Button>

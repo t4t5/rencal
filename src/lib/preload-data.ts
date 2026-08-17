@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill"
+
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
 
@@ -8,19 +10,20 @@ import {
   getVisibleCalendarSlugs,
   normalizeCalendarGroups,
 } from "@/lib/calendar-groups"
+import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"
 
 export type Preload = {
   initialCalendars?: Calendar[]
   initialEvents?: CalendarEvent[]
-  initialDate?: Date
+  initialDate?: Temporal.PlainDate
   initialRange?: DateRange
 }
 
 export async function preloadCalendarData(): Promise<Preload> {
   try {
-    const initialDate = new Date()
+    const initialDate = today()
     const [initialCalendars, groupsResult] = await Promise.all([
       rpc.caldir.list_calendars(),
       rpc.config.get_groups(),

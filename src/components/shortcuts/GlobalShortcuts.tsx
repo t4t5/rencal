@@ -1,5 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { listen } from "@tauri-apps/api/event"
-import { addDays, addMonths, isSameDay, startOfMonth, subDays, subMonths } from "date-fns"
 import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
@@ -26,7 +26,7 @@ import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
-import { todayLocalDate } from "@/lib/event-time"
+import { today } from "@/lib/event-time"
 import { type PalettePage, type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
@@ -184,7 +184,7 @@ function useShortcutHandlers({
     activeElement?.blur()
   }
 
-  const throttledNavigate = (date: Date) => {
+  const throttledNavigate = (date: Temporal.PlainDate) => {
     const now = Date.now()
     if (now - lastNavRef.current < NAV_THROTTLE_MS) return
     lastNavRef.current = now
@@ -193,12 +193,14 @@ function useShortcutHandlers({
   }
 
   const navigateToPreviousMonthStart = () => {
-    const monthStart = startOfMonth(activeDate)
-    throttledNavigate(isSameDay(activeDate, monthStart) ? subMonths(monthStart, 1) : monthStart)
+    const monthStart = activeDate.with({ day: 1 })
+    throttledNavigate(
+      activeDate.equals(monthStart) ? monthStart.subtract({ months: 1 }) : monthStart,
+    )
   }
 
   const navigateToNextMonthStart = () => {
-    throttledNavigate(startOfMonth(addMonths(activeDate, 1)))
+    throttledNavigate(activeDate.add({ months: 1 }).with({ day: 1 }))
   }
 
   const handleSearch = (e?: KeyboardEvent) => {
@@ -238,16 +240,16 @@ function useShortcutHandlers({
   return {
     today: () => {
       clearAgendaFocus()
-      void navigateToDate(todayLocalDate())
+      void navigateToDate(today())
     },
     "go-to-date": (e) => {
       e?.preventDefault()
       openGoToDate()
     },
-    "prev-day": () => throttledNavigate(subDays(activeDate, 1)),
-    "next-day": () => throttledNavigate(addDays(activeDate, 1)),
-    "prev-week": () => throttledNavigate(subDays(activeDate, 7)),
-    "next-week": () => throttledNavigate(addDays(activeDate, 7)),
+    "prev-day": () => throttledNavigate(activeDate.subtract({ days: 1 })),
+    "next-day": () => throttledNavigate(activeDate.add({ days: 1 })),
+    "prev-week": () => throttledNavigate(activeDate.subtract({ days: 7 })),
+    "next-week": () => throttledNavigate(activeDate.add({ days: 7 })),
     "prev-month": navigateToPreviousMonthStart,
     "next-month": navigateToNextMonthStart,
     "prev-event": (e) => {

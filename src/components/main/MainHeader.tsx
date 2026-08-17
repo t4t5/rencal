@@ -19,7 +19,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
-import { todayLocalDate } from "@/lib/event-time"
+import { today } from "@/lib/event-time"
 
 import { CheckIcon } from "@/icons/check"
 import { ChevronDownIcon } from "@/icons/chevron-down"
@@ -37,11 +37,7 @@ export function MainHeader({
     <div className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
         <ShortcutTooltip text="Go to Today" shortcut="t">
-          <Button
-            tabIndex={-1}
-            variant="secondary"
-            onClick={() => navigateToDate(todayLocalDate())}
-          >
+          <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
             Today
           </Button>
         </ShortcutTooltip>

@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill"
+
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { formatDateKey } from "@/lib/event-time"
 
@@ -9,8 +11,8 @@ export type ActiveMonthVirtualItem = {
   size: number
 }
 
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${date.getMonth()}`
+function monthKey(date: Temporal.PlainDate): string {
+  return date.toString().slice(0, 7)
 }
 
 /**
@@ -38,11 +40,11 @@ export function pickActiveMonth({
   viewBottom: number
   activeDateKey: string
   direction: "up" | "down"
-}): Date | null {
+}): Temporal.PlainDate | null {
   // Fractional visible area per month, plus each month's 1st when it's on screen. We only
   // commit to a month once its 1st is visible, so both scroll directions land on day 1.
   const monthArea = new Map<string, number>()
-  const monthFirstDay = new Map<string, Date>()
+  const monthFirstDay = new Map<string, Temporal.PlainDate>()
 
   for (const item of virtualItems) {
     const top = Math.max(item.start, viewTop)
@@ -54,12 +56,12 @@ export function pickActiveMonth({
     for (const day of week) {
       const key = monthKey(day.date)
       monthArea.set(key, (monthArea.get(key) ?? 0) + fraction)
-      if (day.date.getDate() === 1) monthFirstDay.set(key, day.date)
+      if (day.date.day === 1) monthFirstDay.set(key, day.date)
     }
   }
 
   // Most-visible month, staying on the active month unless another is strictly larger.
-  const activeKey = `${activeDateKey.slice(0, 4)}-${Number(activeDateKey.slice(5, 7)) - 1}`
+  const activeKey = activeDateKey.slice(0, 7)
   let bestKey = activeKey
   let bestArea = monthArea.get(activeKey) ?? 0
   for (const [key, area] of monthArea) {

@@ -2,14 +2,13 @@ import type { Calendar, ResponseStatus } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { isAllDay } from "@/lib/event-time"
-import { MS_PER_DAY } from "@/lib/time"
 
 /**
  * All-day events always occupy the all-day lane; timed events only span it if
  * they cross a day boundary.
  */
 export function isSpanning(event: CalendarEvent): boolean {
-  return isAllDay(event.start) || event.dateInfo.lastDayMs - event.dateInfo.firstDayMs >= MS_PER_DAY
+  return isAllDay(event.start) || event.dateInfo.lastDay - event.dateInfo.firstDay >= 1
 }
 
 export function getUserResponseStatus(

@@ -1,12 +1,11 @@
-import { startOfDay } from "date-fns"
 import { useMemo } from "react"
 
 import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { isAllDay } from "@/lib/event-time"
-import { DAY_MINUTES, daysDiff, MS_PER_DAY } from "@/lib/time"
+import { epochDay, isAllDay } from "@/lib/event-time"
+import { DAY_MINUTES } from "@/lib/time"
 
 import type { AllDayLaneItem } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
@@ -38,11 +37,11 @@ function computeTimedPosition(
 ): { top: number; height: number; durationMinutes: number } {
   // Pre-computed at the EventTime → CalendarEvent boundary; expressed in
   // the viewer's local zone (matches Google/Apple calendar UIs).
-  const { startLocalMinutes, endLocalMinutes, firstDayMs, endDayMs } = event.dateInfo
+  const { startLocalMinutes, endLocalMinutes, firstDay, endDay } = event.dateInfo
 
   // If event spans midnight, clamp end to end of day
   const durationMinutes =
-    endDayMs > firstDayMs ? DAY_MINUTES - startLocalMinutes : endLocalMinutes - startLocalMinutes
+    endDay > firstDay ? DAY_MINUTES - startLocalMinutes : endLocalMinutes - startLocalMinutes
 
   const top = ((startLocalMinutes - rangeStartMin) / rangeMinutes) * 100
   const height = (durationMinutes / rangeMinutes) * 100
@@ -125,9 +124,9 @@ export function useDayRangeLayout(
       return { allDayItems: [], maxAllDayLane: -1, timedByDay: new Map() }
     }
 
-    const rangeStartMs = startOfDay(days[0].date).getTime()
-    const rangeLastDayMs = startOfDay(days[N - 1].date).getTime()
-    const rangeExclEndMs = rangeLastDayMs + MS_PER_DAY
+    const rangeStartDay = epochDay(days[0].date)
+    const rangeLastDay = epochDay(days[N - 1].date)
+    const rangeExclEndDay = rangeLastDay + 1
 
     const rangeStartMin = 0
     const rangeMinutes = DAY_MINUTES
@@ -139,18 +138,18 @@ export function useDayRangeLayout(
     }
 
     for (const event of events) {
-      const { firstDayMs: firstMs, lastDayMs: lastMs } = event.dateInfo
+      const { firstDay: firstDay, lastDay: lastDay } = event.dateInfo
       const calendarColor = getCalendarColor(calMap.get(event.calendar_slug))
 
       if (isAllDay(event.start)) {
         // Check overlap with range
-        if (firstMs > rangeLastDayMs || lastMs < rangeStartMs) continue
+        if (firstDay > rangeLastDay || lastDay < rangeStartDay) continue
 
-        const clampedFirstMs = Math.max(firstMs, rangeStartMs)
-        const clampedLastMs = Math.min(lastMs, rangeLastDayMs)
+        const clampedFirstDay = Math.max(firstDay, rangeStartDay)
+        const clampedLastDay = Math.min(lastDay, rangeLastDay)
 
-        const startCol = daysDiff(clampedFirstMs, rangeStartMs) + 1
-        const endCol = daysDiff(clampedLastMs, rangeStartMs) + 2
+        const startCol = clampedFirstDay - rangeStartDay + 1
+        const endCol = clampedLastDay - rangeStartDay + 2
 
         allDayItems.push({
           event,
@@ -158,21 +157,21 @@ export function useDayRangeLayout(
           startCol,
           endCol,
           lane: 0,
-          isStart: firstMs >= rangeStartMs,
-          isEnd: lastMs <= rangeLastDayMs,
+          isStart: firstDay >= rangeStartDay,
+          isEnd: lastDay <= rangeLastDay,
         })
       } else {
-        const spanning = lastMs - firstMs >= MS_PER_DAY
+        const spanning = lastDay - firstDay >= 1
 
         if (spanning) {
           // Multi-day timed events go to all-day bar
-          if (firstMs > rangeLastDayMs || lastMs < rangeStartMs) continue
+          if (firstDay > rangeLastDay || lastDay < rangeStartDay) continue
 
-          const clampedFirstMs = Math.max(firstMs, rangeStartMs)
-          const clampedLastMs = Math.min(lastMs, rangeLastDayMs)
+          const clampedFirstDay = Math.max(firstDay, rangeStartDay)
+          const clampedLastDay = Math.min(lastDay, rangeLastDay)
 
-          const startCol = daysDiff(clampedFirstMs, rangeStartMs) + 1
-          const endCol = daysDiff(clampedLastMs, rangeStartMs) + 2
+          const startCol = clampedFirstDay - rangeStartDay + 1
+          const endCol = clampedLastDay - rangeStartDay + 2
 
           allDayItems.push({
             event,
@@ -180,14 +179,14 @@ export function useDayRangeLayout(
             startCol,
             endCol,
             lane: 0,
-            isStart: firstMs >= rangeStartMs,
-            isEnd: lastMs <= rangeLastDayMs,
+            isStart: firstDay >= rangeStartDay,
+            isEnd: lastDay <= rangeLastDay,
           })
         } else {
           // Single-day timed event
-          if (firstMs < rangeStartMs || firstMs >= rangeExclEndMs) continue
+          if (firstDay < rangeStartDay || firstDay >= rangeExclEndDay) continue
 
-          const colIndex = daysDiff(firstMs, rangeStartMs)
+          const colIndex = firstDay - rangeStartDay
           if (colIndex >= 0 && colIndex < N) {
             const dateKey = days[colIndex].dateKey
             const { top, height, durationMinutes } = computeTimedPosition(

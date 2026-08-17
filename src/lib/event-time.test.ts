@@ -6,11 +6,12 @@ import {
   addMinutes,
   coversFullDay,
   enumerateLocalDateKeys,
+  epochDay,
   formatDateKey,
   getEventDayRange,
-  getLocalTzid,
-  setLocalTzid,
-  subscribeLocalTzid,
+  getViewerTzid,
+  setViewerTzid,
+  subscribeViewerTzid,
   toViewerZonedDateTime,
   wallclockTime,
   isAllDay,
@@ -185,7 +186,7 @@ describe("toAllDay / toTimedAtStartOfDay", () => {
     const t = toTimedAtStartOfDay(d)
     expect(t.kind).toBe("datetime_zoned")
     if (t.kind !== "datetime_zoned") return
-    expect(t.value.timeZoneId).toBe(getLocalTzid())
+    expect(t.value.timeZoneId).toBe(getViewerTzid())
     // Hour is 0 in the viewer's zone (start-of-day).
     expect(t.value.hour).toBe(0)
   })
@@ -200,75 +201,91 @@ describe("getEventDayRange", () => {
   it("all-day single-day occupies one day (DTEND exclusive)", () => {
     const start = date("2026-04-28")
     const end = date("2026-04-29")
-    const { firstMs, lastMs } = getEventDayRange(start, end)
-    expect(firstMs).toBe(lastMs)
+    const { firstDay, lastDay } = getEventDayRange(start, end)
+    expect(firstDay).toBe(lastDay)
   })
 
   it("all-day three-day spans the right inclusive range", () => {
     const start = date("2026-04-28")
     const end = date("2026-05-01") // exclusive: covers 28, 29, 30
-    const { firstMs, lastMs } = getEventDayRange(start, end)
-    const ms = (s: string) =>
-      Temporal.PlainDate.from(s).toZonedDateTime(getLocalTzid()).epochMilliseconds
-    expect(firstMs).toBe(ms("2026-04-28"))
-    expect(lastMs).toBe(ms("2026-04-30"))
+    const { firstDay, lastDay } = getEventDayRange(start, end)
+    expect(firstDay).toBe(epochDay(Temporal.PlainDate.from("2026-04-28")))
+    expect(lastDay).toBe(epochDay(Temporal.PlainDate.from("2026-04-30")))
   })
 
   it("timed event ending exactly at midnight stops on the previous day", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     const start = zoned("2026-04-28T22:00:00", tz)
     const end = zoned("2026-04-29T00:00:00", tz)
-    const { firstMs, lastMs } = getEventDayRange(start, end)
-    expect(firstMs).toBe(lastMs)
+    const { firstDay, lastDay } = getEventDayRange(start, end)
+    expect(firstDay).toBe(lastDay)
   })
 
   it("detects viewer-zone midnight after the system timezone changes", () => {
-    const original = getLocalTzid()
+    const original = getViewerTzid()
     const other = original === "America/New_York" ? "Europe/London" : "America/New_York"
     try {
-      setLocalTzid(other)
+      setViewerTzid(other)
       const start = zoned("2026-08-17T22:00:00", other)
       const end = zoned("2026-08-18T00:00:00", other)
-      const { firstMs, lastMs } = getEventDayRange(start, end)
-      expect(firstMs).toBe(lastMs)
+      const { firstDay, lastDay } = getEventDayRange(start, end)
+      expect(firstDay).toBe(lastDay)
     } finally {
-      setLocalTzid(original)
+      setViewerTzid(original)
     }
   })
 
   it("uses calendar arithmetic for exclusive ends across DST", () => {
     const originalProcessTz = process.env.TZ
-    const originalViewerTz = getLocalTzid()
+    const originalViewerTz = getViewerTzid()
     try {
       process.env.TZ = "Europe/London"
-      setLocalTzid("Europe/London")
+      setViewerTzid("Europe/London")
 
-      const { lastMs } = getEventDayRange(date("2026-03-28"), date("2026-03-30"))
-      expect(lastMs).toBe(new Date(2026, 2, 29).getTime())
+      const { lastDay } = getEventDayRange(date("2026-03-28"), date("2026-03-30"))
+      expect(lastDay).toBe(epochDay(Temporal.PlainDate.from("2026-03-29")))
     } finally {
       if (originalProcessTz === undefined) delete process.env.TZ
       else process.env.TZ = originalProcessTz
-      setLocalTzid(originalViewerTz)
+      setViewerTzid(originalViewerTz)
+    }
+  })
+
+  it("keeps epoch-day keys independent of the webview timezone", () => {
+    const originalProcessTz = process.env.TZ
+    const originalViewerTz = getViewerTzid()
+    try {
+      setViewerTzid("Europe/London")
+      process.env.TZ = "Pacific/Kiritimati"
+      const inKiritimati = getEventDayRange(date("2026-08-17"), date("2026-08-18"))
+      process.env.TZ = "America/Los_Angeles"
+      const inLosAngeles = getEventDayRange(date("2026-08-17"), date("2026-08-18"))
+      expect(inKiritimati).toEqual(inLosAngeles)
+      expect(inKiritimati.firstDay).toBe(epochDay(Temporal.PlainDate.from("2026-08-17")))
+    } finally {
+      if (originalProcessTz === undefined) delete process.env.TZ
+      else process.env.TZ = originalProcessTz
+      setViewerTzid(originalViewerTz)
     }
   })
 
   it("timed event spanning midnight covers two days", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     const start = zoned("2026-04-28T22:00:00", tz)
     const end = zoned("2026-04-29T01:00:00", tz)
-    const { firstMs, lastMs } = getEventDayRange(start, end)
-    expect(lastMs - firstMs).toBeGreaterThan(0)
+    const { firstDay, lastDay } = getEventDayRange(start, end)
+    expect(lastDay - firstDay).toBeGreaterThan(0)
   })
 })
 
 describe("isSameDay", () => {
   it("two events at different times on the same local day", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     expect(isSameDay(zoned("2026-04-28T09:00:00", tz), zoned("2026-04-28T22:00:00", tz))).toBe(true)
   })
 
   it("crosses midnight", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     expect(isSameDay(zoned("2026-04-28T23:00:00", tz), zoned("2026-04-29T01:00:00", tz))).toBe(
       false,
     )
@@ -293,14 +310,14 @@ describe("normalizeAllDayRange", () => {
 
 describe("enumerateLocalDateKeys", () => {
   it("single-day timed event yields a single key", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     const start = zoned("2026-04-28T09:00:00", tz)
     const end = zoned("2026-04-28T10:00:00", tz)
     expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual(["2026-04-28"])
   })
 
   it("multi-day timed event enumerates every occupied day", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     const start = zoned("2026-04-28T19:00:00", tz)
     const end = zoned("2026-05-01T05:00:00", tz)
     expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual([
@@ -312,7 +329,7 @@ describe("enumerateLocalDateKeys", () => {
   })
 
   it("timed event ending at midnight excludes the end date", () => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     const start = zoned("2026-04-28T19:00:00", tz)
     const end = zoned("2026-05-01T00:00:00", tz)
     expect(Array.from(enumerateLocalDateKeys(start, end))).toEqual([
@@ -341,7 +358,7 @@ describe("enumerateLocalDateKeys", () => {
 
 describe("coversFullDay", () => {
   const timed = (start: string, end: string) => {
-    const tz = getLocalTzid()
+    const tz = getViewerTzid()
     return [zoned(start, tz), zoned(end, tz)] as const
   }
 
@@ -403,46 +420,46 @@ describe("plainDate", () => {
   })
 })
 
-describe("local zone store", () => {
-  it("updates getLocalTzid, notifies subscribers, and rejects unknown zones", () => {
-    const original = getLocalTzid()
+describe("viewer zone store", () => {
+  it("updates getViewerTzid, notifies subscribers, and rejects unknown zones", () => {
+    const original = getViewerTzid()
     const other = original === "Europe/Stockholm" ? "America/Los_Angeles" : "Europe/Stockholm"
     let notified = 0
-    const unsubscribe = subscribeLocalTzid(() => notified++)
+    const unsubscribe = subscribeViewerTzid(() => notified++)
     try {
-      setLocalTzid(other)
-      expect(getLocalTzid()).toBe(other)
+      setViewerTzid(other)
+      expect(getViewerTzid()).toBe(other)
       expect(notified).toBe(1)
 
       // Same value → no notification.
-      setLocalTzid(other)
+      setViewerTzid(other)
       expect(notified).toBe(1)
 
       // Unknown zone → ignored.
-      setLocalTzid("Not/AZone")
-      expect(getLocalTzid()).toBe(other)
+      setViewerTzid("Not/AZone")
+      expect(getViewerTzid()).toBe(other)
       expect(notified).toBe(1)
     } finally {
       unsubscribe()
-      setLocalTzid(original)
+      setViewerTzid(original)
     }
   })
 
   it("changes the zone used by viewer projections", () => {
-    const original = getLocalTzid()
+    const original = getViewerTzid()
     const et = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
     try {
       // 09:00 CEST is 00:00 the same day in Los Angeles.
-      setLocalTzid("America/Los_Angeles")
+      setViewerTzid("America/Los_Angeles")
       expect(toViewerZonedDateTime(et).hour).toBe(0)
       expect(formatDateKey(et)).toBe("2026-04-28")
 
       // ...and 21:00 the same day in Kiritimati (UTC+14).
-      setLocalTzid("Pacific/Kiritimati")
+      setViewerTzid("Pacific/Kiritimati")
       expect(toViewerZonedDateTime(et).hour).toBe(21)
       expect(formatDateKey(et)).toBe("2026-04-28")
     } finally {
-      setLocalTzid(original)
+      setViewerTzid(original)
     }
   })
 })

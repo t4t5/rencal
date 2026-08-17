@@ -35,16 +35,17 @@ Conversion happens at the frontend boundary in `src/lib/cal-events.ts` using `sr
 
 ## Viewer timezone
 
-The viewer's IANA zone comes from `getLocalTzid()` in `src/lib/event-time/local-zone.ts`. It is seeded from `Intl` once and then kept current by the Rust-side watcher (`src-tauri/src/tz_watcher.rs`), which emits `SYSTEM_TZ_CHANGED` when `/etc/localtime` changes. The webview's own zone is fixed at launch, so:
+The viewer's IANA zone comes from `getViewerTzid()` in `src/lib/event-time/local-zone.ts`. It is seeded from `Intl` once and then kept current by the Rust-side watcher (`src-tauri/src/tz_watcher.rs`), which emits `SYSTEM_TZ_CHANGED` when `/etc/localtime` changes. The webview's own zone is fixed at launch, so app code never uses JS `Date` components to determine a calendar day.
 
-- Never derive "now" or "today" from `new Date()` components or date-fns `isToday`-style helpers; use `nowLocalDate()` / `todayLocalDate()` / `useToday()` / `useLocalTzid()`.
-- Never render an event's calendar date by formatting its interop instant; use `localDateInViewerZone(et)` (or the `format*` helpers, which do).
-- JS `Date` bridges (`fromDate`, chrono-node, drag math, grid labels) carry wallclock in their local _components_, not their instant.
-- `CalEventsContext` recomputes every event's `dateInfo` when the zone changes; anything else that caches zone-dependent values must subscribe via `useLocalTzid()` or `subscribeLocalTzid()`.
+- Use `today()` or `useToday()` for the current viewer-zone day and `Temporal.Now.zonedDateTimeISO(getViewerTzid())` for the current wallclock.
+- Use `dateInViewerZone(et)` to project an event onto the viewer's calendar, and use `formatDay` or the other event-time display helpers to render days.
+- `CalEventsContext` recomputes every event's `dateInfo` when the zone changes; other cached zone-dependent values must subscribe with `useViewerTzid()` or `subscribeViewerTzid()`.
 
 ## Rules
 
-Use helpers from `@/lib/event-time` for construction, display, arithmetic, edits, ranges, and ordering.
+Calendar days in app state, props, hooks, and helpers are `Temporal.PlainDate`. Use an ISO `YYYY-MM-DD` date key only for map keys and DOM attributes. Use helpers from `@/lib/event-time` for construction, display, arithmetic, edits, ranges, and ordering.
+
+JS `Date` exists only at third-party boundaries: date-fns formatting in `event-time/display.ts`, react-day-picker components, chrono-node in `magic-parser.ts`, and rrule.js in `rrule-utils.ts`. Convert at the boundary with `plainDateToJsDate` and `jsDateToPlainDate` from `event-time/js-date.ts`; non-boundary application code must not import those converters.
 
 Never use these on event start/end values:
 

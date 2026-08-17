@@ -1,12 +1,7 @@
 import { useMemo, useRef } from "react"
 
 import { CalendarEvent } from "@/lib/cal-events"
-import { enumerateLocalDateKeys } from "@/lib/event-time"
-
-function dateKeyToJsDate(key: string): Date {
-  const [y, m, d] = key.split("-").map(Number)
-  return new Date(y, m - 1, d)
-}
+import { dateKeyToPlainDate, enumerateLocalDateKeys } from "@/lib/event-time"
 
 export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const eventsByDate = useMemo(() => {
@@ -24,7 +19,7 @@ export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([dateKey, dayEvents]) => ({
         dateKey,
-        date: dateKeyToJsDate(dateKey),
+        date: dateKeyToPlainDate(dateKey),
         events: dayEvents,
       }))
   }, [events])

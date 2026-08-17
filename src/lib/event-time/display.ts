@@ -1,29 +1,30 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { differenceInCalendarDays, format, getYear } from "date-fns"
+import { format } from "date-fns"
 
 import type { TimeFormat } from "@/rpc/bindings"
 
-import { allDayFromLocalDate, todayLocalDate } from "./constructors"
-import { getLocalTzid } from "./local-zone"
-import {
-  dateInViewerZone,
-  isAllDay,
-  localDateInViewerZone,
-  toViewerZonedDateTime,
-} from "./projections"
+import { today } from "./constructors"
+import { epochDay } from "./day"
+import { plainDateToJsDate } from "./js-date"
+import { getViewerTzid } from "./local-zone"
+import { dateInViewerZone, isAllDay, toViewerZonedDateTime } from "./projections"
 import type { EventTime } from "./types"
 
 /** "YYYY-MM-DD" in the viewer's local zone. Used as a stable grouping key. */
-export function formatDateKey(et: EventTime | Date): string {
-  if (et instanceof Date) return dateInViewerZone(allDayFromLocalDate(et)).toString()
-  return dateInViewerZone(et).toString()
+export function formatDateKey(value: EventTime | Temporal.PlainDate): string {
+  return (value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)).toString()
+}
+
+/** Format a calendar day without leaking JS Date beyond the date-fns boundary. */
+export function formatDay(date: Temporal.PlainDate, pattern: string): string {
+  return format(plainDateToJsDate(date), pattern)
 }
 
 let timeFormatters: Partial<Record<TimeFormat, Intl.DateTimeFormat>> = {}
 let timeFormattersTzid: string | undefined
 
 function getTimeFormatter(timeFormat: TimeFormat): Intl.DateTimeFormat {
-  const tzid = getLocalTzid()
+  const tzid = getViewerTzid()
   // Formatters bake in the timeZone, so drop the cache when the viewer's zone changes.
   if (timeFormattersTzid !== tzid) {
     timeFormatters = {}
@@ -62,33 +63,25 @@ export function formatWallclockTime(hour: number, minute: number, timeFormat: Ti
 }
 
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
-export function formatShortDate(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : localDateInViewerZone(et)
-  const pattern = getYear(d) !== getYear(todayLocalDate()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
-  return format(d, pattern)
+export function formatShortDate(value: EventTime | Temporal.PlainDate): string {
+  const date = value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)
+  const pattern = date.year !== today().year ? "EEE, d MMM yyyy" : "EEE, d MMM"
+  return formatDay(date, pattern)
 }
 
 /** "Thursday, 5 November" (adds the year when not the current year). */
-export function formatLongDate(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : localDateInViewerZone(et)
-  const pattern = getYear(d) !== getYear(todayLocalDate()) ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
-  return format(d, pattern)
+export function formatLongDate(value: EventTime | Temporal.PlainDate): string {
+  const date = value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)
+  const pattern = date.year !== today().year ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
+  return formatDay(date, pattern)
 }
 
 /** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
-export function getRelativeDayLabel(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : localDateInViewerZone(et)
-  const diffDays = differenceInCalendarDays(d, todayLocalDate())
+export function getRelativeDayLabel(value: EventTime | Temporal.PlainDate): string {
+  const date = value instanceof Temporal.PlainDate ? value : dateInViewerZone(value)
+  const diffDays = epochDay(date) - epochDay(today())
   if (diffDays === 0) return "Today"
   if (diffDays === 1) return "Tomorrow"
   if (diffDays === -1) return "Yesterday"
-  return format(d, "EEEE")
-}
-
-export function plainDateToLocalDate(pd: Temporal.PlainDate): Date {
-  return new Date(pd.year, pd.month - 1, pd.day)
-}
-
-export function localDateToPlainDate(d: Date): Temporal.PlainDate {
-  return new Temporal.PlainDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
+  return formatDay(date, "EEEE")
 }

@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { getLocalTzid } from "./local-zone"
+import { getViewerTzid } from "./local-zone"
 import type { EventTime } from "./types"
 
 export function isAllDay(et: EventTime): boolean {
@@ -17,11 +17,11 @@ export function isAllDay(et: EventTime): boolean {
 export function instantForOrdering(et: EventTime): Temporal.Instant {
   switch (et.kind) {
     case "date":
-      return et.value.toZonedDateTime(getLocalTzid()).toInstant()
+      return et.value.toZonedDateTime(getViewerTzid()).toInstant()
     case "datetime_utc":
       return et.value
     case "datetime_floating":
-      return et.value.toZonedDateTime(getLocalTzid()).toInstant()
+      return et.value.toZonedDateTime(getViewerTzid()).toInstant()
     case "datetime_zoned":
       return et.value.toInstant()
   }
@@ -32,7 +32,7 @@ export function instantForOrdering(et: EventTime): Temporal.Instant {
  * calculations expressed in the viewer's clock.
  */
 export function toViewerZonedDateTime(et: EventTime): Temporal.ZonedDateTime {
-  const tzid = getLocalTzid()
+  const tzid = getViewerTzid()
   switch (et.kind) {
     case "date":
       return et.value.toZonedDateTime(tzid)
@@ -52,17 +52,6 @@ export function toViewerZonedDateTime(et: EventTime): Temporal.ZonedDateTime {
 export function dateInViewerZone(et: EventTime): Temporal.PlainDate {
   if (et.kind === "date") return et.value
   return toViewerZonedDateTime(et).toPlainDate()
-}
-
-/**
- * The viewer-local calendar day as a local-midnight day-key Date, for date-fns
- * date formatting and day-based navigation. Formatting the raw interop instant
- * instead would render in the webview's zone, which is fixed at launch and
- * goes stale after an OS timezone change.
- */
-export function localDateInViewerZone(et: EventTime): Date {
-  const d = dateInViewerZone(et)
-  return new Date(d.year, d.month - 1, d.day)
 }
 
 export function isSameDay(a: EventTime, b: EventTime): boolean {

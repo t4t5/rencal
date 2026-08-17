@@ -12,7 +12,7 @@ import { SYSTEM_TZ_CHANGED } from "@/rpc/events"
 import { CalendarStateProvider } from "@/contexts/CalendarStateContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 
-import { setLocalTzid } from "@/lib/event-time"
+import { setViewerTzid } from "@/lib/event-time"
 import { preloadCalendarData } from "@/lib/preload-data"
 
 import { ThemeProvider } from "@/themes/ThemeRegistry"
@@ -23,8 +23,8 @@ const params = new URLSearchParams(window.location.search)
 const appWindow = params.get("appWindow")
 
 // Keep the viewer's zone in sync with the OS: the Rust watcher emits the new
-// IANA tzid when /etc/localtime changes, and the local-zone store fans it out.
-void listen<string>(SYSTEM_TZ_CHANGED, (event) => setLocalTzid(event.payload))
+// IANA tzid when /etc/localtime changes, and the viewer-zone store fans it out.
+void listen<string>(SYSTEM_TZ_CHANGED, (event) => setViewerTzid(event.payload))
 
 async function bootstrap() {
   const preload = appWindow === "settings" ? {} : await preloadCalendarData()

@@ -1,3 +1,4 @@
+import { epochDay } from "./day"
 import {
   instantForOrdering,
   isAllDay,
@@ -6,42 +7,36 @@ import {
 } from "./projections"
 import type { EventDateInfo, EventTime } from "./types"
 
-/** Local-midnight timestamp (ms) of the calendar day this event sits on. */
-export function startOfDayMs(et: EventTime): number {
-  const date = dateInViewerZone(et)
-  return new Date(date.year, date.month - 1, date.day).getTime()
+/** Epoch-day key for the viewer-local calendar day this event sits on. */
+export function dayOf(et: EventTime): number {
+  return epochDay(dateInViewerZone(et))
 }
 
-function previousDayMs(et: EventTime): number {
-  const date = dateInViewerZone(et).subtract({ days: 1 })
-  return new Date(date.year, date.month - 1, date.day).getTime()
-}
-
-function lastOccupiedDayMs(start: EventTime, end: EventTime, firstMs: number): number {
-  const endDayMs = startOfDayMs(end)
+function lastOccupiedDay(start: EventTime, end: EventTime, firstDay: number): number {
+  const endDay = dayOf(end)
   const endsAtDayBoundary =
     isAllDay(start) || toViewerZonedDateTime(end).toPlainTime().equals("00:00")
 
-  return endsAtDayBoundary && endDayMs > firstMs ? previousDayMs(end) : endDayMs
+  return endsAtDayBoundary && endDay > firstDay ? endDay - 1 : endDay
 }
 
 /**
- * Inclusive [firstMs, lastMs] range of local midnights this event occupies.
+ * Inclusive [firstDay, lastDay] epoch-day range this event occupies.
  * DTEND is exclusive, so an end exactly at midnight belongs to the previous day.
  */
 export function getEventDayRange(
   start: EventTime,
   end: EventTime,
-): { firstMs: number; lastMs: number } {
-  const firstMs = startOfDayMs(start)
-  return { firstMs, lastMs: lastOccupiedDayMs(start, end, firstMs) }
+): { firstDay: number; lastDay: number } {
+  const firstDay = dayOf(start)
+  return { firstDay, lastDay: lastOccupiedDay(start, end, firstDay) }
 }
 
 export function computeEventDateInfo(start: EventTime, end: EventTime): EventDateInfo {
-  const firstDayMs = startOfDayMs(start)
-  const endDayMs = startOfDayMs(end)
+  const firstDay = dayOf(start)
+  const endDay = dayOf(end)
   const startMs = instantForOrdering(start).epochMilliseconds
-  const lastDayMs = lastOccupiedDayMs(start, end, firstDayMs)
+  const lastDay = lastOccupiedDay(start, end, firstDay)
 
   let startLocalMinutes = 0
   let endLocalMinutes = 0
@@ -52,5 +47,5 @@ export function computeEventDateInfo(start: EventTime, end: EventTime): EventDat
     endLocalMinutes = endZ.hour * 60 + endZ.minute
   }
 
-  return { startMs, firstDayMs, lastDayMs, endDayMs, startLocalMinutes, endLocalMinutes }
+  return { startMs, firstDay, lastDay, endDay, startLocalMinutes, endLocalMinutes }
 }

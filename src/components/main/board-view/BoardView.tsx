@@ -7,7 +7,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone } from "@/lib/event-time"
-import { getLocalTzid } from "@/lib/event-time/local-zone"
+import { getViewerTzid } from "@/lib/event-time/local-zone"
 
 interface Bucket {
   id: string
@@ -26,7 +26,7 @@ export function BoardView() {
   const { calendarEvents } = useCalEvents()
 
   const columns = useMemo(() => {
-    const today = Temporal.Now.zonedDateTimeISO(getLocalTzid()).toPlainDate()
+    const today = Temporal.Now.zonedDateTimeISO(getViewerTzid()).toPlainDate()
     const yesterday = today.subtract({ days: 1 })
     const tomorrow = today.add({ days: 1 })
 

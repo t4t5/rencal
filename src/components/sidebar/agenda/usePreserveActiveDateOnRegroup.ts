@@ -1,15 +1,16 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useEffectEvent, useRef } from "react"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { createDebugLogger } from "@/lib/debug"
-import { formatDateKey, getLocalTzid, subscribeLocalTzid } from "@/lib/event-time"
+import { formatDateKey, getViewerTzid, subscribeViewerTzid } from "@/lib/event-time"
 
 const debug = createDebugLogger("agenda")
 
 type RegroupReason = "group" | "timezone"
 
 type PendingScroll = {
-  date: Date
+  date: Temporal.PlainDate
   previousEvents: CalendarEvent[]
   reason: RegroupReason
 }
@@ -26,11 +27,11 @@ export function usePreserveActiveDateOnRegroup({
   setIsNavigating,
 }: {
   activeGroup: string
-  activeDate: Date
+  activeDate: Temporal.PlainDate
   events: CalendarEvent[]
   isInitialLoading: boolean
   isLoadingCalendars: boolean
-  scrollToDate: (date: Date, behavior: ScrollBehavior) => void
+  scrollToDate: (date: Temporal.PlainDate, behavior: ScrollBehavior) => void
   setIsNavigating: (navigating: boolean) => void
 }) {
   const previousActiveGroupRef = useRef(activeGroup)
@@ -40,7 +41,7 @@ export function usePreserveActiveDateOnRegroup({
     debug("preserve active date before regroup", {
       reason,
       activeDate: formatDateKey(activeDate),
-      tzid: getLocalTzid(),
+      tzid: getViewerTzid(),
     })
     pendingScrollRef.current = { date: activeDate, previousEvents: events, reason }
     setIsNavigating(true)
@@ -57,10 +58,10 @@ export function usePreserveActiveDateOnRegroup({
     beginPreserving("group")
   }, [activeGroup])
 
-  // Subscribe directly rather than reacting to useLocalTzid after render. This
+  // Subscribe directly rather than reacting to useViewerTzid after render. This
   // captures activeDate and the old event array before CalEventsContext replaces
   // every event's viewer-zone projection in the same notification cycle.
-  useEffect(() => subscribeLocalTzid(() => beginPreserving("timezone")), [])
+  useEffect(() => subscribeViewerTzid(() => beginPreserving("timezone")), [])
 
   useEffect(() => {
     const pending = pendingScrollRef.current

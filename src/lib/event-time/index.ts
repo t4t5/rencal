@@ -16,24 +16,16 @@
 export type { EventDateInfo, EventTime, EventTimeRange } from "./types"
 
 export { DEFAULT_DURATION_MINS } from "./constants"
+export { allDayDate, atTime, fromDate, nowZoned, plainDate, today } from "./constructors"
+export { dateKeyToPlainDate, epochDay, startOfWeek } from "./day"
 export {
-  allDayDate,
-  allDayFromLocalDate,
-  fromDate,
-  nowLocalDate,
-  nowZoned,
-  plainDate,
-  todayLocalDate,
-} from "./constructors"
-export {
+  formatDay,
   formatDateKey,
   formatLongDate,
   formatShortDate,
   formatTime,
   formatWallclockTime,
   getRelativeDayLabel,
-  localDateToPlainDate,
-  plainDateToLocalDate,
 } from "./display"
 export {
   addDays,
@@ -46,14 +38,13 @@ export {
   withViewerZone,
   withWallclockTime,
 } from "./edit"
-export { getLocalTzid, setLocalTzid, subscribeLocalTzid } from "./local-zone"
-export { computeEventDateInfo, getEventDayRange, startOfDayMs } from "./layout"
+export { getViewerTzid, setViewerTzid, subscribeViewerTzid } from "./local-zone"
+export { computeEventDateInfo, dayOf, getEventDayRange } from "./layout"
 export {
   dateInViewerZone,
   instantForOrdering,
   isAllDay,
   isSameDay,
-  localDateInViewerZone,
   toViewerZonedDateTime,
 } from "./projections"
 export {

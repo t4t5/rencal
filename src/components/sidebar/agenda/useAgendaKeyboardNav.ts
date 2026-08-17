@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill"
+
 import { formatDateKey } from "@/lib/event-time"
 
 export const AGENDA_ITEM_SELECTOR = "[data-agenda-item]"
@@ -32,7 +34,7 @@ export function clearRememberedAgendaItem(): void {
   lastFocusedAgendaEventKey = null
 }
 
-export function focusAgendaItem(delta: 1 | -1, activeDate: Date): void {
+export function focusAgendaItem(delta: 1 | -1, activeDate: Temporal.PlainDate): void {
   const items = Array.from(document.querySelectorAll<HTMLElement>(AGENDA_ITEM_SELECTOR))
   if (!items.length) return
 

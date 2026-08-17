@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useLayoutEffect, useRef } from "react"
 
 import { formatDateKey } from "@/lib/event-time"
@@ -11,7 +12,7 @@ export function usePreserveScrollOnPrepend({
   sections,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
-  sections: { date: Date }[]
+  sections: { date: Temporal.PlainDate }[]
 }) {
   const prevScrollHeightRef = useRef(0)
   const prevFirstKeyRef = useRef<string | null>(null)

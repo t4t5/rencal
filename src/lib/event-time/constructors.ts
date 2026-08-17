@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { getLocalTzid } from "./local-zone"
+import { getViewerTzid } from "./local-zone"
 import type { EventTime } from "./types"
 
 export function allDayDate(value: Temporal.PlainDate): EventTime {
@@ -12,23 +12,36 @@ export function plainDate(year: number, month: number, day: number): EventTime {
   return allDayDate(new Temporal.PlainDate(year, month, day))
 }
 
+/** The current calendar day in the viewer's timezone. */
+export function today(): Temporal.PlainDate {
+  return Temporal.Now.plainDateISO(getViewerTzid())
+}
+
+/** A timed event on a calendar day in the viewer's timezone. */
+export function atTime(date: Temporal.PlainDate, hour: number, minute = 0): EventTime {
+  return {
+    kind: "datetime_zoned",
+    value: date.toPlainDateTime({ hour, minute }).toZonedDateTime(getViewerTzid()),
+  }
+}
+
 /** A ZonedDateTime "now" in the viewer's local zone. */
 export function nowZoned(): EventTime {
   return {
     kind: "datetime_zoned",
-    value: Temporal.Now.zonedDateTimeISO(getLocalTzid()),
+    value: Temporal.Now.zonedDateTimeISO(getViewerTzid()),
   }
 }
 
 /**
- * Bridge for libraries that produce a JS `Date` (chrono-node, drag offsets,
- * DOM date/time inputs). Those Dates carry the intended wallclock in their
+ * Boundary bridge for libraries that produce a JS `Date` (chrono-node and
+ * rrule.js). Those Dates carry the intended wallclock in their
  * local components, so interpret the components in the given zone, or the
  * viewer's zone. Interpreting the instant instead would shift the wallclock
  * whenever the webview's zone (fixed at launch) and the viewer's current zone
  * diverge after an OS timezone change.
  */
-export function fromDate(d: Date, tzid: string = getLocalTzid()): EventTime {
+export function fromDate(d: Date, tzid: string = getViewerTzid()): EventTime {
   const wallclock = new Temporal.PlainDateTime(
     d.getFullYear(),
     d.getMonth() + 1,
@@ -42,21 +55,4 @@ export function fromDate(d: Date, tzid: string = getLocalTzid()): EventTime {
     kind: "datetime_zoned",
     value: wallclock.toZonedDateTime(tzid),
   }
-}
-
-/** Bridge: take a JS Date's local calendar date and produce an all-day EventTime. */
-export function allDayFromLocalDate(d: Date): EventTime {
-  return plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate())
-}
-
-/** Bridge: viewer-zone wallclock "now", materialized in a local-components Date. */
-export function nowLocalDate(): Date {
-  const z = Temporal.Now.zonedDateTimeISO(getLocalTzid())
-  return new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond)
-}
-
-/** Bridge: the viewer-zone calendar date "today" as a local-midnight day-key Date. */
-export function todayLocalDate(): Date {
-  const z = Temporal.Now.zonedDateTimeISO(getLocalTzid())
-  return new Date(z.year, z.month - 1, z.day)
 }

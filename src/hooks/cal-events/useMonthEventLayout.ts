@@ -1,12 +1,11 @@
-import { startOfDay } from "date-fns"
 import { useMemo } from "react"
 
 import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
+import { epochDay } from "@/lib/event-time"
 import { isSpanning } from "@/lib/event-utils"
-import { daysDiff, MS_PER_DAY } from "@/lib/time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -45,29 +44,29 @@ export function useMonthEventLayout(
     }
 
     return weeks.map((weekDays) => {
-      const weekStartMs = startOfDay(weekDays[0].date).getTime()
-      const weekEndDayMs = startOfDay(weekDays[6].date).getTime()
-      const weekExclEndMs = weekEndDayMs + MS_PER_DAY
+      const weekStartDay = epochDay(weekDays[0].date)
+      const weekEndDay = epochDay(weekDays[6].date)
+      const weekExclEndDay = weekEndDay + 1
 
       const allDayItems: AllDayLaneItem[] = []
       const timedByCol: TimedEventItem[][] = Array.from({ length: 7 }, () => [])
 
       for (const event of events) {
-        const { firstDayMs, lastDayMs } = event.dateInfo
+        const { firstDay, lastDay } = event.dateInfo
         const calendar = calMap.get(event.calendar_slug)
 
         if (isSpanning(event)) {
           // Check overlap: event [first, last] vs week [weekStart, weekEndDay]
-          if (firstDayMs > weekEndDayMs || lastDayMs < weekStartMs) {
+          if (firstDay > weekEndDay || lastDay < weekStartDay) {
             continue
           }
 
           // Clamp to week bounds
-          const clampedFirstMs = firstDayMs < weekStartMs ? weekStartMs : firstDayMs
-          const clampedLastMs = lastDayMs > weekEndDayMs ? weekEndDayMs : lastDayMs
+          const clampedFirstDay = firstDay < weekStartDay ? weekStartDay : firstDay
+          const clampedLastDay = lastDay > weekEndDay ? weekEndDay : lastDay
 
-          const startCol = daysDiff(clampedFirstMs, weekStartMs) + 1
-          const endCol = daysDiff(clampedLastMs, weekStartMs) + 2
+          const startCol = clampedFirstDay - weekStartDay + 1
+          const endCol = clampedLastDay - weekStartDay + 2
 
           allDayItems.push({
             event,
@@ -75,16 +74,16 @@ export function useMonthEventLayout(
             startCol,
             endCol,
             lane: 0,
-            isStart: firstDayMs >= weekStartMs,
-            isEnd: lastDayMs <= weekEndDayMs,
+            isStart: firstDay >= weekStartDay,
+            isEnd: lastDay <= weekEndDay,
           })
         } else {
           // Single-day timed event
-          if (firstDayMs < weekStartMs || firstDayMs >= weekExclEndMs) {
+          if (firstDay < weekStartDay || firstDay >= weekExclEndDay) {
             continue
           }
 
-          const colIndex = daysDiff(firstDayMs, weekStartMs)
+          const colIndex = firstDay - weekStartDay
           if (colIndex >= 0 && colIndex < 7) {
             timedByCol[colIndex].push({
               event,

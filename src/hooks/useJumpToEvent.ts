@@ -11,7 +11,7 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { formatDateKey, localDateInViewerZone } from "@/lib/event-time"
+import { formatDateKey, dateInViewerZone } from "@/lib/event-time"
 
 const MAX_ANCHOR_FRAMES = 30
 
@@ -21,7 +21,7 @@ export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
 
   return useCallback(
     async (event: CalendarEvent) => {
-      const date = localDateInViewerZone(event.start)
+      const date = dateInViewerZone(event.start)
       const dateKey = formatDateKey(date)
       const masterKey = eventKey(event)
 

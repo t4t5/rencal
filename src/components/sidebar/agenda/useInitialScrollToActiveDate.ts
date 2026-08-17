@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useRef, useState } from "react"
 
 import { createDebugLogger } from "@/lib/debug"
@@ -17,8 +18,8 @@ export function useInitialScrollToActiveDate({
   setIsNavigating,
 }: {
   hasEvents: boolean
-  activeDate: Date
-  scrollToDate: (date: Date, behavior: ScrollBehavior) => void
+  activeDate: Temporal.PlainDate
+  scrollToDate: (date: Temporal.PlainDate, behavior: ScrollBehavior) => void
   setIsNavigating: (navigating: boolean) => void
 }) {
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)

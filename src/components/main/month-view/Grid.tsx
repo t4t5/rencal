@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   RefObject,
@@ -48,9 +49,9 @@ export function MonthGrid({
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
   isNavigating: () => boolean
-  onDayClick: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
-  onScrollMonthChange: (date: Date) => void
+  onScrollMonthChange: (date: Temporal.PlainDate) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }) {

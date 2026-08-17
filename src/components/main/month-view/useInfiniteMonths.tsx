@@ -1,4 +1,4 @@
-import { addMonths, startOfMonth, startOfWeek, subMonths } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useCallback, useEffect, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -6,13 +6,16 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 import { createDebugLogger } from "@/lib/debug"
+import { startOfWeek } from "@/lib/event-time"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
 
 // rangeStart / rangeEnd are the 1st of a month; rangeEnd is exclusive (the 1st of the first
 // not-yet-rendered month), matching useMonthGrid.
-const rangeStartFor = (date: Date) => startOfMonth(subMonths(date, MONTHS_TO_LOAD))
-const rangeEndFor = (date: Date) => startOfMonth(addMonths(date, MONTHS_TO_LOAD + 1))
+const rangeStartFor = (date: Temporal.PlainDate) =>
+  date.with({ day: 1 }).subtract({ months: MONTHS_TO_LOAD })
+const rangeEndFor = (date: Temporal.PlainDate) =>
+  date.with({ day: 1 }).add({ months: MONTHS_TO_LOAD + 1 })
 
 /**
  * Owns the growing month range rendered by the infinite month grid. The grid is the source
@@ -25,7 +28,7 @@ export function useInfiniteMonths({
   visibleCalendarIds,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
-  activeDate: Date
+  activeDate: Temporal.PlainDate
   visibleCalendarIds: string[]
 }) {
   const { ensureRangeLoaded } = useCalEvents()
@@ -35,9 +38,9 @@ export function useInfiniteMonths({
 
   // Jump navigation: if activeDate lands outside the rendered range, extend toward it.
   useEffect(() => {
-    if (activeDate < rangeStart) {
+    if (Temporal.PlainDate.compare(activeDate, rangeStart) < 0) {
       setRangeStart(rangeStartFor(activeDate))
-    } else if (activeDate >= rangeEnd) {
+    } else if (Temporal.PlainDate.compare(activeDate, rangeEnd) >= 0) {
       setRangeEnd(rangeEndFor(activeDate))
     }
   }, [activeDate, rangeStart, rangeEnd])
@@ -46,8 +49,8 @@ export function useInfiniteMonths({
   // gridStart/gridEnd exactly so coverage lines up with what's on screen.
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    const gridStart = startOfWeek(rangeStart, { weekStartsOn: 1 })
-    const gridEnd = startOfWeek(rangeEnd, { weekStartsOn: 1 })
+    const gridStart = startOfWeek(rangeStart)
+    const gridEnd = startOfWeek(rangeEnd)
     debugMonthScroll("ensure month range loaded", { gridStart, gridEnd })
     void ensureRangeLoaded(gridStart, gridEnd)
   }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded])
@@ -60,10 +63,10 @@ export function useInfiniteMonths({
     onNearTop: useCallback(() => {
       // Prepending shifts the viewport away from the top (Grid preserves scroll offset),
       // so this fires once per approach rather than runaway-growing.
-      setRangeStart((s) => startOfMonth(subMonths(s, MONTHS_TO_LOAD)))
+      setRangeStart((start) => start.subtract({ months: MONTHS_TO_LOAD }).with({ day: 1 }))
     }, []),
     onNearBottom: useCallback(() => {
-      setRangeEnd((e) => startOfMonth(addMonths(e, MONTHS_TO_LOAD)))
+      setRangeEnd((end) => end.add({ months: MONTHS_TO_LOAD }).with({ day: 1 }))
     }, []),
   })
 

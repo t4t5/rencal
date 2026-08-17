@@ -2,8 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 
-import { useLocalTzid } from "@/hooks/useLocalTzid"
-import { todayLocalDate } from "@/lib/event-time"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
+import { today as getToday } from "@/lib/event-time"
 
 /**
  * Track current day, to avoid stale "today"
@@ -13,15 +13,15 @@ import { todayLocalDate } from "@/lib/event-time"
  * - at next viewer-zone midnight (while the app stays open)
  * - when the OS timezone changes
  */
-export function useToday(): Date {
-  const tzid = useLocalTzid()
-  const [today, setToday] = useState(() => todayLocalDate())
+export function useToday(): Temporal.PlainDate {
+  const tzid = useViewerTzid()
+  const [today, setToday] = useState(() => getToday())
 
   useEffect(() => {
     const refresh = () =>
       setToday((prev) => {
-        const next = todayLocalDate()
-        return prev.getTime() === next.getTime() ? prev : next
+        const next = getToday()
+        return prev.equals(next) ? prev : next
       })
 
     // A timezone change can flip the calendar date (this effect re-runs on tzid).

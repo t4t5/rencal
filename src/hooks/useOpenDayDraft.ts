@@ -1,4 +1,4 @@
-import { setHours, startOfDay } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
@@ -8,10 +8,10 @@ import { setDraftAnchor, type DraftAnchor } from "@/lib/draft-anchor"
 import {
   addDays,
   addMinutes,
-  allDayFromLocalDate,
+  allDayDate,
+  atTime,
   DEFAULT_DURATION_MINS,
-  fromDate,
-  nowLocalDate,
+  getViewerTzid,
   withViewerZone,
   type EventTime,
 } from "@/lib/event-time"
@@ -33,7 +33,7 @@ export function useOpenDayDraft() {
   const { setDraftEvent, setDraftPopoverOpen, setIsDrafting, defaultCalendarId } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
 
-  return (day: Date, anchor: DraftAnchor, opts: OpenDayDraftOptions = {}) => {
+  return (day: Temporal.PlainDate, anchor: DraftAnchor, opts: OpenDayDraftOptions = {}) => {
     if (!canCreate) {
       promptToConnect()
       return
@@ -42,12 +42,12 @@ export function useOpenDayDraft() {
     let start: EventTime
     let end: EventTime
     if (opts.allDay) {
-      start = allDayFromLocalDate(day)
+      start = allDayDate(day)
       end = addDays(start, 1)
     } else {
       start = opts.start
         ? withViewerZone(opts.start)
-        : fromDate(setHours(startOfDay(day), nowLocalDate().getHours()))
+        : atTime(day, Temporal.Now.zonedDateTimeISO(getViewerTzid()).hour)
       end = addMinutes(start, DEFAULT_DURATION_MINS)
     }
 

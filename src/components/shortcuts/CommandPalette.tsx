@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
@@ -18,7 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
-import { formatLongDate, localDateInViewerZone } from "@/lib/event-time"
+import { formatLongDate, dateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
 import {
   COMMAND_GROUPS,
@@ -53,7 +54,7 @@ export function CommandPalette({
   requestedPage?: "root" | PalettePage
   handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
-  onGoToDate: (date: Date) => void
+  onGoToDate: (date: Temporal.PlainDate) => void
 }) {
   const [page, setPage] = useState<Page>("root")
   const [search, setSearch] = useState("")
@@ -167,7 +168,7 @@ function CommandListContent({
   goToPage: (next: Page) => void
   run: (action: () => void) => void
   handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
-  onGoToDate: (date: Date) => void
+  onGoToDate: (date: Temporal.PlainDate) => void
 }) {
   if (isGoToDatePage) {
     return <GoToDatePage search={search} onSelect={(date) => run(() => onGoToDate(date))} />
@@ -247,10 +248,16 @@ function RootCommands({
   ))
 }
 
-function GoToDatePage({ search, onSelect }: { search: string; onSelect: (date: Date) => void }) {
+function GoToDatePage({
+  search,
+  onSelect,
+}: {
+  search: string
+  onSelect: (date: Temporal.PlainDate) => void
+}) {
   const date = useMemo(() => {
     const start = parseEventText(search).start
-    return start ? localDateInViewerZone(start) : null
+    return start ? dateInViewerZone(start) : null
   }, [search])
 
   if (!date) {

@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import type { CalendarEvent } from "./cal-events"
@@ -59,7 +60,7 @@ describe("withNearestOccurrence", () => {
   })
 
   it("keeps the DTSTART weekday when BYDAY is omitted across DST", () => {
-    const winterNow = new Date(2026, 0, 30, 12)
+    const winterNow = Temporal.PlainDateTime.from("2026-01-30T12:00")
     const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY" }), winterNow)
 
     expect(formatDateKey(shifted.start)).toBe("2026-02-02")

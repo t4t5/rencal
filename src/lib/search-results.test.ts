@@ -44,7 +44,7 @@ describe("prepareSearchResults", () => {
           exdates: [],
         }),
       ],
-      new Date(2026, 6, 31, 12),
+      new Date(2026, 6, 31, 12).getTime(),
     )
 
     expect(results.map(({ id }) => id)).toEqual(["recurring event", "2015 event", "2013 event"])

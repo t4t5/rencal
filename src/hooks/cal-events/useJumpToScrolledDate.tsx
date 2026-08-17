@@ -1,7 +1,9 @@
-import { parse } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useEffect, useEffectEvent, useRef } from "react"
 
 import { isAgendaItemFocused } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
+
+import { dateKeyToPlainDate } from "@/lib/event-time"
 
 export function useJumpToScrolledDate({
   onSetActiveDate,
@@ -9,7 +11,7 @@ export function useJumpToScrolledDate({
   isNavigating,
   scrollContainerRef,
 }: {
-  onSetActiveDate: (date: Date) => void
+  onSetActiveDate: (date: Temporal.PlainDate) => void
   datesWithEvents: string[]
   isNavigating: () => boolean
   scrollContainerRef: RefObject<HTMLDivElement | null>
@@ -62,7 +64,7 @@ export function useJumpToScrolledDate({
       if (entry.isIntersecting) {
         const dateStr = entry.target.getAttribute("data-date")
         if (dateStr) {
-          onSetActiveDate(parse(dateStr, "yyyy-MM-dd", new Date()))
+          onSetActiveDate(dateKeyToPlainDate(dateStr))
         }
       }
     }

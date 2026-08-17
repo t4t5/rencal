@@ -1,4 +1,3 @@
-import { isSameDay, startOfMonth } from "date-fns"
 import { useRef } from "react"
 
 import { MonthGrid } from "@/components/main/month-view/Grid"
@@ -40,9 +39,9 @@ export function MonthView() {
   const dimmed = useIsDimmed()
 
   // Compute initial anchor week (the week containing the 1st of activeDate's month)
-  const initialAnchorRef = useRef(startOfMonth(activeDate))
+  const initialAnchorRef = useRef(activeDate.with({ day: 1 }))
   const anchorWeekIndex = weeks.findIndex((week) =>
-    week.some((d) => isSameDay(d.date, initialAnchorRef.current)),
+    week.some((d) => d.date.equals(initialAnchorRef.current)),
   )
 
   return (

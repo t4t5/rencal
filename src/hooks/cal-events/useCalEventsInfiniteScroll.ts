@@ -1,4 +1,3 @@
-import { addMonths, endOfMonth, startOfMonth, subMonths } from "date-fns"
 import { RefObject, useCallback } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -25,12 +24,18 @@ export const useCalEventsInfiniteScroll = ({
     onNearTop: useCallback(() => {
       const range = loadedRangeRef.current
       if (!range) return
-      void ensureRangeLoaded(startOfMonth(subMonths(range.start, MONTHS_TO_LOAD)), range.end)
+      void ensureRangeLoaded(
+        range.start.subtract({ months: MONTHS_TO_LOAD }).with({ day: 1 }),
+        range.end,
+      )
     }, [loadedRangeRef, ensureRangeLoaded]),
     onNearBottom: useCallback(() => {
       const range = loadedRangeRef.current
       if (!range) return
-      void ensureRangeLoaded(range.start, endOfMonth(addMonths(range.end, MONTHS_TO_LOAD)))
+      void ensureRangeLoaded(
+        range.start,
+        range.end.with({ day: 1 }).add({ months: MONTHS_TO_LOAD }),
+      )
     }, [loadedRangeRef, ensureRangeLoaded]),
   })
 }

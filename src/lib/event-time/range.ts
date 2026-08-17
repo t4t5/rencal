@@ -2,8 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 
 import { allDayDate } from "./constructors"
 import { addDays, addMinutes, dateInEventZone, withEventDate, withWallclockTime } from "./edit"
-import { startOfDayMs } from "./layout"
-import { getLocalTzid } from "./local-zone"
+import { dayOf } from "./layout"
+import { getViewerTzid } from "./local-zone"
 import {
   dateInViewerZone,
   instantForOrdering,
@@ -17,7 +17,7 @@ import type { EventTime, EventTimeRange } from "./types"
  * least one day after start's day.
  */
 export function normalizeAllDayRange(start: EventTime, end: EventTime): EventTimeRange {
-  const needsBump = startOfDayMs(end) <= startOfDayMs(start)
+  const needsBump = dayOf(end) <= dayOf(start)
   return { start, end: needsBump ? addDays(start, 1) : end }
 }
 
@@ -58,7 +58,7 @@ export function coversFullDay(start: EventTime, end: EventTime, dateKey: string)
   if (isAllDay(start)) return true
 
   const day = Temporal.PlainDate.from(dateKey)
-  const tzid = getLocalTzid()
+  const tzid = getViewerTzid()
   const dayStartMs = day.toZonedDateTime(tzid).epochMilliseconds
   const nextDayStartMs = day.add({ days: 1 }).toZonedDateTime(tzid).epochMilliseconds
 

@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useEffect, useMemo, useRef, useState } from "react"
 
 import { CalendarEvent } from "@/lib/cal-events"
@@ -9,7 +10,7 @@ import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
 const debug = createDebugLogger("agenda")
 
 export type Section = {
-  date: Date
+  date: Temporal.PlainDate
   events: CalendarEvent[]
   isGhost: boolean
 }
@@ -21,11 +22,11 @@ export function useGhostSection({
   eventsByDate,
   scrollContainerRef,
 }: {
-  eventsByDate: { date: Date; events: CalendarEvent[] }[]
+  eventsByDate: { date: Temporal.PlainDate; events: CalendarEvent[] }[]
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }) {
-  const [ghostDate, setGhostDate] = useState<Date | null>(null)
-  const ghostDateRef = useRef<Date | null>(null)
+  const [ghostDate, setGhostDate] = useState<Temporal.PlainDate | null>(null)
+  const ghostDateRef = useRef<Temporal.PlainDate | null>(null)
   ghostDateRef.current = ghostDate
   const ghostRef = useRef<HTMLDivElement>(null)
   const ghostScrollBehaviorRef = useRef<ScrollBehavior>("smooth")
@@ -42,7 +43,7 @@ export function useGhostSection({
       const alreadyExists = sections.some(({ date }) => formatDateKey(date) === ghostDateStr)
       if (!alreadyExists) {
         sections.push({ date: ghostDate, events: [], isGhost: true })
-        sections.sort((a, b) => a.date.getTime() - b.date.getTime())
+        sections.sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))
       }
     }
 
@@ -83,7 +84,7 @@ export function useGhostSection({
     return () => observer.disconnect()
   }, [ghostDate])
 
-  const showGhost = (date: Date, behavior: ScrollBehavior) => {
+  const showGhost = (date: Temporal.PlainDate, behavior: ScrollBehavior) => {
     debug("show ghost", { date: formatDateKey(date), behavior })
     ghostScrollBehaviorRef.current = behavior
     setGhostDate(date)

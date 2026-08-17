@@ -1,11 +1,11 @@
-import { addDays, isSameDay, startOfWeek, subDays } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useCallback, useEffect, useMemo, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { useToday } from "@/hooks/useToday"
-import { formatDateKey } from "@/lib/event-time"
+import { formatDateKey, startOfWeek } from "@/lib/event-time"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -13,17 +13,16 @@ const BUFFER_DAYS = 7
 const INITIAL_RANGE_DAYS = 21
 
 /** Seed the day range: activeDate's Mon–Sun week, with BUFFER_DAYS extra on each side. */
-function initialRangeStart(activeDate: Date): Date {
-  const weekStart = startOfWeek(activeDate, { weekStartsOn: 1 })
-  return subDays(weekStart, BUFFER_DAYS)
+function initialRangeStart(activeDate: Temporal.PlainDate): Temporal.PlainDate {
+  return startOfWeek(activeDate).subtract({ days: BUFFER_DAYS })
 }
 
-function buildDay(date: Date, today: Date): MonthDay {
+function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): MonthDay {
   return {
     date,
     dateKey: formatDateKey(date),
-    isToday: isSameDay(date, today),
-    isWeekend: date.getDay() === 0 || date.getDay() === 6,
+    isToday: date.equals(today),
+    isWeekend: date.dayOfWeek === 6 || date.dayOfWeek === 7,
   }
 }
 
@@ -40,7 +39,7 @@ export function useInfiniteDays({
   visibleCalendarIds,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
-  activeDate: Date
+  activeDate: Temporal.PlainDate
   visibleCalendarIds: string[]
 }): { days: MonthDay[] } {
   const { ensureRangeLoaded } = useCalEvents()
@@ -50,17 +49,20 @@ export function useInfiniteDays({
   const [count, setCount] = useState(INITIAL_RANGE_DAYS)
 
   // If activeDate jumps outside the rendered range, reset around it.
-  const rangeEnd = useMemo(() => addDays(rangeStart, count - 1), [rangeStart, count])
-  if (activeDate < rangeStart || activeDate > rangeEnd) {
+  const rangeEnd = useMemo(() => rangeStart.add({ days: count - 1 }), [rangeStart, count])
+  if (
+    Temporal.PlainDate.compare(activeDate, rangeStart) < 0 ||
+    Temporal.PlainDate.compare(activeDate, rangeEnd) > 0
+  ) {
     const newStart = initialRangeStart(activeDate)
-    if (!isSameDay(newStart, rangeStart) || count !== INITIAL_RANGE_DAYS) {
+    if (!newStart.equals(rangeStart) || count !== INITIAL_RANGE_DAYS) {
       setRangeStart(newStart)
       setCount(INITIAL_RANGE_DAYS)
     }
   }
 
   const days = useMemo(() => {
-    return Array.from({ length: count }, (_, i) => buildDay(addDays(rangeStart, i), today))
+    return Array.from({ length: count }, (_, i) => buildDay(rangeStart.add({ days: i }), today))
   }, [rangeStart, count, today])
 
   // Keep loaded events in step with the rendered days. The end is exclusive (start of the
@@ -68,7 +70,7 @@ export function useInfiniteDays({
   // [gridStart, gridEnd) convention the month grid loads with.
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    void ensureRangeLoaded(rangeStart, addDays(rangeEnd, 1))
+    void ensureRangeLoaded(rangeStart, rangeEnd.add({ days: 1 }))
   }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded])
 
   useScrollBoundary({
@@ -80,7 +82,7 @@ export function useInfiniteDays({
     onNearLeft: useCallback(() => {
       // Prepending shifts the viewport away from the left edge (WeekTimeGrid preserves
       // scrollLeft), so this fires once per approach rather than runaway-growing.
-      setRangeStart((d) => subDays(d, BUFFER_DAYS))
+      setRangeStart((date) => date.subtract({ days: BUFFER_DAYS }))
       setCount((n) => n + BUFFER_DAYS)
     }, []),
     onNearRight: useCallback(() => {

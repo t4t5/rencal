@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill"
+
 import { DatePicker } from "@/components/ui/date-picker"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
@@ -6,8 +8,6 @@ import {
   dateInEventZone,
   displayEndDate,
   isAllDay,
-  localDateToPlainDate,
-  plainDateToLocalDate,
   shouldShowDisplayEndDate,
   type EventTime,
   type EventTimeRange,
@@ -52,14 +52,14 @@ export const DateTimeSelect = ({
   const handleEndTime = (hour: number, minute: number) =>
     onChange(withRangeEndWallclockTime({ start, end }, hour, minute))
 
-  const handleStartDate = (jsDate: Date | null) => {
-    if (!jsDate) return
-    onChange(withRangeStartDate({ start, end }, localDateToPlainDate(jsDate)))
+  const handleStartDate = (date: Temporal.PlainDate | null) => {
+    if (!date) return
+    onChange(withRangeStartDate({ start, end }, date))
   }
 
-  const handleEndDate = (jsDate: Date | null) => {
-    if (!jsDate) return
-    onChange(withRangeDisplayEndDate({ start, end }, localDateToPlainDate(jsDate)))
+  const handleEndDate = (date: Temporal.PlainDate | null) => {
+    if (!date) return
+    onChange(withRangeDisplayEndDate({ start, end }, date))
   }
 
   return (
@@ -75,8 +75,8 @@ export const DateTimeSelect = ({
         />
       )}
       <DateSelect
-        startDate={plainDateToLocalDate(dateInEventZone(start))}
-        endDate={plainDateToLocalDate(displayEndDate({ start, end }))}
+        startDate={dateInEventZone(start)}
+        endDate={displayEndDate({ start, end })}
         showEndDate={shouldShowDisplayEndDate({ start, end })}
         icon={timeRowVisible ? null : <ClockIcon />}
         readOnly={readOnly}
@@ -140,13 +140,13 @@ const DateSelect = ({
   onChangeStart,
   onChangeEnd,
 }: {
-  startDate: Date
-  endDate: Date
+  startDate: Temporal.PlainDate
+  endDate: Temporal.PlainDate
   showEndDate: boolean
   icon?: React.ReactNode
   readOnly?: boolean
-  onChangeStart: (date: Date | null) => void
-  onChangeEnd: (date: Date | null) => void
+  onChangeStart: (date: Temporal.PlainDate | null) => void
+  onChangeEnd: (date: Temporal.PlainDate | null) => void
 }) => {
   return (
     <div className="flex flex-wrap gap-1">

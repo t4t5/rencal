@@ -1,15 +1,15 @@
-import { format } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useState } from "react"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { useLocalTzid } from "@/hooks/useLocalTzid"
-import { nowLocalDate } from "@/lib/event-time"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
+import { getViewerTzid } from "@/lib/event-time"
 
 export function CurrentTimeIndicator() {
   const { timeFormat } = useSettings()
 
-  useLocalTzid()
+  useViewerTzid()
   const [, tick] = useState(0)
 
   // The colon blinks via CSS, so we only need to tick state once per minute to
@@ -19,14 +19,14 @@ export function CurrentTimeIndicator() {
     return () => clearInterval(interval)
   }, [])
 
-  const now = nowLocalDate()
+  const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  const currentMinutes = now.hour * 60 + now.minute
   const timeIndicatorTopPercent = (currentMinutes / 1440) * 100
 
-  const hour = format(now, timeFormat === "12h" ? "h" : "H")
-  const minutes = format(now, "mm")
-  const ampm = timeFormat === "12h" ? format(now, "a").toLowerCase() : ""
+  const hour = timeFormat === "12h" ? (now.hour % 12 || 12).toString() : now.hour.toString()
+  const minutes = now.minute.toString().padStart(2, "0")
+  const ampm = timeFormat === "12h" ? (now.hour < 12 ? "am" : "pm") : ""
 
   return (
     <div

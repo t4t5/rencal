@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import { allDayDate } from "./constructors"
-import { getLocalTzid } from "./local-zone"
+import { getViewerTzid } from "./local-zone"
 import { dateInViewerZone, toViewerZonedDateTime } from "./projections"
 import type { EventTime } from "./types"
 
@@ -13,7 +13,7 @@ export function toTimedAtStartOfDay(et: EventTime): EventTime {
   if (et.kind !== "date") return et
   return {
     kind: "datetime_zoned",
-    value: et.value.toZonedDateTime(getLocalTzid()),
+    value: et.value.toZonedDateTime(getViewerTzid()),
   }
 }
 

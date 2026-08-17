@@ -1,4 +1,4 @@
-import { format, isSameDay, isSameYear } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { forwardRef, type FocusEvent, type KeyboardEvent, type ReactNode, useMemo } from "react"
 
 import { focusEventPopoverField } from "@/components/event-parts/useEventPopoverTabTrap"
@@ -14,7 +14,13 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { coversFullDay, formatDateKey, getRelativeDayLabel, todayLocalDate } from "@/lib/event-time"
+import {
+  coversFullDay,
+  formatDateKey,
+  formatDay,
+  getRelativeDayLabel,
+  today,
+} from "@/lib/event-time"
 import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -27,7 +33,7 @@ import {
 export const DaySection = forwardRef<
   HTMLDivElement,
   {
-    date: Date
+    date: Temporal.PlainDate
     events: CalendarEvent[]
     calendars: Calendar[]
     draftEvent: CalendarEvent | null
@@ -257,19 +263,20 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
   )
 }
 
-const DateBar = ({ date }: { date: Date }) => {
-  const today = isSameDay(date, todayLocalDate())
+const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
+  const currentDay = today()
+  const isToday = date.equals(currentDay)
 
   return (
     <div
       className={cn(
         "sticky top-0 z-10 text-sm bg-background px-3 py-1.5 flex gap-2 h-8 items-center",
-        { "text-today": today },
+        { "text-today": isToday },
       )}
     >
       <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
-      <span className={cn("text-muted-foreground numerical", { "text-today": today })}>
-        {format(date, isSameYear(date, todayLocalDate()) ? "d MMM" : "d MMM yyyy")}
+      <span className={cn("text-muted-foreground numerical", { "text-today": isToday })}>
+        {formatDay(date, date.year === currentDay.year ? "d MMM" : "d MMM yyyy")}
       </span>
     </div>
   )

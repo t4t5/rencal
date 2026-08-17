@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { memo } from "react"
 
 import { MonthAllDayEvent } from "@/components/events-blocks/month-view/AllDayEventBlock"
@@ -53,7 +54,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   activeEventKey: string | null
   selectedEventKey: string | null
   activeDateKey: string
-  onDayClick: (date: Date) => void
+  onDayClick: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
@@ -61,7 +62,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   const { calendars } = useCalendars()
 
   const allDayEvents = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
-  const monthStartCol = weekDays.findIndex((day) => day.date.getDate() === 1)
+  const monthStartCol = weekDays.findIndex((day) => day.date.day === 1)
 
   // Per-column reserved lanes: a day only leaves space for all-day bars that actually span it
   const reservedLanes: number[] = Array(7).fill(0)

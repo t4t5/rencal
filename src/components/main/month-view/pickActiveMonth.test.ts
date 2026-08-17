@@ -1,24 +1,24 @@
-import { addDays, startOfWeek } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { formatDateKey } from "@/lib/event-time"
+import { formatDateKey, startOfWeek } from "@/lib/event-time"
 
 import { pickActiveMonth, type ActiveMonthVirtualItem } from "./pickActiveMonth"
 
 const ROW = 100
 
 // Weeks starting from the Monday of `startMonday`'s week, mirroring useMonthGrid.
-function buildWeeks(startMonday: Date, numWeeks: number): MonthDay[][] {
-  const mon = startOfWeek(startMonday, { weekStartsOn: 1 })
+function buildWeeks(startMonday: Temporal.PlainDate, numWeeks: number): MonthDay[][] {
+  const mon = startOfWeek(startMonday)
   return Array.from({ length: numWeeks }, (_, w) =>
     Array.from({ length: 7 }, (_, d) => {
-      const date = addDays(mon, w * 7 + d)
+      const date = mon.add({ days: w * 7 + d })
       return {
         date,
         dateKey: formatDateKey(date),
         isToday: false,
-        isWeekend: date.getDay() === 0 || date.getDay() === 6,
+        isWeekend: date.dayOfWeek === 6 || date.dayOfWeek === 7,
       }
     }),
   )
@@ -35,7 +35,7 @@ function items(numWeeks: number): ActiveMonthVirtualItem[] {
 
 // Jan 19 2026 is a Monday. week0 = Jan19–25 (all Jan), week1 = Jan26–Feb1 (Feb 1 is Sun),
 // week2 = Feb2–8, week3 = Feb9–15, week4 = Feb16–22.
-const weeks = buildWeeks(new Date(2026, 0, 19), 5)
+const weeks = buildWeeks(Temporal.PlainDate.from("2026-01-19"), 5)
 const virtualItems = items(5)
 
 describe("pickActiveMonth", () => {
