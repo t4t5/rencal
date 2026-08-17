@@ -20,7 +20,7 @@ import { GetStartedState } from "./GetStartedState"
 import { scrollSectionIntoContainer } from "./scrollSectionIntoContainer"
 import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
-import { usePreserveActiveDateOnGroupChange } from "./usePreserveActiveDateOnGroupChange"
+import { usePreserveActiveDateOnRegroup } from "./usePreserveActiveDateOnRegroup"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
 
 const debug = createDebugLogger("agenda")
@@ -93,7 +93,7 @@ export function Agenda() {
     registerScrollToDate(scrollToDate)
   }, [])
 
-  usePreserveActiveDateOnGroupChange({
+  usePreserveActiveDateOnRegroup({
     activeGroup,
     activeDate,
     events,
