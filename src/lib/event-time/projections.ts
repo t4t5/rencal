@@ -63,6 +63,17 @@ export function toInteropDate(et: EventTime): Date {
   return new Date(instantForOrdering(et).epochMilliseconds)
 }
 
+/**
+ * The viewer-local calendar day as a local-midnight day-key Date, for date-fns
+ * date formatting and day-based navigation. Formatting the raw interop instant
+ * instead would render in the webview's zone, which is fixed at launch and
+ * goes stale after an OS timezone change.
+ */
+export function localDateInViewerZone(et: EventTime): Date {
+  const d = dateInViewerZone(et)
+  return new Date(d.year, d.month - 1, d.day)
+}
+
 export function isSameDay(a: EventTime, b: EventTime): boolean {
   return dateInViewerZone(a).equals(dateInViewerZone(b))
 }

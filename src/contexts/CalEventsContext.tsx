@@ -17,7 +17,8 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
-import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { useLocalTzid } from "@/hooks/useLocalTzid"
+import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
 import {
   getCalendarEventsForRange,
   getStartRangeForDate,
@@ -218,6 +219,17 @@ export function CalEventsProvider({
       setIsInitialLoading(false)
     }
   }, [visibleCalendarKey, calendars, isLoadingCalendars, settingsLoaded])
+
+  // Each event's `dateInfo` bakes in the viewer's zone at conversion time, so an OS
+  // timezone change must recompute it for every held event. The events themselves
+  // are unchanged on disk — only the projections shift.
+  const localTzid = useLocalTzid()
+  const prevTzidRef = useRef(localTzid)
+  useEffect(() => {
+    if (prevTzidRef.current === localTzid) return
+    prevTzidRef.current = localTzid
+    setCalendarEvents((prev) => prev.map((e) => withDates(e, e.start, e.end)))
+  }, [localTzid])
 
   // Let navigateToDate pull a distant date's events into range before it scrolls there.
   // For dates already covered this resolves without fetching, so nearby jumps stay instant.

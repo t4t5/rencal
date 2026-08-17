@@ -12,6 +12,7 @@ mod omarchy;
 mod routes;
 #[cfg(target_os = "linux")]
 mod single_instance;
+mod tz_watcher;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
@@ -196,6 +197,9 @@ pub async fn run() {
 
             // Handle ~/.config/rencal/config.toml changes:
             tokio::spawn(config_watcher::run_watcher(app.handle().clone()));
+
+            // Handle system timezone changes:
+            tokio::spawn(tz_watcher::run_watcher(app.handle().clone()));
 
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {

@@ -3830,6 +3830,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "dirs 5.0.1",
+ "iana-time-zone",
  "libc",
  "log",
  "notify",

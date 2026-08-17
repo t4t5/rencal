@@ -6,6 +6,7 @@ import {
   DEFAULT_DURATION_MINS,
   fromDate,
   getLocalTzid,
+  nowLocalDate,
   plainDate,
   type EventTime,
 } from "@/lib/event-time"
@@ -112,7 +113,10 @@ export interface TextSegment {
  * Splits the raw input text into plain and parsed segments for visual highlighting.
  * Runs recurrence/time/location detection directly on the original text to identify ranges.
  */
-export function segmentEventText(text: string, referenceDate: Date = new Date()): TextSegment[] {
+export function segmentEventText(
+  text: string,
+  referenceDate: Date = nowLocalDate(),
+): TextSegment[] {
   if (!text.trim()) return [{ text, parsed: false }]
 
   const parsed = parseEventText(text, referenceDate)
@@ -180,7 +184,7 @@ export function segmentEventText(text: string, referenceDate: Date = new Date())
 
 export function parseEventText(
   text: string,
-  referenceDate: Date = new Date(),
+  referenceDate: Date = nowLocalDate(),
 ): ParsedEventSegments {
   const recurrenceResult = parseRecurrence(text)
 

@@ -11,6 +11,7 @@ import {
   allDayFromLocalDate,
   DEFAULT_DURATION_MINS,
   fromDate,
+  nowLocalDate,
   withViewerZone,
   type EventTime,
 } from "@/lib/event-time"
@@ -46,7 +47,7 @@ export function useOpenDayDraft() {
     } else {
       start = opts.start
         ? withViewerZone(opts.start)
-        : fromDate(setHours(startOfDay(day), new Date().getHours()))
+        : fromDate(setHours(startOfDay(day), nowLocalDate().getHours()))
       end = addMinutes(start, DEFAULT_DURATION_MINS)
     }
 

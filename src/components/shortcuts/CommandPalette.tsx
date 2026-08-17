@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
-import { formatLongDate, toInteropDate } from "@/lib/event-time"
+import { formatLongDate, localDateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
 import {
   COMMAND_GROUPS,
@@ -250,7 +250,7 @@ function RootCommands({
 function GoToDatePage({ search, onSelect }: { search: string; onSelect: (date: Date) => void }) {
   const date = useMemo(() => {
     const start = parseEventText(search).start
-    return start ? toInteropDate(start) : null
+    return start ? localDateInViewerZone(start) : null
   }, [search])
 
   if (!date) {

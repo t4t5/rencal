@@ -12,13 +12,17 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
+import { useLocalTzid } from "@/hooks/useLocalTzid"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
-import { formatTime, toInteropDate } from "@/lib/event-time"
+import { formatTime, localDateInViewerZone } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesBadge() {
   const { calendars } = useCalendars()
   const [invites, setInvites] = useState<CalendarEvent[]>([])
+
+  // Invite rows show viewer-zone dates/times; re-render them on timezone change.
+  useLocalTzid()
 
   useEffect(() => {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
@@ -84,7 +88,7 @@ function InviteCard({
   const organizerName = invite.organizer?.name ?? organizerEmail
   const initial = organizerName.charAt(0).toUpperCase()
 
-  const startDate = toInteropDate(invite.start)
+  const startDate = localDateInViewerZone(invite.start)
   const dateStr =
     invite.start.kind === "date"
       ? format(startDate, "EEE, d MMM")

@@ -15,7 +15,8 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
-import { formatDateKey } from "@/lib/event-time"
+import { useLocalTzid } from "@/hooks/useLocalTzid"
+import { formatDateKey, todayLocalDate } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"
@@ -45,10 +46,15 @@ function Calendar({
 }) {
   const defaultClassNames = getDefaultClassNames()
 
+  // Subscribe to timezone changes: the current-week/weekday highlights and the
+  // `today` prop below all derive from the viewer's zone.
+  useLocalTzid()
+
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       fixedWeeks
+      today={todayLocalDate()}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -169,7 +175,7 @@ function Calendar({
           const { week } = weekProps
           const { isSelected } = useDayPicker()
 
-          const currentWeekNumber = getWeek(new Date())
+          const currentWeekNumber = getWeek(todayLocalDate())
           const isCurrentWeek = week.weekNumber === currentWeekNumber
           const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
@@ -195,7 +201,7 @@ function Calendar({
         Weekday: ({ className, children, ...weekdayProps }) => {
           const weekdayName = typeof children === "string" ? children : ""
           const weekdayNumber = WEEKDAY_SHORT.indexOf(weekdayName as (typeof WEEKDAY_SHORT)[number])
-          const isCurrentWeekday = weekdayNumber === new Date().getDay()
+          const isCurrentWeekday = weekdayNumber === todayLocalDate().getDay()
           const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
 
           return (

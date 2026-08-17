@@ -26,6 +26,7 @@ import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
+import { todayLocalDate } from "@/lib/event-time"
 import { type PalettePage, type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
@@ -237,7 +238,7 @@ function useShortcutHandlers({
   return {
     today: () => {
       clearAgendaFocus()
-      void navigateToDate(new Date())
+      void navigateToDate(todayLocalDate())
     },
     "go-to-date": (e) => {
       e?.preventDefault()

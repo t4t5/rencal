@@ -1,25 +1,32 @@
-import { format } from "date-fns"
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useState } from "react"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { useLocalTzid } from "@/hooks/useLocalTzid"
+
 export function CurrentTimeIndicator() {
   const { timeFormat } = useSettings()
-  const [now, setNow] = useState(() => new Date())
+  const tzid = useLocalTzid()
+  const [nowMs, setNowMs] = useState(() => Date.now())
 
   // The colon blinks via CSS, so we only need to tick state once per minute to
   // reposition the indicator and update the displayed h:mm.
   useEffect(() => {
-    const interval = setInterval(() => setNow(new Date()), 60_000)
+    const interval = setInterval(() => setNowMs(Date.now()), 60_000)
     return () => clearInterval(interval)
   }, [])
 
-  const currentMinutes = now.getHours() * 60 + now.getMinutes()
+  // Wallclock in the viewer's zone — native Date getters would use the zone the
+  // webview launched with, which goes stale after an OS timezone change.
+  const now = Temporal.Instant.fromEpochMilliseconds(nowMs).toZonedDateTimeISO(tzid)
+  const currentMinutes = now.hour * 60 + now.minute
   const timeIndicatorTopPercent = (currentMinutes / 1440) * 100
 
-  const hour = format(now, timeFormat === "12h" ? "h" : "H")
-  const minutes = format(now, "mm")
-  const ampm = timeFormat === "12h" ? format(now, "a").toLowerCase() : ""
+  const hour =
+    timeFormat === "12h" ? String(now.hour % 12 === 0 ? 12 : now.hour % 12) : String(now.hour)
+  const minutes = String(now.minute).padStart(2, "0")
+  const ampm = timeFormat === "12h" ? (now.hour < 12 ? "am" : "pm") : ""
 
   return (
     <div

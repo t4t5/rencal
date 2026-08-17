@@ -1,11 +1,16 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { format, getYear, isToday, isTomorrow, isYesterday } from "date-fns"
+import { differenceInCalendarDays, format, getYear } from "date-fns"
 
 import type { TimeFormat } from "@/rpc/bindings"
 
-import { allDayFromLocalDate } from "./constructors"
+import { allDayFromLocalDate, todayLocalDate } from "./constructors"
 import { getLocalTzid } from "./local-zone"
-import { dateInViewerZone, isAllDay, toInteropDate, toViewerZonedDateTime } from "./projections"
+import {
+  dateInViewerZone,
+  isAllDay,
+  localDateInViewerZone,
+  toViewerZonedDateTime,
+} from "./projections"
 import type { EventTime } from "./types"
 
 /** "YYYY-MM-DD" in the viewer's local zone. Used as a stable grouping key. */
@@ -14,16 +19,23 @@ export function formatDateKey(et: EventTime | Date): string {
   return dateInViewerZone(et).toString()
 }
 
-const timeFormatters: Partial<Record<TimeFormat, Intl.DateTimeFormat>> = {}
+let timeFormatters: Partial<Record<TimeFormat, Intl.DateTimeFormat>> = {}
+let timeFormattersTzid: string | undefined
 
 function getTimeFormatter(timeFormat: TimeFormat): Intl.DateTimeFormat {
+  const tzid = getLocalTzid()
+  // Formatters bake in the timeZone, so drop the cache when the viewer's zone changes.
+  if (timeFormattersTzid !== tzid) {
+    timeFormatters = {}
+    timeFormattersTzid = tzid
+  }
   let f = timeFormatters[timeFormat]
   if (!f) {
     f = new Intl.DateTimeFormat(timeFormat === "12h" ? "en-US" : "en-GB", {
       hour: "2-digit",
       minute: "2-digit",
       hourCycle: timeFormat === "12h" ? "h12" : "h23",
-      timeZone: getLocalTzid(),
+      timeZone: tzid,
     })
     timeFormatters[timeFormat] = f
   }
@@ -51,24 +63,25 @@ export function formatWallclockTime(hour: number, minute: number, timeFormat: Ti
 
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
 export function formatShortDate(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : toInteropDate(et)
-  const pattern = getYear(d) !== getYear(new Date()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
+  const d = et instanceof Date ? et : localDateInViewerZone(et)
+  const pattern = getYear(d) !== getYear(todayLocalDate()) ? "EEE, d MMM yyyy" : "EEE, d MMM"
   return format(d, pattern)
 }
 
 /** "Thursday, 5 November" (adds the year when not the current year). */
 export function formatLongDate(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : toInteropDate(et)
-  const pattern = getYear(d) !== getYear(new Date()) ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
+  const d = et instanceof Date ? et : localDateInViewerZone(et)
+  const pattern = getYear(d) !== getYear(todayLocalDate()) ? "EEEE, d MMMM yyyy" : "EEEE, d MMMM"
   return format(d, pattern)
 }
 
 /** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
 export function getRelativeDayLabel(et: EventTime | Date): string {
-  const d = et instanceof Date ? et : toInteropDate(et)
-  if (isToday(d)) return "Today"
-  if (isTomorrow(d)) return "Tomorrow"
-  if (isYesterday(d)) return "Yesterday"
+  const d = et instanceof Date ? et : localDateInViewerZone(et)
+  const diffDays = differenceInCalendarDays(d, todayLocalDate())
+  if (diffDays === 0) return "Today"
+  if (diffDays === 1) return "Tomorrow"
+  if (diffDays === -1) return "Yesterday"
   return format(d, "EEEE")
 }
 

@@ -33,6 +33,15 @@ The same model crosses the stack:
 
 Conversion happens at the frontend boundary in `src/lib/cal-events.ts` using `src/lib/event-time/rpc.ts`. Normal UI code should use `CalendarEvent`, `Recurrence`, and `EventTime`, not raw RPC event time strings.
 
+## Viewer timezone
+
+The viewer's IANA zone comes from `getLocalTzid()` in `src/lib/event-time/local-zone.ts`. It is seeded from `Intl` once and then kept current by the Rust-side watcher (`src-tauri/src/tz_watcher.rs`), which emits `SYSTEM_TZ_CHANGED` when `/etc/localtime` changes. The webview's own zone is fixed at launch, so:
+
+- Never derive "now" or "today" from `new Date()` components or date-fns `isToday`-style helpers; use `nowLocalDate()` / `todayLocalDate()` / `useToday()` / `useLocalTzid()`.
+- Never render an event's calendar date by formatting its interop instant; use `localDateInViewerZone(et)` (or the `format*` helpers, which do).
+- JS `Date` bridges (`fromDate`, chrono-node, drag math, grid labels) carry wallclock in their local _components_, not their instant.
+- `CalEventsContext` recomputes every event's `dateInfo` when the zone changes; anything else that caches zone-dependent values must subscribe via `useLocalTzid()` or `subscribeLocalTzid()`.
+
 ## Rules
 
 Use helpers from `@/lib/event-time` for construction, display, arithmetic, edits, ranges, and ordering.

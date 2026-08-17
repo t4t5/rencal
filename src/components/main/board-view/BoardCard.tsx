@@ -12,7 +12,7 @@ import { CalendarEvent, eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockColors } from "@/lib/event-styles"
-import { formatShortDate, formatTime, isSameDay, toInteropDate } from "@/lib/event-time"
+import { formatShortDate, formatTime, isSameDay, localDateInViewerZone } from "@/lib/event-time"
 
 export const BoardCard = memo(function BoardCard({
   event,
@@ -61,7 +61,7 @@ export const BoardCard = memo(function BoardCard({
             <div className="text-muted-foreground numerical text-xs h-4">
               {isSameDay(event.start, event.end)
                 ? `${formatTime(event.start, timeFormat)} - ${formatTime(event.end, timeFormat)}`
-                : `${format(toInteropDate(event.start), "MMM d,")} ${formatTime(event.start, timeFormat)} - ${format(toInteropDate(event.end), "MMM d,")} ${formatTime(event.end, timeFormat)}`}
+                : `${format(localDateInViewerZone(event.start), "MMM d,")} ${formatTime(event.start, timeFormat)} - ${format(localDateInViewerZone(event.end), "MMM d,")} ${formatTime(event.end, timeFormat)}`}
             </div>
           )}
 

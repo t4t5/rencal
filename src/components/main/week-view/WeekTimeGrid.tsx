@@ -15,7 +15,7 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { formatDateKey, formatTime, fromDate } from "@/lib/event-time"
+import { formatDateKey, formatTime, fromDate, nowLocalDate } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -124,7 +124,7 @@ export function WeekTimeGrid({
 
     suppressScrollTracking()
     const hasToday = days.some((d) => d.isToday)
-    const now = new Date()
+    const now = nowLocalDate()
     const targetHour = hasToday ? now.getHours() + now.getMinutes() / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
 

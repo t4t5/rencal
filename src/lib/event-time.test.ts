@@ -9,6 +9,9 @@ import {
   formatDateKey,
   getEventDayRange,
   getLocalTzid,
+  setLocalTzid,
+  subscribeLocalTzid,
+  toViewerZonedDateTime,
   wallclockTime,
   isAllDay,
   isSameDay,
@@ -367,5 +370,49 @@ describe("plainDate", () => {
     const d = plainDate(2026, 4, 28)
     expect(d.kind).toBe("date")
     expect(formatDateKey(d)).toBe("2026-04-28")
+  })
+})
+
+describe("local zone store", () => {
+  it("updates getLocalTzid, notifies subscribers, and rejects unknown zones", () => {
+    const original = getLocalTzid()
+    const other = original === "Europe/Stockholm" ? "America/Los_Angeles" : "Europe/Stockholm"
+    let notified = 0
+    const unsubscribe = subscribeLocalTzid(() => notified++)
+    try {
+      setLocalTzid(other)
+      expect(getLocalTzid()).toBe(other)
+      expect(notified).toBe(1)
+
+      // Same value → no notification.
+      setLocalTzid(other)
+      expect(notified).toBe(1)
+
+      // Unknown zone → ignored.
+      setLocalTzid("Not/AZone")
+      expect(getLocalTzid()).toBe(other)
+      expect(notified).toBe(1)
+    } finally {
+      unsubscribe()
+      setLocalTzid(original)
+    }
+  })
+
+  it("changes the zone used by viewer projections", () => {
+    const original = getLocalTzid()
+    const et = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
+    try {
+      // 09:00 CEST is 00:00 the same day in Los Angeles.
+      setLocalTzid("America/Los_Angeles")
+      expect(toViewerZonedDateTime(et).hour).toBe(0)
+      expect(formatDateKey(et)).toBe("2026-04-28")
+
+      // ...and 21:00 the same day in Kiritimati (UTC+14).
+      setLocalTzid("Pacific/Kiritimati")
+      expect(toViewerZonedDateTime(et).hour).toBe(21)
+      expect(formatDateKey(et)).toBe("2026-04-28")
+    } finally {
+      setLocalTzid(original)
+    }
   })
 })

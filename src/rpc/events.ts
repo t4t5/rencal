@@ -8,3 +8,6 @@ export const THEME_CHANGED = "theme-changed"
 
 // Emitted when anything in ~/.config/rencal/config.toml changes:
 export const RENCAL_CONFIG_CHANGED = "rencal-config-changed"
+
+// Emitted by the Rust timezone watcher with the new IANA tzid as payload:
+export const SYSTEM_TZ_CHANGED = "system-tz-changed"

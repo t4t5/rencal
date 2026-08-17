@@ -7,7 +7,7 @@ import {
   dateInEventZone,
   fromDate,
   getLocalTzid,
-  toInteropDate,
+  toViewerZonedDateTime,
   type EventTime,
   wallclockTime,
 } from "./event-time"
@@ -104,14 +104,16 @@ export function withNearestOccurrence(event: CalendarEvent, now = new Date()): C
 
 /**
  * Convert a Recurrence object into an RRuleSet.
- * rrule.js works with JS Date; we project EventTime to an interop Date for
- * the bridge.
+ * rrule.js works with JS Date; we bridge each exdate's viewer-zone wallclock
+ * into a local-components Date — the inverse of the fromDate bridge in
+ * rruleToRecurrence, so the round trip through RRuleSet is lossless.
  */
 export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
   const rruleSet = new RRuleSet()
   rruleSet.rrule(rrulestr(recurrence.rrule) as RRule)
   for (const exdate of recurrence.exdates) {
-    rruleSet.exdate(toInteropDate(exdate))
+    const z = toViewerZonedDateTime(exdate)
+    rruleSet.exdate(new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond))
   }
   return rruleSet
 }

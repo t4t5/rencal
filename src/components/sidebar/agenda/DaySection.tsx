@@ -1,4 +1,4 @@
-import { format, isSameYear, isToday } from "date-fns"
+import { format, isSameDay, isSameYear } from "date-fns"
 import { forwardRef, type FocusEvent, type KeyboardEvent, type ReactNode, useMemo } from "react"
 
 import { focusEventPopoverField } from "@/components/event-parts/useEventPopoverTabTrap"
@@ -14,7 +14,7 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { coversFullDay, formatDateKey, getRelativeDayLabel } from "@/lib/event-time"
+import { coversFullDay, formatDateKey, getRelativeDayLabel, todayLocalDate } from "@/lib/event-time"
 import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
@@ -258,7 +258,7 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
 }
 
 const DateBar = ({ date }: { date: Date }) => {
-  const today = isToday(date)
+  const today = isSameDay(date, todayLocalDate())
 
   return (
     <div
@@ -269,7 +269,7 @@ const DateBar = ({ date }: { date: Date }) => {
     >
       <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
       <span className={cn("text-muted-foreground numerical", { "text-today": today })}>
-        {format(date, isSameYear(date, new Date()) ? "d MMM" : "d MMM yyyy")}
+        {format(date, isSameYear(date, todayLocalDate()) ? "d MMM" : "d MMM yyyy")}
       </span>
     </div>
   )
