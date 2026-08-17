@@ -7,11 +7,6 @@ export function allDayDate(value: Temporal.PlainDate): EventTime {
   return { kind: "date", value }
 }
 
-/** All-day event at the given calendar date. */
-export function plainDate(year: number, month: number, day: number): EventTime {
-  return allDayDate(new Temporal.PlainDate(year, month, day))
-}
-
 /** The current calendar day in the viewer's timezone. */
 export function today(): Temporal.PlainDate {
   return Temporal.Now.plainDateISO(getViewerTzid())

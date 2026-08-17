@@ -4,10 +4,10 @@ import type { Calendar } from "@/rpc/bindings"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { epochDay, isAllDay } from "@/lib/event-time"
-import { DAY_MINUTES } from "@/lib/time"
+import { DAY_MINUTES, epochDay } from "@/lib/event-time"
+import { isSpanning } from "@/lib/event-utils"
 
-import type { AllDayLaneItem } from "./useMonthEventLayout"
+import { assignAllDayLanes, buildAllDaySpan, type AllDayLaneItem } from "./all-day-lanes"
 import type { MonthDay } from "./useMonthGrid"
 
 export type WeekEventDisplayMode = "xs" | "sm" | "md" | "lg"
@@ -138,73 +138,34 @@ export function useDayRangeLayout(
     }
 
     for (const event of events) {
-      const { firstDay: firstDay, lastDay: lastDay } = event.dateInfo
+      const { firstDay } = event.dateInfo
       const calendarColor = getCalendarColor(calMap.get(event.calendar_slug))
 
-      if (isAllDay(event.start)) {
-        // Check overlap with range
-        if (firstDay > rangeLastDay || lastDay < rangeStartDay) continue
-
-        const clampedFirstDay = Math.max(firstDay, rangeStartDay)
-        const clampedLastDay = Math.min(lastDay, rangeLastDay)
-
-        const startCol = clampedFirstDay - rangeStartDay + 1
-        const endCol = clampedLastDay - rangeStartDay + 2
-
-        allDayItems.push({
-          event,
-          calendarColor,
-          startCol,
-          endCol,
-          lane: 0,
-          isStart: firstDay >= rangeStartDay,
-          isEnd: lastDay <= rangeLastDay,
-        })
+      if (isSpanning(event)) {
+        const item = buildAllDaySpan(event, rangeStartDay, rangeLastDay, calendarColor)
+        if (item) allDayItems.push(item)
       } else {
-        const spanning = lastDay - firstDay >= 1
+        // Single-day timed event
+        if (firstDay < rangeStartDay || firstDay >= rangeExclEndDay) continue
 
-        if (spanning) {
-          // Multi-day timed events go to all-day bar
-          if (firstDay > rangeLastDay || lastDay < rangeStartDay) continue
-
-          const clampedFirstDay = Math.max(firstDay, rangeStartDay)
-          const clampedLastDay = Math.min(lastDay, rangeLastDay)
-
-          const startCol = clampedFirstDay - rangeStartDay + 1
-          const endCol = clampedLastDay - rangeStartDay + 2
-
-          allDayItems.push({
+        const colIndex = firstDay - rangeStartDay
+        if (colIndex >= 0 && colIndex < N) {
+          const dateKey = days[colIndex].dateKey
+          const { top, height, durationMinutes } = computeTimedPosition(
+            event,
+            rangeStartMin,
+            rangeMinutes,
+          )
+          timedByDay.get(dateKey)!.push({
             event,
             calendarColor,
-            startCol,
-            endCol,
-            lane: 0,
-            isStart: firstDay >= rangeStartDay,
-            isEnd: lastDay <= rangeLastDay,
+            top,
+            height,
+            column: 0,
+            totalColumns: 1,
+            durationMinutes,
+            displayMode: displayModeFor(durationMinutes),
           })
-        } else {
-          // Single-day timed event
-          if (firstDay < rangeStartDay || firstDay >= rangeExclEndDay) continue
-
-          const colIndex = firstDay - rangeStartDay
-          if (colIndex >= 0 && colIndex < N) {
-            const dateKey = days[colIndex].dateKey
-            const { top, height, durationMinutes } = computeTimedPosition(
-              event,
-              rangeStartMin,
-              rangeMinutes,
-            )
-            timedByDay.get(dateKey)!.push({
-              event,
-              calendarColor,
-              top,
-              height,
-              column: 0,
-              totalColumns: 1,
-              durationMinutes,
-              displayMode: displayModeFor(durationMinutes),
-            })
-          }
         }
       }
     }
@@ -214,37 +175,7 @@ export function useDayRangeLayout(
       assignOverlapColumns(layouts)
     }
 
-    // Sort and assign lanes for all-day items
-    allDayItems.sort((a, b) => {
-      const spanDiff = b.endCol - b.startCol - (a.endCol - a.startCol)
-      if (spanDiff !== 0) return spanDiff
-      return a.startCol - b.startCol
-    })
-
-    const laneOccupied: boolean[][] = []
-    let maxAllDayLane = -1
-
-    for (const item of allDayItems) {
-      let lane = 0
-      while (true) {
-        if (!laneOccupied[lane]) laneOccupied[lane] = Array(N).fill(false) as boolean[]
-        let fits = true
-        for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
-          if (laneOccupied[lane][c]) {
-            fits = false
-            break
-          }
-        }
-        if (fits) break
-        lane++
-      }
-      if (!laneOccupied[lane]) laneOccupied[lane] = Array(N).fill(false) as boolean[]
-      for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
-        laneOccupied[lane][c] = true
-      }
-      item.lane = lane
-      maxAllDayLane = Math.max(maxAllDayLane, lane)
-    }
+    const maxAllDayLane = assignAllDayLanes(allDayItems, N)
 
     return { allDayItems, maxAllDayLane, timedByDay }
   }, [days, events, calendars])

@@ -7,17 +7,8 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { epochDay } from "@/lib/event-time"
 import { isSpanning } from "@/lib/event-utils"
 
+import { assignAllDayLanes, buildAllDaySpan, type AllDayLaneItem } from "./all-day-lanes"
 import type { MonthDay } from "./useMonthGrid"
-
-export type AllDayLaneItem = {
-  event: CalendarEvent
-  calendarColor: string | null
-  startCol: number // 1-based CSS grid-column-start
-  endCol: number // 1-based CSS grid-column-end (exclusive)
-  lane: number
-  isStart: boolean
-  isEnd: boolean
-}
 
 export type TimedEventItem = {
   event: CalendarEvent
@@ -52,31 +43,13 @@ export function useMonthEventLayout(
       const timedByCol: TimedEventItem[][] = Array.from({ length: 7 }, () => [])
 
       for (const event of events) {
-        const { firstDay, lastDay } = event.dateInfo
+        const { firstDay } = event.dateInfo
         const calendar = calMap.get(event.calendar_slug)
+        const calendarColor = getCalendarColor(calendar)
 
         if (isSpanning(event)) {
-          // Check overlap: event [first, last] vs week [weekStart, weekEndDay]
-          if (firstDay > weekEndDay || lastDay < weekStartDay) {
-            continue
-          }
-
-          // Clamp to week bounds
-          const clampedFirstDay = firstDay < weekStartDay ? weekStartDay : firstDay
-          const clampedLastDay = lastDay > weekEndDay ? weekEndDay : lastDay
-
-          const startCol = clampedFirstDay - weekStartDay + 1
-          const endCol = clampedLastDay - weekStartDay + 2
-
-          allDayItems.push({
-            event,
-            calendarColor: getCalendarColor(calendar),
-            startCol,
-            endCol,
-            lane: 0,
-            isStart: firstDay >= weekStartDay,
-            isEnd: lastDay <= weekEndDay,
-          })
+          const item = buildAllDaySpan(event, weekStartDay, weekEndDay, calendarColor)
+          if (item) allDayItems.push(item)
         } else {
           // Single-day timed event
           if (firstDay < weekStartDay || firstDay >= weekExclEndDay) {
@@ -87,7 +60,7 @@ export function useMonthEventLayout(
           if (colIndex >= 0 && colIndex < 7) {
             timedByCol[colIndex].push({
               event,
-              color: getCalendarColor(calendar),
+              color: calendarColor,
               eventColor: event.color,
             })
           }
@@ -99,39 +72,7 @@ export function useMonthEventLayout(
         col.sort((a, b) => a.event.dateInfo.startMs - b.event.dateInfo.startMs)
       }
 
-      // Sort all-day items: wider spans first, then earlier start
-      allDayItems.sort((a, b) => {
-        const spanDiff = b.endCol - b.startCol - (a.endCol - a.startCol)
-        if (spanDiff !== 0) return spanDiff
-        return a.startCol - b.startCol
-      })
-
-      // Greedy lane assignment
-      const laneOccupied: boolean[][] = []
-      let maxLane = -1
-
-      for (const item of allDayItems) {
-        let lane = 0
-        while (true) {
-          if (!laneOccupied[lane]) laneOccupied[lane] = Array(7).fill(false) as boolean[]
-          let fits = true
-          for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
-            if (laneOccupied[lane][c]) {
-              fits = false
-              break
-            }
-          }
-          if (fits) break
-          lane++
-        }
-
-        if (!laneOccupied[lane]) laneOccupied[lane] = Array(7).fill(false) as boolean[]
-        for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
-          laneOccupied[lane][c] = true
-        }
-        item.lane = lane
-        maxLane = Math.max(maxLane, lane)
-      }
+      const maxLane = assignAllDayLanes(allDayItems, 7)
 
       return { allDayItems, maxLane, timedByCol }
     })

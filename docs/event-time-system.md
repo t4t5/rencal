@@ -45,7 +45,7 @@ The viewer's IANA zone comes from `getViewerTzid()` in `src/lib/event-time/local
 
 Calendar days in app state, props, hooks, and helpers are `Temporal.PlainDate`. Use an ISO `YYYY-MM-DD` date key only for map keys and DOM attributes. Use helpers from `@/lib/event-time` for construction, display, arithmetic, edits, ranges, and ordering.
 
-JS `Date` exists only at third-party boundaries: date-fns formatting in `event-time/display.ts`, react-day-picker components, chrono-node in `magic-parser.ts`, and rrule.js in `rrule-utils.ts`. Convert at the boundary with `plainDateToJsDate` and `jsDateToPlainDate` from `event-time/js-date.ts`; non-boundary application code must not import those converters.
+JS `Date` exists only at third-party boundaries (example: react-day-picker in `ui/date-picker.tsx`, chrono-node in `magic-parser.ts`, rrule.js in `rrule-utils.ts`). Convert at the boundary with `plainDateToJsDate` and `jsDateToPlainDate` from `event-time/js-date.ts`; non-boundary application code must not import those converters.
 
 Never use these on event start/end values:
 
@@ -56,6 +56,6 @@ Never use these on event start/end values:
 
 Do not add an `allDay: boolean`; `kind: "date"` already encodes all-day events.
 
-Use `instantForOrdering(et)` only when you need a comparable ordering projection. Do not use ordering projections as the source of truth for edits or recurrence.
+Ordering projections such as `instantForOrdering(et)` stay internal to event-time. Do not use them as the source of truth for edits or recurrence.
 
 When changing an event range, use `withDates(...)` from `src/lib/cal-events.ts` so the cached `dateInfo` projection is recomputed.

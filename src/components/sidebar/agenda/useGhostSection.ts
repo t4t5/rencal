@@ -39,8 +39,7 @@ export function useGhostSection({
     }))
 
     if (ghostDate) {
-      const ghostDateStr = formatDateKey(ghostDate)
-      const alreadyExists = sections.some(({ date }) => formatDateKey(date) === ghostDateStr)
+      const alreadyExists = sections.some(({ date }) => date.equals(ghostDate))
       if (!alreadyExists) {
         sections.push({ date: ghostDate, events: [], isGhost: true })
         sections.sort((a, b) => Temporal.PlainDate.compare(a.date, b.date))

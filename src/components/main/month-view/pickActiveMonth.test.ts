@@ -46,7 +46,7 @@ describe("pickActiveMonth", () => {
       weeks,
       viewTop: 100,
       viewBottom: 400,
-      activeDateKey: "2026-01-15",
+      activeDate: Temporal.PlainDate.from("2026-01-15"),
       direction: "down",
     })
     expect(result && formatDateKey(result)).toBe("2026-02-01")
@@ -59,7 +59,7 @@ describe("pickActiveMonth", () => {
       weeks,
       viewTop: 200,
       viewBottom: 500,
-      activeDateKey: "2026-02-10",
+      activeDate: Temporal.PlainDate.from("2026-02-10"),
       direction: "down",
     })
     expect(result).toBeNull()
@@ -72,7 +72,7 @@ describe("pickActiveMonth", () => {
       weeks,
       viewTop: 120,
       viewBottom: 420,
-      activeDateKey: "2026-01-15",
+      activeDate: Temporal.PlainDate.from("2026-01-15"),
       direction: "down",
     })
     expect(result).toBeNull()
@@ -85,7 +85,7 @@ describe("pickActiveMonth", () => {
       weeks,
       viewTop: 100,
       viewBottom: 400,
-      activeDateKey: "2026-01-15",
+      activeDate: Temporal.PlainDate.from("2026-01-15"),
       direction: "up",
     })
     expect(result).toBeNull()

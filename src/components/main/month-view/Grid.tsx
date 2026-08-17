@@ -23,15 +23,13 @@ import { pickActiveMonth } from "./pickActiveMonth"
 const debugMonthScroll = createDebugLogger("month-scroll")
 
 const DEFAULT_ROW_HEIGHT = 150
-export const LANE_HEIGHT = 20
-export const LANE_GAP = 3
 
 export function MonthGrid({
   weeks,
   weekLayouts,
   activeEventKey,
   selectedEventKey,
-  activeDateKey,
+  activeDate,
   anchorWeekIndex,
   scrollRef,
   isNavigating,
@@ -45,7 +43,7 @@ export function MonthGrid({
   weekLayouts: WeekLayout[]
   activeEventKey: string | null
   selectedEventKey: string | null
-  activeDateKey: string
+  activeDate: Temporal.PlainDate
   anchorWeekIndex: number
   scrollRef: RefObject<HTMLDivElement | null>
   isNavigating: () => boolean
@@ -55,6 +53,8 @@ export function MonthGrid({
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }) {
+  const activeDateKey = activeDate.toString()
+
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
 
@@ -214,7 +214,7 @@ export function MonthGrid({
       weeks,
       viewTop,
       viewBottom,
-      activeDateKey,
+      activeDate,
       direction,
     })
 

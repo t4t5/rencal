@@ -5,9 +5,9 @@ import { BoardColumn } from "@/components/main/board-view/BoardColumn"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { useToday } from "@/hooks/useToday"
 import { type CalendarEvent } from "@/lib/cal-events"
-import { dateInViewerZone } from "@/lib/event-time"
-import { getViewerTzid } from "@/lib/event-time/local-zone"
+import { dateInViewerZone, startOfWeek } from "@/lib/event-time"
 
 interface Bucket {
   id: string
@@ -17,22 +17,14 @@ interface Bucket {
   isToday: boolean
 }
 
-function eventDateKey(event: CalendarEvent): string {
-  const pd = dateInViewerZone(event.start)
-  return pd.toString()
-}
-
 export function BoardView() {
   const { calendarEvents } = useCalEvents()
+  const today = useToday()
 
   const columns = useMemo(() => {
-    const today = Temporal.Now.zonedDateTimeISO(getViewerTzid()).toPlainDate()
     const yesterday = today.subtract({ days: 1 })
     const tomorrow = today.add({ days: 1 })
-
-    const dayOfWeek = today.dayOfWeek
-    const daysUntilSunday = 7 - dayOfWeek
-    const endOfWeek = today.add({ days: daysUntilSunday })
+    const endOfWeek = startOfWeek(today).add({ days: 6 })
 
     function getBucketId(pd: Temporal.PlainDate): string {
       if (pd.equals(yesterday)) return "yesterday"
@@ -74,12 +66,10 @@ export function BoardView() {
       const def = bucketDefs[id]
       const events = buckets.get(id) ?? []
       if (id === "this-week") {
-        events.sort((a, b) => {
-          const aKey = eventDateKey(a)
-          const bKey = eventDateKey(b)
-          if (aKey !== bKey) return aKey < bKey ? -1 : 1
-          return a.dateInfo.startMs - b.dateInfo.startMs
-        })
+        events.sort(
+          (a, b) =>
+            a.dateInfo.firstDay - b.dateInfo.firstDay || a.dateInfo.startMs - b.dateInfo.startMs,
+        )
       }
       return {
         id,
@@ -89,7 +79,7 @@ export function BoardView() {
         isToday: def.isToday,
       } satisfies Bucket
     })
-  }, [calendarEvents])
+  }, [calendarEvents, today])
 
   return (
     <div className="flex h-full overflow-hidden">

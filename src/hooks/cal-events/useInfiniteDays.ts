@@ -5,9 +5,9 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { useToday } from "@/hooks/useToday"
-import { formatDateKey, startOfWeek } from "@/lib/event-time"
+import { startOfWeek } from "@/lib/event-time"
 
-import type { MonthDay } from "./useMonthGrid"
+import { buildDay, type MonthDay } from "./useMonthGrid"
 
 const BUFFER_DAYS = 7
 const INITIAL_RANGE_DAYS = 21
@@ -15,15 +15,6 @@ const INITIAL_RANGE_DAYS = 21
 /** Seed the day range: activeDate's Mon–Sun week, with BUFFER_DAYS extra on each side. */
 function initialRangeStart(activeDate: Temporal.PlainDate): Temporal.PlainDate {
   return startOfWeek(activeDate).subtract({ days: BUFFER_DAYS })
-}
-
-function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): MonthDay {
-  return {
-    date,
-    dateKey: formatDateKey(date),
-    isToday: date.equals(today),
-    isWeekend: date.dayOfWeek === 6 || date.dayOfWeek === 7,
-  }
 }
 
 /**

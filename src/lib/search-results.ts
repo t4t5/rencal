@@ -7,13 +7,12 @@ import { withNearestOccurrence } from "./rrule-utils"
 /** Normalize recurring masters, then rank every result by its displayed date. */
 export function prepareSearchResults(
   events: CalendarEvent[],
-  nowMs = Temporal.Now.instant().epochMilliseconds,
+  now: Temporal.Instant = Temporal.Now.instant(),
 ): CalendarEvent[] {
-  const now = Temporal.Instant.fromEpochMilliseconds(nowMs)
-    .toZonedDateTimeISO(getViewerTzid())
-    .toPlainDateTime()
+  const nowMs = now.epochMilliseconds
+  const viewerNow = now.toZonedDateTimeISO(getViewerTzid()).toPlainDateTime()
 
   return events
-    .map((event) => withNearestOccurrence(event, now))
+    .map((event) => withNearestOccurrence(event, viewerNow))
     .sort((a, b) => Math.abs(a.dateInfo.startMs - nowMs) - Math.abs(b.dateInfo.startMs - nowMs))
 }

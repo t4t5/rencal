@@ -1,7 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { formatDateKey } from "@/lib/event-time"
 
 /** The slice of a tanstack-virtual item that pickActiveMonth needs. */
 export type ActiveMonthVirtualItem = {
@@ -31,14 +30,14 @@ export function pickActiveMonth({
   weeks,
   viewTop,
   viewBottom,
-  activeDateKey,
+  activeDate,
   direction,
 }: {
   virtualItems: ActiveMonthVirtualItem[]
   weeks: MonthDay[][]
   viewTop: number
   viewBottom: number
-  activeDateKey: string
+  activeDate: Temporal.PlainDate
   direction: "up" | "down"
 }): Temporal.PlainDate | null {
   // Fractional visible area per month, plus each month's 1st when it's on screen. We only
@@ -61,7 +60,7 @@ export function pickActiveMonth({
   }
 
   // Most-visible month, staying on the active month unless another is strictly larger.
-  const activeKey = activeDateKey.slice(0, 7)
+  const activeKey = monthKey(activeDate)
   let bestKey = activeKey
   let bestArea = monthArea.get(activeKey) ?? 0
   for (const [key, area] of monthArea) {
@@ -76,12 +75,12 @@ export function pickActiveMonth({
   if (!target) return null
 
   // Don't promote a half-clipped 1st-of-month row, and don't move against the scroll.
-  const targetKey = formatDateKey(target)
-  if (direction === "up" && targetKey > activeDateKey) return null
-  if (direction === "down" && targetKey < activeDateKey) return null
+  const targetComparison = Temporal.PlainDate.compare(target, activeDate)
+  if (direction === "up" && targetComparison > 0) return null
+  if (direction === "down" && targetComparison < 0) return null
 
   const targetItem = virtualItems.find((item) =>
-    weeks[item.index]?.some((day) => day.dateKey === targetKey),
+    weeks[item.index]?.some((day) => day.date.equals(target)),
   )
   if (!targetItem || targetItem.start < viewTop || targetItem.end > viewBottom) return null
 

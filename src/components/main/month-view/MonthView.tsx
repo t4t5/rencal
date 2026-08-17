@@ -12,7 +12,6 @@ import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { eventKey } from "@/lib/cal-events"
-import { formatDateKey } from "@/lib/event-time"
 
 import { WeekDayLabels } from "./WeekDayLabels"
 import { useInfiniteMonths } from "./useInfiniteMonths"
@@ -53,7 +52,7 @@ export function MonthView() {
         weekLayouts={weekLayouts}
         activeEventKey={activeEvent ? eventKey(activeEvent) : null}
         selectedEventKey={selectedEventKey}
-        activeDateKey={formatDateKey(activeDate)}
+        activeDate={activeDate}
         anchorWeekIndex={anchorWeekIndex}
         scrollRef={scrollRef}
         isNavigating={isNavigating}

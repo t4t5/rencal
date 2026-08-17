@@ -20,18 +20,6 @@ function lastOccupiedDay(start: EventTime, end: EventTime, firstDay: number): nu
   return endsAtDayBoundary && endDay > firstDay ? endDay - 1 : endDay
 }
 
-/**
- * Inclusive [firstDay, lastDay] epoch-day range this event occupies.
- * DTEND is exclusive, so an end exactly at midnight belongs to the previous day.
- */
-export function getEventDayRange(
-  start: EventTime,
-  end: EventTime,
-): { firstDay: number; lastDay: number } {
-  const firstDay = dayOf(start)
-  return { firstDay, lastDay: lastOccupiedDay(start, end, firstDay) }
-}
-
 export function computeEventDateInfo(start: EventTime, end: EventTime): EventDateInfo {
   const firstDay = dayOf(start)
   const endDay = dayOf(end)

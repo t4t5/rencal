@@ -5,7 +5,7 @@ import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
-import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/time"
+import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons/bell"

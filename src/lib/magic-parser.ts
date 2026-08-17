@@ -4,12 +4,13 @@ import { addDays, addMinutes, startOfDay } from "date-fns"
 
 import type { Recurrence } from "@/lib/cal-events"
 import {
+  allDayDate,
   DEFAULT_DURATION_MINS,
   fromDate,
   getViewerTzid,
-  plainDate,
   type EventTime,
 } from "@/lib/event-time"
+import { jsDateToPlainDate } from "@/lib/event-time/js-date"
 
 function currentViewerWallclockDate(): Date {
   const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
@@ -242,7 +243,7 @@ export function parseEventText(
   // anchored in the viewer's local zone (chrono produces local-zone Dates).
   const tzid = getViewerTzid()
   const toEt = (d: Date): EventTime =>
-    allDay ? plainDate(d.getFullYear(), d.getMonth() + 1, d.getDate()) : fromDate(d, tzid)
+    allDay ? allDayDate(jsDateToPlainDate(d)) : fromDate(d, tzid)
 
   return {
     summary: finalSummary,

@@ -9,15 +9,14 @@ import type { TimeFormat } from "@/rpc/bindings"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
-import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import {
   atTime,
-  formatDateKey,
   formatDay,
   formatWallclockTime,
   getViewerTzid,
@@ -38,6 +37,11 @@ const DAY_WIDTH_MIN = 100
 // How long to wait after a scroll event before considering the scroll "settled"
 // and updating the activeDate based on the scroll position.
 const SCROLL_SETTLE_MS = 300
+
+function mondayIndex(days: MonthDay[], activeDay: MonthDay): number {
+  const monday = startOfWeek(activeDay.date)
+  return days.findIndex((day) => day.date.equals(monday))
+}
 
 type WeekTimeGridProps = {
   days: MonthDay[]
@@ -137,8 +141,7 @@ export function WeekTimeGrid({
 
     const activeDay = days.find((d) => d.dateKey === activeDateKey)
     if (activeDay) {
-      const weekStartKey = formatDateKey(startOfWeek(activeDay.date))
-      const mondayIdx = days.findIndex((d) => d.dateKey === weekStartKey)
+      const mondayIdx = mondayIndex(days, activeDay)
       if (mondayIdx !== -1) el.scrollLeft = mondayIdx * dayWidth
     }
 
@@ -168,8 +171,7 @@ export function WeekTimeGrid({
 
     if (columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
       const activeDay = currentDays[idx]
-      const weekStartKey = formatDateKey(startOfWeek(activeDay.date))
-      const mondayIdx = currentDays.findIndex((d) => d.dateKey === weekStartKey)
+      const mondayIdx = mondayIndex(currentDays, activeDay)
       const targetIdx = mondayIdx !== -1 ? mondayIdx : idx
 
       suppressScrollTracking()

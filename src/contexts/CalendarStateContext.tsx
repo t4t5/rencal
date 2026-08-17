@@ -60,13 +60,6 @@ export function useCalendarNavigation() {
   return useContext(CalendarNavigationContext)
 }
 
-/** @deprecated Use useCalendars() or useCalendarNavigation() directly */
-export function useCalendarState() {
-  const calendars = useCalendars()
-  const navigation = useCalendarNavigation()
-  return { ...calendars, ...navigation }
-}
-
 // --- Provider ---
 
 interface CalendarStateProviderProps {

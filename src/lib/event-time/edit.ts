@@ -1,5 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
+import { DAY_MINUTES } from "./constants"
 import { allDayDate } from "./constructors"
 import { getViewerTzid } from "./local-zone"
 import { dateInViewerZone, toViewerZonedDateTime } from "./projections"
@@ -40,7 +41,7 @@ export function withViewerZone(et: EventTime): EventTime {
 export function addMinutes(et: EventTime, minutes: number): EventTime {
   switch (et.kind) {
     case "date":
-      return { kind: "date", value: et.value.add({ days: Math.round(minutes / 1440) }) }
+      return { kind: "date", value: et.value.add({ days: Math.round(minutes / DAY_MINUTES) }) }
     case "datetime_utc":
       return { kind: "datetime_utc", value: et.value.add({ minutes }) }
     case "datetime_floating":

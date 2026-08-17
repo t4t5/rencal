@@ -4,7 +4,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { enumerateLocalDateKeys } from "@/lib/event-time"
+import { enumerateLocalDays } from "@/lib/event-time"
 
 export function useEventDotsByDate(): Map<string, string[]> {
   const { calendars } = useCalendars()
@@ -34,8 +34,8 @@ export function useEventDotsByDate(): Map<string, string[]> {
       const color = colorByCalendarSlug.get(event.calendar_slug)
       if (!color) continue
 
-      for (const dateKey of enumerateLocalDateKeys(event.start, event.end)) {
-        addDot(dateKey, event.calendar_slug, color)
+      for (const date of enumerateLocalDays(event.start, event.end)) {
+        addDot(date.toString(), event.calendar_slug, color)
       }
     }
 

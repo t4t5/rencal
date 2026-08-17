@@ -115,8 +115,12 @@ export const DaySection = forwardRef<
 
   // A timed event that covers this entire day (e.g. the middle of a
   // multi-day span) is shown as an all-day chip, not a timed row.
-  const allDayEvents = events.filter((e) => coversFullDay(e.start, e.end, dateKey))
-  const timedEvents = events.filter((e) => !coversFullDay(e.start, e.end, dateKey))
+  const allDayEvents: CalendarEvent[] = []
+  const timedEvents: CalendarEvent[] = []
+  for (const event of events) {
+    if (coversFullDay(event.start, event.end, date)) allDayEvents.push(event)
+    else timedEvents.push(event)
+  }
 
   return (
     <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">

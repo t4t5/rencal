@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
 import type { CalendarEvent, Recurrence } from "./cal-events"
@@ -44,7 +45,7 @@ describe("prepareSearchResults", () => {
           exdates: [],
         }),
       ],
-      new Date(2026, 6, 31, 12).getTime(),
+      Temporal.ZonedDateTime.from("2026-07-31T12:00:00+02:00[Europe/Berlin]").toInstant(),
     )
 
     expect(results.map(({ id }) => id)).toEqual(["recurring event", "2015 event", "2013 event"])

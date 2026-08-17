@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useViewerTzid } from "@/hooks/useViewerTzid"
-import { getViewerTzid } from "@/lib/event-time"
+import { DAY_MINUTES, getViewerTzid } from "@/lib/event-time"
 
 export function CurrentTimeIndicator() {
   const { timeFormat } = useSettings()
@@ -22,7 +22,7 @@ export function CurrentTimeIndicator() {
   const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
 
   const currentMinutes = now.hour * 60 + now.minute
-  const timeIndicatorTopPercent = (currentMinutes / 1440) * 100
+  const timeIndicatorTopPercent = (currentMinutes / DAY_MINUTES) * 100
 
   const hour = timeFormat === "12h" ? (now.hour % 12 || 12).toString() : now.hour.toString()
   const minutes = now.minute.toString().padStart(2, "0")

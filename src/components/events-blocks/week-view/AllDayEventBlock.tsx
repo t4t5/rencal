@@ -4,7 +4,7 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 import { GUTTER_WIDTH } from "@/components/main/week-view/WeekTimeGrid"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
-import type { AllDayLaneItem } from "@/hooks/cal-events/useMonthEventLayout"
+import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"

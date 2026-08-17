@@ -3,10 +3,10 @@ import { RefObject, useCallback, useEffect, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 
+import { monthGridBounds } from "@/hooks/cal-events/useMonthGrid"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 import { createDebugLogger } from "@/lib/debug"
-import { startOfWeek } from "@/lib/event-time"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
 
@@ -45,12 +45,10 @@ export function useInfiniteMonths({
     }
   }, [activeDate, rangeStart, rangeEnd])
 
-  // Keep loaded events in step with the rendered weeks. The bounds match useMonthGrid's
-  // gridStart/gridEnd exactly so coverage lines up with what's on screen.
+  // Keep loaded events in step with the rendered weeks.
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    const gridStart = startOfWeek(rangeStart)
-    const gridEnd = startOfWeek(rangeEnd)
+    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd)
     debugMonthScroll("ensure month range loaded", { gridStart, gridEnd })
     void ensureRangeLoaded(gridStart, gridEnd)
   }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded])

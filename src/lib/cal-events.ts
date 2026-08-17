@@ -4,14 +4,14 @@
  * objects rather than strings. Conversion happens once at the RPC boundary.
  *
  * CalendarEvent also carries `dateInfo` — numeric projections of start/end
- * (epoch ms, local-day ms, wallclock minutes). These are computed once at
+ * (epoch ms, epoch-day integers, wallclock minutes). These are computed once at
  * construction time so the week/month layout hot loops can sort, group by
  * day, and place events without round-tripping through Temporal on every
  * render.
  */
 import type { CalendarEvent as RpcCalendarEvent, RpcRecurrence } from "@/rpc/bindings"
 
-import { conferenceToRpc, rpcToConference, type EventConference } from "./conference"
+import { rpcToConference, type EventConference } from "./conference"
 import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./event-time"
 import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
 
@@ -83,17 +83,6 @@ export function rpcToCalendarEvents(rpcEvents: RpcCalendarEvent[]): CalendarEven
     }
   }
   return converted
-}
-
-export function calendarEventToRpc(e: CalendarEvent): RpcCalendarEvent {
-  return {
-    ...e,
-    start: toRpcEventTime(e.start),
-    end: toRpcEventTime(e.end),
-    recurrence: e.recurrence ? recurrenceToRpc(e.recurrence) : null,
-    master_recurrence: e.master_recurrence ? recurrenceToRpc(e.master_recurrence) : null,
-    conference: conferenceToRpc(e.conference),
-  }
 }
 
 /**
