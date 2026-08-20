@@ -48,9 +48,12 @@ iana-time-zone = "0.1"
 dirs = "5"
 tauri-plugin-log = "2.8.0"
 log = "0.4.29"
-tauri-plugin-single-instance = "2.4.1"
+tauri-plugin-deep-link = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"
+
+[target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
+tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }

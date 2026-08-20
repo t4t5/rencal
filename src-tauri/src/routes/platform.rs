@@ -38,9 +38,12 @@ pub fn needs_native_decorations() -> bool {
     false
 }
 
+use crate::deep_links::{EventDeepLink, take_pending_event_links};
+
 #[taurpc::procedures(path = "platform", export_to = "../src/rpc/bindings.ts")]
 pub trait PlatformApi {
     async fn needs_native_decorations() -> bool;
+    async fn take_pending_event_links() -> Vec<EventDeepLink>;
 }
 
 #[derive(Clone)]
@@ -50,5 +53,9 @@ pub struct PlatformApiImpl;
 impl PlatformApi for PlatformApiImpl {
     async fn needs_native_decorations(self) -> bool {
         needs_native_decorations()
+    }
+
+    async fn take_pending_event_links(self) -> Vec<EventDeepLink> {
+        take_pending_event_links()
     }
 }

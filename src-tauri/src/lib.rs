@@ -1,5 +1,6 @@
 mod caldir_watcher;
 mod config_watcher;
+mod deep_links;
 mod event_cache;
 mod external_themes;
 #[cfg(target_os = "linux")]
@@ -22,6 +23,7 @@ use routes::themes::{ThemesApi, ThemesApiImpl};
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 use tauri::Manager;
+use tauri_plugin_deep_link::DeepLinkExt;
 use taurpc::Router;
 
 const MIN_WINDOW_WIDTH: f64 = 300.0;
@@ -124,7 +126,7 @@ pub async fn run() {
 
     let builder = tauri::Builder::default();
 
-    #[cfg(not(target_os = "linux"))]
+    #[cfg(any(target_os = "macos", target_os = "windows"))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
         if let Some(window) = app.get_webview_window("main") {
             let _ = window.unminimize();
@@ -140,6 +142,7 @@ pub async fn run() {
         .on_menu_event(menu::handle_menu_event);
 
     builder
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(if cfg!(debug_assertions) {
@@ -168,13 +171,36 @@ pub async fn run() {
             // Bundle default providers (google, icloud, caldav...)
             setup_bundled_providers(app);
 
+            #[cfg(all(debug_assertions, target_os = "linux"))]
+            app.deep_link().register_all()?;
+
+            if let Some(urls) = app.deep_link().get_current()? {
+                let urls: Vec<String> = urls.into_iter().map(|url| url.to_string()).collect();
+                deep_links::enqueue_urls(app.handle(), &urls);
+            }
+
+            let app_handle = app.handle().clone();
+            app.deep_link().on_open_url(move |event| {
+                let urls: Vec<String> = event.urls().iter().map(ToString::to_string).collect();
+                if deep_links::enqueue_urls(&app_handle, &urls) > 0
+                    && let Some(window) = app_handle.get_webview_window("main")
+                {
+                    let _ = window.unminimize();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            });
+
             // Enable systemd notifications:
             #[cfg(target_os = "linux")]
             {
                 linux_reminders::enable_notifierd_if_needed();
                 if let Some(listener) = instance_listener {
                     let app_handle = app.handle().clone();
-                    single_instance::spawn_listener(listener, move || {
+                    single_instance::spawn_listener(listener, move |urls| {
+                        if !urls.is_empty() {
+                            deep_links::enqueue_urls(&app_handle, &urls);
+                        }
                         if let Some(window) = app_handle.get_webview_window("main") {
                             let _ = window.unminimize();
                             let _ = window.show();

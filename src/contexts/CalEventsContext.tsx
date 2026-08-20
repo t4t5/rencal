@@ -18,6 +18,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
+import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
 import {
   getCalendarEventsForRange,
@@ -274,5 +275,15 @@ export function CalEventsProvider({
     ],
   )
 
-  return <CalEventsContext.Provider value={value}>{children}</CalEventsContext.Provider>
+  return (
+    <CalEventsContext.Provider value={value}>
+      <EventDeepLinkListener />
+      {children}
+    </CalEventsContext.Provider>
+  )
+}
+
+function EventDeepLinkListener() {
+  useEventDeepLinks()
+  return null
 }

@@ -11,6 +11,7 @@ mod delete_calendar;
 mod delete_event;
 mod delete_recurring_series;
 mod discard;
+mod find_event;
 mod get_config;
 mod get_event;
 mod get_provider_connect_info;
@@ -48,6 +49,10 @@ pub trait CaldirApi {
     ) -> TauResult<Vec<CalendarEvent>>;
     async fn get_event(calendar_slug: String, event_id: String)
     -> TauResult<Option<CalendarEvent>>;
+    async fn find_event(
+        uid: String,
+        recurrence_id: Option<String>,
+    ) -> TauResult<Option<CalendarEvent>>;
     async fn create_event(input: CreateEventInput) -> TauResult<CalendarEvent>;
     async fn update_event(input: UpdateEventInput) -> TauResult<()>;
     async fn delete_event(calendar_slug: String, event_id: String) -> TauResult<()>;
@@ -140,6 +145,14 @@ impl CaldirApi for CaldirApiImpl {
         event_id: String,
     ) -> TauResult<Option<CalendarEvent>> {
         get_event::handler(calendar_slug, event_id).await
+    }
+
+    async fn find_event(
+        self,
+        uid: String,
+        recurrence_id: Option<String>,
+    ) -> TauResult<Option<CalendarEvent>> {
+        find_event::handler(uid, recurrence_id).await
     }
 
     async fn create_event(self, input: CreateEventInput) -> TauResult<CalendarEvent> {

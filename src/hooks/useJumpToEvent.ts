@@ -12,11 +12,12 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, dateInViewerZone } from "@/lib/event-time"
+import { upsertEvent } from "@/lib/upsert-event"
 
 const MAX_ANCHOR_FRAMES = 30
 
 export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
-  const { setActiveEventKey } = useCalEvents()
+  const { setActiveEventKey, setCalendarEvents } = useCalEvents()
   const { navigateToDate } = useCalendarNavigation()
 
   return useCallback(
@@ -26,6 +27,8 @@ export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
       const masterKey = eventKey(event)
 
       await navigateToDate(date, "instant")
+
+      setCalendarEvents((events) => upsertEvent(events, event))
 
       const row = await findAgendaRow((candidate) => {
         if (candidate.dataset.dateKey !== dateKey) return false
@@ -49,7 +52,7 @@ export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
       setEventAnchor(row)
       setActiveEventKey(row.dataset.eventKey)
     },
-    [navigateToDate, setActiveEventKey],
+    [navigateToDate, setActiveEventKey, setCalendarEvents],
   )
 }
 
