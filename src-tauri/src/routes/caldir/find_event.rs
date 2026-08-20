@@ -1,5 +1,5 @@
-use super::helpers::{is_visible, load_caldir};
-use super::types::{CalendarEvent, core_recurrence_to_rpc};
+use super::helpers::{is_visible, load_caldir, to_calendar_event};
+use super::types::CalendarEvent;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Event, EventInstanceId, EventUid, expand_in_range};
@@ -53,17 +53,26 @@ fn find_in_sources<I>(target: &EventInstanceId, sources: I) -> TauResult<Option<
 where
     I: IntoIterator<Item = TauResult<(String, Arc<Vec<Event>>)>>,
 {
+    // A recurrence target is matched by expanding a narrow window around its
+    // recurrence time; the window depends only on the target, so compute it once.
+    let window = match target.recurrence_id() {
+        Some(recurrence_id) => {
+            let recurrence_time = recurrence_id.as_event_time().to_utc();
+            let (Some(from), Some(to)) = (
+                recurrence_time.checked_sub_signed(Duration::days(1)),
+                recurrence_time.checked_add_signed(Duration::days(1)),
+            ) else {
+                return Ok(None);
+            };
+            Some((from, to))
+        }
+        None => None,
+    };
+
     for source in sources {
         let (slug, parsed) = source?;
 
-        let matched = if let Some(recurrence_id) = target.recurrence_id() {
-            let recurrence_time = recurrence_id.as_event_time().to_utc();
-            let Some(from) = recurrence_time.checked_sub_signed(Duration::days(1)) else {
-                return Ok(None);
-            };
-            let Some(to) = recurrence_time.checked_add_signed(Duration::days(1)) else {
-                return Ok(None);
-            };
+        let matched = if let Some((from, to)) = window {
             expand_in_range(parsed.iter().cloned(), from, to)
                 .into_iter()
                 .find(|event| event.event_instance_id().eq(target) && is_visible(event))
@@ -75,20 +84,7 @@ where
         };
 
         if let Some(event) = matched {
-            let master_recurrence = event.recurrence_id.as_ref().and_then(|_| {
-                parsed
-                    .iter()
-                    .find(|candidate| {
-                        candidate.uid.as_str() == event.uid.as_str()
-                            && candidate.recurrence.is_some()
-                    })
-                    .and_then(|master| master.recurrence.as_ref().map(core_recurrence_to_rpc))
-            });
-            return Ok(Some(CalendarEvent::from_event(
-                &event,
-                &slug,
-                master_recurrence,
-            )));
+            return Ok(Some(to_calendar_event(&event, &slug, &parsed)));
         }
     }
 

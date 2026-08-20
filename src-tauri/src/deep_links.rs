@@ -37,17 +37,21 @@ pub fn parse_event_deep_link(raw: &str) -> Result<EventDeepLink, String> {
     })
 }
 
-/// Validate and enqueue URLs. The emitted event is only a wake-up signal; the
-/// inbox remains authoritative and is drained through taurpc.
-pub fn enqueue_urls<R, I, S>(app: &AppHandle<R>, urls: I) -> usize
-where
-    R: Runtime,
-    I: IntoIterator<Item = S>,
-    S: AsRef<str>,
-{
+/// Validate and enqueue URLs, waking the frontend when any were accepted. The
+/// emitted event is only a wake-up signal; the inbox remains authoritative and
+/// is drained through taurpc.
+pub fn enqueue_urls<R: Runtime>(app: &AppHandle<R>, urls: &[String]) -> usize {
+    let count = enqueue(urls);
+    if count > 0 {
+        let _ = app.emit(EVENT_DEEP_LINK_AVAILABLE, ());
+    }
+    count
+}
+
+fn enqueue(urls: &[String]) -> usize {
     let accepted: Vec<_> = urls
-        .into_iter()
-        .filter_map(|raw| match parse_event_deep_link(raw.as_ref()) {
+        .iter()
+        .filter_map(|raw| match parse_event_deep_link(raw) {
             Ok(link) => Some(link),
             Err(error) => {
                 log::warn!("ignoring invalid event deep link: {error}");
@@ -57,25 +61,12 @@ where
         .collect();
 
     let count = accepted.len();
-    if count == 0 {
-        return 0;
-    }
-
     EVENT_LINK_INBOX.lock().unwrap().extend(accepted);
-    let _ = app.emit(EVENT_DEEP_LINK_AVAILABLE, ());
     count
 }
 
 pub fn take_pending_event_links() -> Vec<EventDeepLink> {
     EVENT_LINK_INBOX.lock().unwrap().drain(..).collect()
-}
-
-#[cfg(test)]
-fn enqueue_for_test(urls: &[&str]) {
-    let accepted = urls
-        .iter()
-        .filter_map(|url| parse_event_deep_link(url).ok());
-    EVENT_LINK_INBOX.lock().unwrap().extend(accepted);
 }
 
 #[cfg(test)]
@@ -141,11 +132,12 @@ mod tests {
     #[test]
     fn inbox_is_fifo_and_drain_is_atomic() {
         let _guard = inbox_test_lock();
-        enqueue_for_test(&[
-            "rencal://event?uid=first",
-            "not-a-url",
-            "rencal://event?uid=second",
+        let accepted = enqueue(&[
+            "rencal://event?uid=first".into(),
+            "not-a-url".into(),
+            "rencal://event?uid=second".into(),
         ]);
+        assert_eq!(accepted, 2);
 
         let drained = take_pending_event_links();
         assert_eq!(

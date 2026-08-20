@@ -12,7 +12,6 @@ import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { formatDateKey, dateInViewerZone } from "@/lib/event-time"
-import { upsertEvent } from "@/lib/upsert-event"
 
 const MAX_ANCHOR_FRAMES = 30
 
@@ -28,7 +27,7 @@ export function useJumpToEvent(): (event: CalendarEvent) => Promise<void> {
 
       await navigateToDate(date, "instant")
 
-      setCalendarEvents((events) => upsertEvent(events, event))
+      setCalendarEvents((events) => addEventIfMissing(events, event))
 
       const row = await findAgendaRow((candidate) => {
         if (candidate.dataset.dateKey !== dateKey) return false
@@ -76,4 +75,9 @@ function findAgendaRow(matches: (row: HTMLElement) => boolean): Promise<HTMLElem
 
     requestAnimationFrame(find)
   })
+}
+
+function addEventIfMissing(events: CalendarEvent[], target: CalendarEvent): CalendarEvent[] {
+  const targetKey = eventKey(target)
+  return events.some((event) => eventKey(event) === targetKey) ? events : [...events, target]
 }
