@@ -2,22 +2,12 @@
 //!
 //! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
-//! socket; later launches send a bounded JSON message to it and exit. Debug and release use
-//! separate sockets so `tauri dev` does not fight the installed app.
+//! socket; later launches send deep-link URLs to it and exit. Debug and release
+//! use separate sockets so `tauri dev` does not fight the installed app.
 
-use serde::{Deserialize, Serialize};
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
-
-const MAX_MESSAGE_SIZE: usize = 64 * 1024;
-
-#[derive(Debug, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(tag = "type", rename_all = "snake_case")]
-enum InstanceMessage {
-    Focus,
-    OpenUrls { urls: Vec<String> },
-}
 
 /// Hold for the process lifetime; the kernel removes the socket file when the
 /// listener is dropped (we also unbind explicitly on Drop for cleanliness).
@@ -72,14 +62,7 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
             .filter_map(|arg| arg.into_string().ok())
             .filter(|arg| arg.starts_with("rencal:"))
             .collect();
-        let message = if urls.is_empty() {
-            InstanceMessage::Focus
-        } else {
-            InstanceMessage::OpenUrls { urls }
-        };
-        if let Some(encoded) = encode_message(&message) {
-            let _ = stream.write_all(&encoded);
-        }
+        let _ = stream.write_all(urls.join("\n").as_bytes());
         return None;
     }
 
@@ -104,8 +87,8 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     }
 }
 
-/// Spawn a thread that listens for framed messages. Valid URL messages are
-/// passed to `on_message`; an empty vector represents a focus-only launch.
+/// Spawn a thread that listens for newline-delimited URLs. An empty message
+/// represents a focus-only launch.
 pub fn spawn_listener<F>(listener: UnixListener, on_message: F)
 where
     F: Fn(Vec<String>) + Send + 'static,
@@ -113,58 +96,11 @@ where
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
-            let mut bytes = Vec::new();
-            if Read::by_ref(&mut stream)
-                .take((MAX_MESSAGE_SIZE + 1) as u64)
-                .read_to_end(&mut bytes)
-                .is_err()
-            {
+            let mut message = String::new();
+            if stream.read_to_string(&mut message).is_err() {
                 continue;
             }
-            match decode_message(&bytes) {
-                Some(InstanceMessage::Focus) => on_message(Vec::new()),
-                Some(InstanceMessage::OpenUrls { urls }) => on_message(urls),
-                None => log::warn!("ignoring invalid single-instance message"),
-            }
+            on_message(message.lines().map(String::from).collect());
         }
     });
-}
-
-fn encode_message(message: &InstanceMessage) -> Option<Vec<u8>> {
-    let mut encoded = serde_json::to_vec(message).ok()?;
-    encoded.push(b'\n');
-    (encoded.len() <= MAX_MESSAGE_SIZE).then_some(encoded)
-}
-
-fn decode_message(bytes: &[u8]) -> Option<InstanceMessage> {
-    if bytes.is_empty() || bytes.len() > MAX_MESSAGE_SIZE || bytes.last() != Some(&b'\n') {
-        return None;
-    }
-    serde_json::from_slice(&bytes[..bytes.len() - 1]).ok()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn focus_and_open_urls_round_trip() {
-        for message in [
-            InstanceMessage::Focus,
-            InstanceMessage::OpenUrls {
-                urls: vec!["rencal://event?uid=a".into(), "rencal://event?uid=b".into()],
-            },
-        ] {
-            let encoded = encode_message(&message).unwrap();
-            assert_eq!(decode_message(&encoded), Some(message));
-        }
-    }
-
-    #[test]
-    fn invalid_and_oversized_messages_are_ignored() {
-        assert_eq!(decode_message(b"not json\n"), None);
-        assert_eq!(decode_message(b"{\"type\":\"focus\"}"), None);
-        assert_eq!(decode_message(&vec![b'x'; MAX_MESSAGE_SIZE + 1]), None);
-        assert_eq!(decode_message(b"{\"type\":\"unknown\"}\n"), None);
-    }
 }

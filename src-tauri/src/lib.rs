@@ -73,6 +73,14 @@ fn setup_bundled_providers(app: &tauri::App) {
     let _ = BUNDLED_PROVIDERS_DIR.set(providers_dir);
 }
 
+fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.unminimize();
+        let _ = window.show();
+        let _ = window.set_focus();
+    }
+}
+
 fn spawn_reminder_loop_if_needed(app: &tauri::App) {
     #[cfg(target_os = "linux")]
     if !linux_reminders::should_run_in_process_reminders() {
@@ -128,11 +136,7 @@ pub async fn run() {
 
     #[cfg(any(target_os = "macos", target_os = "windows"))]
     let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-        if let Some(window) = app.get_webview_window("main") {
-            let _ = window.unminimize();
-            let _ = window.show();
-            let _ = window.set_focus();
-        }
+        focus_main_window(app);
     }));
 
     // Native macOS menu bar
@@ -182,12 +186,8 @@ pub async fn run() {
             let app_handle = app.handle().clone();
             app.deep_link().on_open_url(move |event| {
                 let urls: Vec<String> = event.urls().iter().map(ToString::to_string).collect();
-                if deep_links::enqueue_urls(&app_handle, &urls) > 0
-                    && let Some(window) = app_handle.get_webview_window("main")
-                {
-                    let _ = window.unminimize();
-                    let _ = window.show();
-                    let _ = window.set_focus();
+                if deep_links::enqueue_urls(&app_handle, &urls) > 0 {
+                    focus_main_window(&app_handle);
                 }
             });
 
@@ -201,11 +201,7 @@ pub async fn run() {
                         if !urls.is_empty() {
                             deep_links::enqueue_urls(&app_handle, &urls);
                         }
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let _ = window.unminimize();
-                            let _ = window.show();
-                            let _ = window.set_focus();
-                        }
+                        focus_main_window(&app_handle);
                     });
                 }
             }
