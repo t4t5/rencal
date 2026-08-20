@@ -3,7 +3,7 @@ use super::types::{CalendarEvent, core_recurrence_to_rpc};
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
 use caldir_core::{Event, EventInstanceId, EventUid, expand_in_range};
-use chrono::{DateTime, Duration, Utc};
+use chrono::Duration;
 use std::sync::Arc;
 
 pub(super) async fn handler(
@@ -14,7 +14,7 @@ pub(super) async fn handler(
         return Ok(None);
     }
 
-    let Some(target) = LookupTarget::new(uid, recurrence_id) else {
+    let Some(target) = parse_lookup_target(uid, recurrence_id) else {
         return Ok(None);
     };
     let caldir = load_caldir()?;
@@ -32,43 +32,32 @@ pub(super) async fn handler(
     find_in_sources(&target, sources)
 }
 
-struct LookupTarget {
-    id: EventInstanceId,
-    recurrence_time: Option<DateTime<Utc>>,
-}
-
-impl LookupTarget {
-    fn new(uid: String, recurrence_id: Option<String>) -> Option<Self> {
-        match recurrence_id {
-            None => Some(Self {
-                // Do not parse an opaque UID: it may itself end in `__<date>`.
-                id: EventInstanceId::new(EventUid::new(uid), None),
-                recurrence_time: None,
-            }),
-            Some(recurrence_id) if !recurrence_id.is_empty() => {
-                let id = EventInstanceId::from(format!("{uid}__{recurrence_id}"));
-                if id.uid().as_str() != uid || id.recurrence_id().is_none() {
-                    return None;
-                }
-                let recurrence_time = id.recurrence_id()?.as_event_time().to_utc();
-                Some(Self {
-                    id,
-                    recurrence_time: Some(recurrence_time),
-                })
-            }
-            Some(_) => None,
+fn parse_lookup_target(uid: String, recurrence_id: Option<String>) -> Option<EventInstanceId> {
+    match recurrence_id {
+        None => {
+            // Do not parse an opaque UID: it may itself end in `__<date>`.
+            Some(EventInstanceId::new(EventUid::new(uid), None))
         }
+        Some(recurrence_id) if !recurrence_id.is_empty() => {
+            let id = EventInstanceId::from(format!("{uid}__{recurrence_id}"));
+            if id.uid().as_str() != uid || id.recurrence_id().is_none() {
+                return None;
+            }
+            Some(id)
+        }
+        Some(_) => None,
     }
 }
 
-fn find_in_sources<I>(target: &LookupTarget, sources: I) -> TauResult<Option<CalendarEvent>>
+fn find_in_sources<I>(target: &EventInstanceId, sources: I) -> TauResult<Option<CalendarEvent>>
 where
     I: IntoIterator<Item = TauResult<(String, Arc<Vec<Event>>)>>,
 {
     for source in sources {
         let (slug, parsed) = source?;
 
-        let matched = if let Some(recurrence_time) = target.recurrence_time {
+        let matched = if let Some(recurrence_id) = target.recurrence_id() {
+            let recurrence_time = recurrence_id.as_event_time().to_utc();
             let Some(from) = recurrence_time.checked_sub_signed(Duration::days(1)) else {
                 return Ok(None);
             };
@@ -77,11 +66,11 @@ where
             };
             expand_in_range(parsed.iter().cloned(), from, to)
                 .into_iter()
-                .find(|event| event.event_instance_id() == target.id && is_visible(event))
+                .find(|event| event.event_instance_id().eq(target) && is_visible(event))
         } else {
             parsed
                 .iter()
-                .find(|event| event.event_instance_id() == target.id && is_visible(event))
+                .find(|event| event.event_instance_id().eq(target) && is_visible(event))
                 .cloned()
         };
 
@@ -110,7 +99,7 @@ where
 mod tests {
     use super::*;
     use caldir_core::{EventTime, Recurrence, RecurrenceId, Status};
-    use chrono::TimeZone;
+    use chrono::{TimeZone, Utc};
 
     fn time(day: u32, hour: u32) -> EventTime {
         EventTime::DateTimeUtc(Utc.with_ymd_and_hms(2026, 8, day, hour, 0, 0).unwrap())
@@ -134,7 +123,7 @@ mod tests {
     }
 
     fn lookup(uid: &str, recurrence_id: Option<&str>) -> Option<CalendarEvent> {
-        let target = LookupTarget::new(uid.into(), recurrence_id.map(String::from)).unwrap();
+        let target = parse_lookup_target(uid.into(), recurrence_id.map(String::from)).unwrap();
         find_in_sources(
             &target,
             [source("calendar", vec![event(uid, "single", 26)])],
@@ -147,7 +136,7 @@ mod tests {
         assert_eq!(lookup("single", None).unwrap().summary, "single");
 
         let uid = "opaque__20260826";
-        let target = LookupTarget::new(uid.into(), None).unwrap();
+        let target = parse_lookup_target(uid.into(), None).unwrap();
         let found = find_in_sources(
             &target,
             [source("calendar", vec![event(uid, "opaque", 26)])],
@@ -160,7 +149,7 @@ mod tests {
     #[test]
     fn finds_recurring_master_and_generated_occurrence() {
         let master = recurring("series");
-        let master_target = LookupTarget::new("series".into(), None).unwrap();
+        let master_target = parse_lookup_target("series".into(), None).unwrap();
         assert_eq!(
             find_in_sources(&master_target, [source("calendar", vec![master.clone()])])
                 .unwrap()
@@ -170,7 +159,7 @@ mod tests {
         );
 
         let occurrence_target =
-            LookupTarget::new("series".into(), Some("20260826T090000Z".into())).unwrap();
+            parse_lookup_target("series".into(), Some("20260826T090000Z".into())).unwrap();
         let found = find_in_sources(&occurrence_target, [source("calendar", vec![master])])
             .unwrap()
             .unwrap();
@@ -186,7 +175,7 @@ mod tests {
         moved.end = Some(time(30, 16));
         moved.recurrence_id = Some(RecurrenceId::from_event_time(time(26, 9)));
 
-        let target = LookupTarget::new("series".into(), Some("20260826T090000Z".into())).unwrap();
+        let target = parse_lookup_target("series".into(), Some("20260826T090000Z".into())).unwrap();
         let found = find_in_sources(&target, [source("calendar", vec![master, moved])])
             .unwrap()
             .unwrap();
@@ -204,7 +193,7 @@ mod tests {
             .exdates
             .push(time(26, 9));
         let excluded =
-            LookupTarget::new("excluded".into(), Some("20260826T090000Z".into())).unwrap();
+            parse_lookup_target("excluded".into(), Some("20260826T090000Z".into())).unwrap();
         assert!(
             find_in_sources(&excluded, [source("calendar", vec![excluded_master])])
                 .unwrap()
@@ -216,25 +205,26 @@ mod tests {
         cancelled.recurrence_id = Some(RecurrenceId::from_event_time(time(26, 9)));
         cancelled.status = Status::Cancelled;
         let target =
-            LookupTarget::new("cancelled".into(), Some("20260826T090000Z".into())).unwrap();
+            parse_lookup_target("cancelled".into(), Some("20260826T090000Z".into())).unwrap();
         assert!(
             find_in_sources(&target, [source("calendar", vec![master, cancelled])])
                 .unwrap()
                 .is_none()
         );
 
-        let missing = LookupTarget::new("missing".into(), Some("20260826T090000Z".into())).unwrap();
+        let missing =
+            parse_lookup_target("missing".into(), Some("20260826T090000Z".into())).unwrap();
         assert!(
             find_in_sources(&missing, [source("calendar", vec![])])
                 .unwrap()
                 .is_none()
         );
-        assert!(LookupTarget::new("series".into(), Some("invalid".into())).is_none());
+        assert!(parse_lookup_target("series".into(), Some("invalid".into())).is_none());
     }
 
     #[test]
     fn duplicate_returns_first_source_without_reading_the_next() {
-        let target = LookupTarget::new("same".into(), None).unwrap();
+        let target = parse_lookup_target("same".into(), None).unwrap();
         let mut first = Some(source("first", vec![event("same", "first", 26)]));
         let sources = std::iter::from_fn(move || {
             if first.is_some() {
