@@ -15,6 +15,7 @@ import { CalEventsProvider } from "@/contexts/CalEventsContext"
 import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
 import { RecurrenceEditProvider } from "@/contexts/RecurrenceEditContext"
+import { SidebarCollapseProvider, useSidebarCollapse } from "@/contexts/SidebarCollapseContext"
 import { SyncProvider } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
@@ -29,7 +30,9 @@ export function AppWindow({ preload }: { preload: Preload }) {
           <EventDraftProvider>
             <CreateEventGateProvider>
               <AgendaFocusProvider>
-                <App />
+                <SidebarCollapseProvider>
+                  <App />
+                </SidebarCollapseProvider>
               </AgendaFocusProvider>
             </CreateEventGateProvider>
           </EventDraftProvider>
@@ -44,15 +47,17 @@ export function AppWindow({ preload }: { preload: Preload }) {
 
 function App() {
   const { calendarView, setCalendarView } = useCalendarView()
+  const { collapsed, toggleCollapsed } = useSidebarCollapse()
 
   const isMd = useBreakpoint("md")
+  const sidebarCollapsed = collapsed && isMd
 
   return (
     <main className="flex h-screen overflow-clip">
-      <GlobalShortcuts onChangeCalendarView={setCalendarView} />
+      <GlobalShortcuts onChangeCalendarView={setCalendarView} onToggleSidebar={toggleCollapsed} />
       <DragRegion className="absolute h-4! w-full" />
 
-      <Sidebar />
+      <Sidebar collapsed={sidebarCollapsed} />
 
       {isMd && <Main calendarView={calendarView} onChangeCalendarView={setCalendarView} />}
 

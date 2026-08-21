@@ -117,6 +117,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "g", type: "char" }],
   },
   {
+    id: "toggle-sidebar",
+    group: "View",
+    label: "Toggle sidebar",
+    bindings: [{ keys: "ctrl+b", type: "hotkey" }],
+  },
+  {
     id: "search",
     group: "General",
     label: "Search",

@@ -39,8 +39,10 @@ type ShortcutHandler = (e?: KeyboardEvent) => void
 // Isolated so context updates in the shortcut handlers don't re-render <App />.
 export function GlobalShortcuts({
   onChangeCalendarView,
+  onToggleSidebar,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
+  onToggleSidebar: () => void
 }) {
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -54,6 +56,7 @@ export function GlobalShortcuts({
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
+    onToggleSidebar,
     openShortcutsOverlay: () => setOverlayOpen(true),
     toggleCommandPalette: () => {
       setPalettePage("root")
@@ -137,6 +140,7 @@ export function GlobalShortcuts({
 
 function useShortcutHandlers({
   onChangeCalendarView,
+  onToggleSidebar,
   openShortcutsOverlay,
   toggleCommandPalette,
   openGoToDate,
@@ -146,6 +150,7 @@ function useShortcutHandlers({
   setActiveGroup,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
+  onToggleSidebar: () => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
   openGoToDate: () => void
@@ -266,6 +271,10 @@ function useShortcutHandlers({
     week: () => onChangeCalendarView("week"),
     board: () => onChangeCalendarView("board"),
     "switch-group": switchGroup,
+    "toggle-sidebar": (e) => {
+      e?.preventDefault()
+      onToggleSidebar()
+    },
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
