@@ -1,4 +1,4 @@
-use super::helpers::{is_visible, load_caldir, to_calendar_event};
+use super::helpers::{load_caldir, to_calendar_event};
 use super::types::CalendarEvent;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
@@ -72,16 +72,20 @@ where
     for source in sources {
         let (slug, parsed) = source?;
 
-        let matched = if let Some((from, to)) = window {
-            expand_in_range(parsed.iter().cloned(), from, to)
-                .into_iter()
-                .find(|event| event.event_instance_id().eq(target) && is_visible(event))
-        } else {
-            parsed
-                .iter()
-                .find(|event| event.event_instance_id().eq(target) && is_visible(event))
-                .cloned()
-        };
+        // Lookup is identity-based, not visibility-based: cancelled events are
+        // hidden from calendar listings but remain valid deep-link targets.
+        // Check stored events first because recurrence expansion intentionally
+        // removes cancelled overrides.
+        let matched = parsed
+            .iter()
+            .find(|event| event.event_instance_id().eq(target))
+            .cloned()
+            .or_else(|| {
+                let (from, to) = window?;
+                expand_in_range(parsed.iter().cloned(), from, to)
+                    .into_iter()
+                    .find(|event| event.event_instance_id().eq(target))
+            });
 
         if let Some(event) = matched {
             return Ok(Some(to_calendar_event(&event, &slug, &parsed)));
@@ -180,7 +184,31 @@ mod tests {
     }
 
     #[test]
-    fn excluded_cancelled_and_missing_occurrences_are_absent() {
+    fn finds_cancelled_events_and_recurring_overrides() {
+        let mut single = event("single-cancelled", "cancelled single", 26);
+        single.status = Status::Cancelled;
+        let single_target = parse_lookup_target("single-cancelled".into(), None).unwrap();
+        let found = find_in_sources(&single_target, [source("calendar", vec![single])])
+            .unwrap()
+            .unwrap();
+        assert_eq!(found.summary, "cancelled single");
+        assert_eq!(found.status, "cancelled");
+
+        let master = recurring("cancelled");
+        let mut cancelled = event("cancelled", "cancelled override", 26);
+        cancelled.recurrence_id = Some(RecurrenceId::from_event_time(time(26, 9)));
+        cancelled.status = Status::Cancelled;
+        let target =
+            parse_lookup_target("cancelled".into(), Some("20260826T090000Z".into())).unwrap();
+        let found = find_in_sources(&target, [source("calendar", vec![master, cancelled])])
+            .unwrap()
+            .unwrap();
+        assert_eq!(found.summary, "cancelled override");
+        assert_eq!(found.status, "cancelled");
+    }
+
+    #[test]
+    fn excluded_and_missing_occurrences_are_absent() {
         let mut excluded_master = recurring("excluded");
         excluded_master
             .recurrence
@@ -192,18 +220,6 @@ mod tests {
             parse_lookup_target("excluded".into(), Some("20260826T090000Z".into())).unwrap();
         assert!(
             find_in_sources(&excluded, [source("calendar", vec![excluded_master])])
-                .unwrap()
-                .is_none()
-        );
-
-        let master = recurring("cancelled");
-        let mut cancelled = event("cancelled", "cancelled", 26);
-        cancelled.recurrence_id = Some(RecurrenceId::from_event_time(time(26, 9)));
-        cancelled.status = Status::Cancelled;
-        let target =
-            parse_lookup_target("cancelled".into(), Some("20260826T090000Z".into())).unwrap();
-        assert!(
-            find_in_sources(&target, [source("calendar", vec![master, cancelled])])
                 .unwrap()
                 .is_none()
         );
