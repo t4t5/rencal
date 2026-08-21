@@ -2,8 +2,8 @@
 //!
 //! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
-//! socket; later launches send `focus\n` to it and exit. Debug and release use
-//! separate sockets so `tauri dev` does not fight the installed app.
+//! socket; later launches send deep-link URLs to it and exit. Debug and release
+//! use separate sockets so `tauri dev` does not fight the installed app.
 
 use std::io::{Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -56,9 +56,13 @@ fn socket_path() -> PathBuf {
 pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     let path = socket_path();
 
-    // Existing instance? Send focus and bail.
+    // Existing instance? Forward deep-link arguments (if any), otherwise focus.
     if let Ok(mut stream) = UnixStream::connect(&path) {
-        let _ = stream.write_all(b"focus\n");
+        let urls: Vec<String> = std::env::args_os()
+            .filter_map(|arg| arg.into_string().ok())
+            .filter(|arg| arg.starts_with("rencal:"))
+            .collect();
+        let _ = stream.write_all(urls.join("\n").as_bytes());
         return None;
     }
 
@@ -83,19 +87,20 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     }
 }
 
-/// Spawn a thread that listens for `focus\n` messages and invokes `on_focus` for each.
-pub fn spawn_listener<F>(listener: UnixListener, on_focus: F)
+/// Spawn a thread that listens for newline-delimited URLs. An empty message
+/// represents a focus-only launch.
+pub fn spawn_listener<F>(listener: UnixListener, on_message: F)
 where
-    F: Fn() + Send + 'static,
+    F: Fn(Vec<String>) + Send + 'static,
 {
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
-            let mut buf = String::new();
-            let _ = stream.read_to_string(&mut buf);
-            if buf.trim() == "focus" {
-                on_focus();
+            let mut message = String::new();
+            if stream.read_to_string(&mut message).is_err() {
+                continue;
             }
+            on_message(message.lines().map(String::from).collect());
         }
     });
 }

@@ -1,5 +1,6 @@
 use super::types::{
-    Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime, rpc_time_to_core,
+    Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime,
+    core_recurrence_to_rpc, rpc_time_to_core,
 };
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
@@ -18,6 +19,20 @@ pub(super) fn load_caldir() -> TauResult<Caldir> {
 
 pub fn is_visible(event: &Event) -> bool {
     event.status != Status::Cancelled
+}
+
+/// Convert an event to its RPC form, resolving the master's recurrence from
+/// `siblings` when the event is an override or generated occurrence.
+pub fn to_calendar_event(event: &Event, calendar_slug: &str, siblings: &[Event]) -> CalendarEvent {
+    let master_recurrence = if event.recurrence_id.is_some() {
+        siblings
+            .iter()
+            .find(|e| e.uid.as_str() == event.uid.as_str() && e.recurrence.is_some())
+            .and_then(|master| master.recurrence.as_ref().map(core_recurrence_to_rpc))
+    } else {
+        None
+    };
+    CalendarEvent::from_event(event, calendar_slug, master_recurrence)
 }
 
 /// Sort key that orders RpcEventTime values by their UTC instant.
