@@ -11,6 +11,7 @@ use std::time::Duration as StdDuration;
 use caldir_core::{Caldir, Event, EventTime, ParticipationStatus, Status, TimeFormat};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
 use rencal_config::RencalConfig;
+use url::Url;
 
 use delivered_cache::{DeliveredCache, DeliveryKey};
 
@@ -29,10 +30,18 @@ const MAX_REMINDER_BEFORE_MINUTES: i64 = 28 * 24 * 60;
 /// after-midnight patterns without dragging the scan window unreasonably far back.
 const MAX_REMINDER_AFTER_MINUTES: i64 = 24 * 60;
 
-/// Host-provided notification sink. Implementations should not block —
-/// spawn off the tick thread if the underlying call is slow.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReminderNotification {
+    pub title: String,
+    pub body: String,
+    pub event_url: String,
+}
+
+/// Host-provided notification sink. Implementations should not block — spawn
+/// off the tick thread if the underlying call is slow. `event_url` identifies
+/// the exact event (including its recurrence ID) to open when clicked.
 pub trait Notifier: Send + Sync + 'static {
-    fn notify(&self, title: &str, body: &str, icon: Option<&Path>);
+    fn notify(&self, notification: &ReminderNotification, icon: Option<&Path>);
 }
 
 /// Linux notify-send fallback. Used by both the daemon and (when the daemon
@@ -44,26 +53,71 @@ pub struct NotifySendNotifier;
 
 #[cfg(target_os = "linux")]
 impl Notifier for NotifySendNotifier {
-    fn notify(&self, title: &str, body: &str, icon: Option<&Path>) {
-        let title = title.to_string();
-        let body = body.to_string();
+    fn notify(&self, notification: &ReminderNotification, icon: Option<&Path>) {
+        let notification = notification.clone();
         let icon = icon.map(|p| p.to_string_lossy().into_owned());
         std::thread::spawn(move || {
-            let mut cmd = std::process::Command::new("notify-send");
-            cmd.arg("--app-name=rencal");
-            // Persist until dismissed — event reminders are easy to miss at the
-            // daemon's default 5s timeout (mako/dunst). 0 = never expire.
-            cmd.arg("--expire-time=0");
-            if let Some(icon) = icon {
-                cmd.arg(format!("--icon={icon}"));
-            }
-            cmd.arg(&title).arg(&body);
-            match cmd.status() {
-                Ok(s) if !s.success() => log::warn!("notify-send {s}"),
-                Err(e) => log::warn!("notify-send err: {e}"),
-                _ => {}
+            match notify_send_command(&notification, icon.as_deref(), true).output() {
+                Ok(output) if output.status.success() => {
+                    if String::from_utf8_lossy(&output.stdout).trim() == "default" {
+                        open_event_url(&notification.event_url);
+                    }
+                }
+                Ok(output) => {
+                    // Older notify-send versions do not support actions. Still
+                    // deliver the reminder, albeit without click handling.
+                    log::warn!(
+                        "notify-send action failed {}; retrying without action",
+                        output.status
+                    );
+                    match notify_send_command(&notification, icon.as_deref(), false).status() {
+                        Ok(status) if !status.success() => log::warn!("notify-send {status}"),
+                        Err(error) => log::warn!("notify-send err: {error}"),
+                        _ => {}
+                    }
+                }
+                Err(error) => log::warn!("notify-send err: {error}"),
             }
         });
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn notify_send_command(
+    notification: &ReminderNotification,
+    icon: Option<&str>,
+    with_action: bool,
+) -> std::process::Command {
+    let mut command = std::process::Command::new("notify-send");
+    command.arg("--app-name=rencal");
+    // Persist until dismissed — event reminders are easy to miss at the
+    // daemon's default 5s timeout (mako/dunst). 0 = never expire.
+    command.arg("--expire-time=0");
+    if with_action {
+        // `default` is the FreeDesktop action invoked by clicking the body.
+        // notify-send implies --wait and prints the chosen action to stdout.
+        command.arg("--action=default=Open event");
+    }
+    if let Some(icon) = icon {
+        command.arg(format!("--icon={icon}"));
+    }
+    command.arg(&notification.title).arg(&notification.body);
+    command
+}
+
+#[cfg(target_os = "linux")]
+fn open_event_url(event_url: &str) {
+    for (opener, args) in [("gio", &["open"][..]), ("xdg-open", &[][..])] {
+        match std::process::Command::new(opener)
+            .args(args)
+            .arg(event_url)
+            .status()
+        {
+            Ok(status) if status.success() => return,
+            Ok(status) => log::warn!("{opener} failed to open reminder event: {status}"),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => continue,
+            Err(error) => log::warn!("{opener} failed to open reminder event: {error}"),
+        }
     }
 }
 
@@ -230,12 +284,37 @@ fn process_reminders(
             "FIRE \"{}\" {minutes}min before (trigger={trigger})",
             summary_str
         );
-        let body = format_body(event, time_format, Local::now());
-        notifier.notify(summary_str, &body, icon);
+        let notification = ReminderNotification {
+            title: summary_str.to_string(),
+            body: format_body(event, time_format, Local::now()),
+            event_url: event_deep_link(event),
+        };
+        notifier.notify(&notification, icon);
         fired += 1;
     }
 
     fired
+}
+
+fn event_deep_link(event: &Event) -> String {
+    let mut url = Url::parse("rencal://event").expect("static event deep-link URL must be valid");
+    let instance_id = event.event_instance_id();
+    let uid = instance_id.uid().as_str();
+
+    {
+        let mut query = url.query_pairs_mut();
+        query.append_pair("uid", uid);
+        if instance_id.recurrence_id().is_some() {
+            let instance = instance_id.to_string();
+            let recurrence_id = instance
+                .strip_prefix(uid)
+                .and_then(|suffix| suffix.strip_prefix("__"))
+                .expect("recurring event instance IDs contain a recurrence suffix");
+            query.append_pair("recurrence-id", recurrence_id);
+        }
+    }
+
+    url.into()
 }
 
 /// Pick the latest reminder trigger in `(window_start, now]` for one event.
@@ -491,12 +570,12 @@ mod tests {
 
     // ---- process_reminders -----------------------------------------------
 
-    use caldir_core::{Attendee, EventUid, Reminder};
+    use caldir_core::{Attendee, EventUid, RecurrenceId, Reminder};
     use std::sync::Mutex;
 
     #[derive(Default)]
     struct TestNotifier {
-        calls: Mutex<Vec<(String, String)>>,
+        calls: Mutex<Vec<ReminderNotification>>,
     }
 
     impl TestNotifier {
@@ -506,11 +585,8 @@ mod tests {
     }
 
     impl Notifier for TestNotifier {
-        fn notify(&self, title: &str, body: &str, _icon: Option<&Path>) {
-            self.calls
-                .lock()
-                .unwrap()
-                .push((title.to_string(), body.to_string()));
+        fn notify(&self, notification: &ReminderNotification, _icon: Option<&Path>) {
+            self.calls.lock().unwrap().push(notification.clone());
         }
     }
 
@@ -522,6 +598,23 @@ mod tests {
         }];
         event.uid = EventUid::new(uid);
         event
+    }
+
+    #[test]
+    fn event_deep_link_encodes_recurring_instance_identity() {
+        let mut event = make_event("team/a+b@example.com", t(2026, 8, 26, 9, 0), 10);
+        event.recurrence_id = Some(RecurrenceId::from_event_time(EventTime::DateTimeZoned {
+            datetime: NaiveDate::from_ymd_opt(2026, 8, 26)
+                .unwrap()
+                .and_hms_opt(9, 0, 0)
+                .unwrap(),
+            tzid: "Europe/London".to_string(),
+        }));
+
+        assert_eq!(
+            event_deep_link(&event),
+            "rencal://event?uid=team%2Fa%2Bb%40example.com&recurrence-id=TZID%3DEurope%2FLondon%3A20260826T090000"
+        );
     }
 
     fn attendee(email: &str, status: ParticipationStatus) -> Attendee {
@@ -616,6 +709,10 @@ mod tests {
         run(t(2026, 4, 29, 12, 1), &[event], &mut cache, &notifier, true);
 
         assert_eq!(notifier.count(), 1);
+        assert_eq!(
+            notifier.calls.lock().unwrap()[0].event_url,
+            "rencal://event?uid=evt-sync"
+        );
     }
 
     #[test]

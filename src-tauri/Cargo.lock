@@ -3870,6 +3870,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tokio",
+ "url",
 ]
 
 [[package]]
@@ -3884,6 +3885,7 @@ dependencies = [
  "iana-time-zone",
  "libc",
  "log",
+ "mac-notification-sys",
  "notify",
  "reminder-core",
  "rencal-config",
