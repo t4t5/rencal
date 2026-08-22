@@ -44,6 +44,7 @@
     "linux": {
       "deb": {
         "depends": ["libnotify-bin"],
+        "desktopTemplate": "linux/rencal.desktop",
         "files": {
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
@@ -52,6 +53,7 @@
       },
       "rpm": {
         "depends": ["libnotify"],
+        "desktopTemplate": "linux/rencal.desktop",
         "files": {
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
