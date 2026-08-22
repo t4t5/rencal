@@ -1,0 +1,17 @@
+# Copy of tauri-bundler's default main.desktop template with one change: %u
+# on the Exec line. Without a field code, GLib-based launchers (GNOME,
+# gio open, portals) drop the URL when dispatching rencal:// deep links.
+[Desktop Entry]
+Categories={{categories}}
+{{#if comment}}
+Comment={{comment}}
+{{/if}}
+Exec={{exec}} %u
+StartupWMClass={{exec}}
+Icon={{icon}}
+Name={{name}}
+Terminal=false
+Type=Application
+{{#if mime_type}}
+MimeType={{mime_type}}
+{{/if}}
