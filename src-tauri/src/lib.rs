@@ -172,12 +172,6 @@ pub async fn run() {
             // Bundle default providers (google, icloud, caldav...)
             setup_bundled_providers(app);
 
-            #[cfg(all(debug_assertions, target_os = "linux"))]
-            {
-                app.deep_link().register_all()?;
-                deep_links::unquote_registered_desktop_exec(app);
-            }
-
             if let Some(urls) = app.deep_link().get_current()? {
                 let urls: Vec<String> = urls.into_iter().map(|url| url.to_string()).collect();
                 deep_links::enqueue_urls(app.handle(), &urls);

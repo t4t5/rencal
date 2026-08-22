@@ -18,10 +18,6 @@ format-rust:
 dev: build-providers
   pnpm tauri dev
 
-# Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug month-scroll`.
-debug flags="*": build-providers
-  VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
-
 # Run website docs (dev mode)
 web:
   pnpm --dir website dev
@@ -54,6 +50,10 @@ typecheck:
 # Run frontend tests
 test:
   pnpm test
+
+# Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug month-scroll`.
+debug flags="*": build-providers
+  VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
 
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:
@@ -160,3 +160,25 @@ uninstall-notifierd:
 # Tail the reminder daemon's logs
 notifierd-logs:
   journalctl --user -u rencal-notifierd.service -f
+
+# Point rencal:// links at the dev build (for testing deeplinks against `just dev`)
+deeplink-dev:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  mkdir -p ~/.local/share/applications
+  printf '%s\n' \
+    '[Desktop Entry]' \
+    'Type=Application' \
+    'Name=renCal' \
+    'Terminal=false' \
+    'NoDisplay=true' \
+    'MimeType=x-scheme-handler/rencal' \
+    'Exec={{justfile_directory()}}/src-tauri/target/debug/rencal %u' \
+    > ~/.local/share/applications/rencal-handler.desktop
+  xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
+
+# Point rencal:// links back at the installed app
+deeplink-prod:
+  xdg-mime default renCal.desktop x-scheme-handler/rencal
+  rm -f ~/.local/share/applications/rencal-handler.desktop
+
