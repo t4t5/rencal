@@ -89,10 +89,10 @@ pub fn unquote_registered_desktop_exec(app: &tauri::App) {
     let Ok(contents) = std::fs::read_to_string(&path) else {
         return;
     };
-    if let Some(fixed) = unquote_desktop_exec(&contents, &exe.to_string_lossy()) {
-        if let Err(error) = std::fs::write(&path, fixed) {
-            log::warn!("failed to unquote Exec in {}: {error}", path.display());
-        }
+    if let Some(fixed) = unquote_desktop_exec(&contents, &exe.to_string_lossy())
+        && let Err(error) = std::fs::write(&path, fixed)
+    {
+        log::warn!("failed to unquote Exec in {}: {error}", path.display());
     }
 }
 
