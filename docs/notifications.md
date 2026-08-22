@@ -5,14 +5,27 @@ reminder minutes) falls in the catch-up window, records delivered reminder keys,
 notifications. The platform-agnostic logic lives in `src-tauri/reminder-core/`. There are two
 hosts:
 
-- **macOS / Windows**: in-process tokio task spawned from `src-tauri/src/lib.rs::setup()`, using
-  `tauri-plugin-notification`.
+- **macOS / Windows**: in-process tokio task spawned from `src-tauri/src/lib.rs::setup()`. macOS
+  uses `mac-notification-sys` directly so the click response can open the reminder's event;
+  Windows uses `tauri-plugin-notification`.
 - **Linux**: a separate `rencal-notifierd` binary autostarted as a systemd user service. The GUI
   detects the daemon via `systemctl --user is-active` and skips its own loop when active. If the
   daemon isn't installed, the GUI falls back to running the loop in-process and shelling out to
   `notify-send`.
 
 Test with `just test-notification`.
+
+## Clicking a notification
+
+Every fired reminder carries a `rencal://event?uid=...` deep link, plus `recurrence-id` for a
+specific recurring occurrence. Clicking the notification opens and focuses rencal, then the
+normal event deep-link flow finds the local event and opens its details.
+
+- **macOS** waits for the native notification click response in the notification's worker thread
+  and enqueues the deep link directly in the running app.
+- **Linux** gives `notify-send` a FreeDesktop `default` action. On activation, the daemon (or GUI
+  fallback) opens the deep link with `gio open`, falling back to `xdg-open`. Older `notify-send`
+  versions without action support still receive the reminder, but cannot make it clickable.
 
 ## Why a daemon on Linux
 
