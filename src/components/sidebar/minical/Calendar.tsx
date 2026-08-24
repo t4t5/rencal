@@ -17,7 +17,7 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useViewerTzid } from "@/hooks/useViewerTzid"
-import { formatDateKey, today } from "@/lib/event-time"
+import { formatDateKey, isoWeekNumber, today } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
@@ -47,7 +47,8 @@ function Calendar({
   buttonVariant?: ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
-  const { firstDayOfWeek } = useSettings()
+  const { firstDayOfWeek, showWeekNumbers } = useSettings()
+  const showWeekNumber = props.showWeekNumber ?? showWeekNumbers
 
   // Subscribe to timezone changes: the current-week/weekday highlights and the
   // `today` prop below all derive from the viewer's zone.
@@ -65,6 +66,7 @@ function Calendar({
         className,
       )}
       weekStartsOn={firstDayOfWeek === "sunday" ? 0 : 1}
+      showWeekNumber={showWeekNumber}
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
@@ -123,7 +125,7 @@ function Calendar({
         ),
         day: cn(
           "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
-          props.showWeekNumber
+          showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
             : "[&:first-child[data-selected=true]_button]:rounded-l-md",
           defaultClassNames.day,
@@ -194,11 +196,16 @@ function Calendar({
             />
           )
         },
-        WeekNumber: ({ children, ...props }) => {
+        // RDP's own numbering follows US week-counting rules; render ISO week
+        // numbers computed from the row's days instead (`children` is unused).
+        WeekNumber: ({ children, week, ...props }) => {
+          const firstRowDay = week.days[0]
           return (
             <td {...props}>
-              <div className="flex size-(--cell-size) items-center justify-center text-center">
-                {children}
+              <div className="flex size-(--cell-size) items-center justify-center text-center text-[10px] text-muted-foreground">
+                {firstRowDay
+                  ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
+                  : null}
               </div>
             </td>
           )

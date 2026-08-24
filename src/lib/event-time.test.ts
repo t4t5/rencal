@@ -8,6 +8,7 @@ import {
   enumerateLocalDays,
   epochDay,
   formatDateKey,
+  isoWeekNumber,
   startOfWeek,
   computeEventDateInfo,
   getViewerTzid,
@@ -486,5 +487,30 @@ describe("startOfWeek", () => {
     expect(startOfWeek(wednesday, "sunday").equals(previousSunday)).toBe(true)
     expect(startOfWeek(saturday, "sunday").equals(previousSunday)).toBe(true)
     expect(startOfWeek(sunday, "sunday").equals(sunday)).toBe(true)
+  })
+})
+
+describe("isoWeekNumber", () => {
+  it("matches the ISO week for Monday-first rows", () => {
+    // 2026-08-24 is a Monday in ISO week 35.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-24"), "monday")).toBe(35)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-30"), "monday")).toBe(35)
+  })
+
+  it("numbers a Sunday-first row by its Thursday", () => {
+    // The Sunday-first row 2026-08-23 … 2026-08-29 contains ISO week 35's Thursday.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-23"), "sunday")).toBe(35)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-29"), "sunday")).toBe(35)
+    // The Sunday itself belongs to ISO week 34, but its displayed row is week 35.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-23"), "monday")).toBe(34)
+  })
+
+  it("handles ISO year boundaries", () => {
+    // 2024-12-30 (Monday) starts ISO week 1 of 2025.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2024-12-30"), "monday")).toBe(1)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2024-12-29"), "sunday")).toBe(1)
+    // 2021-01-01 (Friday) falls in ISO week 53 of 2020.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2021-01-01"), "monday")).toBe(53)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2021-01-01"), "sunday")).toBe(53)
   })
 })

@@ -5,6 +5,8 @@ import { Button, buttonVariants } from "@/components/ui/button"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { isoWeekNumber } from "@/lib/event-time"
+import { jsDateToPlainDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon } from "@/icons/chevron-down"
@@ -24,12 +26,14 @@ function Calendar({
   buttonVariant?: React.ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
-  const { firstDayOfWeek } = useSettings()
+  const { firstDayOfWeek, showWeekNumbers } = useSettings()
+  const showWeekNumber = props.showWeekNumber ?? showWeekNumbers
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
       weekStartsOn={firstDayOfWeek === "sunday" ? 0 : 1}
+      showWeekNumber={showWeekNumber}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -93,7 +97,7 @@ function Calendar({
         ),
         day: cn(
           "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day aspect-square select-none",
-          props.showWeekNumber
+          showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
             : "[&:first-child[data-selected=true]_button]:rounded-l-md",
           defaultClassNames.day,
@@ -129,11 +133,16 @@ function Calendar({
           return <ChevronDownIcon className={cn("size-4", className)} {...props} />
         },
         DayButton: CalendarDayButton,
-        WeekNumber: ({ children, ...props }) => {
+        // RDP's own numbering follows US week-counting rules; render ISO week
+        // numbers computed from the row's days instead (`children` is unused).
+        WeekNumber: ({ children, week, ...props }) => {
+          const firstRowDay = week.days[0]
           return (
             <td {...props}>
-              <div className="flex size-(--cell-size) items-center justify-center text-center">
-                {children}
+              <div className="flex size-(--cell-size) items-center justify-center text-center text-[10px] text-muted-foreground">
+                {firstRowDay
+                  ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
+                  : null}
               </div>
             </td>
           )
