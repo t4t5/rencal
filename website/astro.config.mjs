@@ -19,6 +19,7 @@ const sidebarItems = [
       { label: "Themes", slug: "docs/themes" },
       { label: "Agents", slug: "docs/agents" },
       { label: "Omarchy Widget", slug: "docs/omarchy-widget" },
+      { label: "Developers", slug: "docs/developers" },
     ],
   },
   {
