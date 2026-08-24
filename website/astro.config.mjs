@@ -18,6 +18,7 @@ const sidebarItems = [
       { label: "Keyboard Shortcuts", slug: "docs/keyboard-shortcuts" },
       { label: "Themes", slug: "docs/themes" },
       { label: "Agents", slug: "docs/agents" },
+      { label: "Omarchy Widget", slug: "docs/omarchy-widget" },
     ],
   },
   {
