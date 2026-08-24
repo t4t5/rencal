@@ -2,27 +2,31 @@ import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useCallback, useEffect, useMemo, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { useToday } from "@/hooks/useToday"
-import { startOfWeek } from "@/lib/event-time"
+import { startOfWeek, type FirstDayOfWeek } from "@/lib/event-time"
 
 import { buildDay, type MonthDay } from "./useMonthGrid"
 
 const BUFFER_DAYS = 7
 const INITIAL_RANGE_DAYS = 21
 
-/** Seed the day range: activeDate's Mon–Sun week, with BUFFER_DAYS extra on each side. */
-function initialRangeStart(activeDate: Temporal.PlainDate): Temporal.PlainDate {
-  return startOfWeek(activeDate).subtract({ days: BUFFER_DAYS })
+/** Seed the day range: activeDate's week, with BUFFER_DAYS extra on each side. */
+function initialRangeStart(
+  activeDate: Temporal.PlainDate,
+  firstDayOfWeek: FirstDayOfWeek,
+): Temporal.PlainDate {
+  return startOfWeek(activeDate, firstDayOfWeek).subtract({ days: BUFFER_DAYS })
 }
 
 /**
  * Manages a growing range of days for the continuously-scrollable week view. The day range
  * is the source of truth for what's rendered; event loading just follows it via
  * `ensureRangeLoaded` and never blocks scrolling (mirrors useInfiniteMonths).
- * Start is a Monday (activeDate's week Monday, minus one buffer week); new weeks are
- * prepended/appended when the user scrolls within `threshold` px of either edge.
+ * Start is aligned to the first day of activeDate's week (minus one buffer week); new
+ * weeks are prepended/appended when the user scrolls within `threshold` px of either edge.
  */
 export function useInfiniteDays({
   scrollContainerRef,
@@ -34,9 +38,10 @@ export function useInfiniteDays({
   visibleCalendarIds: string[]
 }): { days: MonthDay[] } {
   const { ensureRangeLoaded } = useCalEvents()
+  const { firstDayOfWeek } = useSettings()
   const today = useToday()
 
-  const [rangeStart, setRangeStart] = useState(() => initialRangeStart(activeDate))
+  const [rangeStart, setRangeStart] = useState(() => initialRangeStart(activeDate, firstDayOfWeek))
   const [count, setCount] = useState(INITIAL_RANGE_DAYS)
 
   // If activeDate jumps outside the rendered range, reset around it.
@@ -45,7 +50,7 @@ export function useInfiniteDays({
     Temporal.PlainDate.compare(activeDate, rangeStart) < 0 ||
     Temporal.PlainDate.compare(activeDate, rangeEnd) > 0
   ) {
-    const newStart = initialRangeStart(activeDate)
+    const newStart = initialRangeStart(activeDate, firstDayOfWeek)
     if (!newStart.equals(rangeStart) || count !== INITIAL_RANGE_DAYS) {
       setRangeStart(newStart)
       setCount(INITIAL_RANGE_DAYS)

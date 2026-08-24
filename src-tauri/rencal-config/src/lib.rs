@@ -21,6 +21,14 @@ fn default_auto_sync_enabled() -> bool {
     true
 }
 
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum FirstDayOfWeek {
+    #[default]
+    Monday,
+    Sunday,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
@@ -31,6 +39,12 @@ pub struct RencalConfig {
 
     #[serde(default = "default_auto_sync_enabled")]
     pub auto_sync_enabled: bool,
+
+    #[serde(default)]
+    pub first_day_of_week: FirstDayOfWeek,
+
+    #[serde(default)]
+    pub show_week_numbers: bool,
 
     /// Must come AFTER top-level configs since it adds [groups] table header:
     #[serde(default)]
@@ -43,6 +57,8 @@ impl Default for RencalConfig {
             theme: default_theme(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
+            first_day_of_week: FirstDayOfWeek::default(),
+            show_week_numbers: false,
             groups: BTreeMap::new(),
         }
     }
@@ -117,5 +133,35 @@ mod tests {
     fn missing_groups_falls_back_to_empty() {
         let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
         assert!(config.groups.is_empty());
+    }
+
+    #[test]
+    fn first_day_of_week_defaults_to_monday_and_round_trips() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert_eq!(config.first_day_of_week, FirstDayOfWeek::Monday);
+
+        let config = RencalConfig {
+            first_day_of_week: FirstDayOfWeek::Sunday,
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("first_day_of_week = \"sunday\""));
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert_eq!(reparsed.first_day_of_week, FirstDayOfWeek::Sunday);
+    }
+
+    #[test]
+    fn show_week_numbers_defaults_to_false_and_round_trips() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert!(!config.show_week_numbers);
+
+        let config = RencalConfig {
+            show_week_numbers: true,
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("show_week_numbers = true"));
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert!(reparsed.show_week_numbers);
     }
 }

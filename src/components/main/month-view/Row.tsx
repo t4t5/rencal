@@ -5,10 +5,12 @@ import { MonthAllDayEvent } from "@/components/events-blocks/month-view/AllDayEv
 import { MonthDayCell } from "@/components/main/month-view/Cell"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { isoWeekNumber } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 
 import { TopLeftDate } from "./TopLeftDate"
@@ -60,6 +62,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   dimmed: boolean
 }) {
   const { calendars } = useCalendars()
+  const { showWeekNumbers, firstDayOfWeek } = useSettings()
 
   const allDayEvents = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
   const monthStartCol = weekDays.findIndex((day) => day.date.day === 1)
@@ -86,6 +89,11 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             onClick={() => onDayClick(day.date)}
           />
         ))}
+        {showWeekNumbers && weekDays[0] && (
+          <span className="pointer-events-none absolute left-1 top-1.5 z-10 text-[10px] text-muted-foreground numerical select-none">
+            {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
+          </span>
+        )}
         <MonthBoundary col={monthStartCol} />
       </div>
 

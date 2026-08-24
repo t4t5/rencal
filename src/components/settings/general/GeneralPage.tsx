@@ -19,12 +19,15 @@ import type { TimeFormat } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { FirstDayOfWeek } from "@/lib/event-time"
 import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
 
 export function GeneralPage() {
   return (
     <SettingsContent>
       <TimeFormatSection />
+      <FirstDayOfWeekSection />
+      <WeekNumbersSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
@@ -48,6 +51,48 @@ const TimeFormatSection = () => {
           <SelectItem value="12h">12h</SelectItem>
         </SelectContent>
       </Select>
+    </div>
+  )
+}
+
+const FirstDayOfWeekSection = () => {
+  const { firstDayOfWeek, setFirstDayOfWeek } = useSettings()
+
+  return (
+    <div className="flex flex-col gap-2 w-[150px]">
+      <label className="text-sm">First day of week</label>
+      <Select value={firstDayOfWeek} onValueChange={(v) => setFirstDayOfWeek(v as FirstDayOfWeek)}>
+        <SelectTrigger className="w-full" ghost={false}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="monday">Monday</SelectItem>
+          <SelectItem value="sunday">Sunday</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+const WeekNumbersSection = () => {
+  const { showWeekNumbers, setShowWeekNumbers } = useSettings()
+  const id = useId()
+
+  return (
+    <div className="flex flex-col gap-1 w-[400px]">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={id}
+          checked={showWeekNumbers}
+          onCheckedChange={(checked) => void setShowWeekNumbers(checked === true)}
+        />
+        <Label htmlFor={id} className="text-sm">
+          Show week numbers
+        </Label>
+      </div>
+      <p className="text-xs text-muted-foreground pl-7">
+        ISO week numbers in the month view and mini calendars.
+      </p>
     </div>
   )
 }
