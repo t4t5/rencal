@@ -10,7 +10,7 @@ const ROW = 100
 
 // Weeks starting from the Monday of `startMonday`'s week, mirroring useMonthGrid.
 function buildWeeks(startMonday: Temporal.PlainDate, numWeeks: number): MonthDay[][] {
-  const mon = startOfWeek(startMonday)
+  const mon = startOfWeek(startMonday, "monday")
   return Array.from({ length: numWeeks }, (_, w) =>
     Array.from({ length: 7 }, (_, d) => {
       const date = mon.add({ days: w * 7 + d })

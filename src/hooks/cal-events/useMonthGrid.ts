@@ -1,8 +1,10 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useMemo } from "react"
 
+import { useSettings } from "@/contexts/SettingsContext"
+
 import { useToday } from "@/hooks/useToday"
-import { formatDateKey, startOfWeek } from "@/lib/event-time"
+import { formatDateKey, startOfWeek, type FirstDayOfWeek } from "@/lib/event-time"
 
 export type MonthDay = {
   date: Temporal.PlainDate
@@ -23,8 +25,12 @@ export function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): M
 export function monthGridBounds(
   rangeStart: Temporal.PlainDate,
   rangeEnd: Temporal.PlainDate,
+  firstDayOfWeek: FirstDayOfWeek,
 ): { gridStart: Temporal.PlainDate; gridEnd: Temporal.PlainDate } {
-  return { gridStart: startOfWeek(rangeStart), gridEnd: startOfWeek(rangeEnd) }
+  return {
+    gridStart: startOfWeek(rangeStart, firstDayOfWeek),
+    gridEnd: startOfWeek(rangeEnd, firstDayOfWeek),
+  }
 }
 
 /**
@@ -33,9 +39,10 @@ export function monthGridBounds(
  */
 export function useMonthGrid(rangeStart: Temporal.PlainDate, rangeEnd: Temporal.PlainDate) {
   const today = useToday()
+  const { firstDayOfWeek } = useSettings()
 
   return useMemo(() => {
-    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd)
+    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
 
     const weeks: MonthDay[][] = []
     let current = gridStart
@@ -51,5 +58,5 @@ export function useMonthGrid(rangeStart: Temporal.PlainDate, rangeEnd: Temporal.
     }
 
     return weeks
-  }, [rangeStart, rangeEnd, today])
+  }, [rangeStart, rangeEnd, today, firstDayOfWeek])
 }

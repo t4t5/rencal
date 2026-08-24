@@ -4,6 +4,7 @@ import { useMemo } from "react"
 import { BoardColumn } from "@/components/main/board-view/BoardColumn"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { useToday } from "@/hooks/useToday"
 import { type CalendarEvent } from "@/lib/cal-events"
@@ -19,12 +20,13 @@ interface Bucket {
 
 export function BoardView() {
   const { calendarEvents } = useCalEvents()
+  const { firstDayOfWeek } = useSettings()
   const today = useToday()
 
   const columns = useMemo(() => {
     const yesterday = today.subtract({ days: 1 })
     const tomorrow = today.add({ days: 1 })
-    const endOfWeek = startOfWeek(today).add({ days: 6 })
+    const endOfWeek = startOfWeek(today, firstDayOfWeek).add({ days: 6 })
 
     function getBucketId(pd: Temporal.PlainDate): string {
       if (pd.equals(yesterday)) return "yesterday"
@@ -79,7 +81,7 @@ export function BoardView() {
         isToday: def.isToday,
       } satisfies Bucket
     })
-  }, [calendarEvents, today])
+  }, [calendarEvents, today, firstDayOfWeek])
 
   return (
     <div className="flex h-full overflow-hidden">

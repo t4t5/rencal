@@ -8,6 +8,7 @@ import {
   enumerateLocalDays,
   epochDay,
   formatDateKey,
+  startOfWeek,
   computeEventDateInfo,
   getViewerTzid,
   setViewerTzid,
@@ -462,5 +463,28 @@ describe("viewer zone store", () => {
     } finally {
       setViewerTzid(original)
     }
+  })
+})
+
+describe("startOfWeek", () => {
+  // 2024-01-01 was a Monday.
+  const monday = Temporal.PlainDate.from("2024-01-01")
+  const wednesday = Temporal.PlainDate.from("2024-01-03")
+  const saturday = Temporal.PlainDate.from("2024-01-06")
+  const sunday = Temporal.PlainDate.from("2024-01-07")
+
+  it("returns the preceding (or same) Monday when weeks start on Monday", () => {
+    expect(startOfWeek(monday, "monday").equals(monday)).toBe(true)
+    expect(startOfWeek(wednesday, "monday").equals(monday)).toBe(true)
+    expect(startOfWeek(sunday, "monday").equals(monday)).toBe(true)
+  })
+
+  it("returns the preceding (or same) Sunday when weeks start on Sunday", () => {
+    const previousSunday = Temporal.PlainDate.from("2023-12-31")
+    expect(startOfWeek(previousSunday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(monday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(wednesday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(saturday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(sunday, "sunday").equals(sunday)).toBe(true)
   })
 })

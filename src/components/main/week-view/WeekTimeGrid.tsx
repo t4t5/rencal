@@ -21,6 +21,7 @@ import {
   formatWeekday,
   getViewerTzid,
   startOfWeek,
+  type FirstDayOfWeek,
 } from "@/lib/event-time"
 import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
@@ -38,9 +39,13 @@ const DAY_WIDTH_MIN = 100
 // and updating the activeDate based on the scroll position.
 const SCROLL_SETTLE_MS = 300
 
-function mondayIndex(days: MonthDay[], activeDay: MonthDay): number {
-  const monday = startOfWeek(activeDay.date)
-  return days.findIndex((day) => day.date.equals(monday))
+function weekStartIndex(
+  days: MonthDay[],
+  activeDay: MonthDay,
+  firstDayOfWeek: FirstDayOfWeek,
+): number {
+  const weekStart = startOfWeek(activeDay.date, firstDayOfWeek)
+  return days.findIndex((day) => day.date.equals(weekStart))
 }
 
 type WeekTimeGridProps = {
@@ -75,7 +80,7 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
-  const { timeFormat } = useSettings()
+  const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
   const openDayDraft = useOpenDayDraft()
 
   const N = days.length
@@ -126,10 +131,12 @@ export function WeekTimeGrid({
     }
   })
 
-  // Initial scroll (once dayWidth is measured): scrollTop to current time / 08:00, scrollLeft to Monday of activeDate's week.
+  // Initial scroll (once dayWidth is measured and settings are loaded, since week
+  // alignment depends on firstDayOfWeek): scrollTop to current time / 08:00,
+  // scrollLeft to the first day of activeDate's week.
   const didInitialScrollRef = useRef(false)
   useLayoutEffect(() => {
-    if (!dayWidthReady || didInitialScrollRef.current) return
+    if (!dayWidthReady || !settingsLoaded || didInitialScrollRef.current) return
     const el = scrollContainerRef.current
     if (!el) return
 
@@ -141,12 +148,20 @@ export function WeekTimeGrid({
 
     const activeDay = days.find((d) => d.dateKey === activeDateKey)
     if (activeDay) {
-      const mondayIdx = mondayIndex(days, activeDay)
-      if (mondayIdx !== -1) el.scrollLeft = mondayIdx * dayWidth
+      const weekStartIdx = weekStartIndex(days, activeDay, firstDayOfWeek)
+      if (weekStartIdx !== -1) el.scrollLeft = weekStartIdx * dayWidth
     }
 
     didInitialScrollRef.current = true
-  }, [dayWidthReady, days, dayWidth, activeDateKey, scrollContainerRef])
+  }, [
+    dayWidthReady,
+    settingsLoaded,
+    days,
+    dayWidth,
+    activeDateKey,
+    firstDayOfWeek,
+    scrollContainerRef,
+  ])
 
   // After initial scroll, whenever activeDate changes to an off-screen day, smooth-scroll it into view.
   // Deps are intentionally only activeDateKey — if we include `days` / `dayWidth`, the effect
@@ -171,8 +186,8 @@ export function WeekTimeGrid({
 
     if (columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
       const activeDay = currentDays[idx]
-      const mondayIdx = mondayIndex(currentDays, activeDay)
-      const targetIdx = mondayIdx !== -1 ? mondayIdx : idx
+      const weekStartIdx = weekStartIndex(currentDays, activeDay, firstDayOfWeek)
+      const targetIdx = weekStartIdx !== -1 ? weekStartIdx : idx
 
       suppressScrollTracking()
       el.scrollTo({ left: targetIdx * currentDayWidth, behavior: "smooth" })

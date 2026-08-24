@@ -12,10 +12,13 @@ import {
 } from "@/rpc/events"
 
 import { normalizeCalendarGroups } from "@/lib/calendar-groups"
+import type { FirstDayOfWeek } from "@/lib/event-time"
 
 interface SettingsContextType {
   timeFormat: TimeFormat
   setTimeFormat: (tf: TimeFormat) => Promise<void>
+  firstDayOfWeek: FirstDayOfWeek
+  setFirstDayOfWeek: (day: FirstDayOfWeek) => Promise<void>
   defaultReminders: number[]
   setDefaultReminders: (mins: number[]) => Promise<void>
   defaultCalendar: string | null
@@ -43,6 +46,7 @@ export function useSettings() {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>("24h")
+  const [firstDayOfWeek, setFirstDayOfWeekState] = useState<FirstDayOfWeek>("monday")
   const [defaultReminders, setDefaultRemindersState] = useState<number[]>([])
   const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
@@ -53,21 +57,25 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const reloadSettings = useCallback(async () => {
     try {
-      const [tf, reminders, cal, dir, notifs, autoSync, groupsResult] = await Promise.all([
-        rpc.caldir.get_time_format(),
-        rpc.caldir.get_default_reminders(),
-        rpc.caldir.get_default_calendar(),
-        rpc.caldir.get_calendar_dir(),
-        rpc.config.get_notifications_enabled(),
-        rpc.config.get_auto_sync_enabled(),
-        rpc.config.get_groups(),
-      ])
+      const [tf, reminders, cal, dir, notifs, autoSync, firstDay, groupsResult] = await Promise.all(
+        [
+          rpc.caldir.get_time_format(),
+          rpc.caldir.get_default_reminders(),
+          rpc.caldir.get_default_calendar(),
+          rpc.caldir.get_calendar_dir(),
+          rpc.config.get_notifications_enabled(),
+          rpc.config.get_auto_sync_enabled(),
+          rpc.config.get_first_day_of_week(),
+          rpc.config.get_groups(),
+        ],
+      )
       setTimeFormatState(tf)
       setDefaultRemindersState(reminders)
       setDefaultCalendarState(cal)
       setCalendarDirState(dir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
+      setFirstDayOfWeekState(firstDay)
       // The RPC type is Partial<Record<string, string[]>>; drop undefined values.
       setGroupsState(normalizeCalendarGroups(groupsResult))
       setSettingsLoaded(true)
@@ -138,6 +146,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(RENCAL_CONFIG_CHANGED)
   }
 
+  const setFirstDayOfWeek = async (day: FirstDayOfWeek) => {
+    setFirstDayOfWeekState(day)
+    await rpc.config.set_first_day_of_week(day)
+    await emit(RENCAL_CONFIG_CHANGED)
+  }
+
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
     await rpc.config.set_auto_sync_enabled(enabled)
@@ -155,6 +169,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       value={{
         timeFormat,
         setTimeFormat,
+        firstDayOfWeek,
+        setFirstDayOfWeek,
         defaultReminders,
         setDefaultReminders,
         defaultCalendar,

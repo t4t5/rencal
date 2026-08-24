@@ -61,8 +61,9 @@ never controls it.
 
 ### Active date while scrolling
 
-- On open, the strip is positioned so the Monday of the active date's week is at the far
-  left, with the active day highlighted within that week.
+- On open, the strip is positioned so the first day of the active date's week (per the
+  first-day-of-week setting) is at the far left, with the active day highlighted within
+  that week.
 - As the user scrolls, the active date follows but the viewport is never programmatically
   moved. The active date does not change mid-scroll; once scrolling settles, it becomes
   the leftmost fully-visible day column.
