@@ -34,6 +34,10 @@ normal event deep-link flow finds the local event and opens its details.
 
 - **macOS** waits for the native notification click response in the notification's worker thread
   and enqueues the deep link directly in the running app.
+- **Linux** sends with `--expire-time=0 --urgency=critical`. Both are needed for "stay until
+  dismissed": mako/dunst honor the expire time, while Omarchy's shell and GNOME cap normal-urgency
+  popups at a few seconds regardless and only keep critical ones on screen. Critical alone does
+  not bypass Omarchy's DND (that also requires `app_name=notify-send`).
 - **Linux** gives `notify-send` a FreeDesktop `default` action. On activation, the daemon (or GUI
   fallback) opens the deep link with `gio open`, falling back to `xdg-open`. Older `notify-send`
   versions without action support still receive the reminder, but cannot make it clickable.

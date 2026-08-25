@@ -93,6 +93,13 @@ fn notify_send_command(
     // Persist until dismissed — event reminders are easy to miss at the
     // daemon's default 5s timeout (mako/dunst). 0 = never expire.
     command.arg("--expire-time=0");
+    // Some daemons (Omarchy's shell, GNOME) ignore expire-time for normal
+    // urgency and only keep critical notifications on screen until dismissed.
+    // A reminder for a meeting that starts in 10 minutes is time-critical in
+    // exactly that sense, and it's what Google Calendar's own web
+    // notifications use. Critical does not bypass Omarchy's DND by itself
+    // (that additionally requires app_name=notify-send).
+    command.arg("--urgency=critical");
     if with_action {
         // `default` is the FreeDesktop action invoked by clicking the body.
         // notify-send implies --wait and prints the chosen action to stdout.
