@@ -15,6 +15,17 @@ hosts:
 
 Test with `just test-notification`.
 
+## Which reminders fire
+
+An event's own VALARMs always win. A timed event with _no_ VALARM falls back to caldir's
+`default_reminders` (the "Default reminders" setting in renCal's Reminders settings page) —
+see `reminder_offsets` in `reminder-core`. This matters because providers like Google keep the
+calendar-level default reminder out of the exported event, so most synced meetings arrive without
+any alarm and would otherwise never notify. All-day events never use the fallback (a
+minutes-before-start offset against midnight isn't a meaningful reminder for a birthday or
+holiday); they only notify via explicit VALARMs. With no defaults configured, behaviour is
+unchanged: VALARM-less events are silent.
+
 ## Clicking a notification
 
 Every fired reminder carries a `rencal://event?uid=...` deep link, plus `recurrence-id` for a

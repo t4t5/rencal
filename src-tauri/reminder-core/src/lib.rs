@@ -166,6 +166,13 @@ pub fn check_and_notify(
 
     let caldir = Caldir::load()?;
     let time_format = caldir.config().time_format();
+    let default_reminders: Vec<i64> = caldir
+        .config()
+        .default_reminders()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r| r.minutes_before_start)
+        .collect();
 
     // Scan range is over event *start* times, but reminders fire at
     // `start - minutes_before`. To cover every trigger that could land in
@@ -208,6 +215,7 @@ pub fn check_and_notify(
         now,
         cutoff,
         &events,
+        &default_reminders,
         &mut cache,
         notifier,
         notifications_enabled,
@@ -228,12 +236,17 @@ pub fn check_and_notify(
 /// fire in `cache` (whether or not we actually called `notify`, so that
 /// disabling notifications doesn't queue up a 4h replay on re-enable).
 ///
+/// Events carrying their own VALARMs use those. Timed events with *no*
+/// VALARM fall back to `default_reminders` (caldir's "Default reminders"
+/// setting, in minutes before start) — see `reminder_offsets`.
+///
 /// Returns the number of `notifier.notify` calls made.
 #[allow(clippy::too_many_arguments)]
 fn process_reminders(
     now: DateTime<Utc>,
     cutoff: DateTime<Utc>,
     events: &[Event],
+    default_reminders: &[i64],
     cache: &mut DeliveredCache,
     notifier: &dyn Notifier,
     notifications_enabled: bool,
@@ -244,20 +257,18 @@ fn process_reminders(
 
     for event in events {
         let summary_str = event.summary.as_deref().unwrap_or("");
-        let triggers = event.reminders.iter().filter_map(|r| {
-            if !is_supported_offset(r.minutes_before_start) {
-                log::debug!(
-                    "skipping out-of-range reminder ({}min) on \"{}\"",
-                    r.minutes_before_start,
-                    summary_str
-                );
-                return None;
-            }
-            Some((
-                r.minutes_before_start,
-                compute_trigger_time(event, r.minutes_before_start)?,
-            ))
-        });
+        let triggers = reminder_offsets(event, default_reminders)
+            .into_iter()
+            .filter_map(|minutes| {
+                if !is_supported_offset(minutes) {
+                    log::debug!(
+                        "skipping out-of-range reminder ({minutes}min) on \"{}\"",
+                        summary_str
+                    );
+                    return None;
+                }
+                Some((minutes, compute_trigger_time(event, minutes)?))
+            });
 
         let Some((minutes, trigger)) = select_best_trigger(triggers, cutoff, now) else {
             continue;
@@ -336,6 +347,29 @@ fn select_best_trigger(
         .into_iter()
         .filter(|(_, t)| *t > window_start && *t <= now)
         .max_by_key(|(_, t)| *t)
+}
+
+/// The reminder offsets (minutes before start) to consider for `event`.
+///
+/// An event's own VALARMs always win. When it has none, timed events fall
+/// back to the user's default reminders — this is what makes meetings synced
+/// from providers that don't materialize their calendar-level default
+/// reminder into the event (e.g. Google) still notify. All-day events are
+/// left alone: "10 minutes before midnight" is never what anyone wants for a
+/// birthday or holiday, and the default-reminder setting is expressed in
+/// minutes-before-start, which only makes sense for a real start time.
+fn reminder_offsets(event: &Event, default_reminders: &[i64]) -> Vec<i64> {
+    if !event.reminders.is_empty() {
+        return event
+            .reminders
+            .iter()
+            .map(|r| r.minutes_before_start)
+            .collect();
+    }
+    if matches!(event.start, EventTime::Date(_)) {
+        return Vec::new();
+    }
+    default_reminders.to_vec()
 }
 
 fn should_remind(event: &Event, account_email: Option<&str>) -> bool {
@@ -632,11 +666,23 @@ mod tests {
         notifier: &TestNotifier,
         notifications_enabled: bool,
     ) -> usize {
+        run_with_defaults(now, events, &[], cache, notifier, notifications_enabled)
+    }
+
+    fn run_with_defaults(
+        now: DateTime<Utc>,
+        events: &[Event],
+        default_reminders: &[i64],
+        cache: &mut DeliveredCache,
+        notifier: &TestNotifier,
+        notifications_enabled: bool,
+    ) -> usize {
         let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
         process_reminders(
             now,
             cutoff,
             events,
+            default_reminders,
             cache,
             notifier,
             notifications_enabled,
@@ -713,6 +759,110 @@ mod tests {
             notifier.calls.lock().unwrap()[0].event_url,
             "rencal://event?uid=evt-sync"
         );
+    }
+
+    // ---- default reminders fallback ---------------------------------------
+
+    fn make_event_without_alarm(uid: &str, start_utc: DateTime<Utc>) -> Event {
+        let mut event = make_event(uid, start_utc, 0);
+        event.reminders.clear();
+        event
+    }
+
+    #[test]
+    fn reminder_offsets_prefers_event_alarms_over_defaults() {
+        let event = make_event("evt-own", t(2026, 4, 29, 12, 30), 5);
+        assert_eq!(reminder_offsets(&event, &[10, 30]), vec![5]);
+    }
+
+    #[test]
+    fn reminder_offsets_falls_back_to_defaults_when_event_has_none() {
+        let event = make_event_without_alarm("evt-none", t(2026, 4, 29, 12, 30));
+        assert_eq!(reminder_offsets(&event, &[10, 30]), vec![10, 30]);
+        assert!(reminder_offsets(&event, &[]).is_empty());
+    }
+
+    #[test]
+    fn reminder_offsets_skips_defaults_for_all_day_events() {
+        let mut event = make_event_without_alarm("evt-allday", t(2026, 4, 29, 0, 0));
+        event.start = EventTime::Date(NaiveDate::from_ymd_opt(2026, 4, 29).unwrap());
+        event.end = None;
+        assert!(reminder_offsets(&event, &[10]).is_empty());
+    }
+
+    /// A Google meeting synced without any VALARM (Google keeps its
+    /// calendar-level default reminder out of the event) must still fire
+    /// using the user's default reminders.
+    #[test]
+    fn event_without_alarm_fires_via_default_reminders() {
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+        let event = make_event_without_alarm("evt-google", t(2026, 4, 29, 12, 30));
+
+        // No defaults configured → silent, as before.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 20),
+            &[event.clone()],
+            &[],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 0);
+
+        // 10-minute default → fires at 12:20.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 20),
+            &[event.clone()],
+            &[10],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
+
+        // Same tick again → deduped.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 21),
+            &[event],
+            &[10],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
+    }
+
+    #[test]
+    fn event_with_own_alarm_ignores_default_reminders() {
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+        // Event alarm is 5 min before (12:25); default is 30 min (12:00).
+        let event = make_event("evt-own-alarm", t(2026, 4, 29, 12, 30), 5);
+
+        run_with_defaults(
+            t(2026, 4, 29, 12, 0),
+            &[event.clone()],
+            &[30],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(
+            notifier.count(),
+            0,
+            "default must not fire when event has its own alarm"
+        );
+
+        run_with_defaults(
+            t(2026, 4, 29, 12, 25),
+            &[event],
+            &[30],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
     }
 
     #[test]
