@@ -160,7 +160,9 @@ pub fn check_and_notify(
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
-    let notifications_enabled = RencalConfig::load().notifications_enabled;
+    let rencal_config = RencalConfig::load();
+    let notifications_enabled = rencal_config.notifications_enabled;
+    let default_group = rencal_config.groups.get(DEFAULT_GROUP).map(Vec::as_slice);
 
     let cache_path = delivered_cache_path();
     let mut cache = cache_path
@@ -205,6 +207,13 @@ pub fn check_and_notify(
                 continue;
             }
         };
+        if !calendar_is_visible(calendar.slug(), default_group) {
+            log::debug!(
+                "[{}] hidden from the default group — skipping reminders",
+                calendar.slug().unwrap_or("?")
+            );
+            continue;
+        }
         let account_email = calendar.remote_email().map(str::to_owned);
         match calendar.expanded_events_in_range(range_start, range_end) {
             Ok(es) => events.extend(
@@ -354,6 +363,24 @@ fn select_best_trigger(
         .into_iter()
         .filter(|(_, t)| *t > window_start && *t <= now)
         .max_by_key(|(_, t)| *t)
+}
+
+/// Name of the special calendar group that defines which calendars are shown
+/// by default. Hiding a calendar in Settings removes it from this group; when
+/// every calendar is shown the group is absent from config.toml entirely.
+const DEFAULT_GROUP: &str = "default";
+
+/// Whether a calendar takes part in reminders. Mirrors the frontend's
+/// `getVisibleCalendarSlugs` for the default group: with no `default` group
+/// configured every calendar is visible; otherwise only the listed slugs are.
+/// Named groups are a client-side view switch (localStorage) and are
+/// deliberately not consulted here — reminders follow the default view, not
+/// whichever group happens to be selected.
+fn calendar_is_visible(slug: Option<&str>, default_group: Option<&[String]>) -> bool {
+    let Some(default_group) = default_group else {
+        return true;
+    };
+    slug.is_some_and(|slug| default_group.iter().any(|s| s == slug))
 }
 
 /// The reminder offsets (minutes before start) to consider for `event`.
@@ -766,6 +793,23 @@ mod tests {
             notifier.calls.lock().unwrap()[0].event_url,
             "rencal://event?uid=evt-sync"
         );
+    }
+
+    // ---- calendar visibility ------------------------------------------------
+
+    #[test]
+    fn calendar_is_visible_without_default_group() {
+        assert!(calendar_is_visible(Some("work"), None));
+        assert!(calendar_is_visible(None, None));
+    }
+
+    #[test]
+    fn calendar_is_visible_only_when_listed_in_default_group() {
+        let group = vec!["work".to_string(), "family".to_string()];
+        assert!(calendar_is_visible(Some("work"), Some(&group)));
+        assert!(!calendar_is_visible(Some("room-1"), Some(&group)));
+        assert!(!calendar_is_visible(None, Some(&group)));
+        assert!(!calendar_is_visible(Some("work"), Some(&[])));
     }
 
     // ---- default reminders fallback ---------------------------------------

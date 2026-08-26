@@ -26,6 +26,12 @@ minutes-before-start offset against midnight isn't a meaningful reminder for a b
 holiday); they only notify via explicit VALARMs. With no defaults configured, behaviour is
 unchanged: VALARM-less events are silent.
 
+Only calendars shown in the default view take part. Hiding a calendar in Settings removes it from
+the `default` group in `~/.config/rencal/config.toml`; the loop reads that group and skips any
+calendar not in it (`calendar_is_visible`). With no `default` group configured, every calendar is
+included. Named groups are a client-side view switch stored in localStorage, so they are not
+consulted — reminders follow the default view, not whichever group is currently selected.
+
 ## Clicking a notification
 
 Every fired reminder carries a `rencal://event?uid=...` deep link, plus `recurrence-id` for a
