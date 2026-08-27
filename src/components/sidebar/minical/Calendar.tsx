@@ -14,6 +14,8 @@ import {
 
 import { Button, buttonVariants } from "@/components/ui/button"
 
+import { useSettings } from "@/contexts/SettingsContext"
+
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { formatDateKey, today } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
@@ -45,6 +47,7 @@ function Calendar({
   buttonVariant?: ComponentProps<typeof Button>["variant"]
 }) {
   const defaultClassNames = getDefaultClassNames()
+  const { firstDayOfWeek } = useSettings()
 
   // Subscribe to timezone changes: the current-week/weekday highlights and the
   // `today` prop below all derive from the viewer's zone.
@@ -61,7 +64,7 @@ function Calendar({
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
       )}
-      weekStartsOn={1}
+      weekStartsOn={firstDayOfWeek === "sunday" ? 0 : 1}
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),

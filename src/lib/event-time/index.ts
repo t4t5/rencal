@@ -23,7 +23,7 @@ export {
   WEEK_MINUTES,
 } from "./constants"
 export { allDayDate, atTime, fromDate, nowZoned, today } from "./constructors"
-export { dateKeyToPlainDate, epochDay, startOfWeek } from "./day"
+export { dateKeyToPlainDate, epochDay, startOfWeek, type FirstDayOfWeek } from "./day"
 export {
   formatDateKey,
   formatDayMonth,

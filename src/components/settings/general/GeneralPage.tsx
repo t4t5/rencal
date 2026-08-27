@@ -19,12 +19,14 @@ import type { TimeFormat } from "@/rpc/bindings"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { FirstDayOfWeek } from "@/lib/event-time"
 import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
 
 export function GeneralPage() {
   return (
     <SettingsContent>
       <TimeFormatSection />
+      <FirstDayOfWeekSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
@@ -46,6 +48,25 @@ const TimeFormatSection = () => {
         <SelectContent>
           <SelectItem value="24h">24h</SelectItem>
           <SelectItem value="12h">12h</SelectItem>
+        </SelectContent>
+      </Select>
+    </div>
+  )
+}
+
+const FirstDayOfWeekSection = () => {
+  const { firstDayOfWeek, setFirstDayOfWeek } = useSettings()
+
+  return (
+    <div className="flex flex-col gap-2 w-[150px]">
+      <label className="text-sm">First day of week</label>
+      <Select value={firstDayOfWeek} onValueChange={(v) => setFirstDayOfWeek(v as FirstDayOfWeek)}>
+        <SelectTrigger className="w-full" ghost={false}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="monday">Monday</SelectItem>
+          <SelectItem value="sunday">Sunday</SelectItem>
         </SelectContent>
       </Select>
     </div>

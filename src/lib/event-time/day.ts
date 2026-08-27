@@ -7,9 +7,17 @@ export function epochDay(date: Temporal.PlainDate): number {
   return date.toZonedDateTime("UTC").epochMilliseconds / MILLIS_PER_DAY
 }
 
-/** The Monday that begins the week containing the given date. */
-export function startOfWeek(date: Temporal.PlainDate): Temporal.PlainDate {
-  return date.subtract({ days: date.dayOfWeek - 1 })
+/** App-level mirror of the RPC `FirstDayOfWeek` type. */
+export type FirstDayOfWeek = "monday" | "sunday"
+
+/** The day that begins the week containing the given date, per `firstDay`. */
+export function startOfWeek(
+  date: Temporal.PlainDate,
+  firstDay: FirstDayOfWeek,
+): Temporal.PlainDate {
+  // dayOfWeek: Mon=1 … Sun=7.
+  const daysSinceWeekStart = firstDay === "sunday" ? date.dayOfWeek % 7 : date.dayOfWeek - 1
+  return date.subtract({ days: daysSinceWeekStart })
 }
 
 /** Parse the app's YYYY-MM-DD day-key representation. */

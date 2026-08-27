@@ -2,6 +2,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useCallback, useEffect, useState } from "react"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useSettings } from "@/contexts/SettingsContext"
 
 import { monthGridBounds } from "@/hooks/cal-events/useMonthGrid"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
@@ -32,6 +33,7 @@ export function useInfiniteMonths({
   visibleCalendarIds: string[]
 }) {
   const { ensureRangeLoaded } = useCalEvents()
+  const { firstDayOfWeek } = useSettings()
 
   const [rangeStart, setRangeStart] = useState(() => rangeStartFor(activeDate))
   const [rangeEnd, setRangeEnd] = useState(() => rangeEndFor(activeDate))
@@ -48,10 +50,10 @@ export function useInfiniteMonths({
   // Keep loaded events in step with the rendered weeks.
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
-    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd)
+    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
     debugMonthScroll("ensure month range loaded", { gridStart, gridEnd })
     void ensureRangeLoaded(gridStart, gridEnd)
-  }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded])
+  }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded, firstDayOfWeek])
 
   useScrollBoundary({
     scrollContainerRef,
