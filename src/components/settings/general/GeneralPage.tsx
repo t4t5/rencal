@@ -59,7 +59,7 @@ const FirstDayOfWeekSection = () => {
 
   return (
     <div className="flex flex-col gap-2 w-[150px]">
-      <label className="text-sm">First day of week</label>
+      <label className="text-sm">Start week on</label>
       <Select value={firstDayOfWeek} onValueChange={(v) => setFirstDayOfWeek(v as FirstDayOfWeek)}>
         <SelectTrigger className="w-full" ghost={false}>
           <SelectValue />
