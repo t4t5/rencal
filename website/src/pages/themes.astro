@@ -1,0 +1,501 @@
+---
+import "../styles/index.css"
+import "../styles/themes.css"
+
+import BaseLayout from "../layouts/BaseLayout.astro"
+import AppPreview from "../components/themes/AppPreview.astro"
+import CheckIcon from "../icons/check.astro"
+import CopyIcon from "../icons/copy.astro"
+import { site } from "../site"
+
+// The built-in theme files live in the app source, one directory up from the
+// website project. Inlining them at build time keeps this page in sync with
+// the app automatically. Mirrors src/themes/manifest.ts (minus "omarchy",
+// whose palette is derived from the OS theme at runtime).
+const themeFiles = import.meta.glob<string>("../../../src/themes/*.css", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+})
+
+function parseThemeCss(css: string): Record<string, string> {
+  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "")
+  const vars: Record<string, string> = {}
+  for (const match of withoutComments.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
+    vars[match[1]] = match[2].trim()
+  }
+  return vars
+}
+
+// Ren's color primitives live in the app's global.css `:root` block (ren.css
+// itself is comment-only), so they're spelled out here. Keep in sync with the
+// app's global.css.
+const REN_CORE: Record<string, string> = {
+  "--background": "#131313",
+  "--foreground": "white",
+  "--muted": "rgba(255, 255, 255, 0.5)",
+  "--primary": "#f56313",
+  "--highlight": "#ff610b",
+  "--today": "#3a93ff",
+  "--hover-tint": "white",
+  "--hover-mix": "5%",
+}
+
+const themes = [
+  { id: "ren", name: "Ren" },
+  { id: "catpuccin-latte", name: "Catpuccin Latte" },
+  { id: "tokyonight", name: "Tokyo Night" },
+  { id: "classic", name: "Classic" },
+  { id: "nord", name: "Nord" },
+].map((theme) => {
+  const css = themeFiles[`../../../src/themes/${theme.id}.css`]
+  if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
+  return { ...theme, vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(css) } }
+})
+
+// The full ren defaults (also declared on `.rc-scope` in themes.css). Used to
+// fill editor fields for primitives a theme doesn't override.
+const REN_DEFAULTS: Record<string, string> = {
+  ...REN_CORE,
+  "--radius-base": "0px",
+  "--radius-circle": "0px",
+  "--font-heading": "var(--mono)",
+  "--font-button": "var(--mono)",
+  "--font-numerical": "var(--mono)",
+  "--font-heading-transform": "uppercase",
+  "--font-button-transform": "uppercase",
+  "--font-numerical-transform": "uppercase",
+}
+
+const payload = { themes, defaults: REN_DEFAULTS }
+
+const styleAttr = (vars: Record<string, string>) =>
+  Object.entries(vars)
+    .map(([name, value]) => `${name}: ${value}`)
+    .join("; ")
+
+const renVars = themes[0].vars
+
+const colorControls = [
+  { var: "--background", label: "Background" },
+  { var: "--foreground", label: "Text" },
+  { var: "--muted", label: "Muted text" },
+  { var: "--primary", label: "Primary" },
+  { var: "--highlight", label: "Highlight" },
+  { var: "--today", label: "Today" },
+  { var: "--hover-tint", label: "Hover tint" },
+]
+
+const segControls = [
+  {
+    seg: "font",
+    label: "Font",
+    options: [
+      { value: "mono", label: "Mono" },
+      { value: "sans", label: "Sans" },
+    ],
+  },
+  {
+    seg: "caps",
+    label: "Headings",
+    options: [
+      { value: "uppercase", label: "Caps" },
+      { value: "normal", label: "Normal" },
+    ],
+  },
+  {
+    seg: "circle",
+    label: "Circles",
+    options: [
+      { value: "sharp", label: "Off" },
+      { value: "pill", label: "On" },
+    ],
+  },
+]
+---
+
+<BaseLayout
+  title={`Themes - ${site.title}`}
+  description={`Preview ${site.title}'s built-in themes or design your own.`}
+>
+  <section class="mx-auto flex w-full max-w-7xl flex-col gap-10 px-6 pt-6 md:px-10">
+    <div class="flex max-w-2xl flex-col gap-3">
+      <h1 class="text-3xl">Themes</h1>
+      <p>
+        Discover or create your own themes for renCal.
+      </p>
+      <p>
+        Copy the generated CSS file into
+        <code class="text-sm">~/.config/rencal/themes/</code> and renCal picks it up live.
+      </p>
+    </div>
+
+    <div class="grid items-start gap-10 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <!-- Preview (first on mobile, right column on desktop) -->
+      <div class="order-1 flex flex-col gap-3 lg:sticky lg:top-6 lg:order-2">
+        <AppPreview />
+      </div>
+
+      <!-- Controls -->
+      <aside class="order-2 flex flex-col gap-10 lg:order-1">
+        <div class="flex flex-col gap-3">
+          <div class="grid grid-cols-2 gap-2">
+            {
+              themes.map((theme) => (
+                <button type="button" class="tp-tile" data-theme-tile={theme.id}>
+                  <div class="rc-scope w-full" style={styleAttr(theme.vars)}>
+                    <div class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-white/10 bg-(--background) p-2">
+                      <div class="flex items-center justify-between gap-2">
+                        <div class="h-[4px] grow rounded bg-(--foreground)" />
+                        <div class="rc-circle size-3 bg-(--primary)" />
+                      </div>
+                      <div class="relative grow">
+                        <div class="absolute inset-0 flex justify-between gap-1.5">
+                          <div class="grow bg-(--hover-tint) opacity-5" />
+                          <div class="grow bg-(--hover-tint) opacity-5" />
+                          <div class="grow bg-(--hover-tint) opacity-10" />
+                        </div>
+                        <div class="absolute inset-0 flex flex-col">
+                          <div class="grow" />
+                          <div class="grow bg-(--hover-tint) opacity-5" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <span class="text-xs text-muted">{theme.name}</span>
+                </button>
+              ))
+            }
+
+            <button type="button" class="tp-tile" data-theme-tile="custom">
+              <div id="tp-custom-palette" class="rc-scope w-full" style={styleAttr(renVars)}>
+                <div
+                  class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-dashed border-white/20 bg-(--background) p-2"
+                >
+                  <div class="flex items-center justify-between gap-2">
+                    <div class="h-[4px] grow rounded bg-(--foreground)"></div>
+                    <div class="rc-circle size-3 bg-(--primary)"></div>
+                  </div>
+                  <div class="relative grow">
+                    <div class="absolute inset-0 flex justify-between gap-1.5">
+                      <div class="grow bg-(--hover-tint) opacity-5"></div>
+                      <div class="grow bg-(--hover-tint) opacity-5"></div>
+                      <div class="grow bg-(--hover-tint) opacity-10"></div>
+                    </div>
+                    <div class="absolute inset-0 flex flex-col">
+                      <div class="grow"></div>
+                      <div class="grow bg-(--hover-tint) opacity-5"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <span class="text-xs text-muted">Custom</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex flex-col gap-5">
+          <h2 class="text-lg">Customize</h2>
+
+          <div class="flex flex-col gap-3">
+            {
+              colorControls.map((control) => (
+                <div class="flex items-center gap-3">
+                  <input
+                    type="color"
+                    class="tp-swatch"
+                    data-color-for={control.var}
+                    aria-label={`${control.label} color`}
+                  />
+                  <div class="flex min-w-0 grow flex-col gap-0.5">
+                    <label class="text-xs tracking-wide text-muted uppercase">
+                      {control.label}
+                    </label>
+                    <input
+                      type="text"
+                      class="tp-text"
+                      data-text-for={control.var}
+                      spellcheck="false"
+                      autocomplete="off"
+                      aria-label={`${control.label} value`}
+                    />
+                  </div>
+                </div>
+              ))
+            }
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-xs">
+              <label class="tracking-wide text-muted uppercase">Hover strength</label>
+              <span class="text-muted" data-range-out="--hover-mix"></span>
+            </div>
+            <input
+              type="range"
+              class="tp-range"
+              min="0"
+              max="25"
+              step="1"
+              data-range-for="--hover-mix"
+            />
+          </div>
+
+          <div class="flex flex-col gap-1">
+            <div class="flex justify-between text-xs">
+              <label class="tracking-wide text-muted uppercase">Button radius</label>
+              <span class="text-muted" data-range-out="--radius-base"></span>
+            </div>
+            <input
+              type="range"
+              class="tp-range"
+              min="0"
+              max="1"
+              step="0.05"
+              data-range-for="--radius-base"
+            />
+          </div>
+
+          {
+            segControls.map((control) => (
+              <div class="flex items-center justify-between gap-3">
+                <span class="text-xs tracking-wide text-muted uppercase">{control.label}</span>
+                <div class="tp-seg" data-seg={control.seg}>
+                  {control.options.map((option) => (
+                    <button type="button" data-seg-value={option.value}>
+                      {option.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="flex flex-col gap-3">
+          <div class="flex items-center justify-between">
+            <h2 class="text-lg">Theme CSS</h2>
+            <button
+              type="button"
+              id="tp-copy"
+              data-copy-command=""
+              aria-label="Copy theme CSS"
+              class="flex items-center gap-2! text-sm"
+            >
+              Copy
+              <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
+              <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
+            </button>
+          </div>
+          <pre class="tp-code"><code id="tp-css-code" /></pre>
+          <p class="text-sm opacity-80">
+            Save it as <code>~/.config/rencal/themes/my-theme.css</code> — renCal watches that folder
+            and applies changes live.
+            <a href="/docs/themes" class="text-primary hover:underline">Learn more</a>
+          </p>
+        </div>
+      </aside>
+    </div>
+  </section>
+</BaseLayout>
+
+<script
+  type="application/json"
+  id="tp-data"
+  set:html={JSON.stringify(payload).replace(/</g, "\\u003c")}
+/>
+
+<script src="../lib/copy-button.js"></script>
+
+<script>
+  type Vars = Record<string, string>
+
+  const data = JSON.parse(document.getElementById("tp-data")!.textContent!) as {
+    themes: { id: string; name: string; vars: Vars }[]
+    defaults: Vars
+  }
+
+  const preview = document.getElementById("rc-preview") as HTMLElement
+  const customPalette = document.getElementById("tp-custom-palette") as HTMLElement
+  const cssOut = document.getElementById("tp-css-code") as HTMLElement
+  const copyButton = document.getElementById("tp-copy") as HTMLElement
+  const tiles = [...document.querySelectorAll<HTMLElement>("[data-theme-tile]")]
+
+  // Hidden probe inside the preview: resolves any CSS color (including
+  // var() references against the active theme) to a computed rgb value.
+  const probe = document.createElement("span")
+  probe.style.display = "none"
+  preview.appendChild(probe)
+
+  const STORAGE_KEY = "rencal-theme-playground-v1"
+
+  let active = "ren"
+  let customVars: Vars = { ...data.themes[0].vars }
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "")
+    if (saved && typeof saved === "object") {
+      if (saved.customVars && typeof saved.customVars === "object") {
+        customVars = saved.customVars
+      }
+      const validIds = [...data.themes.map((t) => t.id), "custom"]
+      if (validIds.includes(saved.active)) active = saved.active
+    }
+  } catch {
+    // No saved state (or unreadable storage) — start from the defaults.
+  }
+
+  // Deep link: /themes#tokyonight selects that theme (wins over saved state).
+  const hashId = decodeURIComponent(location.hash.slice(1))
+  if ([...data.themes.map((theme) => theme.id), "custom"].includes(hashId)) active = hashId
+
+  const themeById = (id: string) => data.themes.find((theme) => theme.id === id)
+  const currentVars = (): Vars =>
+    active === "custom" ? customVars : (themeById(active)?.vars ?? {})
+  const effective = (name: string): string => currentVars()[name] ?? data.defaults[name] ?? ""
+
+  function applyVars(el: HTMLElement, vars: Vars) {
+    const stale: string[] = []
+    for (let i = 0; i < el.style.length; i++) {
+      const prop = el.style[i]
+      if (prop.startsWith("--")) stale.push(prop)
+    }
+    for (const prop of stale) el.style.removeProperty(prop)
+    for (const [name, value] of Object.entries(vars)) el.style.setProperty(name, value)
+  }
+
+  function resolveToHex(value: string): string {
+    probe.style.color = ""
+    probe.style.color = value
+    const rgb = getComputedStyle(probe).color
+    const match = rgb.match(/rgba?\(\s*([\d.]+)[,\s]+([\d.]+)[,\s]+([\d.]+)/)
+    if (!match) return "#000000"
+    return (
+      "#" +
+      [match[1], match[2], match[3]]
+        .map((channel) => Math.round(Number(channel)).toString(16).padStart(2, "0"))
+        .join("")
+    )
+  }
+
+  function becomeCustom() {
+    if (active === "custom") return
+    customVars = { ...currentVars() }
+    active = "custom"
+  }
+
+  function setVars(updates: Vars) {
+    becomeCustom()
+    Object.assign(customVars, updates)
+    render()
+  }
+
+  function syncEditor() {
+    // Order matters: applyVars() must have run so the probe resolves var()
+    // references (e.g. Catpuccin's --theme-base) against the active theme.
+    for (const input of document.querySelectorAll<HTMLInputElement>("[data-text-for]")) {
+      input.value = effective(input.dataset.textFor!)
+    }
+    for (const input of document.querySelectorAll<HTMLInputElement>("[data-color-for]")) {
+      input.value = resolveToHex(effective(input.dataset.colorFor!))
+    }
+
+    for (const input of document.querySelectorAll<HTMLInputElement>("[data-range-for]")) {
+      const name = input.dataset.rangeFor!
+      const value = Number.parseFloat(effective(name)) || 0
+      input.value = String(value)
+      const out = document.querySelector(`[data-range-out="${name}"]`)
+      if (out) out.textContent = name === "--hover-mix" ? `${value}%` : `${value}rem`
+    }
+
+    const segState: Record<string, string> = {
+      font: effective("--font-heading").includes("mono") ? "mono" : "sans",
+      caps: effective("--font-heading-transform") === "uppercase" ? "uppercase" : "normal",
+      circle: Number.parseFloat(effective("--radius-circle")) === 0 ? "sharp" : "pill",
+    }
+    for (const seg of document.querySelectorAll<HTMLElement>("[data-seg]")) {
+      for (const button of seg.querySelectorAll("button")) {
+        button.setAttribute(
+          "aria-pressed",
+          String(button.dataset.segValue === segState[seg.dataset.seg!]),
+        )
+      }
+    }
+  }
+
+  function syncCss() {
+    const name = active === "custom" ? "My Theme" : (themeById(active)?.name ?? "My Theme")
+    const lines = [`/* @name ${name} */`]
+    for (const [varName, value] of Object.entries(currentVars())) {
+      lines.push(`${varName}: ${value};`)
+    }
+    const css = lines.join("\n")
+    cssOut.textContent = css
+    copyButton.setAttribute("data-copy-command", css)
+  }
+
+  function render() {
+    applyVars(preview, currentVars())
+    applyVars(customPalette, customVars)
+    for (const tile of tiles) {
+      tile.classList.toggle("is-active", tile.dataset.themeTile === active)
+    }
+    syncEditor()
+    syncCss()
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ active, customVars }))
+    } catch {
+      // Storage unavailable — the playground still works, it just won't persist.
+    }
+  }
+
+  for (const tile of tiles) {
+    tile.addEventListener("click", () => {
+      active = tile.dataset.themeTile!
+      history.replaceState(null, "", `#${active}`)
+      render()
+    })
+  }
+
+  for (const input of document.querySelectorAll<HTMLInputElement>("[data-text-for]")) {
+    input.addEventListener("change", () => {
+      setVars({ [input.dataset.textFor!]: input.value.trim() })
+    })
+  }
+
+  for (const input of document.querySelectorAll<HTMLInputElement>("[data-color-for]")) {
+    input.addEventListener("input", () => {
+      setVars({ [input.dataset.colorFor!]: input.value })
+    })
+  }
+
+  for (const input of document.querySelectorAll<HTMLInputElement>("[data-range-for]")) {
+    input.addEventListener("input", () => {
+      const name = input.dataset.rangeFor!
+      setVars({ [name]: name === "--hover-mix" ? `${input.value}%` : `${input.value}rem` })
+    })
+  }
+
+  for (const seg of document.querySelectorAll<HTMLElement>("[data-seg]")) {
+    seg.addEventListener("click", (event) => {
+      const button = (event.target as HTMLElement).closest<HTMLElement>("[data-seg-value]")
+      if (!button) return
+      const value = button.dataset.segValue!
+
+      if (seg.dataset.seg === "font") {
+        const font = value === "mono" ? "var(--mono)" : "var(--sans)"
+        setVars({ "--font-heading": font, "--font-button": font, "--font-numerical": font })
+      } else if (seg.dataset.seg === "caps") {
+        const transform = value === "uppercase" ? "uppercase" : "none"
+        setVars({
+          "--font-heading-transform": transform,
+          "--font-button-transform": transform,
+          "--font-numerical-transform": transform,
+        })
+      } else if (seg.dataset.seg === "circle") {
+        setVars({ "--radius-circle": value === "pill" ? "calc(infinity * 1px)" : "0px" })
+      }
+    })
+  }
+
+  render()
+</script>
