@@ -231,6 +231,12 @@
   font-size: 12px;
   line-height: 1.6;
   overflow: auto;
+  scrollbar-color: transparent transparent;
   max-height: 20rem;
   white-space: pre;
+}
+
+.tp-code::-webkit-scrollbar,
+.tp-code::-webkit-scrollbar-thumb {
+  background: transparent;
 }
