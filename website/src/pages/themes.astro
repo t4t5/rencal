@@ -121,7 +121,7 @@ const segControls = [
 >
   <section class="mx-auto flex w-full flex-col gap-10 px-6 pt-6 md:px-10">
     <div class="flex flex-col gap-3">
-      <h1 class="text-3xl">Themes</h1>
+      <h1 class="text-3xl hidden">renCal Themes</h1>
       <p>
         Discover themes for renCal or create your own. Copy the generated CSS file into
         <code class="text-sm">~/.config/rencal/themes/</code> to use it.
@@ -272,27 +272,30 @@ const segControls = [
         <div class="flex flex-col gap-3">
           <div class="flex items-center justify-between">
             <h2 class="text-lg">Theme CSS</h2>
+          </div>
+          <pre class="tp-code"><code id="tp-css-code" /></pre>
+
+          <div class="flex gap-2">
             <button
               type="button"
               id="tp-copy"
               data-copy-command=""
               aria-label="Copy theme CSS"
-              class="flex items-center gap-2! text-sm"
+              class="flex flex-1 items-center justify-center gap-2! text-sm"
             >
               Copy
               <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
               <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
             </button>
+            <button
+              type="button"
+              id="tp-download"
+              class="primary flex flex-1 items-center justify-center gap-2!"
+            >
+              <DownloadIcon class="h-4 w-4" />
+              Download
+            </button>
           </div>
-          <pre class="tp-code"><code id="tp-css-code" /></pre>
-          <button
-            type="button"
-            id="tp-download"
-            class="primary flex w-full items-center justify-center gap-2!"
-          >
-            <DownloadIcon class="h-4 w-4" />
-            Download
-          </button>
           <p class="text-sm opacity-80">
             If you create a theme that you want to share, you can 
             <a href="https://github.com/t4t5/rencal/pulls" class="text-primary hover:underline">open a PR</a>!
