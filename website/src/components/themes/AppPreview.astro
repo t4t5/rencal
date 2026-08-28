@@ -184,9 +184,9 @@ const barStyle = (bar: AllDayBar) =>
   id="rc-preview"
   class="rc-scope flex h-[620px] cursor-default overflow-hidden rounded-xl border border-white/10 bg-(--background) text-[16px] leading-6 text-(--foreground) antialiased select-none"
 >
-  <!-- Sidebar -->
+  <!-- Sidebar (the only pane on narrow widths; fixed-width next to Main on xl+) -->
   <div
-    class="hidden w-[280px] shrink-0 flex-col overflow-hidden border-r border-(--divider) xl:flex"
+    class="flex grow flex-col overflow-hidden xl:w-[280px] xl:grow-0 xl:shrink-0 xl:border-r xl:border-(--divider)"
   >
     <!-- Toolbar with the compose (+) button -->
     <div class="flex justify-end p-4 pb-0">
@@ -337,7 +337,7 @@ const barStyle = (bar: AllDayBar) =>
   </div>
 
   <!-- Main -->
-  <div class="flex min-w-0 grow flex-col">
+  <div class="hidden min-w-0 grow flex-col xl:flex">
     <!-- Header -->
     <div class="flex shrink-0 items-center gap-2 p-4">
       <span class="rc-btn">Today</span>
