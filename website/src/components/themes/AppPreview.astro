@@ -1,0 +1,475 @@
+---
+// A simplified, static mock of the renCal app window, rendered entirely from
+// the theme variables defined by the `.rc-scope` class (src/styles/themes.css).
+// The layout and class recipes mirror the real app components (MainHeader,
+// Minical, Agenda, MonthView) in ../../../../src (simplified — no interactivity).
+
+// Fixed calendar colors, like a user's multi-calendar setup. Events without a
+// color fall back to var(--primary), matching the app's default calendar color.
+const PURPLE = "#9d7cd8"
+const GREEN = "#4caf50"
+
+interface Chip {
+  time: string
+  title: string
+  color?: string
+}
+
+interface Day {
+  num: number
+  monthLabel?: string
+  weekend?: boolean
+  today?: boolean
+  active?: boolean
+  /** Reserve space for an all-day bar lane above the timed chips. */
+  spacer?: boolean
+  chips?: Chip[]
+  more?: number
+}
+
+interface AllDayBar {
+  /** 1-indexed columns, endCol exclusive (same convention as the app). */
+  startCol: number
+  endCol: number
+  title: string
+  color?: string
+}
+
+interface Week {
+  days: Day[]
+  bars?: AllDayBar[]
+  /** 0-indexed column where a new month starts (vertical boundary line). */
+  boundaryCol?: number
+}
+
+// August 2026, Monday start, today = Friday Aug 28.
+const weeks: Week[] = [
+  {
+    days: [
+      { num: 10, chips: [{ time: "09:00", title: "Standup" }] },
+      { num: 11, chips: [{ time: "07:00", title: "Gym", color: GREEN }] },
+      { num: 12, chips: [{ time: "12:30", title: "Lunch w/ Sam" }] },
+      {
+        num: 13,
+        chips: [
+          { time: "09:00", title: "Standup" },
+          { time: "15:00", title: "Design review", color: PURPLE },
+        ],
+      },
+      { num: 14 },
+      { num: 15, weekend: true, chips: [{ time: "10:00", title: "Market run", color: GREEN }] },
+      { num: 16, weekend: true },
+    ],
+  },
+  {
+    days: [
+      { num: 17, chips: [{ time: "09:00", title: "Standup" }] },
+      {
+        num: 18,
+        chips: [
+          { time: "07:00", title: "Gym", color: GREEN },
+          { time: "14:00", title: "1:1 w/ Dana" },
+        ],
+      },
+      { num: 19, chips: [{ time: "18:30", title: "Dinner w/ Alex", color: PURPLE }] },
+      { num: 20, chips: [{ time: "09:00", title: "Standup" }] },
+      { num: 21, chips: [{ time: "16:00", title: "Demo day" }] },
+      { num: 22, weekend: true },
+      { num: 23, weekend: true, chips: [{ time: "11:00", title: "Hike", color: GREEN }] },
+    ],
+  },
+  {
+    bars: [{ startCol: 3, endCol: 6, title: "Conference", color: PURPLE }],
+    days: [
+      { num: 24, chips: [{ time: "09:00", title: "Standup" }] },
+      { num: 25, chips: [{ time: "07:00", title: "Gym", color: GREEN }] },
+      { num: 26, spacer: true, chips: [{ time: "13:00", title: "Workshop", color: PURPLE }] },
+      { num: 27, spacer: true },
+      {
+        num: 28,
+        today: true,
+        active: true,
+        spacer: true,
+        chips: [
+          { time: "09:30", title: "Keynote", color: PURPLE },
+          { time: "19:00", title: "Team dinner" },
+        ],
+        more: 2,
+      },
+      { num: 29, weekend: true, chips: [{ time: "08:00", title: "Long run", color: GREEN }] },
+      { num: 30, weekend: true },
+    ],
+  },
+  {
+    boundaryCol: 1,
+    bars: [{ startCol: 6, endCol: 8, title: "Berlin trip", color: GREEN }],
+    days: [
+      { num: 31, chips: [{ time: "09:00", title: "Standup" }] },
+      { num: 1, monthLabel: "September", chips: [{ time: "07:00", title: "Gym", color: GREEN }] },
+      { num: 2, chips: [{ time: "12:30", title: "Lunch w/ Sam" }] },
+      { num: 3, chips: [{ time: "09:00", title: "Standup" }] },
+      { num: 4, chips: [{ time: "16:00", title: "Demo day" }] },
+      { num: 5, weekend: true, spacer: true },
+      { num: 6, weekend: true, spacer: true },
+    ],
+  },
+]
+
+const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+// Minical grid: Jul 27 – Sep 6 chunked into weeks.
+interface MiniDay {
+  num: number
+  outside?: boolean
+}
+
+const miniCells: MiniDay[] = []
+for (let d = 27; d <= 31; d++) miniCells.push({ num: d, outside: true })
+for (let d = 1; d <= 31; d++) miniCells.push({ num: d })
+for (let d = 1; d <= 6; d++) miniCells.push({ num: d, outside: true })
+
+const miniWeeks: MiniDay[][] = []
+for (let i = 0; i < miniCells.length; i += 7) miniWeeks.push(miniCells.slice(i, i + 7))
+const CURRENT_WEEK_INDEX = 4
+
+const miniDots: Record<number, string[]> = {
+  24: ["var(--primary)"],
+  25: [GREEN],
+  26: [PURPLE],
+  27: [PURPLE],
+  28: [PURPLE, "var(--primary)"],
+  29: [GREEN],
+  31: ["var(--primary)"],
+}
+
+interface AgendaSection {
+  label: string
+  date: string
+  today?: boolean
+  allDay?: { title: string; color?: string }[]
+  rows: { time: string; title: string; color?: string }[]
+}
+
+const agenda: AgendaSection[] = [
+  {
+    label: "Today",
+    date: "28 Aug",
+    today: true,
+    allDay: [{ title: "Conference", color: PURPLE }],
+    rows: [
+      { time: "09:30 - 10:15", title: "Keynote", color: PURPLE },
+      { time: "12:00 - 12:45", title: "Lunch w/ Sam" },
+      { time: "19:00 - 21:00", title: "Team dinner" },
+    ],
+  },
+  {
+    label: "Tomorrow",
+    date: "29 Aug",
+    rows: [{ time: "08:00 - 09:30", title: "Long run", color: GREEN }],
+  },
+  { label: "Sunday", date: "30 Aug", rows: [] },
+]
+
+const barStyle = (bar: AllDayBar) =>
+  [
+    bar.color ? `--ev: ${bar.color}` : null,
+    `left: calc(${(((bar.startCol - 1) / 7) * 100).toFixed(4)}% + 3px)`,
+    `right: calc(${(((7 - (bar.endCol - 1)) / 7) * 100).toFixed(4)}% + 4px)`,
+  ]
+    .filter(Boolean)
+    .join("; ")
+---
+
+<div
+  id="rc-preview"
+  class="rc-scope flex h-[620px] cursor-default overflow-hidden rounded-xl border border-white/10 bg-(--background) text-[16px] leading-6 text-(--foreground) antialiased select-none"
+>
+  <!-- Sidebar (the only pane on narrow widths; fixed-width next to Main on xl+) -->
+  <div
+    class="flex grow flex-col overflow-hidden xl:w-[280px] xl:grow-0 xl:shrink-0 xl:border-r xl:border-(--divider)"
+  >
+    <!-- Toolbar with the compose (+) button -->
+    <div class="flex justify-end p-4 pb-0">
+      <span class="rc-btn rc-btn--icon">
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 5v14M5 12h14" stroke-linecap="round"></path>
+        </svg>
+      </span>
+    </div>
+
+    <!-- Minical -->
+    <div class="pt-4">
+      <div class="flex h-12 items-center justify-between px-4 pb-4">
+        <h2 class="rc-heading text-2xl font-bold">
+          August <span class="font-normal text-(--highlight)">2026</span>
+        </h2>
+        <div class="flex items-center gap-1">
+          <span class="rc-circle flex size-7 items-center justify-center">
+            <svg
+              viewBox="0 0 24 24"
+              class="size-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m6 15 6-6 6 6" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </span>
+          <span class="rc-circle flex size-7 items-center justify-center">
+            <svg
+              viewBox="0 0 24 24"
+              class="size-4"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+            </svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="px-3">
+        <div class="flex">
+          {
+            weekdayLabels.map((label, i) => (
+              <div
+                class:list={[
+                  "rc-numerical flex-1 text-center text-[11px] text-(--muted)",
+                  i >= 5 && "bg-(--weekend)",
+                  i === 4 && "text-(--today)",
+                ]}
+              >
+                {label.toUpperCase()}
+              </div>
+            ))
+          }
+        </div>
+
+        {
+          miniWeeks.map((week, weekIndex) => (
+            <div class:list={["flex", weekIndex === CURRENT_WEEK_INDEX && "bg-(--hover)"]}>
+              {week.map((day, i) => {
+                const isSelected =
+                  !day.outside && day.num === 28 && weekIndex === CURRENT_WEEK_INDEX
+                const dots = !day.outside ? miniDots[day.num] : undefined
+                return (
+                  <div class:list={["flex flex-1 justify-center", i >= 5 && "bg-(--weekend)"]}>
+                    <div
+                      class:list={[
+                        "relative flex size-8 items-center justify-center text-sm",
+                        day.outside && "text-(--muted)",
+                        isSelected &&
+                          "rc-circle bg-(--today) font-bold text-(--primary-foreground)",
+                      ]}
+                    >
+                      {day.num}
+                      {dots && !isSelected && (
+                        <span class="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-[3px]">
+                          {dots.map((color) => (
+                            <span class="rc-circle size-1" style={`background: ${color}`} />
+                          ))}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <!-- Agenda -->
+    <div class="mt-3 flex min-h-0 grow flex-col overflow-hidden">
+      {
+        agenda.map((section) => (
+          <div class="border-b border-(--divider)">
+            <div class="flex h-8 items-center gap-2 px-3 py-1.5 text-sm">
+              <span
+                class:list={["rc-numerical font-bold uppercase", section.today && "text-(--today)"]}
+              >
+                {section.label}
+              </span>
+              <span
+                class:list={["rc-numerical", section.today ? "text-(--today)" : "text-(--muted)"]}
+              >
+                {section.date}
+              </span>
+            </div>
+
+            <div class="flex flex-col gap-1 pb-2">
+              {!section.allDay?.length && !section.rows.length && (
+                <div class="px-3 py-1 text-sm text-(--muted)">No events</div>
+              )}
+
+              {section.allDay && section.allDay.length > 0 && (
+                <div class="flex flex-wrap gap-1 px-3 py-1">
+                  {section.allDay.map((chip) => (
+                    <span
+                      class="rc-ev rc-allday px-1.5 text-xs leading-5"
+                      style={chip.color ? `--ev: ${chip.color}` : undefined}
+                    >
+                      {chip.title}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              {section.rows.map((row) => (
+                <div
+                  class="rc-ev flex gap-3 py-1 pr-2 pl-3.5"
+                  style={row.color ? `--ev: ${row.color}` : undefined}
+                >
+                  <div class="w-[3px] shrink-0 rounded-[2px] bg-(--ev)" />
+                  <div class="text-sm">
+                    <div class="rc-numerical h-4 text-xs text-(--muted)">{row.time}</div>
+                    <div class="font-medium">{row.title}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div class="hidden min-w-0 grow flex-col xl:flex">
+    <!-- Header -->
+    <div class="flex shrink-0 items-center gap-2 p-4">
+      <span class="rc-btn">Today</span>
+      <span class="rc-btn rc-btn--icon">
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path
+            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.01a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h.01a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v.01a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z"
+          ></path>
+        </svg>
+      </span>
+      <div class="grow"></div>
+      <span class="rc-btn min-w-24 justify-between">
+        Month
+        <svg
+          viewBox="0 0 24 24"
+          class="size-4 text-(--muted)"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path d="m6 9 6 6 6-6" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </span>
+      <span class="rc-btn rc-btn--icon">
+        <svg viewBox="0 0 24 24" class="size-4" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m21 21-4.35-4.35" stroke-linecap="round"></path>
+        </svg>
+      </span>
+    </div>
+
+    <!-- Weekday labels -->
+    <div class="grid grid-cols-7 border-b border-(--divider)">
+      {
+        weekdayLabels.map((label, i) => (
+          <div
+            class:list={[
+              "rc-numerical py-2 text-center text-[11px] font-medium text-(--muted) uppercase",
+              i >= 5 && "bg-(--weekend)",
+            ]}
+          >
+            {label}
+          </div>
+        ))
+      }
+    </div>
+
+    <!-- Month grid -->
+    <div class="flex min-h-0 grow flex-col">
+      {
+        weeks.map((week) => (
+          <div class="flex min-h-0 grow basis-0 flex-col border-b border-(--divider) last:border-b-0">
+            <div class="relative grid shrink-0 grid-cols-7">
+              {week.days.map((day) => (
+                <div
+                  class:list={[
+                    "rc-numerical flex min-w-0 items-center justify-end gap-1 overflow-hidden border-r border-(--divider) p-1 last:border-r-0",
+                    day.weekend && "bg-(--weekend)",
+                    day.active && "bg-(--accent)",
+                  ]}
+                >
+                  {day.monthLabel && (
+                    <span class="truncate text-xs text-(--muted)">{day.monthLabel}</span>
+                  )}
+                  <span
+                    class:list={[
+                      "flex h-5 w-5 items-center justify-center text-xs",
+                      day.today && "rc-circle bg-(--today) text-(--primary-foreground)",
+                    ]}
+                  >
+                    {day.num}
+                  </span>
+                </div>
+              ))}
+              {week.boundaryCol != null && (
+                <div
+                  class="absolute top-0 bottom-0 z-10 w-0.5 -translate-x-px bg-(--month-boundary)"
+                  style={`left: ${((week.boundaryCol / 7) * 100).toFixed(4)}%`}
+                />
+              )}
+            </div>
+
+            <div class="relative grid min-h-0 grow grid-cols-7">
+              {week.bars?.map((bar) => (
+                <div
+                  class="rc-ev rc-allday absolute top-0 z-10 h-[17px] truncate px-1 py-px text-xs leading-4"
+                  style={barStyle(bar)}
+                >
+                  {bar.title}
+                </div>
+              ))}
+
+              {week.days.map((day) => (
+                <div
+                  class:list={[
+                    "flex min-h-0 flex-col gap-1 overflow-hidden border-r border-(--divider) px-1 pb-1 last:border-r-0",
+                    day.weekend && "bg-(--weekend)",
+                    day.active && "bg-(--accent)",
+                  ]}
+                >
+                  {day.spacer && <div class="h-[17px] shrink-0" />}
+                  {day.chips?.map((chip) => (
+                    <div
+                      class="rc-ev flex shrink-0 items-center gap-1 truncate text-xs"
+                      style={chip.color ? `--ev: ${chip.color}` : undefined}
+                    >
+                      <div class="h-full w-0.5 shrink-0 bg-(--ev)" />
+                      <span class="truncate">
+                        <span class="rc-numerical rc-ev-text text-[10px]">{chip.time}</span>{" "}
+                        {chip.title}
+                      </span>
+                    </div>
+                  ))}
+                  {day.more && (
+                    <div class="shrink-0 truncate px-0.5 text-xs text-(--muted)">
+                      +{day.more} more
+                    </div>
+                  )}
+                </div>
+              ))}
+
+              {week.boundaryCol != null && (
+                <div
+                  class="absolute top-0 bottom-0 z-10 w-0.5 -translate-x-px bg-(--month-boundary)"
+                  style={`left: ${((week.boundaryCol / 7) * 100).toFixed(4)}%`}
+                />
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</div>
