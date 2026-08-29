@@ -57,6 +57,7 @@ export function MonthGrid({
 
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
+  const prevRowHeightRef = useRef(rowHeight)
 
   // Hide the grid until the initial anchor scroll lands, so the user never sees the
   // pre-scroll frame (top of the grid) flash before it jumps to the active month.
@@ -82,6 +83,31 @@ export function MonthGrid({
     estimateSize,
     overscan: 3,
   })
+
+  // When the row height changes (e.g. sidebar toggle or window resize), rescale
+  // scrollTop so the viewport stays on the same week instead of jumping. Placed
+  // after the virtualizer so it can call measure() on it.
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    const prevHeight = prevRowHeightRef.current
+    prevRowHeightRef.current = rowHeight
+
+    if (!el || prevHeight === rowHeight || prevHeight === 0 || !hasInitiallyScrolled) return
+
+    const ratio = rowHeight / prevHeight
+    const newScrollTop = Math.round(el.scrollTop * ratio)
+
+    debugMonthScroll("rescale scrollTop after row height change", {
+      prevHeight,
+      rowHeight,
+      ratio,
+      prevScrollTop: el.scrollTop,
+      newScrollTop,
+    })
+
+    el.scrollTop = newScrollTop
+    virtualizer.measure()
+  }, [rowHeight, virtualizer, scrollRef, hasInitiallyScrolled])
 
   // anchorWeekIndex shifts when weeks are prepended/appended; keep it in a ref so the
   // one-time initial scroll can read the latest value without re-running on every shift.
