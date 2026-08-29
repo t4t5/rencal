@@ -2,6 +2,7 @@ import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { ReportBugButton } from "@/components/toolbar/ReportBugButton"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
+import { ToggleSidebarButton } from "@/components/toolbar/ToggleSidebarButton"
 import { SearchButton } from "@/components/toolbar/search/SearchButton"
 import { Button } from "@/components/ui/button"
 import { DragRegion } from "@/components/ui/drag-region"
@@ -36,6 +37,8 @@ export function MainHeader({
   return (
     <div className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
+        <ToggleSidebarButton />
+
         <ShortcutTooltip text="Go to Today" shortcut="t">
           <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
             Today
