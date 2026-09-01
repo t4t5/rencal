@@ -10,6 +10,8 @@
 //! binary is still on disk (a pacman upgrade unlinks it) and it still has a
 //! main window to show. No ack means the primary is defunct — the new launch
 //! takes over the socket, instead of exiting 0 with no window ever appearing.
+//! A primary that finds its own binary replaced exits when yielding, so the
+//! takeover doesn't leave a windowless process running duplicate loops.
 
 use std::io::{Read, Write};
 use std::net::Shutdown;
@@ -78,8 +80,8 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
         }
         // No ack: the primary is stale (binary replaced under it), hung, or
         // lost its window. Take over so this launch still produces a window.
-        // The defunct process just lingers without the socket until logout;
-        // killing it isn't worth the machinery (see PR #119 review).
+        // A stale primary exits itself when yielding (see spawn_listener);
+        // a hung or pre-handshake one lingers until logout.
         log::warn!("existing instance did not ack; taking over single-instance role");
     }
 
@@ -147,8 +149,13 @@ where
                 continue;
             }
             if exe_is_stale() {
-                log::warn!("binary replaced on disk; yielding single-instance role");
-                continue;
+                // Our binary was replaced on disk; the connecting launch is
+                // the new version and will take over the socket. Exit
+                // abruptly on purpose: process::exit skips
+                // InstanceGuard::drop, so we don't unlink the socket file
+                // after the successor has already bound it.
+                log::warn!("binary replaced on disk; exiting so the new launch can take over");
+                std::process::exit(0);
             }
             if on_message(message.lines().map(String::from).collect()) {
                 let _ = stream.write_all(ACK);
