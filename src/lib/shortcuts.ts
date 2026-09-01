@@ -145,6 +145,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "a", type: "char" }],
   },
   {
+    id: "sync",
+    group: "General",
+    label: "Sync now",
+    bindings: [{ keys: "s", type: "char" }],
+  },
+  {
     id: "settings",
     group: "General",
     label: "Go to settings",

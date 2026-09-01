@@ -20,6 +20,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
+import { useSync } from "@/contexts/SyncContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
@@ -164,6 +165,7 @@ function useShortcutHandlers({
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
+  const { syncNow } = useSync()
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)
@@ -278,6 +280,7 @@ function useShortcutHandlers({
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
+    sync: () => void syncNow(),
     settings: (e) => {
       e?.preventDefault()
       void openSettingsWindow()

@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react"
+import { type ReactNode } from "react"
 
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -19,8 +19,7 @@ import { SyncIcon as SyncingIcon } from "@/icons/sync"
 import { Button } from "../ui/button"
 
 export const SyncStatus = () => {
-  const { isChecking, isSyncing, syncError, pendingPreviews, syncNow } = useSync()
-  const [isForcingSync, setIsForcingSync] = useState(false)
+  const { syncStatus, syncError, pendingPreviews, syncNow } = useSync()
 
   const isOnline = useIsOnline()
 
@@ -38,17 +37,12 @@ export const SyncStatus = () => {
     tooltipContent = <ChangesPreview pendingPreviews={pendingPreviews} />
   }
 
-  if (isChecking) {
-    icon = (
-      <CloudIcon
-        className="size-5 text-muted-foreground pointer-events-none"
-        isLoading={isChecking}
-      />
-    )
+  if (syncStatus === "checking") {
+    icon = <CloudIcon className="size-5 text-muted-foreground pointer-events-none" isLoading />
     tooltipContent = <>Checking for changes...</>
   }
 
-  if (isSyncing || isForcingSync) {
+  if (syncStatus === "syncing") {
     icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
     tooltipContent = <>Syncing...</>
   }
@@ -63,22 +57,13 @@ export const SyncStatus = () => {
     tooltipContent = <>No internet connection</>
   }
 
-  const handleSyncNow = async () => {
-    setIsForcingSync(true)
-    try {
-      await syncNow()
-    } finally {
-      setIsForcingSync(false)
-    }
-  }
-
   const button = (
     <Button
       variant="ghost"
       size="icon"
       tabIndex={-1}
       className="relative focus-visible:ring-0"
-      onClick={() => void handleSyncNow()}
+      onClick={() => void syncNow()}
     >
       <div style={{ animation: "scale-in 0.15s ease-out" }} className="pointer-events-none">
         {icon}
