@@ -75,8 +75,8 @@ fn setup_bundled_providers(app: &tauri::App) {
     let _ = BUNDLED_PROVIDERS_DIR.set(providers_dir);
 }
 
-/// Returns whether a main window existed to focus — the single-instance
-/// listener only acks a launch when this is true (see `single_instance`).
+/// Returns whether a main window existed to focus; the single-instance
+/// listener acks a launch only when this is true.
 fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
     let Some(window) = app.get_webview_window("main") else {
         return false;
