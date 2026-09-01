@@ -9,12 +9,10 @@
 //! stream, and waits briefly for a one-byte ack. The primary acks only if its
 //! binary is still on disk (a pacman upgrade unlinks it) and it still has a
 //! main window to show. No ack means the primary is defunct — the new launch
-//! terminates it and takes over the socket, instead of exiting 0 with no
-//! window ever appearing.
+//! takes over the socket, instead of exiting 0 with no window ever appearing.
 
 use std::io::{Read, Write};
 use std::net::Shutdown;
-use std::os::unix::io::AsRawFd;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
 use std::time::Duration;
@@ -80,8 +78,9 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
         }
         // No ack: the primary is stale (binary replaced under it), hung, or
         // lost its window. Take over so this launch still produces a window.
+        // The defunct process just lingers without the socket until logout;
+        // killing it isn't worth the machinery (see PR #119 review).
         log::warn!("existing instance did not ack; taking over single-instance role");
-        terminate_defunct_primary(&stream);
     }
 
     // No live instance. Clear any stale file from a prior crash or takeover.
@@ -122,36 +121,6 @@ fn signal_primary(stream: &mut UnixStream) -> std::io::Result<()> {
     stream.read_exact(&mut ack)
 }
 
-/// Best-effort SIGTERM for a primary that failed the handshake, so takeovers
-/// don't leave windowless background processes running (issue #114).
-fn terminate_defunct_primary(stream: &UnixStream) {
-    let mut cred = libc::ucred {
-        pid: 0,
-        uid: 0,
-        gid: 0,
-    };
-    let mut len = std::mem::size_of::<libc::ucred>() as libc::socklen_t;
-    let ret = unsafe {
-        libc::getsockopt(
-            stream.as_raw_fd(),
-            libc::SOL_SOCKET,
-            libc::SO_PEERCRED,
-            (&mut cred as *mut libc::ucred).cast(),
-            &mut len,
-        )
-    };
-    if ret != 0 || cred.pid <= 0 {
-        return;
-    }
-    // Guard against pid reuse: only kill a process that is still rencal.
-    let comm = std::fs::read_to_string(format!("/proc/{}/comm", cred.pid)).unwrap_or_default();
-    if comm.trim_end() != "rencal" {
-        return;
-    }
-    log::warn!("terminating defunct primary instance (pid {})", cred.pid);
-    let _ = unsafe { libc::kill(cred.pid, libc::SIGTERM) };
-}
-
 /// True once the binary this process was launched from has been replaced or
 /// removed (e.g. by a pacman upgrade, which unlinks the old file and leaves
 /// `/proc/self/exe` pointing at "... (deleted)").
@@ -164,7 +133,7 @@ fn exe_is_stale() -> bool {
 /// Spawn a thread that listens for newline-delimited URLs. An empty message
 /// represents a focus-only launch. `on_message` returns whether the launch
 /// was actually handled (a main window exists to show); only then do we ack —
-/// otherwise the connecting process terminates us and takes over as primary.
+/// otherwise the connecting process takes over as primary.
 pub fn spawn_listener<F>(listener: UnixListener, on_message: F)
 where
     F: Fn(Vec<String>) -> bool + Send + 'static,
