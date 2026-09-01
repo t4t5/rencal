@@ -75,12 +75,16 @@ fn setup_bundled_providers(app: &tauri::App) {
     let _ = BUNDLED_PROVIDERS_DIR.set(providers_dir);
 }
 
-fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) {
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.unminimize();
-        let _ = window.show();
-        let _ = window.set_focus();
-    }
+/// Returns whether a main window existed to focus; the single-instance
+/// listener acks a launch only when this is true.
+fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
+    let Some(window) = app.get_webview_window("main") else {
+        return false;
+    };
+    let _ = window.unminimize();
+    let _ = window.show();
+    let _ = window.set_focus();
+    true
 }
 
 fn spawn_reminder_loop_if_needed(app: &tauri::App) {
@@ -119,7 +123,7 @@ pub async fn run() {
     #[cfg(target_os = "linux")]
     let mut instance_guard = match single_instance::try_acquire_or_signal() {
         Some(g) => g,
-        None => return, // existing instance was signaled to focus; we exit.
+        None => return, // existing instance acked and was focused; we exit.
     };
 
     // Keep the guard on this frame for the whole process; dropping it early
@@ -195,7 +199,7 @@ pub async fn run() {
                         if !urls.is_empty() {
                             deep_links::enqueue_urls(&app_handle, &urls);
                         }
-                        focus_main_window(&app_handle);
+                        focus_main_window(&app_handle)
                     });
                 }
             }
