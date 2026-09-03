@@ -3,6 +3,7 @@ import { memo, useRef, useState } from "react"
 import { EventContextMenu } from "@/components/EventContextMenu"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
+import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
@@ -33,6 +34,16 @@ function WeekTimedEventImpl({
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()
 
+  const dragRole = useEventDragRole(layout.event)
+  const isDragPreview = dragRole === "preview"
+  // Drafts and drag previews are stand-ins: no click, no context menu, no drag.
+  const isStatic = isDraft || isDragPreview
+  // The floating copy keeps this block's size so it reads as the block being lifted.
+  const onDragPointerDown = useEventDragHandle(layout.event, {
+    disabled: isStatic,
+    float: "block",
+  })
+
   // Cascade layout: each overlap depth indents from the left by a fixed percentage and
   // extends to the right edge, so the earlier/outer event remains fully visible beneath.
   const CASCADE_OFFSET_PCT = 15
@@ -60,20 +71,23 @@ function WeekTimedEventImpl({
   const inner = (
     <div
       ref={ref}
-      data-event-clickable={!isDraft || undefined}
+      data-event-clickable={!isStatic || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
         "absolute overflow-hidden rounded px-1",
         hasStripe && "pl-1.5",
-        !isDraft && dimmed && "opacity-50",
+        !isStatic && dimmed && "opacity-50",
         isDraft && "font-medium",
+        dragRole === "source" && "opacity-40",
+        isDragPreview && "pointer-events-none",
       )}
       style={{
         top: `${layout.top}%`,
         height: `max(${layout.height}%, 1rem)`,
         left: `${leftPercent}%`,
         width: `${widthPercent}%`,
-        zIndex: layout.column,
+        // Lift the preview above overlapping neighbours so its ring stays visible.
+        zIndex: isDragPreview ? 10 : layout.column,
         border: "1px solid var(--background)",
         ...getEventBlockStyle({
           calendarColor: layout.calendarColor,
@@ -81,10 +95,12 @@ function WeekTimedEventImpl({
           highlighted,
           isDashed,
           isDraft,
+          isDragPreview,
         }),
       }}
+      onPointerDown={onDragPointerDown}
       onClick={
-        isDraft
+        isStatic
           ? undefined
           : (e) => {
               e.stopPropagation()
@@ -134,7 +150,7 @@ function WeekTimedEventImpl({
     </div>
   )
 
-  if (isDraft) return inner
+  if (isStatic) return inner
 
   return (
     <EventContextMenu event={layout.event} anchorRef={ref} onOpenChange={setContextOpen}>

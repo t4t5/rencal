@@ -46,7 +46,13 @@ export {
 } from "./edit"
 export { getViewerTzid, setViewerTzid, subscribeViewerTzid } from "./local-zone"
 export { computeEventDateInfo } from "./layout"
-export { dateInViewerZone, isAllDay, isSameDay, toViewerZonedDateTime } from "./projections"
+export {
+  dateInViewerZone,
+  isAllDay,
+  isSameDay,
+  isSameEventTime,
+  toViewerZonedDateTime,
+} from "./projections"
 export {
   coversFullDay,
   displayEndDate,

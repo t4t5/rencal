@@ -71,6 +71,8 @@ export function MonthDayCell({
             isActiveDay && "bg-accent",
           )}
           id={isActiveDay ? ACTIVE_DAY_EL_ID : undefined}
+          data-drop-day={day.dateKey}
+          data-drop-zone="day"
           onClick={onClick}
           onContextMenu={(e) => {
             contextTargetRef.current = e.currentTarget

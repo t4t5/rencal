@@ -1,5 +1,6 @@
 import { Toaster } from "sonner"
 
+import { EventDragOverlay } from "@/components/event-parts/EventDragOverlay"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
 import { SheetEvent } from "@/components/event-parts/SheetInfo"
@@ -14,6 +15,7 @@ import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
 import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
+import { EventDragProvider } from "@/contexts/EventDragContext"
 import { RecurrenceEditProvider } from "@/contexts/RecurrenceEditContext"
 import { SidebarCollapseProvider, useSidebarCollapse } from "@/contexts/SidebarCollapseContext"
 import { SyncProvider } from "@/contexts/SyncContext"
@@ -27,15 +29,17 @@ export function AppWindow({ preload }: { preload: Preload }) {
     <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
       <SyncProvider>
         <RecurrenceEditProvider>
-          <EventDraftProvider>
-            <CreateEventGateProvider>
-              <AgendaFocusProvider>
-                <SidebarCollapseProvider>
-                  <App />
-                </SidebarCollapseProvider>
-              </AgendaFocusProvider>
-            </CreateEventGateProvider>
-          </EventDraftProvider>
+          <EventDragProvider>
+            <EventDraftProvider>
+              <CreateEventGateProvider>
+                <AgendaFocusProvider>
+                  <SidebarCollapseProvider>
+                    <App />
+                  </SidebarCollapseProvider>
+                </AgendaFocusProvider>
+              </CreateEventGateProvider>
+            </EventDraftProvider>
+          </EventDragProvider>
         </RecurrenceEditProvider>
         <MassDeleteConfirmDialog />
         <UpdateChecker />
@@ -62,6 +66,7 @@ function App() {
 
       {isMd && <PopoverEditEvent />}
       {isMd && <PopoverNewEvent />}
+      {isMd && <EventDragOverlay />}
 
       {!isMd && <SheetEvent />}
     </main>
