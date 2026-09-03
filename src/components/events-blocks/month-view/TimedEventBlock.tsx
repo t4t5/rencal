@@ -3,11 +3,12 @@ import { useRef, useState } from "react"
 import { EventContextMenu } from "@/components/EventContextMenu"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
+import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockColors } from "@/lib/event-styles"
+import { getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -32,6 +33,12 @@ export function MonthTimedEvent({
   const [contextOpen, setContextOpen] = useState(false)
   const { timeFormat } = useSettings()
 
+  const dragRole = useEventDragRole(item.event)
+  const isDragPreview = dragRole === "preview"
+  // Drafts and drag previews are stand-ins: no click, no context menu, no drag.
+  const isStatic = isDraft || isDragPreview
+  const onDragPointerDown = useEventDragHandle(item.event, { disabled: isStatic })
+
   const highlighted = highlightedByParent || contextOpen
 
   const colors = getEventBlockColors({
@@ -43,14 +50,16 @@ export function MonthTimedEvent({
   const inner = (
     <div
       ref={ref}
-      data-event-clickable={!isDraft || undefined}
+      data-event-clickable={!isStatic || undefined}
       className={cn(
         "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded shrink-0",
         highlighted && "bg-accent!",
         (isPending || isDeclined) && "opacity-50",
-        !isDraft && dimmed && "opacity-50",
+        !isStatic && dimmed && "opacity-50",
         isDraft && "font-medium border border-dashed",
         isDeclined && "line-through",
+        dragRole === "source" && "opacity-40",
+        isDragPreview && "pointer-events-none",
       )}
       style={
         isDraft
@@ -59,10 +68,17 @@ export function MonthTimedEvent({
               borderColor: colors.borderColor,
               color: colors.textColor,
             }
-          : undefined
+          : isDragPreview
+            ? getEventBlockStyle({
+                calendarColor: item.color,
+                eventColor: item.eventColor,
+                isDragPreview: true,
+              })
+            : undefined
       }
+      onPointerDown={onDragPointerDown}
       onClick={
-        isDraft
+        isStatic
           ? undefined
           : (e) => {
               e.stopPropagation()
@@ -86,7 +102,7 @@ export function MonthTimedEvent({
     </div>
   )
 
-  if (isDraft) return inner
+  if (isStatic) return inner
 
   return (
     <EventContextMenu event={item.event} anchorRef={ref} onOpenChange={setContextOpen}>

@@ -64,12 +64,15 @@ export function getEventBlockStyle({
   highlighted,
   isDashed,
   isDraft,
+  isDragPreview,
 }: {
   calendarColor: string | null
   eventColor: string | null
   highlighted?: boolean
   isDashed?: boolean
   isDraft?: boolean
+  /** Drop-position stand-in while dragging: normal fill with a solid ring in the event colour. */
+  isDragPreview?: boolean
 }): CSSProperties {
   const { borderColor, textColor, backgroundColor } = getEventBlockColors({
     calendarColor,
@@ -85,6 +88,14 @@ export function getEventBlockStyle({
       backgroundColor,
       color: textColor,
       boxShadow: `0 0 0 2px color-mix(in srgb, ${borderColor} 25%, transparent)`,
+    }
+  }
+
+  if (isDragPreview) {
+    return {
+      backgroundColor,
+      color: textColor,
+      boxShadow: `0 0 0 1.5px ${borderColor}`,
     }
   }
 

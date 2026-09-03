@@ -7,6 +7,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
+import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
@@ -33,7 +34,8 @@ export function MonthView() {
   })
 
   const weeks = useMonthGrid(rangeStart, rangeEnd)
-  const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const events = useEventsWithDrag(eventsWithDraft)
   const weekLayouts = useMonthEventLayout(weeks, events, calendars)
   const dimmed = useIsDimmed()
 

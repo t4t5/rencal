@@ -20,6 +20,8 @@ export function TopLeftDate({
         day.isWeekend && "bg-weekend",
         isActive && "bg-accent",
       )}
+      data-drop-day={day.dateKey}
+      data-drop-zone="day"
       onClick={onClick}
     >
       {day.date.day === 1 && (

@@ -243,7 +243,7 @@ export function WeekTimeGrid({
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
 
   return (
-    <div ref={scrollContainerRef} className="h-full w-full min-w-0 overflow-auto">
+    <div ref={scrollContainerRef} data-drag-scroll className="h-full w-full min-w-0 overflow-auto">
       <div style={{ width: totalContentWidth, minHeight: "100%" }}>
         {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
             line up exactly with the time grid below. */}
@@ -285,6 +285,8 @@ export function WeekTimeGrid({
                         : day.isWeekend && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
+                    data-drop-day={day.dateKey}
+                    data-drop-zone="all-day"
                     onContextMenu={(e) => {
                       contextTargetRef.current = e.currentTarget
                     }}
@@ -349,6 +351,8 @@ export function WeekTimeGrid({
                   } as React.CSSProperties
                 }
                 id={day.dateKey === activeDateKey ? ACTIVE_DAY_EL_ID : undefined}
+                data-drop-day={day.dateKey}
+                data-drop-zone="timed"
                 onClick={() => onDayClick(day.date)}
               >
                 {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
@@ -415,6 +419,10 @@ const DayHeaders = ({
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
+      // Headers double as an all-day drop zone so multi-day bars can land here
+      // even when no all-day lane is rendered yet.
+      data-drop-day={day.dateKey}
+      data-drop-zone="all-day"
       onClick={() => onDayClick(day.date)}
     >
       <span className="text-[11px] text-muted-foreground uppercase">

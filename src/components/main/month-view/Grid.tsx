@@ -277,6 +277,7 @@ export function MonthGrid({
   return (
     <div
       ref={scrollRef}
+      data-drag-scroll
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
         !hasInitiallyScrolled && "invisible",

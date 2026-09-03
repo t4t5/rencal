@@ -6,6 +6,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 
 import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
+import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
@@ -24,7 +25,8 @@ export function WeekView() {
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { days } = useInfiniteDays({ scrollContainerRef, activeDate, visibleCalendarIds })
-  const { events, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const events = useEventsWithDrag(eventsWithDraft)
   const layout = useDayRangeLayout(days, events, calendars)
   const dimmed = useIsDimmed()
 
