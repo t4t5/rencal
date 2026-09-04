@@ -26,20 +26,10 @@ const hyprlandBinding = 'o.bind("SUPER SHIFT", "C", "Calendar", "uwsm-app -- ren
       <h1 class="text-[30px] md:text-[40px] leading-tight text-pretty">renCal for Omarchy</h1>
 
       <p class="max-w-2xl text-balance text-[17px]">
-        renCal is a free, open-source calendar app built for Omarchy Linux. It follows your Omarchy
-        theme and keeps your Google Calendar, iCloud, Outlook and CalDAV calendars in sync as
-        plaintext files on your own machine.
+        renCal is a free, open-source calendar app built to be Omarchy-first.<br />
+        It supports Google Calendar, iCloud, Outlook and CalDAV, adapts to your Omarchy theme, and is
+        fast and keyboard-driven.
       </p>
-
-      <div class="flex gap-5">
-        <a href="/download/">
-          <button class="primary">Download</button>
-        </a>
-
-        <a href="/docs/installation/">
-          <button>Docs</button>
-        </a>
-      </div>
     </header>
 
     <video
@@ -100,12 +90,17 @@ const hyprlandBinding = 'o.bind("SUPER SHIFT", "C", "Calendar", "uwsm-app -- ren
 
       <CodeBlock code={widgetInstallCommand} label="Copy the Omarchy widget install command" />
 
-      <img
-        src="/docs/omarchy-widget.png"
-        alt="The renCal Caldir widget showing the next calendar event in the Omarchy bar"
+      <video
         class="w-full rounded-md border border-separator"
-        loading="lazy"
-      />
+        autoplay
+        loop
+        muted
+        playsinline
+        preload="metadata"
+        aria-label="The renCal Caldir widget showing upcoming events in the Omarchy bar"
+      >
+        <source src="/docs/caldir-widget-demo.mp4" type="video/mp4" />
+      </video>
 
       <p>
         See the
