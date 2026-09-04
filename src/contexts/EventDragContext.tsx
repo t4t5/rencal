@@ -12,8 +12,6 @@
  * scroll containers declare `data-drag-scroll` to opt in to edge auto-scroll.
  */
 import {
-  createContext,
-  useContext,
   useMemo,
   useRef,
   useState,
@@ -45,6 +43,7 @@ import {
   type EventTimeRange,
 } from "@/lib/event-time"
 import { isEventReadonly } from "@/lib/event-utils"
+import { createStrictContext } from "@/lib/strict-context"
 
 const debugDrag = createDebugLogger("event-drag")
 
@@ -83,13 +82,10 @@ interface EventDragContextValue {
   startDrag: StartDrag
 }
 
-const EventDragContext = createContext<EventDragContextValue | null>(null)
+const [EventDragContextProvider, useEventDrag] =
+  createStrictContext<EventDragContextValue>("EventDrag")
 
-export function useEventDrag(): EventDragContextValue {
-  const ctx = useContext(EventDragContext)
-  if (!ctx) throw new Error("useEventDrag must be used within EventDragProvider")
-  return ctx
-}
+export { useEventDrag }
 
 type DragSession = {
   event: CalendarEvent
@@ -323,7 +319,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
     [drag, handlers],
   )
 
-  return <EventDragContext.Provider value={value}>{children}</EventDragContext.Provider>
+  return <EventDragContextProvider value={value}>{children}</EventDragContextProvider>
 }
 
 /**

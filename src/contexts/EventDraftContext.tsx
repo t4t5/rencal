@@ -1,13 +1,4 @@
-import {
-  ReactNode,
-  createContext,
-  startTransition,
-  useCallback,
-  useContext,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { Calendar, EventAttendee } from "@/rpc/bindings"
@@ -29,6 +20,7 @@ import {
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/magic-parser"
+import { createStrictContext } from "@/lib/strict-context"
 
 import { useCalEvents } from "./CalEventsContext"
 import { useCalendars } from "./CalendarStateContext"
@@ -71,16 +63,12 @@ interface EventDraftContextType {
   createDraftEvent: () => Promise<void>
 }
 
-const EventTextContext = createContext({} as EventTextContextType)
-const EventDraftContext = createContext({} as EventDraftContextType)
+const [EventTextContextProvider, useEventText] =
+  createStrictContext<EventTextContextType>("EventDraft")
+const [EventDraftContextProvider, useEventDraft] =
+  createStrictContext<EventDraftContextType>("EventDraft")
 
-export function useEventText() {
-  return useContext(EventTextContext)
-}
-
-export function useEventDraft() {
-  return useContext(EventDraftContext)
-}
+export { useEventDraft, useEventText }
 
 /** ZonedDateTime in viewer's local zone, rounded up to the next whole hour. */
 function getClosestNextHour(): EventTime {
@@ -282,8 +270,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <EventTextContext.Provider value={textValue}>
-      <EventDraftContext.Provider value={draftValue}>{children}</EventDraftContext.Provider>
-    </EventTextContext.Provider>
+    <EventTextContextProvider value={textValue}>
+      <EventDraftContextProvider value={draftValue}>{children}</EventDraftContextProvider>
+    </EventTextContextProvider>
   )
 }

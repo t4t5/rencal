@@ -4,9 +4,7 @@ import {
   ReactNode,
   RefObject,
   SetStateAction,
-  createContext,
   useCallback,
-  useContext,
   useEffect,
   useEffectEvent,
   useMemo,
@@ -26,6 +24,7 @@ import {
   mergeEvents,
 } from "@/lib/cal-events-range"
 import { subscribeViewerTzid } from "@/lib/event-time"
+import { createStrictContext } from "@/lib/strict-context"
 import { DateRange } from "@/lib/types"
 
 // Cheap identity check used to skip no-op state updates after a reload. The
@@ -54,11 +53,10 @@ interface CalEventsContextType {
   ensureRangeLoaded: (start: Temporal.PlainDate, end: Temporal.PlainDate) => Promise<void>
 }
 
-const CalEventsContext = createContext({} as CalEventsContextType)
+const [CalEventsContextProvider, useCalEvents] =
+  createStrictContext<CalEventsContextType>("CalEvents")
 
-export function useCalEvents() {
-  return useContext(CalEventsContext)
-}
+export { useCalEvents }
 
 interface CalEventsProviderProps {
   children: ReactNode
@@ -276,10 +274,10 @@ export function CalEventsProvider({
   )
 
   return (
-    <CalEventsContext.Provider value={value}>
+    <CalEventsContextProvider value={value}>
       <EventDeepLinkListener />
       {children}
-    </CalEventsContext.Provider>
+    </CalEventsContextProvider>
   )
 }
 
