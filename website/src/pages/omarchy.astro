@@ -14,9 +14,8 @@ const description =
 const widgetRepoUrl = "https://github.com/t4t5/omarchy-caldir-widget"
 const widgetInstallCommand = `omarchy plugin add ${widgetRepoUrl} --enable`
 
-// Omarchy's default binding opens the HEY Calendar web app. This swaps it for
-// renCal using the same `uwsm-app` launcher Omarchy uses for its own apps.
-const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- rencal"
+// Binds renCal using the same `uwsm-app` launcher Omarchy uses for its own apps.
+const hyprlandBinding = 'o.bind("SUPER SHIFT", "C", "Calendar", "uwsm-app -- rencal")'
 ---
 
 <BaseLayout title={title} description={description}>
@@ -27,9 +26,9 @@ const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- ren
       <h1 class="text-[30px] md:text-[40px] leading-tight text-pretty">renCal for Omarchy</h1>
 
       <p class="max-w-2xl text-balance text-[17px]">
-        renCal is a free, open-source calendar app built for Omarchy Linux. It runs natively on
-        Hyprland, follows your Omarchy theme, and keeps your Google Calendar, iCloud, Outlook and
-        CalDAV calendars in sync as plaintext files on your own machine.
+        renCal is a free, open-source calendar app built for Omarchy Linux. It follows your Omarchy
+        theme and keeps your Google Calendar, iCloud, Outlook and CalDAV calendars in sync as
+        plaintext files on your own machine.
       </p>
 
       <div class="flex gap-5">
@@ -59,40 +58,14 @@ const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- ren
       <h2 class="text-2xl">Install renCal on Omarchy</h2>
 
       <p>
-        renCal is packaged for Arch Linux in the AUR, so on Omarchy you install it the same way as
-        any other package:
+        renCal is available on the <a
+          href="https://aur.archlinux.org/packages/rencal-bin"
+          class="underline"
+          target="_blank">AUR</a
+        >, and can be installed with one command:
       </p>
 
       <CodeBlock code={site.aurCommand} label="Copy the renCal AUR install command" />
-
-      <p>
-        The package also installs <code>rencal-notifierd</code>, a small background service that
-        shows reminder notifications for upcoming events even when the app is closed. Updates arrive
-        with the rest of your system through <code>yay -Syu</code>.
-      </p>
-
-      <p>
-        Not on Omarchy? renCal also runs on other Linux distributions and on macOS. See the
-        <a href="/download/" class="underline hover:text-foreground">download page</a> for deb, rpm, AppImage
-        and dmg builds.
-      </p>
-    </section>
-
-    <section class="flex flex-col gap-5">
-      <h2 class="text-2xl">Launch it with Super + Shift + C</h2>
-
-      <p>
-        Out of the box, Omarchy binds <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> to the HEY Calendar
-        web app. To open renCal instead, replace the Calendar line in
-        <code>~/.config/hypr/bindings.conf</code> with:
-      </p>
-
-      <CodeBlock code={hyprlandBinding} label="Copy the Hyprland keybinding for renCal" />
-
-      <p>
-        Hyprland picks up the change automatically (or run <code>hyprctl reload</code>). renCal also
-        shows up in the Omarchy app launcher like any other installed application.
-      </p>
     </section>
 
     <section class="flex flex-col gap-5">
@@ -101,13 +74,17 @@ const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- ren
       <p>
         Pick the "Omarchy" theme in renCal's settings and the app re-colors itself whenever you
         change your Omarchy theme, so the calendar always looks like it belongs next to your
-        terminal and editor. Prefer a fixed look? renCal also ships with popular themes like Tokyo
-        Night, Catppuccin and Gruvbox, and you can drop your own CSS file into
+        terminal and editor.
+      </p>
+
+      <p>
+        renCal also ships with popular themes like Tokyo Night, Catppuccin and Gruvbox, and you can
+        drop your own CSS file into
         <code>~/.config/rencal/themes/</code>.
       </p>
 
       <p>
-        <a href="/themes/" class="underline hover:text-foreground">Preview every theme</a> or read the
+        <a href="/themes/" class="underline hover:text-foreground">Browse themes</a> or read the
         <a href="/docs/themes/" class="underline hover:text-foreground">theme docs</a>.
       </p>
     </section>
@@ -163,7 +140,7 @@ const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- ren
         two-way sync. Every event is stored as a standard <code>.ics</code> file in
         <code>~/caldir/</code>, so your calendar works offline and can be searched with
         <code>grep</code>, versioned with git, scripted from the shell, or handed to an agent like
-        Claude Code. No proprietary database and no API keys required.
+        Claude Code.
       </p>
 
       <p>
@@ -172,27 +149,29 @@ const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- ren
         and <a href="/docs/agents/" class="underline hover:text-foreground">agent workflows</a>.
       </p>
     </section>
-
-    <section class="flex flex-col items-center gap-6 pb-4 text-center">
-      <h2 class="text-2xl">Free and open-source</h2>
-
-      <p class="max-w-xl text-balance">
-        renCal is MIT-licensed and built in the open. No subscriptions, no lock-in, and your data
-        never leaves your machine unless you sync it.
-      </p>
-
-      <div class="flex gap-5">
-        <a href="/download/">
-          <button class="primary">Download</button>
-        </a>
-
-        <a href={site.repoUrl} target="_blank">
-          <button class="flex items-center gap-2">
-            <GitHubLogo class="w-5" />
-            <span>GitHub</span>
-          </button>
-        </a>
-      </div>
-    </section>
   </article>
+
+  <hr />
+
+  <section class="flex flex-col items-center gap-6 pb-4 text-center">
+    <h2 class="text-2xl">Free and open-source</h2>
+
+    <p class="max-w-xl text-balance">
+      renCal is MIT-licensed and built in the open. No subscriptions, no lock-in, and your data
+      never leaves your machine unless you sync it.
+    </p>
+
+    <div class="flex gap-5">
+      <a href="/download/">
+        <button class="primary">Download</button>
+      </a>
+
+      <a href={site.repoUrl} target="_blank">
+        <button class="flex items-center gap-2">
+          <GitHubLogo class="w-5" />
+          <span>GitHub</span>
+        </button>
+      </a>
+    </div>
+  </section>
 </BaseLayout>
