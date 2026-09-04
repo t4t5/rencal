@@ -15,6 +15,7 @@ import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
 import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
+import { detectEventUrl } from "@/lib/event-url"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -93,6 +94,15 @@ export function EventInfo({
 }) {
   const canEdit = !readonly
 
+  // Links in the location/notes double as a "virtual" URL field, so a
+  // description like "Details: https://…" is one click away.
+  const detectedUrl = detectEventUrl({
+    url: url ?? null,
+    description: description ?? null,
+    location: location ?? null,
+    conference: conference ?? null,
+  })
+
   return (
     <div className="flex flex-col gap-1 grow">
       {(canEdit || !!summary?.trim()) && (
@@ -157,8 +167,14 @@ export function EventInfo({
           </>
         )}
 
-        {(canEdit || !!url?.trim()) && (
-          <UrlInput value={url} onChange={onUrlChange} onClose={onClose} readOnly={readonly} />
+        {(canEdit || !!url?.trim() || detectedUrl) && (
+          <UrlInput
+            value={url}
+            onChange={onUrlChange}
+            onClose={onClose}
+            readOnly={readonly}
+            detected={detectedUrl}
+          />
         )}
 
         <ReminderSelect
