@@ -1,6 +1,7 @@
 ---
 import Header from "../components/landing/Header.astro"
 import Footer from "../components/landing/Footer.astro"
+import { softwareApplicationJsonLd } from "../lib/structured-data"
 import { site } from "../site"
 
 interface Props {
@@ -8,7 +9,13 @@ interface Props {
   description?: string
 }
 
-const { title = site.title, description = site.description } = Astro.props
+const { title = site.seoTitle, description = site.description } = Astro.props
+
+// Cloudflare Pages redirects extensionless paths to their trailing-slash form,
+// so canonical URLs always use trailing slashes (see `trailingSlash` in the
+// Astro config).
+const canonical = new URL(Astro.url.pathname, site.url).href
+const jsonLd = JSON.stringify(softwareApplicationJsonLd)
 ---
 
 <html lang="en">
@@ -17,12 +24,25 @@ const { title = site.title, description = site.description } = Astro.props
     <meta name="viewport" content="width=device-width" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <link rel="sitemap" href="/sitemap-index.xml" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.title} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
     <meta property="og:image" content={site.ogImage} />
+    <meta property="og:image:width" content={String(site.ogImageWidth)} />
+    <meta property="og:image:height" content={String(site.ogImageHeight)} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={site.ogImage} />
     <link rel="icon" type="image/svg+xml" href={site.favicon} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href={site.geistMonoStylesheet} rel="stylesheet" />
+    <script type="application/ld+json" set:html={jsonLd} />
     <script defer data-domain={site.analyticsDomain} src={site.analyticsScript}></script>
   </head>
   <body>

@@ -1,7 +1,13 @@
 ---
 import FeatureCard from "./FeatureCard.astro"
 
-const features = [
+interface Feature {
+  title: string
+  description: string
+  link?: { href: string; label: string }
+}
+
+const features: Feature[] = [
   {
     title: "Plain files",
     description:
@@ -30,6 +36,7 @@ const features = [
     title: "Omarchy native",
     description:
       "Built for Omarchy Linux, with themes that adapt to the color palette of your system.",
+    link: { href: "/omarchy/", label: "Learn more" },
   },
 ]
 ---
@@ -38,7 +45,7 @@ const features = [
   <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-14 px-8 max-w-[1200px]">
     {
       features.map((feature) => (
-        <FeatureCard title={feature.title} description={feature.description} />
+        <FeatureCard title={feature.title} description={feature.description} link={feature.link} />
       ))
     }
   </div>

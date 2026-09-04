@@ -5,7 +5,7 @@ description: Customize how renCal looks
 
 Change renCal's theme from the settings, or press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd> to cycle through them.
 
-You can preview all built-in themes (and design your own) in the [theme playground](/themes).
+You can preview all built-in themes (and design your own) in the [theme playground](/themes/).
 
 | Theme: Gruvbox                                                                                                                         | Theme: Catpuccin Light                                                                                                                                 | Theme: Hackerman                                                                                                                           |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
