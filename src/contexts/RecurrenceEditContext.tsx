@@ -81,6 +81,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         summary: current.summary,
         description: current.description,
         location: current.location,
+        url: current.url,
         reminders: current.reminders,
         conference: current.conference,
       }
@@ -120,6 +121,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         summary: current.summary,
         description: current.description,
         location: current.location,
+        url: current.url,
         start: newMasterStart,
         end: newMasterEnd,
         reminders: current.reminders,

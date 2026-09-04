@@ -30,6 +30,7 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     event.end = Some(end);
     event.description = input.description;
     event.location = input.location;
+    event.url = input.url;
     event.recurrence = recurrence;
     event.reminders = reminders;
     event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();

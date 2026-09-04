@@ -60,6 +60,7 @@ export function useOpenDayDraft() {
       end,
       calendarId: defaultCalendarId,
       location: null,
+      url: null,
       recurrence: null,
       attendees: [],
       conference: null,

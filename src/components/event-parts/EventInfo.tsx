@@ -8,6 +8,7 @@ import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inp
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
+import { UrlInput } from "@/components/event-parts/inputs/UrlInput"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
@@ -37,6 +38,8 @@ export function EventInfo({
   onAllDayChange,
   location,
   onLocationChange,
+  url,
+  onUrlChange,
   calendar,
   onCalendarChange,
   recurrence,
@@ -68,6 +71,8 @@ export function EventInfo({
   onAllDayChange: (checked: boolean) => void
   location?: string | null
   onLocationChange: (location: string) => void
+  url?: string | null
+  onUrlChange: (url: string) => void
   recurrence: RRule | RRuleSet | null
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
@@ -150,6 +155,10 @@ export function EventInfo({
 
             {!!attendees?.length && <Divider />}
           </>
+        )}
+
+        {(canEdit || !!url?.trim()) && (
+          <UrlInput value={url} onChange={onUrlChange} onClose={onClose} readOnly={readonly} />
         )}
 
         <ReminderSelect
