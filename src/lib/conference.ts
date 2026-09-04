@@ -41,6 +41,16 @@ export const detectConference = (text: string | null | undefined): DetectedConfe
   return null
 }
 
+/**
+ * Whether an event has a video meeting: either a stored conference (live or
+ * requested) or a known meeting link in its location, mirroring what the
+ * event popover's conference section would show.
+ */
+export const hasVideoMeeting = (event: {
+  conference: EventConference | null
+  location: string | null
+}): boolean => !!event.conference || !!detectConference(event.location)
+
 /** The conference provider renCal can provision for events on this calendar, if any. */
 export const calendarConferenceProvider = (calendar?: Calendar): ConferenceProvider | null =>
   calendar?.provider === "google" ? "google" : null

@@ -7,6 +7,7 @@ import {
   conferenceForCalendar,
   conferenceToRpc,
   detectConference,
+  hasVideoMeeting,
   rpcToConference,
   type EventConference,
 } from "@/lib/conference"
@@ -93,5 +94,30 @@ describe("conference RPC conversion", () => {
     { status: "live", provider: "proton", url: "https://meet.proton.me/example" },
   ])("round-trips $status conferences", (conference) => {
     expect(rpcToConference(conferenceToRpc(conference))).toEqual(conference)
+  })
+})
+
+describe("hasVideoMeeting", () => {
+  it("is true for stored conferences, live or requested", () => {
+    const live: EventConference = {
+      status: "live",
+      provider: "google",
+      url: "https://meet.google.com/abc-defg-hij",
+    }
+    const requested: EventConference = { status: "requested", provider: "google" }
+
+    expect(hasVideoMeeting({ conference: live, location: null })).toBe(true)
+    expect(hasVideoMeeting({ conference: requested, location: null })).toBe(true)
+  })
+
+  it("is true for a meeting link in the location", () => {
+    expect(hasVideoMeeting({ conference: null, location: "https://zoom.us/j/123456789" })).toBe(
+      true,
+    )
+  })
+
+  it("is false without a conference or meeting link", () => {
+    expect(hasVideoMeeting({ conference: null, location: null })).toBe(false)
+    expect(hasVideoMeeting({ conference: null, location: "Room 4B" })).toBe(false)
   })
 })
