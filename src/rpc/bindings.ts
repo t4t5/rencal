@@ -6,7 +6,7 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**
  * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
  * Used by the frontend to cheaply detect content changes for reload dedup.
@@ -20,7 +20,7 @@ export type Contact = { email: string; name: string | null; count: number; last_
 /**
  * Input for creating an event
  */
-export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
+export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
 
 export type CredentialFieldInput = { id: string; value: string }
 
@@ -118,7 +118,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
 /**
  * If set and different from calendar_slug, moves the event to this calendar
  */
-new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
+new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
 
 const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_calendar_dir":[],"get_default_calendar":[],"get_default_reminders":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"get_time_format":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[]}', 'themes':'{"list_external":[]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 

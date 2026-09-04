@@ -21,6 +21,7 @@ function makeEvent(start: EventTime, end: EventTime): CalendarEvent {
     summary: "Book pub quiz",
     description: null,
     location: null,
+    url: null,
     start,
     end,
     status: "confirmed",

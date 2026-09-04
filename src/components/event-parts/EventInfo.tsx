@@ -8,12 +8,14 @@ import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inp
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
+import { UrlInput } from "@/components/event-parts/inputs/UrlInput"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar, EventAttendee, ResponseStatus } from "@/rpc/bindings"
 
 import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
+import { detectEventUrl } from "@/lib/event-url"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
@@ -37,6 +39,8 @@ export function EventInfo({
   onAllDayChange,
   location,
   onLocationChange,
+  url,
+  onUrlChange,
   calendar,
   onCalendarChange,
   recurrence,
@@ -68,6 +72,8 @@ export function EventInfo({
   onAllDayChange: (checked: boolean) => void
   location?: string | null
   onLocationChange: (location: string) => void
+  url?: string | null
+  onUrlChange: (url: string) => void
   recurrence: RRule | RRuleSet | null
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
@@ -87,6 +93,15 @@ export function EventInfo({
   isPendingInvite?: boolean
 }) {
   const canEdit = !readonly
+
+  // Links in the location/notes double as a "virtual" URL field, so a
+  // description like "Details: https://…" is one click away.
+  const detectedUrl = detectEventUrl({
+    url: url ?? null,
+    description: description ?? null,
+    location: location ?? null,
+    conference: conference ?? null,
+  })
 
   return (
     <div className="flex flex-col gap-1 grow">
@@ -150,6 +165,16 @@ export function EventInfo({
 
             {!!attendees?.length && <Divider />}
           </>
+        )}
+
+        {(canEdit || !!url?.trim() || detectedUrl) && (
+          <UrlInput
+            value={url}
+            onChange={onUrlChange}
+            onClose={onClose}
+            readOnly={readonly}
+            detected={detectedUrl}
+          />
         )}
 
         <ReminderSelect

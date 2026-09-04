@@ -22,6 +22,7 @@ function eventBetween(startDate: Date, endDate: Date): CalendarEvent {
     summary: "Late event",
     description: null,
     location: null,
+    url: null,
     start,
     end,
     status: "confirmed",

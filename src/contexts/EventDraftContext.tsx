@@ -34,6 +34,7 @@ export interface DraftEvent {
   end: EventTime
   calendarId: string | null
   location: string | null
+  url: string | null
   recurrence: Recurrence | null
   attendees: EventAttendee[]
   conference: EventConference | null
@@ -117,6 +118,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       end: addMinutes(start, DEFAULT_DURATION_MINS),
       calendarId: defaultCalendarId,
       location: null,
+      url: null,
       recurrence: null,
       attendees: [],
       conference: null,
@@ -189,6 +191,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
+      url: draftEvent.url,
       start: draftEvent.start,
       end: draftEvent.end,
       dateInfo: computeEventDateInfo(draftEvent.start, draftEvent.end),
@@ -214,6 +217,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       summary: draftEvent.summary ?? "",
       description: draftEvent.description,
       location: draftEvent.location ?? null,
+      url: draftEvent.url,
       start: toRpcEventTime(draftEvent.start),
       end: toRpcEventTime(draftEvent.end),
       recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,

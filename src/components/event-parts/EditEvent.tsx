@@ -137,7 +137,7 @@ export const EditEvent = ({
 
   if (!dirtyEvent) return null
 
-  const { summary, description, start, end, location, calendar_slug, recurrence } = dirtyEvent
+  const { summary, description, start, end, location, url, calendar_slug, recurrence } = dirtyEvent
   const all_day = isAllDay(start)
 
   const effectiveRecurrence = recurrence ?? dirtyEvent.master_recurrence
@@ -206,6 +206,10 @@ export const EditEvent = ({
         location={location}
         onLocationChange={(newLocation) => {
           setDirtyEvent({ ...dirtyEvent, location: newLocation || null })
+        }}
+        url={url}
+        onUrlChange={(newUrl) => {
+          setDirtyEvent({ ...dirtyEvent, url: newUrl || null })
         }}
         calendar={calendar}
         onCalendarChange={(newCalendarId) => {

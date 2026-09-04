@@ -11,6 +11,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     summary: draft.summary,
     description: draft.description,
     location: draft.location,
+    url: draft.url,
     start: draft.start,
     end: draft.end,
     dateInfo: computeEventDateInfo(draft.start, draft.end),

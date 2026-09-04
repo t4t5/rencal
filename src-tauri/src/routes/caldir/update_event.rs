@@ -45,6 +45,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
                 event.summary = Some(input.summary);
                 event.description = input.description;
                 event.location = input.location;
+                event.url = input.url;
                 event.start = start;
                 event.end = Some(end);
                 event.reminders = input_reminders;
@@ -73,6 +74,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
         updated_event.summary = Some(input.summary);
         updated_event.description = input.description;
         updated_event.location = input.location;
+        updated_event.url = input.url;
         updated_event.start = start;
         updated_event.end = Some(end);
         updated_event.recurrence = input_recurrence;
