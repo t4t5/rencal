@@ -35,6 +35,8 @@ async function bootstrap() {
 
   ReactDOM.createRoot(rootEl).render(
     <React.StrictMode>
+      {/* Theme, Settings, and CalendarState are shared by both windows. */}
+      {/* The app-only provider chain continues in AppProviders. */}
       <ThemeProvider>
         <SettingsProvider>
           <CalendarStateProvider

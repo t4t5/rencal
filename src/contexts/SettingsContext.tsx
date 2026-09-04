@@ -1,5 +1,5 @@
 import { emit, listen } from "@tauri-apps/api/event"
-import { ReactNode, createContext, useCallback, useContext, useEffect, useState } from "react"
+import { ReactNode, useCallback, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { TimeFormat } from "@/rpc/bindings"
@@ -13,6 +13,7 @@ import {
 
 import { normalizeCalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek } from "@/lib/event-time"
+import { createStrictContext } from "@/lib/strict-context"
 
 interface SettingsContextType {
   timeFormat: TimeFormat
@@ -38,11 +39,9 @@ interface SettingsContextType {
   settingsLoaded: boolean
 }
 
-const SettingsContext = createContext({} as SettingsContextType)
+const [SettingsContextProvider, useSettings] = createStrictContext<SettingsContextType>("Settings")
 
-export function useSettings() {
-  return useContext(SettingsContext)
-}
+export { useSettings }
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>("24h")
@@ -165,7 +164,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <SettingsContext.Provider
+    <SettingsContextProvider
       value={{
         timeFormat,
         setTimeFormat,
@@ -188,6 +187,6 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
       }}
     >
       {children}
-    </SettingsContext.Provider>
+    </SettingsContextProvider>
   )
 }

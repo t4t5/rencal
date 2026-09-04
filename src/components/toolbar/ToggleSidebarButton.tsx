@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { useSidebarCollapse } from "@/contexts/SidebarCollapseContext"
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
 
 import { SidebarIcon } from "@/icons/sidebar"
 

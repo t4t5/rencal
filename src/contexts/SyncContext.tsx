@@ -1,14 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
-import {
-  ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { rpc } from "@/rpc"
 import { SyncPreview } from "@/rpc/bindings"
@@ -16,6 +7,8 @@ import { SyncPreview } from "@/rpc/bindings"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
+
+import { createStrictContext } from "@/lib/strict-context"
 
 const MASS_DELETE_THRESHOLD = 10
 
@@ -33,11 +26,9 @@ interface SyncContextType {
   cancelMassDelete: () => void
 }
 
-const SyncContext = createContext({} as SyncContextType)
+const [SyncContextProvider, useSync] = createStrictContext<SyncContextType>("Sync")
 
-export function useSync() {
-  return useContext(SyncContext)
-}
+export { useSync }
 
 export function SyncProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
@@ -195,5 +186,5 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     ],
   )
 
-  return <SyncContext.Provider value={value}>{children}</SyncContext.Provider>
+  return <SyncContextProvider value={value}>{children}</SyncContextProvider>
 }

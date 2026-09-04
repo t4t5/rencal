@@ -1,5 +1,3 @@
-import { Toaster } from "sonner"
-
 import { EventDragOverlay } from "@/components/event-parts/EventDragOverlay"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
 import { PopoverNewEvent } from "@/components/event-parts/PopoverNewEvent"
@@ -7,45 +5,20 @@ import { SheetEvent } from "@/components/event-parts/SheetInfo"
 import { Main } from "@/components/main/Main"
 import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts"
 import { Sidebar } from "@/components/sidebar/Sidebar"
-import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { DragRegion } from "@/components/ui/drag-region"
-import { UpdateChecker } from "@/components/update/UpdateChecker"
-
-import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
-import { CalEventsProvider } from "@/contexts/CalEventsContext"
-import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
-import { EventDraftProvider } from "@/contexts/EventDraftContext"
-import { EventDragProvider } from "@/contexts/EventDragContext"
-import { RecurrenceEditProvider } from "@/contexts/RecurrenceEditContext"
-import { SidebarCollapseProvider, useSidebarCollapse } from "@/contexts/SidebarCollapseContext"
-import { SyncProvider } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useCalendarView } from "@/hooks/useCalendarView"
-import { Preload } from "@/lib/preload-data"
+import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
+import type { Preload } from "@/lib/preload-data"
+
+import { AppProviders } from "./AppProviders"
 
 export function AppWindow({ preload }: { preload: Preload }) {
   return (
-    <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
-      <SyncProvider>
-        <RecurrenceEditProvider>
-          <EventDragProvider>
-            <EventDraftProvider>
-              <CreateEventGateProvider>
-                <AgendaFocusProvider>
-                  <SidebarCollapseProvider>
-                    <App />
-                  </SidebarCollapseProvider>
-                </AgendaFocusProvider>
-              </CreateEventGateProvider>
-            </EventDraftProvider>
-          </EventDragProvider>
-        </RecurrenceEditProvider>
-        <MassDeleteConfirmDialog />
-        <UpdateChecker />
-        <Toaster richColors position="bottom-right" />
-      </SyncProvider>
-    </CalEventsProvider>
+    <AppProviders preload={preload}>
+      <App />
+    </AppProviders>
   )
 }
 
