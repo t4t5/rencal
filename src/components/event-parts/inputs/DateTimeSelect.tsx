@@ -149,7 +149,7 @@ const DateSelect = ({
   onChangeEnd: (date: Temporal.PlainDate | null) => void
 }) => {
   return (
-    <div className="flex flex-wrap gap-1">
+    <div className="flex flex-wrap gap-y-1">
       <div
         className="shrink-0 flex"
         style={{
