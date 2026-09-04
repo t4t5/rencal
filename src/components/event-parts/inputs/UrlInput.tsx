@@ -12,7 +12,7 @@ import { detectedUrlSourceLabel, toOpenableUrl, type DetectedUrl } from "@/lib/e
 
 import { ArrowUpRightIcon } from "@/icons/arrow-up-right"
 import { LinkIcon } from "@/icons/link"
-import { QuestionMarkIcon } from "@/icons/question-mark"
+import { QuestionMarkCircleIcon } from "@/icons/question-mark-circle"
 
 export const UrlInput = ({
   value,
@@ -103,7 +103,7 @@ function UrlLink({ url, hint }: { url: string; hint?: string }) {
               className="flex size-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
               aria-label={hint}
             >
-              <QuestionMarkIcon className="size-4" />
+              <QuestionMarkCircleIcon className="size-4" />
             </span>
           </TooltipTrigger>
           <TooltipContent>{hint}</TooltipContent>
