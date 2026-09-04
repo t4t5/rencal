@@ -197,6 +197,16 @@ describe("toAllDay / toTimedAtStartOfDay", () => {
   })
 })
 
+describe("computeEventDateInfo epoch projections", () => {
+  it("projects start and end to epoch ms", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T10:00:00", tz)
+    const end = zoned("2026-04-28T10:30:00", tz)
+    const { startMs, endMs } = computeEventDateInfo(start, end)
+    expect(endMs - startMs).toBe(30 * 60_000)
+  })
+})
+
 describe("computeEventDateInfo day range", () => {
   it("all-day single-day occupies one day (DTEND exclusive)", () => {
     const start = date("2026-04-28")
