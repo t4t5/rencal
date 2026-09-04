@@ -9,13 +9,10 @@ import { site } from "../site"
 
 const title = "renCal for Omarchy: a native calendar app that matches your theme"
 const description =
-  "Install renCal on Omarchy Linux from the AUR, launch it with Super + Shift + C, sync Google Calendar, iCloud, Outlook or CalDAV, and see upcoming events in the Omarchy bar."
+  "Install renCal on Omarchy Linux from the AUR, sync Google Calendar, iCloud, Outlook or CalDAV, and see upcoming events in the Omarchy bar."
 
 const widgetRepoUrl = "https://github.com/t4t5/omarchy-caldir-widget"
 const widgetInstallCommand = `omarchy plugin add ${widgetRepoUrl} --enable`
-
-// Binds renCal using the same `uwsm-app` launcher Omarchy uses for its own apps.
-const hyprlandBinding = 'o.bind("SUPER SHIFT", "C", "Calendar", "uwsm-app -- rencal")'
 ---
 
 <BaseLayout title={title} description={description}>

@@ -26,7 +26,7 @@
 ### Omarchy / Arch Linux (AUR)
 
 ```bash
-yay -S rencal
+yay -S rencal-bin
 ```
 
 <details>
