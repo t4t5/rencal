@@ -1,0 +1,198 @@
+---
+import "../styles/index.css"
+
+import BaseLayout from "../layouts/BaseLayout.astro"
+import CodeBlock from "../components/CodeBlock.astro"
+import GitHubLogo from "../icons/github.astro"
+import OmarchyLogo from "../icons/omarchy.astro"
+import { site } from "../site"
+
+const title = "renCal for Omarchy: a native calendar app that matches your theme"
+const description =
+  "Install renCal on Omarchy Linux from the AUR, launch it with Super + Shift + C, sync Google Calendar, iCloud, Outlook or CalDAV, and see upcoming events in the Omarchy bar."
+
+const widgetRepoUrl = "https://github.com/t4t5/omarchy-caldir-widget"
+const widgetInstallCommand = `omarchy plugin add ${widgetRepoUrl} --enable`
+
+// Omarchy's default binding opens the HEY Calendar web app. This swaps it for
+// renCal using the same `uwsm-app` launcher Omarchy uses for its own apps.
+const hyprlandBinding = "bindd = SUPER SHIFT, C, Calendar, exec, uwsm-app -- rencal"
+---
+
+<BaseLayout title={title} description={description}>
+  <article class="mx-auto flex w-full max-w-3xl flex-col gap-14 px-6 md:px-10">
+    <header class="flex flex-col items-center gap-6 pt-6 text-center">
+      <OmarchyLogo class="h-10" />
+
+      <h1 class="text-[30px] md:text-[40px] leading-tight text-pretty">renCal for Omarchy</h1>
+
+      <p class="max-w-2xl text-balance text-[17px]">
+        renCal is a free, open-source calendar app built for Omarchy Linux. It runs natively on
+        Hyprland, follows your Omarchy theme, and keeps your Google Calendar, iCloud, Outlook and
+        CalDAV calendars in sync as plaintext files on your own machine.
+      </p>
+
+      <div class="flex gap-5">
+        <a href="/download/">
+          <button class="primary">Download</button>
+        </a>
+
+        <a href="/docs/installation/">
+          <button>Docs</button>
+        </a>
+      </div>
+    </header>
+
+    <video
+      class="w-full rounded-md border border-separator"
+      autoplay
+      loop
+      muted
+      playsinline
+      preload="metadata"
+      aria-label="renCal switching colors as the Omarchy theme changes"
+    >
+      <source src="/docs/omarchy-theme.mp4" type="video/mp4" />
+    </video>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Install renCal on Omarchy</h2>
+
+      <p>
+        renCal is packaged for Arch Linux in the AUR, so on Omarchy you install it the same way as
+        any other package:
+      </p>
+
+      <CodeBlock code={site.aurCommand} label="Copy the renCal AUR install command" />
+
+      <p>
+        The package also installs <code>rencal-notifierd</code>, a small background service that
+        shows reminder notifications for upcoming events even when the app is closed. Updates arrive
+        with the rest of your system through <code>yay -Syu</code>.
+      </p>
+
+      <p>
+        Not on Omarchy? renCal also runs on other Linux distributions and on macOS. See the
+        <a href="/download/" class="underline hover:text-foreground">download page</a> for deb, rpm, AppImage
+        and dmg builds.
+      </p>
+    </section>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Launch it with Super + Shift + C</h2>
+
+      <p>
+        Out of the box, Omarchy binds <kbd>Super</kbd> + <kbd>Shift</kbd> + <kbd>C</kbd> to the HEY Calendar
+        web app. To open renCal instead, replace the Calendar line in
+        <code>~/.config/hypr/bindings.conf</code> with:
+      </p>
+
+      <CodeBlock code={hyprlandBinding} label="Copy the Hyprland keybinding for renCal" />
+
+      <p>
+        Hyprland picks up the change automatically (or run <code>hyprctl reload</code>). renCal also
+        shows up in the Omarchy app launcher like any other installed application.
+      </p>
+    </section>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Matches your Omarchy theme</h2>
+
+      <p>
+        Pick the "Omarchy" theme in renCal's settings and the app re-colors itself whenever you
+        change your Omarchy theme, so the calendar always looks like it belongs next to your
+        terminal and editor. Prefer a fixed look? renCal also ships with popular themes like Tokyo
+        Night, Catppuccin and Gruvbox, and you can drop your own CSS file into
+        <code>~/.config/rencal/themes/</code>.
+      </p>
+
+      <p>
+        <a href="/themes/" class="underline hover:text-foreground">Preview every theme</a> or read the
+        <a href="/docs/themes/" class="underline hover:text-foreground">theme docs</a>.
+      </p>
+    </section>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Upcoming events in the Omarchy bar</h2>
+
+      <p>
+        The Caldir widget for Omarchy puts your next event in the Omarchy bar. It highlights the
+        meeting that is coming up, joins video calls with one click, and opens events directly in
+        renCal. Install it as an Omarchy plugin:
+      </p>
+
+      <CodeBlock code={widgetInstallCommand} label="Copy the Omarchy widget install command" />
+
+      <img
+        src="/docs/omarchy-widget.png"
+        alt="The renCal Caldir widget showing the next calendar event in the Omarchy bar"
+        class="w-full rounded-md border border-separator"
+        loading="lazy"
+      />
+
+      <p>
+        See the
+        <a href="/docs/omarchy-widget/" class="underline hover:text-foreground">widget docs</a>
+        for shortcuts and settings.
+      </p>
+    </section>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Keyboard-first, like the rest of Omarchy</h2>
+
+      <p>
+        Move between days and weeks with Vim motions (<kbd>h</kbd>
+        <kbd>j</kbd>
+        <kbd>k</kbd>
+        <kbd>l</kbd>), jump to today with <kbd>t</kbd>, search with <kbd>/</kbd> and compose a new event
+        with <kbd>c</kbd>. Type events the way you would say them, like "lunch with Sarah tomorrow
+        at 1" or "team sync every Monday", and renCal fills in the dates and times. Press <kbd
+          >?</kbd
+        > in the app for the full list of
+        <a href="/docs/keyboard-shortcuts/" class="underline hover:text-foreground"
+          >keyboard shortcuts</a
+        >.
+      </p>
+    </section>
+
+    <section class="flex flex-col gap-5">
+      <h2 class="text-2xl">Your calendars, synced and on disk</h2>
+
+      <p>
+        Connect Google Calendar, iCloud, Outlook or any CalDAV server and renCal keeps them in
+        two-way sync. Every event is stored as a standard <code>.ics</code> file in
+        <code>~/caldir/</code>, so your calendar works offline and can be searched with
+        <code>grep</code>, versioned with git, scripted from the shell, or handed to an agent like
+        Claude Code. No proprietary database and no API keys required.
+      </p>
+
+      <p>
+        Read about
+        <a href="/docs/calendar-data/" class="underline hover:text-foreground">calendar data</a>
+        and <a href="/docs/agents/" class="underline hover:text-foreground">agent workflows</a>.
+      </p>
+    </section>
+
+    <section class="flex flex-col items-center gap-6 pb-4 text-center">
+      <h2 class="text-2xl">Free and open-source</h2>
+
+      <p class="max-w-xl text-balance">
+        renCal is MIT-licensed and built in the open. No subscriptions, no lock-in, and your data
+        never leaves your machine unless you sync it.
+      </p>
+
+      <div class="flex gap-5">
+        <a href="/download/">
+          <button class="primary">Download</button>
+        </a>
+
+        <a href={site.repoUrl} target="_blank">
+          <button class="flex items-center gap-2">
+            <GitHubLogo class="w-5" />
+            <span>GitHub</span>
+          </button>
+        </a>
+      </div>
+    </section>
+  </article>
+</BaseLayout>

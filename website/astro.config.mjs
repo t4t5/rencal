@@ -29,8 +29,13 @@ const sidebarItems = [
 ]
 
 export default defineConfig({
+  // Required for the generated sitemap and for canonical / Open Graph URLs.
+  site: site.url,
+  // Cloudflare Pages serves directory-style pages at their trailing-slash URL
+  // (and 308-redirects the bare path), so emit those URLs everywhere.
+  trailingSlash: "always",
   redirects: {
-    "/docs": `/${sidebarItems[0].items[0].slug}`,
+    "/docs": `/${sidebarItems[0].items[0].slug}/`,
   },
   vite: {
     plugins: [tailwindcss()],
@@ -38,6 +43,7 @@ export default defineConfig({
   integrations: [
     starlight({
       title: site.title,
+      description: site.description,
       plugins: [starlightThemeRapide(), starlightRenTheme()],
       customCss: ["/src/styles/fonts.css"],
       head: [

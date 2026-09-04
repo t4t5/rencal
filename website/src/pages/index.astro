@@ -5,9 +5,10 @@ import BaseLayout from "../layouts/BaseLayout.astro"
 import Hero from "../components/landing/Hero.astro"
 import Features from "../components/landing/Features.astro"
 import OpenSource from "../components/landing/OpenSource.astro"
+import { site } from "../site"
 ---
 
-<BaseLayout>
+<BaseLayout title={site.seoTitle} description={site.description}>
   <Hero />
   <Features />
   <hr />
