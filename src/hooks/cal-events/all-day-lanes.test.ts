@@ -11,6 +11,7 @@ function event(id: string, firstDay: number, lastDay: number): CalendarEvent {
       firstDay,
       lastDay,
       startMs: 0,
+      endMs: 0,
       endDay: lastDay,
       startLocalMinutes: 0,
       endLocalMinutes: 0,

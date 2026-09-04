@@ -14,6 +14,8 @@ export type EventTimeRange = {
 export type EventDateInfo = {
   /** Start projection in epoch ms; used as a sort key. */
   startMs: number
+  /** End projection in epoch ms; used with `startMs` to check if an event is ongoing. */
+  endMs: number
   /** Epoch-day key for the start's day in the viewer's zone. */
   firstDay: number
   /** Epoch-day key for the last occupied day, iCal-end-exclusive aware. */
