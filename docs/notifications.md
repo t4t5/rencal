@@ -15,6 +15,23 @@ hosts:
 
 Test with `just test-notification`.
 
+## Which reminders fire
+
+An event's own VALARMs always win. A timed event with _no_ VALARM falls back to caldir's
+`default_reminders` (the "Default reminders" setting in renCal's Reminders settings page) —
+see `reminder_offsets` in `reminder-core`. This matters because providers like Google keep the
+calendar-level default reminder out of the exported event, so most synced meetings arrive without
+any alarm and would otherwise never notify. All-day events never use the fallback (a
+minutes-before-start offset against midnight isn't a meaningful reminder for a birthday or
+holiday); they only notify via explicit VALARMs. With no defaults configured, behaviour is
+unchanged: VALARM-less events are silent.
+
+Only calendars shown in the default view take part. Hiding a calendar in Settings removes it from
+the `default` group in `~/.config/rencal/config.toml`; the loop reads that group and skips any
+calendar not in it (`calendar_is_visible`). With no `default` group configured, every calendar is
+included. Named groups are a client-side view switch stored in localStorage, so they are not
+consulted — reminders follow the default view, not whichever group is currently selected.
+
 ## Clicking a notification
 
 Every fired reminder carries a `rencal://event?uid=...` deep link, plus `recurrence-id` for a
@@ -23,6 +40,10 @@ normal event deep-link flow finds the local event and opens its details.
 
 - **macOS** waits for the native notification click response in the notification's worker thread
   and enqueues the deep link directly in the running app.
+- **Linux** sends with `--expire-time=0 --urgency=critical`. Both are needed for "stay until
+  dismissed": mako/dunst honor the expire time, while Omarchy's shell and GNOME cap normal-urgency
+  popups at a few seconds regardless and only keep critical ones on screen. Critical alone does
+  not bypass Omarchy's DND (that also requires `app_name=notify-send`).
 - **Linux** gives `notify-send` a FreeDesktop `default` action. On activation, the daemon (or GUI
   fallback) opens the deep link with `gio open`, falling back to `xdg-open`. Older `notify-send`
   versions without action support still receive the reminder, but cannot make it clickable.
