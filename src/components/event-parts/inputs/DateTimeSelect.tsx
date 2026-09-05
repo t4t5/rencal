@@ -1,12 +1,16 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
 import {
   dateInEventZone,
   displayEndDate,
+  eventTzid,
   isAllDay,
   shouldShowDisplayEndDate,
   type EventTime,
@@ -15,6 +19,7 @@ import {
   withRangeEndWallclockTime,
   withRangeStartDate,
   withRangeStartWallclockTime,
+  withRangeTimeZone,
 } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -22,6 +27,7 @@ import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
 
 import { TimeInput } from "./TimeInput"
+import { TimeZoneSelect } from "./TimeZoneSelect"
 
 export type DateTimeRange = EventTimeRange
 
@@ -41,6 +47,15 @@ export const DateTimeSelect = ({
 }) => {
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end)
+  const viewerTzid = useViewerTzid()
+
+  // The timezone row is only shown for events in another zone than the
+  // viewer's machine; otherwise a subtle "Add timezone" button sits next to
+  // the date. Once the user reaches for it the row stays for the session,
+  // even if they end up picking their own zone.
+  const [timeZoneRequested, setTimeZoneRequested] = useState(false)
+  const showTimeZone = !allDay && (timeZoneRequested || eventTzid(start) !== viewerTzid)
+  const canAddTimeZone = !allDay && !readOnly && !showTimeZone
   // An all-day event with no remembered timed range has no times to show —
   // hide the time row entirely instead of rendering empty inputs.
   const visibleTimeRange = allDay ? lastTimedRange : { start, end }
@@ -60,6 +75,11 @@ export const DateTimeSelect = ({
   const handleEndDate = (date: Temporal.PlainDate | null) => {
     if (!date) return
     onChange(withRangeDisplayEndDate({ start, end }, date))
+  }
+
+  const handleTimeZone = (tzid: string) => {
+    setTimeZoneRequested(true)
+    onChange(withRangeTimeZone({ start, end }, tzid))
   }
 
   return (
@@ -82,7 +102,27 @@ export const DateTimeSelect = ({
         readOnly={readOnly}
         onChangeStart={handleStartDate}
         onChangeEnd={handleEndDate}
+        trailing={
+          canAddTimeZone && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="px-2 font-normal text-muted-foreground bodytext!"
+              onClick={() => setTimeZoneRequested(true)}
+            >
+              Add timezone
+            </Button>
+          )
+        }
       />
+      {showTimeZone && (
+        <TimeZoneSelect
+          value={start}
+          readOnly={readOnly}
+          defaultOpen={timeZoneRequested}
+          onChange={handleTimeZone}
+        />
+      )}
     </div>
   )
 }
@@ -139,6 +179,7 @@ const DateSelect = ({
   readOnly,
   onChangeStart,
   onChangeEnd,
+  trailing,
 }: {
   startDate: Temporal.PlainDate
   endDate: Temporal.PlainDate
@@ -147,6 +188,8 @@ const DateSelect = ({
   readOnly?: boolean
   onChangeStart: (date: Temporal.PlainDate | null) => void
   onChangeEnd: (date: Temporal.PlainDate | null) => void
+  /** Rendered after the date pickers, e.g. the "Add timezone" button. */
+  trailing?: React.ReactNode
 }) => {
   return (
     <div className="flex flex-wrap gap-y-1">
@@ -161,6 +204,8 @@ const DateSelect = ({
       </div>
 
       {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
+
+      {trailing}
     </div>
   )
 }

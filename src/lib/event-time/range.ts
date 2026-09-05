@@ -1,7 +1,14 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import { allDayDate } from "./constructors"
-import { addDays, addMinutes, dateInEventZone, withEventDate, withWallclockTime } from "./edit"
+import {
+  addDays,
+  addMinutes,
+  dateInEventZone,
+  withEventDate,
+  withEventTimeZone,
+  withWallclockTime,
+} from "./edit"
 import { dayOf } from "./layout"
 import { getViewerTzid } from "./local-zone"
 import {
@@ -132,4 +139,12 @@ export function displayEndDate(range: EventTimeRange): Temporal.PlainDate {
 export function shouldShowDisplayEndDate(range: EventTimeRange): boolean {
   if (isAllDay(range.start)) return true
   return !dateInEventZone(range.start).equals(dateInEventZone(range.end))
+}
+
+/** Move both ends of a range to another zone, keeping their wallclocks (see `withEventTimeZone`). */
+export function withRangeTimeZone(range: EventTimeRange, tzid: string): EventTimeRange {
+  return {
+    start: withEventTimeZone(range.start, tzid),
+    end: withEventTimeZone(range.end, tzid),
+  }
 }

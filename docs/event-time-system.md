@@ -59,3 +59,9 @@ Do not add an `allDay: boolean`; `kind: "date"` already encodes all-day events.
 Ordering projections such as `instantForOrdering(et)` stay internal to event-time. Do not use them as the source of truth for edits or recurrence.
 
 When changing an event range, use `withDates(...)` from `src/lib/cal-events.ts` so the cached `dateInfo` projection is recomputed.
+
+## Event timezone
+
+The editor shows a timed event in the zone from `eventTzid(et)`: the event's own zone for `datetime_zoned`, otherwise the viewer's zone (floating and UTC values are edited in the viewer's clock). The timezone picker in the event editor only appears when that zone differs from the viewer's, or after the user asks for it.
+
+Picking a zone calls `withEventTimeZone` / `withRangeTimeZone`, which keep the entered wallclock and change the instant: `09:00 Europe/Stockholm` becomes `09:00 Europe/London`, as on a Google/Apple Calendar form. `withViewerZone` is the opposite conversion (same instant, viewer's clock) and is only for seeding drafts. Zone labels come from `timeZoneCity` and `timeZoneOffsetLabel`, e.g. `GMT+1 London`, with the offset evaluated at the event's date so DST is right.

@@ -164,3 +164,36 @@ export function withEventDate(et: EventTime, newDate: Temporal.PlainDate): Event
     }
   }
 }
+
+/**
+ * The zone whose wallclock `dateInEventZone` and `wallclockTime` express: the
+ * event's own zone for zoned times, otherwise the viewer's zone (floating and
+ * UTC values are edited in the viewer's clock; all-day dates have no clock).
+ */
+export function eventTzid(et: EventTime): string {
+  return et.kind === "datetime_zoned" ? et.value.timeZoneId : getViewerTzid()
+}
+
+/**
+ * Replace the zone, preserving the date and wallclock the value is edited in:
+ * 09:00 Stockholm becomes 09:00 London, a different instant. This is what a
+ * timezone field on an event form means — the entered clock time is read in
+ * the chosen zone. (Contrast `withViewerZone`, which keeps the instant.)
+ * Floating and UTC values carry over the viewer-zone wallclock they display;
+ * all-day dates have no zone and pass through.
+ */
+export function withEventTimeZone(et: EventTime, tzid: string): EventTime {
+  switch (et.kind) {
+    case "date":
+      return et
+    case "datetime_zoned":
+      return { kind: "datetime_zoned", value: et.value.toPlainDateTime().toZonedDateTime(tzid) }
+    case "datetime_floating":
+      return { kind: "datetime_zoned", value: et.value.toZonedDateTime(tzid) }
+    case "datetime_utc":
+      return {
+        kind: "datetime_zoned",
+        value: toViewerZonedDateTime(et).toPlainDateTime().toZonedDateTime(tzid),
+      }
+  }
+}
