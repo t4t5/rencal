@@ -31,8 +31,7 @@ export function toAllDay(et: EventTime): EventTime {
  * Re-express the same instant in the viewer's zone. All-day values have no clock
  * to re-zone, so they pass through. Used when seeding a new event from an
  * existing event's time so the draft reads in the viewer's local clock (matching
- * the calendar grid) instead of the source event's stored zone, and by the
- * editor to show an event from another zone in the viewer's clock.
+ * the calendar grid) instead of the source event's stored zone.
  */
 export function withViewerZone(et: EventTime): EventTime {
   if (et.kind === "date") return et
@@ -166,23 +165,12 @@ export function withEventDate(et: EventTime, newDate: Temporal.PlainDate): Event
   }
 }
 
-/**
- * The zone whose wallclock `dateInEventZone` and `wallclockTime` express: the
- * event's own zone for zoned times, otherwise the viewer's zone (floating and
- * UTC values are edited in the viewer's clock; all-day dates have no clock).
- */
+/** Returns the stored zone, or the viewer zone for values without one. */
 export function eventTzid(et: EventTime): string {
   return et.kind === "datetime_zoned" ? et.value.timeZoneId : getViewerTzid()
 }
 
-/**
- * Replace the zone, preserving the date and wallclock the value is edited in:
- * 09:00 Stockholm becomes 09:00 London, a different instant. This is what a
- * timezone field on an event form means — the entered clock time is read in
- * the chosen zone. (Contrast `withViewerZone`, which keeps the instant.)
- * Floating and UTC values carry over the viewer-zone wallclock they display;
- * all-day dates have no zone and pass through.
- */
+/** Changes zone while preserving the displayed wallclock, not the instant. */
 export function withEventTimeZone(et: EventTime, tzid: string): EventTime {
   switch (et.kind) {
     case "date":

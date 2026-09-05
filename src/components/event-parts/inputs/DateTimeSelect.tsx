@@ -54,27 +54,15 @@ export const DateTimeSelect = ({
   const tzid = eventTzid(start)
   const foreignZone = !allDay && tzid !== viewerTzid
 
-  // The timezone row is only shown for events in another zone than the
-  // viewer's machine; otherwise a subtle "Add timezone" button sits next to
-  // the date. Once the user reaches for it the row stays for the session,
-  // even if they end up picking their own zone.
   const [timeZoneRequested, setTimeZoneRequested] = useState(false)
   const showTimeZone = !allDay && (timeZoneRequested || foreignZone)
   const canAddTimeZone = !allDay && !readOnly && !showTimeZone
 
-  // An event in another zone opens in the viewer's clock with its inputs
-  // locked, so a wallclock edit can't land in a zone the user isn't looking
-  // at. The switch button next to the zone unlocks the inputs in the event's
-  // own zone. This remembers the unlocked zone rather than a flag so that a
-  // different event's zone starts locked again when the editor stays mounted
-  // from one event to the next.
+  // Storing the zone ensures a newly loaded foreign zone starts locked.
   const [unlockedTzid, setUnlockedTzid] = useState<string | null>(null)
   const locked = foreignZone && unlockedTzid !== tzid
   const inputsReadOnly = readOnly || locked
 
-  // While locked the inputs show the same instants in the viewer's clock, and
-  // the zone row names the viewer's zone to match; otherwise they show the
-  // wallclock and zone stored on the event.
   const shown: EventTimeRange = locked ? withRangeViewerZone({ start, end }) : { start, end }
   // An all-day event with no remembered timed range has no times to show —
   // hide the time row entirely instead of rendering empty inputs.
@@ -99,7 +87,6 @@ export const DateTimeSelect = ({
 
   const handleTimeZone = (nextTzid: string) => {
     setTimeZoneRequested(true)
-    // A zone the user just picked is one they are editing in.
     setUnlockedTzid(nextTzid)
     onChange(withRangeTimeZone({ start, end }, nextTzid))
   }
@@ -158,7 +145,6 @@ export const DateTimeSelect = ({
   )
 }
 
-/** Toggles the inputs between the viewer's clock and the event's own zone. */
 const ZoneSwitchButton = ({
   locked,
   readOnly,
@@ -254,7 +240,6 @@ const DateSelect = ({
   readOnly?: boolean
   onChangeStart: (date: Temporal.PlainDate | null) => void
   onChangeEnd: (date: Temporal.PlainDate | null) => void
-  /** Rendered after the date pickers, e.g. the "Add timezone" button. */
   trailing?: React.ReactNode
 }) => {
   return (

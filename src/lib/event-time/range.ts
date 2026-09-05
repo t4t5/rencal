@@ -142,7 +142,6 @@ export function shouldShowDisplayEndDate(range: EventTimeRange): boolean {
   return !dateInEventZone(range.start).equals(dateInEventZone(range.end))
 }
 
-/** Move both ends of a range to another zone, keeping their wallclocks (see `withEventTimeZone`). */
 export function withRangeTimeZone(range: EventTimeRange, tzid: string): EventTimeRange {
   return {
     start: withEventTimeZone(range.start, tzid),
@@ -150,7 +149,6 @@ export function withRangeTimeZone(range: EventTimeRange, tzid: string): EventTim
   }
 }
 
-/** Re-express both ends in the viewer's zone, keeping their instants (see `withViewerZone`). */
 export function withRangeViewerZone(range: EventTimeRange): EventTimeRange {
   return { start: withViewerZone(range.start), end: withViewerZone(range.end) }
 }

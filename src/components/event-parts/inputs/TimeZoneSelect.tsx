@@ -28,7 +28,6 @@ type TimeZoneOption = {
   tzid: string
   city: string
   offset: string
-  /** Lowercased haystack for substring search: city, region, and offset. */
   searchText: string
 }
 
@@ -43,7 +42,6 @@ function buildOptions(zones: string[], at: EventTime): TimeZoneOption[] {
     .sort((a, b) => a.city.localeCompare(b.city))
 }
 
-/** Cities starting with the query come first, then any other substring match. */
 function filterOptions(options: TimeZoneOption[], query: string): TimeZoneOption[] {
   const q = query.trim().toLowerCase()
   if (!q) return options
@@ -57,16 +55,11 @@ function filterOptions(options: TimeZoneOption[], query: string): TimeZoneOption
   return [...prefixMatches, ...otherMatches]
 }
 
-/** The known zones plus any the event or viewer uses that the engine's list lacks. */
 function withKnownZones(zones: string[], extra: string[]): string[] {
   const missing = extra.filter((tzid) => !zones.includes(tzid))
   return missing.length ? [...missing, ...zones] : zones
 }
 
-/**
- * A searchable dropdown of every IANA timezone, showing the zone the event's
- * wallclock is expressed in as "GMT+1 London".
- */
 export const TimeZoneSelect = ({
   value,
   readOnly,
@@ -83,12 +76,9 @@ export const TimeZoneSelect = ({
 
   const [open, setOpen] = useState(defaultOpen)
   const [query, setQuery] = useState("")
-  // The cmdk-selected row: highlighted and scrolled into view on open. Starts
-  // at the current zone, then follows the typed query / pointer.
   const [highlighted, setHighlighted] = useState<string | undefined>(defaultOpen ? tzid : undefined)
 
-  // Offsets depend on the event's date (DST), and computing all ~400 of them
-  // is not free, so only build the list while the dropdown is open.
+  // Build DST-aware offsets lazily because calculating every zone is expensive.
   const options = useMemo(
     () => (open ? buildOptions(withKnownZones(listTimeZones(), [tzid, viewerTzid]), value) : []),
     [open, tzid, viewerTzid, value],
