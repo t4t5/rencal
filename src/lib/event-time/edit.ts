@@ -164,3 +164,25 @@ export function withEventDate(et: EventTime, newDate: Temporal.PlainDate): Event
     }
   }
 }
+
+/** Returns the stored zone, or the viewer zone for values without one. */
+export function eventTzid(et: EventTime): string {
+  return et.kind === "datetime_zoned" ? et.value.timeZoneId : getViewerTzid()
+}
+
+/** Changes zone while preserving the displayed wallclock, not the instant. */
+export function withEventTimeZone(et: EventTime, tzid: string): EventTime {
+  switch (et.kind) {
+    case "date":
+      return et
+    case "datetime_zoned":
+      return { kind: "datetime_zoned", value: et.value.toPlainDateTime().toZonedDateTime(tzid) }
+    case "datetime_floating":
+      return { kind: "datetime_zoned", value: et.value.toZonedDateTime(tzid) }
+    case "datetime_utc":
+      return {
+        kind: "datetime_zoned",
+        value: toViewerZonedDateTime(et).toPlainDateTime().toZonedDateTime(tzid),
+      }
+  }
+}

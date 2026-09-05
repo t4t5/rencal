@@ -39,9 +39,11 @@ export {
   addDays,
   addMinutes,
   dateInEventZone,
+  eventTzid,
   toAllDay,
   toTimedAtStartOfDay,
   wallclockTime,
+  withEventTimeZone,
   withViewerZone,
 } from "./edit"
 export { getViewerTzid, setViewerTzid, subscribeViewerTzid } from "./local-zone"
@@ -63,4 +65,7 @@ export {
   withRangeEndWallclockTime,
   withRangeStartDate,
   withRangeStartWallclockTime,
+  withRangeTimeZone,
+  withRangeViewerZone,
 } from "./range"
+export { listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "./timezones"

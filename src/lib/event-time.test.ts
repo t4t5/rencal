@@ -22,6 +22,13 @@ import {
   dateInEventZone,
   toTimedAtStartOfDay,
   allDayDate,
+  eventTzid,
+  listTimeZones,
+  timeZoneCity,
+  timeZoneOffsetLabel,
+  withEventTimeZone,
+  withRangeTimeZone,
+  withRangeViewerZone,
   type EventTime,
 } from "./event-time"
 import { withEventDate, withWallclockTime } from "./event-time/edit"
@@ -496,5 +503,141 @@ describe("startOfWeek", () => {
     expect(startOfWeek(wednesday, "sunday").equals(previousSunday)).toBe(true)
     expect(startOfWeek(saturday, "sunday").equals(previousSunday)).toBe(true)
     expect(startOfWeek(sunday, "sunday").equals(sunday)).toBe(true)
+  })
+})
+
+describe("eventTzid", () => {
+  it("is the zone of a zoned time", () => {
+    expect(eventTzid(zoned("2026-04-28T09:00:00", "America/Los_Angeles"))).toBe(
+      "America/Los_Angeles",
+    )
+  })
+
+  it("is the viewer zone for floating, UTC, and all-day values", () => {
+    const viewer = getViewerTzid()
+    expect(eventTzid(floating("2026-04-28T09:00:00"))).toBe(viewer)
+    expect(eventTzid(utc("2026-04-28T09:00:00Z"))).toBe(viewer)
+    expect(eventTzid(date("2026-04-28"))).toBe(viewer)
+  })
+})
+
+describe("withEventTimeZone", () => {
+  it("keeps the wallclock and moves the instant for zoned times", () => {
+    const et = withEventTimeZone(zoned("2026-04-28T09:00:00", "Europe/Stockholm"), "Europe/London")
+    expect(toRpcEventTime(et)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "Europe/London",
+    })
+    expect(instantForOrdering(et).toString()).toBe("2026-04-28T08:00:00Z")
+  })
+
+  it("pins a floating time to the zone", () => {
+    const et = withEventTimeZone(floating("2026-04-28T09:00:00"), "Asia/Kolkata")
+    expect(toRpcEventTime(et)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "Asia/Kolkata",
+    })
+  })
+
+  it("carries over the viewer-zone wallclock of a UTC instant", () => {
+    const original = getViewerTzid()
+    setViewerTzid("Europe/Stockholm")
+    try {
+      // 07:00Z reads as 09:00 in Stockholm, so London gets 09:00 too.
+      const et = withEventTimeZone(utc("2026-04-28T07:00:00Z"), "Europe/London")
+      expect(toRpcEventTime(et)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T09:00:00",
+        tzid: "Europe/London",
+      })
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("passes all-day dates through", () => {
+    const et = date("2026-04-28")
+    expect(withEventTimeZone(et, "Europe/London")).toBe(et)
+  })
+})
+
+describe("withRangeTimeZone", () => {
+  it("moves both ends, keeping their wallclocks", () => {
+    const range = withRangeTimeZone(
+      {
+        start: zoned("2026-04-28T09:00:00", "Europe/Stockholm"),
+        end: zoned("2026-04-28T10:30:00", "Europe/Stockholm"),
+      },
+      "America/New_York",
+    )
+    expect(toRpcEventTime(range.start)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "America/New_York",
+    })
+    expect(toRpcEventTime(range.end)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T10:30:00",
+      tzid: "America/New_York",
+    })
+  })
+})
+
+describe("withRangeViewerZone", () => {
+  it("keeps the instants and re-expresses both ends in the viewer's clock", () => {
+    const original = getViewerTzid()
+    setViewerTzid("Europe/Stockholm")
+    try {
+      const range = withRangeViewerZone({
+        start: zoned("2026-04-28T09:00:00", "Europe/London"),
+        end: zoned("2026-04-28T10:30:00", "Europe/London"),
+      })
+      expect(toRpcEventTime(range.start)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T10:00:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(toRpcEventTime(range.end)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T11:30:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(instantForOrdering(range.start).toString()).toBe("2026-04-28T08:00:00Z")
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("passes all-day ranges through", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-29")
+    expect(withRangeViewerZone({ start, end })).toEqual({ start, end })
+  })
+})
+
+describe("timezone labels", () => {
+  it("timeZoneCity takes the last path segment with spaces", () => {
+    expect(timeZoneCity("Europe/London")).toBe("London")
+    expect(timeZoneCity("America/Argentina/Buenos_Aires")).toBe("Buenos Aires")
+    expect(timeZoneCity("UTC")).toBe("UTC")
+  })
+
+  it("timeZoneOffsetLabel follows DST at the event's date", () => {
+    const summer = zoned("2026-07-01T10:00:00", "UTC")
+    const winter = zoned("2026-01-01T10:00:00", "UTC")
+    expect(timeZoneOffsetLabel("Europe/London", summer)).toBe("GMT+1")
+    expect(timeZoneOffsetLabel("Europe/London", winter)).toBe("GMT+0")
+    expect(timeZoneOffsetLabel("Asia/Kolkata", summer)).toBe("GMT+5:30")
+    expect(timeZoneOffsetLabel("America/Sao_Paulo", summer)).toBe("GMT-3")
+    expect(timeZoneOffsetLabel("UTC", summer)).toBe("GMT+0")
+  })
+
+  it("listTimeZones has Area/City ids plus UTC", () => {
+    const zones = listTimeZones()
+    expect(zones).toContain("Europe/London")
+    expect(zones).toContain("UTC")
+    expect(zones.every((z) => z === "UTC" || (z.includes("/") && !z.startsWith("Etc/")))).toBe(true)
   })
 })

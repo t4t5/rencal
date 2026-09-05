@@ -1,12 +1,17 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { useState } from "react"
 
+import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
 import { InputGroupAddon } from "@/components/ui/input-group"
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
+import { useViewerTzid } from "@/hooks/useViewerTzid"
 import {
   dateInEventZone,
   displayEndDate,
+  eventTzid,
   isAllDay,
   shouldShowDisplayEndDate,
   type EventTime,
@@ -15,13 +20,17 @@ import {
   withRangeEndWallclockTime,
   withRangeStartDate,
   withRangeStartWallclockTime,
+  withRangeTimeZone,
+  withRangeViewerZone,
 } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { ClockIcon } from "@/icons/clock"
+import { UndoIcon } from "@/icons/undo"
 
 import { TimeInput } from "./TimeInput"
+import { TimeZoneSelect } from "./TimeZoneSelect"
 
 export type DateTimeRange = EventTimeRange
 
@@ -41,9 +50,23 @@ export const DateTimeSelect = ({
 }) => {
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end)
+  const viewerTzid = useViewerTzid()
+  const tzid = eventTzid(start)
+  const foreignZone = !allDay && tzid !== viewerTzid
+
+  const [timeZoneRequested, setTimeZoneRequested] = useState(false)
+  const showTimeZone = !allDay && (timeZoneRequested || foreignZone)
+  const canAddTimeZone = !allDay && !readOnly && !showTimeZone
+
+  // Storing the zone ensures a newly loaded foreign zone starts locked.
+  const [unlockedTzid, setUnlockedTzid] = useState<string | null>(null)
+  const locked = foreignZone && unlockedTzid !== tzid
+  const inputsReadOnly = readOnly || locked
+
+  const shown: EventTimeRange = locked ? withRangeViewerZone({ start, end }) : { start, end }
   // An all-day event with no remembered timed range has no times to show —
   // hide the time row entirely instead of rendering empty inputs.
-  const visibleTimeRange = allDay ? lastTimedRange : { start, end }
+  const visibleTimeRange = allDay ? lastTimedRange : shown
   const timeRowVisible = visibleTimeRange !== null
 
   const handleStartTime = (hour: number, minute: number) =>
@@ -62,6 +85,12 @@ export const DateTimeSelect = ({
     onChange(withRangeDisplayEndDate({ start, end }, date))
   }
 
+  const handleTimeZone = (nextTzid: string) => {
+    setTimeZoneRequested(true)
+    setUnlockedTzid(nextTzid)
+    onChange(withRangeTimeZone({ start, end }, nextTzid))
+  }
+
   return (
     <div className="flex flex-col gap-1">
       {timeRowVisible && (
@@ -69,21 +98,84 @@ export const DateTimeSelect = ({
           start={visibleTimeRange.start}
           end={visibleTimeRange.end}
           allDay={allDay}
-          readOnly={readOnly}
+          readOnly={inputsReadOnly}
           onChangeStartTime={handleStartTime}
           onChangeEndTime={handleEndTime}
         />
       )}
       <DateSelect
-        startDate={dateInEventZone(start)}
-        endDate={displayEndDate({ start, end })}
-        showEndDate={shouldShowDisplayEndDate({ start, end })}
+        startDate={dateInEventZone(shown.start)}
+        endDate={displayEndDate(shown)}
+        showEndDate={shouldShowDisplayEndDate(shown)}
         icon={timeRowVisible ? null : <ClockIcon />}
-        readOnly={readOnly}
+        readOnly={inputsReadOnly}
         onChangeStart={handleStartDate}
         onChangeEnd={handleEndDate}
+        trailing={
+          canAddTimeZone && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="px-2 font-normal text-muted-foreground bodytext!"
+              onClick={() => setTimeZoneRequested(true)}
+            >
+              Add timezone
+            </Button>
+          )
+        }
       />
+      {showTimeZone && (
+        <div className="flex items-center gap-1">
+          <TimeZoneSelect
+            value={shown.start}
+            readOnly={inputsReadOnly}
+            defaultOpen={timeZoneRequested}
+            onChange={handleTimeZone}
+          />
+          {foreignZone && (
+            <ZoneSwitchButton
+              locked={locked}
+              readOnly={readOnly}
+              onClick={() => setUnlockedTzid(locked ? tzid : null)}
+            />
+          )}
+        </div>
+      )}
     </div>
+  )
+}
+
+const ZoneSwitchButton = ({
+  locked,
+  readOnly,
+  onClick,
+}: {
+  locked: boolean
+  readOnly?: boolean
+  onClick: () => void
+}) => {
+  const label = locked
+    ? readOnly
+      ? "Show in event's time zone"
+      : "Switch to event's time zone to edit"
+    : "Show in your time zone"
+
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="secondary"
+          size="icon-md"
+          className="text-muted-foreground"
+          aria-label={label}
+          onClick={onClick}
+        >
+          <UndoIcon className={cn(!locked && "-scale-x-100")} />
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>{label}</TooltipContent>
+    </Tooltip>
   )
 }
 
@@ -139,6 +231,7 @@ const DateSelect = ({
   readOnly,
   onChangeStart,
   onChangeEnd,
+  trailing,
 }: {
   startDate: Temporal.PlainDate
   endDate: Temporal.PlainDate
@@ -147,6 +240,7 @@ const DateSelect = ({
   readOnly?: boolean
   onChangeStart: (date: Temporal.PlainDate | null) => void
   onChangeEnd: (date: Temporal.PlainDate | null) => void
+  trailing?: React.ReactNode
 }) => {
   return (
     <div className="flex flex-wrap gap-y-1">
@@ -161,6 +255,8 @@ const DateSelect = ({
       </div>
 
       {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
+
+      {trailing}
     </div>
   )
 }
