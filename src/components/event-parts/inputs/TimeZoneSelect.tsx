@@ -119,7 +119,7 @@ export const TimeZoneSelect = ({
         <button
           type="button"
           className={cn(
-            "group flex h-control-height w-full items-center gap-2 rounded-md border border-transparent bg-transparent pl-0 pr-3 text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
+            "group flex h-control-height w-full min-w-0 items-center gap-2 rounded-md border border-transparent bg-transparent pl-0 pr-3 text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
             readOnly && "pointer-events-none",
           )}
         >

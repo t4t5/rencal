@@ -28,6 +28,7 @@ import {
   timeZoneOffsetLabel,
   withEventTimeZone,
   withRangeTimeZone,
+  withRangeViewerZone,
   type EventTime,
 } from "./event-time"
 import { withEventDate, withWallclockTime } from "./event-time/edit"
@@ -581,6 +582,38 @@ describe("withRangeTimeZone", () => {
       wallclock: "2026-04-28T10:30:00",
       tzid: "America/New_York",
     })
+  })
+})
+
+describe("withRangeViewerZone", () => {
+  it("keeps the instants and re-expresses both ends in the viewer's clock", () => {
+    const original = getViewerTzid()
+    setViewerTzid("Europe/Stockholm")
+    try {
+      const range = withRangeViewerZone({
+        start: zoned("2026-04-28T09:00:00", "Europe/London"),
+        end: zoned("2026-04-28T10:30:00", "Europe/London"),
+      })
+      expect(toRpcEventTime(range.start)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T10:00:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(toRpcEventTime(range.end)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T11:30:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(instantForOrdering(range.start).toString()).toBe("2026-04-28T08:00:00Z")
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("passes all-day ranges through", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-29")
+    expect(withRangeViewerZone({ start, end })).toEqual({ start, end })
   })
 })
 

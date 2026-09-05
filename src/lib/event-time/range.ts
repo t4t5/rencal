@@ -7,6 +7,7 @@ import {
   dateInEventZone,
   withEventDate,
   withEventTimeZone,
+  withViewerZone,
   withWallclockTime,
 } from "./edit"
 import { dayOf } from "./layout"
@@ -147,4 +148,9 @@ export function withRangeTimeZone(range: EventTimeRange, tzid: string): EventTim
     start: withEventTimeZone(range.start, tzid),
     end: withEventTimeZone(range.end, tzid),
   }
+}
+
+/** Re-express both ends in the viewer's zone, keeping their instants (see `withViewerZone`). */
+export function withRangeViewerZone(range: EventTimeRange): EventTimeRange {
+  return { start: withViewerZone(range.start), end: withViewerZone(range.end) }
 }

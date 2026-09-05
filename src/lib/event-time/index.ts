@@ -66,5 +66,6 @@ export {
   withRangeStartDate,
   withRangeStartWallclockTime,
   withRangeTimeZone,
+  withRangeViewerZone,
 } from "./range"
 export { listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "./timezones"
