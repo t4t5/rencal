@@ -30,3 +30,5 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 ```
 
 Most themes only need to set `--background`, `--foreground`, `--muted`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives surfaces, dividers, hover states, and other colors from those values.
+
+For a monochrome look, set `--event-color` to paint every event in one color instead of each calendar's own color.

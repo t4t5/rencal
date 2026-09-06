@@ -58,6 +58,14 @@ These are the variables theme files override. Everything else (`--hover`, `--car
 | `--warning`    | Warning / tentative state       |
 | `--error`      | Error / declined state          |
 
+#### Optional colors
+
+Unset by default; a theme sets them to opt in.
+
+| Variable        | Purpose                                                                                                                                           |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--event-color` | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `nous.css`. |
+
 ### Hover / tint system
 
 The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`, `--input`, …) are all built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react"
 
+import { DEFAULT_CALENDAR_COLOR, withThemeEventColor } from "@/lib/calendar-styles"
 import { cn } from "@/lib/utils"
 
 export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) {
@@ -29,7 +30,10 @@ export function getEventBlockColors({
   isDashed?: boolean
   isDraft?: boolean
 }): EventBlockColors {
-  const borderColor = eventColor ?? calendarColor ?? "var(--primary)"
+  // `calendarColor` comes from getCalendarColor(), so it already honours the theme override.
+  const borderColor = eventColor
+    ? withThemeEventColor(eventColor)
+    : (calendarColor ?? withThemeEventColor(DEFAULT_CALENDAR_COLOR))
 
   const boostedColor = `oklch(from ${borderColor} l calc(c * 1.4) h)`
 

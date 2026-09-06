@@ -25,7 +25,7 @@ import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronLeftIcon } from "@/icons/chevron-left"
 import { ChevronRightIcon } from "@/icons/chevron-right"
 
-/** Maps date strings ("yyyy-MM-dd") to arrays of calendar hex colors for that date. */
+/** Maps date strings ("yyyy-MM-dd") to arrays of calendar CSS colors for that date. */
 const EventDotsContext = createContext<Map<string, string[]>>(new Map())
 export const EventDotsProvider = EventDotsContext.Provider
 
