@@ -109,7 +109,7 @@ export function SearchPalette({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         showCloseButton={false}
-        className="mt-[20px] self-start gap-0 overflow-hidden p-0 sm:max-w-2xl"
+        className="mt-[20px] self-start gap-0 overflow-hidden p-0 sm:max-w-2xl border-0"
         onCloseAutoFocus={(e) => {
           if (!pendingRef.current) return
           e.preventDefault()
