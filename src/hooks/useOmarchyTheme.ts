@@ -87,6 +87,7 @@ function applyOmarchyColors(c: OmarchyColors) {
   // Sync OS window chrome if omarchy is the active theme. useTheme can't
   // do this itself because the appearance comes from Omarchy's palette.
   if (document.body.dataset.theme === "omarchy") {
+    document.body.dataset.appearance = c.mode
     void getCurrentWindow().setTheme(c.mode)
     // Keep index.html's flash-prevention cache in step with the live OS theme.
     try {

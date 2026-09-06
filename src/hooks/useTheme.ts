@@ -38,12 +38,16 @@ export function useTheme() {
   useEffect(() => {
     document.body.dataset.theme = theme
     document.body.style.removeProperty("--background")
-    // Sync OS window chrome (macOS titlebar text, Windows DWM chrome) to the
-    // theme's light/dark appearance. For omarchy this depends on the
-    // dynamically-injected --background, which may not be applied yet on
-    // first mount; useOmarchyTheme re-syncs once colors arrive.
-    void getCurrentWindow().setTheme(getActiveAppearance(theme))
-  }, [theme])
+    // Expose the theme's light/dark appearance to CSS (global.css keys the event
+    // text tint on `data-appearance`) and sync OS window chrome (macOS titlebar
+    // text, Windows DWM chrome) to it. For omarchy this depends on the
+    // dynamically-injected --background, which may not be applied yet on first
+    // mount; useOmarchyTheme re-syncs once colors arrive. User themes are
+    // injected asynchronously too, hence the `descriptors` dependency.
+    const appearance = getActiveAppearance(theme)
+    document.body.dataset.appearance = appearance
+    void getCurrentWindow().setTheme(appearance)
+  }, [theme, descriptors])
 
   // Cache the resolved --background for index.html's flash-prevention.
   // Deferred by 1 frame so any runtime-injected user/omarchy styles are applied first.

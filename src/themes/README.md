@@ -68,6 +68,16 @@ Unset by default; a theme sets them to opt in.
 | `--event-background` | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                           |
 | `--event-foreground` | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                          |
 
+#### Event text
+
+Event text is derived from each event's accent colour. With these unset (the dark-theme default) it is the accent, chroma-boosted, mixed into `--foreground` for a soft pastel. That mix muddies accents on a light background (yellow + black is olive), so `global.css` overrides the first and last for `[data-appearance="light"]` — `useTheme` puts the theme's appearance on `<body>` — and a theme can set any of them directly.
+
+| Variable                      | Purpose                                                                                                       | Dark     | Light  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- | ------ |
+| `--event-text-max-lightness`  | Cap on the accent's OKLCH lightness before it becomes text                                                    | `1`      | `0.45` |
+| `--event-text-chroma`         | Chroma multiplier applied to the accent                                                                       | `1.4`    | `1.4`  |
+| `--event-text-foreground-mix` | Share of `--foreground` mixed into the text. Unset it varies per block state (40–60%, dashed and draft lower) | `40–60%` | `0%`   |
+
 ### Hover / tint system
 
 The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`, `--input`, …) are all built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.

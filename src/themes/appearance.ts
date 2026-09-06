@@ -1,26 +1,27 @@
 import { type Appearance, getDeclaredAppearance } from "./manifest"
 
-function hexLuminance(hex: string): number {
-  const h = hex.replace("#", "").trim()
-  const r = parseInt(h.slice(0, 2), 16)
-  const g = parseInt(h.slice(2, 4), 16)
-  const b = parseInt(h.slice(4, 6), 16)
+function luminance(r: number, g: number, b: number): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 }
 
-export function appearanceFromHex(hex: string): Appearance {
-  return hexLuminance(hex) > 0.5 ? "light" : "dark"
+// Resolves any CSS colour the engine understands (`white`, `rgb()`, `oklch()`,
+// `color-mix()`, …) to sRGB by painting it on a 1×1 canvas.
+function resolveColor(css: string): [number, number, number] | null {
+  const ctx = document.createElement("canvas").getContext("2d")
+  if (!ctx) return null
+  ctx.fillStyle = css
+  ctx.fillRect(0, 0, 1, 1)
+  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+  if (r === undefined || g === undefined || b === undefined || a === 0) return null
+  return [r, g, b]
 }
 
-// Reads the live `--background` token from the DOM. Used for themes whose
-// appearance isn't declared statically (omarchy).
+// Reads the rendered body background (`bg-background`). Used for themes whose
+// appearance isn't declared statically (omarchy, user themes).
 export function appearanceFromComputedBackground(): Appearance {
-  const bg = getComputedStyle(document.body).getPropertyValue("--background").trim()
-  if (bg.startsWith("#") && (bg.length === 7 || bg.length === 4)) {
-    const hex = bg.length === 4 ? `#${bg[1]}${bg[1]}${bg[2]}${bg[2]}${bg[3]}${bg[3]}` : bg
-    return appearanceFromHex(hex)
-  }
-  return "dark"
+  const rgb = resolveColor(getComputedStyle(document.body).backgroundColor)
+  if (!rgb) return "dark"
+  return luminance(...rgb) > 0.5 ? "light" : "dark"
 }
 
 // Built-in themes declare their appearance; user/omarchy themes derive it from

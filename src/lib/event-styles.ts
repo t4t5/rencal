@@ -26,6 +26,18 @@ interface EventBlockColors {
   tintedTextColor: string
 }
 
+/**
+ * Accent-tinted text. With the tokens unset (the dark-theme default) this is the accent,
+ * chroma-boosted, with `foregroundMix` of `--foreground` mixed in for a soft pastel. On a
+ * light background that mix only muddies the accent (yellow + black is olive), so
+ * `[data-appearance="light"]` in global.css flips the tokens: no foreground mix, and the
+ * accent's lightness capped so it reads on the light background.
+ */
+function tintText(accent: string, foregroundMix: number) {
+  const tinted = `oklch(from ${accent} min(l, var(--event-text-max-lightness, 1)) calc(c * var(--event-text-chroma, 1.4)) h)`
+  return `color-mix(in srgb, var(--foreground) var(--event-text-foreground-mix, ${foregroundMix}%), ${tinted})`
+}
+
 export function getEventBlockColors({
   calendarColor,
   eventColor,
@@ -47,7 +59,7 @@ export function getEventBlockColors({
   const boostedColor = `oklch(from ${borderColor} l calc(c * 1.4) h)`
 
   if (isDraft) {
-    const textColor = `color-mix(in srgb, ${boostedColor} 60%, var(--foreground))`
+    const textColor = tintText(borderColor, 40)
     return {
       borderColor,
       backgroundColor: `color-mix(in srgb, ${boostedColor} 15%, var(--background))`,
@@ -57,11 +69,11 @@ export function getEventBlockColors({
   }
 
   if (isDashed) {
-    const textColor = `color-mix(in srgb, ${boostedColor} 50%, var(--foreground))`
+    const textColor = tintText(borderColor, 50)
     return { borderColor, backgroundColor: "transparent", textColor, tintedTextColor: textColor }
   }
 
-  const tintedTextColor = `color-mix(in srgb, ${boostedColor} 40%, var(--foreground))`
+  const tintedTextColor = tintText(borderColor, 60)
 
   // Themes can swap the derived tint for a solid fill via `--event-background` and
   // `--event-foreground` (see src/themes/README.md). Unset, the derived colours show through.
