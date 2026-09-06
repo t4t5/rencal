@@ -1,0 +1,19 @@
+/* @name Minimal */
+--minimal-brand-color: #000;
+
+--background: white;
+--foreground: var(--minimal-brand-color);
+--muted: color-mix(in srgb, var(--minimal-brand-color) 90%, transparent);
+--primary: var(--minimal-brand-color);
+--highlight: #ff2f00;
+--today: #ff2f00;
+--hover-tint: var(--minimal-brand-color);
+--hover-mix: 4%;
+--radius-base: 0.5rem;
+--font-heading: var(--mono);
+--font-button: var(--mono);
+--font-numerical: var(--mono);
+--font-heading-transform: uppercase;
+--font-button-transform: uppercase;
+--font-numerical-transform: uppercase;
+--radius-circle: 4px;

@@ -5,11 +5,12 @@ export type Appearance = "light" | "dark"
 export const themes = [
   { id: "omarchy", name: "Omarchy (Auto)", appearance: null },
   { id: "ren", name: "Ren", appearance: "dark" },
-  { id: "nous", name: "Nous", appearance: "light" },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },
   { id: "nord", name: "Nord", appearance: "dark" },
+  { id: "nous", name: "Nous", appearance: "light" },
+  { id: "minimal", name: "Minimal", appearance: "light" },
 ] as const satisfies readonly { id: string; name: string; appearance: Appearance | null }[]
 
 export type ThemeId = (typeof themes)[number]["id"]
