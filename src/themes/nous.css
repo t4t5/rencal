@@ -1,0 +1,17 @@
+/* @name Nous */
+--background: white;
+--foreground: #0000f2;
+--muted: #0000f2;
+--primary: #0000f2;
+--highlight: #0000f2;
+--today: #0000f2;
+--hover-tint: #0000f2;
+--hover-mix: 6%;
+--radius-base: 0rem;
+--font-heading: var(--mono);
+--font-button: var(--mono);
+--font-numerical: var(--mono);
+--font-heading-transform: uppercase;
+--font-button-transform: uppercase;
+--font-numerical-transform: uppercase;
+--radius-circle: 0px;

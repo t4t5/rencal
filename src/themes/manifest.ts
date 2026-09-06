@@ -5,6 +5,7 @@ export type Appearance = "light" | "dark"
 export const themes = [
   { id: "omarchy", name: "Omarchy (Auto)", appearance: null },
   { id: "ren", name: "Ren", appearance: "dark" },
+  { id: "nous", name: "Nous", appearance: "light" },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },
