@@ -1,14 +1,16 @@
 /* @name Nous */
+--nous-brand-color: #0000f2;
+
 --background: white;
---foreground: #0000f2;
---muted: #0000f290;
---primary: #0000f2;
---highlight: #0000f2;
---today: #0000f2;
---event-color: #0000f2;
---event-background: #0000f2;
+--foreground: var(--nous-brand-color);
+--muted: color-mix(in srgb, var(--nous-brand-color) 90%, transparent);
+--primary: var(--nous-brand-color);
+--highlight: var(--nous-brand-color);
+--today: var(--nous-brand-color);
+--event-color: var(--nous-brand-color);
+--event-background: var(--nous-brand-color);
 --event-foreground: white;
---hover-tint: #0000f2;
+--hover-tint: var(--nous-brand-color);
 --hover-mix: 6%;
 --radius-base: 0rem;
 --font-heading: var(--mono);
