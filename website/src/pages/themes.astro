@@ -48,6 +48,7 @@ const themes = [
   { id: "tokyonight", name: "Tokyo Night" },
   { id: "classic", name: "Classic" },
   { id: "nord", name: "Nord" },
+  { id: "nous", name: "Nous" },
 ].map((theme) => {
   const css = themeFiles[`../../../src/themes/${theme.id}.css`]
   if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
