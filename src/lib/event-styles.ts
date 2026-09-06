@@ -12,9 +12,18 @@ export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) 
 }
 
 interface EventBlockColors {
+  /** The event's accent colour: stripes, dots and dashed outlines. */
   borderColor: string
-  textColor: string
+  /** Fill of a solid event block. */
   backgroundColor: string
+  /** Text placed on `backgroundColor`. */
+  textColor: string
+  /**
+   * Accent-tinted text placed straight on the app background (no fill), e.g. the time
+   * label of month-view timed events. Unlike `textColor`, a theme's `--event-foreground`
+   * never replaces it.
+   */
+  tintedTextColor: string
 }
 
 export function getEventBlockColors({
@@ -38,27 +47,36 @@ export function getEventBlockColors({
   const boostedColor = `oklch(from ${borderColor} l calc(c * 1.4) h)`
 
   if (isDraft) {
+    const textColor = `color-mix(in srgb, ${boostedColor} 60%, var(--foreground))`
     return {
       borderColor,
-      textColor: `color-mix(in srgb, ${boostedColor} 60%, var(--foreground))`,
       backgroundColor: `color-mix(in srgb, ${boostedColor} 15%, var(--background))`,
+      textColor,
+      tintedTextColor: textColor,
     }
   }
 
   if (isDashed) {
-    return {
-      borderColor,
-      textColor: `color-mix(in srgb, ${boostedColor} 50%, var(--foreground))`,
-      backgroundColor: "transparent",
-    }
+    const textColor = `color-mix(in srgb, ${boostedColor} 50%, var(--foreground))`
+    return { borderColor, backgroundColor: "transparent", textColor, tintedTextColor: textColor }
   }
 
-  const base = `color-mix(in srgb, ${boostedColor} 20%, var(--background))`
+  const tintedTextColor = `color-mix(in srgb, ${boostedColor} 40%, var(--foreground))`
+
+  // Themes can swap the derived tint for a solid fill via `--event-background` and
+  // `--event-foreground` (see src/themes/README.md). Unset, the derived colours show through.
+  const fill = `var(--event-background, color-mix(in srgb, ${boostedColor} 20%, var(--background)))`
+  const textColor = `var(--event-foreground, ${tintedTextColor})`
 
   return {
     borderColor,
-    textColor: `color-mix(in srgb, ${boostedColor} 40%, var(--foreground))`,
-    backgroundColor: highlighted ? `color-mix(in srgb, ${base} 80%, var(--foreground))` : base,
+    // Highlight by mixing the fill toward its text colour. With no overrides this is the
+    // original `base 80% + --foreground` formula; on a solid fill it stays clearly visible.
+    backgroundColor: highlighted
+      ? `color-mix(in srgb, ${fill} 80%, var(--event-foreground, var(--foreground)))`
+      : fill,
+    textColor,
+    tintedTextColor,
   }
 }
 

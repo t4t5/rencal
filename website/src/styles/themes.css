@@ -121,8 +121,8 @@
 }
 
 .rc-allday {
-  background: color-mix(in srgb, var(--ev-boost) 20%, var(--background));
-  color: color-mix(in srgb, var(--ev-boost) 40%, var(--foreground));
+  background: var(--event-background, color-mix(in srgb, var(--ev-boost) 20%, var(--background)));
+  color: var(--event-foreground, color-mix(in srgb, var(--ev-boost) 40%, var(--foreground)));
   border-radius: var(--radius-ev);
 }
 

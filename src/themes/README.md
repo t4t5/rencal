@@ -62,9 +62,11 @@ These are the variables theme files override. Everything else (`--hover`, `--car
 
 Unset by default; a theme sets them to opt in.
 
-| Variable        | Purpose                                                                                                                                           |
-| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--event-color` | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `nous.css`. |
+| Variable             | Purpose                                                                                                                                           |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--event-color`      | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `nous.css`. |
+| `--event-background` | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                           |
+| `--event-foreground` | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                          |
 
 ### Hover / tint system
 

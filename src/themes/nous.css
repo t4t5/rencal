@@ -1,11 +1,13 @@
 /* @name Nous */
 --background: white;
 --foreground: #0000f2;
---muted: #0000f2;
+--muted: #0000f290;
 --primary: #0000f2;
 --highlight: #0000f2;
 --today: #0000f2;
 --event-color: #0000f2;
+--event-background: #0000f2;
+--event-foreground: white;
 --hover-tint: #0000f2;
 --hover-mix: 6%;
 --radius-base: 0rem;
