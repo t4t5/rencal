@@ -3,7 +3,7 @@
 
 --background: white;
 --foreground: var(--minimal-brand-color);
---muted: color-mix(in srgb, var(--minimal-brand-color) 70%, transparent);
+--muted: color-mix(in srgb, var(--minimal-brand-color) 60%, transparent);
 --primary: var(--minimal-brand-color);
 --highlight: #ff2f00;
 --today: #ff2f00;
