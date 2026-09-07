@@ -10,7 +10,7 @@ export const themes = [
   { id: "classic", name: "Classic", appearance: "dark" },
   { id: "nord", name: "Nord", appearance: "dark" },
   { id: "nous", name: "Nous", appearance: "light" },
-  { id: "minimal", name: "Minimal", appearance: "light" },
+  { id: "minimal", name: "Minimal Light", appearance: "light" },
 ] as const satisfies readonly { id: string; name: string; appearance: Appearance | null }[]
 
 export type ThemeId = (typeof themes)[number]["id"]

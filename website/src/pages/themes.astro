@@ -49,6 +49,7 @@ const themes = [
   { id: "classic", name: "Classic" },
   { id: "nord", name: "Nord" },
   { id: "nous", name: "Nous" },
+  { id: "minimal", name: "Minimal Light" },
 ].map((theme) => {
   const css = themeFiles[`../../../src/themes/${theme.id}.css`]
   if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
