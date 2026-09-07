@@ -9,7 +9,7 @@ export const themes = [
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },
   { id: "nord", name: "Nord", appearance: "dark" },
-  { id: "nous", name: "Nous", appearance: "light" },
+  { id: "electric-blue", name: "Electric Blue", appearance: "light" },
   { id: "minimal", name: "Minimal Light", appearance: "light" },
 ] as const satisfies readonly { id: string; name: string; appearance: Appearance | null }[]
 
