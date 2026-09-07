@@ -9,6 +9,14 @@ const OMARCHY_THEME_CHANGED = "omarchy-theme-changed"
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
+// Omarchy themes built around a single hue (or none at all). Their palette
+// still names a red, green, blue, etc., but those are all shades of the same
+// colour, so the per-calendar event colours would be the only thing clashing
+// with the desktop. These get the Nous treatment instead (see nous.css): the
+// accent for every emphasis, and every event painted in it. Keyed by the
+// theme slug Omarchy writes to `current/theme.name`.
+const MONOCHROME_THEMES: ReadonlySet<string> = new Set(["vantablack", "white", "solitude", "lumon"])
+
 const CSS_VARS = [
   "--background",
   "--foreground",
@@ -21,7 +29,14 @@ const CSS_VARS = [
   "--success",
   "--warning",
   "--error",
+  "--event-color",
+  "--event-background",
+  "--event-foreground",
 ] as const
+
+// Partial: the event vars are only set for monochrome themes. Leaving them
+// out lets the per-calendar colours show through, as for any other theme.
+type OmarchyVars = Partial<Record<(typeof CSS_VARS)[number], string>>
 
 function luminance(hex: string): number {
   const h = hex.replace("#", "")
@@ -42,10 +57,14 @@ function pickForeground(c: OmarchyColors): string {
   return brightFgContrast > fgContrast ? c.bright_foreground : c.foreground
 }
 
-function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], string> {
+function isMonochrome(c: OmarchyColors): boolean {
+  return c.name !== null && MONOCHROME_THEMES.has(c.name)
+}
+
+function varsFromColors(c: OmarchyColors): OmarchyVars {
   const fg = pickForeground(c)
   const popoverTint = c.mode === "light" ? "white" : "black"
-  return {
+  const vars: OmarchyVars = {
     "--background": c.background,
     "--foreground": fg,
     "--primary": c.accent,
@@ -57,6 +76,19 @@ function varsFromColors(c: OmarchyColors): Record<(typeof CSS_VARS)[number], str
     "--success": c.green,
     "--warning": c.yellow,
     "--error": c.red,
+  }
+  if (!isMonochrome(c)) return vars
+  // Mirror nous.css: one colour for every emphasis, and events as a solid
+  // accent fill with background-coloured text. Success / warning / error keep
+  // the palette's shades so response states stay distinguishable.
+  return {
+    ...vars,
+    "--today": c.accent,
+    "--highlight": c.accent,
+    "--hover-tint": c.accent,
+    "--event-color": c.accent,
+    "--event-background": c.accent,
+    "--event-foreground": c.background,
   }
 }
 

@@ -138,6 +138,8 @@ The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 
+**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Nous treatment: the accent for `--primary` / `--today` / `--highlight` / `--hover-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
+
 If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 
 ## Escape hatch: custom CSS rules

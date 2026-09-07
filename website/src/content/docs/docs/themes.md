@@ -15,6 +15,8 @@ The "Omarchy" theme updates automatically when your system theme changes:
 
 <video src="/docs/omarchy-theme.mp4" autoplay loop muted playsinline></video>
 
+For monochrome Omarchy themes (Vantablack, White, Solitude, Lumon), renCal paints every event in the theme's accent colour instead of the per-calendar colours, so the calendar stays as single-hued as the rest of your desktop.
+
 ## Add your own theme
 
 Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal watches this folder, so new files, edits, and removals show up automatically in the settings.
