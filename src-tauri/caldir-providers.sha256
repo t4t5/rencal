@@ -1,0 +1,6 @@
+# caldir v0.13.1 release assets. Regenerate with: just bump-caldir <tag>
+d007d20259c27b51be5690fdb36033218b8a259f5a342b627baded251104e0d7  caldir-aarch64-apple-darwin.tar.gz
+0c212791751f053ce32efdd1f232a48552460247b001e1cc7a13fc613416511f  caldir-aarch64-unknown-linux-musl.tar.gz
+ff0495a0bd21c296ab5b5686d521cdce4506e6c21e10cb3e769343b71c300fc8  caldir-x86_64-apple-darwin.tar.gz
+8e68194b005c06593959c5f022ffb72e3471e5377a4cd4a19816b6835261a054  caldir-x86_64-pc-windows-msvc.zip
+9990fead337e581ce1a6db0af41fbd0436c9a8672880864e4ebe7845254b4c57  caldir-x86_64-unknown-linux-musl.tar.gz
