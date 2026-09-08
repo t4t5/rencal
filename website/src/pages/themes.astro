@@ -9,10 +9,10 @@ import CopyIcon from "../icons/copy.astro"
 import DownloadIcon from "../icons/download.astro"
 import { site } from "../site"
 
-// The built-in theme files live in the app source, one directory up from the
-// website project. Inlining them at build time keeps this page in sync with
-// the app automatically. Mirrors src/themes/manifest.ts (minus "omarchy",
-// whose palette is derived from the OS theme at runtime).
+// Built-in themes are read from the app source at build time, so a theme
+// registered in the manifest shows up here automatically.
+import { themes as appThemes } from "../../../src/themes/manifest"
+
 const themeFiles = import.meta.glob<string>("../../../src/themes/*.css", {
   query: "?raw",
   import: "default",
@@ -42,17 +42,21 @@ const REN_CORE: Record<string, string> = {
   "--hover-mix": "5%",
 }
 
-const themes = [
-  { id: "ren", name: "Ren" },
-  { id: "catpuccin-latte", name: "Catpuccin Latte" },
-  { id: "tokyonight", name: "Tokyo Night" },
-  { id: "classic", name: "Classic" },
-  { id: "nord", name: "Nord" },
-].map((theme) => {
-  const css = themeFiles[`../../../src/themes/${theme.id}.css`]
-  if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
-  return { ...theme, vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(css) } }
-})
+// Omarchy (appearance: null) has no static palette to preview.
+const themes = appThemes
+  .filter((theme) => theme.appearance !== null)
+  .map((theme) => {
+    const css = themeFiles[`../../../src/themes/${theme.id}.css`]
+    if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
+    return {
+      id: theme.id,
+      name: theme.name,
+      vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(css) },
+    }
+  })
+
+const renTheme = themes.find((theme) => theme.id === "ren")
+if (renTheme === undefined) throw new Error('Missing "ren" theme in manifest')
 
 // The full ren defaults (also declared on `.rc-scope` in themes.css). Used to
 // fill editor fields for primitives a theme doesn't override.
@@ -75,7 +79,7 @@ const styleAttr = (vars: Record<string, string>) =>
     .map(([name, value]) => `${name}: ${value}`)
     .join("; ")
 
-const renVars = themes[0].vars
+const renVars = renTheme.vars
 
 const colorControls = [
   { var: "--background", label: "Background" },
@@ -337,7 +341,9 @@ const segControls = [
   const STORAGE_KEY = "rencal-theme-playground-v1"
 
   let active = "ren"
-  let customVars: Vars = { ...data.themes[0].vars }
+  let customVars: Vars = {
+    ...(data.themes.find((theme) => theme.id === "ren") ?? data.themes[0]).vars,
+  }
 
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "")

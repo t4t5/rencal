@@ -42,7 +42,11 @@ name: string; css: string }
  */
 export type FirstDayOfWeek = "monday" | "sunday"
 
-export type OmarchyColors = { mode: OmarchyMode; background: string; foreground: string; bright_foreground: string; accent: string; red: string; green: string; yellow: string; blue: string }
+export type OmarchyColors = { mode: OmarchyMode; 
+/**
+ * Active theme slug (e.g. `tokyo-night`), if resolvable.
+ */
+name: string | null; background: string; foreground: string; bright_foreground: string; accent: string; red: string; green: string; yellow: string; blue: string }
 
 export type OmarchyMode = "dark" | "light"
 

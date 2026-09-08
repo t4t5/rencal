@@ -267,7 +267,10 @@ const barStyle = (bar: AllDayBar) =>
                       {dots && !isSelected && (
                         <span class="absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-[3px]">
                           {dots.map((color) => (
-                            <span class="rc-circle size-1" style={`background: ${color}`} />
+                            <span
+                              class="rc-circle size-1"
+                              style={`background: var(--event-color, ${color})`}
+                            />
                           ))}
                         </span>
                       )}
@@ -322,7 +325,7 @@ const barStyle = (bar: AllDayBar) =>
                   class="rc-ev flex gap-3 py-1 pr-2 pl-3.5"
                   style={row.color ? `--ev: ${row.color}` : undefined}
                 >
-                  <div class="w-[3px] shrink-0 rounded-[2px] bg-(--ev)" />
+                  <div class="w-[3px] shrink-0 rounded-[2px] bg-(--ev-paint)" />
                   <div class="text-sm">
                     <div class="rc-numerical h-4 text-xs text-(--muted)">{row.time}</div>
                     <div class="font-medium">{row.title}</div>
@@ -445,7 +448,7 @@ const barStyle = (bar: AllDayBar) =>
                       class="rc-ev flex shrink-0 items-center gap-1 truncate text-xs"
                       style={chip.color ? `--ev: ${chip.color}` : undefined}
                     >
-                      <div class="h-full w-0.5 shrink-0 bg-(--ev)" />
+                      <div class="h-full w-0.5 shrink-0 bg-(--ev-paint)" />
                       <span class="truncate">
                         <span class="rc-numerical rc-ev-text text-[10px]">{chip.time}</span>{" "}
                         {chip.title}

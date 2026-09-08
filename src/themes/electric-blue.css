@@ -1,0 +1,22 @@
+/* @name Electric Blue */
+--electric-blue: #0000f2;
+
+--background: white;
+--foreground: var(--electric-blue);
+--muted: color-mix(in srgb, var(--electric-blue) 90%, transparent);
+--primary: var(--electric-blue);
+--highlight: var(--electric-blue);
+--today: var(--electric-blue);
+--event-color: var(--electric-blue);
+--event-background: var(--electric-blue);
+--event-foreground: white;
+--hover-tint: var(--electric-blue);
+--hover-mix: 6%;
+--radius-base: 0rem;
+--font-heading: var(--mono);
+--font-button: var(--mono);
+--font-numerical: var(--mono);
+--font-heading-transform: uppercase;
+--font-button-transform: uppercase;
+--font-numerical-transform: uppercase;
+--radius-circle: 0px;

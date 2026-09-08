@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use notify::{Event, EventKind, RecursiveMode, Watcher};
@@ -22,6 +22,8 @@ pub enum OmarchyMode {
 #[derive(Clone, Debug, Deserialize, Serialize, Type, PartialEq, Eq)]
 pub struct OmarchyColors {
     pub mode: OmarchyMode,
+    /// Active theme slug (e.g. `tokyo-night`), if resolvable.
+    pub name: Option<String>,
     pub background: String,
     pub foreground: String,
     pub bright_foreground: String,
@@ -115,6 +117,7 @@ fn resolve_colors(
 
     Some(OmarchyColors {
         mode,
+        name: None,
         background,
         foreground,
         bright_foreground,
@@ -124,6 +127,20 @@ fn resolve_colors(
         yellow,
         blue,
     })
+}
+
+/// Quattro writes the slug to `theme.name`; v3 exposes it as the `theme` symlink target.
+fn read_theme_name(current_dir: &Path) -> Option<String> {
+    if let Ok(name) = std::fs::read_to_string(current_dir.join("theme.name")) {
+        let name = name.trim();
+        if !name.is_empty() {
+            return Some(name.to_owned());
+        }
+    }
+    std::fs::read_link(current_dir.join("theme"))
+        .ok()?
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
 }
 
 pub fn read_colors() -> Option<OmarchyColors> {
@@ -142,12 +159,17 @@ pub fn read_colors() -> Option<OmarchyColors> {
             return None;
         }
     };
-    let has_light_mode_marker = path
-        .parent()
-        .is_some_and(|theme_dir| theme_dir.join("light.mode").is_file());
-    let resolved = resolve_colors(&string_values(table), has_light_mode_marker);
-    if resolved.is_none() {
-        log::warn!("Omarchy colors at {path:?} have no resolvable background or foreground");
+    let theme_dir = path.parent();
+    let has_light_mode_marker =
+        theme_dir.is_some_and(|theme_dir| theme_dir.join("light.mode").is_file());
+    let mut resolved = resolve_colors(&string_values(table), has_light_mode_marker);
+    match &mut resolved {
+        Some(colors) => {
+            colors.name = theme_dir.and_then(Path::parent).and_then(read_theme_name);
+        }
+        None => {
+            log::warn!("Omarchy colors at {path:?} have no resolvable background or foreground");
+        }
     }
     resolved
 }
@@ -396,6 +418,57 @@ mod tests {
         .unwrap();
 
         assert_eq!(colors.mode, OmarchyMode::Light);
+    }
+
+    fn temp_current_dir(label: &str) -> PathBuf {
+        let dir = std::env::temp_dir().join(format!(
+            "rencal-omarchy-{label}-{}-{}",
+            std::process::id(),
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ));
+        std::fs::create_dir_all(&dir).unwrap();
+        dir
+    }
+
+    #[test]
+    fn theme_name_prefers_quattro_name_file() {
+        let dir = temp_current_dir("quattro");
+        std::fs::create_dir(dir.join("theme")).unwrap();
+        std::fs::write(dir.join("theme.name"), "tokyo-night\n").unwrap();
+
+        assert_eq!(read_theme_name(&dir).as_deref(), Some("tokyo-night"));
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn theme_name_falls_back_to_v3_symlink() {
+        let dir = temp_current_dir("v3");
+        let target = dir.join("themes/vantablack");
+        std::fs::create_dir_all(&target).unwrap();
+        std::os::unix::fs::symlink(&target, dir.join("theme")).unwrap();
+
+        assert_eq!(read_theme_name(&dir).as_deref(), Some("vantablack"));
+
+        // An empty theme.name must not shadow the symlink.
+        std::fs::write(dir.join("theme.name"), "").unwrap();
+        assert_eq!(read_theme_name(&dir).as_deref(), Some("vantablack"));
+
+        std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn theme_name_is_none_without_markers() {
+        let dir = temp_current_dir("bare");
+        std::fs::create_dir(dir.join("theme")).unwrap();
+
+        assert_eq!(read_theme_name(&dir), None);
+
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]

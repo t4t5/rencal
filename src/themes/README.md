@@ -26,7 +26,7 @@ The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `sr
    { id: "mytheme", name: "My Theme", appearance: "dark" },
    ```
 
-That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, `useTheme` picks it up, and Ctrl/Cmd+Shift+T cycles through every registered theme. (Flash-prevention is automatic: `useTheme` caches the active theme's `--background` and `index.html` repaints it on next launch.)
+That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, `useTheme` picks it up, and Ctrl/Cmd+Shift+T cycles through every registered theme. The website's theme playground (`website/src/pages/themes.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: `useTheme` caches the active theme's `--background` and `index.html` repaints it on next launch.)
 
 ## User themes
 
@@ -57,6 +57,26 @@ These are the variables theme files override. Everything else (`--hover`, `--car
 | `--success`    | Success / accepted state        |
 | `--warning`    | Warning / tentative state       |
 | `--error`      | Error / declined state          |
+
+#### Optional colors
+
+Unset by default; a theme sets them to opt in.
+
+| Variable             | Purpose                                                                                                                                                    |
+| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--event-color`      | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
+| `--event-background` | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
+| `--event-foreground` | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                                   |
+
+#### Event text
+
+Event text is derived from each event's accent colour. With these unset (the dark-theme default) it is the accent, chroma-boosted, mixed into `--foreground` for a soft pastel. That mix muddies accents on a light background (yellow + black is olive), so `global.css` overrides the first and last for `[data-appearance="light"]` — `useTheme` puts the theme's appearance on `<body>` — and a theme can set any of them directly.
+
+| Variable                      | Purpose                                                                                                       | Dark     | Light  |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- | ------ |
+| `--event-text-max-lightness`  | Cap on the accent's OKLCH lightness before it becomes text                                                    | `1`      | `0.45` |
+| `--event-text-chroma`         | Chroma multiplier applied to the accent                                                                       | `1.4`    | `1.4`  |
+| `--event-text-foreground-mix` | Share of `--foreground` mixed into the text. Unset it varies per block state (40–60%, dashed and draft lower) | `40–60%` | `0%`   |
 
 ### Hover / tint system
 
@@ -117,6 +137,8 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.local/state/omarchy/current/theme/colors.toml` on Omarchy quattro or `~/.config/omarchy/current/theme/colors.toml` on v3, then writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. The Rust integration in `src-tauri/src/omarchy.rs` normalizes v3 ANSI, v4 semantic, and hybrid palettes into one shape. Its file-watcher re-emits on every OS theme change, so changing the Omarchy theme repaints renCal live without a restart.
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
+
+**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--highlight` / `--hover-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
 
 If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 

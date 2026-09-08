@@ -45,6 +45,7 @@ export function MonthTimedEvent({
     calendarColor: item.color,
     eventColor: item.eventColor,
     highlighted,
+    isDraft,
   })
 
   const inner = (
@@ -92,7 +93,7 @@ export function MonthTimedEvent({
         <span
           className="text-[10px] numerical"
           style={{
-            color: colors.textColor,
+            color: colors.tintedTextColor,
           }}
         >
           {formatTime(item.event.start, timeFormat)}

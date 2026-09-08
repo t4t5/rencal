@@ -86,7 +86,7 @@ const CalendarViewDropdown = ({
       <DropdownMenuTrigger asChild>
         <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
           {currentView?.name ?? "View"}
-          <ChevronDownIcon className="size-4 text-muted-foreground" />
+          <ChevronDownIcon className="size-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -122,7 +122,7 @@ const GroupSwitcher = () => {
       <DropdownMenuTrigger asChild>
         <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
           {formatGroupName(activeGroup)}
-          <ChevronDownIcon className="size-4 text-muted-foreground" />
+          <ChevronDownIcon className="size-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
 
