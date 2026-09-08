@@ -90,9 +90,17 @@ notarize: ensure-providers
   # Updater artifacts (and their signing key) are produced in CI, not here.
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
-# Download the pinned caldir provider binaries when they are not already installed.
+# Download the caldir provider binaries pinned in src-tauri/Cargo.toml, unless already installed.
 ensure-providers:
   scripts/install-caldir-providers.sh
+
+# Move caldir-core and the provider binaries to a caldir release, e.g. `just bump-caldir v0.13.1`.
+bump-caldir tag:
+  scripts/bump-caldir.sh {{tag}}
+
+# Build the providers from a local caldir checkout instead of the pinned release. Delete src-tauri/providers/ to undo.
+build-providers-local caldir_repo="../caldir":
+  scripts/build-local-caldir-providers.sh {{caldir_repo}}
 
 # ---- NOTIFICATIONS
 

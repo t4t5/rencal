@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
+# Install the caldir provider binaries for the caldir release pinned in src-tauri/Cargo.toml.
 set -euo pipefail
 
-readonly caldir_binaries_release="v0.13.1"
+cd "$(dirname "$0")/.."
+
+readonly manifest="src-tauri/Cargo.toml"
+readonly checksums_file="src-tauri/caldir-providers.sha256"
 readonly providers_dir="src-tauri/providers"
 readonly version_file="$providers_dir/.caldir-version"
 readonly -a providers=(google icloud outlook caldav webcal)
+
+# The pinned tag is the one on the caldir-core line under [workspace.dependencies].
+tag="$(sed -n 's/^caldir-core = .*tag = "\([^"]*\)".*/\1/p' "$manifest")"
+if [[ -z "$tag" ]]; then
+  echo "Could not read the caldir release tag from the caldir-core line in $manifest." >&2
+  exit 1
+fi
 
 if [[ -n "${CALDIR_TARGET:-}" ]]; then
   target="$CALDIR_TARGET"
@@ -21,9 +32,14 @@ else
   esac
 fi
 
+if [[ -f "$version_file" && "$(<"$version_file")" == local* ]]; then
+  echo "Using locally built caldir providers ($(<"$version_file")). Delete $providers_dir to go back to caldir $tag." >&2
+  exit 0
+fi
+
 providers_are_current() {
   [[ -f "$version_file" ]] || return 1
-  [[ "$(<"$version_file")" == "$caldir_binaries_release $target" ]] || return 1
+  [[ "$(<"$version_file")" == "$tag $target" ]] || return 1
 
   local provider
   for provider in "${providers[@]}"; do
@@ -31,35 +47,29 @@ providers_are_current() {
   done
 }
 
-case "$target" in
-  aarch64-apple-darwin)
-    checksum="d007d20259c27b51be5690fdb36033218b8a259f5a342b627baded251104e0d7"
-    ;;
-  x86_64-apple-darwin)
-    checksum="ff0495a0bd21c296ab5b5686d521cdce4506e6c21e10cb3e769343b71c300fc8"
-    ;;
-  aarch64-unknown-linux-musl)
-    checksum="0c212791751f053ce32efdd1f232a48552460247b001e1cc7a13fc613416511f"
-    ;;
-  x86_64-unknown-linux-musl)
-    checksum="9990fead337e581ce1a6db0af41fbd0436c9a8672880864e4ebe7845254b4c57"
-    ;;
-  *)
-    echo "No prebuilt caldir providers are available for target $target." >&2
-    exit 1
-    ;;
-esac
-
 if providers_are_current; then
   exit 0
 fi
 
+checksums_tag="$(sed -n 's/^# caldir \(v[^ ]*\) .*/\1/p' "$checksums_file")"
+if [[ "$checksums_tag" != "$tag" ]]; then
+  echo "$checksums_file is for caldir $checksums_tag but $manifest pins $tag." >&2
+  echo "Run: just bump-caldir $tag" >&2
+  exit 1
+fi
+
 archive="caldir-$target.tar.gz"
-url="https://github.com/t4t5/caldir/releases/download/$caldir_binaries_release/$archive"
+checksum="$(awk -v name="$archive" '$2 == name { print $1 }' "$checksums_file")"
+if [[ ${#checksum} -ne 64 ]]; then
+  echo "No checksum for $archive in $checksums_file: no prebuilt caldir providers for target $target." >&2
+  exit 1
+fi
+
+url="https://github.com/t4t5/caldir/releases/download/$tag/$archive"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
-echo "Downloading caldir providers $caldir_binaries_release for $target..."
+echo "Downloading caldir providers $tag for $target..."
 curl --fail --location --retry 3 --show-error --silent \
   --output "$tmp_dir/$archive" \
   "$url"
@@ -89,5 +99,5 @@ for provider in "${providers[@]}"; do
   install -m 755 "$tmp_dir/$binary" "$providers_dir/$binary"
 done
 
-printf '%s %s\n' "$caldir_binaries_release" "$target" > "$version_file"
-echo "Installed caldir providers $caldir_binaries_release."
+printf '%s %s\n' "$tag" "$target" > "$version_file"
+echo "Installed caldir providers $tag."

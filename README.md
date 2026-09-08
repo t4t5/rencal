@@ -67,5 +67,18 @@ Use [`just`](https://just.systems/) to access handy development commands.
 just dev
 ```
 
-The first run downloads the pinned caldir provider binaries for your platform.
+The first run downloads the caldir provider binaries for your platform.
 Later runs reuse the binaries in `src-tauri/providers/`.
+
+One caldir release tag in `src-tauri/Cargo.toml` pins both the `caldir-core` crate and the provider binaries. To move to a new caldir release:
+
+```bash
+just bump-caldir v0.13.2
+```
+
+To develop against a local caldir checkout (`../caldir` by default), build the providers from it with `just build-providers-local`. For `caldir-core` itself, add a patch to `src-tauri/Cargo.toml`:
+
+```toml
+[patch."https://github.com/t4t5/caldir"]
+caldir-core = { path = "../../caldir/caldir-core" }
+```
