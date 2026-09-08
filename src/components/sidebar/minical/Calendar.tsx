@@ -202,7 +202,7 @@ function Calendar({
           const firstRowDay = week.days[0]
           return (
             <td {...props}>
-              <div className="flex size-(--cell-size) items-center justify-center text-center text-[10px] text-muted-foreground">
+              <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-[10px] text-muted-foreground">
                 {firstRowDay
                   ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
                   : null}

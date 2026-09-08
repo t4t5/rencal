@@ -90,7 +90,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           />
         ))}
         {showWeekNumbers && weekDays[0] && (
-          <span className="pointer-events-none absolute left-1 top-1.5 z-10 text-[10px] text-muted-foreground numerical select-none">
+          <span className="pointer-events-none absolute left-1 top-1 z-10 text-[10px] leading-[18px] text-muted-foreground numerical select-none">
             {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
           </span>
         )}
