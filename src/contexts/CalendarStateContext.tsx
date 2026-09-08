@@ -1,15 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { listen } from "@tauri-apps/api/event"
-import {
-  ReactNode,
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react"
+import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 
 import { rpc } from "@/rpc"
@@ -20,6 +11,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
+import { createStrictContext } from "@/lib/strict-context"
 
 // Which named group is active is client-side app state (persisted in
 // localStorage), not stored in config.toml. "default" means the special
@@ -36,11 +28,10 @@ interface CalendarsContextType {
   setActiveGroup: (name: string) => void
 }
 
-const CalendarsContext = createContext({} as CalendarsContextType)
+const [CalendarsContextProvider, useCalendars] =
+  createStrictContext<CalendarsContextType>("CalendarState")
 
-export function useCalendars() {
-  return useContext(CalendarsContext)
-}
+export { useCalendars }
 
 // --- Navigation context (changes on every date navigation) ---
 
@@ -54,11 +45,10 @@ interface CalendarNavigationContextType {
   setIsNavigating: (value: boolean) => void
 }
 
-const CalendarNavigationContext = createContext({} as CalendarNavigationContextType)
+const [CalendarNavigationContextProvider, useCalendarNavigation] =
+  createStrictContext<CalendarNavigationContextType>("CalendarState")
 
-export function useCalendarNavigation() {
-  return useContext(CalendarNavigationContext)
-}
+export { useCalendarNavigation }
 
 // --- Provider ---
 
@@ -202,10 +192,10 @@ export function CalendarStateProvider({
   )
 
   return (
-    <CalendarsContext.Provider value={calendarsValue}>
-      <CalendarNavigationContext.Provider value={navigationValue}>
+    <CalendarsContextProvider value={calendarsValue}>
+      <CalendarNavigationContextProvider value={navigationValue}>
         {children}
-      </CalendarNavigationContext.Provider>
-    </CalendarsContext.Provider>
+      </CalendarNavigationContextProvider>
+    </CalendarsContextProvider>
   )
 }

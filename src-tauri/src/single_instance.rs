@@ -4,10 +4,23 @@
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
 //! socket; later launches send deep-link URLs to it and exit. Debug and release
 //! use separate sockets so `tauri dev` does not fight the installed app.
+//!
+//! Handshake (issue #114): a later launch writes its URLs and waits briefly
+//! for a one-byte ack. The primary acks only if its binary is still on disk
+//! (an upgrade unlinks it) and it has a main window to show; otherwise the
+//! new launch takes over the socket, and a stale primary exits itself.
 
 use std::io::{Read, Write};
+use std::net::Shutdown;
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::PathBuf;
+use std::time::Duration;
+
+/// How long each side of the handshake waits on the other. A healthy primary
+/// acks nearly instantly, so this only delays takeovers from a defunct one.
+const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(2);
+
+const ACK: &[u8] = b"1";
 
 /// Hold for the process lifetime; the kernel removes the socket file when the
 /// listener is dropped (we also unbind explicitly on Drop for cleanliness).
@@ -58,15 +71,16 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
 
     // Existing instance? Forward deep-link arguments (if any), otherwise focus.
     if let Ok(mut stream) = UnixStream::connect(&path) {
-        let urls: Vec<String> = std::env::args_os()
-            .filter_map(|arg| arg.into_string().ok())
-            .filter(|arg| arg.starts_with("rencal:"))
-            .collect();
-        let _ = stream.write_all(urls.join("\n").as_bytes());
-        return None;
+        if signal_primary(&mut stream).is_ok() {
+            return None;
+        }
+        // No ack: the primary is stale, hung, or lost its window. Take over
+        // so this launch still produces a window; a stale primary exits
+        // itself, a hung one lingers until logout.
+        log::warn!("existing instance did not ack; taking over single-instance role");
     }
 
-    // No live instance. Clear any stale file from a prior crash.
+    // No live instance. Clear any stale file from a prior crash or takeover.
     let _ = std::fs::remove_file(&path);
 
     match UnixListener::bind(&path) {
@@ -87,20 +101,55 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
     }
 }
 
-/// Spawn a thread that listens for newline-delimited URLs. An empty message
-/// represents a focus-only launch.
+/// Send our deep-link URLs (possibly none, meaning focus-only) to the primary
+/// and wait for its ack. Any error means the caller should take over.
+fn signal_primary(stream: &mut UnixStream) -> std::io::Result<()> {
+    let urls: Vec<String> = std::env::args_os()
+        .filter_map(|arg| arg.into_string().ok())
+        .filter(|arg| arg.starts_with("rencal:"))
+        .collect();
+    stream.write_all(urls.join("\n").as_bytes())?;
+    // Half-close so the primary's read_to_string sees EOF while our read
+    // side stays open for the ack.
+    stream.shutdown(Shutdown::Write)?;
+    stream.set_read_timeout(Some(HANDSHAKE_TIMEOUT))?;
+    let mut ack = [0u8; 1];
+    stream.read_exact(&mut ack)
+}
+
+/// True once the binary we were launched from has been replaced or removed
+/// (an upgrade unlinks it, leaving `/proc/self/exe` at "... (deleted)").
+fn exe_is_stale() -> bool {
+    std::fs::read_link("/proc/self/exe")
+        .map(|target| target.to_string_lossy().ends_with(" (deleted)"))
+        .unwrap_or(false)
+}
+
+/// Spawn a thread that listens for newline-delimited URLs; an empty message
+/// is a focus-only launch. Ack only when `on_message` returns true (a main
+/// window existed to show) — otherwise the connecting process takes over.
 pub fn spawn_listener<F>(listener: UnixListener, on_message: F)
 where
-    F: Fn(Vec<String>) + Send + 'static,
+    F: Fn(Vec<String>) -> bool + Send + 'static,
 {
     std::thread::spawn(move || {
         for incoming in listener.incoming() {
             let Ok(mut stream) = incoming else { continue };
+            let _ = stream.set_read_timeout(Some(HANDSHAKE_TIMEOUT));
             let mut message = String::new();
             if stream.read_to_string(&mut message).is_err() {
                 continue;
             }
-            on_message(message.lines().map(String::from).collect());
+            if exe_is_stale() {
+                // The connecting launch will take over the socket.
+                // process::exit deliberately skips InstanceGuard::drop so we
+                // don't unlink the socket file after the successor binds it.
+                log::warn!("binary replaced on disk; exiting so the new launch can take over");
+                std::process::exit(0);
+            }
+            if on_message(message.lines().map(String::from).collect()) {
+                let _ = stream.write_all(ACK);
+            }
         }
     });
 }

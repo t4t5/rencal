@@ -77,6 +77,7 @@ Provider credential field IDs come from the caldir provider binaries.
 ## Feature-specific notes
 
 - Infinite scroll (in Month/Week views): `docs/scroll-behaviour.md`
+- Drag to reschedule (in Month/Week views): `docs/drag-to-reschedule.md`
 - Natural language input: `src/lib/magic-parser.ts`
 - Agenda keyboard nav: `src/components/sidebar/agenda/`
 - Notifications: `docs/notifications.md`, `src-tauri/reminder-core/`

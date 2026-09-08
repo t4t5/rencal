@@ -3,17 +3,36 @@ import OmarchyLogo from "../../icons/omarchy.astro"
 import LinuxLogo from "../../icons/linux.astro"
 import AppleLogo from "../../icons/apple.astro"
 import WindowsLogo from "../../icons/windows.astro"
+import { site } from "../../site"
 ---
 
 <div class="text-center flex flex-col items-center gap-7 border-b border-b-separator px-4">
-  <h2 class="uppercase text-[30px] md:text-[40px] leading-tight pt-10 md:pt-6 text-pretty">
-    A calendar for hackers
-  </h2>
+  <h1 class="uppercase text-[30px] md:text-[40px] leading-tight pt-10 md:pt-6 text-pretty">
+    {site.tagline}
+  </h1>
+
+  <p class="max-w-xl text-balance text-[17px]">
+    <span class="inline-block max-w-full">A free, open-source desktop calendar.</span>{" "}<span
+      class="inline-block max-w-full">Works with Google, iCloud, Outlook and CalDAV.</span
+    >
+  </p>
 
   <div id="linux-availability" class="flex gap-3 items-center">
     <OmarchyLogo class="h-4" />
     <LinuxLogo class="h-4" />
-    <p>Built for Omarchy + Linux</p>
+    <p>
+      Built for <a href="/omarchy/" class="underline hover:text-foreground">Omarchy</a> + Linux
+    </p>
+  </div>
+
+  <div class="flex gap-5">
+    <a href="/download/">
+      <button class="primary">Download</button>
+    </a>
+
+    <a href="/docs/installation/">
+      <button>Docs</button>
+    </a>
   </div>
 
   <div id="platform-availability" class="hidden gap-3 items-center">
@@ -23,22 +42,12 @@ import WindowsLogo from "../../icons/windows.astro"
     <p>Available for macOS + Linux</p>
   </div>
 
-  <div class="flex gap-5">
-    <a href="/download">
-      <button class="primary">Download</button>
-    </a>
-
-    <a href="/docs/installation">
-      <button>Docs</button>
-    </a>
-  </div>
-
   <div
     class="relative mt-8 w-[calc(100%+1rem)] self-start overflow-hidden border border-separator border-b-0 border-r-0 rounded-none rounded-tl-md md:mx-0 md:w-full md:max-w-5xl md:self-auto md:rounded-t-md md:border-x"
   >
     <img
       src="/demo-poster.avif"
-      alt="renCal screenshot"
+      alt="renCal, an open-source calendar app for Omarchy Linux, showing a month of events"
       width="960"
       height="500"
       class="w-[180vw] max-w-none rounded-none md:w-full md:rounded-lg"
@@ -50,7 +59,7 @@ import WindowsLogo from "../../icons/windows.astro"
       muted
       playsinline
       preload="metadata"
-      aria-label="renCal demo"
+      aria-label="Demo of the renCal calendar app on Omarchy Linux"
       oncanplay="this.classList.remove('opacity-0')"
     >
       <source src="/demo.mp4" type="video/mp4" />

@@ -45,14 +45,22 @@ export {
   addDays,
   addMinutes,
   dateInEventZone,
+  eventTzid,
   toAllDay,
   toTimedAtStartOfDay,
   wallclockTime,
+  withEventTimeZone,
   withViewerZone,
 } from "./edit"
 export { getViewerTzid, setViewerTzid, subscribeViewerTzid } from "./local-zone"
 export { computeEventDateInfo } from "./layout"
-export { dateInViewerZone, isAllDay, isSameDay, toViewerZonedDateTime } from "./projections"
+export {
+  dateInViewerZone,
+  isAllDay,
+  isSameDay,
+  isSameEventTime,
+  toViewerZonedDateTime,
+} from "./projections"
 export {
   coversFullDay,
   displayEndDate,
@@ -63,4 +71,7 @@ export {
   withRangeEndWallclockTime,
   withRangeStartDate,
   withRangeStartWallclockTime,
+  withRangeTimeZone,
+  withRangeViewerZone,
 } from "./range"
+export { listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "./timezones"

@@ -1,0 +1,16 @@
+---
+import CopyButton from "./CopyButton.astro"
+
+interface Props {
+  code: string
+  label: string
+}
+
+const { code, label } = Astro.props
+---
+
+<div class="flex items-start justify-between gap-4 bg-white/5 px-5 py-4">
+  <pre
+    class="overflow-x-auto text-sm text-foreground [font-family:var(--heading-font-family)]"><code>{code}</code></pre>
+  <CopyButton command={code} label={label} />
+</div>

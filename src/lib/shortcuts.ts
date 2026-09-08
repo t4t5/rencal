@@ -117,6 +117,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "g", type: "char" }],
   },
   {
+    id: "toggle-sidebar",
+    group: "View",
+    label: "Toggle sidebar",
+    bindings: [{ keys: "ctrl+b", type: "hotkey" }],
+  },
+  {
     id: "search",
     group: "General",
     label: "Search",
@@ -137,6 +143,12 @@ export const SHORTCUTS = [
     group: "General",
     label: "Add event to selected day",
     bindings: [{ keys: "a", type: "char" }],
+  },
+  {
+    id: "sync",
+    group: "General",
+    label: "Sync now",
+    bindings: [{ keys: "s", type: "char" }],
   },
   {
     id: "settings",

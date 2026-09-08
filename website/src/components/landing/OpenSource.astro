@@ -1,18 +1,19 @@
 ---
 import GitHubLogo from "../../icons/github.astro"
+import { site } from "../../site"
 ---
 
 <div class="px-8 flex flex-col items-center gap-5 md:gap-8 text-center">
-  <h3 class="uppercase text-2xl md:text-3xl text-pretty">Free and open-source</h3>
+  <h2 class="uppercase text-2xl md:text-3xl text-pretty">Free and open-source</h2>
 
   <p class="text-balance">No subscriptions. No enshittification. Built in the open.</p>
 
   <div class="flex gap-5">
-    <a href="/download">
+    <a href="/download/">
       <button class="primary">Download</button>
     </a>
 
-    <a href="https://github.com/t4t5/rencal" target="_blank">
+    <a href={site.repoUrl} target="_blank">
       <button class="flex items-center gap-2">
         <GitHubLogo class="w-5" />
         <span>Contribute</span>

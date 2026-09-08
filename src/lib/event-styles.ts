@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react"
 
+import { DEFAULT_CALENDAR_COLOR, withThemeEventColor } from "@/lib/calendar-styles"
 import { cn } from "@/lib/utils"
 
 export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) {
@@ -12,8 +13,17 @@ export function getEventBlockClasses(highlighted: boolean, isDeclined: boolean) 
 
 interface EventBlockColors {
   borderColor: string
-  textColor: string
   backgroundColor: string
+  textColor: string
+  /** Tinted text on the bare app background; never replaced by `--event-foreground`. */
+  tintedTextColor: string
+}
+
+// Chroma-boosted accent mixed into --foreground. Light themes override the tokens in
+// global.css (no mix, capped lightness) so the accent doesn't turn muddy.
+function tintText(accent: string, foregroundMix: number) {
+  const tinted = `oklch(from ${accent} min(l, var(--event-text-max-lightness, 1)) calc(c * var(--event-text-chroma, 1.4)) h)`
+  return `color-mix(in srgb, var(--foreground) var(--event-text-foreground-mix, ${foregroundMix}%), ${tinted})`
 }
 
 export function getEventBlockColors({
@@ -29,32 +39,42 @@ export function getEventBlockColors({
   isDashed?: boolean
   isDraft?: boolean
 }): EventBlockColors {
-  const borderColor = eventColor ?? calendarColor ?? "var(--primary)"
+  // `calendarColor` comes from getCalendarColor(), so it already honours the theme override.
+  const borderColor = eventColor
+    ? withThemeEventColor(eventColor)
+    : (calendarColor ?? withThemeEventColor(DEFAULT_CALENDAR_COLOR))
 
   const boostedColor = `oklch(from ${borderColor} l calc(c * 1.4) h)`
 
   if (isDraft) {
+    const textColor = tintText(borderColor, 40)
     return {
       borderColor,
-      textColor: `color-mix(in srgb, ${boostedColor} 60%, var(--foreground))`,
       backgroundColor: `color-mix(in srgb, ${boostedColor} 15%, var(--background))`,
+      textColor,
+      tintedTextColor: textColor,
     }
   }
 
   if (isDashed) {
-    return {
-      borderColor,
-      textColor: `color-mix(in srgb, ${boostedColor} 50%, var(--foreground))`,
-      backgroundColor: "transparent",
-    }
+    const textColor = tintText(borderColor, 50)
+    return { borderColor, backgroundColor: "transparent", textColor, tintedTextColor: textColor }
   }
 
-  const base = `color-mix(in srgb, ${boostedColor} 20%, var(--background))`
+  const tintedTextColor = tintText(borderColor, 60)
+
+  // Themes can replace the derived tint with a solid fill (see themes/README.md).
+  const fill = `var(--event-background, color-mix(in srgb, ${boostedColor} 20%, var(--background)))`
+  const textColor = `var(--event-foreground, ${tintedTextColor})`
 
   return {
     borderColor,
-    textColor: `color-mix(in srgb, ${boostedColor} 40%, var(--foreground))`,
-    backgroundColor: highlighted ? `color-mix(in srgb, ${base} 80%, var(--foreground))` : base,
+    // Mix the fill toward its text colour so the highlight also shows on solid fills.
+    backgroundColor: highlighted
+      ? `color-mix(in srgb, ${fill} 80%, var(--event-foreground, var(--foreground)))`
+      : fill,
+    textColor,
+    tintedTextColor,
   }
 }
 
@@ -64,12 +84,15 @@ export function getEventBlockStyle({
   highlighted,
   isDashed,
   isDraft,
+  isDragPreview,
 }: {
   calendarColor: string | null
   eventColor: string | null
   highlighted?: boolean
   isDashed?: boolean
   isDraft?: boolean
+  /** Drop-position stand-in while dragging: normal fill with a solid ring in the event colour. */
+  isDragPreview?: boolean
 }): CSSProperties {
   const { borderColor, textColor, backgroundColor } = getEventBlockColors({
     calendarColor,
@@ -85,6 +108,14 @@ export function getEventBlockStyle({
       backgroundColor,
       color: textColor,
       boxShadow: `0 0 0 2px color-mix(in srgb, ${borderColor} 25%, transparent)`,
+    }
+  }
+
+  if (isDragPreview) {
+    return {
+      backgroundColor,
+      color: textColor,
+      boxShadow: `0 0 0 1.5px ${borderColor}`,
     }
   }
 

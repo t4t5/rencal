@@ -26,6 +26,7 @@ function recurringEvent({
     summary: "Weekly event",
     description: null,
     location: null,
+    url: null,
     start,
     end,
     status: "confirmed",

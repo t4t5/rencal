@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from "react"
+import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
@@ -12,6 +12,7 @@ import { recurrenceToRpc, rpcToCalendarEvent, type CalendarEvent } from "@/lib/c
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
 import { updateAndSyncEvent } from "@/lib/save-event"
+import { createStrictContext } from "@/lib/strict-context"
 
 type PendingEdit = { current: CalendarEvent; original: CalendarEvent }
 
@@ -21,13 +22,10 @@ interface RecurrenceEditContextValue {
   requestSave: (current: CalendarEvent, original: CalendarEvent) => void
 }
 
-const RecurrenceEditContext = createContext<RecurrenceEditContextValue | null>(null)
+const [RecurrenceEditContextProvider, useRecurrenceEdit] =
+  createStrictContext<RecurrenceEditContextValue>("RecurrenceEdit")
 
-export function useRecurrenceEdit(): RecurrenceEditContextValue {
-  const ctx = useContext(RecurrenceEditContext)
-  if (!ctx) throw new Error("useRecurrenceEdit must be used within RecurrenceEditProvider")
-  return ctx
-}
+export { useRecurrenceEdit }
 
 export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const { setCalendarEvents, reloadEvents } = useCalEvents()
@@ -83,6 +81,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         summary: current.summary,
         description: current.description,
         location: current.location,
+        url: current.url,
         reminders: current.reminders,
         conference: current.conference,
       }
@@ -122,6 +121,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         summary: current.summary,
         description: current.description,
         location: current.location,
+        url: current.url,
         start: newMasterStart,
         end: newMasterEnd,
         reminders: current.reminders,
@@ -141,7 +141,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <RecurrenceEditContext.Provider value={{ requestSave }}>
+    <RecurrenceEditContextProvider value={{ requestSave }}>
       {children}
       <RecurrenceConfirmDialog
         isOpen={pendingEdit !== null}
@@ -150,6 +150,6 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         onApplyToFuture={handleApplyToFuture}
         onApplyToAll={handleApplyToAll}
       />
-    </RecurrenceEditContext.Provider>
+    </RecurrenceEditContextProvider>
   )
 }

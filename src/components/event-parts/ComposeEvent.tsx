@@ -41,7 +41,7 @@ export const ComposeEventInner = ({
     draftPopoverOpen,
   } = useEventDraft()
 
-  const { summary, description, start, end, location, calendarId, recurrence } = draftEvent
+  const { summary, description, start, end, location, url, calendarId, recurrence } = draftEvent
   const allDay = isAllDay(start)
   const lastTimedRange = useLastTimedRange(start, end, draftPopoverOpen)
 
@@ -92,6 +92,10 @@ export const ComposeEventInner = ({
           location={location}
           onLocationChange={(newLocation) => {
             setDraftEvent({ ...draftEvent, location: newLocation || null })
+          }}
+          url={url}
+          onUrlChange={(newUrl) => {
+            setDraftEvent({ ...draftEvent, url: newUrl || null })
           }}
           conference={draftEvent.conference}
           onConferenceChange={(conference) => {

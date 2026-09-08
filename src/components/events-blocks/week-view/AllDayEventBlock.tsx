@@ -4,6 +4,8 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 import { GUTTER_WIDTH } from "@/components/main/week-view/WeekTimeGrid"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
+import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
+
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
@@ -35,13 +37,19 @@ export function WeekAllDayBar({
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
+  const dragRole = useEventDragRole(item.event)
+  const isDragPreview = dragRole === "preview"
+  // Drafts and drag previews are stand-ins: no click, no context menu, no drag.
+  const isStatic = isDraft || isDragPreview
+  const onDragPointerDown = useEventDragHandle(item.event, { disabled: isStatic })
+
   const isDashed = isPending || isDeclined
   const highlighted = highlightedByParent || contextOpen
   const fillsRow = item.endCol - item.startCol >= 7
 
   const inner = (
     <div
-      className="p-0.5 py-px pr-[3px]"
+      className={cn("p-0.5 py-px pr-[3px]", isDragPreview && "pointer-events-none")}
       style={{
         gridColumn: `${item.startCol + colOffset} / ${item.endCol + colOffset}`,
         gridRow: item.lane + 1 + rowOffset,
@@ -49,12 +57,13 @@ export function WeekAllDayBar({
     >
       <div
         ref={ref}
-        data-event-clickable={!isDraft || undefined}
+        data-event-clickable={!isStatic || undefined}
         className={cn(
           getEventBlockClasses(highlighted, isDeclined),
           "flex items-center px-1 py-px leading-4 rounded",
-          !isDraft && dimmed && "opacity-50",
+          !isStatic && dimmed && "opacity-50",
           isDraft && "font-medium",
+          dragRole === "source" && "opacity-40",
         )}
         style={getEventBlockStyle({
           calendarColor: item.calendarColor,
@@ -62,9 +71,11 @@ export function WeekAllDayBar({
           highlighted,
           isDashed,
           isDraft,
+          isDragPreview,
         })}
+        onPointerDown={onDragPointerDown}
         onClick={
-          isDraft
+          isStatic
             ? undefined
             : (e) => {
                 e.stopPropagation()
@@ -81,7 +92,7 @@ export function WeekAllDayBar({
     </div>
   )
 
-  if (isDraft) return inner
+  if (isStatic) return inner
 
   return (
     <EventContextMenu event={item.event} anchorRef={ref} onOpenChange={setContextOpen}>

@@ -3,7 +3,7 @@ title: Installation
 description: Install and update renCal on Linux and macOS.
 ---
 
-Install renCal from the [download page](/download).
+Install renCal from the [download page](/download/).
 
 ## Reminders support
 
@@ -14,5 +14,5 @@ If you're using the AppImage or are on macOS, you currently need to keep renCal 
 ## Updating renCal
 
 - **AUR**: update with `yay -Syu`.
-- **`.deb` / `.rpm` / AppImage**: install the latest package from the [download page](/download) over the existing version.
+- **`.deb` / `.rpm` / AppImage**: install the latest package from the [download page](/download/) over the existing version.
 - **macOS**: renCal prompts you in-app when a new version is available.

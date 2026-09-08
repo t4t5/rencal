@@ -94,6 +94,13 @@ body {
   --tab-list-shadow: inset 0 0 0 1px var(--secondary);
 }
 
+/* Event text on light themes (see tintText in src/lib/event-styles.ts):
+   keep the accent's hue and cap its lightness instead of mixing in --foreground. */
+[data-appearance="light"] {
+  --event-text-max-lightness: 0.45;
+  --event-text-foreground-mix: 0%;
+}
+
 @theme inline {
   --radius: calc(var(--radius-base) - 6px);
   --radius-xs: calc(var(--radius-base) - 8px);

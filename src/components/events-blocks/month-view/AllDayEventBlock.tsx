@@ -4,6 +4,8 @@ import { EventContextMenu } from "@/components/EventContextMenu"
 import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/Row"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
+import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
+
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
@@ -29,13 +31,19 @@ export function MonthAllDayEvent({
   const ref = useRef<HTMLDivElement>(null)
   const [contextOpen, setContextOpen] = useState(false)
 
+  const dragRole = useEventDragRole(item.event)
+  const isDragPreview = dragRole === "preview"
+  // Drafts and drag previews are stand-ins: no click, no context menu, no drag.
+  const isStatic = isDraft || isDragPreview
+  const onDragPointerDown = useEventDragHandle(item.event, { disabled: isStatic })
+
   const highlighted = highlightedByParent || contextOpen
   const isDashed = isPending || isDeclined
 
   const fillsRow = item.endCol - item.startCol === 7
 
   const handleClick: MouseEventHandler<HTMLDivElement> | undefined = (e) => {
-    if (!isDraft) {
+    if (!isStatic) {
       e.stopPropagation()
       setEventAnchor(fillsRow ? pointAnchorFromClick(e) : e.currentTarget)
       onClick()
@@ -45,14 +53,16 @@ export function MonthAllDayEvent({
   const inner = (
     <div
       ref={ref}
-      data-event-clickable={!isDraft || undefined}
+      data-event-clickable={!isStatic || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
         "absolute truncate px-1 py-px leading-4",
         isDashed && "opacity-50",
-        !isDraft && dimmed && "opacity-50",
+        !isStatic && dimmed && "opacity-50",
         item.isStart && "rounded-l",
         item.isEnd && "rounded-r",
+        dragRole === "source" && "opacity-40",
+        isDragPreview && "pointer-events-none",
       )}
       style={{
         top: `${item.lane * LANE_HEIGHT}px`,
@@ -65,15 +75,17 @@ export function MonthAllDayEvent({
           highlighted,
           isDashed,
           isDraft,
+          isDragPreview,
         }),
       }}
+      onPointerDown={onDragPointerDown}
       onClick={handleClick}
     >
       {item.event.summary || <UntitledEventText />}
     </div>
   )
 
-  if (isDraft) return inner
+  if (isStatic) return inner
 
   return (
     <EventContextMenu event={item.event} anchorRef={ref} onOpenChange={setContextOpen}>

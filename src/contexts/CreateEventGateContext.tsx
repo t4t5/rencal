@@ -1,6 +1,8 @@
-import { ReactNode, createContext, useContext, useMemo, useState } from "react"
+import { ReactNode, useMemo, useState } from "react"
 
 import { AddAccountModal } from "@/components/settings/accounts/AddAccountModal"
+
+import { createStrictContext } from "@/lib/strict-context"
 
 import { useCalendars } from "./CalendarStateContext"
 
@@ -9,11 +11,10 @@ interface CreateEventGateContextType {
   promptToConnect: () => void
 }
 
-const CreateEventGateContext = createContext({} as CreateEventGateContextType)
+const [CreateEventGateContextProvider, useCreateEventGate] =
+  createStrictContext<CreateEventGateContextType>("CreateEventGate")
 
-export function useCreateEventGate() {
-  return useContext(CreateEventGateContext)
-}
+export { useCreateEventGate }
 
 export function CreateEventGateProvider({ children }: { children: ReactNode }) {
   const { calendars } = useCalendars()
@@ -30,9 +31,9 @@ export function CreateEventGateProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <CreateEventGateContext.Provider value={value}>
+    <CreateEventGateContextProvider value={value}>
       {children}
       {modalOpen && <AddAccountModal onClose={() => setModalOpen(false)} />}
-    </CreateEventGateContext.Provider>
+    </CreateEventGateContextProvider>
   )
 }

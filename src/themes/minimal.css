@@ -1,0 +1,20 @@
+/* @name Minimal Light */
+--minimal-brand-color: #34302d;
+
+--background: white;
+--foreground: var(--minimal-brand-color);
+--muted: color-mix(in srgb, var(--minimal-brand-color) 60%, transparent);
+--primary: var(--minimal-brand-color);
+--highlight: #ff2f00;
+--today: #ff2f00;
+--hover-tint: var(--minimal-brand-color);
+--hover-mix: 4%;
+--radius-base: 0.5rem;
+--font-heading-transform: normal;
+--font-button-transform: normal;
+--font-numerical-transform: normal;
+--radius-circle: 4px;
+
+--font-heading: var(--sans);
+--font-button: var(--sans);
+--font-numerical: var(--sans);

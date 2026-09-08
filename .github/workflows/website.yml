@@ -1,9 +1,6 @@
 name: Deploy website
 
 on:
-  push:
-    branches: [main]
-    paths: [website/**]
   workflow_run:
     workflows: [Release]
     types: [completed]

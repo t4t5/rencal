@@ -13,7 +13,6 @@ import LinuxLogo from "../icons/linux.astro"
 import { site } from "../site"
 
 const releasesUrl = "https://github.com/t4t5/rencal/releases"
-const aurCommand = "yay -S rencal-bin"
 
 let latestRelease: GitHubRelease | undefined
 try {
@@ -66,8 +65,8 @@ if (latestRelease) {
 ---
 
 <BaseLayout
-  title={`Download - ${site.title}`}
-  description={`Download the latest version of ${site.title}.`}
+  title="Download renCal for Omarchy, Linux and macOS"
+  description="Get the latest renCal release: an AUR package for Omarchy and Arch Linux, deb, rpm and AppImage builds for other distributions, and a dmg for macOS."
 >
   <div class="flex flex-col items-center">
     <div class="flex flex-col items-center gap-4">
@@ -111,7 +110,7 @@ if (latestRelease) {
 
           <InstallRow label="Arch / Omarchy (AUR)">
             <CopyButton
-              command={aurCommand}
+              command={site.aurCommand}
               label="Copy the renCal AUR install command"
               showCommand
             />

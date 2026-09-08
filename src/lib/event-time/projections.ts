@@ -57,3 +57,17 @@ export function dateInViewerZone(et: EventTime): Temporal.PlainDate {
 export function isSameDay(a: EventTime, b: EventTime): boolean {
   return dateInViewerZone(a).equals(dateInViewerZone(b))
 }
+
+/** Whether two event times are the same kind and the same value (zone included). */
+export function isSameEventTime(a: EventTime, b: EventTime): boolean {
+  switch (a.kind) {
+    case "date":
+      return b.kind === "date" && a.value.equals(b.value)
+    case "datetime_utc":
+      return b.kind === "datetime_utc" && a.value.equals(b.value)
+    case "datetime_floating":
+      return b.kind === "datetime_floating" && a.value.equals(b.value)
+    case "datetime_zoned":
+      return b.kind === "datetime_zoned" && a.value.equals(b.value)
+  }
+}

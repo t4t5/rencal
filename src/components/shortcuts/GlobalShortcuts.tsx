@@ -20,6 +20,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
+import { useSync } from "@/contexts/SyncContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
@@ -39,8 +40,10 @@ type ShortcutHandler = (e?: KeyboardEvent) => void
 // Isolated so context updates in the shortcut handlers don't re-render <App />.
 export function GlobalShortcuts({
   onChangeCalendarView,
+  onToggleSidebar,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
+  onToggleSidebar: () => void
 }) {
   const [overlayOpen, setOverlayOpen] = useState(false)
   const [paletteOpen, setPaletteOpen] = useState(false)
@@ -54,6 +57,7 @@ export function GlobalShortcuts({
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
+    onToggleSidebar,
     openShortcutsOverlay: () => setOverlayOpen(true),
     toggleCommandPalette: () => {
       setPalettePage("root")
@@ -137,6 +141,7 @@ export function GlobalShortcuts({
 
 function useShortcutHandlers({
   onChangeCalendarView,
+  onToggleSidebar,
   openShortcutsOverlay,
   toggleCommandPalette,
   openGoToDate,
@@ -146,6 +151,7 @@ function useShortcutHandlers({
   setActiveGroup,
 }: {
   onChangeCalendarView: (view: CalendarView) => void
+  onToggleSidebar: () => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
   openGoToDate: () => void
@@ -159,6 +165,7 @@ function useShortcutHandlers({
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
+  const { syncNow } = useSync()
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)
@@ -266,9 +273,14 @@ function useShortcutHandlers({
     week: () => onChangeCalendarView("week"),
     board: () => onChangeCalendarView("board"),
     "switch-group": switchGroup,
+    "toggle-sidebar": (e) => {
+      e?.preventDefault()
+      onToggleSidebar()
+    },
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
+    sync: () => void syncNow(),
     settings: (e) => {
       e?.preventDefault()
       void openSettingsWindow()

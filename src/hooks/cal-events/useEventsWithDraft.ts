@@ -21,7 +21,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
   //    draftEvent renders the draft at the *previous* position (today, from
   //    the prior popover-close reset) for one frame — a visible flash. So we
   //    keep position fields live (start/end/calendarId/recurrence) and only
-  //    defer the content fields (summary/description/location). With the
+  //    defer the content fields (summary/description/location/url). With the
   //    layout memo's deps composed of stable references + deferred content,
   //    keystroke-only edits hit the cached layout during urgent renders and
   //    only invalidate it on the trailing low-priority render.
@@ -30,6 +30,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
   const deferredSummary = useDeferredValue(draftEvent.summary)
   const deferredDescription = useDeferredValue(draftEvent.description)
   const deferredLocation = useDeferredValue(draftEvent.location)
+  const deferredUrl = useDeferredValue(draftEvent.url)
 
   const draftCalEvent = useMemo(() => {
     if (draftPopoverOpen) {
@@ -37,6 +38,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
         summary: deferredSummary,
         description: deferredDescription,
         location: deferredLocation,
+        url: deferredUrl,
         start: draftEvent.start,
         end: draftEvent.end,
         calendarId: draftEvent.calendarId,
@@ -58,6 +60,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
     deferredSummary,
     deferredDescription,
     deferredLocation,
+    deferredUrl,
     isDrafting,
     deferredText,
     deferredDraftEvent,

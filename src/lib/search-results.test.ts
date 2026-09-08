@@ -18,6 +18,7 @@ function event(id: string, startDate: string, recurrence: Recurrence | null = nu
     summary: id,
     description: null,
     location: null,
+    url: null,
     start,
     end,
     status: "confirmed",

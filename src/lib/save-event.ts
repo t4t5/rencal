@@ -29,6 +29,7 @@ export async function updateAndSyncEvent(
       summary: current.summary,
       description: current.description,
       location: current.location,
+      url: current.url,
       start: toRpcEventTime(current.start),
       end: toRpcEventTime(current.end),
       recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,

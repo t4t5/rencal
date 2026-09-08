@@ -24,6 +24,7 @@ export function computeEventDateInfo(start: EventTime, end: EventTime): EventDat
   const firstDay = dayOf(start)
   const endDay = dayOf(end)
   const startMs = instantForOrdering(start).epochMilliseconds
+  const endMs = instantForOrdering(end).epochMilliseconds
   const lastDay = lastOccupiedDay(start, end, firstDay)
 
   let startLocalMinutes = 0
@@ -35,5 +36,5 @@ export function computeEventDateInfo(start: EventTime, end: EventTime): EventDat
     endLocalMinutes = endZ.hour * 60 + endZ.minute
   }
 
-  return { startMs, firstDay, lastDay, endDay, startLocalMinutes, endLocalMinutes }
+  return { startMs, endMs, firstDay, lastDay, endDay, startLocalMinutes, endLocalMinutes }
 }
