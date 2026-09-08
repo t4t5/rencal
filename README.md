@@ -76,9 +76,11 @@ One caldir release tag in `src-tauri/Cargo.toml` pins both the `caldir-core` cra
 just bump-caldir v0.13.2
 ```
 
-To develop against a local caldir checkout (`../caldir` by default), build the providers from it with `just build-providers-local`. For `caldir-core` itself, add a patch to `src-tauri/Cargo.toml`:
+To develop against a local caldir checkout (`../caldir` by default), build the providers from it with `just build-providers-local`. For `caldir-core` itself, create a gitignored `.cargo/config.toml` in the repo root that patches the crate to the checkout (the path is relative to the repo root):
 
 ```toml
 [patch."https://github.com/t4t5/caldir"]
-caldir-core = { path = "../../caldir/caldir-core" }
+caldir-core = { path = "../caldir/caldir-core" }
 ```
+
+This also rewrites `src-tauri/Cargo.lock`, so don't commit that change. Delete `.cargo/config.toml` and `src-tauri/providers/` to go back to the pinned release.
