@@ -44,7 +44,7 @@ export type FirstDayOfWeek = "monday" | "sunday"
 
 export type OmarchyColors = { mode: OmarchyMode; 
 /**
- * Slug of the active theme (e.g. `tokyo-night`), when it can be resolved.
+ * Active theme slug (e.g. `tokyo-night`), if resolvable.
  */
 name: string | null; background: string; foreground: string; bright_foreground: string; accent: string; red: string; green: string; yellow: string; blue: string }
 

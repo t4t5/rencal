@@ -111,7 +111,7 @@
 /* Event colors — same formulas as the app's getEventBlockColors() */
 .rc-ev {
   --ev: var(--primary);
-  /* A theme's --event-color (if set) overrides the calendar colour, like in the app. */
+  /* --event-color overrides the calendar colour, as in the app. */
   --ev-paint: var(--event-color, var(--ev));
   --ev-boost: oklch(from var(--ev-paint) l calc(c * 1.4) h);
 }

@@ -2,10 +2,7 @@ import { Calendar } from "@/rpc/bindings"
 
 export const DEFAULT_CALENDAR_COLOR = "var(--primary)"
 
-/**
- * Themes can set `--event-color` to paint every event in a single colour
- * (see src/themes/README.md). It's unset by default, so `color` shows through.
- */
+/** Lets a theme's `--event-color` override every event colour (see themes/README.md). */
 export const withThemeEventColor = (color: string) => `var(--event-color, ${color})`
 
 export const getCalendarColor = (calendar: Calendar | undefined) => {

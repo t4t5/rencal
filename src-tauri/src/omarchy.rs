@@ -22,7 +22,7 @@ pub enum OmarchyMode {
 #[derive(Clone, Debug, Deserialize, Serialize, Type, PartialEq, Eq)]
 pub struct OmarchyColors {
     pub mode: OmarchyMode,
-    /// Slug of the active theme (e.g. `tokyo-night`), when it can be resolved.
+    /// Active theme slug (e.g. `tokyo-night`), if resolvable.
     pub name: Option<String>,
     pub background: String,
     pub foreground: String,
@@ -129,9 +129,7 @@ fn resolve_colors(
     })
 }
 
-/// Resolves the active theme's slug from an Omarchy `current` directory. Quattro
-/// writes it to `theme.name`; on v3 `theme` is a symlink into the themes
-/// directory, so its target's basename is the slug.
+/// Quattro writes the slug to `theme.name`; v3 exposes it as the `theme` symlink target.
 fn read_theme_name(current_dir: &Path) -> Option<String> {
     if let Ok(name) = std::fs::read_to_string(current_dir.join("theme.name")) {
         let name = name.trim();
@@ -167,9 +165,7 @@ pub fn read_colors() -> Option<OmarchyColors> {
     let mut resolved = resolve_colors(&string_values(table), has_light_mode_marker);
     match &mut resolved {
         Some(colors) => {
-            colors.name = theme_dir
-                .and_then(Path::parent)
-                .and_then(read_theme_name);
+            colors.name = theme_dir.and_then(Path::parent).and_then(read_theme_name);
         }
         None => {
             log::warn!("Omarchy colors at {path:?} have no resolvable background or foreground");

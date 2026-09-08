@@ -4,8 +4,7 @@ function luminance(r: number, g: number, b: number): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 }
 
-// Resolves any CSS colour the engine understands (`white`, `rgb()`, `oklch()`,
-// `color-mix()`, …) to sRGB by painting it on a 1×1 canvas.
+// Resolves any CSS colour to sRGB by painting it on a 1×1 canvas.
 function resolveColor(css: string): [number, number, number] | null {
   const ctx = document.createElement("canvas").getContext("2d")
   if (!ctx) return null

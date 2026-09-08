@@ -9,12 +9,8 @@ const OMARCHY_THEME_CHANGED = "omarchy-theme-changed"
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
-// Omarchy themes built around a single hue (or none at all). Their palette
-// still names a red, green, blue, etc., but those are all shades of the same
-// colour, so the per-calendar event colours would be the only thing clashing
-// with the desktop. These get the Electric Blue treatment instead (see
-// electric-blue.css): the accent for every emphasis, and every event painted
-// in it. Keyed by the theme slug Omarchy writes to `current/theme.name`.
+// Single-hue Omarchy themes, styled like electric-blue.css (accent everywhere,
+// events included). Keyed by the slug in `current/theme.name`.
 const MONOCHROME_THEMES: ReadonlySet<string> = new Set(["vantablack", "white", "solitude", "lumon"])
 
 const CSS_VARS = [
@@ -34,8 +30,7 @@ const CSS_VARS = [
   "--event-foreground",
 ] as const
 
-// Partial: the event vars are only set for monochrome themes. Leaving them
-// out lets the per-calendar colours show through, as for any other theme.
+// Event vars are only set for monochrome themes.
 type OmarchyVars = Partial<Record<(typeof CSS_VARS)[number], string>>
 
 function luminance(hex: string): number {
@@ -78,9 +73,7 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
     "--error": c.red,
   }
   if (!isMonochrome(c)) return vars
-  // Mirror electric-blue.css: one colour for every emphasis, and events as a
-  // solid accent fill with background-coloured text. Success / warning / error
-  // keep the palette's shades so response states stay distinguishable.
+  // Mirrors electric-blue.css: accent for every emphasis, events as a solid accent fill.
   return {
     ...vars,
     "--today": c.accent,

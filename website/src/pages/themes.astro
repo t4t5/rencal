@@ -9,10 +9,8 @@ import CopyIcon from "../icons/copy.astro"
 import DownloadIcon from "../icons/download.astro"
 import { site } from "../site"
 
-// The built-in themes live in the app source, one directory up from the
-// website project. Both the theme list (src/themes/manifest.ts) and the theme
-// CSS files are read at build time, so a theme registered in the app shows up
-// here automatically — no list to keep in sync.
+// Built-in themes are read from the app source at build time, so a theme
+// registered in the manifest shows up here automatically.
 import { themes as appThemes } from "../../../src/themes/manifest"
 
 const themeFiles = import.meta.glob<string>("../../../src/themes/*.css", {
@@ -44,8 +42,7 @@ const REN_CORE: Record<string, string> = {
   "--hover-mix": "5%",
 }
 
-// Themes with `appearance: null` (omarchy) derive their palette from the OS
-// theme at runtime, so they have no static palette to preview here.
+// Omarchy (appearance: null) has no static palette to preview.
 const themes = appThemes
   .filter((theme) => theme.appearance !== null)
   .map((theme) => {

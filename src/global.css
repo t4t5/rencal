@@ -94,12 +94,8 @@ body {
   --tab-list-shadow: inset 0 0 0 1px var(--secondary);
 }
 
-/* Event text tint (see getEventBlockColors in src/lib/event-styles.ts).
-   Unset — the dark-theme default — event text is the accent mixed into
-   --foreground, a soft pastel. On a light background that same mix only
-   muddies the accent (yellow + black = olive), so light themes keep the
-   accent's hue and chroma and cap its lightness instead. useTheme sets
-   data-appearance on <body>; a theme can override these tokens directly. */
+/* Event text on light themes (see tintText in src/lib/event-styles.ts):
+   keep the accent's hue and cap its lightness instead of mixing in --foreground. */
 [data-appearance="light"] {
   --event-text-max-lightness: 0.45;
   --event-text-foreground-mix: 0%;
