@@ -7,6 +7,7 @@ import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventB
 import type { TimeFormat } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
@@ -15,6 +16,8 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { getCalendarColor } from "@/lib/calendar-styles"
+import { minutesAtY } from "@/lib/drag-to-create"
 import {
   atTime,
   formatWallclockTime,
@@ -28,7 +31,9 @@ import { cn } from "@/lib/utils"
 
 import { AllDayContextMenu } from "./AllDayContextMenu"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
+import { DragToCreateSelection } from "./DragToCreateSelection"
 import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
+import { useDragToCreate } from "./useDragToCreate"
 
 const HOUR_HEIGHT = 56
 const GRID_HEIGHT = 24 * HOUR_HEIGHT
@@ -80,8 +85,13 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
+  const { defaultCalendarId } = useEventDraft()
   const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
   const openDayDraft = useOpenDayDraft()
+  const { selection, startCreateDrag } = useDragToCreate(scrollContainerRef)
+  const createSelectionColor = getCalendarColor(
+    calendars.find((calendar) => calendar.slug === defaultCalendarId),
+  )
 
   const N = days.length
   const hasAllDay = allDayItems.length > 0
@@ -233,17 +243,19 @@ export function WeekTimeGrid({
   }, [scrollContainerRef])
 
   const getHourFromClickY = (el: HTMLElement, clientY: number) => {
-    const rect = el.getBoundingClientRect()
-    const fraction = (clientY - rect.top) / rect.height
-    const hour = fraction * 24
-    return Math.max(0, Math.min(23, Math.floor(hour)))
+    const minutes = minutesAtY(el.getBoundingClientRect(), clientY)
+    return Math.max(0, Math.min(23, Math.floor(minutes / 60)))
   }
 
   const totalContentWidth = GUTTER_WIDTH + N * dayWidth
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
 
   return (
-    <div ref={scrollContainerRef} data-drag-scroll className="h-full w-full min-w-0 overflow-auto">
+    <div
+      ref={scrollContainerRef}
+      data-drag-scroll
+      className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
+    >
       <div style={{ width: totalContentWidth, minHeight: "100%" }}>
         {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
             line up exactly with the time grid below. */}
@@ -326,10 +338,10 @@ export function WeekTimeGrid({
           {days.map((day) => (
             <ScheduledDayContextMenu
               key={day.dateKey}
-              onCreateEvent={(el, clickY) => {
-                const startHour = getHourFromClickY(el, clickY)
+              onCreateEvent={(el, anchorY) => {
+                const startHour = getHourFromClickY(el, anchorY)
                 const start = atTime(day.date, startHour)
-                openDayDraft(day.date, el, { allDay: false, start, clickY })
+                openDayDraft(day.date, el, { allDay: false, start, anchorY })
               }}
             >
               <div
@@ -353,6 +365,7 @@ export function WeekTimeGrid({
                 id={day.dateKey === activeDateKey ? ACTIVE_DAY_EL_ID : undefined}
                 data-drop-day={day.dateKey}
                 data-drop-zone="timed"
+                onPointerDown={(event) => startCreateDrag(day.date, event)}
                 onClick={() => onDayClick(day.date)}
               >
                 {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
@@ -371,6 +384,13 @@ export function WeekTimeGrid({
                     />
                   )
                 })}
+
+                {selection?.dayKey === day.dateKey && (
+                  <DragToCreateSelection
+                    selection={selection}
+                    calendarColor={createSelectionColor}
+                  />
+                )}
 
                 {day.isToday && <CurrentTimeIndicator />}
               </div>
