@@ -27,6 +27,7 @@ export function GeneralPage() {
     <SettingsContent>
       <TimeFormatSection />
       <FirstDayOfWeekSection />
+      <WeekNumbersSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
@@ -69,6 +70,24 @@ const FirstDayOfWeekSection = () => {
           <SelectItem value="sunday">Sunday</SelectItem>
         </SelectContent>
       </Select>
+    </div>
+  )
+}
+
+const WeekNumbersSection = () => {
+  const { showWeekNumbers, setShowWeekNumbers } = useSettings()
+  const id = useId()
+
+  return (
+    <div className="flex items-center gap-2">
+      <Checkbox
+        id={id}
+        checked={showWeekNumbers}
+        onCheckedChange={(checked) => void setShowWeekNumbers(checked === true)}
+      />
+      <Label htmlFor={id} className="text-sm">
+        Show week numbers
+      </Label>
     </div>
   )
 }

@@ -43,6 +43,9 @@ pub struct RencalConfig {
     #[serde(default)]
     pub first_day_of_week: FirstDayOfWeek,
 
+    #[serde(default)]
+    pub show_week_numbers: bool,
+
     /// Must come AFTER top-level configs since it adds [groups] table header:
     #[serde(default)]
     pub groups: BTreeMap<String, Vec<String>>,
@@ -55,6 +58,7 @@ impl Default for RencalConfig {
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
+            show_week_numbers: false,
             groups: BTreeMap::new(),
         }
     }
@@ -144,5 +148,20 @@ mod tests {
         assert!(toml_str.contains("first_day_of_week = \"sunday\""));
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
         assert_eq!(reparsed.first_day_of_week, FirstDayOfWeek::Sunday);
+    }
+
+    #[test]
+    fn show_week_numbers_defaults_to_false_and_round_trips() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert!(!config.show_week_numbers);
+
+        let config = RencalConfig {
+            show_week_numbers: true,
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("show_week_numbers = true"));
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert!(reparsed.show_week_numbers);
     }
 }

@@ -24,11 +24,12 @@ import { parseEventText } from "@/lib/magic-parser"
 import {
   COMMAND_GROUPS,
   PALETTE_COMMANDS,
+  type PaletteCommandId,
   type PalettePage,
   type PaletteSubmenu,
   type SubmenuConfig,
 } from "@/lib/palette-commands"
-import { ShortcutDef, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
+import { ShortcutDef, SHORTCUTS } from "@/lib/shortcuts"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { CheckIcon } from "@/icons/check"
@@ -52,7 +53,7 @@ export function CommandPalette({
   open: boolean
   onOpenChange: (open: boolean) => void
   requestedPage?: "root" | PalettePage
-  handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
+  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   onGoToDate: (date: Temporal.PlainDate) => void
 }) {
@@ -167,7 +168,7 @@ function CommandListContent({
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   goToPage: (next: Page) => void
   run: (action: () => void) => void
-  handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
+  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
   onGoToDate: (date: Temporal.PlainDate) => void
 }) {
   if (isGoToDatePage) {
@@ -212,7 +213,7 @@ function RootCommands({
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   goToPage: (next: Page) => void
   run: (action: () => void) => void
-  handlers: Record<ShortcutId, (e?: KeyboardEvent) => void>
+  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
 }) {
   return COMMAND_GROUPS.map((group) => (
     <CommandGroup key={group} heading={group}>
@@ -220,8 +221,8 @@ function RootCommands({
         (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
       ).map((command) => {
         const def = SHORTCUT_BY_ID[command.id]
-        const label = command.label ?? def.label
-        const binding = def.bindings.find((b) => !b.hidden)
+        const label = command.label ?? def?.label ?? command.id
+        const binding = def?.bindings.find((b) => !b.hidden)
         const drill = command.submenu ?? command.page
 
         return (

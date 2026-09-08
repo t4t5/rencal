@@ -28,7 +28,12 @@ import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
-import { type PalettePage, type PaletteSubmenu, type SubmenuConfig } from "@/lib/palette-commands"
+import {
+  type PaletteCommandId,
+  type PalettePage,
+  type PaletteSubmenu,
+  type SubmenuConfig,
+} from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
@@ -52,7 +57,7 @@ export function GlobalShortcuts({
   const { navigateToDate } = useCalendarNavigation()
   const { theme, setTheme, toggleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
-  const { groups } = useSettings()
+  const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
 
   const handlers = useShortcutHandlers({
@@ -80,6 +85,10 @@ export function GlobalShortcuts({
   }, [handlers])
 
   const groupOptions = getGroupOptions(groups)
+  const paletteHandlers: Record<PaletteCommandId, ShortcutHandler> = {
+    ...handlers,
+    "toggle-week-numbers": () => void setShowWeekNumbers(!showWeekNumbers),
+  }
 
   // Each maps a `submenu` id to the list its command drills into. Group is
   // omitted when there's nothing to switch between, hiding its root command.
@@ -131,7 +140,7 @@ export function GlobalShortcuts({
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         requestedPage={palettePage}
-        handlers={handlers}
+        handlers={paletteHandlers}
         submenus={submenus}
         onGoToDate={(date) => void navigateToDate(date)}
       />

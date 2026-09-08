@@ -47,6 +47,8 @@ pub trait ConfigApi {
     async fn set_auto_sync_enabled(enabled: bool) -> TauResult<()>;
     async fn get_first_day_of_week() -> TauResult<FirstDayOfWeek>;
     async fn set_first_day_of_week(day: FirstDayOfWeek) -> TauResult<()>;
+    async fn get_show_week_numbers() -> TauResult<bool>;
+    async fn set_show_week_numbers(show: bool) -> TauResult<()>;
     async fn get_groups() -> TauResult<BTreeMap<String, Vec<String>>>;
     async fn set_groups(groups: BTreeMap<String, Vec<String>>) -> TauResult<()>;
 }
@@ -96,6 +98,16 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_first_day_of_week(self, day: FirstDayOfWeek) -> TauResult<()> {
         let mut config = RencalConfig::load();
         config.first_day_of_week = day.into();
+        config.save()
+    }
+
+    async fn get_show_week_numbers(self) -> TauResult<bool> {
+        Ok(RencalConfig::load().show_week_numbers)
+    }
+
+    async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
+        let mut config = RencalConfig::load();
+        config.show_week_numbers = show;
         config.save()
     }
 
