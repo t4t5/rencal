@@ -15,7 +15,7 @@ format-rust:
   cargo fmt --all
 
 # Run app (dev mode)
-dev: build-providers
+dev: ensure-providers
   pnpm tauri dev
 
 # Run website docs (dev mode)
@@ -52,7 +52,7 @@ test:
   pnpm test
 
 # Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug month-scroll`.
-debug flags="*": build-providers
+debug flags="*": ensure-providers
   VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
 
 # Analyze which parts of app are slow based on ChromeDevTool recording:
@@ -68,7 +68,7 @@ bundlesize:
   npx vite-bundle-visualizer
 
 # Build the app for production
-build: build-providers-release
+build: ensure-providers
   #!/usr/bin/env bash
   set -euo pipefail
   # Linux deb/rpm bundles ship the reminder daemon — build it first so
@@ -79,7 +79,7 @@ build: build-providers-release
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
-notarize: build-providers-release
+notarize: ensure-providers
   #!/usr/bin/env bash
   set -euo pipefail
   set -a && source .env && set +a
@@ -90,27 +90,9 @@ notarize: build-providers-release
   # Updater artifacts (and their signing key) are produced in CI, not here.
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
-# Build caldir provider binaries (debug) into src-tauri/providers/
-build-providers:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  mkdir -p src-tauri/providers
-  providers=(google icloud outlook caldav webcal)
-  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
-  for p in "${providers[@]}"; do
-    cp "../caldir/target/debug/caldir-provider-$p" src-tauri/providers/
-  done
-
-# Build caldir provider binaries (release) into src-tauri/providers/
-build-providers-release:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  mkdir -p src-tauri/providers
-  providers=(google icloud outlook caldav webcal)
-  cargo build --manifest-path ../caldir/Cargo.toml "${providers[@]/#/--package=caldir-provider-}"
-  for p in "${providers[@]}"; do
-    cp "../caldir/target/release/caldir-provider-$p" src-tauri/providers/
-  done
+# Download the pinned caldir provider binaries when they are not already installed.
+ensure-providers:
+  scripts/install-caldir-providers.sh
 
 # ---- NOTIFICATIONS
 
@@ -181,4 +163,3 @@ deeplink-dev:
 deeplink-prod:
   xdg-mime default renCal.desktop x-scheme-handler/rencal
   rm -f ~/.local/share/applications/rencal-handler.desktop
-

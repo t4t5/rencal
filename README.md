@@ -66,3 +66,6 @@ Use [`just`](https://just.systems/) to access handy development commands.
 # Start the Tauri app:
 just dev
 ```
+
+The first run downloads the pinned caldir provider binaries for your platform.
+Later runs reuse the binaries in `src-tauri/providers/`.
