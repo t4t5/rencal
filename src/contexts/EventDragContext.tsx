@@ -136,7 +136,7 @@ function sameRange(a: EventTimeRange | null, b: EventTimeRange | null): boolean 
  * targets, which after a drag would land on a day cell and navigate. Swallow
  * that one click; the listener is dropped right after in case none fires.
  */
-function suppressNextClick() {
+export function suppressNextClick() {
   const swallow = (e: MouseEvent) => {
     e.stopPropagation()
     e.preventDefault()

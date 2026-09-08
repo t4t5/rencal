@@ -78,6 +78,15 @@ export function getEventBlockColors({
   }
 }
 
+/** Flat tint used while drawing a new event range over the week time grid. */
+export function getCreateSelectionStyle(calendarColor: string | null): CSSProperties {
+  const accent = calendarColor ?? withThemeEventColor(DEFAULT_CALENDAR_COLOR)
+  const boostedAccent = `oklch(from ${accent} l calc(c * 1.4) h)`
+  return {
+    backgroundColor: `color-mix(in srgb, ${boostedAccent} 20%, transparent)`,
+  }
+}
+
 export function getEventBlockStyle({
   calendarColor,
   eventColor,

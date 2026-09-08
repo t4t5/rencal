@@ -10,6 +10,8 @@ DOM hit-testing), `src/lib/event-drag.ts` (pure drop math, tested), and
 - A press on an event block only becomes a drag after the pointer travels a few
   pixels, so clicks still open the popover. The release after a drag never
   counts as a click (it would otherwise navigate to the day under the pointer).
+- In the week time grid, presses directly on the column background belong to
+  drag-to-create; event-block presses continue to belong to drag-to-reschedule.
 - While dragging: the source block stays where it was, dimmed; a floating copy
   follows the pointer (a title pill in the month view and all-day lane, a
   full-size block showing the new time in the week grid); a preview block with a

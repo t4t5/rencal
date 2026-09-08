@@ -20,8 +20,10 @@ export interface OpenDayDraftOptions {
   allDay?: boolean
   /** Start time for a timed draft; defaults to the current hour on `day`. */
   start?: EventTime | null
+  /** End time for a timed draft; defaults to one hour after `start`. */
+  end?: EventTime | null
   /** Anchor the popover at this viewport Y instead of the element's center. */
-  clickY?: number
+  anchorY?: number
 }
 
 /**
@@ -48,7 +50,7 @@ export function useOpenDayDraft() {
       start = opts.start
         ? withViewerZone(opts.start)
         : atTime(day, Temporal.Now.zonedDateTimeISO(getViewerTzid()).hour)
-      end = addMinutes(start, DEFAULT_DURATION_MINS)
+      end = opts.end ? withViewerZone(opts.end) : addMinutes(start, DEFAULT_DURATION_MINS)
     }
 
     setActiveEventKey(null)
@@ -66,9 +68,9 @@ export function useOpenDayDraft() {
       conference: null,
     })
 
-    if (opts.clickY != null) {
+    if (opts.anchorY != null) {
       const { left, width } = anchor.getBoundingClientRect()
-      const y = opts.clickY
+      const y = opts.anchorY
       setDraftAnchor({ getBoundingClientRect: () => new DOMRect(left, y, width, 0) })
     } else {
       setDraftAnchor(anchor)
