@@ -8,8 +8,10 @@ export type PaletteSubmenu = "themes" | "calendar-groups"
 // Special sub-pages that drive their own dynamic content (no static SubmenuConfig).
 export type PalettePage = "go-to-date"
 
+export type PaletteCommandId = ShortcutId | "toggle-week-numbers"
+
 export interface PaletteCommand {
-  id: ShortcutId
+  id: PaletteCommandId
   group: CommandGroup
   // Override of the shortcut's label in the palette:
   label?: string
@@ -34,6 +36,7 @@ export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
   { id: "month", group: "View" },
   { id: "week", group: "View" },
   { id: "board", group: "View" },
+  { id: "toggle-week-numbers", group: "View", label: "Toggle week numbers" },
   {
     id: "switch-group",
     group: "View",
