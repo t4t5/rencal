@@ -77,6 +77,10 @@ export function MonthDayCell({
           onContextMenu={(e) => {
             contextTargetRef.current = e.currentTarget
           }}
+          onDoubleClick={(e) => {
+            if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
+            handleCreateEvent(e.currentTarget)
+          }}
         >
           {reservedAllDayHeight > 0 && (
             <div style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }} />
