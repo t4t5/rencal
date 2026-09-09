@@ -24,6 +24,10 @@ export function ScheduledDayContextMenu({ children, onCreateEvent }: ScheduledDa
           anchorRef.current = e.currentTarget as HTMLElement
           clickYRef.current = e.clientY
         }}
+        onDoubleClick={(e: React.MouseEvent) => {
+          if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
+          onCreateEvent(e.currentTarget as HTMLElement, e.clientY)
+        }}
       >
         {children}
       </ContextMenuTrigger>
