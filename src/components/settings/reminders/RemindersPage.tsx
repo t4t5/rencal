@@ -42,6 +42,10 @@ const DefaultRemindersSection = () => {
   return (
     <div className="flex flex-col gap-2 w-[300px]">
       <label className="text-sm">Default reminders</label>
+      <p className="text-xs text-muted-foreground">
+        Added to new events you create, and used for timed events that have no reminders of their
+        own (e.g. meetings synced from Google without an alarm).
+      </p>
       <ReminderSelect
         reminders={defaultReminders}
         onSelect={(mins) => setDefaultReminders([...defaultReminders, mins])}
