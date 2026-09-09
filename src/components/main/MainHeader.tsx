@@ -1,5 +1,4 @@
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
-import { ReportBugButton } from "@/components/toolbar/ReportBugButton"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { ToggleSidebarButton } from "@/components/toolbar/ToggleSidebarButton"
@@ -51,8 +50,6 @@ export function MainHeader({
       </div>
 
       <DragRegion className="grow h-full" />
-
-      <ReportBugButton />
 
       <GroupSwitcher />
 
