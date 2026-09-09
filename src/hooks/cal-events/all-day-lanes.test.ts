@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 
-import { assignAllDayLanes, buildAllDaySpan, clipSpanToRange, firstFreeLane } from "./all-day-lanes"
+import { assignAllDayLanes, buildAllDaySpan, clipSpanToRange } from "./all-day-lanes"
 
 function event(id: string, firstDay: number, lastDay: number): CalendarEvent {
   return {
@@ -90,23 +90,20 @@ describe("clipSpanToRange", () => {
   })
 })
 
-describe("firstFreeLane", () => {
-  it("uses lane zero when empty", () => {
-    expect(firstFreeLane([], 1, 3)).toBe(0)
-  })
+describe("assignAllDayLanes with a create selection", () => {
+  it("gives the selection the same priority as an appended draft event", () => {
+    const items = [
+      { id: "existing-long", startCol: 1, endCol: 6, isStart: true, isEnd: true, lane: 0 },
+      { id: "existing-short", startCol: 2, endCol: 4, isStart: true, isEnd: true, lane: 0 },
+      { id: "selection", startCol: 1, endCol: 8, isStart: true, isEnd: true, lane: 0 },
+    ]
 
-  it("skips overlapping occupied lanes", () => {
-    expect(firstFreeLane([{ startCol: 1, endCol: 4, lane: 0 }], 2, 5)).toBe(1)
-    expect(firstFreeLane([{ startCol: 5, endCol: 7, lane: 0 }], 1, 3)).toBe(0)
-    expect(
-      firstFreeLane(
-        [
-          { startCol: 1, endCol: 4, lane: 0 },
-          { startCol: 2, endCol: 5, lane: 2 },
-        ],
-        2,
-        3,
-      ),
-    ).toBe(1)
+    assignAllDayLanes(items, 7)
+
+    expect(items.map(({ id, lane }) => [id, lane])).toEqual([
+      ["selection", 0],
+      ["existing-long", 1],
+      ["existing-short", 2],
+    ])
   })
 })

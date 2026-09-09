@@ -45,12 +45,13 @@ Passing over a border or other gap keeps the last valid selection. Storing dates
 rather than virtual row indices keeps the selection stable when infinite scroll
 prepends weeks.
 
-Each visible week clips the range with `clipSpanToRange` and renders a flat bar
-segment in the first lane that is free across its selected columns. Existing
-events are not reflowed. Only the true range ends are rounded. On release, the
-popover receives an all-day `[start, end)` range whose end is the day after the
-last selected date, and anchors to a snapshot of the segment nearest the
-pointer.
+Each visible week clips the range with `clipSpanToRange` and packs the flat bar
+through the normal all-day lane algorithm as though it were the appended draft
+event. Overlapping bars therefore move to their eventual positions during the
+drag and stay there after release. Only the true range ends are rounded. On
+release, the popover receives an all-day `[start, end)` range whose end is the
+day after the last selected date, and anchors to a snapshot of the segment
+nearest the pointer.
 
 The week all-day lane could reuse this date-range controller in the future; its
 cells and headers already expose `data-drop-day`. It would need to opt its

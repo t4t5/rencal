@@ -7,7 +7,7 @@ import { MonthDayCell } from "@/components/main/month-view/Cell"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { firstFreeLane, type AllDaySpan } from "@/hooks/cal-events/all-day-lanes"
+import { assignAllDayLanes, type AllDaySpan } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
@@ -71,16 +71,30 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   const { calendars } = useCalendars()
   const { showWeekNumbers, firstDayOfWeek } = useSettings()
 
-  const allDayEvents = layout.allDayItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)
+  // Pack the temporary selection exactly where the appended draft event will
+  // be packed on release. Clone real items because lane assignment mutates.
+  const packedAllDayEvents = createSelection
+    ? layout.allDayItems.map((item) => ({ ...item }))
+    : layout.allDayItems
+  const packedCreateSelection = createSelection ? { ...createSelection, lane: 0 } : null
+  const packedLaneItems = packedCreateSelection
+    ? [...packedAllDayEvents, packedCreateSelection]
+    : packedAllDayEvents
+  if (packedCreateSelection) {
+    assignAllDayLanes(packedLaneItems, 7)
+  }
+
+  const allDayEvents = packedAllDayEvents.filter((item) => item.lane < MAX_ALL_DAY_LANES)
+  const visibleCreateSelection =
+    packedCreateSelection && packedCreateSelection.lane < MAX_ALL_DAY_LANES
+      ? packedCreateSelection
+      : null
   const monthStartCol = weekDays.findIndex((day) => day.date.day === 1)
-  const createSelectionLane = createSelection
-    ? firstFreeLane(allDayEvents, createSelection.startCol, createSelection.endCol)
-    : null
 
   // Per-column reserved lanes: a day only leaves space for all-day bars that actually span it
   const reservedLanes: number[] = Array(7).fill(0)
 
-  for (const item of allDayEvents) {
+  for (const item of packedLaneItems.filter((item) => item.lane < MAX_ALL_DAY_LANES)) {
     for (let c = item.startCol - 1; c < item.endCol - 1; c++) {
       reservedLanes[c] = Math.max(reservedLanes[c], item.lane + 1)
     }
@@ -127,17 +141,17 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           )
         })}
 
-        {createSelection && createSelectionLane !== null && (
+        {visibleCreateSelection && (
           <MonthDragToCreateSelection
-            span={createSelection}
-            lane={createSelectionLane}
+            span={visibleCreateSelection}
+            lane={visibleCreateSelection.lane}
             calendarColor={createSelectionColor}
           />
         )}
 
         {/* Timed events */}
         {weekDays.map((day, colIndex) => {
-          const allDayOnDay = layout.allDayItems.filter(
+          const allDayOnDay = packedLaneItems.filter(
             (item) => item.startCol <= colIndex + 1 && item.endCol > colIndex + 1,
           )
           const visibleAllDayOnDay = allDayOnDay.filter((item) => item.lane < MAX_ALL_DAY_LANES)

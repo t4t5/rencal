@@ -54,22 +54,10 @@ export function buildAllDaySpan(
   }
 }
 
-export function firstFreeLane(
-  items: { startCol: number; endCol: number; lane: number }[],
-  startCol: number,
-  endCol: number,
+export function assignAllDayLanes<T extends AllDaySpan & { lane: number }>(
+  items: T[],
+  columnCount: number,
 ): number {
-  const occupied = new Set(
-    items
-      .filter((item) => item.startCol < endCol && item.endCol > startCol)
-      .map((item) => item.lane),
-  )
-  let lane = 0
-  while (occupied.has(lane)) lane++
-  return lane
-}
-
-export function assignAllDayLanes(items: AllDayLaneItem[], columnCount: number): number {
   items.sort((a, b) => {
     const spanDiff = b.endCol - b.startCol - (a.endCol - a.startCol)
     return spanDiff || a.startCol - b.startCol
