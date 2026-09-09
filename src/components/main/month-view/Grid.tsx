@@ -10,15 +10,18 @@ import {
   useState,
 } from "react"
 
+import { clipSpanToRange } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { createDebugLogger } from "@/lib/debug"
-import { formatDateKey } from "@/lib/event-time"
+import { epochDay, formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
 import { pickActiveMonth } from "./pickActiveMonth"
+import { useDragToCreateDays } from "./useDragToCreateDays"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
 
@@ -54,6 +57,8 @@ export function MonthGrid({
   dimmed: boolean
 }) {
   const activeDateKey = activeDate.toString()
+  const { selection, startCreateDrag } = useDragToCreateDays(scrollRef)
+  const createSelectionColor = useCreateSelectionColor()
 
   // Each day cell is a square: row height tracks the column width
   const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
@@ -281,6 +286,7 @@ export function MonthGrid({
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
         !hasInitiallyScrolled && "invisible",
+        selection && "select-none",
       )}
     >
       <div
@@ -290,32 +296,47 @@ export function MonthGrid({
           position: "relative",
         }}
       >
-        {virtualizer.getVirtualItems().map((virtualRow) => (
-          <div
-            key={weeks[virtualRow.index][0].dateKey}
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: `${virtualRow.size}px`,
-              transform: `translateY(${virtualRow.start}px)`,
-            }}
-            className="flex flex-col border-b border-divider"
-          >
-            <MonthWeekRow
-              weekDays={weeks[virtualRow.index]}
-              layout={weekLayouts[virtualRow.index]}
-              activeEventKey={activeEventKey}
-              selectedEventKey={selectedEventKey}
-              activeDateKey={activeDateKey}
-              onDayClick={onDayClick}
-              onEventClick={onEventClick}
-              draftEvent={draftEvent}
-              dimmed={dimmed}
-            />
-          </div>
-        ))}
+        {virtualizer.getVirtualItems().map((virtualRow) => {
+          const weekDays = weeks[virtualRow.index]
+          const createSelection = selection
+            ? clipSpanToRange(
+                epochDay(selection.start),
+                epochDay(selection.end),
+                epochDay(weekDays[0].date),
+                epochDay(weekDays[6].date),
+              )
+            : null
+
+          return (
+            <div
+              key={weekDays[0].dateKey}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: `${virtualRow.size}px`,
+                transform: `translateY(${virtualRow.start}px)`,
+              }}
+              className="flex flex-col border-b border-divider"
+            >
+              <MonthWeekRow
+                weekDays={weekDays}
+                layout={weekLayouts[virtualRow.index]}
+                activeEventKey={activeEventKey}
+                selectedEventKey={selectedEventKey}
+                activeDateKey={activeDateKey}
+                onDayClick={onDayClick}
+                onEventClick={onEventClick}
+                draftEvent={draftEvent}
+                dimmed={dimmed}
+                createSelection={createSelection}
+                createSelectionColor={createSelectionColor}
+                startCreateDrag={startCreateDrag}
+              />
+            </div>
+          )
+        })}
       </div>
     </div>
   )

@@ -18,9 +18,9 @@ import {
 
 export interface OpenDayDraftOptions {
   allDay?: boolean
-  /** Start time for a timed draft; defaults to the current hour on `day`. */
+  /** Draft start; defaults to `day` for all-day or the current hour for timed drafts. */
   start?: EventTime | null
-  /** End time for a timed draft; defaults to one hour after `start`. */
+  /** Draft end; defaults to one day/hour after `start`, according to draft kind. */
   end?: EventTime | null
   /** Anchor the popover at this viewport Y instead of the element's center. */
   anchorY?: number
@@ -44,8 +44,8 @@ export function useOpenDayDraft() {
     let start: EventTime
     let end: EventTime
     if (opts.allDay) {
-      start = allDayDate(day)
-      end = addDays(start, 1)
+      start = opts.start ?? allDayDate(day)
+      end = opts.end ?? addDays(start, 1)
     } else {
       start = opts.start
         ? withViewerZone(opts.start)

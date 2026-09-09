@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest"
 
 import type { CalendarEvent } from "@/lib/cal-events"
 
-import { assignAllDayLanes, buildAllDaySpan } from "./all-day-lanes"
+import { assignAllDayLanes, buildAllDaySpan, clipSpanToRange, firstFreeLane } from "./all-day-lanes"
 
 function event(id: string, firstDay: number, lastDay: number): CalendarEvent {
   return {
@@ -62,5 +62,51 @@ describe("assignAllDayLanes", () => {
       ["later", 1],
       ["tail", 0],
     ])
+  })
+})
+
+describe("clipSpanToRange", () => {
+  it("keeps spans inside the range", () => {
+    expect(clipSpanToRange(11, 12, 10, 13)).toEqual({
+      startCol: 2,
+      endCol: 4,
+      isStart: true,
+      isEnd: true,
+    })
+  })
+
+  it("clips both ends", () => {
+    expect(clipSpanToRange(8, 15, 10, 13)).toEqual({
+      startCol: 1,
+      endCol: 5,
+      isStart: false,
+      isEnd: false,
+    })
+  })
+
+  it("returns null outside the range", () => {
+    expect(clipSpanToRange(7, 9, 10, 13)).toBeNull()
+    expect(clipSpanToRange(14, 16, 10, 13)).toBeNull()
+  })
+})
+
+describe("firstFreeLane", () => {
+  it("uses lane zero when empty", () => {
+    expect(firstFreeLane([], 1, 3)).toBe(0)
+  })
+
+  it("skips overlapping occupied lanes", () => {
+    expect(firstFreeLane([{ startCol: 1, endCol: 4, lane: 0 }], 2, 5)).toBe(1)
+    expect(firstFreeLane([{ startCol: 5, endCol: 7, lane: 0 }], 1, 3)).toBe(0)
+    expect(
+      firstFreeLane(
+        [
+          { startCol: 1, endCol: 4, lane: 0 },
+          { startCol: 2, endCol: 5, lane: 2 },
+        ],
+        2,
+        3,
+      ),
+    ).toBe(1)
   })
 })
