@@ -11,6 +11,7 @@
  * `data-drop-day` + `data-drop-zone` (see `DropZone` in lib/event-drag), and
  * scroll containers declare `data-drag-scroll` to opt in to edge auto-scroll.
  */
+import { Temporal } from "@js-temporal/polyfill"
 import {
   useMemo,
   useRef,
@@ -104,7 +105,10 @@ type DragSession = {
   raf: number | null
 }
 
-function findDropHit(x: number, y: number): DropHit | null {
+export function findDropDayElement(
+  x: number,
+  y: number,
+): { el: HTMLElement; day: Temporal.PlainDate } | null {
   // `elementsFromPoint` returns the full stack under the point, so a cell is
   // found even when an event block (a sibling in the grid) sits on top of it.
   const el = document
@@ -115,15 +119,22 @@ function findDropHit(x: number, y: number): DropHit | null {
     )
   if (!el) return null
 
-  const zone = el.dataset.dropZone as DropZone | undefined
   const dayKey = el.dataset.dropDay
-  if (!zone || !dayKey) return null
+  if (!dayKey) return null
+  return { el, day: dateKeyToPlainDate(dayKey) }
+}
 
-  const day = dateKeyToPlainDate(dayKey)
-  if (zone !== "timed") return { zone, day, minutes: null }
+function findDropHit(x: number, y: number): DropHit | null {
+  const hit = findDropDayElement(x, y)
+  if (!hit) return null
 
-  const rect = el.getBoundingClientRect()
-  return { zone, day, minutes: ((y - rect.top) / rect.height) * DAY_MINUTES }
+  const zone = hit.el.dataset.dropZone as DropZone | undefined
+  if (!zone) return null
+
+  if (zone !== "timed") return { zone, day: hit.day, minutes: null }
+
+  const rect = hit.el.getBoundingClientRect()
+  return { zone, day: hit.day, minutes: ((y - rect.top) / rect.height) * DAY_MINUTES }
 }
 
 function sameRange(a: EventTimeRange | null, b: EventTimeRange | null): boolean {

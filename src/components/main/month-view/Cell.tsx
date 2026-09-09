@@ -1,4 +1,5 @@
-import { useRef } from "react"
+import { Temporal } from "@js-temporal/polyfill"
+import { useRef, type PointerEvent as ReactPointerEvent } from "react"
 
 import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
 import {
@@ -33,6 +34,7 @@ type MonthDayCellProps = {
   onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
+  startCreateDrag: (day: Temporal.PlainDate, event: ReactPointerEvent<HTMLElement>) => void
 }
 
 export function MonthDayCell({
@@ -47,6 +49,7 @@ export function MonthDayCell({
   onEventClick,
   draftEvent,
   dimmed,
+  startCreateDrag,
 }: MonthDayCellProps) {
   const { calendars } = useCalendars()
   const { calendarEvents } = useCalEvents()
@@ -74,6 +77,7 @@ export function MonthDayCell({
           data-drop-day={day.dateKey}
           data-drop-zone="day"
           onClick={onClick}
+          onPointerDown={(event) => startCreateDrag(day.date, event)}
           onContextMenu={(e) => {
             contextTargetRef.current = e.currentTarget
           }}
@@ -83,7 +87,10 @@ export function MonthDayCell({
           }}
         >
           {reservedAllDayHeight > 0 && (
-            <div style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }} />
+            <div
+              className="pointer-events-none"
+              style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }}
+            />
           )}
           {visibleTimed.map((item) => {
             const key = eventKey(item.event)
@@ -103,7 +110,7 @@ export function MonthDayCell({
           })}
 
           {totalHidden > 0 && (
-            <div className="text-xs text-muted-foreground px-0.5 truncate shrink-0">
+            <div className="pointer-events-none text-xs text-muted-foreground px-0.5 truncate shrink-0">
               +{totalHidden} more
             </div>
           )}

@@ -1,9 +1,40 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import { DRAG_SNAP_MINUTES } from "@/lib/event-drag"
-import { atTime, DAY_MINUTES, type EventTimeRange } from "@/lib/event-time"
+import { allDayDate, atTime, DAY_MINUTES, type EventTimeRange } from "@/lib/event-time"
 
 export type CreateSelection = { startMinutes: number; endMinutes: number }
+export type DaySelection = { start: Temporal.PlainDate; end: Temporal.PlainDate }
+
+/** Inclusive day range that always contains the anchor and grows toward the pointer. */
+export function daySelectionForPointer(
+  anchor: Temporal.PlainDate,
+  pointer: Temporal.PlainDate,
+): DaySelection {
+  return Temporal.PlainDate.compare(anchor, pointer) <= 0
+    ? { start: anchor, end: pointer }
+    : { start: pointer, end: anchor }
+}
+
+/** All-day [start, end) range for a selection. */
+export function daySelectionRange(selection: DaySelection): EventTimeRange {
+  return {
+    start: allDayDate(selection.start),
+    end: allDayDate(selection.end.add({ days: 1 })),
+  }
+}
+
+/** Clamp a viewport point just inside a rect so outside drags hit its edge cells. */
+export function clampPointToRect(
+  rect: DOMRectReadOnly,
+  x: number,
+  y: number,
+): { x: number; y: number } {
+  return {
+    x: Math.max(rect.left + 1, Math.min(rect.right - 1, x)),
+    y: Math.max(rect.top + 1, Math.min(rect.bottom - 1, y)),
+  }
+}
 
 /** Unclamped wallclock minutes-of-day for a viewport Y inside a day column. */
 export function minutesAtY(rect: { top: number; height: number }, y: number): number {

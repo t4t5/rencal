@@ -1,7 +1,7 @@
 import { useRef, useState, MouseEventHandler } from "react"
 
 import { EventContextMenu } from "@/components/EventContextMenu"
-import { LANE_GAP, LANE_HEIGHT } from "@/components/main/month-view/Row"
+import { allDayBarStyle } from "@/components/main/month-view/lane-geometry"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
 import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
@@ -65,10 +65,7 @@ export function MonthAllDayEvent({
         isDragPreview && "pointer-events-none",
       )}
       style={{
-        top: `${item.lane * LANE_HEIGHT}px`,
-        height: `${LANE_HEIGHT - LANE_GAP}px`,
-        left: `calc(${((item.startCol - 1) / 7) * 100}% + ${item.isStart ? 3 : -2}px)`,
-        right: `calc(${((7 - (item.endCol - 1)) / 7) * 100}% + ${item.isEnd ? 4 : -2}px)`,
+        ...allDayBarStyle(item, item.lane),
         ...getEventBlockStyle({
           calendarColor: item.calendarColor,
           eventColor: item.event.color,

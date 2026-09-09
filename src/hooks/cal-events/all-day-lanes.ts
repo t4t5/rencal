@@ -1,13 +1,35 @@
 import type { CalendarEvent } from "@/lib/cal-events"
 
-export type AllDayLaneItem = {
-  event: CalendarEvent
-  calendarColor: string | null
+export type AllDaySpan = {
   startCol: number // 1-based CSS grid-column-start
   endCol: number // 1-based CSS grid-column-end (exclusive)
-  lane: number
   isStart: boolean
   isEnd: boolean
+}
+
+export type AllDayLaneItem = AllDaySpan & {
+  event: CalendarEvent
+  calendarColor: string | null
+  lane: number
+}
+
+export function clipSpanToRange(
+  firstDay: number,
+  lastDay: number,
+  rangeFirstDay: number,
+  rangeLastDay: number,
+): AllDaySpan | null {
+  if (firstDay > rangeLastDay || lastDay < rangeFirstDay) return null
+
+  const clampedFirstDay = Math.max(firstDay, rangeFirstDay)
+  const clampedLastDay = Math.min(lastDay, rangeLastDay)
+
+  return {
+    startCol: clampedFirstDay - rangeFirstDay + 1,
+    endCol: clampedLastDay - rangeFirstDay + 2,
+    isStart: firstDay >= rangeFirstDay,
+    isEnd: lastDay <= rangeLastDay,
+  }
 }
 
 export function buildAllDaySpan(
@@ -16,24 +38,26 @@ export function buildAllDaySpan(
   rangeLastDay: number,
   calendarColor: string | null,
 ): AllDayLaneItem | null {
-  const { firstDay, lastDay } = event.dateInfo
-  if (firstDay > rangeLastDay || lastDay < rangeFirstDay) return null
-
-  const clampedFirstDay = Math.max(firstDay, rangeFirstDay)
-  const clampedLastDay = Math.min(lastDay, rangeLastDay)
+  const span = clipSpanToRange(
+    event.dateInfo.firstDay,
+    event.dateInfo.lastDay,
+    rangeFirstDay,
+    rangeLastDay,
+  )
+  if (!span) return null
 
   return {
+    ...span,
     event,
     calendarColor,
-    startCol: clampedFirstDay - rangeFirstDay + 1,
-    endCol: clampedLastDay - rangeFirstDay + 2,
     lane: 0,
-    isStart: firstDay >= rangeFirstDay,
-    isEnd: lastDay <= rangeLastDay,
   }
 }
 
-export function assignAllDayLanes(items: AllDayLaneItem[], columnCount: number): number {
+export function assignAllDayLanes<T extends AllDaySpan & { lane: number }>(
+  items: T[],
+  columnCount: number,
+): number {
   items.sort((a, b) => {
     const spanDiff = b.endCol - b.startCol - (a.endCol - a.startCol)
     return spanDiff || a.startCol - b.startCol

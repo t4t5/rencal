@@ -7,16 +7,15 @@ import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventB
 import type { TimeFormat } from "@/rpc/bindings"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
-import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { getCalendarColor } from "@/lib/calendar-styles"
 import { minutesAtY } from "@/lib/drag-to-create"
 import {
   atTime,
@@ -85,13 +84,10 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
-  const { defaultCalendarId } = useEventDraft()
   const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
   const openDayDraft = useOpenDayDraft()
   const { selection, startCreateDrag } = useDragToCreate(scrollContainerRef)
-  const createSelectionColor = getCalendarColor(
-    calendars.find((calendar) => calendar.slug === defaultCalendarId),
-  )
+  const createSelectionColor = useCreateSelectionColor()
 
   const N = days.length
   const hasAllDay = allDayItems.length > 0

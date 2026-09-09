@@ -8,7 +8,14 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 
-import { minutesAtY, selectionForPointer, selectionRange } from "./drag-to-create"
+import {
+  clampPointToRect,
+  daySelectionForPointer,
+  daySelectionRange,
+  minutesAtY,
+  selectionForPointer,
+  selectionRange,
+} from "./drag-to-create"
 
 function wallclock(eventTime: EventTime): string {
   const value = toViewerZonedDateTime(eventTime)
@@ -76,5 +83,50 @@ describe("minutesAtY", () => {
     expect(minutesAtY(rect, 100)).toBe(0)
     expect(minutesAtY(rect, 820)).toBe(720)
     expect(minutesAtY(rect, 1540)).toBe(1440)
+  })
+})
+
+describe("daySelectionForPointer", () => {
+  const anchor = Temporal.PlainDate.from("2026-09-09")
+
+  it("grows after, before, and equal to the anchor", () => {
+    expect(daySelectionForPointer(anchor, Temporal.PlainDate.from("2026-09-12"))).toEqual({
+      start: anchor,
+      end: Temporal.PlainDate.from("2026-09-12"),
+    })
+    expect(daySelectionForPointer(anchor, Temporal.PlainDate.from("2026-09-06"))).toEqual({
+      start: Temporal.PlainDate.from("2026-09-06"),
+      end: anchor,
+    })
+    expect(daySelectionForPointer(anchor, anchor)).toEqual({ start: anchor, end: anchor })
+  })
+})
+
+describe("daySelectionRange", () => {
+  it("creates an all-day range with an exclusive end", () => {
+    const range = daySelectionRange({
+      start: Temporal.PlainDate.from("2026-09-09"),
+      end: Temporal.PlainDate.from("2026-09-12"),
+    })
+
+    expect(range.start).toEqual({
+      kind: "date",
+      value: Temporal.PlainDate.from("2026-09-09"),
+    })
+    expect(range.end).toEqual({
+      kind: "date",
+      value: Temporal.PlainDate.from("2026-09-13"),
+    })
+  })
+})
+
+describe("clampPointToRect", () => {
+  const rect = { left: 10, right: 110, top: 20, bottom: 220 } as DOMRectReadOnly
+
+  it("clamps each edge with a one-pixel inset", () => {
+    expect(clampPointToRect(rect, 0, 50)).toEqual({ x: 11, y: 50 })
+    expect(clampPointToRect(rect, 200, 50)).toEqual({ x: 109, y: 50 })
+    expect(clampPointToRect(rect, 50, 0)).toEqual({ x: 50, y: 21 })
+    expect(clampPointToRect(rect, 50, 300)).toEqual({ x: 50, y: 219 })
   })
 })
