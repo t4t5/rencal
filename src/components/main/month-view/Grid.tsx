@@ -18,11 +18,10 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { createDebugLogger } from "@/lib/debug"
-import { epochDay, formatDateKey } from "@/lib/event-time"
+import { epochDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
-import { pickActiveMonth } from "./pickActiveMonth"
 import { useDragToCreateDays } from "./useDragToCreateDays"
 import { attachWeekSnapSession } from "./weekSnapSession"
 
@@ -41,7 +40,6 @@ export function MonthGrid({
   isNavigating,
   onDayClick,
   onEventClick,
-  onScrollMonthChange,
   draftEvent,
   dimmed,
 }: {
@@ -55,7 +53,6 @@ export function MonthGrid({
   isNavigating: () => boolean
   onDayClick: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
-  onScrollMonthChange: (date: Temporal.PlainDate) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }) {
@@ -162,7 +159,6 @@ export function MonthGrid({
   // measure() on rowHeight/virtualizer changes because tanstack-virtual memoizes item sizes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
-  const prevScrollTopRef = useRef<number | null>(null)
 
   const getSnapState = useEffectEvent(() => ({
     enabled: hasInitiallyScrolled && !selection && !drag && !isNavigating(),
@@ -194,7 +190,6 @@ export function MonthGrid({
 
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
-    prevScrollTopRef.current = null
 
     debugMonthScroll("initial anchor scroll", { idx, rowHeight })
 
@@ -206,8 +201,6 @@ export function MonthGrid({
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
-  // Scroll-follow updates activeDate without setting isNavigating, so this only runs for
-  // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
 
@@ -242,49 +235,6 @@ export function MonthGrid({
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
 
-  // As the user scrolls, follow the active date to the dominant month (see
-  // docs/scroll-behaviour.md). useEffectEvent so the once-bound scroll listener always
-  // sees the latest render's weeks/virtualizer without re-subscribing.
-  const onScrollTick = useEffectEvent(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    // Ignore the settling scrolls right after the initial programmatic anchor scroll, and
-    // never follow while a deliberate navigation is driving the viewport.
-    if (Date.now() < ignoreScrollUntil.current || isNavigating() || weeks.length === 0) {
-      prevScrollTopRef.current = null
-      return
-    }
-
-    const viewTop = el.scrollTop
-    const viewBottom = viewTop + el.clientHeight
-    const prevTop = prevScrollTopRef.current
-    const direction: "up" | "down" | null =
-      prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
-    prevScrollTopRef.current = viewTop
-
-    // The first tick after mount/navigation only establishes the direction baseline.
-    if (direction === null) return
-
-    const target = pickActiveMonth({
-      virtualItems: virtualizer.getVirtualItems(),
-      weeks,
-      viewTop,
-      viewBottom,
-      activeDate,
-      direction,
-    })
-
-    if (target) {
-      debugMonthScroll("scroll-follow active month", {
-        from: activeDateKey,
-        to: formatDateKey(target),
-        direction,
-      })
-      onScrollMonthChange(target)
-    }
-  })
-
   const onScrollEnd = useEffectEvent(() => {
     const el = scrollRef.current
     if (!el) return
@@ -299,21 +249,9 @@ export function MonthGrid({
     const el = scrollRef.current
     if (!el) return
 
-    let rafId: number | null = null
-    const handleScroll = () => {
-      if (rafId !== null) return
-      rafId = requestAnimationFrame(() => {
-        rafId = null
-        onScrollTick()
-      })
-    }
-
-    el.addEventListener("scroll", handleScroll, { passive: true })
     el.addEventListener("scrollend", onScrollEnd)
     return () => {
-      el.removeEventListener("scroll", handleScroll)
       el.removeEventListener("scrollend", onScrollEnd)
-      if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [scrollRef])
 

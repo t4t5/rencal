@@ -6,7 +6,7 @@ Two things move independently and must never be confused:
 - **Scroll position** — where the viewport is. Moved by the user, and by deliberate
   navigation, with the month-view snap animator landing user scrolls on week rows.
 - **Active date** — the highlighted day that drives the header's month label, the
-  minical, and keyboard navigation. Follows the scroll, but does not control it.
+  minical, and keyboard navigation. Stays selected while the user scrolls.
 
 ### Infinite scrolling
 
@@ -105,15 +105,8 @@ fixtures verify the session/physics rules but cannot establish native event beha
 
 - On open, the grid is positioned so the first week of the current date's month is at
   the top of the viewport (the 1st of that month is visible).
-- As the user scrolls, the active date follows the scroll. Updating the active date
-  never moves the viewport; the snap session handles week-row alignment independently.
-  - The active date jumps to the 1st of whichever month currently fills the most of
-    the viewport.
-  - The jump only commits once that month's first-of-month week is fully visible.
-    Scrolling within a month (when no 1st-of-month week is on screen) leaves the
-    active date unchanged.
-  - To avoid flicker at month boundaries, the current month wins ties — we only
-    switch when another month is _strictly_ more visible.
+- Scrolling leaves the active date unchanged, including when crossing month
+  boundaries. The snap session handles week-row alignment independently.
 
 ### Jump navigation
 
@@ -121,15 +114,14 @@ fixtures verify the session/physics rules but cannot establish native event beha
   or clicking a day — sets the active date and, if that date's week is not already
   fully visible, scrolls it to the top of the viewport. If it is already fully
   visible, the viewport does not move.
-- These programmatic scrolls must not trigger the scroll-follow behavior above: a jump
-  changes the active date directly, not as a reaction to what scrolls into view.
+- A jump changes the active date directly; scrolling into view does not select a day.
 
 ## Week view
 
 The week view is a horizontally-scrollable strip of day columns, over a fixed 24-hour
 time grid. The same separation as the month view applies: the **scroll position**
-follows the user (and deliberate jumps); the **active date** follows the scroll but
-never controls it.
+follows the user (and deliberate jumps); the **active date** stays selected while the
+user scrolls.
 
 ### Infinite scrolling
 
@@ -147,13 +139,12 @@ never controls it.
 - On open, the strip is positioned so the first day of the active date's week (per the
   first-day-of-week setting) is at the far left, with the active day highlighted within
   that week.
-- As the user scrolls, the active date follows but the viewport is never programmatically
-  moved. The active date does not change mid-scroll; once scrolling settles, it becomes
-  the leftmost fully-visible day column.
+- Scrolling leaves the active date unchanged, both during the gesture and after it
+  settles.
 
 ### Jump navigation
 
 - Deliberately jumping to a date sets the active date and, if that day's column is not
   already fully visible, smooth-scrolls it into view. If it is already visible, the
   viewport does not move.
-- These programmatic scrolls must not trigger the scroll-follow behavior above.
+- A jump changes the active date directly; scrolling into view does not select a day.

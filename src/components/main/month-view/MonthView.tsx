@@ -19,7 +19,7 @@ import { useInfiniteMonths } from "./useInfiniteMonths"
 
 export function MonthView() {
   const { calendars } = useCalendars()
-  const { activeDate, setActiveDate, navigateToDate, isNavigating } = useCalendarNavigation()
+  const { activeDate, navigateToDate, isNavigating } = useCalendarNavigation()
   const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
   const { selectedEventKey } = useAgendaSelection()
 
@@ -60,7 +60,6 @@ export function MonthView() {
         isNavigating={isNavigating}
         onDayClick={navigateToDate}
         onEventClick={toggleActiveEventKey}
-        onScrollMonthChange={setActiveDate}
         draftEvent={draftCalEvent}
         dimmed={dimmed}
       />

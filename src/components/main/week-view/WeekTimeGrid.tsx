@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { RefObject, useEffect, useLayoutEffect, useRef, useState } from "react"
+import { RefObject, useLayoutEffect, useRef, useState } from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
 import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventBlock"
@@ -39,10 +39,6 @@ const GRID_HEIGHT = 24 * HOUR_HEIGHT
 export const GUTTER_WIDTH = 48
 const DAY_WIDTH_MIN = 100
 
-// How long to wait after a scroll event before considering the scroll "settled"
-// and updating the activeDate based on the scroll position.
-const SCROLL_SETTLE_MS = 300
-
 function weekStartIndex(
   days: MonthDay[],
   activeDay: MonthDay,
@@ -62,7 +58,6 @@ type WeekTimeGridProps = {
   activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
   onDayClick: (date: Temporal.PlainDate) => void
-  onScrollActiveChange: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
@@ -78,7 +73,6 @@ export function WeekTimeGrid({
   activeDateKey,
   scrollContainerRef,
   onDayClick,
-  onScrollActiveChange,
   onEventClick,
   draftEvent,
   dimmed,
@@ -92,12 +86,6 @@ export function WeekTimeGrid({
   const N = days.length
   const hasAllDay = allDayItems.length > 0
   const contextTargetRef = useRef<HTMLElement | null>(null)
-
-  // Used to suppress the "update activeDate on scroll" logic during our own programmatic scrolls.
-  const ignoreScrollUntilRef = useRef(0)
-  const suppressScrollTracking = (durationMs = 500) => {
-    ignoreScrollUntilRef.current = Date.now() + durationMs
-  }
 
   // Day width is computed so 7 days fit in the viewport (min-floored).
   // The `ready` flag gates the initial-scroll effect until the width is measured against the real container.
@@ -132,7 +120,6 @@ export function WeekTimeGrid({
     if (curFirstKey === prevFirstKey) return
     const added = days.length - prevCount
     if (added > 0 && days[added]?.dateKey === prevFirstKey) {
-      suppressScrollTracking()
       el.scrollLeft += added * dayWidth
     }
   })
@@ -146,7 +133,6 @@ export function WeekTimeGrid({
     const el = scrollContainerRef.current
     if (!el) return
 
-    suppressScrollTracking()
     const hasToday = days.some((d) => d.isToday)
     const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
     const targetHour = hasToday ? now.hour + now.minute / 60 : 8
@@ -195,48 +181,9 @@ export function WeekTimeGrid({
       const weekStartIdx = weekStartIndex(currentDays, activeDay, firstDayOfWeek)
       const targetIdx = weekStartIdx !== -1 ? weekStartIdx : idx
 
-      suppressScrollTracking()
       el.scrollTo({ left: targetIdx * currentDayWidth, behavior: "smooth" })
     }
   }, [activeDateKey, scrollContainerRef])
-
-  // When user stops scrolling, set activeDate to whatever day is the leftmost fully-visible column.
-  const activeDateKeyRef = useRef(activeDateKey)
-  activeDateKeyRef.current = activeDateKey
-  const onScrollActiveChangeRef = useRef(onScrollActiveChange)
-  onScrollActiveChangeRef.current = onScrollActiveChange
-  useEffect(() => {
-    const el = scrollContainerRef.current
-    if (!el) return
-    let debounceTimer: number | null = null
-    let lastScrollLeft = el.scrollLeft
-
-    const onScroll = () => {
-      if (Date.now() < ignoreScrollUntilRef.current) return
-      if (el.scrollLeft === lastScrollLeft) return // vertical-only scroll
-      lastScrollLeft = el.scrollLeft
-
-      if (debounceTimer !== null) window.clearTimeout(debounceTimer)
-      debounceTimer = window.setTimeout(() => {
-        const currentDays = daysRef.current
-        const currentDayWidth = dayWidthRef.current
-        if (currentDayWidth === 0 || currentDays.length === 0) return
-        const idx = Math.min(
-          currentDays.length - 1,
-          Math.max(0, Math.ceil(el.scrollLeft / currentDayWidth)),
-        )
-        const day = currentDays[idx]
-        if (!day || day.dateKey === activeDateKeyRef.current) return
-        onScrollActiveChangeRef.current(day.date)
-      }, SCROLL_SETTLE_MS)
-    }
-
-    el.addEventListener("scroll", onScroll, { passive: true })
-    return () => {
-      el.removeEventListener("scroll", onScroll)
-      if (debounceTimer !== null) window.clearTimeout(debounceTimer)
-    }
-  }, [scrollContainerRef])
 
   const getHourFromClickY = (el: HTMLElement, clientY: number) => {
     const minutes = minutesAtY(el.getBoundingClientRect(), clientY)

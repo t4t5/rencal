@@ -42,7 +42,6 @@ export function WeekView() {
         activeDateKey={formatDateKey(activeDate)}
         scrollContainerRef={scrollContainerRef}
         onDayClick={navigateToDate}
-        onScrollActiveChange={navigateToDate}
         onEventClick={toggleActiveEventKey}
         draftEvent={draftCalEvent}
         dimmed={dimmed}
