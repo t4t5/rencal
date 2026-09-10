@@ -37,6 +37,7 @@ export { useCalendars }
 
 interface CalendarNavigationContextType {
   activeDate: Temporal.PlainDate
+  navigationVersion: number
   setActiveDate: (date: Temporal.PlainDate) => void
   navigateToDate: (date: Temporal.PlainDate, behavior?: ScrollBehavior) => Promise<void>
   registerScrollToDate: (fn: (date: Temporal.PlainDate, behavior?: ScrollBehavior) => void) => void
@@ -64,6 +65,7 @@ export function CalendarStateProvider({
   initialDate,
 }: CalendarStateProviderProps) {
   const [activeDate, setActiveDate] = useState<Temporal.PlainDate>(() => initialDate ?? today())
+  const [navigationVersion, setNavigationVersion] = useState(0)
   const [calendars, setCalendars] = useState<Calendar[]>(() => initialCalendars ?? [])
   const [isLoadingCalendars, setIsLoadingCalendars] = useState(() => initialCalendars === undefined)
   const [activeGroup, setActiveGroup] = useLocalStorage(
@@ -156,6 +158,8 @@ export function CalendarStateProvider({
       // Use requestAnimationFrame to ensure DOM has updated before scrolling
       requestAnimationFrame(() => {
         setActiveDate(date)
+        // A deliberate jump must recheck visibility even when the date is unchanged.
+        setNavigationVersion((version) => version + 1)
         scrollToDateRef.current?.(date, behavior)
       })
 
@@ -181,6 +185,7 @@ export function CalendarStateProvider({
   const navigationValue = useMemo(
     () => ({
       activeDate,
+      navigationVersion,
       setActiveDate,
       navigateToDate,
       registerScrollToDate,
@@ -188,7 +193,7 @@ export function CalendarStateProvider({
       isNavigating,
       setIsNavigating,
     }),
-    [activeDate],
+    [activeDate, navigationVersion],
   )
 
   return (

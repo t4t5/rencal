@@ -10,6 +10,7 @@ import {
   useState,
 } from "react"
 
+import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useEventDrag } from "@/contexts/EventDragContext"
 
 import { clipSpanToRange } from "@/hooks/cal-events/all-day-lanes"
@@ -57,6 +58,7 @@ export function MonthGrid({
   dimmed: boolean
 }) {
   const activeDateKey = activeDate.toString()
+  const { navigationVersion } = useCalendarNavigation()
   const { selection, startCreateDrag } = useDragToCreateDays(scrollRef)
   const { drag } = useEventDrag()
   const createSelectionColor = useCreateSelectionColor()
@@ -234,7 +236,7 @@ export function MonthGrid({
     debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
 
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
-  }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
+  }, [activeDateKey, navigationVersion, weeks, virtualizer, isNavigating, scrollRef])
 
   const onScrollEnd = useEffectEvent(() => {
     const el = scrollRef.current

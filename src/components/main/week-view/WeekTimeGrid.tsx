@@ -6,7 +6,7 @@ import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventB
 
 import type { TimeFormat } from "@/rpc/bindings"
 
-import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
@@ -78,6 +78,7 @@ export function WeekTimeGrid({
   dimmed,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
+  const { navigationVersion } = useCalendarNavigation()
   const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
   const openDayDraft = useOpenDayDraft()
   const { selection, startCreateDrag } = useDragToCreate(scrollContainerRef)
@@ -155,8 +156,8 @@ export function WeekTimeGrid({
     scrollContainerRef,
   ])
 
-  // After initial scroll, whenever activeDate changes to an off-screen day, smooth-scroll it into view.
-  // Deps are intentionally only activeDateKey — if we include `days` / `dayWidth`, the effect
+  // Recheck visibility on date changes and deliberate jumps, including to the same date.
+  // Exclude `days` / `dayWidth` from the deps — otherwise the effect
   // re-fires on edge-growth and snaps the scroll back to activeDate, breaking free pan.
   const daysRef = useRef(days)
   const dayWidthRef = useRef(dayWidth)
@@ -183,7 +184,7 @@ export function WeekTimeGrid({
 
       el.scrollTo({ left: targetIdx * currentDayWidth, behavior: "smooth" })
     }
-  }, [activeDateKey, scrollContainerRef])
+  }, [activeDateKey, navigationVersion, scrollContainerRef])
 
   const getHourFromClickY = (el: HTMLElement, clientY: number) => {
     const minutes = minutesAtY(el.getBoundingClientRect(), clientY)

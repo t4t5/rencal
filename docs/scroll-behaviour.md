@@ -119,6 +119,8 @@ fixtures verify the session/physics rules but cannot establish native event beha
   or clicking a day — sets the active date and, if that date's week is not already
   fully visible, scrolls it to the top of the viewport. If it is already fully
   visible, the viewport does not move.
+- This visibility check also runs when the target date is already active, so "t"
+  brings today back into view after scrolling away without changing the selection.
 - A jump changes the active date directly; scrolling into view does not select a day.
 
 ## Week view
@@ -152,4 +154,6 @@ user scrolls.
 - Deliberately jumping to a date sets the active date and, if that day's column is not
   already fully visible, smooth-scrolls it into view. If it is already visible, the
   viewport does not move.
+- This visibility check also runs when the target date is already active, so "t"
+  brings today back into view after scrolling away without changing the selection.
 - A jump changes the active date directly; scrolling into view does not select a day.
