@@ -20,91 +20,19 @@ Two things move independently and must never be confused:
 
 ### Week-row snapping
 
-`weekSnapSession.ts` leaves the user's direct scrolling native, then takes over a
-trackpad fling to land on a week boundary. `weekSnapFling.ts` owns the animation:
-there is no CSS snapping or second native smooth-scroll animation.
+- Direct scrolling stays native. Eligible trackpad flings transition to a JS
+  animation that lands on a week boundary ahead in the direction of motion.
+  Other scrolls settle to the nearest week after 250 ms idle.
+- New input cancels the animation immediately. Snapping is disabled during initial
+  positioning, date navigation, event drags, and when reduced motion is requested.
+  Programmatic scrolls never start a snap session.
+- Prepending months preserves the ongoing gesture or animation. Resizing cancels
+  the animation and lets an active session settle using the new row height.
 
-- A wheel session becomes eligible after two scroll events without intervening wheel
-  input and at least one strictly shrinking pair of coast deltas in the same
-  direction. Growth or a sign flip resets the decay count; equal nonzero deltas
-  leave it unchanged. Every coasting frame retries, so a partial first frame delays
-  takeover instead of rejecting the entire fling. This follows the decay-wait model
-  in Chromium's `cc/input/snap_fling_controller.cc`, without adopting its curve-specific
-  ratio threshold. The wheel stream must also look precise: at least three events
-  within 150 ms of the newest event, with at least two distinct absolute delta values.
-  Explicit line/page wheel input is excluded. This is a provisional device heuristic;
-  physical WebKitGTK traces are still needed to validate it against trackpads and mice.
-- On takeover, one instant `scrollTo` stops the native animation. Measured velocity
-  predicts the natural end as `from + velocity / 4`. The target is the week boundary
-  nearest that prediction **among boundaries ahead in the direction of motion**,
-  clamped to the current scroll range. A boundary less than 1 px ahead counts as
-  reached, so a tiny fling past a line continues to the next one. With nothing ahead
-  at the range edge, native scrolling continues and the idle settle remains available.
-  This follows `DirectionStrategy` in Chromium's `cc/input/scroll_snap_data.cc`, used
-  by the fling path in `cc/input/input_handler.cc`; slow releases still use the nearest
-  boundary in either direction, like `CreateForEndPosition`.
-- The animator uses a finite, normalised exponential. For distance `d`, its rate
-  `k = abs(velocity / d)` is clamped to 4–30 per second (zero velocity uses 4).
-  Its duration is `T = max(0, ln(k * abs(d) / 60) / k)` seconds, and its offset is
-  `from + d * (1 - exp(-k * t)) / (1 - exp(-k * T))` until the final write at `T`.
-  This ends the glide before its approach speed falls below 60 px/s, removing the
-  creeping tail, with the 1500 ms safety cap retained. Zero-duration corrections land
-  on the first frame. Fractional positions stay in JS, independent of `scrollTop`
-  rounding. Like Chromium's distance-driven `cc/input/snap_fling_curve.cc`, the curve
-  may increase entry speed when the target lies beyond the natural landing point;
-  normalisation also raises entry speed slightly.
-- Without an eligible fling, 250 ms without input or scrolling starts the same
-  ease-out animator from zero velocity toward the nearest week. Pointer and scroll
-  key sessions only use this settle path, after all held pointers/keys are released.
-- New wheel, pointer, or scroll-key input cancels our frame loop immediately.
-  Wheel events are never prevented and direct gestures receive no synthetic deltas.
-- Snapping is disabled during initial positioning, date navigation, event creation
-  and rescheduling drags, and when reduced motion is requested. Programmatic scrolls
-  never start a session. Navigation cancels the current session.
-- Prepend corrections shift the session instead of cancelling it. A running fling or
-  settle continues in the corrected coordinate space with no restart. A coasting
-  trackpad fling is adopted at once from its last measured velocity, because the
-  correction's instant write has already stopped the native animation. A direct
-  gesture keeps its wheel stream and samples. The correction's own scroll event is
-  ignored until the next animation frame. Resize corrections still cancel the
-  animation and reset samples; an active session then re-settles using the corrected
-  offset and current row height. Geometry changes while idle never start a session.
-- `data-week-snap` is `fling` or `settle` only while our animator runs. Native
-  `scrollend` events do not control that lifecycle. `just debug month-scroll` logs
-  animation starts/finishes, session shifts (`shift week snap`), and scroll-end offsets
-  (`offsetFromWeek` should reach 0).
-  Each declined takeover logs its reason (`not-precise`, `waiting-for-decay`,
-  `no-target-ahead`, or `disabled`), coast count, and current/previous deltas.
-  `just debug wheel-trace` logs wheel/scroll timestamps, deltas, `deltaMode`, the
-  nonstandard `wheelDeltaY`, offsets, whether a wheel arrived since the last scroll,
-  and unexpected offsets during animation.
-  Use `just debug month-scroll,wheel-trace` for both.
-
-All tuning constants live at the top of `weekSnapFling.ts`: kinetic friction 4,
-takeover after at least 2 coast frames and 1 shrinking pair, a 150 ms wheel capture
-window with at least 3 events, a 1 px ahead threshold, decay bounds 4–30, idle delay
-250 ms, maximum duration 1500 ms, and minimum approach speed 60 px/s.
-
-The WebKitGTK constraints documented in the implementation plan (WebKit tag
-`webkitgtk-2.52.6`) explain this approach:
-
-- `ScrollingEffectsController::processWheelEventForKineticScrolling` skips kinetic
-  scrolling when CSS snap points exist; momentum-based snapping is Mac-only there.
-- GTK finger lift becomes a zero-delta ended wheel event. `Element::dispatchWheelEvent`
-  stops propagation for zero deltas, so JS cannot observe release directly.
-- `ScrollAnimationKinetic.cpp` uses exponential decay with friction 4 per second.
-  Native gesture scroll frames follow wheel events; kinetic frames continue without
-  wheel input. The latter are the takeover opportunity.
-- Mouse wheels do not use kinetic scrolling. Their notches can use
-  `ScrollAnimationSmooth`, producing scroll-only frames with an ease-in-out curve.
-  The wheel-stream classifier keeps isolated or fixed-magnitude notches on the settle
-  path while allowing trackpad coasting to recover from an initially growing frame.
-
-Notion Calendar's reference bundle uses permanent mandatory CSS snapping; Chromium
-can carry a fling continuously into its snap target. renCal instead adapts the fling
-in JS for WebKitGTK. Physical trackpad/mouse traces, native kinetic cancellation,
-and feel tuning still need live verification on the target WebKitGTK build; unit
-fixtures verify the session/physics rules but cannot establish native event behavior.
+Implementation: `src/components/main/month-view/weekSnapSession.ts` manages input
+and sessions; `weekSnapFling.ts` owns animation and tuning. Snapping uses JS to work
+with WebKitGTK's kinetic scrolling. Device detection and native fling takeover
+still need physical trackpad/mouse verification.
 
 ### Active date while scrolling
 

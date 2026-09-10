@@ -1,5 +1,3 @@
-import { createDebugLogger } from "@/lib/debug"
-
 import {
   classifyGesture,
   pickFlingTarget,
@@ -11,8 +9,6 @@ import {
   WEBKIT_SCROLL_CAPTURE_MS,
 } from "./weekSnapFling"
 
-const debugMonthScroll = createDebugLogger("month-scroll")
-const traceWheel = createDebugLogger("wheel-trace")
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "])
 
 type SnapContainer = Pick<
@@ -44,7 +40,7 @@ export function attachWeekSnapSession(
   let coasting = 0
   let precise: boolean | undefined
   let prev: Sample | undefined
-  let lastCoast: { delta: number; dt: number; previousDelta?: number } | undefined
+  let lastCoast: { delta: number; dt: number } | undefined
   let decayPairs = 0
   const wheelLog: { t: number; deltaY: number; deltaMode: number }[] = []
   const pointers = new Set<number>()
@@ -90,17 +86,13 @@ export function attachWeekSnapSession(
     stopAnimation()
     phase = kind
     el.dataset.weekSnap = kind
-    debugMonthScroll("start week snap", { phase, from, velocity, to })
     // This single write aborts WebKit's native kinetic animation before our first frame.
     if (kind === "fling") el.scrollTo({ top: from, behavior: "instant" })
     animator = startSnapFling(el, {
       from,
       velocity,
       to,
-      onDone: () => {
-        debugMonthScroll("finish week snap", { phase, scrollTop: el.scrollTop, to })
-        cancel()
-      },
+      onDone: cancel,
     })
   }
 
@@ -151,15 +143,6 @@ export function attachWeekSnapSession(
   }
 
   const onWheel = (event: WheelEvent) => {
-    traceWheel("wheel", {
-      timeStamp: event.timeStamp,
-      deltaY: event.deltaY,
-      deltaMode: event.deltaMode,
-      wheelDeltaY: (event as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY,
-      scrollTop: el.scrollTop,
-      wheelSinceScroll,
-      phase,
-    })
     if (event.ctrlKey || event.deltaY === 0) return
     onInput("wheel")
     wheelSinceScroll = true
@@ -169,36 +152,23 @@ export function attachWeekSnapSession(
     }
   }
 
-  const decline = (
-    reason: "not-precise" | "waiting-for-decay" | "no-target-ahead" | "disabled",
-  ) => {
-    debugMonthScroll("takeover declined", {
-      reason,
-      coasting,
-      delta: lastCoast?.delta,
-      lastDelta: lastCoast?.previousDelta,
-    })
-    return false
-  }
-
   const takeover = (velocity: number): boolean => {
     const rowHeight = canSnap()
     if (pointers.size || keys.size || rowHeight === undefined) {
-      return decline("disabled")
+      return false
     }
     if (input !== "wheel" || !precise) {
-      return decline("not-precise")
+      return false
     }
     const from = el.scrollTop
     const to = pickFlingTarget(from, velocity, rowHeight, el.scrollHeight - el.clientHeight)
-    if (to === undefined) return decline("no-target-ahead")
+    if (to === undefined) return false
     animate("fling", from, velocity, to)
     return true
   }
 
   const tryTakeover = (delta: number, dt: number) => {
     if (coasting < TAKEOVER_COAST_FRAMES || decayPairs < TAKEOVER_DECAY_PAIRS || dt <= 0) {
-      decline("waiting-for-decay")
       return
     }
     takeover((delta / dt) * 1000)
@@ -207,7 +177,6 @@ export function attachWeekSnapSession(
   /** A prepend moved the content; carry the session across it instead of tearing it down. */
   const shift = (delta: number) => {
     if (phase === "idle" || delta === 0) return
-    debugMonthScroll("shift week snap", { phase, delta, coasting })
     if (animator) {
       animator.shift(delta)
       return
@@ -222,24 +191,8 @@ export function attachWeekSnapSession(
   }
 
   const onScroll = (event: Event) => {
-    traceWheel("scroll", {
-      timeStamp: event.timeStamp,
-      scrollTop: el.scrollTop,
-      wheelSinceScroll,
-      phase,
-      suspended: resumeFrame !== undefined,
-    })
     if (phase === "idle" || resumeFrame !== undefined) return
-    if (phase === "fling" || phase === "settle") {
-      if (animator && Math.abs(el.scrollTop - animator.lastWritten()) > 1) {
-        traceWheel("unexpected scroll during week snap", {
-          scrollTop: el.scrollTop,
-          lastWritten: animator.lastWritten(),
-          phase,
-        })
-      }
-      return
-    }
+    if (phase === "fling" || phase === "settle") return
     moved = true
     const sample = { t: event.timeStamp, y: el.scrollTop }
     const previous = prev
@@ -259,7 +212,6 @@ export function attachWeekSnapSession(
 
     const delta = sample.y - previous.y
     const dt = sample.t - previous.t
-    const lastDelta = lastCoast?.delta
     if (lastCoast) {
       if (
         dt <= 0 ||
@@ -273,7 +225,7 @@ export function attachWeekSnapSession(
       }
       // Equal nonzero deltas neither prove decay nor erase an earlier shrinking pair.
     }
-    lastCoast = { delta, dt, previousDelta: lastDelta }
+    lastCoast = { delta, dt }
     tryTakeover(delta, dt)
   }
 

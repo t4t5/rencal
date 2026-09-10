@@ -7,9 +7,6 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { monthGridBounds } from "@/hooks/cal-events/useMonthGrid"
 import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { MONTHS_TO_LOAD } from "@/lib/cal-events-range"
-import { createDebugLogger } from "@/lib/debug"
-
-const debugMonthScroll = createDebugLogger("month-scroll")
 
 // rangeStart / rangeEnd are the 1st of a month; rangeEnd is exclusive (the 1st of the first
 // not-yet-rendered month), matching useMonthGrid.
@@ -51,7 +48,6 @@ export function useInfiniteMonths({
   const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
     const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
-    debugMonthScroll("ensure month range loaded", { gridStart, gridEnd })
     void ensureRangeLoaded(gridStart, gridEnd)
   }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded, firstDayOfWeek])
 

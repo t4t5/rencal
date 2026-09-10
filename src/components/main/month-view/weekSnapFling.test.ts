@@ -150,10 +150,9 @@ describe("week snap fling physics", () => {
     [140, 0, 200],
     [240, -600, 100],
   ])("lands exactly and monotonically from %i", (from, velocity, to) => {
-    const { animation, step, offsets, onDone, frames } = setup(from, velocity, to)
+    const { step, offsets, onDone, frames } = setup(from, velocity, to)
     for (let i = 0; i < 200; i++) step(8)
     expect(offsets.at(-1)).toBe(to)
-    expect(animation.lastWritten()).toBe(to)
     expect(onDone).toHaveBeenCalledTimes(1)
     expect(frames.size).toBe(0)
     offsets.forEach((offset, i) => {
@@ -170,25 +169,24 @@ describe("week snap fling physics", () => {
       fast.step(8)
       fast.step(8)
       slow.step(16)
-      expect(fast.animation.lastWritten()).toBe(slow.animation.lastWritten())
+      expect(fast.offsets.at(-1)).toBe(slow.offsets.at(-1))
     }
   })
 
   it("keeps fractional positions independent of integer scrollTop readback", () => {
-    const { animation, step, offsets } = setup(140.25, 0, 200.5)
+    const { step, offsets } = setup(140.25, 0, 200.5)
     step(100)
-    expect(animation.lastWritten()).not.toBe(Math.round(animation.lastWritten()))
+    expect(offsets.at(-1)).not.toBe(Math.round(offsets.at(-1)!))
     step(300)
     expect(offsets.at(-1)).toBe(200.5)
   })
 
-  it("shifts later writes and lastWritten without changing the curve", () => {
+  it("shifts later writes without changing the curve", () => {
     const moved = setup(0, 600, 150)
     const still = setup(0, 600, 150)
     moved.step(16)
     still.step(16)
     moved.animation.shift(2000)
-    expect(moved.animation.lastWritten()).toBe(still.animation.lastWritten() + 2000)
     for (let i = 0; i < 40; i++) {
       moved.step(16)
       still.step(16)
@@ -209,9 +207,9 @@ describe("week snap fling physics", () => {
   })
 
   it.each([150, -150])("moves at least one pixel per full 60 Hz frame toward %i", (to) => {
-    const { animation, step, offsets, onDone } = setup(0, 0, to)
+    const { step, offsets, onDone } = setup(0, 0, to)
     while (!onDone.mock.calls.length) {
-      const previous = animation.lastWritten()
+      const previous = offsets.at(-1) ?? 0
       step(1000 / 60)
       // The last frame may span only the fraction remaining before the landing time.
       if (!onDone.mock.calls.length)

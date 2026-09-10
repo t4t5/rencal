@@ -18,15 +18,12 @@ import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import type { CalendarEvent } from "@/lib/cal-events"
-import { createDebugLogger } from "@/lib/debug"
 import { epochDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
 import { useDragToCreateDays } from "./useDragToCreateDays"
 import { attachWeekSnapSession } from "./weekSnapSession"
-
-const debugMonthScroll = createDebugLogger("month-scroll")
 
 const DEFAULT_ROW_HEIGHT = 150
 
@@ -108,14 +105,6 @@ export function MonthGrid({
     const ratio = rowHeight / prevHeight
     const newScrollTop = Math.round(el.scrollTop * ratio)
 
-    debugMonthScroll("rescale scrollTop after row height change", {
-      prevHeight,
-      rowHeight,
-      ratio,
-      prevScrollTop: el.scrollTop,
-      newScrollTop,
-    })
-
     el.scrollTop = newScrollTop
     virtualizer.measure()
   }, [rowHeight, virtualizer, scrollRef, hasInitiallyScrolled])
@@ -143,15 +132,6 @@ export function MonthGrid({
     const delta = added * rowHeight
     const from = el.scrollTop
     const to = from + delta
-
-    debugMonthScroll("preserve offset after prepend", {
-      prevFirstKey,
-      curFirstKey,
-      added,
-      rowHeight,
-      from,
-      to,
-    })
 
     virtualizer.scrollToOffset(to, { align: "start" })
     snapSessionRef.current?.shift(delta)
@@ -194,8 +174,6 @@ export function MonthGrid({
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
 
-    debugMonthScroll("initial anchor scroll", { idx, rowHeight })
-
     virtualizer.scrollToIndex(idx, { align: "start" })
 
     // Reveal only after the scroll has actually painted, so the user never sees the
@@ -215,8 +193,6 @@ export function MonthGrid({
     // pull the viewport to the active *day*'s week instead (docs/scroll-behaviour.md).
     if (Date.now() < ignoreScrollUntil.current) return
 
-    debugMonthScroll("navigation scroll check", { activeDateKey })
-
     const el = scrollRef.current
 
     if (!el) return
@@ -233,30 +209,8 @@ export function MonthGrid({
       if (item.start >= viewStart && item.end <= viewEnd) return
     }
 
-    debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
-
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
   }, [activeDateKey, navigationVersion, weeks, virtualizer, isNavigating, scrollRef])
-
-  const onScrollEnd = useEffectEvent(() => {
-    const el = scrollRef.current
-    if (!el) return
-    debugMonthScroll("week snap settled", {
-      scrollTop: el.scrollTop,
-      rowHeight,
-      offsetFromWeek: el.scrollTop - Math.round(el.scrollTop / rowHeight) * rowHeight,
-    })
-  })
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    el.addEventListener("scrollend", onScrollEnd)
-    return () => {
-      el.removeEventListener("scrollend", onScrollEnd)
-    }
-  }, [scrollRef])
 
   return (
     <div
