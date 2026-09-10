@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils"
 export const INVITES_BUTTON_EL_ID = "global-invites-button"
 
 export function InvitesBadge() {
+  const restoringFocusRef = useRef(false)
   const { calendars } = useCalendars()
   const [pendingInvites, setPendingInvites] = useState<CalendarEvent[]>([])
   const today = useToday()
@@ -63,13 +64,27 @@ export function InvitesBadge() {
           <button
             id={INVITES_BUTTON_EL_ID}
             aria-label="Invitations"
+            onFocus={(event) => {
+              if (restoringFocusRef.current) event.preventDefault()
+            }}
             className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none"
           >
             {invites.length}
           </button>
         </PopoverTrigger>
       </ShortcutTooltip>
-      <PopoverContent align={isMd ? "start" : "end"} collisionPadding={16} className="w-80 p-0">
+      <PopoverContent
+        align={isMd ? "start" : "end"}
+        collisionPadding={16}
+        className="w-80 p-0"
+        onCloseAutoFocus={() => {
+          // Radix restores focus synchronously; keep that focus from reopening the tooltip.
+          restoringFocusRef.current = true
+          queueMicrotask(() => {
+            restoringFocusRef.current = false
+          })
+        }}
+      >
         <PopoverArrow />
         <div className="p-3 font-medium text-sm border-b">Invitations</div>
         <div className="max-h-80 overflow-y-auto">

@@ -46,7 +46,7 @@ function PopoverArrow({
   return (
     <PopoverPrimitive.Arrow
       data-slot="popover-arrow"
-      className={cn("fill-popover", className)}
+      className={cn("fill-card", className)}
       asChild
       width={width}
       height={height}
@@ -54,7 +54,7 @@ function PopoverArrow({
     >
       <svg viewBox="0 0 30 10" preserveAspectRatio="none">
         <polygon points="0,0 30,0 15,10" />
-        <polyline points="0,0 15,10 30,0" fill="none" className="stroke-border" strokeWidth={2} />
+        <polyline points="0,0 15,10 30,0" fill="none" className="stroke-divider" strokeWidth={2} />
       </svg>
     </PopoverPrimitive.Arrow>
   )

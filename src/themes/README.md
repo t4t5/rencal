@@ -89,6 +89,8 @@ The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`,
 | `--popover-tint` | Popover depth tint (`black` for dark themes, `white` for light)   |
 | `--popover-mix`  | Percentage of popover tint mixed into the background              |
 
+Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
+
 ### Structure
 
 | Variable          | Purpose                                     |
