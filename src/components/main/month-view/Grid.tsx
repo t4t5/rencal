@@ -288,7 +288,7 @@ export function MonthGrid({
   const onScrollEnd = useEffectEvent(() => {
     const el = scrollRef.current
     if (!el) return
-    debugMonthScroll("native week snap settled", {
+    debugMonthScroll("week snap settled", {
       scrollTop: el.scrollTop,
       rowHeight,
       offsetFromWeek: el.scrollTop - Math.round(el.scrollTop / rowHeight) * rowHeight,

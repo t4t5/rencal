@@ -1,8 +1,15 @@
 import { createDebugLogger } from "@/lib/debug"
 
+import {
+  pickSnapTarget,
+  predictFlingEnd,
+  SETTLE_IDLE_MS,
+  startSnapFling,
+  TAKEOVER_COAST_FRAMES,
+} from "./weekSnapFling"
+
 const debugMonthScroll = createDebugLogger("month-scroll")
-// Leave room for lifting/repositioning fingers between trackpad swipes.
-const SESSION_IDLE_MS = 700
+const traceWheel = createDebugLogger("wheel-trace")
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "])
 
 type SnapContainer = Pick<
@@ -15,76 +22,199 @@ type SnapContainer = Pick<
   | "clientHeight"
   | "scrollTo"
 >
+type Phase = "idle" | "gesture" | "fling" | "settle"
+type Input = "wheel" | "pointer" | "key"
+type Sample = { t: number; y: number }
 
-/** Align with an explicit native smooth scroll after the input session settles.
- * Re-enabling CSS snapping can jump immediately in WebKitGTK. */
+/** Leave direct input native, then take over kinetic scrolling to land on a week. */
 export function attachWeekSnapSession(
   el: SnapContainer,
   getState: () => { enabled: boolean; rowHeight: number },
 ) {
+  let phase: Phase = "idle"
+  let input: Input = "wheel"
   let timer: ReturnType<typeof setTimeout> | undefined
-  let userSession = false
+  let resumeFrame: number | undefined
+  let animator: ReturnType<typeof startSnapFling> | undefined
   let moved = false
+  let wheelSinceScroll = false
+  let coasting = 0
+  let coastRejected = false
+  const samples: Sample[] = []
   const pointers = new Set<number>()
   const keys = new Set<string>()
 
-  const pause = () => {
+  const resetSamples = () => {
+    samples.length = 0
+    coasting = 0
+    wheelSinceScroll = false
+    coastRejected = false
+  }
+
+  const stopAnimation = () => {
     clearTimeout(timer)
-    if (el.dataset.weekSnap === undefined) return
+    timer = undefined
+    animator?.cancel()
+    animator = undefined
     delete el.dataset.weekSnap
-    // Also abort a settling animation before the browser applies the new input.
-    el.scrollTo({ top: el.scrollTop, behavior: "instant" })
-    debugMonthScroll("release week snap", { scrollTop: el.scrollTop })
   }
 
   const cancel = () => {
-    userSession = moved = false
-    pause()
+    stopAnimation()
+    if (resumeFrame !== undefined) cancelAnimationFrame(resumeFrame)
+    resumeFrame = undefined
+    phase = "idle"
+    moved = false
+    resetSamples()
+  }
+
+  const canSnap = () => {
+    const { enabled, rowHeight } = getState()
+    return enabled &&
+      rowHeight > 0 &&
+      !window.matchMedia("(prefers-reduced-motion: reduce)").matches
+      ? rowHeight
+      : undefined
+  }
+
+  const animate = (kind: "fling" | "settle", from: number, velocity: number, to: number) => {
+    stopAnimation()
+    phase = kind
+    el.dataset.weekSnap = kind
+    debugMonthScroll("start week snap", { phase, from, velocity, to })
+    // This single write aborts WebKit's native kinetic animation before our first frame.
+    if (kind === "fling") el.scrollTo({ top: from, behavior: "instant" })
+    animator = startSnapFling(el, {
+      from,
+      velocity,
+      to,
+      onDone: () => {
+        debugMonthScroll("finish week snap", { phase, scrollTop: el.scrollTop, to })
+        cancel()
+      },
+    })
   }
 
   const schedule = () => {
     clearTimeout(timer)
-    if (!userSession || !moved || pointers.size || keys.size) return
+    timer = undefined
+    if (phase !== "gesture" || !moved || pointers.size || keys.size) return
     timer = setTimeout(() => {
-      userSession = moved = false
-      const { enabled, rowHeight } = getState()
-      if (!enabled || rowHeight <= 0) return
-      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return
+      timer = undefined
+      const rowHeight = canSnap()
       const from = el.scrollTop
-      const to = Math.max(
-        0,
-        Math.min(Math.round(from / rowHeight) * rowHeight, el.scrollHeight - el.clientHeight),
-      )
-      if (Math.abs(to - from) < 1) return
-      debugMonthScroll("smooth week snap after input settles", {
-        from,
-        to,
-        idleMs: SESSION_IDLE_MS,
-      })
-      el.dataset.weekSnap = "settling"
-      el.scrollTo({ top: to, behavior: "smooth" })
-    }, SESSION_IDLE_MS)
+      if (rowHeight === undefined) {
+        cancel()
+        return
+      }
+      const to = pickSnapTarget(from, rowHeight, el.scrollHeight - el.clientHeight)
+      if (Math.abs(to - from) < 1) cancel()
+      else animate("settle", from, 0, to)
+    }, SETTLE_IDLE_MS)
   }
 
-  const onInput = () => {
-    pause()
-    userSession = true
+  const pause = () => {
+    const wasActive = phase !== "idle"
+    stopAnimation()
+    resetSamples()
+    // Geometry alone must not turn a programmatic scroll into a user session.
+    phase = wasActive ? "gesture" : "idle"
+    if (resumeFrame !== undefined) cancelAnimationFrame(resumeFrame)
+    resumeFrame = requestAnimationFrame(() => {
+      resumeFrame = undefined
+    })
+    schedule()
+  }
+
+  const onInput = (nextInput: Input) => {
+    const wasIdle = phase === "idle"
+    stopAnimation()
+    phase = "gesture"
+    input = nextInput
+    if (wasIdle) moved = false
+    resetSamples()
     schedule()
   }
 
   const onWheel = (event: WheelEvent) => {
-    if (!event.ctrlKey && event.deltaY !== 0) onInput()
+    traceWheel("wheel", {
+      timeStamp: event.timeStamp,
+      deltaY: event.deltaY,
+      deltaMode: event.deltaMode,
+      scrollTop: el.scrollTop,
+      wheelSinceScroll,
+      phase,
+    })
+    if (event.ctrlKey || event.deltaY === 0) return
+    onInput("wheel")
+    wheelSinceScroll = true
+    // Line/page wheel events cannot be a precise trackpad fling.
+    coastRejected = event.deltaMode !== 0
   }
 
-  const onScroll = () => {
-    if (!userSession) return
+  const tryTakeover = () => {
+    if (
+      input !== "wheel" ||
+      coastRejected ||
+      coasting < TAKEOVER_COAST_FRAMES ||
+      pointers.size ||
+      keys.size ||
+      samples.length < 3
+    )
+      return
+    const [a, b, c] = samples
+    const firstDelta = b.y - a.y
+    const secondDelta = c.y - b.y
+    const firstDt = b.t - a.t
+    const secondDt = c.t - b.t
+    if (firstDt <= 0 || secondDt <= 0) return
+    if (firstDelta * secondDelta <= 0 || Math.abs(secondDelta) > Math.abs(firstDelta)) {
+      // Do not mistake the later decelerating half of a mouse-notch ease-in-out for a fling.
+      coastRejected = true
+      return
+    }
+    const rowHeight = canSnap()
+    if (rowHeight === undefined) return
+    const from = el.scrollTop
+    const velocity = (secondDelta / secondDt) * 1000
+    const maxOffset = el.scrollHeight - el.clientHeight
+    const to = pickSnapTarget(predictFlingEnd(from, velocity, maxOffset), rowHeight, maxOffset)
+    // A tiny fling can predict a boundary behind us. Let it stop before settling back.
+    if (Math.abs(to - from) < 1 || (to - from) * velocity <= 0) return
+    animate("fling", from, velocity, to)
+  }
+
+  const onScroll = (event: Event) => {
+    traceWheel("scroll", {
+      timeStamp: event.timeStamp,
+      scrollTop: el.scrollTop,
+      wheelSinceScroll,
+      phase,
+      suspended: resumeFrame !== undefined,
+    })
+    if (phase === "idle" || resumeFrame !== undefined) return
+    if (phase === "fling" || phase === "settle") {
+      if (animator && Math.abs(el.scrollTop - animator.lastWritten()) > 1) {
+        traceWheel("unexpected scroll during week snap", {
+          scrollTop: el.scrollTop,
+          lastWritten: animator.lastWritten(),
+          phase,
+        })
+      }
+      return
+    }
     moved = true
+    samples.push({ t: event.timeStamp, y: el.scrollTop })
+    if (samples.length > 3) samples.shift()
+    coasting = wheelSinceScroll ? 0 : coasting + 1
+    wheelSinceScroll = false
     schedule()
+    tryTakeover()
   }
 
   const onPointerDown = (event: PointerEvent) => {
     pointers.add(event.pointerId)
-    onInput()
+    onInput("pointer")
   }
   const onPointerUp = (event: PointerEvent) => {
     if (pointers.delete(event.pointerId)) schedule()
@@ -92,7 +222,7 @@ export function attachWeekSnapSession(
   const onKeyDown = (event: KeyboardEvent) => {
     if (!SCROLL_KEYS.has(event.key)) return
     keys.add(event.key)
-    onInput()
+    onInput("key")
   }
   const onKeyUp = (event: KeyboardEvent) => {
     if (keys.delete(event.key)) schedule()
@@ -102,16 +232,10 @@ export function attachWeekSnapSession(
     keys.clear()
     cancel()
   }
-  const onScrollEnd = () => {
-    // The next gesture only needs to abort an animation while it is still running.
-    delete el.dataset.weekSnap
-  }
 
-  // Non-passive so the animation is interrupted before WebKit handles this wheel event.
-  // We never preventDefault or replace the user's scrolling with scrollTop writes.
+  // Interrupt our animation before WebKit handles the new wheel event; never preventDefault.
   el.addEventListener("wheel", onWheel, { passive: false })
   el.addEventListener("scroll", onScroll, { passive: true })
-  el.addEventListener("scrollend", onScrollEnd)
   el.addEventListener("pointerdown", onPointerDown, true)
   el.addEventListener("keydown", onKeyDown)
   window.addEventListener("pointerup", onPointerUp, true)
@@ -120,14 +244,12 @@ export function attachWeekSnapSession(
   window.addEventListener("blur", onBlur)
 
   return {
-    // Geometry corrections keep the input session alive but postpone its snap.
     pause,
     cancel,
     cleanup() {
       onBlur()
       el.removeEventListener("wheel", onWheel)
       el.removeEventListener("scroll", onScroll)
-      el.removeEventListener("scrollend", onScrollEnd)
       el.removeEventListener("pointerdown", onPointerDown, true)
       el.removeEventListener("keydown", onKeyDown)
       window.removeEventListener("pointerup", onPointerUp, true)
