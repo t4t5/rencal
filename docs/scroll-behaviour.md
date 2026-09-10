@@ -4,7 +4,7 @@ The month view is a vertically-stacked, endlessly-scrollable grid of week rows.
 Two things move independently and must never be confused:
 
 - **Scroll position** — where the viewport is. Moved by the user, and by deliberate
-  navigation. Never moved as a side effect of the user's own scrolling.
+  navigation, with a final week-row snap after the user's scrolling settles.
 - **Active date** — the highlighted day that drives the header's month label, the
   minical, and keyboard navigation. Follows the scroll, but does not control it.
 
@@ -18,12 +18,40 @@ Two things move independently and must never be confused:
   scrolling. The grid stays fully scrollable while events are still loading, when no
   calendars are visible, and when the calendar is empty.
 
+### Week-row snapping
+
+- The scroll container aligns to the nearest week with an explicit
+  `scrollTo({ top, behavior: "smooth" })` after 700 ms without wheel input or scroll
+  movement. This quiet
+  period includes momentum and allows short pauses between trackpad swipes.
+  `weekSnapSession.ts` owns that input session; the browser owns the snap animation.
+- New wheel input synchronously interrupts an active snap
+  before the browser applies the input. During the gesture there are no snap points
+  constraining the viewport, prevented wheel events, or synthetic scroll deltas.
+- The target uses the current row height and scroll offset, clamped to the scroll
+  range. CSS scroll snapping remains off, so fast gestures can cross any number of
+  weeks and changing snap styles cannot cause an instant jump in WebKitGTK.
+- Snapping is disabled during initial positioning and event creation/rescheduling
+  drags, and when reduced motion is requested. Date navigation already targets
+  week boundaries and keeps its existing scroll-follow suppression.
+- Pointer/key release is required before settling. Prepend/resize corrections
+  suspend snapping; explicit date navigation cancels the pending session.
+- `just debug month-scroll` logs native scroll-end offsets for checking alignment.
+
+The reference Notion Calendar bundles (`App-DnfGLEPj.js`, `cron-BwS_eHfk.js`,
+inspected September 2026) use native mandatory snapping with independent markers.
+They reset the marker range after 200 ms of scroll inactivity, plus another 1000 ms
+only when their Safari user-agent check matches. Chromium does not use that extra
+delay. Our input-session gate and explicit smooth alignment adapt this behavior
+for renCal's WebKitGTK trackpad handling. Enabling CSS snapping after the idle
+period caused an instant jump even with `scroll-behavior: smooth`.
+
 ### Active date while scrolling
 
 - On open, the grid is positioned so the first week of the current date's month is at
   the top of the viewport (the 1st of that month is visible).
-- As the user scrolls, the active date follows the scroll, but **the viewport is never
-  programmatically moved** — we never hijack the user's scroll position.
+- As the user scrolls, the active date follows the scroll. Updating the active date
+  never moves the viewport; the browser handles week-row snapping as scrolling settles.
   - The active date jumps to the 1st of whichever month currently fills the most of
     the viewport.
   - The jump only commits once that month's first-of-month week is fully visible.

@@ -10,6 +10,8 @@ import {
   useState,
 } from "react"
 
+import { useEventDrag } from "@/contexts/EventDragContext"
+
 import { clipSpanToRange } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
@@ -22,6 +24,7 @@ import { cn } from "@/lib/utils"
 import { MonthWeekRow } from "./Row"
 import { pickActiveMonth } from "./pickActiveMonth"
 import { useDragToCreateDays } from "./useDragToCreateDays"
+import { attachWeekSnapSession } from "./weekSnapSession"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
 
@@ -58,6 +61,7 @@ export function MonthGrid({
 }) {
   const activeDateKey = activeDate.toString()
   const { selection, startCreateDrag } = useDragToCreateDays(scrollRef)
+  const { drag } = useEventDrag()
   const createSelectionColor = useCreateSelectionColor()
 
   // Each day cell is a square: row height tracks the column width
@@ -67,6 +71,7 @@ export function MonthGrid({
   // Hide the grid until the initial anchor scroll lands, so the user never sees the
   // pre-scroll frame (top of the grid) flash before it jumps to the active month.
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
+  const snapSessionRef = useRef<ReturnType<typeof attachWeekSnapSession> | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -98,6 +103,8 @@ export function MonthGrid({
     prevRowHeightRef.current = rowHeight
 
     if (!el || prevHeight === rowHeight || prevHeight === 0 || !hasInitiallyScrolled) return
+
+    snapSessionRef.current?.pause()
 
     const ratio = rowHeight / prevHeight
     const newScrollTop = Math.round(el.scrollTop * ratio)
@@ -133,6 +140,8 @@ export function MonthGrid({
 
     const added = weeks.length - prevCount
 
+    snapSessionRef.current?.pause()
+
     const from = virtualizer.scrollOffset ?? 0
     const to = from + added * rowHeight
 
@@ -154,6 +163,21 @@ export function MonthGrid({
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   const prevScrollTopRef = useRef<number | null>(null)
+
+  const getSnapState = useEffectEvent(() => ({
+    enabled: hasInitiallyScrolled && !selection && !drag && !isNavigating(),
+    rowHeight,
+  }))
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const session = attachWeekSnapSession(el, getSnapState)
+    snapSessionRef.current = session
+    return () => {
+      session.cleanup()
+      snapSessionRef.current = null
+    }
+  }, [scrollRef])
 
   useEffect(() => {
     virtualizer.measure()
@@ -186,6 +210,8 @@ export function MonthGrid({
   // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+
+    snapSessionRef.current?.cancel()
 
     // Don't override the initial anchor scroll while it's still settling. On open,
     // isNavigating() is already true (the agenda's mount-time scroll sets the shared flag),
@@ -259,6 +285,16 @@ export function MonthGrid({
     }
   })
 
+  const onScrollEnd = useEffectEvent(() => {
+    const el = scrollRef.current
+    if (!el) return
+    debugMonthScroll("native week snap settled", {
+      scrollTop: el.scrollTop,
+      rowHeight,
+      offsetFromWeek: el.scrollTop - Math.round(el.scrollTop / rowHeight) * rowHeight,
+    })
+  })
+
   useEffect(() => {
     const el = scrollRef.current
     if (!el) return
@@ -273,8 +309,10 @@ export function MonthGrid({
     }
 
     el.addEventListener("scroll", handleScroll, { passive: true })
+    el.addEventListener("scrollend", onScrollEnd)
     return () => {
       el.removeEventListener("scroll", handleScroll)
+      el.removeEventListener("scrollend", onScrollEnd)
       if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [scrollRef])
