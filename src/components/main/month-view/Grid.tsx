@@ -136,11 +136,11 @@ export function MonthGrid({
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
 
     const added = weeks.length - prevCount
-
-    snapSessionRef.current?.pause()
-
-    const from = virtualizer.scrollOffset ?? 0
-    const to = from + added * rowHeight
+    const el = scrollRef.current
+    if (!el) return
+    const delta = added * rowHeight
+    const from = el.scrollTop
+    const to = from + delta
 
     debugMonthScroll("preserve offset after prepend", {
       prevFirstKey,
@@ -152,6 +152,7 @@ export function MonthGrid({
     })
 
     virtualizer.scrollToOffset(to, { align: "start" })
+    snapSessionRef.current?.shift(delta)
   })
 
   // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when

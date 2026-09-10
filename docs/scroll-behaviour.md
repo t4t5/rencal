@@ -61,13 +61,18 @@ there is no CSS snapping or second native smooth-scroll animation.
 - Snapping is disabled during initial positioning, date navigation, event creation
   and rescheduling drags, and when reduced motion is requested. Programmatic scrolls
   never start a session. Navigation cancels the current session.
-- Prepend/resize corrections cancel the animation and reset velocity samples. Their
-  scroll events are ignored until the next animation frame; an existing user session
-  then re-settles using the corrected offset and current row height. Geometry changes
-  while idle do not start a new session.
+- Prepend corrections shift the session instead of cancelling it. A running fling or
+  settle continues in the corrected coordinate space with no restart. A coasting
+  trackpad fling is adopted at once from its last measured velocity, because the
+  correction's instant write has already stopped the native animation. A direct
+  gesture keeps its wheel stream and samples. The correction's own scroll event is
+  ignored until the next animation frame. Resize corrections still cancel the
+  animation and reset samples; an active session then re-settles using the corrected
+  offset and current row height. Geometry changes while idle never start a session.
 - `data-week-snap` is `fling` or `settle` only while our animator runs. Native
   `scrollend` events do not control that lifecycle. `just debug month-scroll` logs
-  animation starts/finishes and scroll-end offsets (`offsetFromWeek` should reach 0).
+  animation starts/finishes, session shifts (`shift week snap`), and scroll-end offsets
+  (`offsetFromWeek` should reach 0).
   Each declined takeover logs its reason (`not-precise`, `waiting-for-decay`,
   `no-target-ahead`, or `disabled`), coast count, and current/previous deltas.
   `just debug wheel-trace` logs wheel/scroll timestamps, deltas, `deltaMode`, the

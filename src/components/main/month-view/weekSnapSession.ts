@@ -44,7 +44,7 @@ export function attachWeekSnapSession(
   let coasting = 0
   let precise: boolean | undefined
   let prev: Sample | undefined
-  let lastCoast: { delta: number; dt: number } | undefined
+  let lastCoast: { delta: number; dt: number; previousDelta?: number } | undefined
   let decayPairs = 0
   const wheelLog: { t: number; deltaY: number; deltaMode: number }[] = []
   const pointers = new Set<number>()
@@ -122,16 +122,20 @@ export function attachWeekSnapSession(
     }, SETTLE_IDLE_MS)
   }
 
+  const suspendUntilFrame = () => {
+    if (resumeFrame !== undefined) cancelAnimationFrame(resumeFrame)
+    resumeFrame = requestAnimationFrame(() => {
+      resumeFrame = undefined
+    })
+  }
+
   const pause = () => {
     const wasActive = phase !== "idle"
     stopAnimation()
     resetSamples()
     // Geometry alone must not turn a programmatic scroll into a user session.
     phase = wasActive ? "gesture" : "idle"
-    if (resumeFrame !== undefined) cancelAnimationFrame(resumeFrame)
-    resumeFrame = requestAnimationFrame(() => {
-      resumeFrame = undefined
-    })
+    suspendUntilFrame()
     schedule()
   }
 
@@ -165,33 +169,56 @@ export function attachWeekSnapSession(
     }
   }
 
-  const tryTakeover = (delta: number, dt: number, lastDelta: number | undefined) => {
-    const decline = (
-      reason: "not-precise" | "waiting-for-decay" | "no-target-ahead" | "disabled",
-    ) => {
-      debugMonthScroll("takeover declined", { reason, coasting, delta, lastDelta })
-    }
+  const decline = (
+    reason: "not-precise" | "waiting-for-decay" | "no-target-ahead" | "disabled",
+  ) => {
+    debugMonthScroll("takeover declined", {
+      reason,
+      coasting,
+      delta: lastCoast?.delta,
+      lastDelta: lastCoast?.previousDelta,
+    })
+    return false
+  }
+
+  const takeover = (velocity: number): boolean => {
     const rowHeight = canSnap()
     if (pointers.size || keys.size || rowHeight === undefined) {
-      decline("disabled")
-      return
+      return decline("disabled")
     }
     if (input !== "wheel" || !precise) {
-      decline("not-precise")
-      return
+      return decline("not-precise")
     }
+    const from = el.scrollTop
+    const to = pickFlingTarget(from, velocity, rowHeight, el.scrollHeight - el.clientHeight)
+    if (to === undefined) return decline("no-target-ahead")
+    animate("fling", from, velocity, to)
+    return true
+  }
+
+  const tryTakeover = (delta: number, dt: number) => {
     if (coasting < TAKEOVER_COAST_FRAMES || decayPairs < TAKEOVER_DECAY_PAIRS || dt <= 0) {
       decline("waiting-for-decay")
       return
     }
-    const from = el.scrollTop
-    const velocity = (delta / dt) * 1000
-    const to = pickFlingTarget(from, velocity, rowHeight, el.scrollHeight - el.clientHeight)
-    if (to === undefined) {
-      decline("no-target-ahead")
+    takeover((delta / dt) * 1000)
+  }
+
+  /** A prepend moved the content; carry the session across it instead of tearing it down. */
+  const shift = (delta: number) => {
+    if (phase === "idle" || delta === 0) return
+    debugMonthScroll("shift week snap", { phase, delta, coasting })
+    if (animator) {
+      animator.shift(delta)
       return
     }
-    animate("fling", from, velocity, to)
+    if (prev) prev = { t: prev.t, y: prev.y + delta }
+    suspendUntilFrame()
+    // The correction's instant write has stopped WebKit's kinetic animation, so a
+    // coasting trackpad fling would otherwise fall silent. Adopt it now.
+    if (coasting && lastCoast && lastCoast.dt > 0) {
+      takeover((lastCoast.delta / lastCoast.dt) * 1000)
+    }
   }
 
   const onScroll = (event: Event) => {
@@ -246,8 +273,8 @@ export function attachWeekSnapSession(
       }
       // Equal nonzero deltas neither prove decay nor erase an earlier shrinking pair.
     }
-    lastCoast = { delta, dt }
-    tryTakeover(delta, dt, lastDelta)
+    lastCoast = { delta, dt, previousDelta: lastDelta }
+    tryTakeover(delta, dt)
   }
 
   const onPointerDown = (event: PointerEvent) => {
@@ -283,6 +310,7 @@ export function attachWeekSnapSession(
 
   return {
     pause,
+    shift,
     cancel,
     cleanup() {
       onBlur()

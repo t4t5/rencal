@@ -56,6 +56,11 @@ describe("week snap input session", () => {
     scroll(140)
     coast()
   }
+  const prepend = (delta = 2000) => {
+    el.scrollTop += delta
+    session.shift(delta)
+    dispatch(el, "scroll")
+  }
   const finish = () => vi.advanceTimersByTime(1600)
 
   beforeEach(() => {
@@ -339,7 +344,65 @@ describe("week snap input session", () => {
     },
   )
 
-  it("ignores geometry correction scrolls until rAF and re-settles an interrupted fling", () => {
+  it("carries a fling across a prepend without a gap", () => {
+    flick()
+    vi.advanceTimersByTime(16)
+    prepend()
+    const writes = el.scrollTo.mock.calls.length
+    expect(el.dataset.weekSnap).toBe("fling")
+    vi.advanceTimersByTime(16)
+    expect(el.scrollTo).toHaveBeenCalledTimes(writes + 1)
+    vi.advanceTimersByTime(SETTLE_IDLE_MS)
+    expect(el.dataset.weekSnap).toBe("fling")
+    finish()
+    expect(el.scrollTop).toBe(2500)
+  })
+
+  it("adopts a coasting fling that a prepend interrupts", () => {
+    preciseWheel()
+    scroll(140)
+    vi.advanceTimersByTime(16)
+    scroll(20)
+    prepend()
+    expect(el.dataset.weekSnap).toBe("fling")
+    expect(el.scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 2160, behavior: "instant" })
+    finish()
+    expect(el.scrollTop).toBe(2500)
+  })
+
+  it("keeps a direct gesture's wheel stream across a prepend", () => {
+    preciseWheel()
+    scroll(140)
+    prepend()
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    coast()
+    expect(el.dataset.weekSnap).toBe("fling")
+    expect(el.scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 2178, behavior: "instant" })
+    finish()
+    expect(el.scrollTop).toBe(2500)
+  })
+
+  it("leaves a non-precise coast to the settle path after a prepend", () => {
+    wheel()
+    scroll(140)
+    vi.advanceTimersByTime(16)
+    scroll(20)
+    prepend()
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(SETTLE_IDLE_MS)
+    expect(el.dataset.weekSnap).toBe("settle")
+    finish()
+    expect(el.scrollTop).toBe(2200)
+  })
+
+  it("does nothing when shifted while idle", () => {
+    session.shift(2000)
+    finish()
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    expect(vi.getTimerCount()).toBe(0)
+  })
+
+  it("ignores resize correction scrolls until rAF and re-settles an interrupted fling", () => {
     flick()
     vi.advanceTimersByTime(16)
     session.pause()
@@ -358,9 +421,8 @@ describe("week snap input session", () => {
   it("does not delay settling for the suspended correction event", () => {
     wheel()
     scroll()
-    session.pause()
+    prepend()
     vi.advanceTimersByTime(8)
-    scroll(2000)
     vi.advanceTimersByTime(SETTLE_IDLE_MS - 8)
     expect(el.dataset.weekSnap).toBe("settle")
   })
@@ -407,15 +469,19 @@ describe("week snap input session", () => {
     expect(el.scrollTo).toHaveBeenCalledTimes(writes)
   })
 
-  it("cleanup removes listeners, the idle timer, and the geometry resume frame", () => {
-    wheel()
-    scroll()
-    session.pause()
-    session.cleanup()
-    wheel()
-    scroll()
-    expect(vi.getTimerCount()).toBe(0)
-  })
+  it.each(["pause", "shift"])(
+    "cleanup removes listeners, the idle timer, and the %s geometry resume frame",
+    (correction) => {
+      wheel()
+      scroll()
+      if (correction === "pause") session.pause()
+      else prepend()
+      session.cleanup()
+      wheel()
+      scroll()
+      expect(vi.getTimerCount()).toBe(0)
+    },
+  )
 
   it("ignores zoom, horizontal wheel input, and unrelated keys", () => {
     wheel({ ctrlKey: true })

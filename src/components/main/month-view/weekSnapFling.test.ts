@@ -182,6 +182,21 @@ describe("week snap fling physics", () => {
     expect(offsets.at(-1)).toBe(200.5)
   })
 
+  it("shifts later writes and lastWritten without changing the curve", () => {
+    const moved = setup(0, 600, 150)
+    const still = setup(0, 600, 150)
+    moved.step(16)
+    still.step(16)
+    moved.animation.shift(2000)
+    expect(moved.animation.lastWritten()).toBe(still.animation.lastWritten() + 2000)
+    for (let i = 0; i < 40; i++) {
+      moved.step(16)
+      still.step(16)
+    }
+    expect(moved.offsets.slice(1)).toEqual(still.offsets.slice(1).map((offset) => offset + 2000))
+    expect(moved.offsets.at(-1)).toBe(2150)
+  })
+
   it("reaches the target at the finite landing time", () => {
     const { step, offsets, onDone } = setup(0, 600, 150)
     const duration = (Math.log(600 / 60) / 4) * 1000
