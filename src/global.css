@@ -89,6 +89,8 @@ body {
   --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
   --popover-foreground: var(--foreground);
 
+  --tooltip: color-mix(in srgb, var(--hover-tint) 15%, var(--background));
+
   --destructive: var(--error);
 
   --tab-list-shadow: inset 0 0 0 1px var(--secondary);
@@ -123,6 +125,7 @@ body {
 
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
+  --color-tooltip: var(--tooltip);
 
   --color-card: var(--card);
   --color-today: var(--today);

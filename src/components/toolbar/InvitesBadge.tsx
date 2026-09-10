@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react"
+import { Temporal } from "@js-temporal/polyfill"
+import { useEffect, useRef, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { rpc } from "@/rpc"
 import type { ResponseStatus, TimeFormat } from "@/rpc/bindings"
@@ -11,17 +13,23 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { useViewerTzid } from "@/hooks/useViewerTzid"
+import { useToday } from "@/hooks/useToday"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-export function InvitesBadge() {
-  const { calendars } = useCalendars()
-  const [invites, setInvites] = useState<CalendarEvent[]>([])
+export const INVITES_BUTTON_EL_ID = "global-invites-button"
 
-  // Invite rows show viewer-zone dates/times; re-render them on timezone change.
-  useViewerTzid()
+export function InvitesBadge() {
+  const restoringFocusRef = useRef(false)
+  const { calendars } = useCalendars()
+  const [pendingInvites, setPendingInvites] = useState<CalendarEvent[]>([])
+  const today = useToday()
+
+  // Keep today's invitations until local midnight, even after they've ended.
+  const invites = pendingInvites.filter(
+    (invite) => Temporal.PlainDate.compare(dateInViewerZone(invite.start), today) >= 0,
+  )
 
   useEffect(() => {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
@@ -29,7 +37,7 @@ export function InvitesBadge() {
 
     rpc.caldir
       .list_invites(slugs)
-      .then((events) => setInvites(rpcToCalendarEvents(events)))
+      .then((events) => setPendingInvites(rpcToCalendarEvents(events)))
       .catch(console.error)
   }, [calendars])
 
@@ -40,7 +48,7 @@ export function InvitesBadge() {
   if (invites.length === 0) return null
 
   const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
-    setInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
+    setPendingInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
     try {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
       void requestSync()
@@ -51,12 +59,32 @@ export function InvitesBadge() {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button className="flex size-6 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white hover:bg-red-600 transition-colors outline-none">
-          {invites.length}
-        </button>
-      </PopoverTrigger>
-      <PopoverContent align={isMd ? "start" : "end"} collisionPadding={16} className="w-80 p-0">
+      <ShortcutTooltip text="Invitations" shortcut="i">
+        <PopoverTrigger asChild>
+          <button
+            id={INVITES_BUTTON_EL_ID}
+            aria-label="Invitations"
+            onFocus={(event) => {
+              if (restoringFocusRef.current) event.preventDefault()
+            }}
+            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none"
+          >
+            {invites.length}
+          </button>
+        </PopoverTrigger>
+      </ShortcutTooltip>
+      <PopoverContent
+        align={isMd ? "start" : "end"}
+        collisionPadding={16}
+        className="w-80 p-0"
+        onCloseAutoFocus={() => {
+          // Radix restores focus synchronously; keep that focus from reopening the tooltip.
+          restoringFocusRef.current = true
+          queueMicrotask(() => {
+            restoringFocusRef.current = false
+          })
+        }}
+      >
         <PopoverArrow />
         <div className="p-3 font-medium text-sm border-b">Invitations</div>
         <div className="max-h-80 overflow-y-auto">
