@@ -10,20 +10,20 @@ import {
   useState,
 } from "react"
 
+import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
+import { useEventDrag } from "@/contexts/EventDragContext"
+
 import { clipSpanToRange } from "@/hooks/cal-events/all-day-lanes"
 import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import type { CalendarEvent } from "@/lib/cal-events"
-import { createDebugLogger } from "@/lib/debug"
-import { epochDay, formatDateKey } from "@/lib/event-time"
+import { epochDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
-import { pickActiveMonth } from "./pickActiveMonth"
 import { useDragToCreateDays } from "./useDragToCreateDays"
-
-const debugMonthScroll = createDebugLogger("month-scroll")
+import { attachWeekSnapSession } from "./weekSnapSession"
 
 const DEFAULT_ROW_HEIGHT = 150
 
@@ -38,7 +38,6 @@ export function MonthGrid({
   isNavigating,
   onDayClick,
   onEventClick,
-  onScrollMonthChange,
   draftEvent,
   dimmed,
 }: {
@@ -52,12 +51,13 @@ export function MonthGrid({
   isNavigating: () => boolean
   onDayClick: (date: Temporal.PlainDate) => void
   onEventClick: (eventKey: string) => void
-  onScrollMonthChange: (date: Temporal.PlainDate) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
 }) {
   const activeDateKey = activeDate.toString()
+  const { navigationVersion } = useCalendarNavigation()
   const { selection, startCreateDrag } = useDragToCreateDays(scrollRef)
+  const { drag } = useEventDrag()
   const createSelectionColor = useCreateSelectionColor()
 
   // Each day cell is a square: row height tracks the column width
@@ -67,6 +67,7 @@ export function MonthGrid({
   // Hide the grid until the initial anchor scroll lands, so the user never sees the
   // pre-scroll frame (top of the grid) flash before it jumps to the active month.
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
+  const snapSessionRef = useRef<ReturnType<typeof attachWeekSnapSession> | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -99,16 +100,10 @@ export function MonthGrid({
 
     if (!el || prevHeight === rowHeight || prevHeight === 0 || !hasInitiallyScrolled) return
 
+    snapSessionRef.current?.pause()
+
     const ratio = rowHeight / prevHeight
     const newScrollTop = Math.round(el.scrollTop * ratio)
-
-    debugMonthScroll("rescale scrollTop after row height change", {
-      prevHeight,
-      rowHeight,
-      ratio,
-      prevScrollTop: el.scrollTop,
-      newScrollTop,
-    })
 
     el.scrollTop = newScrollTop
     virtualizer.measure()
@@ -132,20 +127,14 @@ export function MonthGrid({
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
 
     const added = weeks.length - prevCount
-
-    const from = virtualizer.scrollOffset ?? 0
-    const to = from + added * rowHeight
-
-    debugMonthScroll("preserve offset after prepend", {
-      prevFirstKey,
-      curFirstKey,
-      added,
-      rowHeight,
-      from,
-      to,
-    })
+    const el = scrollRef.current
+    if (!el) return
+    const delta = added * rowHeight
+    const from = el.scrollTop
+    const to = from + delta
 
     virtualizer.scrollToOffset(to, { align: "start" })
+    snapSessionRef.current?.shift(delta)
   })
 
   // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when
@@ -153,7 +142,21 @@ export function MonthGrid({
   // measure() on rowHeight/virtualizer changes because tanstack-virtual memoizes item sizes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
-  const prevScrollTopRef = useRef<number | null>(null)
+
+  const getSnapState = useEffectEvent(() => ({
+    enabled: hasInitiallyScrolled && !selection && !drag && !isNavigating(),
+    rowHeight,
+  }))
+  useEffect(() => {
+    const el = scrollRef.current
+    if (!el) return
+    const session = attachWeekSnapSession(el, getSnapState)
+    snapSessionRef.current = session
+    return () => {
+      session.cleanup()
+      snapSessionRef.current = null
+    }
+  }, [scrollRef])
 
   useEffect(() => {
     virtualizer.measure()
@@ -170,9 +173,6 @@ export function MonthGrid({
 
     hasInitialized.current = true
     ignoreScrollUntil.current = Date.now() + 200
-    prevScrollTopRef.current = null
-
-    debugMonthScroll("initial anchor scroll", { idx, rowHeight })
 
     virtualizer.scrollToIndex(idx, { align: "start" })
 
@@ -182,18 +182,16 @@ export function MonthGrid({
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
-  // Scroll-follow updates activeDate without setting isNavigating, so this only runs for
-  // deliberate jumps such as clicks, shortcuts, and minical navigation.
   useEffect(() => {
     if (!hasInitialized.current || !isNavigating()) return
+
+    snapSessionRef.current?.cancel()
 
     // Don't override the initial anchor scroll while it's still settling. On open,
     // isNavigating() is already true (the agenda's mount-time scroll sets the shared flag),
     // and the anchor has just put the active month's first week at the top — we must not
     // pull the viewport to the active *day*'s week instead (docs/scroll-behaviour.md).
     if (Date.now() < ignoreScrollUntil.current) return
-
-    debugMonthScroll("navigation scroll check", { activeDateKey })
 
     const el = scrollRef.current
 
@@ -211,73 +209,8 @@ export function MonthGrid({
       if (item.start >= viewStart && item.end <= viewEnd) return
     }
 
-    debugMonthScroll("navigation scroll to active week", { activeDateKey, weekIndex })
-
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
-  }, [activeDateKey, weeks, virtualizer, isNavigating, scrollRef])
-
-  // As the user scrolls, follow the active date to the dominant month (see
-  // docs/scroll-behaviour.md). useEffectEvent so the once-bound scroll listener always
-  // sees the latest render's weeks/virtualizer without re-subscribing.
-  const onScrollTick = useEffectEvent(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    // Ignore the settling scrolls right after the initial programmatic anchor scroll, and
-    // never follow while a deliberate navigation is driving the viewport.
-    if (Date.now() < ignoreScrollUntil.current || isNavigating() || weeks.length === 0) {
-      prevScrollTopRef.current = null
-      return
-    }
-
-    const viewTop = el.scrollTop
-    const viewBottom = viewTop + el.clientHeight
-    const prevTop = prevScrollTopRef.current
-    const direction: "up" | "down" | null =
-      prevTop === null || viewTop === prevTop ? null : viewTop > prevTop ? "down" : "up"
-    prevScrollTopRef.current = viewTop
-
-    // The first tick after mount/navigation only establishes the direction baseline.
-    if (direction === null) return
-
-    const target = pickActiveMonth({
-      virtualItems: virtualizer.getVirtualItems(),
-      weeks,
-      viewTop,
-      viewBottom,
-      activeDate,
-      direction,
-    })
-
-    if (target) {
-      debugMonthScroll("scroll-follow active month", {
-        from: activeDateKey,
-        to: formatDateKey(target),
-        direction,
-      })
-      onScrollMonthChange(target)
-    }
-  })
-
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-
-    let rafId: number | null = null
-    const handleScroll = () => {
-      if (rafId !== null) return
-      rafId = requestAnimationFrame(() => {
-        rafId = null
-        onScrollTick()
-      })
-    }
-
-    el.addEventListener("scroll", handleScroll, { passive: true })
-    return () => {
-      el.removeEventListener("scroll", handleScroll)
-      if (rafId !== null) cancelAnimationFrame(rafId)
-    }
-  }, [scrollRef])
+  }, [activeDateKey, navigationVersion, weeks, virtualizer, isNavigating, scrollRef])
 
   return (
     <div

@@ -51,7 +51,7 @@ typecheck:
 test:
   pnpm test
 
-# Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug month-scroll`.
+# Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug agenda`.
 debug flags="*": ensure-providers
   VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
 
