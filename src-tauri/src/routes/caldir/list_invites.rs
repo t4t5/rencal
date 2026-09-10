@@ -3,11 +3,9 @@ use super::helpers::{event_time_sort_key, is_visible};
 use super::types::CalendarEvent;
 use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use chrono::Utc;
 
 pub(super) async fn handler(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {
     let caldir = load_caldir()?;
-    let now = Utc::now();
     let mut invites = Vec::new();
 
     for slug in &calendar_slugs {
@@ -23,13 +21,7 @@ pub(super) async fn handler(calendar_slugs: Vec<String>) -> TauResult<Vec<Calend
             if !is_visible(event) {
                 continue;
             }
-            let is_future = event
-                .end
-                .as_ref()
-                .map(|e| e.to_utc())
-                .unwrap_or_else(|| event.start.to_utc())
-                >= now;
-            if event.is_pending_invite_for(&email) && is_future {
+            if event.is_pending_invite_for(&email) {
                 invites.push(CalendarEvent::from_event(event, slug, None));
             }
         }

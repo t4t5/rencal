@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
@@ -11,17 +12,20 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
-import { useViewerTzid } from "@/hooks/useViewerTzid"
+import { useToday } from "@/hooks/useToday"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function InvitesBadge() {
   const { calendars } = useCalendars()
-  const [invites, setInvites] = useState<CalendarEvent[]>([])
+  const [pendingInvites, setPendingInvites] = useState<CalendarEvent[]>([])
+  const today = useToday()
 
-  // Invite rows show viewer-zone dates/times; re-render them on timezone change.
-  useViewerTzid()
+  // Keep today's invitations until local midnight, even after they've ended.
+  const invites = pendingInvites.filter(
+    (invite) => Temporal.PlainDate.compare(dateInViewerZone(invite.start), today) >= 0,
+  )
 
   useEffect(() => {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
@@ -29,7 +33,7 @@ export function InvitesBadge() {
 
     rpc.caldir
       .list_invites(slugs)
-      .then((events) => setInvites(rpcToCalendarEvents(events)))
+      .then((events) => setPendingInvites(rpcToCalendarEvents(events)))
       .catch(console.error)
   }, [calendars])
 
@@ -40,7 +44,7 @@ export function InvitesBadge() {
   if (invites.length === 0) return null
 
   const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
-    setInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
+    setPendingInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
     try {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
       void requestSync()
@@ -52,7 +56,7 @@ export function InvitesBadge() {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button className="flex size-6 items-center justify-center rounded-full bg-red-500 text-xs font-medium text-white hover:bg-red-600 transition-colors outline-none">
+        <button className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none">
           {invites.length}
         </button>
       </PopoverTrigger>
