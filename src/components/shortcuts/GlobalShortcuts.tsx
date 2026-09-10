@@ -11,6 +11,7 @@ import {
   isAgendaItemFocused,
   isInteractiveElementFocused,
 } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
+import { INVITES_BUTTON_EL_ID } from "@/components/toolbar/InvitesBadge"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 
@@ -289,6 +290,10 @@ function useShortcutHandlers({
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
+    "toggle-invites": (e) => {
+      e?.preventDefault()
+      document.getElementById(INVITES_BUTTON_EL_ID)?.click()
+    },
     sync: () => void syncNow(),
     settings: (e) => {
       e?.preventDefault()

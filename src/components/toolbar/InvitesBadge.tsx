@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { rpc } from "@/rpc"
 import type { ResponseStatus, TimeFormat } from "@/rpc/bindings"
@@ -16,6 +17,8 @@ import { useToday } from "@/hooks/useToday"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
+
+export const INVITES_BUTTON_EL_ID = "global-invites-button"
 
 export function InvitesBadge() {
   const { calendars } = useCalendars()
@@ -55,11 +58,17 @@ export function InvitesBadge() {
 
   return (
     <Popover>
-      <PopoverTrigger asChild>
-        <button className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none">
-          {invites.length}
-        </button>
-      </PopoverTrigger>
+      <ShortcutTooltip text="Invitations" shortcut="i">
+        <PopoverTrigger asChild>
+          <button
+            id={INVITES_BUTTON_EL_ID}
+            aria-label="Invitations"
+            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none"
+          >
+            {invites.length}
+          </button>
+        </PopoverTrigger>
+      </ShortcutTooltip>
       <PopoverContent align={isMd ? "start" : "end"} collisionPadding={16} className="w-80 p-0">
         <PopoverArrow />
         <div className="p-3 font-medium text-sm border-b">Invitations</div>

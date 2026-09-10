@@ -36,6 +36,7 @@ Press <kbd>?</kbd> in the app to see all shortcuts.
 | Search events                    | <kbd>/</kbd> or <kbd>Ctrl</kbd><kbd>F</kbd> |
 | Compose a new event              | <kbd>c</kbd>                                |
 | Add an event to the selected day | <kbd>a</kbd>                                |
+| Toggle invitations               | <kbd>i</kbd>                                |
 | Open settings                    | <kbd>Ctrl</kbd><kbd>,</kbd>                 |
 | Cycle through themes             | <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd> |
 | Show keyboard shortcuts          | <kbd>?</kbd>                                |
