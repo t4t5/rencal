@@ -24,21 +24,35 @@ Two things move independently and must never be confused:
 trackpad fling to land on a week boundary. `weekSnapFling.ts` owns the animation:
 there is no CSS snapping or second native smooth-scroll animation.
 
-- A wheel session becomes eligible after two consecutive scroll events without
-  intervening wheel input. The last three timestamped offsets must show movement
-  in the same direction with non-increasing frame deltas. Acceleration disqualifies
-  that coasting sequence, including its later deceleration; line/page wheel input
-  is also excluded. This is a heuristic, since DOM wheel events do not identify
-  the physical input device.
+- A wheel session becomes eligible after two scroll events without intervening wheel
+  input and at least one strictly shrinking pair of coast deltas in the same
+  direction. Growth or a sign flip resets the decay count; equal nonzero deltas
+  leave it unchanged. Every coasting frame retries, so a partial first frame delays
+  takeover instead of rejecting the entire fling. This follows the decay-wait model
+  in Chromium's `cc/input/snap_fling_controller.cc`, without adopting its curve-specific
+  ratio threshold. The wheel stream must also look precise: at least three events
+  within 150 ms of the newest event, with at least two distinct absolute delta values.
+  Explicit line/page wheel input is excluded. This is a provisional device heuristic;
+  physical WebKitGTK traces are still needed to validate it against trackpads and mice.
 - On takeover, one instant `scrollTo` stops the native animation. Measured velocity
-  predicts the natural end as `from + velocity / 4`; the nearest week boundary to
-  that prediction becomes the target, clamped to the current scroll range. A target
-  behind the current motion is left for idle settling instead of reversing a fling.
-- The frame loop follows `target - (target - from) * exp(-rate * elapsedSeconds)`.
-  The rate is `abs(velocity / (target - from))`, clamped to 4–30 per second. This
-  matches entry velocity when within those limits. Fractional positions stay in JS
-  so rounded `scrollTop` values cannot stall the tail. The final write lands exactly
-  on the target, within 0.5 px or at the 1500 ms safety cap.
+  predicts the natural end as `from + velocity / 4`. The target is the week boundary
+  nearest that prediction **among boundaries ahead in the direction of motion**,
+  clamped to the current scroll range. A boundary less than 1 px ahead counts as
+  reached, so a tiny fling past a line continues to the next one. With nothing ahead
+  at the range edge, native scrolling continues and the idle settle remains available.
+  This follows `DirectionStrategy` in Chromium's `cc/input/scroll_snap_data.cc`, used
+  by the fling path in `cc/input/input_handler.cc`; slow releases still use the nearest
+  boundary in either direction, like `CreateForEndPosition`.
+- The animator uses a finite, normalised exponential. For distance `d`, its rate
+  `k = abs(velocity / d)` is clamped to 4–30 per second (zero velocity uses 4).
+  Its duration is `T = max(0, ln(k * abs(d) / 60) / k)` seconds, and its offset is
+  `from + d * (1 - exp(-k * t)) / (1 - exp(-k * T))` until the final write at `T`.
+  This ends the glide before its approach speed falls below 60 px/s, removing the
+  creeping tail, with the 1500 ms safety cap retained. Zero-duration corrections land
+  on the first frame. Fractional positions stay in JS, independent of `scrollTop`
+  rounding. Like Chromium's distance-driven `cc/input/snap_fling_curve.cc`, the curve
+  may increase entry speed when the target lies beyond the natural landing point;
+  normalisation also raises entry speed slightly.
 - Without an eligible fling, 250 ms without input or scrolling starts the same
   ease-out animator from zero velocity toward the nearest week. Pointer and scroll
   key sessions only use this settle path, after all held pointers/keys are released.
@@ -54,13 +68,17 @@ there is no CSS snapping or second native smooth-scroll animation.
 - `data-week-snap` is `fling` or `settle` only while our animator runs. Native
   `scrollend` events do not control that lifecycle. `just debug month-scroll` logs
   animation starts/finishes and scroll-end offsets (`offsetFromWeek` should reach 0).
-  `just debug wheel-trace` logs wheel/scroll timestamps, deltas, offsets, whether a
-  wheel arrived since the last scroll, and unexpected offsets during animation.
+  Each declined takeover logs its reason (`not-precise`, `waiting-for-decay`,
+  `no-target-ahead`, or `disabled`), coast count, and current/previous deltas.
+  `just debug wheel-trace` logs wheel/scroll timestamps, deltas, `deltaMode`, the
+  nonstandard `wheelDeltaY`, offsets, whether a wheel arrived since the last scroll,
+  and unexpected offsets during animation.
   Use `just debug month-scroll,wheel-trace` for both.
 
 All tuning constants live at the top of `weekSnapFling.ts`: kinetic friction 4,
-takeover after 2 coast frames, decay bounds 4–30, idle delay 250 ms, maximum duration
-1500 ms, and completion tolerance 0.5 px.
+takeover after at least 2 coast frames and 1 shrinking pair, a 150 ms wheel capture
+window with at least 3 events, a 1 px ahead threshold, decay bounds 4–30, idle delay
+250 ms, maximum duration 1500 ms, and minimum approach speed 60 px/s.
 
 The WebKitGTK constraints documented in the implementation plan (WebKit tag
 `webkitgtk-2.52.6`) explain this approach:
@@ -74,7 +92,8 @@ The WebKitGTK constraints documented in the implementation plan (WebKit tag
   wheel input. The latter are the takeover opportunity.
 - Mouse wheels do not use kinetic scrolling. Their notches can use
   `ScrollAnimationSmooth`, producing scroll-only frames with an ease-in-out curve.
-  The acceleration guard avoids treating that curve as a trackpad fling.
+  The wheel-stream classifier keeps isolated or fixed-magnitude notches on the settle
+  path while allowing trackpad coasting to recover from an initially growing frame.
 
 Notion Calendar's reference bundle uses permanent mandatory CSS snapping; Chromium
 can carry a fling continuously into its snap target. renCal instead adapts the fling

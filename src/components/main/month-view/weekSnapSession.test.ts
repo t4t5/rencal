@@ -42,8 +42,17 @@ describe("week snap input session", () => {
     vi.advanceTimersByTime(16)
     scroll(second)
   }
+  const preciseWheel = (direction = 1, properties = {}) => {
+    for (const [i, delta] of [12, 18, 14].entries()) {
+      wheel({ deltaY: direction * delta, ...properties })
+      if (i < 2) {
+        scroll(0)
+        vi.advanceTimersByTime(16)
+      }
+    }
+  }
   const flick = () => {
-    wheel()
+    preciseWheel()
     scroll(140)
     coast()
   }
@@ -93,7 +102,7 @@ describe("week snap input session", () => {
   })
 
   it("takes over on the second decelerating coast frame and predicts the landing", () => {
-    wheel()
+    preciseWheel()
     scroll(140)
     vi.advanceTimersByTime(16)
     scroll(20)
@@ -112,7 +121,7 @@ describe("week snap input session", () => {
 
   it("takes over upward flings", () => {
     el.scrollTop = 1000
-    wheel({ deltaY: -12 })
+    preciseWheel(-1)
     scroll(-140)
     coast(-20, -18)
     expect(el.dataset.weekSnap).toBe("fling")
@@ -124,7 +133,7 @@ describe("week snap input session", () => {
     if (kind === "fling") flick()
     else {
       wheel()
-      scroll()
+      scroll(140)
       vi.advanceTimersByTime(SETTLE_IDLE_MS)
     }
     vi.advanceTimersByTime(16)
@@ -167,7 +176,7 @@ describe("week snap input session", () => {
     expect(el.scrollTop).toBe(200)
   })
 
-  it("does not take over mouse acceleration, even when its tail decelerates", () => {
+  it("a single mouse notch stays native through acceleration and deceleration", () => {
     wheel()
     scroll(140)
     coast(5, 10)
@@ -178,7 +187,7 @@ describe("week snap input session", () => {
   })
 
   it("does not take over line-mode mouse wheel events", () => {
-    wheel({ deltaMode: 1 })
+    preciseWheel(1, { deltaMode: 1 })
     scroll(140)
     coast()
     expect(el.scrollTo).not.toHaveBeenCalled()
@@ -186,15 +195,117 @@ describe("week snap input session", () => {
     expect(el.dataset.weekSnap).toBe("settle")
   })
 
-  it("does not reverse a tiny fling at takeover", () => {
-    wheel()
+  it("carries a tiny fling forward to the next week", () => {
+    preciseWheel()
     scroll(115)
     coast(2, 1)
+    expect(el.dataset.weekSnap).toBe("fling")
+    expect(el.scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 118, behavior: "instant" })
+    vi.advanceTimersByTime(16)
+    expect(el.scrollTo).toHaveBeenCalledTimes(2)
+    finish()
+    expect(el.scrollTop).toBe(200)
+  })
+
+  it("waits through a partial first coast frame and takes over at the first shrinking pair", () => {
+    preciseWheel()
+    scroll(140)
+    coast(5, 10)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    scroll(8)
+    expect(el.dataset.weekSnap).toBe("fling")
+    expect(el.scrollTo).toHaveBeenCalledExactlyOnceWith({ top: 163, behavior: "instant" })
+    finish()
+    expect(el.scrollTop).toBe(300)
+  })
+
+  it("equal coast deltas do not count as decay", () => {
+    preciseWheel()
+    scroll(140)
+    coast(10, 10)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    scroll(9)
+    expect(el.dataset.weekSnap).toBe("fling")
+  })
+
+  it("equal coast deltas preserve decay while takeover is disabled", () => {
+    enabled = false
+    preciseWheel()
+    scroll(140)
+    coast(10, 9)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    enabled = true
+    vi.advanceTimersByTime(16)
+    scroll(9)
+    expect(el.dataset.weekSnap).toBe("fling")
+  })
+
+  it.each([8, -6])("growth or a sign flip to %i resets earlier decay", (delta) => {
+    enabled = false
+    preciseWheel()
+    scroll(140)
+    coast(10, 7)
+    enabled = true
+    coast(delta, delta)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    scroll(delta - Math.sign(delta))
+    expect(el.dataset.weekSnap).toBe("fling")
+  })
+
+  it("leaves a fling at the range edge native and settles afterwards", () => {
+    el.scrollHeight = 1475
+    preciseWheel()
+    scroll(958)
+    coast(10, 7)
+    expect(el.scrollTop).toBe(975)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    // Native motion can retreat from the edge before the idle settle.
+    vi.advanceTimersByTime(16)
+    scroll(-15)
     expect(el.scrollTo).not.toHaveBeenCalled()
     vi.advanceTimersByTime(SETTLE_IDLE_MS)
     expect(el.dataset.weekSnap).toBe("settle")
     finish()
-    expect(el.scrollTop).toBe(100)
+    expect(el.scrollTop).toBe(975)
+  })
+
+  it("does not reuse a previous fling's precise wheel stream for a new notch", () => {
+    flick()
+    vi.advanceTimersByTime(16)
+    wheel()
+    scroll(10)
+    coast()
+    expect(el.dataset.weekSnap).toBeUndefined()
+    vi.advanceTimersByTime(SETTLE_IDLE_MS)
+    expect(el.dataset.weekSnap).toBe("settle")
+  })
+
+  it("prunes old wheel events from an ongoing gesture", () => {
+    preciseWheel()
+    scroll(140)
+    vi.advanceTimersByTime(151)
+    wheel()
+    scroll(10)
+    coast()
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    finish()
+    expect(el.scrollTop).toBe(200)
+  })
+
+  it("new direct wheel input resets the decay wait", () => {
+    preciseWheel()
+    scroll(140)
+    coast(5, 10)
+    wheel()
+    scroll(12)
+    coast(10, 10)
+    expect(el.scrollTo).not.toHaveBeenCalled()
+    vi.advanceTimersByTime(16)
+    scroll(9)
+    expect(el.dataset.weekSnap).toBe("fling")
   })
 
   it("ignores programmatic scrolling and cancels the session for navigation", () => {
@@ -215,7 +326,7 @@ describe("week snap input session", () => {
   it.each(["disabled", "reduced motion", "invalid height"])(
     "leaves native motion alone when %s",
     (reason) => {
-      wheel()
+      preciseWheel()
       scroll(140)
       if (reason === "disabled") enabled = false
       if (reason === "reduced motion") reducedMotion = true

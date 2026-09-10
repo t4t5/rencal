@@ -1,11 +1,14 @@
 import { createDebugLogger } from "@/lib/debug"
 
 import {
+  classifyGesture,
+  pickFlingTarget,
   pickSnapTarget,
-  predictFlingEnd,
   SETTLE_IDLE_MS,
   startSnapFling,
   TAKEOVER_COAST_FRAMES,
+  TAKEOVER_DECAY_PAIRS,
+  WEBKIT_SCROLL_CAPTURE_MS,
 } from "./weekSnapFling"
 
 const debugMonthScroll = createDebugLogger("month-scroll")
@@ -39,16 +42,22 @@ export function attachWeekSnapSession(
   let moved = false
   let wheelSinceScroll = false
   let coasting = 0
-  let coastRejected = false
-  const samples: Sample[] = []
+  let precise: boolean | undefined
+  let prev: Sample | undefined
+  let lastCoast: { delta: number; dt: number } | undefined
+  let decayPairs = 0
+  const wheelLog: { t: number; deltaY: number; deltaMode: number }[] = []
   const pointers = new Set<number>()
   const keys = new Set<string>()
 
-  const resetSamples = () => {
-    samples.length = 0
+  const resetSamples = (preserveWheelLog = false) => {
+    if (!preserveWheelLog) wheelLog.length = 0
+    prev = undefined
+    lastCoast = undefined
+    decayPairs = 0
+    precise = undefined
     coasting = 0
     wheelSinceScroll = false
-    coastRejected = false
   }
 
   const stopAnimation = () => {
@@ -128,11 +137,12 @@ export function attachWeekSnapSession(
 
   const onInput = (nextInput: Input) => {
     const wasIdle = phase === "idle"
+    const continuingWheel = phase === "gesture" && input === "wheel" && nextInput === "wheel"
     stopAnimation()
     phase = "gesture"
     input = nextInput
     if (wasIdle) moved = false
-    resetSamples()
+    resetSamples(continuingWheel)
     schedule()
   }
 
@@ -141,6 +151,7 @@ export function attachWeekSnapSession(
       timeStamp: event.timeStamp,
       deltaY: event.deltaY,
       deltaMode: event.deltaMode,
+      wheelDeltaY: (event as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY,
       scrollTop: el.scrollTop,
       wheelSinceScroll,
       phase,
@@ -148,39 +159,38 @@ export function attachWeekSnapSession(
     if (event.ctrlKey || event.deltaY === 0) return
     onInput("wheel")
     wheelSinceScroll = true
-    // Line/page wheel events cannot be a precise trackpad fling.
-    coastRejected = event.deltaMode !== 0
+    wheelLog.push({ t: event.timeStamp, deltaY: event.deltaY, deltaMode: event.deltaMode })
+    while (wheelLog.length && wheelLog[0].t < event.timeStamp - WEBKIT_SCROLL_CAPTURE_MS) {
+      wheelLog.shift()
+    }
   }
 
-  const tryTakeover = () => {
-    if (
-      input !== "wheel" ||
-      coastRejected ||
-      coasting < TAKEOVER_COAST_FRAMES ||
-      pointers.size ||
-      keys.size ||
-      samples.length < 3
-    )
-      return
-    const [a, b, c] = samples
-    const firstDelta = b.y - a.y
-    const secondDelta = c.y - b.y
-    const firstDt = b.t - a.t
-    const secondDt = c.t - b.t
-    if (firstDt <= 0 || secondDt <= 0) return
-    if (firstDelta * secondDelta <= 0 || Math.abs(secondDelta) > Math.abs(firstDelta)) {
-      // Do not mistake the later decelerating half of a mouse-notch ease-in-out for a fling.
-      coastRejected = true
-      return
+  const tryTakeover = (delta: number, dt: number, lastDelta: number | undefined) => {
+    const decline = (
+      reason: "not-precise" | "waiting-for-decay" | "no-target-ahead" | "disabled",
+    ) => {
+      debugMonthScroll("takeover declined", { reason, coasting, delta, lastDelta })
     }
     const rowHeight = canSnap()
-    if (rowHeight === undefined) return
+    if (pointers.size || keys.size || rowHeight === undefined) {
+      decline("disabled")
+      return
+    }
+    if (input !== "wheel" || !precise) {
+      decline("not-precise")
+      return
+    }
+    if (coasting < TAKEOVER_COAST_FRAMES || decayPairs < TAKEOVER_DECAY_PAIRS || dt <= 0) {
+      decline("waiting-for-decay")
+      return
+    }
     const from = el.scrollTop
-    const velocity = (secondDelta / secondDt) * 1000
-    const maxOffset = el.scrollHeight - el.clientHeight
-    const to = pickSnapTarget(predictFlingEnd(from, velocity, maxOffset), rowHeight, maxOffset)
-    // A tiny fling can predict a boundary behind us. Let it stop before settling back.
-    if (Math.abs(to - from) < 1 || (to - from) * velocity <= 0) return
+    const velocity = (delta / dt) * 1000
+    const to = pickFlingTarget(from, velocity, rowHeight, el.scrollHeight - el.clientHeight)
+    if (to === undefined) {
+      decline("no-target-ahead")
+      return
+    }
     animate("fling", from, velocity, to)
   }
 
@@ -204,12 +214,40 @@ export function attachWeekSnapSession(
       return
     }
     moved = true
-    samples.push({ t: event.timeStamp, y: el.scrollTop })
-    if (samples.length > 3) samples.shift()
-    coasting = wheelSinceScroll ? 0 : coasting + 1
+    const sample = { t: event.timeStamp, y: el.scrollTop }
+    const previous = prev
+    prev = sample
+    if (wheelSinceScroll) {
+      coasting = 0
+      lastCoast = undefined
+      decayPairs = 0
+      precise = undefined
+    } else {
+      coasting++
+      if (coasting === 1) precise = classifyGesture(wheelLog)
+    }
     wheelSinceScroll = false
     schedule()
-    tryTakeover()
+    if (!coasting || !previous) return
+
+    const delta = sample.y - previous.y
+    const dt = sample.t - previous.t
+    const lastDelta = lastCoast?.delta
+    if (lastCoast) {
+      if (
+        dt <= 0 ||
+        lastCoast.dt <= 0 ||
+        delta * lastCoast.delta <= 0 ||
+        Math.abs(delta) > Math.abs(lastCoast.delta)
+      ) {
+        decayPairs = 0
+      } else if (Math.abs(delta) < Math.abs(lastCoast.delta)) {
+        decayPairs++
+      }
+      // Equal nonzero deltas neither prove decay nor erase an earlier shrinking pair.
+    }
+    lastCoast = { delta, dt }
+    tryTakeover(delta, dt, lastDelta)
   }
 
   const onPointerDown = (event: PointerEvent) => {
