@@ -39,3 +39,6 @@ src-tauri/providers/
 # Flatpak build output
 build-dir/
 .flatpak-builder/
+
+# Nix build output
+result
