@@ -25,7 +25,7 @@
         caldirProviders = {
           x86_64-linux = pkgs.fetchurl {
             url = "https://github.com/t4t5/caldir/releases/download/${caldirVersion}/caldir-x86_64-unknown-linux-musl.tar.gz";
-            hash = "sha256-mZD+rTN+WBzhptsPpB+9BDbJqGcogIhk5OvnhFJU4Fc=";
+            hash = "sha256-mZD+rTN+WBzhptsK9B+9BDbJqGcogIZOTr54RSVLTFc=";
           };
           aarch64-linux = pkgs.fetchurl {
             url = "https://github.com/t4t5/caldir/releases/download/${caldirVersion}/caldir-aarch64-unknown-linux-musl.tar.gz";
@@ -33,7 +33,7 @@
           };
         };
 
-        rencal = pkgs.stdenv.mkDerivation {
+        rencal = pkgs.stdenv.mkDerivation (finalAttrs: {
           pname = "rencal";
           version = "0.7.0";
 
@@ -43,7 +43,6 @@
               let
                 baseName = builtins.baseNameOf path;
               in
-              # Exclude build artifacts and dev files
               !(baseName == "target" ||
                 baseName == "node_modules" ||
                 baseName == "dist" ||
@@ -52,17 +51,32 @@
                 builtins.match ".*\\.log$" baseName != null);
           };
 
+          pnpmDeps = pkgs.fetchPnpmDeps {
+            inherit (finalAttrs) pname version src;
+            hash = "sha256-PnPY/3LDeB3/J2JgT/NfIMwpcaxHrFfHqALwa68vplA=";
+            fetcherVersion = 4;
+          };
+
+          cargoRoot = "src-tauri";
+
+          cargoDeps = pkgs.rustPlatform.importCargoLock {
+            lockFile = ./src-tauri/Cargo.lock;
+            outputHashes = {
+              "caldir-core-0.14.3" = "sha256-gE8sTZz93augAInEj47M/e21bphrW+PO27lBFxYNgGE=";
+            };
+          };
+
           nativeBuildInputs = with pkgs; [
             rustToolchain
             cargo-tauri
             nodejs_22
-            pnpm_9
+            pnpm
+            pnpmConfigHook
             pkg-config
             wrapGAppsHook3
             makeWrapper
-            git
-            cacert
-            binutils # for ar (extracting deb)
+            rustPlatform.cargoSetupHook
+            binutils
             gnutar
             gzip
             xz
@@ -83,31 +97,23 @@
             libnotify
           ];
 
-          # Network access needed for cargo git deps and pnpm
-          __noChroot = true;
-
-          configurePhase = ''
-            runHook preConfigure
-
-            export HOME=$(mktemp -d)
-            export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-            export GIT_SSL_CAINFO=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
-
+          postPatch = ''
             # Extract caldir providers
             mkdir -p src-tauri/providers
             tar -xzf ${caldirProviders.${system}} -C src-tauri/providers
             chmod +x src-tauri/providers/caldir-provider-*
             echo "${caldirVersion} ${system}" > src-tauri/providers/.caldir-version
 
-            # Install pnpm deps
-            pnpm config set store-dir $HOME/.pnpm-store
-            pnpm install --frozen-lockfile
-
-            runHook postConfigure
           '';
 
           buildPhase = ''
             runHook preBuild
+
+            export HOME=$(mktemp -d)
+
+            # Dummy signing key for Nix builds (auto-update disabled in Nix packages)
+            export TAURI_SIGNING_PRIVATE_KEY="dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIGVuY3J5cHRlZCBzZWNyZXQga2V5ClJXUlRZMEl5ZnBFOXZUakpJeDNLclFSZ1B6NnRVdit0czJHRHJ4eUpSeU42OXBubG1BOEFBQUFDQUFBQUFBQUFBRUFBQUFBQS9McXVkYmtYR1pFOEFpbnJObi9KWFJWamh4STdVVVZkZ0dSaXRGSlB0Y1hORklPMUNBREFNK0lKWS9pazk5TGR6dnY4Z1dsQTlKR2JjSGtwUmVSY2xGbnNxVGtkS09oVURQNDY0eS9kSG9PVnVwUzVJTWZtUjB1RmdEUjA4MVVGT05KNjc2OGwrVHc9Cg=="
+            export TAURI_SIGNING_PRIVATE_KEY_PASSWORD="nixbuild"
 
             # Build frontend
             pnpm build
@@ -117,7 +123,7 @@
             cargo build --release -p rencal-notifierd
             cd ..
 
-            # Build main app with deb bundle (creates proper resource structure)
+            # Build main app with deb bundle
             cargo tauri build --bundles deb
 
             runHook postBuild
@@ -126,20 +132,29 @@
           installPhase = ''
             runHook preInstall
 
-            # Extract the deb package
             mkdir -p $out
-            ar x src-tauri/target/release/bundle/deb/*.deb
-            tar -xf data.tar.* -C $out --strip-components=1
 
-            # Rename the binary directory
-            mv $out/usr/* $out/
-            rmdir $out/usr
+            # Extract the deb package
+            cd src-tauri/target/release/bundle/deb
+            ar x *.deb
 
-            # Move lib contents to share if applicable
-            if [ -d "$out/lib" ]; then
-              mkdir -p $out/share
-              # Keep systemd service in lib
+            # Create temp dir for extraction
+            mkdir -p extracted
+
+            # Handle different compression formats
+            if [ -f data.tar.zst ]; then
+              ${pkgs.zstd}/bin/zstd -d data.tar.zst
+              tar -xf data.tar -C extracted
+            elif [ -f data.tar.xz ]; then
+              tar -xf data.tar.xz -C extracted
+            elif [ -f data.tar.gz ]; then
+              tar -xf data.tar.gz -C extracted
+            else
+              tar -xf data.tar.* -C extracted
             fi
+
+            # Move usr contents to output
+            cp -r extracted/usr/* $out/
 
             # Fix systemd service path
             if [ -f "$out/lib/systemd/user/rencal-notifierd.service" ]; then
@@ -157,7 +172,7 @@
             platforms = [ "x86_64-linux" "aarch64-linux" ];
             mainProgram = "rencal";
           };
-        };
+        });
       in
       {
         packages = {
@@ -179,7 +194,7 @@
 
             # Node.js & pnpm
             nodejs_22
-            pnpm_9
+            pnpm
 
             # Tauri dependencies
             pkg-config
