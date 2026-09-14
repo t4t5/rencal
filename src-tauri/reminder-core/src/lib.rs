@@ -93,6 +93,13 @@ fn notify_send_command(
     // Persist until dismissed — event reminders are easy to miss at the
     // daemon's default 5s timeout (mako/dunst). 0 = never expire.
     command.arg("--expire-time=0");
+    // Some daemons (Omarchy's shell, GNOME) ignore expire-time for normal
+    // urgency and only keep critical notifications on screen until dismissed.
+    // A reminder for a meeting that starts in 10 minutes is time-critical in
+    // exactly that sense, and it's what Google Calendar's own web
+    // notifications use. Critical does not bypass Omarchy's DND by itself
+    // (that additionally requires app_name=notify-send).
+    command.arg("--urgency=critical");
     if with_action {
         // `default` is the FreeDesktop action invoked by clicking the body.
         // notify-send implies --wait and prints the chosen action to stdout.
@@ -153,7 +160,9 @@ pub fn check_and_notify(
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
-    let notifications_enabled = RencalConfig::load().notifications_enabled;
+    let rencal_config = RencalConfig::load();
+    let notifications_enabled = rencal_config.notifications_enabled;
+    let default_group = rencal_config.groups.get(DEFAULT_GROUP).map(Vec::as_slice);
 
     let cache_path = delivered_cache_path();
     let mut cache = cache_path
@@ -166,6 +175,13 @@ pub fn check_and_notify(
 
     let caldir = Caldir::load()?;
     let time_format = caldir.config().time_format();
+    let default_reminders: Vec<i64> = caldir
+        .config()
+        .default_reminders()
+        .unwrap_or_default()
+        .into_iter()
+        .map(|r| r.minutes_before_start)
+        .collect();
 
     // Scan range is over event *start* times, but reminders fire at
     // `start - minutes_before`. To cover every trigger that could land in
@@ -191,6 +207,13 @@ pub fn check_and_notify(
                 continue;
             }
         };
+        if !calendar_is_visible(calendar.slug(), default_group) {
+            log::debug!(
+                "[{}] hidden from the default group — skipping reminders",
+                calendar.slug().unwrap_or("?")
+            );
+            continue;
+        }
         let account_email = calendar.remote_email().map(str::to_owned);
         match calendar.expanded_events_in_range(range_start, range_end) {
             Ok(es) => events.extend(
@@ -208,6 +231,7 @@ pub fn check_and_notify(
         now,
         cutoff,
         &events,
+        &default_reminders,
         &mut cache,
         notifier,
         notifications_enabled,
@@ -228,12 +252,17 @@ pub fn check_and_notify(
 /// fire in `cache` (whether or not we actually called `notify`, so that
 /// disabling notifications doesn't queue up a 4h replay on re-enable).
 ///
+/// Events carrying their own VALARMs use those. Timed events with *no*
+/// VALARM fall back to `default_reminders` (caldir's "Default reminders"
+/// setting, in minutes before start) — see `reminder_offsets`.
+///
 /// Returns the number of `notifier.notify` calls made.
 #[allow(clippy::too_many_arguments)]
 fn process_reminders(
     now: DateTime<Utc>,
     cutoff: DateTime<Utc>,
     events: &[Event],
+    default_reminders: &[i64],
     cache: &mut DeliveredCache,
     notifier: &dyn Notifier,
     notifications_enabled: bool,
@@ -244,20 +273,18 @@ fn process_reminders(
 
     for event in events {
         let summary_str = event.summary.as_deref().unwrap_or("");
-        let triggers = event.reminders.iter().filter_map(|r| {
-            if !is_supported_offset(r.minutes_before_start) {
-                log::debug!(
-                    "skipping out-of-range reminder ({}min) on \"{}\"",
-                    r.minutes_before_start,
-                    summary_str
-                );
-                return None;
-            }
-            Some((
-                r.minutes_before_start,
-                compute_trigger_time(event, r.minutes_before_start)?,
-            ))
-        });
+        let triggers = reminder_offsets(event, default_reminders)
+            .into_iter()
+            .filter_map(|minutes| {
+                if !is_supported_offset(minutes) {
+                    log::debug!(
+                        "skipping out-of-range reminder ({minutes}min) on \"{}\"",
+                        summary_str
+                    );
+                    return None;
+                }
+                Some((minutes, compute_trigger_time(event, minutes)?))
+            });
 
         let Some((minutes, trigger)) = select_best_trigger(triggers, cutoff, now) else {
             continue;
@@ -336,6 +363,47 @@ fn select_best_trigger(
         .into_iter()
         .filter(|(_, t)| *t > window_start && *t <= now)
         .max_by_key(|(_, t)| *t)
+}
+
+/// Name of the special calendar group that defines which calendars are shown
+/// by default. Hiding a calendar in Settings removes it from this group; when
+/// every calendar is shown the group is absent from config.toml entirely.
+const DEFAULT_GROUP: &str = "default";
+
+/// Whether a calendar takes part in reminders. Mirrors the frontend's
+/// `getVisibleCalendarSlugs` for the default group: with no `default` group
+/// configured every calendar is visible; otherwise only the listed slugs are.
+/// Named groups are a client-side view switch (localStorage) and are
+/// deliberately not consulted here — reminders follow the default view, not
+/// whichever group happens to be selected.
+fn calendar_is_visible(slug: Option<&str>, default_group: Option<&[String]>) -> bool {
+    let Some(default_group) = default_group else {
+        return true;
+    };
+    slug.is_some_and(|slug| default_group.iter().any(|s| s == slug))
+}
+
+/// The reminder offsets (minutes before start) to consider for `event`.
+///
+/// An event's own VALARMs always win. When it has none, timed events fall
+/// back to the user's default reminders — this is what makes meetings synced
+/// from providers that don't materialize their calendar-level default
+/// reminder into the event (e.g. Google) still notify. All-day events are
+/// left alone: "10 minutes before midnight" is never what anyone wants for a
+/// birthday or holiday, and the default-reminder setting is expressed in
+/// minutes-before-start, which only makes sense for a real start time.
+fn reminder_offsets(event: &Event, default_reminders: &[i64]) -> Vec<i64> {
+    if !event.reminders.is_empty() {
+        return event
+            .reminders
+            .iter()
+            .map(|r| r.minutes_before_start)
+            .collect();
+    }
+    if matches!(event.start, EventTime::Date(_)) {
+        return Vec::new();
+    }
+    default_reminders.to_vec()
 }
 
 fn should_remind(event: &Event, account_email: Option<&str>) -> bool {
@@ -632,11 +700,23 @@ mod tests {
         notifier: &TestNotifier,
         notifications_enabled: bool,
     ) -> usize {
+        run_with_defaults(now, events, &[], cache, notifier, notifications_enabled)
+    }
+
+    fn run_with_defaults(
+        now: DateTime<Utc>,
+        events: &[Event],
+        default_reminders: &[i64],
+        cache: &mut DeliveredCache,
+        notifier: &TestNotifier,
+        notifications_enabled: bool,
+    ) -> usize {
         let cutoff = now - Duration::hours(CATCHUP_CAP_HOURS);
         process_reminders(
             now,
             cutoff,
             events,
+            default_reminders,
             cache,
             notifier,
             notifications_enabled,
@@ -713,6 +793,127 @@ mod tests {
             notifier.calls.lock().unwrap()[0].event_url,
             "rencal://event?uid=evt-sync"
         );
+    }
+
+    // ---- calendar visibility ------------------------------------------------
+
+    #[test]
+    fn calendar_is_visible_without_default_group() {
+        assert!(calendar_is_visible(Some("work"), None));
+        assert!(calendar_is_visible(None, None));
+    }
+
+    #[test]
+    fn calendar_is_visible_only_when_listed_in_default_group() {
+        let group = vec!["work".to_string(), "family".to_string()];
+        assert!(calendar_is_visible(Some("work"), Some(&group)));
+        assert!(!calendar_is_visible(Some("room-1"), Some(&group)));
+        assert!(!calendar_is_visible(None, Some(&group)));
+        assert!(!calendar_is_visible(Some("work"), Some(&[])));
+    }
+
+    // ---- default reminders fallback ---------------------------------------
+
+    fn make_event_without_alarm(uid: &str, start_utc: DateTime<Utc>) -> Event {
+        let mut event = make_event(uid, start_utc, 0);
+        event.reminders.clear();
+        event
+    }
+
+    #[test]
+    fn reminder_offsets_prefers_event_alarms_over_defaults() {
+        let event = make_event("evt-own", t(2026, 4, 29, 12, 30), 5);
+        assert_eq!(reminder_offsets(&event, &[10, 30]), vec![5]);
+    }
+
+    #[test]
+    fn reminder_offsets_falls_back_to_defaults_when_event_has_none() {
+        let event = make_event_without_alarm("evt-none", t(2026, 4, 29, 12, 30));
+        assert_eq!(reminder_offsets(&event, &[10, 30]), vec![10, 30]);
+        assert!(reminder_offsets(&event, &[]).is_empty());
+    }
+
+    #[test]
+    fn reminder_offsets_skips_defaults_for_all_day_events() {
+        let mut event = make_event_without_alarm("evt-allday", t(2026, 4, 29, 0, 0));
+        event.start = EventTime::Date(NaiveDate::from_ymd_opt(2026, 4, 29).unwrap());
+        event.end = None;
+        assert!(reminder_offsets(&event, &[10]).is_empty());
+    }
+
+    /// A Google meeting synced without any VALARM (Google keeps its
+    /// calendar-level default reminder out of the event) must still fire
+    /// using the user's default reminders.
+    #[test]
+    fn event_without_alarm_fires_via_default_reminders() {
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+        let event = make_event_without_alarm("evt-google", t(2026, 4, 29, 12, 30));
+
+        // No defaults configured → silent, as before.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 20),
+            &[event.clone()],
+            &[],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 0);
+
+        // 10-minute default → fires at 12:20.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 20),
+            &[event.clone()],
+            &[10],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
+
+        // Same tick again → deduped.
+        run_with_defaults(
+            t(2026, 4, 29, 12, 21),
+            &[event],
+            &[10],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
+    }
+
+    #[test]
+    fn event_with_own_alarm_ignores_default_reminders() {
+        let mut cache = DeliveredCache::new();
+        let notifier = TestNotifier::default();
+        // Event alarm is 5 min before (12:25); default is 30 min (12:00).
+        let event = make_event("evt-own-alarm", t(2026, 4, 29, 12, 30), 5);
+
+        run_with_defaults(
+            t(2026, 4, 29, 12, 0),
+            &[event.clone()],
+            &[30],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(
+            notifier.count(),
+            0,
+            "default must not fire when event has its own alarm"
+        );
+
+        run_with_defaults(
+            t(2026, 4, 29, 12, 25),
+            &[event],
+            &[30],
+            &mut cache,
+            &notifier,
+            true,
+        );
+        assert_eq!(notifier.count(), 1);
     }
 
     #[test]
