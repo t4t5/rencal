@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -8,11 +10,12 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
+import type { CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
 type DeleteConfirmDialogProps = {
-  open: boolean
-  isRecurring: boolean
+  /** The event to confirm deleting; null closes the dialog. */
+  event: CalendarEvent | null
   onClose: () => void
   onDeleteThis: () => void
   onDeleteFuture: () => void
@@ -20,22 +23,35 @@ type DeleteConfirmDialogProps = {
 }
 
 export function DeleteConfirmDialog({
-  open,
-  isRecurring,
+  event,
   onClose,
   onDeleteThis,
   onDeleteFuture,
   onDeleteAll,
 }: DeleteConfirmDialogProps) {
+  // Keep showing the last event while the close animation runs.
+  const [shown, setShown] = useState(event)
+  if (event && event !== shown) setShown(event)
+
+  const isRecurring = !!(shown?.recurring_event_id || shown?.recurrence)
+  const name = shown?.summary ? (
+    <span className="font-medium text-foreground">“{shown.summary}”</span>
+  ) : null
+
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+    <Dialog open={event !== null} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className={cn(isRecurring && "sm:max-w-xl")}>
         <DialogHeader>
           <DialogTitle>{isRecurring ? "Delete recurring event" : "Delete event"}</DialogTitle>
           <DialogDescription>
-            {isRecurring
-              ? "This event is part of a recurring series. Which events do you want to delete?"
-              : "Are you sure you want to delete this event?"}
+            {isRecurring ? (
+              <>
+                {name ? <>The event {name}</> : "This event"} is part of a recurring series. Which
+                events do you want to delete?
+              </>
+            ) : (
+              <>Are you sure you want to delete {name ? <>the event {name}</> : "this event"}?</>
+            )}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">

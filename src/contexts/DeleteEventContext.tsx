@@ -29,8 +29,6 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
   const { requestSync } = useSync()
   const [targetEvent, setTargetEvent] = useState<CalendarEvent | null>(null)
 
-  const isRecurring = !!(targetEvent?.recurring_event_id || targetEvent?.recurrence)
-
   // One confirmation at a time: a trigger while the dialog is open must not retarget it.
   const triggerDelete = useCallback((event: CalendarEvent) => {
     setTargetEvent((pending) => pending ?? event)
@@ -145,8 +143,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     <DeleteEventContextProvider value={value}>
       {children}
       <DeleteConfirmDialog
-        open={targetEvent !== null}
-        isRecurring={isRecurring}
+        event={targetEvent}
         onClose={closeDialog}
         onDeleteThis={handleDeleteThis}
         onDeleteFuture={handleDeleteFuture}
