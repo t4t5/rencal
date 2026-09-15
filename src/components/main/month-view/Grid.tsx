@@ -22,6 +22,7 @@ import { epochDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
+import { nativeWeekSnap, suppressSnapPointsForFrame, WeekSnapPoints } from "./WeekSnapPoints"
 import { useDragToCreateDays } from "./useDragToCreateDays"
 import { attachWeekSnapSession } from "./weekSnapSession"
 
@@ -68,6 +69,7 @@ export function MonthGrid({
   // pre-scroll frame (top of the grid) flash before it jumps to the active month.
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
   const snapSessionRef = useRef<ReturnType<typeof attachWeekSnapSession> | null>(null)
+  const snapPointsRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -101,6 +103,7 @@ export function MonthGrid({
     if (!el || prevHeight === rowHeight || prevHeight === 0 || !hasInitiallyScrolled) return
 
     snapSessionRef.current?.pause()
+    suppressSnapPointsForFrame(snapPointsRef.current)
 
     const ratio = rowHeight / prevHeight
     const newScrollTop = Math.round(el.scrollTop * ratio)
@@ -133,6 +136,7 @@ export function MonthGrid({
     const from = el.scrollTop
     const to = from + delta
 
+    suppressSnapPointsForFrame(snapPointsRef.current)
     virtualizer.scrollToOffset(to, { align: "start" })
     snapSessionRef.current?.shift(delta)
   })
@@ -143,13 +147,17 @@ export function MonthGrid({
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
 
+  // Native CSS snapping on macOS; the JS fling session elsewhere (see WeekSnapPoints.tsx).
+  // Both autoscrollers move the container with per-frame scrollBy calls, which a mandatory
+  // snap would clamp back to the current row, so snapping is off while dragging.
+  const snapEnabled = hasInitiallyScrolled && !selection && !drag
   const getSnapState = useEffectEvent(() => ({
-    enabled: hasInitiallyScrolled && !selection && !drag && !isNavigating(),
+    enabled: snapEnabled && !isNavigating(),
     rowHeight,
   }))
   useEffect(() => {
     const el = scrollRef.current
-    if (!el) return
+    if (!el || nativeWeekSnap) return
     const session = attachWeekSnapSession(el, getSnapState)
     snapSessionRef.current = session
     return () => {
@@ -218,6 +226,7 @@ export function MonthGrid({
       data-drag-scroll
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
+        nativeWeekSnap && snapEnabled && "motion-safe:snap-y motion-safe:snap-mandatory",
         !hasInitiallyScrolled && "invisible",
         selection && "select-none",
       )}
@@ -229,6 +238,9 @@ export function MonthGrid({
           position: "relative",
         }}
       >
+        {nativeWeekSnap && (
+          <WeekSnapPoints ref={snapPointsRef} weeks={weeks} rowHeight={rowHeight} />
+        )}
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const weekDays = weeks[virtualRow.index]
           const createSelection = selection
