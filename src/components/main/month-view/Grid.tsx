@@ -217,14 +217,45 @@ export function MonthGrid({
       return
     }
 
-    hasInitialized.current = true
-    ignoreScrollUntil.current = Date.now() + 200
+    // `measure()` invalidates TanStack's item cache and schedules a render. Wait until
+    // that render has rebuilt the sizer before scrolling; scrollToIndex is a no-op while
+    // the cache is empty in TanStack Virtual 3.14.x. A row offset is exact for this grid.
+    let revealFrame: number | undefined
+    let finalRevealFrame: number | undefined
+    const positionFrame = requestAnimationFrame(() => {
+      if (hasInitialized.current) return
 
-    virtualizer.scrollToIndex(idx, { align: "start" })
+      hasInitialized.current = true
+      ignoreScrollUntil.current = Date.now() + 200
 
-    // Reveal only after the scroll has actually painted, so the user never sees the
-    // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
-    requestAnimationFrame(() => requestAnimationFrame(() => setHasInitiallyScrolled(true)))
+      const target = idx * rowHeight
+      virtualizer.scrollToOffset(target, { align: "start" })
+
+      if (debugMonthScrollEnabled) {
+        const el = scrollRef.current
+        debugMonthScroll("initial anchor", {
+          index: idx,
+          target,
+          rowHeight,
+          domScrollTop: el?.scrollTop,
+          scrollHeight: el?.scrollHeight,
+          virtualScrollOffset: virtualizer.scrollOffset,
+          totalSize: virtualizer.getTotalSize(),
+        })
+      }
+
+      // Reveal only after the scroll has actually painted, so the user never sees the
+      // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
+      revealFrame = requestAnimationFrame(() => {
+        finalRevealFrame = requestAnimationFrame(() => setHasInitiallyScrolled(true))
+      })
+    })
+
+    return () => {
+      cancelAnimationFrame(positionFrame)
+      if (revealFrame !== undefined) cancelAnimationFrame(revealFrame)
+      if (finalRevealFrame !== undefined) cancelAnimationFrame(finalRevealFrame)
+    }
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
