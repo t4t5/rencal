@@ -3,12 +3,14 @@ import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
+import { DuplicateEventDialog } from "@/components/event-parts/DuplicateEventDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
@@ -20,6 +22,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
+import { useDuplicateEvent } from "@/hooks/useDuplicateEvent"
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
@@ -53,6 +56,7 @@ export const EditEvent = ({
   const originalEventRef = useRef<CalendarEvent | null>(null)
 
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
+  const { triggerDuplicate, duplicateDialogProps } = useDuplicateEvent()
 
   useEffect(() => {
     if (event) {
@@ -168,7 +172,12 @@ export const EditEvent = ({
       <div className="flex justify-end px-1 pb-1">
         {children}
 
-        {!isReadonly && <OverflowMenu onDelete={() => triggerDelete(dirtyEvent)} tabIndex={-1} />}
+        {!isReadonly && (
+          <OverflowMenu
+            onDuplicate={() => triggerDuplicate(dirtyEvent)}
+            onDelete={() => triggerDelete(dirtyEvent)}
+          />
+        )}
       </div>
 
       <EventInfo
@@ -241,19 +250,30 @@ export const EditEvent = ({
       />
 
       <DeleteConfirmDialog {...deleteDialogProps} />
+      <DuplicateEventDialog {...duplicateDialogProps} />
     </div>
   )
 }
 
-const OverflowMenu = ({ onDelete, tabIndex }: { onDelete: () => void; tabIndex?: number }) => {
+const OverflowMenu = ({
+  onDuplicate,
+  onDelete,
+}: {
+  onDuplicate: () => void
+  onDelete: () => void
+}) => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7" tabIndex={tabIndex}>
+        <Button variant="ghost" size="icon" className="h-7 w-7">
           <MoreHorizIcon className="size-4" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={onDuplicate}>
+          Duplicate event
+          <DropdownMenuShortcut>D</DropdownMenuShortcut>
+        </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={onDelete}>
           Delete event
         </DropdownMenuItem>

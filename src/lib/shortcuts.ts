@@ -145,6 +145,12 @@ export const SHORTCUTS = [
     bindings: [{ keys: "a", type: "char" }],
   },
   {
+    id: "duplicate-event",
+    group: "General",
+    label: "Duplicate selected event",
+    bindings: [{ keys: "d", type: "char" }],
+  },
+  {
     id: "toggle-invites",
     group: "General",
     label: "Toggle invitations",

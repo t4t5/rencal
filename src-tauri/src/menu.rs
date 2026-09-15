@@ -31,8 +31,12 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let new_event = MenuItemBuilder::with_id("compose-event", "New Event")
         .accelerator("CmdOrCtrl+N")
         .build(handle)?;
+    let duplicate_event = MenuItemBuilder::with_id("duplicate-event", "Duplicate Event")
+        .accelerator("CmdOrCtrl+D")
+        .build(handle)?;
     let file_menu = SubmenuBuilder::new(handle, "File")
         .item(&new_event)
+        .item(&duplicate_event)
         .separator()
         .close_window()
         .build()?;
