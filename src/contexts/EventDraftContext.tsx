@@ -1,12 +1,15 @@
 import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
+import { toast } from "sonner"
 
 import { rpc } from "@/rpc"
-import type { Calendar, EventAttendee } from "@/rpc/bindings"
+import type { Calendar, CalendarEvent as RpcCalendarEvent, EventAttendee } from "@/rpc/bindings"
 
 import {
   type CalendarEvent,
+  reconcileOptimisticCreate,
   type Recurrence,
   recurrenceToRpc,
+  rollbackOptimisticCreate,
   rpcToCalendarEvent,
 } from "@/lib/cal-events"
 import { conferenceToRpc, type EventConference } from "@/lib/conference"
@@ -212,28 +215,36 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setDefaultDraftEvent()
     _setText("")
 
-    const created = await rpc.caldir.create_event({
-      calendar_slug: draftEvent.calendarId,
-      summary: draftEvent.summary ?? "",
-      description: draftEvent.description,
-      location: draftEvent.location ?? null,
-      url: draftEvent.url,
-      start: toRpcEventTime(draftEvent.start),
-      end: toRpcEventTime(draftEvent.end),
-      recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
-      reminders: draftReminders,
-      attendees: draftEvent.attendees,
-      conference: conferenceToRpc(draftEvent.conference),
-    })
+    let created: RpcCalendarEvent
+    try {
+      created = await rpc.caldir.create_event({
+        calendar_slug: draftEvent.calendarId,
+        summary: draftEvent.summary ?? "",
+        description: draftEvent.description,
+        location: draftEvent.location ?? null,
+        url: draftEvent.url,
+        start: toRpcEventTime(draftEvent.start),
+        end: toRpcEventTime(draftEvent.end),
+        recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
+        reminders: draftReminders,
+        attendees: draftEvent.attendees,
+        conference: conferenceToRpc(draftEvent.conference),
+      })
+    } catch (err) {
+      setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))
+      const message = err instanceof Error ? err.message : String(err)
+      toast.error("Failed to create event", { description: message })
+      console.error("create_event failed:", err)
+      return
+    }
 
     if (draftEvent.recurrence) {
       // create_event returns only the master VEVENT; refetch so the range is
       // expanded into individual instances on the calendar grid.
       await reloadEvents()
     } else {
-      setCalendarEvents((prev) =>
-        prev.map((e) => (e.id === optimisticId ? rpcToCalendarEvent(created) : e)),
-      )
+      const createdEvent = rpcToCalendarEvent(created)
+      setCalendarEvents((prev) => reconcileOptimisticCreate(prev, optimisticEvent, createdEvent))
     }
     void requestSync()
   }, [
