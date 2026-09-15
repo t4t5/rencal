@@ -35,6 +35,7 @@ pub enum RpcEventTime {
 pub struct RpcRecurrence {
     pub rrule: String,
     pub exdates: Vec<RpcEventTime>,
+    pub rdates: Vec<RpcEventTime>,
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -354,10 +355,15 @@ pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> Result<Recurrence, String> {
         .iter()
         .map(rpc_time_to_core)
         .collect::<Result<Vec<_>, _>>()?;
+    let rdates = r
+        .rdates
+        .iter()
+        .map(rpc_time_to_core)
+        .collect::<Result<Vec<_>, _>>()?;
     Ok(Recurrence {
         rrule: r.rrule.clone(),
         exdates,
-        rdates: Vec::new(),
+        rdates,
     })
 }
 
@@ -365,6 +371,7 @@ pub fn core_recurrence_to_rpc(r: &Recurrence) -> RpcRecurrence {
     RpcRecurrence {
         rrule: r.rrule.clone(),
         exdates: r.exdates.iter().map(core_time_to_rpc).collect(),
+        rdates: r.rdates.iter().map(core_time_to_rpc).collect(),
     }
 }
 
@@ -419,5 +426,36 @@ impl CalendarEvent {
                 .map(String::from),
             updated: e.last_modified.map(|dt| dt.to_rfc3339()),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn recurrence_rpc_round_trip_preserves_rdates() {
+        let recurrence = Recurrence {
+            rrule: "FREQ=WEEKLY;BYDAY=MO".to_string(),
+            exdates: vec![EventTime::Date(
+                NaiveDate::from_ymd_opt(2026, 9, 21).unwrap(),
+            )],
+            rdates: vec![
+                EventTime::Date(NaiveDate::from_ymd_opt(2026, 9, 22).unwrap()),
+                EventTime::DateTimeZoned {
+                    datetime: NaiveDateTime::parse_from_str(
+                        "2026-09-29T09:30:00",
+                        "%Y-%m-%dT%H:%M:%S",
+                    )
+                    .unwrap(),
+                    tzid: "Europe/London".to_string(),
+                },
+            ],
+        };
+
+        let rpc = core_recurrence_to_rpc(&recurrence);
+        let round_tripped = rpc_recurrence_to_core(&rpc).unwrap();
+
+        assert_eq!(round_tripped, recurrence);
     }
 }

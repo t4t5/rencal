@@ -18,6 +18,7 @@ import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
 export interface Recurrence {
   rrule: string
   exdates: EventTime[]
+  rdates: EventTime[]
 }
 
 export interface CalendarEvent
@@ -46,11 +47,19 @@ export function eventKey(event: Pick<CalendarEvent, "id" | "calendar_slug">): st
 }
 
 export function rpcToRecurrence(w: RpcRecurrence): Recurrence {
-  return { rrule: w.rrule, exdates: w.exdates.map(fromRpcEventTime) }
+  return {
+    rrule: w.rrule,
+    exdates: w.exdates.map(fromRpcEventTime),
+    rdates: w.rdates.map(fromRpcEventTime),
+  }
 }
 
 export function recurrenceToRpc(r: Recurrence): RpcRecurrence {
-  return { rrule: r.rrule, exdates: r.exdates.map(toRpcEventTime) }
+  return {
+    rrule: r.rrule,
+    exdates: r.exdates.map(toRpcEventTime),
+    rdates: r.rdates.map(toRpcEventTime),
+  }
 }
 
 export function rpcToCalendarEvent(w: RpcCalendarEvent): CalendarEvent {

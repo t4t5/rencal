@@ -44,6 +44,7 @@ describe("prepareSearchResults", () => {
         event("recurring event", "2010-05-14", {
           rrule: "FREQ=YEARLY;BYMONTH=5;BYMONTHDAY=14",
           exdates: [],
+          rdates: [],
         }),
       ],
       Temporal.ZonedDateTime.from("2026-07-31T12:00:00+02:00[Europe/Berlin]").toInstant(),

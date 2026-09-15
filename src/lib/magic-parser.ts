@@ -203,7 +203,7 @@ export function parseEventText(
   const recurrenceResult = parseRecurrence(text)
 
   const recurrence: Recurrence | null = recurrenceResult
-    ? { rrule: recurrenceResult.rrule, exdates: [] }
+    ? { rrule: recurrenceResult.rrule, exdates: [], rdates: [] }
     : null
 
   const textForChrono = recurrenceResult ? recurrenceResult.textForChrono : text

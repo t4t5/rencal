@@ -83,7 +83,7 @@ export type RpcEventTime =
  */
 { kind: "datetime_zoned"; wallclock: string; tzid: string }
 
-export type RpcRecurrence = { rrule: string; exdates: RpcEventTime[] }
+export type RpcRecurrence = { rrule: string; exdates: RpcEventTime[]; rdates: RpcEventTime[] }
 
 /**
  * Input for splitting a recurring series at a given instance.
