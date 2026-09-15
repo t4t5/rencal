@@ -32,6 +32,13 @@ function getFocusableElements(content: HTMLElement): HTMLElement[] {
   })
 }
 
+// Entering the popover lands on the title (the first text field), not on
+// header buttons like "…" that precede it in DOM order.
+function entryField(focusables: HTMLElement[], reverse: boolean) {
+  if (reverse) return focusables[focusables.length - 1]
+  return focusables.find((el) => el.matches("textarea, input")) ?? focusables[0]
+}
+
 let activePopoverContent: HTMLElement | null = null
 
 export function focusEventPopoverField(reverse = false): boolean {
@@ -40,7 +47,7 @@ export function focusEventPopoverField(reverse = false): boolean {
   const focusables = getFocusableElements(activePopoverContent)
   if (!focusables.length) return false
 
-  focusables[reverse ? focusables.length - 1 : 0]?.focus()
+  entryField(focusables, reverse)?.focus()
   return true
 }
 
@@ -80,7 +87,7 @@ export function useEventPopoverTabTrap({
       const activeIndex = activeElement ? focusables.indexOf(activeElement) : -1
 
       if (activeIndex === -1) {
-        focusables[e.shiftKey ? focusables.length - 1 : 0]?.focus()
+        entryField(focusables, e.shiftKey)?.focus()
         return
       }
 
