@@ -1,0 +1,49 @@
+{
+  "nodes": {
+    "caldir": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1789474209,
+        "narHash": "sha256-BUlNyH8OS0t9MaSJu+L8Dri8jfEb2bwfY3jBPXFY7w8=",
+        "owner": "t4t5",
+        "repo": "caldir",
+        "rev": "2675ffec187d9539f90aaa927037b05df6c1cfb4",
+        "type": "github"
+      },
+      "original": {
+        "owner": "t4t5",
+        "ref": "v0.14.1",
+        "repo": "caldir",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1789006805,
+        "narHash": "sha256-xB8mKMOx1IA9vTDNLmJZ6n4wCMq/cuWBBOzGCRnqxrU=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "8ce4ef6cb6f871616146b9fe26d2a5ae594e94fe",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "caldir": "caldir",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
