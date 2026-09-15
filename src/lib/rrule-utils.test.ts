@@ -4,17 +4,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { CalendarEvent } from "./cal-events"
 import { computeEventDateInfo, formatDateKey, type EventTime } from "./event-time"
 import { fromRpcEventTime } from "./event-time/rpc"
-import { withNearestOccurrence } from "./rrule-utils"
+import { recurrenceToRRuleSet, rruleToRecurrence, withNearestOccurrence } from "./rrule-utils"
 
 const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date: value })
 
 function recurringEvent({
   rrule = "FREQ=WEEKLY;BYDAY=MO",
   exdates = [],
+  rdates = [],
   startDate = "2020-06-01",
 }: {
   rrule?: string
   exdates?: EventTime[]
+  rdates?: EventTime[]
   startDate?: string
 } = {}): CalendarEvent {
   const start = date(startDate)
@@ -30,7 +32,7 @@ function recurringEvent({
     start,
     end,
     status: "confirmed",
-    recurrence: { rrule, exdates },
+    recurrence: { rrule, exdates, rdates },
     master_recurrence: null,
     reminders: [],
     organizer: null,
@@ -75,6 +77,22 @@ describe("withNearestOccurrence", () => {
     expect(formatDateKey(shifted.end)).toBe("2026-08-11")
   })
 
+  it("uses an added RDATE occurrence before the next RRULE occurrence", () => {
+    const shifted = withNearestOccurrence(recurringEvent({ rdates: [date("2026-08-01")] }))
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-01")
+    expect(formatDateKey(shifted.end)).toBe("2026-08-02")
+  })
+
+  it("lets EXDATE exclude an occurrence also present in RDATE", () => {
+    const excluded = date("2026-08-01")
+    const shifted = withNearestOccurrence(
+      recurringEvent({ exdates: [excluded], rdates: [excluded] }),
+    )
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-03")
+  })
+
   it("uses the last occurrence when a finite series has ended", () => {
     const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY;COUNT=3" }))
 
@@ -92,5 +110,20 @@ describe("withNearestOccurrence", () => {
     const event = { ...recurringEvent(), recurrence: null }
 
     expect(withNearestOccurrence(event)).toBe(event)
+  })
+})
+
+describe("recurrence RRuleSet conversion", () => {
+  it("retains RDATEs through the recurrence editor representation", () => {
+    const recurrence = {
+      rrule: "FREQ=WEEKLY;BYDAY=MO",
+      exdates: [date("2026-08-03")],
+      rdates: [date("2026-08-04")],
+    }
+
+    const converted = rruleToRecurrence(recurrenceToRRuleSet(recurrence))
+
+    expect(converted?.exdates.map(formatDateKey)).toEqual(["2026-08-03"])
+    expect(converted?.rdates.map(formatDateKey)).toEqual(["2026-08-04"])
   })
 })

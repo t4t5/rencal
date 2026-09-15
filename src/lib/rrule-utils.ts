@@ -40,6 +40,27 @@ function rruleDateToPlainDate(date: Date): Temporal.PlainDate {
   return new Temporal.PlainDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
 }
 
+function nearestDateOnSide(
+  dates: Date[],
+  boundary: Date,
+  direction: "after" | "before",
+): Date | null {
+  let nearest: Date | null = null
+
+  for (const candidate of dates) {
+    if (direction === "after") {
+      if (candidate < boundary) continue
+      if (!nearest || candidate < nearest) nearest = candidate
+      continue
+    }
+
+    if (candidate > boundary) continue
+    if (!nearest || candidate > nearest) nearest = candidate
+  }
+
+  return nearest
+}
+
 /**
  * Parse an RRULE string and create an RRule with the correct dtstart.
  *
@@ -81,18 +102,31 @@ export function withNearestOccurrence(
     const exdateTimes = new Set(
       event.recurrence.exdates.map((exdate) => eventTimeToRRuleDate(exdate).getTime()),
     )
+    const rdateOccurrences = event.recurrence.rdates
+      .map(eventTimeToRRuleDate)
+      .filter((rdate) => !exdateTimes.has(rdate.getTime()))
     const rruleNow = localDateToRRuleDate(now)
     const findIncludedOccurrence = (direction: "after" | "before"): Date | null => {
-      let occurrence =
+      let ruleOccurrence =
         direction === "after" ? rule.after(rruleNow, true) : rule.before(rruleNow, true)
 
-      for (let i = 0; occurrence && i < MAX_EXDATE_SKIPS; i++) {
-        if (!exdateTimes.has(occurrence.getTime())) return occurrence
-        occurrence =
-          direction === "after" ? rule.after(occurrence, false) : rule.before(occurrence, false)
+      for (let i = 0; ruleOccurrence && i < MAX_EXDATE_SKIPS; i++) {
+        if (!exdateTimes.has(ruleOccurrence.getTime())) break
+        ruleOccurrence =
+          direction === "after"
+            ? rule.after(ruleOccurrence, false)
+            : rule.before(ruleOccurrence, false)
       }
+      if (ruleOccurrence && exdateTimes.has(ruleOccurrence.getTime())) ruleOccurrence = null
 
-      return null
+      const rdateOccurrence = nearestDateOnSide(rdateOccurrences, rruleNow, direction)
+
+      if (!ruleOccurrence) return rdateOccurrence
+      if (!rdateOccurrence) return ruleOccurrence
+      if (direction === "after") {
+        return ruleOccurrence < rdateOccurrence ? ruleOccurrence : rdateOccurrence
+      }
+      return ruleOccurrence > rdateOccurrence ? ruleOccurrence : rdateOccurrence
     }
 
     const occurrence = findIncludedOccurrence("after") ?? findIncludedOccurrence("before")
@@ -107,9 +141,9 @@ export function withNearestOccurrence(
 
 /**
  * Convert a Recurrence object into an RRuleSet.
- * rrule.js works with JS Date; we bridge each exdate's viewer-zone wallclock
- * into a local-components Date — the inverse of the fromDate bridge in
- * rruleToRecurrence, so the round trip through RRuleSet is lossless.
+ * rrule.js works with JS Date; we bridge each exception/addition's viewer-zone
+ * wallclock into a local-components Date — the inverse of the fromDate bridge
+ * in rruleToRecurrence, so the round trip through RRuleSet is lossless.
  */
 export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
   const rruleSet = new RRuleSet()
@@ -117,6 +151,10 @@ export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
   for (const exdate of recurrence.exdates) {
     const z = toViewerZonedDateTime(exdate)
     rruleSet.exdate(new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond))
+  }
+  for (const rdate of recurrence.rdates) {
+    const z = toViewerZonedDateTime(rdate)
+    rruleSet.rdate(new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond))
   }
   return rruleSet
 }
@@ -131,8 +169,8 @@ function stripRRulePrefix(s: string): string {
 
 /**
  * Convert an RRule or RRuleSet back to a Recurrence object.
- * Exdates from rrule.js are JS Dates; we wrap them as zoned EventTime in
- * the viewer's local zone.
+ * Exception and addition dates from rrule.js are JS Dates; we wrap them as
+ * zoned EventTime in the viewer's local zone.
  */
 export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | null {
   if (!rrule) return null
@@ -145,11 +183,13 @@ export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | 
     return {
       rrule: stripRRulePrefix(rrules[0].toString()),
       exdates: rrule.exdates().map((d) => fromDate(d, tzid)),
+      rdates: rrule.rdates().map((d) => fromDate(d, tzid)),
     }
   }
 
   return {
     rrule: stripRRulePrefix(rrule.toString()),
     exdates: [],
+    rdates: [],
   }
 }
