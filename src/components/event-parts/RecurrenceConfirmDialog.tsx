@@ -10,12 +10,16 @@ import {
 
 export function RecurrenceConfirmDialog({
   isOpen,
+  title = "Edit recurring event",
+  description = "This event is part of a recurring series.",
   onClose,
   onApplyToAll,
   onApplyToFuture,
   onApplyToThis,
 }: {
   isOpen: boolean
+  title?: string
+  description?: string
   onClose: () => void
   onApplyToAll: () => void
   onApplyToFuture: () => void
@@ -25,8 +29,8 @@ export function RecurrenceConfirmDialog({
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>Edit recurring event</DialogTitle>
-          <DialogDescription>This event is part of a recurring series.</DialogDescription>
+          <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
           <Button variant="secondary" onClick={onApplyToThis}>
