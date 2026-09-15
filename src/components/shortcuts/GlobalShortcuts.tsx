@@ -3,9 +3,11 @@ import { listen } from "@tauri-apps/api/event"
 import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
+import { DuplicateEventDialog } from "@/components/event-parts/DuplicateEventDialog"
 import { CommandPalette } from "@/components/shortcuts/CommandPalette"
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
 import {
+  AGENDA_ITEM_SELECTOR,
   clearRememberedAgendaItem,
   focusAgendaItem,
   isAgendaItemFocused,
@@ -23,9 +25,11 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import { useDuplicateEvent } from "@/hooks/useDuplicateEvent"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
@@ -60,10 +64,12 @@ export function GlobalShortcuts({
   const { descriptors } = useThemeRegistry()
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
+  const { triggerDuplicate, duplicateDialogProps } = useDuplicateEvent()
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
     onToggleSidebar,
+    triggerDuplicate,
     openShortcutsOverlay: () => setOverlayOpen(true),
     toggleCommandPalette: () => {
       setPalettePage("root")
@@ -137,6 +143,7 @@ export function GlobalShortcuts({
       )}
 
       <ShortcutsOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} />
+      <DuplicateEventDialog {...duplicateDialogProps} />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
@@ -152,6 +159,7 @@ export function GlobalShortcuts({
 function useShortcutHandlers({
   onChangeCalendarView,
   onToggleSidebar,
+  triggerDuplicate,
   openShortcutsOverlay,
   toggleCommandPalette,
   openGoToDate,
@@ -162,6 +170,7 @@ function useShortcutHandlers({
 }: {
   onChangeCalendarView: (view: CalendarView) => void
   onToggleSidebar: () => void
+  triggerDuplicate: (event: CalendarEvent) => void
   openShortcutsOverlay: () => void
   toggleCommandPalette: () => void
   openGoToDate: () => void
@@ -171,7 +180,7 @@ function useShortcutHandlers({
   setActiveGroup: (name: string) => void
 }): Record<ShortcutId, ShortcutHandler> {
   const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { setSelectedEventKey } = useAgendaSelection()
+  const { setSelectedEventKey, selectedEventKey } = useAgendaSelection()
   const { activeEvent, calendarEvents } = useCalEvents()
   const { draftPopoverOpen, setIsDrafting, setDefaultDraftEvent } = useEventDraft()
   const { canCreate, promptToConnect } = useCreateEventGate()
@@ -254,6 +263,17 @@ function useShortcutHandlers({
     setActiveGroup(options[nextIndex])
   }
 
+  const handleDuplicateEvent = (e?: KeyboardEvent) => {
+    e?.preventDefault()
+    if (draftPopoverOpen) return
+    const target =
+      activeEvent ??
+      calendarEvents.find((event) => eventKey(event) === selectedEventKey) ??
+      findFocusedAgendaEvent(calendarEvents)
+    if (!target) return
+    triggerDuplicate(target)
+  }
+
   return {
     today: () => {
       clearAgendaFocus()
@@ -290,6 +310,7 @@ function useShortcutHandlers({
     search: handleSearch,
     "compose-event": handleComposeEvent,
     "add-event": handleAddEventToActiveDay,
+    "duplicate-event": handleDuplicateEvent,
     "toggle-invites": (e) => {
       e?.preventDefault()
       document.getElementById(INVITES_BUTTON_EL_ID)?.click()
@@ -312,6 +333,14 @@ function useShortcutHandlers({
       toggleCommandPalette()
     },
   }
+}
+
+// The agenda row under keyboard focus, if any, resolved to its event.
+function findFocusedAgendaEvent(events: CalendarEvent[]): CalendarEvent | undefined {
+  const active = document.activeElement as HTMLElement | null
+  const key = active?.closest(AGENDA_ITEM_SELECTOR)?.getAttribute("data-event-key")
+  if (!key) return undefined
+  return events.find((event) => eventKey(event) === key)
 }
 
 function CharBindingHost({
