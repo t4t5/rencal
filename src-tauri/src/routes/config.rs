@@ -62,61 +62,61 @@ impl ConfigApi for ConfigApiImpl {
         if !RencalConfig::exists() {
             return Ok(None);
         }
-        Ok(Some(RencalConfig::load().theme))
+        Ok(Some(RencalConfig::load()?.theme))
     }
 
     async fn set_theme(self, theme: String) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.theme = theme;
         config.save()
     }
 
     async fn get_notifications_enabled(self) -> TauResult<bool> {
-        Ok(RencalConfig::load().notifications_enabled)
+        Ok(RencalConfig::load()?.notifications_enabled)
     }
 
     async fn set_notifications_enabled(self, enabled: bool) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.notifications_enabled = enabled;
         config.save()
     }
 
     async fn get_auto_sync_enabled(self) -> TauResult<bool> {
-        Ok(RencalConfig::load().auto_sync_enabled)
+        Ok(RencalConfig::load()?.auto_sync_enabled)
     }
 
     async fn set_auto_sync_enabled(self, enabled: bool) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.auto_sync_enabled = enabled;
         config.save()
     }
 
     async fn get_first_day_of_week(self) -> TauResult<FirstDayOfWeek> {
-        Ok(RencalConfig::load().first_day_of_week.into())
+        Ok(RencalConfig::load()?.first_day_of_week.into())
     }
 
     async fn set_first_day_of_week(self, day: FirstDayOfWeek) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.first_day_of_week = day.into();
         config.save()
     }
 
     async fn get_show_week_numbers(self) -> TauResult<bool> {
-        Ok(RencalConfig::load().show_week_numbers)
+        Ok(RencalConfig::load()?.show_week_numbers)
     }
 
     async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
         config.save()
     }
 
     async fn get_groups(self) -> TauResult<BTreeMap<String, Vec<String>>> {
-        Ok(RencalConfig::load().groups)
+        Ok(RencalConfig::load()?.groups)
     }
 
     async fn set_groups(self, groups: BTreeMap<String, Vec<String>>) -> TauResult<()> {
-        let mut config = RencalConfig::load();
+        let mut config = RencalConfig::load()?;
         config.groups = groups;
         config.save()
     }
