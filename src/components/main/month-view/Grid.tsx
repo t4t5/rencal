@@ -90,6 +90,9 @@ export function MonthGrid({
   const curFirstKey = weeks[0]?.[0]?.dateKey
   const isPrepending =
     curFirstKey !== prevRef.current.firstKey && weeks.length > prevRef.current.count
+  const nativeSnapRestorePendingRef = useRef(false)
+  const nativeSnapRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const nativeSnapRestoreCleanupRef = useRef<(() => void) | undefined>(undefined)
   const [, setSnapRestoreVersion] = useState(0)
 
   const estimateSize = useCallback(() => rowHeight, [rowHeight])
@@ -148,9 +151,33 @@ export function MonthGrid({
     snapSessionRef.current?.shift(delta)
 
     // The prepend render removes native scroll snapping before the changed snap-point
-    // geometry is committed. Restore it in a fresh render on the following frame.
+    // geometry is committed. Keep it off until WebKit declares scrolling finished: restoring
+    // it on the next frame can resume the fling toward its stale, pre-prepend snap target.
     if (nativeWeekSnap) {
-      requestAnimationFrame(() => setSnapRestoreVersion((version) => version + 1))
+      const el = scrollRef.current
+      nativeSnapRestorePendingRef.current = true
+      nativeSnapRestoreCleanupRef.current?.()
+      clearTimeout(nativeSnapRestoreTimerRef.current)
+
+      let restored = false
+      const restore = () => {
+        if (restored) return
+        restored = true
+        el?.removeEventListener("scrollend", restore)
+        clearTimeout(nativeSnapRestoreTimerRef.current)
+        nativeSnapRestoreTimerRef.current = undefined
+        nativeSnapRestoreCleanupRef.current = undefined
+        nativeSnapRestorePendingRef.current = false
+        setSnapRestoreVersion((version) => version + 1)
+        debugMonthScroll("native snap restored")
+      }
+
+      el?.addEventListener("scrollend", restore, { once: true })
+      nativeSnapRestoreTimerRef.current = setTimeout(restore, 300)
+      nativeSnapRestoreCleanupRef.current = () => {
+        restored = true
+        el?.removeEventListener("scrollend", restore)
+      }
     }
 
     if (debugMonthScrollEnabled) {
@@ -184,11 +211,20 @@ export function MonthGrid({
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
 
+  useEffect(
+    () => () => {
+      nativeSnapRestoreCleanupRef.current?.()
+      clearTimeout(nativeSnapRestoreTimerRef.current)
+    },
+    [],
+  )
+
   // Native CSS snapping on macOS; the JS fling session elsewhere (see WeekSnapPoints.tsx).
   // Both autoscrollers move the container with per-frame scrollBy calls, which a mandatory
   // snap would clamp back to the current row, so snapping is off while dragging.
-  const snapEnabled =
-    hasInitiallyScrolled && !selection && !drag && (!nativeWeekSnap || !isPrepending)
+  const nativeSnapSuspended =
+    nativeWeekSnap && (isPrepending || nativeSnapRestorePendingRef.current)
+  const snapEnabled = hasInitiallyScrolled && !selection && !drag && !nativeSnapSuspended
   const getSnapState = useEffectEvent(() => ({
     enabled: snapEnabled && !isNavigating(),
     rowHeight,
@@ -293,6 +329,7 @@ export function MonthGrid({
     <div
       ref={scrollRef}
       data-drag-scroll
+      style={{ overflowAnchor: "none" }}
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
         nativeWeekSnap && snapEnabled && "motion-safe:snap-y motion-safe:snap-mandatory",

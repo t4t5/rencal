@@ -37,10 +37,10 @@ into the trackpad momentum itself, so there is no JS animation and no input trac
 - Snapping is toggled off by removing the snap classes while a drag or selection is
   active: both autoscrollers move the container with per-frame `scrollBy` calls that a
   mandatory snap would clamp back to the current row. The snap re-engages on drop.
-- When the sentinels move (a prepend, or a row-height change), the snap areas are
-  hidden for one frame around the scroll correction so WebKit does not re-snap to
-  whichever sentinel happens to land nearest. The correction is an exact multiple
-  of the row height, so alignment is preserved.
+- During a prepend, native snapping is disabled in the render that moves the sentinels
+  and stays disabled until `scrollend` (with a short fallback). Re-enabling it on the
+  next frame can make WebKit resume toward its stale, pre-prepend momentum target. A
+  row-height change only needs the snap areas hidden for the correction frame.
 - A prepend that lands mid-fling stops WebKit's momentum at the corrected position.
   This is the one case that still needs physical trackpad verification.
 
