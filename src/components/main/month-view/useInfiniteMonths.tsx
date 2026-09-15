@@ -53,9 +53,13 @@ export function useInfiniteMonths({
 
   useScrollBoundary({
     scrollContainerRef,
-    threshold: 200,
+    // Begin loading several week rows before the native macOS top snap/overscroll zone.
+    threshold: 600,
     checkOnMount: false,
     requireScrollAwayBeforeBoundary: true,
+    // Keep the initial-positioning guard narrower than the preload boundary so compact
+    // windows can still arm infinite scrolling within the initial five-month range.
+    scrollAwayThreshold: 200,
     onNearTop: useCallback(() => {
       // Prepending shifts the viewport away from the top (Grid preserves scroll offset),
       // so this fires once per approach rather than runaway-growing.
