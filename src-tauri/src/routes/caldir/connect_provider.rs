@@ -1,19 +1,18 @@
-use super::helpers::{build_connect_options, load_caldir, save_connected_calendars};
+use super::helpers::{build_connect_options, provider, save_connected_calendars};
 use super::types::Calendar;
 use crate::oauth;
 use crate::routes::TauResult;
-use caldir_core::{Provider, ProviderSlug};
+use crate::state::AppState;
+use caldir_core::Provider;
 use tauri::{AppHandle, Runtime};
 use tauri_plugin_opener::OpenerExt;
 
 pub(super) async fn handler<R: Runtime>(
+    state: &AppState,
     app: AppHandle<R>,
     provider_name: String,
 ) -> TauResult<Vec<Calendar>> {
-    let caldir = load_caldir()?;
-    let provider = caldir
-        .provider(&ProviderSlug::from(provider_name.as_str()))
-        .map_err(|e| e.to_string())?;
+    let provider = provider(state, &provider_name)?;
 
     // Bind callback listener first on port 0 so the OS picks a free port
     let listener = oauth::server::create_localhost_listener(0)
@@ -25,8 +24,9 @@ pub(super) async fn handler<R: Runtime>(
     let redirect_uri = format!("http://localhost:{}/callback", port);
 
     run_with_data(
+        state,
         app,
-        provider,
+        &provider,
         build_connect_options(true, &redirect_uri),
         serde_json::Map::new(),
         listener,
@@ -36,6 +36,7 @@ pub(super) async fn handler<R: Runtime>(
 }
 
 pub(super) async fn run_with_data<R: Runtime>(
+    state: &AppState,
     app: AppHandle<R>,
     provider: &Provider,
     options: serde_json::Map<String, serde_json::Value>,
@@ -58,7 +59,16 @@ pub(super) async fn run_with_data<R: Runtime>(
             ConnectResponse::Done {
                 account_identifier,
                 calendars,
-            } => return save_connected_calendars(provider, account_identifier, calendars).await,
+            } => {
+                return save_connected_calendars(
+                    state,
+                    &app,
+                    provider,
+                    account_identifier,
+                    calendars,
+                )
+                .await;
+            }
             ConnectResponse::NeedsInput {
                 step,
                 data: step_data,

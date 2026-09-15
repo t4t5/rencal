@@ -1,12 +1,13 @@
-use super::helpers::{load_caldir, to_calendar_event};
+use super::helpers::to_calendar_event;
 use super::types::CalendarEvent;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{Event, EventInstanceId, EventUid, expand_in_range};
 use chrono::Duration;
 use std::sync::Arc;
 
-pub(super) async fn handler(
+pub(super) fn handler(
+    state: &AppState,
     uid: String,
     recurrence_id: Option<String>,
 ) -> TauResult<Option<CalendarEvent>> {
@@ -17,15 +18,15 @@ pub(super) async fn handler(
     let Some(target) = parse_lookup_target(uid, recurrence_id) else {
         return Ok(None);
     };
-    let caldir = load_caldir()?;
 
-    let sources = caldir.calendars().into_iter().map(|calendar| {
+    let calendars = state.caldir().calendars();
+    let sources = calendars.into_iter().map(|calendar| {
         let calendar = calendar.map_err(|error| error.to_string())?;
         let slug = calendar
             .slug()
             .ok_or_else(|| "calendar is missing a slug".to_string())?
             .to_string();
-        let events = EVENT_CACHE.events(&caldir, &slug)?;
+        let events = state.events(&slug).map_err(|error| error.to_string())?;
         Ok((slug, events))
     });
 

@@ -1,8 +1,7 @@
-mod caldir_watcher;
-mod config_watcher;
 mod deep_links;
 mod event_cache;
 mod external_themes;
+mod fs_watch;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 #[cfg(target_os = "macos")]
@@ -15,15 +14,20 @@ mod omarchy;
 mod routes;
 #[cfg(target_os = "linux")]
 mod single_instance;
-mod tz_watcher;
+pub mod state;
+mod state_bridge;
+mod tasks;
+mod watchers;
 
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::themes::{ThemesApi, ThemesApiImpl};
-use std::path::{Path, PathBuf};
-use std::sync::OnceLock;
+use state::AppState;
+use std::path::PathBuf;
+use std::sync::Arc;
+use tasks::spawn_task;
 use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
 use taurpc::Router;
@@ -31,32 +35,27 @@ use taurpc::Router;
 const MIN_WINDOW_WIDTH: f64 = 300.0;
 const MIN_WINDOW_HEIGHT: f64 = 600.0;
 
-static BUNDLED_PROVIDERS_DIR: OnceLock<PathBuf> = OnceLock::new();
-
-/// Directory of the providers bundled with this build, resolved at startup.
-pub fn bundled_providers_dir() -> Option<&'static Path> {
-    BUNDLED_PROVIDERS_DIR.get().map(PathBuf::as_path)
-}
-
 /// Creates the taurpc router. Exposed for type generation.
-pub fn create_router() -> Router<tauri::Wry> {
+pub fn create_router(state: Arc<AppState>) -> Router<tauri::Wry> {
     Router::new()
-        .merge(CaldirApiImpl.into_handler())
+        .merge(CaldirApiImpl::new(state.clone()).into_handler())
+        .merge(PlatformApiImpl::new(state).into_handler())
         .merge(OmarchyApiImpl.into_handler())
-        .merge(PlatformApiImpl.into_handler())
         .merge(ConfigApiImpl.into_handler())
         .merge(ThemesApiImpl.into_handler())
 }
 
-/// Resolve the bundled providers directory and remember it for `load_caldir`.
-fn setup_bundled_providers(app: &tauri::App) {
+/// Directory of the providers bundled with this build (google, icloud,
+/// caldav, ...). Resolvable before the Tauri builder runs, which is when
+/// `AppState` needs it.
+fn bundled_providers_dir(context: &tauri::Context) -> PathBuf {
     let providers_dir = if cfg!(debug_assertions) {
         // In dev mode, Tauri doesn't copy resources — use the build output directly.
-        std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("providers")
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("providers")
     } else {
-        app.path()
-            .resolve("providers", tauri::path::BaseDirectory::Resource)
+        tauri::utils::platform::resource_dir(context.package_info(), &tauri::Env::default())
             .expect("failed to resolve bundled providers directory")
+            .join("providers")
     };
 
     // Ensure bundled binaries are executable (unix only).
@@ -72,7 +71,7 @@ fn setup_bundled_providers(app: &tauri::App) {
         }
     }
 
-    let _ = BUNDLED_PROVIDERS_DIR.set(providers_dir);
+    providers_dir
 }
 
 /// Returns whether a main window existed to focus; the single-instance
@@ -87,14 +86,17 @@ fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
     true
 }
 
-fn spawn_reminder_loop_if_needed(app: &tauri::App) {
+fn spawn_reminder_loop_if_needed(app: &tauri::App, state: Arc<AppState>) {
     #[cfg(target_os = "linux")]
     if !linux_reminders::should_run_in_process_reminders() {
         log::info!("rencal-notifierd is active — skipping in-process reminder loop");
         return;
     }
 
-    tokio::spawn(notifications::run_reminder_loop(app.handle().clone()));
+    spawn_task(
+        "reminder loop",
+        notifications::run_reminder_loop(app.handle().clone(), state),
+    );
 }
 
 #[tokio::main]
@@ -131,7 +133,17 @@ pub async fn run() {
     #[cfg(target_os = "linux")]
     let instance_listener = instance_guard.take_listener();
 
-    let router = create_router();
+    let context = tauri::generate_context!();
+    let state = match AppState::load(Some(bundled_providers_dir(&context))) {
+        Ok(state) => Arc::new(state),
+        Err(err) => {
+            // Only a malformed ~/.config/caldir/config.toml gets here; every
+            // RPC would fail anyway, so say why and stop.
+            eprintln!("rencal: cannot read caldir config: {err}");
+            std::process::exit(1);
+        }
+    };
+    let router = create_router(state.clone());
 
     let builder = tauri::Builder::default();
 
@@ -173,18 +185,16 @@ pub async fn run() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_process::init())
         .setup(move |app| {
-            // Bundle default providers (google, icloud, caldav...)
-            setup_bundled_providers(app);
-
             if let Some(urls) = app.deep_link().get_current()? {
                 let urls: Vec<String> = urls.into_iter().map(|url| url.to_string()).collect();
-                deep_links::enqueue_urls(app.handle(), &urls);
+                deep_links::enqueue_urls(app.handle(), &state.deep_links, &urls);
             }
 
             let app_handle = app.handle().clone();
+            let inbox_state = state.clone();
             app.deep_link().on_open_url(move |event| {
                 let urls: Vec<String> = event.urls().iter().map(ToString::to_string).collect();
-                if deep_links::enqueue_urls(&app_handle, &urls) > 0 {
+                if deep_links::enqueue_urls(&app_handle, &inbox_state.deep_links, &urls) > 0 {
                     focus_main_window(&app_handle);
                 }
             });
@@ -195,31 +205,26 @@ pub async fn run() {
                 linux_reminders::enable_notifierd_if_needed();
                 if let Some(listener) = instance_listener {
                     let app_handle = app.handle().clone();
+                    let inbox_state = state.clone();
                     single_instance::spawn_listener(listener, move |urls| {
                         if !urls.is_empty() {
-                            deep_links::enqueue_urls(&app_handle, &urls);
+                            deep_links::enqueue_urls(&app_handle, &inbox_state.deep_links, &urls);
                         }
                         focus_main_window(&app_handle)
                     });
                 }
             }
 
-            spawn_reminder_loop_if_needed(app);
+            spawn_reminder_loop_if_needed(app, state.clone());
 
-            // Handle changing Omarchy theme:
-            tokio::spawn(omarchy::run_watcher(app.handle().clone()));
+            // AppState notifications → webview events:
+            spawn_task(
+                "state bridge",
+                state_bridge::run(app.handle().clone(), state.clone()),
+            );
 
-            // Handle user-supplied CSS themes in ~/.config/rencal/themes:
-            tokio::spawn(external_themes::run_watcher(app.handle().clone()));
-
-            // Handle caldir file changes:
-            tokio::spawn(caldir_watcher::run_watcher(app.handle().clone()));
-
-            // Handle ~/.config/rencal/config.toml changes:
-            tokio::spawn(config_watcher::run_watcher(app.handle().clone()));
-
-            // Handle system timezone changes:
-            tokio::spawn(tz_watcher::run_watcher(app.handle().clone()));
+            // Omarchy theme, user CSS themes, caldir data + config, rencal config, timezone:
+            watchers::spawn_all(app.handle(), &state);
 
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {
@@ -250,7 +255,7 @@ pub async fn run() {
             }
         })
         .invoke_handler(router.into_handler())
-        .build(tauri::generate_context!())
+        .build(context)
         .expect("error while building tauri application")
         .run(|_app_handle, _event| {
             #[cfg(target_os = "macos")]

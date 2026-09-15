@@ -1,7 +1,6 @@
-use super::helpers::load_caldir;
 use super::types::Contact;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{Attendee, Event};
 use chrono::{DateTime, Utc};
 use std::collections::{HashMap, HashSet};
@@ -14,9 +13,9 @@ struct ContactAgg {
     last_seen: DateTime<Utc>,
 }
 
-pub(super) async fn handler() -> TauResult<Vec<Contact>> {
-    let caldir = load_caldir()?;
-    let calendars: Vec<_> = caldir
+pub(super) fn handler(state: &AppState) -> TauResult<Vec<Contact>> {
+    let calendars: Vec<_> = state
+        .caldir()
         .calendars()
         .into_iter()
         .filter_map(Result::ok)
@@ -37,7 +36,7 @@ pub(super) async fn handler() -> TauResult<Vec<Contact>> {
             continue;
         };
 
-        let events = EVENT_CACHE.events(&caldir, slug)?;
+        let events = state.events(slug).map_err(|e| e.to_string())?;
         for event in events.iter() {
             fold_event_contacts(event, &own_addresses, &mut contacts, &mut counted_events);
         }

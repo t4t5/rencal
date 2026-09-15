@@ -1,15 +1,19 @@
-use super::helpers::load_caldir;
 use super::types::Calendar;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::CalendarConfig;
 
-pub(super) async fn handler(name: String, color: Option<String>) -> TauResult<Calendar> {
-    let caldir = load_caldir()?;
+pub(super) fn handler(
+    state: &AppState,
+    name: String,
+    color: Option<String>,
+) -> TauResult<Calendar> {
     let base_slug = caldir_core::Calendar::base_slug_for(Some(&name));
 
     let config = CalendarConfig::new(Some(name), color, None, None);
 
-    let cal = caldir
+    let cal = state
+        .caldir()
         .create_calendar(&base_slug, Some(config))
         .map_err(|e| e.to_string())?;
 

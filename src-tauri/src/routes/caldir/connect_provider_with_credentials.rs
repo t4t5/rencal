@@ -1,20 +1,18 @@
 use super::connect_provider;
-use super::helpers::{build_connect_options, load_caldir};
+use super::helpers::{build_connect_options, provider};
 use super::types::{Calendar, CredentialFieldInput};
 use crate::oauth;
 use crate::routes::TauResult;
-use caldir_core::ProviderSlug;
+use crate::state::AppState;
 use tauri::{AppHandle, Runtime};
 
 pub(super) async fn handler<R: Runtime>(
+    state: &AppState,
     app: AppHandle<R>,
     provider_name: String,
     credentials: Vec<CredentialFieldInput>,
 ) -> TauResult<Vec<Calendar>> {
-    let caldir = load_caldir()?;
-    let provider = caldir
-        .provider(&ProviderSlug::from(provider_name.as_str()))
-        .map_err(|e| e.to_string())?;
+    let provider = provider(state, &provider_name)?;
 
     let mut cred_map = serde_json::Map::new();
     for field in credentials {
@@ -30,8 +28,9 @@ pub(super) async fn handler<R: Runtime>(
     let redirect_uri = format!("http://localhost:{}/callback", port);
 
     connect_provider::run_with_data(
+        state,
         app,
-        provider,
+        &provider,
         build_connect_options(true, &redirect_uri),
         cred_map,
         listener,

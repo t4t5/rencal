@@ -1,13 +1,12 @@
 use super::conference::apply_conference;
-use super::helpers::load_caldir;
 use super::types::{CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{Event, Reminder};
 
-pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent> {
-    let caldir = load_caldir()?;
-    let calendar = caldir
+pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<CalendarEvent> {
+    let calendar = state
+        .caldir()
         .calendar(&input.calendar_slug)
         .map_err(|e| e.to_string())?;
 
@@ -37,7 +36,7 @@ pub(super) async fn handler(input: CreateEventInput) -> TauResult<CalendarEvent>
     apply_conference(&mut event, &calendar, input.conference.as_ref());
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
-    EVENT_CACHE.invalidate(&input.calendar_slug);
+    state.events.invalidate(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(
         cal_event.event(),

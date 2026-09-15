@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-use std::time::Duration;
 
-use notify::{Event, EventKind, RecursiveMode, Watcher};
+use notify::RecursiveMode;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::mpsc;
-use tokio::time::sleep;
+
+use crate::fs_watch::{is_any_change, watch_debounced};
 
 pub const OMARCHY_THEME_CHANGED: &str = "omarchy-theme-changed";
 
@@ -190,47 +189,19 @@ pub async fn run_watcher(app: AppHandle) {
         return;
     }
 
-    let (tx, mut rx) = mpsc::unbounded_channel::<()>();
-
-    let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
-        if let Ok(event) = res
-            && matches!(
-                event.kind,
-                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            )
-        {
-            let _ = tx.send(());
-        }
-    }) {
-        Ok(watcher) => watcher,
-        Err(error) => {
-            log::warn!("Failed to init Omarchy theme watcher: {error}");
+    let mut watch = match watch_debounced(&watch_dirs, RecursiveMode::Recursive, is_any_change) {
+        Ok(watch) => watch,
+        Err(err) => {
+            log::warn!("Omarchy theme watcher: failed to watch {watch_dirs:?}: {err}");
             return;
         }
     };
 
-    let mut watched_any = false;
-    for watch_dir in watch_dirs {
-        match watcher.watch(&watch_dir, RecursiveMode::Recursive) {
-            Ok(()) => watched_any = true,
-            Err(error) => log::warn!("Failed to watch {watch_dir:?}: {error}"),
-        }
-    }
-    if !watched_any {
-        return;
-    }
-
-    while rx.recv().await.is_some() {
-        // Coalesce the burst of events from the atomic rm-rf / mv swap.
-        sleep(Duration::from_millis(150)).await;
-        while rx.try_recv().is_ok() {}
-
+    while watch.changed().await.is_some() {
         if let Some(colors) = read_colors() {
             let _ = app.emit(OMARCHY_THEME_CHANGED, colors);
         }
     }
-
-    drop(watcher);
 }
 
 #[cfg(test)]

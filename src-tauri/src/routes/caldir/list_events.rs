@@ -1,13 +1,13 @@
-use super::helpers::load_caldir;
 use super::helpers::{event_time_sort_key, is_visible};
 use super::types::{CalendarEvent, RpcRecurrence, core_recurrence_to_rpc};
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::expand_in_range;
 use chrono::{DateTime, Utc};
 use std::collections::HashMap;
 
-pub(super) async fn handler(
+pub(super) fn handler(
+    state: &AppState,
     calendar_slugs: Vec<String>,
     start: String,
     end: String,
@@ -17,11 +17,10 @@ pub(super) async fn handler(
         .map_err(|e: chrono::ParseError| e.to_string())?;
     let range_end: DateTime<Utc> = end.parse().map_err(|e: chrono::ParseError| e.to_string())?;
 
-    let caldir = load_caldir()?;
     let mut events = Vec::new();
 
     for slug in &calendar_slugs {
-        let parsed = EVENT_CACHE.events(&caldir, slug)?;
+        let parsed = state.events(slug).map_err(|e| e.to_string())?;
         let master_recurrences: HashMap<String, RpcRecurrence> = parsed
             .iter()
             .filter_map(|e| {

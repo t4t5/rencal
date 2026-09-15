@@ -23,6 +23,10 @@ Run `just check` after Rust / `src-tauri` changes.
 Important backend paths:
 
 - `src-tauri/src/lib.rs`: taurpc router setup
+- `src-tauri/src/state.rs`: `AppState` — the caldir handle, event cache, deep-link inbox
+- `src-tauri/src/state_bridge.rs`: turns `AppState` change notifications into webview events
+- `src-tauri/src/watchers/`: filesystem watchers (caldir data + config, rencal config, timezone)
+- `src-tauri/src/fs_watch.rs`: debounced `notify` helper the watchers are built on
 - `src-tauri/src/routes/caldir/`: caldir API procedures
 - `src-tauri/src/routes/caldir/types.rs`: shared RPC types
 - `src-tauri/src/routes/caldir/helpers.rs`: conversion helpers
@@ -56,6 +60,14 @@ Important frontend paths:
 - Use `i32` / `u32` instead.
 - For fixed string sets, use Rust enums with `#[serde(rename = "...")]` variants.
 - Regenerate bindings with `just gen-types` when route types change.
+- Backend state lives in `AppState` (`src-tauri/src/state.rs`); never add process statics.
+- Handlers take `&AppState`. Never hold `state.caldir()` across an `.await` — clone the
+  `Provider` / `connections()` / config you need first, then await. (The guard is `!Send`,
+  so this is a compile error, not a stall.)
+- `AppState` is Tauri-free: no `AppHandle`, no `emit`. Backend tasks subscribe to its
+  `watch` channels; `state_bridge.rs` is the one place that forwards them to the webview.
+- Spawn background tasks with `tasks::spawn_task`, and build watchers on
+  `fs_watch::watch_debounced` (see `src-tauri/src/watchers/`).
 
 ## caldir/provider rules
 

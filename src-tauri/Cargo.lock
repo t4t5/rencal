@@ -552,7 +552,6 @@ dependencies = [
 [[package]]
 name = "caldir-core"
 version = "0.15.0"
-source = "git+https://github.com/t4t5/caldir?tag=v0.14.1#2675ffec187d9539f90aaa927037b05df6c1cfb4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4002,6 +4001,7 @@ dependencies = [
  "log",
  "mac-notification-sys",
  "notify",
+ "parking_lot",
  "reminder-core",
  "rencal-config",
  "serde",
@@ -4019,6 +4019,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
  "taurpc",
+ "tempfile",
  "tokio",
  "toml 0.8.2",
  "url",

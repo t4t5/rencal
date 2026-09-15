@@ -1,10 +1,11 @@
-use super::helpers::load_caldir;
-use crate::caldir_watcher::CALDIR_CHANGED;
 use crate::routes::TauResult;
+use crate::state::AppState;
+use crate::watchers::caldir::CALDIR_CHANGED;
 use tauri::{AppHandle, Emitter, Runtime};
 
-pub(super) async fn handler<R: Runtime>(
-    app: AppHandle<R>,
+pub(super) fn handler<R: Runtime>(
+    state: &AppState,
+    app: &AppHandle<R>,
     calendar_slug: String,
     color: String,
 ) -> TauResult<()> {
@@ -12,8 +13,10 @@ pub(super) async fn handler<R: Runtime>(
         return Err("Calendar color must be a hex color in the form #RRGGBB".to_string());
     }
 
-    let caldir = load_caldir()?;
-    let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
+    let calendar = state
+        .caldir()
+        .calendar(&calendar_slug)
+        .map_err(|e| e.to_string())?;
     let mut config = calendar.config().cloned().unwrap_or_default();
     config.set_color(Some(color));
 

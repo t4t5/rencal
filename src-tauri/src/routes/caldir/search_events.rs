@@ -1,19 +1,18 @@
-use super::helpers::load_caldir;
 use super::helpers::{is_visible, sort_by_proximity_to_now};
 use super::types::CalendarEvent;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 
-pub(super) async fn handler(
+pub(super) fn handler(
+    state: &AppState,
     calendar_slugs: Vec<String>,
     query: String,
 ) -> TauResult<Vec<CalendarEvent>> {
-    let caldir = load_caldir()?;
     let mut events = Vec::new();
     let query_lower = query.to_lowercase();
 
     for slug in &calendar_slugs {
-        let parsed = EVENT_CACHE.events(&caldir, slug)?;
+        let parsed = state.events(slug).map_err(|e| e.to_string())?;
         for event in parsed.iter() {
             if !is_visible(event) {
                 continue;

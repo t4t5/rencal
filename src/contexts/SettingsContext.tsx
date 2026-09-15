@@ -136,11 +136,10 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emit(DEFAULT_CALENDAR_CHANGED, slug)
   }
 
+  // Rust broadcasts CALENDAR_DIR_CHANGED with the stored path; the listener
+  // above updates the state in every window.
   const setCalendarDir = async (path: string) => {
     await rpc.caldir.set_calendar_dir(path)
-    const stored = await rpc.caldir.get_calendar_dir()
-    setCalendarDirState(stored)
-    await emit(CALENDAR_DIR_CHANGED, stored)
   }
 
   const setNotificationsEnabled = async (enabled: boolean) => {

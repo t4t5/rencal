@@ -1,15 +1,15 @@
-use super::helpers::{build_connect_options, load_caldir, map_fields};
+use super::helpers::{build_connect_options, map_fields, provider};
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
 use crate::routes::TauResult;
-use caldir_core::ProviderSlug;
+use crate::state::AppState;
 
-pub(super) async fn handler(provider_name: String) -> TauResult<ProviderConnectInfo> {
+pub(super) async fn handler(
+    state: &AppState,
+    provider_name: String,
+) -> TauResult<ProviderConnectInfo> {
     use caldir_core::rpc::{ConnectResponse, ConnectStepKind, CredentialsData, SetupData};
 
-    let caldir = load_caldir()?;
-    let provider = caldir
-        .provider(&ProviderSlug::from(provider_name.as_str()))
-        .map_err(|e| e.to_string())?;
+    let provider = provider(state, &provider_name)?;
 
     let port: u16 = 8080;
     let redirect_uri = format!("http://localhost:{}/callback", port);

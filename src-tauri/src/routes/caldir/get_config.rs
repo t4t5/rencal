@@ -1,21 +1,19 @@
-use super::helpers::load_caldir;
 use super::helpers::tildify;
 use super::types::TimeFormat;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::TimeFormat as CoreTimeFormat;
 
-pub(super) async fn get_time_format() -> TauResult<TimeFormat> {
-    let caldir = load_caldir()?;
-    let tf = match caldir.config().time_format() {
+pub(super) fn get_time_format(state: &AppState) -> TauResult<TimeFormat> {
+    let tf = match state.caldir().config().time_format() {
         CoreTimeFormat::H24 => TimeFormat::H24,
         CoreTimeFormat::H12 => TimeFormat::H12,
     };
     Ok(tf)
 }
 
-pub(super) async fn get_default_reminders() -> TauResult<Vec<i32>> {
-    let caldir = load_caldir()?;
-    let Some(reminders) = caldir.config().default_reminders() else {
+pub(super) fn get_default_reminders(state: &AppState) -> TauResult<Vec<i32>> {
+    let Some(reminders) = state.caldir().config().default_reminders() else {
         return Ok(Vec::new());
     };
     Ok(reminders
@@ -24,12 +22,14 @@ pub(super) async fn get_default_reminders() -> TauResult<Vec<i32>> {
         .collect())
 }
 
-pub(super) async fn get_default_calendar() -> TauResult<Option<String>> {
-    let caldir = load_caldir()?;
-    Ok(caldir.config().default_calendar_slug().map(String::from))
+pub(super) fn get_default_calendar(state: &AppState) -> TauResult<Option<String>> {
+    Ok(state
+        .caldir()
+        .config()
+        .default_calendar_slug()
+        .map(String::from))
 }
 
-pub(super) async fn get_calendar_dir() -> TauResult<String> {
-    let caldir = load_caldir()?;
-    Ok(tildify(&caldir.config().data_dir().to_string_lossy()))
+pub(super) fn get_calendar_dir(state: &AppState) -> TauResult<String> {
+    Ok(tildify(&state.caldir().data_dir().to_string_lossy()))
 }
