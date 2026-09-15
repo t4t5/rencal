@@ -24,9 +24,11 @@ export {
 } from "./constants"
 export { allDayDate, atTime, fromDate, nowZoned, today } from "./constructors"
 export {
+  dateKeyFromEpochDay,
   dateKeyToPlainDate,
   epochDay,
   isoWeekNumber,
+  plainDateFromEpochDay,
   startOfWeek,
   type FirstDayOfWeek,
 } from "./day"
@@ -53,7 +55,7 @@ export {
   withViewerZone,
 } from "./edit"
 export { getViewerTzid, setViewerTzid, subscribeViewerTzid } from "./local-zone"
-export { computeEventDateInfo } from "./layout"
+export { computeEventDateInfo, occupiedDays } from "./layout"
 export {
   dateInViewerZone,
   isAllDay,
@@ -64,7 +66,6 @@ export {
 export {
   coversFullDay,
   displayEndDate,
-  enumerateLocalDays,
   normalizeAllDayRange,
   shouldShowDisplayEndDate,
   withRangeDisplayEndDate,

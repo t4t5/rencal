@@ -5,4 +5,4 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export const isMacOS = navigator.platform.startsWith("Mac")
+export const isMacOS = typeof navigator !== "undefined" && navigator.platform.startsWith("Mac")

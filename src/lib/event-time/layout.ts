@@ -38,3 +38,13 @@ export function computeEventDateInfo(start: EventTime, end: EventTime): EventDat
 
   return { startMs, endMs, firstDay, lastDay, endDay, startLocalMinutes, endLocalMinutes }
 }
+
+/**
+ * Epoch-day keys of every viewer-local day the event occupies, first to last. An
+ * event whose end precedes its start still occupies its start day.
+ */
+export function occupiedDays({ firstDay, lastDay }: EventDateInfo): number[] {
+  const days: number[] = []
+  for (let day = firstDay; day <= Math.max(firstDay, lastDay); day++) days.push(day)
+  return days
+}

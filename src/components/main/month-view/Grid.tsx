@@ -18,14 +18,18 @@ import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { createDebugLogger, isDebugMode } from "@/lib/debug"
 import { epochDay } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { MonthWeekRow } from "./Row"
+import { nativeWeekSnap, suppressSnapPointsForFrame, WeekSnapPoints } from "./WeekSnapPoints"
 import { useDragToCreateDays } from "./useDragToCreateDays"
 import { attachWeekSnapSession } from "./weekSnapSession"
 
 const DEFAULT_ROW_HEIGHT = 150
+const debugMonthScroll = createDebugLogger("month-scroll")
+const debugMonthScrollEnabled = isDebugMode("month-scroll")
 
 export function MonthGrid({
   weeks,
@@ -68,6 +72,7 @@ export function MonthGrid({
   // pre-scroll frame (top of the grid) flash before it jumps to the active month.
   const [hasInitiallyScrolled, setHasInitiallyScrolled] = useState(false)
   const snapSessionRef = useRef<ReturnType<typeof attachWeekSnapSession> | null>(null)
+  const snapPointsRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
     const el = scrollRef.current
@@ -81,12 +86,26 @@ export function MonthGrid({
     return () => observer.disconnect()
   }, [scrollRef])
 
+  const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
+  const curFirstKey = weeks[0]?.[0]?.dateKey
+  const isPrepending =
+    curFirstKey !== prevRef.current.firstKey && weeks.length > prevRef.current.count
+  const nativeSnapRestorePendingRef = useRef(false)
+  const nativeSnapRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
+  const nativeSnapRestoreCleanupRef = useRef<(() => void) | undefined>(undefined)
+  const [, setSnapRestoreVersion] = useState(0)
+
   const estimateSize = useCallback(() => rowHeight, [rowHeight])
+  const getItemKey = useCallback((index: number) => weeks[index][0].dateKey, [weeks])
 
   const virtualizer = useVirtualizer({
     count: weeks.length,
     getScrollElement: () => scrollRef.current,
     estimateSize,
+    getItemKey,
+    // Preserve the visible week when older weeks are prepended. TanStack updates its
+    // tracked offset and rendered window in the same pass, avoiding a blank frame.
+    anchorTo: "end",
     overscan: 3,
   })
 
@@ -101,6 +120,7 @@ export function MonthGrid({
     if (!el || prevHeight === rowHeight || prevHeight === 0 || !hasInitiallyScrolled) return
 
     snapSessionRef.current?.pause()
+    suppressSnapPointsForFrame(snapPointsRef.current)
 
     const ratio = rowHeight / prevHeight
     const newScrollTop = Math.round(el.scrollTop * ratio)
@@ -114,12 +134,11 @@ export function MonthGrid({
   const anchorWeekIndexRef = useRef(anchorWeekIndex)
   anchorWeekIndexRef.current = anchorWeekIndex
 
-  // Keep the viewport in place when weeks are prepended
-  const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
+  // TanStack keeps the viewport in place when weeks are prepended. The remaining
+  // bookkeeping restores native snapping after the snap-free prepend commit and carries
+  // the Linux JS fling across the shifted coordinate space.
 
   useLayoutEffect(() => {
-    const curFirstKey = weeks[0]?.[0]?.dateKey
-
     const { firstKey: prevFirstKey, count: prevCount } = prevRef.current
 
     prevRef.current = { firstKey: curFirstKey, count: weeks.length }
@@ -127,14 +146,63 @@ export function MonthGrid({
     if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
 
     const added = weeks.length - prevCount
-    const el = scrollRef.current
-    if (!el) return
     const delta = added * rowHeight
-    const from = el.scrollTop
-    const to = from + delta
 
-    virtualizer.scrollToOffset(to, { align: "start" })
     snapSessionRef.current?.shift(delta)
+
+    // The prepend render removes native scroll snapping before the changed snap-point
+    // geometry is committed. Keep it off until WebKit declares scrolling finished: restoring
+    // it on the next frame can resume the fling toward its stale, pre-prepend snap target.
+    if (nativeWeekSnap) {
+      const el = scrollRef.current
+      nativeSnapRestorePendingRef.current = true
+      nativeSnapRestoreCleanupRef.current?.()
+      clearTimeout(nativeSnapRestoreTimerRef.current)
+
+      let restored = false
+      const restore = () => {
+        if (restored) return
+        restored = true
+        el?.removeEventListener("scrollend", restore)
+        clearTimeout(nativeSnapRestoreTimerRef.current)
+        nativeSnapRestoreTimerRef.current = undefined
+        nativeSnapRestoreCleanupRef.current = undefined
+        nativeSnapRestorePendingRef.current = false
+        setSnapRestoreVersion((version) => version + 1)
+        debugMonthScroll("native snap restored")
+      }
+
+      el?.addEventListener("scrollend", restore, { once: true })
+      nativeSnapRestoreTimerRef.current = setTimeout(restore, 300)
+      nativeSnapRestoreCleanupRef.current = () => {
+        restored = true
+        el?.removeEventListener("scrollend", restore)
+      }
+    }
+
+    if (debugMonthScrollEnabled) {
+      const el = scrollRef.current
+      const logState = (phase: string) => {
+        const virtualRows = virtualizer.getVirtualItems()
+        debugMonthScroll(`prepend ${phase}`, {
+          added,
+          delta,
+          domScrollTop: el?.scrollTop,
+          scrollHeight: el?.scrollHeight,
+          clientHeight: el?.clientHeight,
+          virtualScrollOffset: virtualizer.scrollOffset,
+          totalSize: virtualizer.getTotalSize(),
+          renderedIndexes: virtualRows.map((row) => row.index),
+          renderedStarts: virtualRows.map((row) => row.start),
+        })
+      }
+
+      logState("layout")
+      requestAnimationFrame(() => {
+        logState("frame 1")
+        requestAnimationFrame(() => logState("frame 2"))
+      })
+    }
   })
 
   // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when
@@ -143,13 +211,27 @@ export function MonthGrid({
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
 
+  useEffect(
+    () => () => {
+      nativeSnapRestoreCleanupRef.current?.()
+      clearTimeout(nativeSnapRestoreTimerRef.current)
+    },
+    [],
+  )
+
+  // Native CSS snapping on macOS; the JS fling session elsewhere (see WeekSnapPoints.tsx).
+  // Both autoscrollers move the container with per-frame scrollBy calls, which a mandatory
+  // snap would clamp back to the current row, so snapping is off while dragging.
+  const nativeSnapSuspended =
+    nativeWeekSnap && (isPrepending || nativeSnapRestorePendingRef.current)
+  const snapEnabled = hasInitiallyScrolled && !selection && !drag && !nativeSnapSuspended
   const getSnapState = useEffectEvent(() => ({
-    enabled: hasInitiallyScrolled && !selection && !drag && !isNavigating(),
+    enabled: snapEnabled && !isNavigating(),
     rowHeight,
   }))
   useEffect(() => {
     const el = scrollRef.current
-    if (!el) return
+    if (!el || nativeWeekSnap) return
     const session = attachWeekSnapSession(el, getSnapState)
     snapSessionRef.current = session
     return () => {
@@ -171,14 +253,45 @@ export function MonthGrid({
       return
     }
 
-    hasInitialized.current = true
-    ignoreScrollUntil.current = Date.now() + 200
+    // `measure()` invalidates TanStack's item cache and schedules a render. Wait until
+    // that render has rebuilt the sizer before scrolling; scrollToIndex is a no-op while
+    // the cache is empty in TanStack Virtual 3.14.x. A row offset is exact for this grid.
+    let revealFrame: number | undefined
+    let finalRevealFrame: number | undefined
+    const positionFrame = requestAnimationFrame(() => {
+      if (hasInitialized.current) return
 
-    virtualizer.scrollToIndex(idx, { align: "start" })
+      hasInitialized.current = true
+      ignoreScrollUntil.current = Date.now() + 200
 
-    // Reveal only after the scroll has actually painted, so the user never sees the
-    // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
-    requestAnimationFrame(() => requestAnimationFrame(() => setHasInitiallyScrolled(true)))
+      const target = idx * rowHeight
+      virtualizer.scrollToOffset(target, { align: "start" })
+
+      if (debugMonthScrollEnabled) {
+        const el = scrollRef.current
+        debugMonthScroll("initial anchor", {
+          index: idx,
+          target,
+          rowHeight,
+          domScrollTop: el?.scrollTop,
+          scrollHeight: el?.scrollHeight,
+          virtualScrollOffset: virtualizer.scrollOffset,
+          totalSize: virtualizer.getTotalSize(),
+        })
+      }
+
+      // Reveal only after the scroll has actually painted, so the user never sees the
+      // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
+      revealFrame = requestAnimationFrame(() => {
+        finalRevealFrame = requestAnimationFrame(() => setHasInitiallyScrolled(true))
+      })
+    })
+
+    return () => {
+      cancelAnimationFrame(positionFrame)
+      if (revealFrame !== undefined) cancelAnimationFrame(revealFrame)
+      if (finalRevealFrame !== undefined) cancelAnimationFrame(finalRevealFrame)
+    }
   }, [virtualizer, rowHeight])
 
   // During explicit navigation, scroll the active week fully into view if needed.
@@ -216,8 +329,10 @@ export function MonthGrid({
     <div
       ref={scrollRef}
       data-drag-scroll
+      style={{ overflowAnchor: "none" }}
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
+        nativeWeekSnap && snapEnabled && "motion-safe:snap-y motion-safe:snap-mandatory",
         !hasInitiallyScrolled && "invisible",
         selection && "select-none",
       )}
@@ -229,6 +344,9 @@ export function MonthGrid({
           position: "relative",
         }}
       >
+        {nativeWeekSnap && (
+          <WeekSnapPoints ref={snapPointsRef} weeks={weeks} rowHeight={rowHeight} />
+        )}
         {virtualizer.getVirtualItems().map((virtualRow) => {
           const weekDays = weeks[virtualRow.index]
           const createSelection = selection

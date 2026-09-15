@@ -3,7 +3,6 @@ import { listen } from "@tauri-apps/api/event"
 import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
-import { DuplicateEventDialog } from "@/components/event-parts/DuplicateEventDialog"
 import { CommandPalette } from "@/components/shortcuts/CommandPalette"
 import { ShortcutsOverlay } from "@/components/shortcuts/ShortcutsOverlay"
 import {
@@ -21,11 +20,11 @@ import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
+import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
-import { useDuplicateEvent } from "@/hooks/useDuplicateEvent"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
@@ -64,7 +63,7 @@ export function GlobalShortcuts({
   const { descriptors } = useThemeRegistry()
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
-  const { triggerDuplicate, duplicateDialogProps } = useDuplicateEvent()
+  const { triggerDuplicate } = useDuplicateEvent()
 
   const handlers = useShortcutHandlers({
     onChangeCalendarView,
@@ -143,7 +142,6 @@ export function GlobalShortcuts({
       )}
 
       <ShortcutsOverlay open={overlayOpen} onClose={() => setOverlayOpen(false)} />
-      <DuplicateEventDialog {...duplicateDialogProps} />
       <CommandPalette
         open={paletteOpen}
         onOpenChange={setPaletteOpen}

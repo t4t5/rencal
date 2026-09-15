@@ -20,19 +20,45 @@ Two things move independently and must never be confused:
 
 ### Week-row snapping
 
+User scrolls land on a week boundary. Snapping is off during initial positioning,
+event drags, drag-to-create selections, and when reduced motion is requested.
+Programmatic scrolls (the initial anchor, jump navigation, the row-height rescale on
+resize, and the prepend correction) always target a row multiple, so they never
+fight the snap. There are two implementations, chosen once at startup by platform:
+
+**macOS: native CSS scroll snap.** The scroller gets `scroll-snap-type: y mandatory`
+and `src/components/main/month-view/WeekSnapPoints.tsx` renders an invisible 1px
+`scroll-snap-align: start` sentinel per loaded week. The week rows are virtualized,
+so they cannot be the snap areas: a fling needs targets ahead of the rendered
+window. Weeks containing the 1st are `scroll-snap-stop: always`, so a fling never
+skips past a month boundary (as in Notion Calendar). WebKit's Mac port folds the snap
+into the trackpad momentum itself, so there is no JS animation and no input tracking.
+
+- Snapping is toggled off by removing the snap classes while a drag or selection is
+  active: both autoscrollers move the container with per-frame `scrollBy` calls that a
+  mandatory snap would clamp back to the current row. The snap re-engages on drop.
+- During a prepend, native snapping is disabled in the render that moves the sentinels
+  and stays disabled until `scrollend` (with a short fallback). Re-enabling it on the
+  next frame can make WebKit resume toward its stale, pre-prepend momentum target. A
+  row-height change only needs the snap areas hidden for the correction frame.
+- A prepend that lands mid-fling stops WebKit's momentum at the corrected position.
+  This is the one case that still needs physical trackpad verification.
+
+**Linux (WebKitGTK): JS fling takeover.** WebKitGTK disables kinetic scrolling
+entirely once snap points exist ([WebKit bug 229037](https://bugs.webkit.org/show_bug.cgi?id=229037)),
+so CSS snapping would kill every trackpad fling at finger lift.
+
 - Direct scrolling stays native. Eligible trackpad flings transition to a JS
   animation that lands on a week boundary ahead in the direction of motion.
   Other scrolls settle to the nearest week after 250 ms idle.
-- New input cancels the animation immediately. Snapping is disabled during initial
-  positioning, date navigation, event drags, and when reduced motion is requested.
-  Programmatic scrolls never start a snap session.
+- New input cancels the animation immediately. Snapping is additionally disabled
+  during date navigation. Programmatic scrolls never start a snap session.
 - Prepending months preserves the ongoing gesture or animation. Resizing cancels
   the animation and lets an active session settle using the new row height.
 
 Implementation: `src/components/main/month-view/weekSnapSession.ts` manages input
-and sessions; `weekSnapFling.ts` owns animation and tuning. Snapping uses JS to work
-with WebKitGTK's kinetic scrolling. Device detection and native fling takeover
-still need physical trackpad/mouse verification.
+and sessions; `weekSnapFling.ts` owns animation and tuning. Device detection and
+native fling takeover still need physical trackpad/mouse verification.
 
 ### Active date while scrolling
 

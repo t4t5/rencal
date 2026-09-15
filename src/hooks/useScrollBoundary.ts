@@ -5,6 +5,7 @@ type Axis = "x" | "y" | "both"
 type UseScrollBoundaryProps = {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   threshold?: number // pixels from edge (default: 100)
+  scrollAwayThreshold?: number // pixels from both edges before boundary callbacks are armed
   throttleMs?: number // throttle delay (default: 150)
   axis?: Axis // which axis to watch (default: "y")
   onNearTop?: () => void
@@ -18,6 +19,7 @@ type UseScrollBoundaryProps = {
 export const useScrollBoundary = ({
   scrollContainerRef,
   threshold = 100,
+  scrollAwayThreshold = threshold,
   throttleMs = 150,
   axis = "y",
   onNearTop,
@@ -33,6 +35,7 @@ export const useScrollBoundary = ({
   useEffect(() => {
     const container = scrollContainerRef.current
     if (!container) return
+    let trailingTimer: ReturnType<typeof setTimeout> | undefined
 
     const checkBoundaries = () => {
       if (axis === "y" || axis === "both") {
@@ -40,7 +43,7 @@ export const useScrollBoundary = ({
         const distanceFromBottom = scrollHeight - scrollTop - clientHeight
 
         if (requireScrollAwayBeforeBoundary && !hasScrolledAwayFromBoundaryRef.current) {
-          if (scrollTop >= threshold && distanceFromBottom >= threshold) {
+          if (scrollTop >= scrollAwayThreshold && distanceFromBottom >= scrollAwayThreshold) {
             hasScrolledAwayFromBoundaryRef.current = true
           } else {
             return
@@ -56,7 +59,7 @@ export const useScrollBoundary = ({
         const distanceFromRight = scrollWidth - scrollLeft - clientWidth
 
         if (requireScrollAwayBeforeBoundary && !hasScrolledAwayFromBoundaryRef.current) {
-          if (scrollLeft >= threshold && distanceFromRight >= threshold) {
+          if (scrollLeft >= scrollAwayThreshold && distanceFromRight >= scrollAwayThreshold) {
             hasScrolledAwayFromBoundaryRef.current = true
           } else {
             return
@@ -70,11 +73,21 @@ export const useScrollBoundary = ({
 
     const handleScroll = () => {
       const now = Date.now()
+      const elapsed = now - lastRunRef.current
 
-      // Throttle: run immediately on first call, then at most once per throttleMs
-      if (now - lastRunRef.current >= throttleMs) {
+      // Run on the leading edge, but retain one trailing check so a fast gesture cannot
+      // cross the preload boundary entirely inside the throttle window.
+      if (elapsed >= throttleMs) {
+        clearTimeout(trailingTimer)
+        trailingTimer = undefined
         lastRunRef.current = now
         checkBoundaries()
+      } else if (trailingTimer === undefined) {
+        trailingTimer = setTimeout(() => {
+          trailingTimer = undefined
+          lastRunRef.current = Date.now()
+          checkBoundaries()
+        }, throttleMs - elapsed)
       }
     }
 
@@ -92,11 +105,13 @@ export const useScrollBoundary = ({
 
     return () => {
       container.removeEventListener("scroll", handleScroll)
+      clearTimeout(trailingTimer)
       if (rafId !== null) cancelAnimationFrame(rafId)
     }
   }, [
     scrollContainerRef,
     threshold,
+    scrollAwayThreshold,
     throttleMs,
     axis,
     onNearTop,
