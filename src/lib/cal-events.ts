@@ -46,6 +46,44 @@ export function eventKey(event: Pick<CalendarEvent, "id" | "calendar_slug">): st
   return `${event.calendar_slug}::${event.id}`
 }
 
+/**
+ * Replace an optimistic create with the event returned by the backend.
+ *
+ * A reload may remove the optimistic row while create_event is in flight. In
+ * that case, append the created event so it is not missing until the next
+ * reload. If the reload already fetched the created event, only remove the
+ * stale optimistic row instead of introducing a duplicate.
+ */
+export function reconcileOptimisticCreate(
+  events: CalendarEvent[],
+  optimisticEvent: Pick<CalendarEvent, "id" | "calendar_slug">,
+  createdEvent: CalendarEvent,
+): CalendarEvent[] {
+  const optimisticKey = eventKey(optimisticEvent)
+  const createdKey = eventKey(createdEvent)
+  const optimisticIndex = events.findIndex((event) => eventKey(event) === optimisticKey)
+  const createdIndex = events.findIndex((event) => eventKey(event) === createdKey)
+
+  if (createdIndex !== -1) {
+    if (optimisticIndex === -1 || optimisticIndex === createdIndex) return events
+    return events.filter((_, index) => index !== optimisticIndex)
+  }
+
+  if (optimisticIndex === -1) return [...events, createdEvent]
+  return events.map((event, index) => (index === optimisticIndex ? createdEvent : event))
+}
+
+/** Remove an optimistic create after create_event fails. */
+export function rollbackOptimisticCreate(
+  events: CalendarEvent[],
+  optimisticEvent: Pick<CalendarEvent, "id" | "calendar_slug">,
+): CalendarEvent[] {
+  const optimisticKey = eventKey(optimisticEvent)
+  const optimisticIndex = events.findIndex((event) => eventKey(event) === optimisticKey)
+  if (optimisticIndex === -1) return events
+  return events.filter((_, index) => index !== optimisticIndex)
+}
+
 export function rpcToRecurrence(w: RpcRecurrence): Recurrence {
   return {
     rrule: w.rrule,
