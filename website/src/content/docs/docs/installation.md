@@ -5,6 +5,13 @@ description: Install and update renCal on Linux and macOS.
 
 Install renCal from the [download page](/download/).
 
+## Nix
+
+```sh
+nix run github:t4t5/rencal
+# or, in a NixOS config: inputs.rencal.packages.${system}.default
+```
+
 ## Reminders support
 
 On Linux, the AUR, `.deb`, and `.rpm` packages also install `rencal-notifierd`, a background service that can notify you when events are coming up.

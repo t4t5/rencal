@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Move caldir-core and the provider binaries to a caldir release, e.g. `scripts/bump-caldir.sh v0.13.1`.
-# Regenerates src-tauri/caldir-providers.sha256 from the release's asset digests.
+# Regenerates src-tauri/caldir-providers.sha256 from the release's asset digests
+# and updates the matching Nix flake input when Nix is installed.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -43,4 +44,9 @@ rm "$manifest.bak"
 grep -q "^caldir-core = .*tag = \"$tag\"" "$manifest"
 
 cargo fetch --manifest-path "$manifest"
+
+if command -v nix >/dev/null; then
+  nix flake update caldir --override-input caldir "github:t4t5/caldir/$tag"
+fi
+
 scripts/install-caldir-providers.sh

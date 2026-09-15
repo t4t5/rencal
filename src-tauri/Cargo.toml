@@ -2,8 +2,9 @@
 members = ["reminder-core", "notifierd", "rencal-config"]
 
 [workspace.dependencies]
-# One caldir tag pins both caldir-core and the provider binaries; bump with `just bump-caldir <tag>`.
-caldir-core = { git = "https://github.com/t4t5/caldir", tag = "v0.13.1" }
+# One caldir tag pins caldir-core, the provider binaries, and the Nix flake input;
+# bump with `just bump-caldir <tag>`.
+caldir-core = { git = "https://github.com/t4t5/caldir", tag = "v0.14.1" }
 
 [package]
 name = "rencal"
