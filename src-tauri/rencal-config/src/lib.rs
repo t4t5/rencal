@@ -5,7 +5,7 @@
 //! file without dragging Tauri/taurpc into a long-lived systemd service.
 
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
@@ -80,16 +80,29 @@ impl RencalConfig {
         Self::config_path().map(|p| p.exists()).unwrap_or(false)
     }
 
-    /// Infallible by design: missing or malformed file falls back to defaults
-    /// so callers don't need an error path on every read.
-    pub fn load() -> Self {
-        let Ok(path) = Self::config_path() else {
-            return Self::default();
+    /// A missing file means the user has not configured renCal yet. Existing
+    /// files must be readable and valid so callers never overwrite a broken
+    /// config with defaults.
+    pub fn load() -> Result<Self, String> {
+        Self::load_from_path(&Self::config_path()?)
+    }
+
+    fn load_from_path(path: &Path) -> Result<Self, String> {
+        let contents = match std::fs::read_to_string(path) {
+            Ok(contents) => contents,
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Ok(Self::default());
+            }
+            Err(error) => {
+                return Err(format!(
+                    "Could not read config file {}: {error}",
+                    path.display()
+                ));
+            }
         };
-        let Ok(contents) = std::fs::read_to_string(&path) else {
-            return Self::default();
-        };
-        toml::from_str(&contents).unwrap_or_default()
+
+        toml::from_str(&contents)
+            .map_err(|error| format!("Could not parse config file {}: {error}", path.display()))
     }
 
     pub fn save(&self) -> Result<(), String> {
@@ -163,5 +176,42 @@ mod tests {
         assert!(toml_str.contains("show_week_numbers = true"));
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
         assert!(reparsed.show_week_numbers);
+    }
+
+    #[test]
+    fn missing_config_file_falls_back_to_defaults() {
+        let path = std::env::temp_dir().join(format!(
+            "rencal-config-missing-{}-{}.toml",
+            std::process::id(),
+            std::thread::current().name().unwrap_or("unnamed")
+        ));
+
+        let config = RencalConfig::load_from_path(&path).expect("load missing config");
+
+        assert_eq!(config.theme, default_theme());
+        assert!(config.groups.is_empty());
+    }
+
+    #[test]
+    fn malformed_config_file_returns_an_error() {
+        let path = std::env::temp_dir().join(format!(
+            "rencal-config-malformed-{}-{}.toml",
+            std::process::id(),
+            std::thread::current().name().unwrap_or("unnamed")
+        ));
+        std::fs::write(&path, "theme = [not valid TOML").expect("write malformed config");
+
+        let error = match RencalConfig::load_from_path(&path) {
+            Ok(_) => panic!("malformed config was accepted"),
+            Err(error) => error,
+        };
+
+        assert!(error.contains("Could not parse config file"));
+        assert_eq!(
+            std::fs::read_to_string(&path).expect("read malformed config"),
+            "theme = [not valid TOML"
+        );
+
+        std::fs::remove_file(path).expect("remove malformed config");
     }
 }
