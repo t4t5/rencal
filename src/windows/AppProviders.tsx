@@ -7,6 +7,8 @@ import { UpdateChecker } from "@/components/update/UpdateChecker"
 import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
 import { CalEventsProvider } from "@/contexts/CalEventsContext"
 import { CreateEventGateProvider } from "@/contexts/CreateEventGateContext"
+import { DeleteEventProvider } from "@/contexts/DeleteEventContext"
+import { DuplicateEventProvider } from "@/contexts/DuplicateEventContext"
 import { EventDraftProvider } from "@/contexts/EventDraftContext"
 import { EventDragProvider } from "@/contexts/EventDragContext"
 import { RecurrenceEditProvider } from "@/contexts/RecurrenceEditContext"
@@ -27,6 +29,8 @@ export function AppProviders({ preload, children }: AppProvidersProps) {
   //   EventDrag       <- CalEvents, CalendarState, RecurrenceEdit
   //   EventDraft      <- CalEvents, CalendarState, Settings, Sync
   //   CreateEventGate <- CalendarState
+  //   DeleteEvent     <- CalEvents, Sync
+  //   DuplicateEvent  <- CalEvents, CalendarState, EventDraft, CreateEventGate
   //   AgendaFocus has no provider dependencies.
   return (
     <CalEventsProvider initialEvents={preload.initialEvents} initialRange={preload.initialRange}>
@@ -35,7 +39,11 @@ export function AppProviders({ preload, children }: AppProvidersProps) {
           <EventDragProvider>
             <EventDraftProvider>
               <CreateEventGateProvider>
-                <AgendaFocusProvider>{children}</AgendaFocusProvider>
+                <DeleteEventProvider>
+                  <DuplicateEventProvider>
+                    <AgendaFocusProvider>{children}</AgendaFocusProvider>
+                  </DuplicateEventProvider>
+                </DeleteEventProvider>
               </CreateEventGateProvider>
             </EventDraftProvider>
           </EventDragProvider>

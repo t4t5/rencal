@@ -2,8 +2,6 @@ import { ReactNode, useEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
 
-import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
-import { DuplicateEventDialog } from "@/components/event-parts/DuplicateEventDialog"
 import { EventInfo } from "@/components/event-parts/EventInfo"
 import { Button } from "@/components/ui/button"
 import {
@@ -19,10 +17,10 @@ import type { ResponseStatus } from "@/rpc/bindings"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useDeleteEvent } from "@/contexts/DeleteEventContext"
+import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 import { useSync } from "@/contexts/SyncContext"
 
-import { useDeleteEvent } from "@/hooks/useDeleteEvent"
-import { useDuplicateEvent } from "@/hooks/useDuplicateEvent"
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
@@ -55,8 +53,8 @@ export const EditEvent = ({
   const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
   const originalEventRef = useRef<CalendarEvent | null>(null)
 
-  const { triggerDelete, deleteDialogProps } = useDeleteEvent()
-  const { triggerDuplicate, duplicateDialogProps } = useDuplicateEvent()
+  const { triggerDelete } = useDeleteEvent()
+  const { triggerDuplicate } = useDuplicateEvent()
 
   useEffect(() => {
     if (event) {
@@ -72,7 +70,6 @@ export const EditEvent = ({
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key !== "Delete" && e.key !== "Backspace") return
-      if (deleteDialogProps.open) return
 
       const active = document.activeElement
       if (
@@ -89,7 +86,7 @@ export const EditEvent = ({
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [dirtyEvent, calendars, deleteDialogProps.open, triggerDelete])
+  }, [dirtyEvent, calendars, triggerDelete])
 
   // Keep refs so the unmount cleanup always has the latest values
   const dirtyEventRef = useRef<CalendarEvent | null>(null)
@@ -248,9 +245,6 @@ export const EditEvent = ({
         isPendingInvite={isPendingInvite}
         onClose={() => setActiveEventKey(null)}
       />
-
-      <DeleteConfirmDialog {...deleteDialogProps} />
-      <DuplicateEventDialog {...duplicateDialogProps} />
     </div>
   )
 }
