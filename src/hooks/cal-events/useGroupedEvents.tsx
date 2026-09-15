@@ -1,27 +1,26 @@
-import { Temporal } from "@js-temporal/polyfill"
 import { useMemo, useRef } from "react"
 
 import { CalendarEvent } from "@/lib/cal-events"
-import { enumerateLocalDays } from "@/lib/event-time"
+import { dateKeyFromEpochDay, occupiedDays, plainDateFromEpochDay } from "@/lib/event-time"
 
 export function useGroupedEvents({ events }: { events: CalendarEvent[] }) {
   const eventsByDate = useMemo(() => {
-    const grouped = new Map<string, { date: Temporal.PlainDate; events: CalendarEvent[] }>()
+    // Group on epoch-day ints; dates are materialised once per day from the cache.
+    const grouped = new Map<number, CalendarEvent[]>()
 
     for (const event of events) {
-      for (const date of enumerateLocalDays(event.start, event.end)) {
-        const dateKey = date.toString()
-        const existing = grouped.get(dateKey)
-        if (existing) existing.events.push(event)
-        else grouped.set(dateKey, { date, events: [event] })
+      for (const day of occupiedDays(event.dateInfo)) {
+        const existing = grouped.get(day)
+        if (existing) existing.push(event)
+        else grouped.set(day, [event])
       }
     }
 
     return Array.from(grouped.entries())
-      .sort(([, a], [, b]) => Temporal.PlainDate.compare(a.date, b.date))
-      .map(([dateKey, { date, events }]) => ({
-        dateKey,
-        date,
+      .sort(([a], [b]) => a - b)
+      .map(([day, events]) => ({
+        dateKey: dateKeyFromEpochDay(day),
+        date: plainDateFromEpochDay(day),
         events,
       }))
   }, [events])

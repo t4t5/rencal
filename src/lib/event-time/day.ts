@@ -1,10 +1,52 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-const MILLIS_PER_DAY = 86_400_000
-
-/** A timezone-independent integer key for a calendar day. */
+/**
+ * A timezone-independent integer key for a calendar day. Pure integer arithmetic
+ * (days-from-civil) so the hot per-event paths never touch the polyfill's zone code.
+ */
 export function epochDay(date: Temporal.PlainDate): number {
-  return date.toZonedDateTime("UTC").epochMilliseconds / MILLIS_PER_DAY
+  const { year, month, day } = date
+  const y = month <= 2 ? year - 1 : year
+  const era = Math.floor(y / 400)
+  const yoe = y - era * 400
+  const doy = Math.floor((153 * (month > 2 ? month - 3 : month + 9) + 2) / 5) + day - 1
+  const doe = yoe * 365 + Math.floor(yoe / 4) - Math.floor(yoe / 100) + doy
+  return era * 146097 + doe - 719468
+}
+
+const datesByEpochDay = new Map<number, Temporal.PlainDate>()
+const keysByEpochDay = new Map<number, string>()
+
+/** Inverse of `epochDay`. Cached: the same few thousand days recur across every event list. */
+export function plainDateFromEpochDay(epochDayKey: number): Temporal.PlainDate {
+  const cached = datesByEpochDay.get(epochDayKey)
+  if (cached) return cached
+
+  const z = epochDayKey + 719468
+  const era = Math.floor(z / 146097)
+  const doe = z - era * 146097
+  const yoe = Math.floor(
+    (doe - Math.floor(doe / 1460) + Math.floor(doe / 36524) - Math.floor(doe / 146096)) / 365,
+  )
+  const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100))
+  const mp = Math.floor((5 * doy + 2) / 153)
+  const day = doy - Math.floor((153 * mp + 2) / 5) + 1
+  const month = mp < 10 ? mp + 3 : mp - 9
+  const year = yoe + era * 400 + (month <= 2 ? 1 : 0)
+
+  const date = new Temporal.PlainDate(year, month, day)
+  datesByEpochDay.set(epochDayKey, date)
+  return date
+}
+
+/** `YYYY-MM-DD` key for an epoch day, cached like `plainDateFromEpochDay`. */
+export function dateKeyFromEpochDay(epochDayKey: number): string {
+  const cached = keysByEpochDay.get(epochDayKey)
+  if (cached !== undefined) return cached
+
+  const key = plainDateFromEpochDay(epochDayKey).toString()
+  keysByEpochDay.set(epochDayKey, key)
+  return key
 }
 
 /** App-level mirror of the RPC `FirstDayOfWeek` type. */

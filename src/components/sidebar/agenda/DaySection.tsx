@@ -16,6 +16,7 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import {
   coversFullDay,
+  epochDay,
   formatDateKey,
   formatDayMonth,
   getRelativeDayLabel,
@@ -115,10 +116,11 @@ export const DaySection = forwardRef<
 
   // A timed event that covers this entire day (e.g. the middle of a
   // multi-day span) is shown as an all-day chip, not a timed row.
+  const day = epochDay(date)
   const allDayEvents: CalendarEvent[] = []
   const timedEvents: CalendarEvent[] = []
   for (const event of events) {
-    if (coversFullDay(event.start, event.end, date)) allDayEvents.push(event)
+    if (coversFullDay(event.start, event.dateInfo, day)) allDayEvents.push(event)
     else timedEvents.push(event)
   }
 
