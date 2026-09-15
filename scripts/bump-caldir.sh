@@ -14,6 +14,7 @@ fi
 readonly tag="$1"
 readonly manifest="src-tauri/Cargo.toml"
 readonly checksums="src-tauri/caldir-providers.sha256"
+readonly flake="flake.nix"
 readonly -a targets=(
   aarch64-apple-darwin
   x86_64-apple-darwin
@@ -46,7 +47,10 @@ grep -q "^caldir-core = .*tag = \"$tag\"" "$manifest"
 cargo fetch --manifest-path "$manifest"
 
 if command -v nix >/dev/null; then
-  nix flake update caldir --override-input caldir "github:t4t5/caldir/$tag"
+  sed -i.bak -E "s|^( *url = \"github:t4t5/caldir/)[^\"]*(\";)$|\1$tag\2|" "$flake"
+  rm "$flake.bak"
+  grep -q "^ *url = \"github:t4t5/caldir/$tag\";" "$flake"
+  nix flake update caldir
 fi
 
 scripts/install-caldir-providers.sh
