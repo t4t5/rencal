@@ -70,5 +70,8 @@ jobs:
             chmod +x "src-tauri/providers/caldir-provider-${provider}"
           done
 
-      - name: Run just check
+      - name: Run checks
         run: just check
+
+      - name: Run tests
+        run: just test

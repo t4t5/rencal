@@ -47,9 +47,12 @@ typecheck:
   pnpm typecheck
   pnpm find:unused-exports
 
-# Run frontend tests
+# Run frontend and Rust tests, and verify generated bindings are current
 test:
   pnpm test
+  cargo test --workspace --manifest-path src-tauri/Cargo.toml
+  @just gen-types
+  git diff --exit-code -- src/rpc/bindings.ts
 
 # Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug agenda`.
 debug flags="*": ensure-providers
