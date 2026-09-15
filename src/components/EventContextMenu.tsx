@@ -1,17 +1,21 @@
 import type { ReactNode, RefObject } from "react"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
+import { DuplicateEventDialog } from "@/components/event-parts/DuplicateEventDialog"
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
+  ContextMenuShortcut,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
+import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 
 import { useDeleteEvent } from "@/hooks/useDeleteEvent"
+import { useDuplicateEvent } from "@/hooks/useDuplicateEvent"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { isEventReadonly } from "@/lib/event-utils"
@@ -31,9 +35,12 @@ export function EventContextMenu({
 }: EventContextMenuProps) {
   const { setActiveEventKey } = useCalEvents()
   const { calendars } = useCalendars()
+  const { canCreate } = useCreateEventGate()
   const { triggerDelete, deleteDialogProps } = useDeleteEvent()
+  const { triggerDuplicate, duplicateDialogProps } = useDuplicateEvent()
 
   const canDelete = !isEventReadonly(event, calendars)
+  const canDuplicate = canCreate && !isEventReadonly(event, calendars)
 
   return (
     <>
@@ -52,6 +59,12 @@ export function EventContextMenu({
           >
             Edit event
           </ContextMenuItem>
+          {canDuplicate && (
+            <ContextMenuItem onClick={() => triggerDuplicate(event, anchorRef.current)}>
+              Duplicate event
+              <ContextMenuShortcut>D</ContextMenuShortcut>
+            </ContextMenuItem>
+          )}
           {canDelete && (
             <ContextMenuItem variant="destructive" onClick={() => triggerDelete(event)}>
               Delete event
@@ -61,6 +74,7 @@ export function EventContextMenu({
       </ContextMenu>
 
       <DeleteConfirmDialog {...deleteDialogProps} />
+      <DuplicateEventDialog {...duplicateDialogProps} />
     </>
   )
 }
