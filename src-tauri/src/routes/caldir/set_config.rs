@@ -36,8 +36,8 @@ pub(super) fn set_default_calendar(state: &AppState, slug: Option<String>) -> Ta
     state.save_caldir_config(config).map_err(|e| e.to_string())
 }
 
-/// The cache invalidation and the `calendar-dir-changed` broadcast both
-/// happen inside `save_caldir_config`; nothing else to do here.
+/// Cache invalidation and state notifications happen inside
+/// `save_caldir_config`; nothing else to do here.
 pub(super) fn set_calendar_dir(state: &AppState, path: String) -> TauResult<()> {
     let mut config = state.caldir().config().clone();
     config.set_data_dir(std::path::PathBuf::from(tildify(&path)));

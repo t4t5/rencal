@@ -1,9 +1,13 @@
-use caldir_core::{Attendee, Event, EventTime, ParticipationStatus, Recurrence, Status};
+use caldir_core::{
+    Attendee, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
+    TimeFormat as CoreTimeFormat,
+};
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use super::conference::conference_from_event;
+use super::helpers::tildify;
 
 #[derive(Serialize, Deserialize, Type)]
 pub struct Calendar {
@@ -46,12 +50,43 @@ pub struct Contact {
     pub last_seen: String,
 }
 
-#[derive(Clone, Serialize, Deserialize, Type)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
 pub enum TimeFormat {
     #[serde(rename = "24h")]
     H24,
     #[serde(rename = "12h")]
     H12,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct CaldirSettings {
+    pub time_format: TimeFormat,
+    pub default_reminders: Vec<i32>,
+    pub default_calendar: Option<String>,
+    /// Tildified for display.
+    pub calendar_dir: String,
+}
+
+impl From<&CaldirConfig> for CaldirSettings {
+    fn from(config: &CaldirConfig) -> Self {
+        let time_format = match config.time_format() {
+            CoreTimeFormat::H24 => TimeFormat::H24,
+            CoreTimeFormat::H12 => TimeFormat::H12,
+        };
+        let default_reminders = config
+            .default_reminders()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|reminder| reminder.minutes_before_start as i32)
+            .collect();
+
+        Self {
+            time_format,
+            default_reminders,
+            default_calendar: config.default_calendar_slug().map(String::from),
+            calendar_dir: tildify(&config.data_dir().to_string_lossy()),
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]

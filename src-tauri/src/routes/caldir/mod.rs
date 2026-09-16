@@ -30,10 +30,9 @@ mod sync;
 mod sync_preview;
 mod update_event;
 
-pub use helpers::tildify;
 pub use types::{
-    Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput, ProviderConnectInfo,
-    SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
+    ProviderConnectInfo, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -97,26 +96,16 @@ pub trait CaldirApi {
 
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
-    async fn set_calendar_color<R: Runtime>(
-        app_handle: AppHandle<R>,
-        calendar_slug: String,
-        color: String,
-    ) -> TauResult<()>;
-    async fn delete_calendar<R: Runtime>(
-        app_handle: AppHandle<R>,
-        calendar_slug: String,
-    ) -> TauResult<()>;
+    async fn set_calendar_color(calendar_slug: String, color: String) -> TauResult<()>;
+    async fn delete_calendar(calendar_slug: String) -> TauResult<()>;
 
-    async fn get_time_format() -> TauResult<TimeFormat>;
+    async fn get_caldir_settings() -> TauResult<CaldirSettings>;
     async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
 
-    async fn get_default_reminders() -> TauResult<Vec<i32>>;
     async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()>;
 
-    async fn get_default_calendar() -> TauResult<Option<String>>;
     async fn set_default_calendar(slug: Option<String>) -> TauResult<()>;
 
-    async fn get_calendar_dir() -> TauResult<String>;
     async fn set_calendar_dir(path: String) -> TauResult<()>;
 }
 
@@ -275,47 +264,29 @@ impl CaldirApi for CaldirApiImpl {
         rename_calendar::handler(&self.state, calendar_slug, name)
     }
 
-    async fn set_calendar_color<R: Runtime>(
-        self,
-        app: AppHandle<R>,
-        calendar_slug: String,
-        color: String,
-    ) -> TauResult<()> {
-        set_calendar_color::handler(&self.state, &app, calendar_slug, color)
+    async fn set_calendar_color(self, calendar_slug: String, color: String) -> TauResult<()> {
+        set_calendar_color::handler(&self.state, calendar_slug, color)
     }
 
-    async fn delete_calendar<R: Runtime>(
-        self,
-        app: AppHandle<R>,
-        calendar_slug: String,
-    ) -> TauResult<()> {
-        delete_calendar::handler(&self.state, &app, calendar_slug)
+    async fn delete_calendar(self, calendar_slug: String) -> TauResult<()> {
+        delete_calendar::handler(&self.state, calendar_slug)
     }
 
-    async fn get_time_format(self) -> TauResult<TimeFormat> {
-        get_config::get_time_format(&self.state)
+    async fn get_caldir_settings(self) -> TauResult<CaldirSettings> {
+        get_config::get_caldir_settings(&self.state)
     }
     async fn set_time_format(self, time_format: TimeFormat) -> TauResult<()> {
         set_config::set_time_format(&self.state, time_format)
     }
 
-    async fn get_default_reminders(self) -> TauResult<Vec<i32>> {
-        get_config::get_default_reminders(&self.state)
-    }
     async fn set_default_reminders(self, minutes: Vec<i32>) -> TauResult<()> {
         set_config::set_default_reminders(&self.state, minutes)
     }
 
-    async fn get_default_calendar(self) -> TauResult<Option<String>> {
-        get_config::get_default_calendar(&self.state)
-    }
     async fn set_default_calendar(self, slug: Option<String>) -> TauResult<()> {
         set_config::set_default_calendar(&self.state, slug)
     }
 
-    async fn get_calendar_dir(self) -> TauResult<String> {
-        get_config::get_calendar_dir(&self.state)
-    }
     async fn set_calendar_dir(self, path: String) -> TauResult<()> {
         set_config::set_calendar_dir(&self.state, path)
     }

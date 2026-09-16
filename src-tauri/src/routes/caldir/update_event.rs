@@ -52,7 +52,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
             })
             .map_err(|e| e.to_string())?;
 
-        state.events.invalidate(&input.calendar_slug);
+        state.invalidate_events(&input.calendar_slug);
 
         Ok(())
     } else {
@@ -106,15 +106,15 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
                 .delete()
                 .map_err(|e| e.to_string())?;
 
-            state.events.invalidate(&input.calendar_slug);
-            state.events.invalidate(new_slug);
+            state.invalidate_events(&input.calendar_slug);
+            state.invalidate_events(new_slug);
         } else {
             apply_conference(&mut updated_event, &calendar, input.conference.as_ref());
             existing_calendar_event
                 .update(updated_event)
                 .map_err(|e| e.to_string())?;
 
-            state.events.invalidate(&input.calendar_slug);
+            state.invalidate_events(&input.calendar_slug);
         }
 
         Ok(())

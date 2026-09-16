@@ -22,7 +22,7 @@ pub(super) async fn handler(state: &AppState) -> TauResult<()> {
         connection
             .discard_outgoing_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
-        state.events.invalidate(&slug);
+        state.invalidate_events(&slug);
     }
 
     Ok(())

@@ -60,14 +60,8 @@ pub(super) async fn run_with_data<R: Runtime>(
                 account_identifier,
                 calendars,
             } => {
-                return save_connected_calendars(
-                    state,
-                    &app,
-                    provider,
-                    account_identifier,
-                    calendars,
-                )
-                .await;
+                return save_connected_calendars(state, provider, account_identifier, calendars)
+                    .await;
             }
             ConnectResponse::NeedsInput {
                 step,

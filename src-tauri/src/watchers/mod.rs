@@ -20,10 +20,7 @@ pub fn spawn_all(app: &AppHandle, state: &Arc<AppState>) {
         "external themes watcher",
         external_themes::run_watcher(app.clone()),
     );
-    spawn_task(
-        "caldir watcher",
-        caldir::run_watcher(app.clone(), state.clone()),
-    );
+    spawn_task("caldir watcher", caldir::run_watcher(state.clone()));
     spawn_task(
         "caldir config watcher",
         caldir_config::run_watcher(state.clone()),

@@ -25,7 +25,7 @@ pub(super) fn handler(state: &AppState, calendar_slug: String, event_id: String)
             .map_err(|e| e.to_string())?;
     }
 
-    state.events.invalidate(&calendar_slug);
+    state.invalidate_events(&calendar_slug);
 
     Ok(())
 }

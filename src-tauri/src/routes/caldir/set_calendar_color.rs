@@ -1,14 +1,7 @@
 use crate::routes::TauResult;
 use crate::state::AppState;
-use crate::watchers::caldir::CALDIR_CHANGED;
-use tauri::{AppHandle, Emitter, Runtime};
 
-pub(super) fn handler<R: Runtime>(
-    state: &AppState,
-    app: &AppHandle<R>,
-    calendar_slug: String,
-    color: String,
-) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String, color: String) -> TauResult<()> {
     if !is_hex_color(&color) {
         return Err("Calendar color must be a hex color in the form #RRGGBB".to_string());
     }
@@ -24,7 +17,7 @@ pub(super) fn handler<R: Runtime>(
         .write(&calendar.config_path())
         .map_err(|e| e.to_string())?;
 
-    let _ = app.emit(CALDIR_CHANGED, ());
+    state.notify_calendars_changed();
 
     Ok(())
 }

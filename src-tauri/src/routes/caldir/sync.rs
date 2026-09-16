@@ -27,7 +27,7 @@ pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) ->
         connection
             .apply_incoming_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
-        state.events.invalidate(&slug);
+        state.invalidate_events(&slug);
 
         if connection.read_only() {
             continue;
@@ -50,7 +50,7 @@ pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) ->
             .apply_outgoing_diff(&diff)
             .await
             .map_err(|e| format!("[{}] {}", slug, e))?;
-        state.events.invalidate(&slug);
+        state.invalidate_events(&slug);
     }
 
     Ok(())

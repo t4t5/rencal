@@ -18,6 +18,7 @@ pub(super) fn handler(state: &AppState, calendar_slug: String, name: String) -> 
     config
         .write(&calendar.config_path())
         .map_err(|e| e.to_string())?;
+    state.notify_calendars_changed();
 
     Ok(())
 }

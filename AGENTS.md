@@ -28,8 +28,8 @@ Important backend paths:
 - `src-tauri/src/watchers/`: filesystem watchers (caldir data + config, rencal config, timezone)
 - `src-tauri/src/fs_watch.rs`: debounced `notify` helper the watchers are built on
 - `src-tauri/src/routes/caldir/`: caldir API procedures
-- `src-tauri/src/routes/caldir/types.rs`: shared RPC types
-- `src-tauri/src/routes/caldir/helpers.rs`: conversion helpers
+- `src-tauri/src/routes/caldir/types.rs`: shared RPC types and conversions
+- `src-tauri/src/routes/caldir/helpers.rs`: route helpers
 - `src-tauri/src/oauth/`: OAuth primitives
 - `src-tauri/src/notifications.rs`: notification setup
 
@@ -66,6 +66,14 @@ Important frontend paths:
   so this is a compile error, not a stall.)
 - `AppState` is Tauri-free: no `AppHandle`, no `emit`. Backend tasks subscribe to its
   `watch` channels; `state_bridge.rs` is the one place that forwards them to the webview.
+- Every state change notifies through `AppState`; handlers take an `AppHandle` only for
+  platform services, never to tell the webview that state changed.
+- State events carry the new value when the backend owns that value. Bare signals are for
+  bulk calendar/event data that consumers refetch from disk.
+- Watchers classify filesystem paths and call `AppState`; they do not emit state events.
+- The event cache is private to `AppState`. Handlers invalidate it through
+  `invalidate_events` / `invalidate_all_events`.
+- Declare backend state-event names in `state_bridge.rs`.
 - Spawn background tasks with `tasks::spawn_task`, and build watchers on
   `fs_watch::watch_debounced` (see `src-tauri/src/watchers/`).
 

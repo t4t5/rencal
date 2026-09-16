@@ -30,7 +30,7 @@ pub(super) fn handler(
             new_recurrence,
         )
         .map_err(|e| e.to_string())?;
-    state.events.invalidate(&input.calendar_slug);
+    state.invalidate_events(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(
         &new_master,

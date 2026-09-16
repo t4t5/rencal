@@ -4,10 +4,8 @@ use super::types::{
 };
 use crate::routes::TauResult;
 use crate::state::AppState;
-use crate::watchers::caldir::CALDIR_CHANGED;
 use caldir_core::{CalendarConfig, DateRange, Event, Provider, ProviderSlug, Status};
 use chrono::{DateTime, Utc};
-use tauri::{AppHandle, Emitter, Runtime};
 
 /// An owned handle to a provider binary (`Provider` is an `Arc` inside), so
 /// callers can talk to it without holding the caldir guard across the await.
@@ -102,9 +100,8 @@ pub fn build_connect_options(
 
 /// Create local calendars for a freshly connected account, pick a default
 /// calendar if none is set, pull their events, and tell the webview.
-pub async fn save_connected_calendars<R: Runtime>(
+pub async fn save_connected_calendars(
     state: &AppState,
-    app: &AppHandle<R>,
     provider: &caldir_core::Provider,
     account_identifier: Option<String>,
     prefetched_calendars: Option<Vec<caldir_core::CalendarConfig>>,
@@ -138,7 +135,7 @@ pub async fn save_connected_calendars<R: Runtime>(
         log::warn!("failed to pull events after connecting provider: {err}");
     }
 
-    let _ = app.emit(CALDIR_CHANGED, ());
+    state.notify_calendars_changed();
 
     Ok(created.calendars)
 }
@@ -233,7 +230,7 @@ async fn pull_created_calendar_events(
             .apply_incoming_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
 
-        state.events.invalidate(&slug);
+        state.invalidate_events(&slug);
     }
 
     Ok(())

@@ -12,6 +12,7 @@ mod nvidia_workaround;
 mod oauth;
 mod omarchy;
 mod routes;
+mod signal;
 #[cfg(target_os = "linux")]
 mod single_instance;
 pub mod state;
@@ -30,6 +31,7 @@ use std::sync::Arc;
 use tasks::spawn_task;
 use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_dialog::DialogExt;
 use taurpc::Router;
 
 const MIN_WINDOW_WIDTH: f64 = 300.0;
@@ -99,6 +101,29 @@ fn spawn_reminder_loop_if_needed(app: &tauri::App, state: Arc<AppState>) {
     );
 }
 
+/// Shows `message` in a native dialog, then exits. Runs a minimal Tauri app so
+/// the dialog has an event loop; `blocking_show` must not be used on the main
+/// thread, so the exit happens in the dialog's callback.
+fn run_fatal_dialog(context: tauri::Context<tauri::Wry>, message: String) {
+    tauri::Builder::default()
+        .plugin(tauri_plugin_dialog::init())
+        .setup(move |app| {
+            // The windows from tauri.conf.json are created regardless; keep
+            // only the dialog visible.
+            if let Some(window) = app.get_webview_window("main") {
+                let _ = window.hide();
+            }
+            let handle = app.handle().clone();
+            app.dialog()
+                .message(&message)
+                .title("renCal")
+                .show(move |_| handle.exit(1));
+            Ok(())
+        })
+        .run(context)
+        .expect("error while showing startup error");
+}
+
 #[tokio::main]
 pub async fn run() {
     // Force a dark GTK theme so the native titlebar drawn by the WM/compositor
@@ -137,10 +162,11 @@ pub async fn run() {
     let state = match AppState::load(Some(bundled_providers_dir(&context))) {
         Ok(state) => Arc::new(state),
         Err(err) => {
-            // Only a malformed ~/.config/caldir/config.toml gets here; every
-            // RPC would fail anyway, so say why and stop.
-            eprintln!("rencal: cannot read caldir config: {err}");
-            std::process::exit(1);
+            run_fatal_dialog(
+                context,
+                format!("renCal cannot read caldir's config.toml:\n{err}"),
+            );
+            return;
         }
     };
     let router = create_router(state.clone());

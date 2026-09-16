@@ -43,7 +43,7 @@ pub(super) fn handler(
             .map_err(|e| e.to_string())?;
     }
 
-    state.events.invalidate(&calendar_slug);
+    state.invalidate_events(&calendar_slug);
 
     Ok(())
 }

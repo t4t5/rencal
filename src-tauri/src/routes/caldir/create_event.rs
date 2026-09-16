@@ -36,7 +36,7 @@ pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<Ca
     apply_conference(&mut event, &calendar, input.conference.as_ref());
 
     let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
-    state.events.invalidate(&input.calendar_slug);
+    state.invalidate_events(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(
         cal_event.event(),

@@ -5,7 +5,7 @@ import { z } from "zod"
 
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
-import { CALDIR_CHANGED, CALENDAR_DIR_CHANGED } from "@/rpc/events"
+import { CALENDARS_CHANGED } from "@/rpc/events"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
@@ -96,16 +96,12 @@ export function CalendarStateProvider({
       void loadCalendarsFromStore()
     }
 
-    const unlistenCalendarDir = listen(CALENDAR_DIR_CHANGED, () => {
-      void loadCalendarsFromStore()
-    })
-    const unlistenCaldir = listen(CALDIR_CHANGED, () => {
+    const unlistenCalendars = listen(CALENDARS_CHANGED, () => {
       void loadCalendarsFromStore()
     })
 
     return () => {
-      unlistenCalendarDir.then((fn) => fn())
-      unlistenCaldir.then((fn) => fn())
+      unlistenCalendars.then((fn) => fn())
     }
   }, [])
 

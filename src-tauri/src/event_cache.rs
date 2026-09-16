@@ -12,16 +12,24 @@
 //! Stored as `Arc<Vec<Event>>` so a hit is a cheap pointer clone.
 
 use caldir_core::Event;
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 
 #[derive(Default)]
-pub struct EventCache {
-    inner: RwLock<HashMap<String, Arc<Vec<Event>>>>,
-    /// Bumped by every invalidation so a parse that raced one is not cached.
+struct Slot {
+    /// Held while one caller parses; concurrent misses wait here and then hit.
+    parsing: Mutex<()>,
+    /// Bumped by every invalidation of this slug so a parse that raced one is
+    /// served but not cached.
     generation: AtomicU64,
+    events: RwLock<Option<Arc<Vec<Event>>>>,
+}
+
+#[derive(Default)]
+pub struct EventCache {
+    slots: RwLock<HashMap<String, Arc<Slot>>>,
 }
 
 impl EventCache {
@@ -33,29 +41,52 @@ impl EventCache {
         slug: &str,
         parse: impl FnOnce() -> Result<Vec<Event>, E>,
     ) -> Result<Arc<Vec<Event>>, E> {
-        if let Some(hit) = self.inner.read().get(slug).cloned() {
+        let slot = self.slot(slug);
+        if let Some(hit) = slot.events.read().clone() {
             return Ok(hit);
         }
 
-        let generation = self.generation.load(Ordering::Acquire);
-        let parsed = Arc::new(parse()?);
+        let _parsing = slot.parsing.lock();
+        if let Some(hit) = slot.events.read().clone() {
+            return Ok(hit);
+        }
 
-        let mut map = self.inner.write();
-        if self.generation.load(Ordering::Acquire) != generation {
+        let generation = slot.generation.load(Ordering::Acquire);
+        let parsed = Arc::new(parse()?);
+        let mut events = slot.events.write();
+        if slot.generation.load(Ordering::Acquire) != generation {
             // Invalidated while we parsed: serve the result, don't cache it.
             return Ok(parsed);
         }
-        Ok(map.entry(slug.to_owned()).or_insert(parsed).clone())
+        *events = Some(parsed.clone());
+        Ok(parsed)
     }
 
     pub fn invalidate(&self, slug: &str) {
-        self.generation.fetch_add(1, Ordering::AcqRel);
-        self.inner.write().remove(slug);
+        let Some(slot) = self.slots.read().get(slug).cloned() else {
+            return;
+        };
+        slot.generation.fetch_add(1, Ordering::AcqRel);
+        *slot.events.write() = None;
     }
 
     pub fn invalidate_all(&self) {
-        self.generation.fetch_add(1, Ordering::AcqRel);
-        self.inner.write().clear();
+        let slots: Vec<_> = self.slots.read().values().cloned().collect();
+        for slot in slots {
+            slot.generation.fetch_add(1, Ordering::AcqRel);
+            *slot.events.write() = None;
+        }
+    }
+
+    fn slot(&self, slug: &str) -> Arc<Slot> {
+        if let Some(slot) = self.slots.read().get(slug).cloned() {
+            return slot;
+        }
+        self.slots
+            .write()
+            .entry(slug.to_owned())
+            .or_default()
+            .clone()
     }
 }
 
@@ -65,6 +96,10 @@ mod tests {
     use caldir_core::EventTime;
     use chrono::NaiveDate;
     use std::convert::Infallible;
+    use std::sync::Barrier;
+    use std::sync::atomic::{AtomicUsize, Ordering as AtomicOrdering};
+    use std::thread;
+    use std::time::Duration;
 
     fn events(summary: &str) -> Result<Vec<Event>, Infallible> {
         let start = EventTime::Date(NaiveDate::from_ymd_opt(2026, 9, 15).unwrap());
@@ -72,16 +107,53 @@ mod tests {
     }
 
     #[test]
-    fn caches_until_invalidated() {
+    fn concurrent_misses_parse_once() {
+        let cache = Arc::new(EventCache::default());
+        let barrier = Arc::new(Barrier::new(2));
+        let parses = Arc::new(AtomicUsize::new(0));
+
+        let handles: Vec<_> = (0..2)
+            .map(|_| {
+                let cache = cache.clone();
+                let barrier = barrier.clone();
+                let parses = parses.clone();
+                thread::spawn(move || {
+                    barrier.wait();
+                    cache
+                        .get_or_parse("work", || {
+                            parses.fetch_add(1, AtomicOrdering::SeqCst);
+                            thread::sleep(Duration::from_millis(50));
+                            events("standup")
+                        })
+                        .unwrap()
+                })
+            })
+            .collect();
+
+        let first = handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>();
+        assert_eq!(parses.load(AtomicOrdering::SeqCst), 1);
+        assert!(Arc::ptr_eq(&first[0], &first[1]));
+    }
+
+    #[test]
+    fn invalidating_one_slug_does_not_discard_another_slugs_parse() {
         let cache = EventCache::default();
+        cache.get_or_parse("work", || events("standup")).unwrap();
 
-        let first = cache.get_or_parse("work", || events("first")).unwrap();
-        let hit = cache.get_or_parse("work", || events("second")).unwrap();
-        assert!(Arc::ptr_eq(&first, &hit));
+        let home = cache
+            .get_or_parse("home", || {
+                cache.invalidate("work");
+                events("dentist")
+            })
+            .unwrap();
+        let hit = cache
+            .get_or_parse("home", || events("replacement"))
+            .unwrap();
 
-        cache.invalidate("work");
-        let reparsed = cache.get_or_parse("work", || events("third")).unwrap();
-        assert_eq!(reparsed[0].summary.as_deref(), Some("third"));
+        assert!(Arc::ptr_eq(&home, &hit));
     }
 
     #[test]
@@ -90,7 +162,7 @@ mod tests {
 
         let stale = cache
             .get_or_parse("work", || {
-                cache.invalidate_all();
+                cache.invalidate("work");
                 events("stale")
             })
             .unwrap();

@@ -16,13 +16,16 @@ use tokio::sync::watch;
 
 use crate::deep_links::DeepLinkInbox;
 use crate::event_cache::EventCache;
+use crate::signal::Signal;
 
 pub struct AppState {
     caldir: RwLock<Caldir>,
     caldir_config: watch::Sender<CaldirConfig>,
     caldir_config_path: PathBuf,
     bundled_providers: Option<PathBuf>,
-    pub events: EventCache,
+    events: EventCache,
+    calendars_changed: Signal,
+    events_changed: Signal,
     pub deep_links: DeepLinkInbox,
 }
 
@@ -48,6 +51,8 @@ impl AppState {
             caldir_config_path: config_path,
             bundled_providers,
             events: EventCache::default(),
+            calendars_changed: Signal::new(),
+            events_changed: Signal::new(),
             deep_links: DeepLinkInbox::default(),
         })
     }
@@ -108,6 +113,32 @@ impl AppState {
         self.caldir_config.subscribe()
     }
 
+    pub fn notify_calendars_changed(&self) {
+        self.calendars_changed.notify();
+    }
+
+    pub fn subscribe_calendars_changed(&self) -> watch::Receiver<u64> {
+        self.calendars_changed.subscribe()
+    }
+
+    pub fn subscribe_events_changed(&self) -> watch::Receiver<u64> {
+        self.events_changed.subscribe()
+    }
+
+    /// Only the caldir watcher calls this; in-app edits already return their
+    /// result to the caller and merely invalidate the affected cache entry.
+    pub(crate) fn notify_events_changed(&self) {
+        self.events_changed.notify();
+    }
+
+    pub fn invalidate_events(&self, slug: &str) {
+        self.events.invalidate(slug);
+    }
+
+    pub fn invalidate_all_events(&self) {
+        self.events.invalidate_all();
+    }
+
     pub fn caldir_config_path(&self) -> &Path {
         &self.caldir_config_path
     }
@@ -117,16 +148,21 @@ impl AppState {
     /// happen while the write lock is held. Our own `save_config` echoing back
     /// through the file watcher compares equal and wakes nobody.
     fn publish(&self, caldir: &Caldir) {
+        let mut data_dir_moved = false;
         self.caldir_config.send_if_modified(|current| {
             if current == caldir.config() {
                 return false;
             }
             if current.data_dir() != caldir.data_dir() {
-                self.events.invalidate_all();
+                self.invalidate_all_events();
+                data_dir_moved = true;
             }
             *current = caldir.config().clone();
             true
         });
+        if data_dir_moved {
+            self.notify_calendars_changed();
+        }
     }
 }
 
@@ -212,11 +248,22 @@ mod tests {
         caldir.add_event(&state, "work", "retro");
         assert!(Arc::ptr_eq(&work, &state.events("work").unwrap()));
 
-        state.events.invalidate("work");
+        state.invalidate_events("work");
         let reparsed = state.events("work").unwrap();
         let mut reparsed = summaries(&reparsed);
         reparsed.sort();
         assert_eq!(reparsed, ["retro", "standup"]);
+    }
+
+    #[test]
+    fn notifying_a_calendar_change_wakes_a_subscriber() {
+        let caldir = TestCaldir::new();
+        let state = caldir.state();
+        let subscriber = state.subscribe_calendars_changed();
+
+        state.notify_calendars_changed();
+
+        assert!(subscriber.has_changed().unwrap());
     }
 
     #[test]
@@ -237,12 +284,14 @@ mod tests {
         caldir.add_event(&state, "work", "standup");
         state.events("work").unwrap();
         let mut subscriber = state.subscribe_caldir_config();
+        let calendars_subscriber = state.subscribe_calendars_changed();
 
         let mut config = state.caldir().config().clone();
         config.set_data_dir(caldir.data_dir.join("elsewhere"));
         state.save_caldir_config(config.clone()).unwrap();
 
         assert!(subscriber.has_changed().unwrap());
+        assert!(calendars_subscriber.has_changed().unwrap());
         assert_eq!(*subscriber.borrow_and_update(), config);
         assert_eq!(
             CaldirConfig::load_or_default(&caldir.config_path).unwrap(),
@@ -259,12 +308,14 @@ mod tests {
         caldir.add_event(&state, "work", "standup");
         let cached = state.events("work").unwrap();
         let subscriber = state.subscribe_caldir_config();
+        let calendars_subscriber = state.subscribe_calendars_changed();
 
         let mut config = state.caldir().config().clone();
         config.set_default_calendar_slug(Some("work".into()));
         state.save_caldir_config(config).unwrap();
 
         assert!(subscriber.has_changed().unwrap());
+        assert!(!calendars_subscriber.has_changed().unwrap());
         assert!(Arc::ptr_eq(&cached, &state.events("work").unwrap()));
     }
 

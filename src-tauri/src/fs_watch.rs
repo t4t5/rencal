@@ -3,7 +3,7 @@
 //! A watcher is "which paths, which events matter" plus a loop; everything
 //! else (the `notify` callback, the channel, the coalesce window) lives here.
 
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::time::Duration;
 
 use notify::{RecommendedWatcher, RecursiveMode, Watcher};
@@ -15,10 +15,12 @@ const COALESCE_WINDOW: Duration = Duration::from_millis(150);
 
 pub struct FsWatch {
     _watcher: RecommendedWatcher,
-    rx: mpsc::UnboundedReceiver<()>,
-    /// A wakeup was received but its coalesce window was cut short (the
-    /// future was dropped mid-sleep, e.g. by `select!`); deliver it next call.
-    pending: bool,
+    rx: mpsc::UnboundedReceiver<Vec<PathBuf>>,
+    /// A wakeup whose coalesce window was cut short (the future was dropped
+    /// mid-sleep, e.g. by `select!`), with the paths it carried; delivered by
+    /// the next call. `Some` even when the event carried no paths, so the
+    /// wakeup itself is never lost.
+    pending: Option<Vec<PathBuf>>,
 }
 
 /// Watches `paths` and yields once per coalesced burst of events accepted by
@@ -34,7 +36,7 @@ pub fn watch_debounced(
         if let Ok(event) = result
             && filter(&event)
         {
-            let _ = tx.send(());
+            let _ = tx.send(event.paths);
         }
     })?;
 
@@ -45,23 +47,26 @@ pub fn watch_debounced(
     Ok(FsWatch {
         _watcher: watcher,
         rx,
-        pending: false,
+        pending: None,
     })
 }
 
 impl FsWatch {
-    /// Resolves after the coalesce window once something changed; `None` once
-    /// the underlying watcher is gone. Cancel-safe: a change is never lost if
-    /// the future is dropped before it resolves.
-    pub async fn changed(&mut self) -> Option<()> {
-        if !self.pending {
-            self.rx.recv().await?;
-            self.pending = true;
+    /// Resolves after the coalesce window with the deduplicated paths of one
+    /// burst; `None` once the underlying watcher is gone. Cancel-safe: a
+    /// wakeup is never lost if the future is dropped before it resolves.
+    pub async fn changed(&mut self) -> Option<Vec<PathBuf>> {
+        if self.pending.is_none() {
+            self.pending = Some(self.rx.recv().await?);
         }
         tokio::time::sleep(COALESCE_WINDOW).await;
-        while self.rx.try_recv().is_ok() {}
-        self.pending = false;
-        Some(())
+        let mut paths = self.pending.take().unwrap_or_default();
+        while let Ok(more) = self.rx.try_recv() {
+            paths.extend(more);
+        }
+        paths.sort();
+        paths.dedup();
+        Some(paths)
     }
 }
 
@@ -104,7 +109,9 @@ mod tests {
 
         std::fs::write(dir.path().join("touched.txt"), "x").unwrap();
         let changed = tokio::time::timeout(Duration::from_secs(5), watch.changed()).await;
-        assert_eq!(changed, Ok(Some(())));
+        assert!(
+            matches!(changed, Ok(Some(paths)) if paths.contains(&dir.path().join("touched.txt")))
+        );
 
         let FsWatch {
             _watcher, mut rx, ..
@@ -132,6 +139,46 @@ mod tests {
         assert!(cut_short.is_err());
 
         let changed = tokio::time::timeout(Duration::from_secs(5), watch.changed()).await;
-        assert_eq!(changed, Ok(Some(())));
+        assert!(
+            matches!(changed, Ok(Some(paths)) if paths.contains(&dir.path().join("touched.txt")))
+        );
+    }
+
+    #[tokio::test]
+    async fn a_wakeup_without_paths_survives_being_cut_short() {
+        let (tx, rx) = mpsc::unbounded_channel();
+        let mut watch = FsWatch {
+            _watcher: notify::recommended_watcher(|_: notify::Result<notify::Event>| {}).unwrap(),
+            rx,
+            pending: None,
+        };
+
+        tx.send(Vec::new()).unwrap();
+        let cut_short = tokio::time::timeout(Duration::from_millis(50), watch.changed()).await;
+        assert!(cut_short.is_err());
+
+        let changed = tokio::time::timeout(Duration::from_secs(5), watch.changed()).await;
+        assert_eq!(changed, Ok(Some(Vec::new())));
+    }
+
+    #[tokio::test]
+    async fn batches_and_deduplicates_paths_inside_the_window() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut watch =
+            watch_debounced(&[dir.path()], RecursiveMode::NonRecursive, is_any_change).unwrap();
+        let first = dir.path().join("first.txt");
+        let second = dir.path().join("second.txt");
+
+        std::fs::write(&first, "one").unwrap();
+        std::fs::write(&second, "two").unwrap();
+        std::fs::write(&first, "three").unwrap();
+
+        let paths = tokio::time::timeout(Duration::from_secs(5), watch.changed())
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(paths.contains(&first));
+        assert!(paths.contains(&second));
+        assert_eq!(paths.iter().filter(|path| *path == &first).count(), 1);
     }
 }
