@@ -83,7 +83,7 @@ renCal reads calendars/events from the local caldir directory via `caldir-core`.
 
 Provider credential field IDs come from the caldir provider binaries.
 
-`caldir-core` and the provider binaries are pinned to one caldir release tag in `src-tauri/Cargo.toml` (`[workspace.dependencies]`). Change it with `just bump-caldir <tag>`, which also regenerates `src-tauri/caldir-providers.sha256`; never edit the tag or the checksum file by hand.
+`caldir-core` and the provider binaries are pinned separately in `src-tauri/Cargo.toml`. Update the crate dependency normally. Change the provider release with `just bump-caldir <tag>`, which also regenerates `src-tauri/caldir-providers.sha256`; never edit the provider tag or checksum file by hand.
 
 ## Event date/time rules
 

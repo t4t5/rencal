@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Install the caldir provider binaries for the caldir release pinned in src-tauri/Cargo.toml.
+# Install the caldir provider binaries for the release pinned in src-tauri/Cargo.toml.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -10,10 +10,9 @@ readonly providers_dir="src-tauri/providers"
 readonly version_file="$providers_dir/.caldir-version"
 readonly -a providers=(google icloud outlook caldav webcal)
 
-# The pinned tag is the one on the caldir-core line under [workspace.dependencies].
-tag="$(sed -n 's/^caldir-core = .*tag = "\([^"]*\)".*/\1/p' "$manifest")"
+tag="$(sed -n 's/^provider-tag = "\([^"]*\)".*/\1/p' "$manifest")"
 if [[ -z "$tag" ]]; then
-  echo "Could not read the caldir release tag from the caldir-core line in $manifest." >&2
+  echo "Could not read the caldir provider release tag from $manifest." >&2
   exit 1
 fi
 

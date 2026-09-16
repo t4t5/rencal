@@ -2,9 +2,10 @@
 members = ["reminder-core", "notifierd", "rencal-config"]
 
 [workspace.dependencies]
-# One caldir tag pins caldir-core, the provider binaries, and the Nix flake input;
-# bump with `just bump-caldir <tag>`.
-caldir-core = { git = "https://github.com/t4t5/caldir", tag = "v0.14.1" }
+caldir-core = "0.15.1"
+
+[workspace.metadata.caldir]
+provider-tag = "v0.14.1"
 
 [package]
 name = "rencal"
@@ -69,9 +70,3 @@ mac-notification-sys = "=0.6.12"
 
 [target.'cfg(any(target_os = "macos", target_os = "windows"))'.dependencies]
 tauri-plugin-single-instance = { version = "2.4.1", features = ["deep-link"] }
-
-# TEMPORARY: build against the local caldir checkout until the `load_from` /
-# `reload_config` / `set_providers` change ships in a tagged release. Remove
-# after `just bump-caldir <tag>`.
-[patch."https://github.com/t4t5/caldir"]
-caldir-core = { path = "../../caldir/caldir-core" }

@@ -63,23 +63,18 @@ Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releas
 Use [`just`](https://just.systems/) to access handy development commands.
 
 ```bash
-# Start the Tauri app:
 just dev
 ```
 
 The first run downloads the caldir provider binaries for your platform.
 Later runs reuse the binaries in `src-tauri/providers/`.
 
-One caldir release tag in `src-tauri/Cargo.toml` pins both the `caldir-core` crate and the provider binaries. To move to a new caldir release:
-
-```bash
-just bump-caldir v0.13.2
-```
+### Using a local caldir checkout
 
 To develop against a local caldir checkout (`../caldir` by default), build the providers from it with `just build-providers-local`. For `caldir-core` itself, create a gitignored `.cargo/config.toml` in the repo root that patches the crate to the checkout (the path is relative to the repo root):
 
 ```toml
-[patch."https://github.com/t4t5/caldir"]
+[patch.crates-io]
 caldir-core = { path = "../caldir/caldir-core" }
 ```
 
