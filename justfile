@@ -28,7 +28,7 @@ readme-preview theme="dark":
   set -euo pipefail
   out=.readme-preview.html
   # Export next to the README so relative image paths keep working.
-  uvx grip --export --quiet --user t4t5 --pass "$(gh auth token)" README.md "$out"
+  uvx grip --export --quiet --user "$(gh api user --jq .login)" --pass "$(gh auth token)" README.md "$out"
   sed -i 's|<html lang="en">|<html lang="en" data-color-mode="{{theme}}" data-{{theme}}-theme="{{theme}}">|' "$out"
   xdg-open "$out"
 
