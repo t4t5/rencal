@@ -159,6 +159,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Install package extraction tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libarchive-tools
+
       - name: Install caldir provider binaries
         run: scripts/install-caldir-providers.sh
 
@@ -167,9 +172,10 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: v${{ needs.check-version.outputs.version }}
         run: |
-          mkdir -p /tmp/rencal-bundle/{appimage,deb}
+          mkdir -p /tmp/rencal-bundle/{appimage,deb,rpm}
           gh release download "$RELEASE_TAG" --pattern '*.AppImage' --dir /tmp/rencal-bundle/appimage
           gh release download "$RELEASE_TAG" --pattern '*.deb' --dir /tmp/rencal-bundle/deb
+          gh release download "$RELEASE_TAG" --pattern '*.rpm' --dir /tmp/rencal-bundle/rpm
           chmod +x /tmp/rencal-bundle/appimage/*.AppImage
 
       - name: Check bundled providers

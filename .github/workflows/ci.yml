@@ -100,6 +100,7 @@ jobs:
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
             librsvg2-dev \
+            libarchive-tools \
             patchelf
 
       - uses: Swatinem/rust-cache@v2
@@ -115,7 +116,7 @@ jobs:
         env:
           NO_STRIP: "true"
         run: |
-          pnpm tauri build --bundles appimage,deb --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+          pnpm tauri build --bundles appimage,deb,rpm --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
       - name: Check bundled providers
         run: scripts/check-bundled-providers.sh
