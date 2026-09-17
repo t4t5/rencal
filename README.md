@@ -16,9 +16,7 @@
 
 ---
 
-<p align="center">
-<img width="735" height="482" alt="renCal screenshot" src="https://github.com/user-attachments/assets/63f6b188-8247-4e82-af63-bce74d0c8410" />
-</p>
+https://github.com/user-attachments/assets/cb64fe4e-c546-4f7b-b1c3-51692850847f
 
 <p align="center">
   <b>Modern, open-source calendar app. Built for Omarchy.</b><br>
