@@ -42,3 +42,6 @@ build-dir/
 
 # Nix build output
 result
+
+# just readme-preview output
+.readme-preview.html

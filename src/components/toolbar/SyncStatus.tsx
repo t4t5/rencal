@@ -1,5 +1,6 @@
 import { type ReactNode } from "react"
 
+import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { SyncPreview } from "@/rpc/bindings"
@@ -15,8 +16,6 @@ import { CloudCheckIcon } from "@/icons/cloud-check"
 import { CloudOffIcon } from "@/icons/cloud-off"
 import { CloudWarningIcon } from "@/icons/cloud-warning"
 import { SyncIcon as SyncingIcon } from "@/icons/sync"
-
-import { Button } from "../ui/button"
 
 export const SyncStatus = () => {
   const { syncStatus, syncError, pendingPreviews, syncNow } = useSync()

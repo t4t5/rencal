@@ -1,5 +1,6 @@
 import { ReactNode, RefObject, useEffect, useRef } from "react"
 
+import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
@@ -11,7 +12,6 @@ import { cn, isMacOS } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
-import { useFlyAnimation } from "../FlyAnimation"
 import { ComposeEventInput } from "./ComposeEventInput"
 
 export function ComposeEventButton() {

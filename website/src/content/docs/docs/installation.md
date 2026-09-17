@@ -8,9 +8,12 @@ Install renCal from the [download page](/download/).
 ## Nix
 
 ```sh
-nix run github:t4t5/rencal
-# or, in a NixOS config: inputs.rencal.packages.${system}.default
+nix run github:t4t5/rencal/v0.x.y
+nix build github:t4t5/rencal/v0.x.y
+nix profile install github:t4t5/rencal/v0.x.y
 ```
+
+Replace `v0.x.y` with the [latest release tag](https://github.com/t4t5/rencal/releases/latest). You can omit the tag to track `main`, but release tags are recommended for normal installs.
 
 ## Reminders support
 
