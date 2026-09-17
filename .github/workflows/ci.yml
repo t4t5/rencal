@@ -75,3 +75,47 @@ jobs:
 
       - name: Run tests
         run: just test
+
+  linux-packaging:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Linux system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            patchelf
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: linux-packaging
+
+      - run: pnpm install --frozen-lockfile
+      - run: scripts/install-caldir-providers.sh
+      - run: cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+
+      - name: Build Linux packages
+        env:
+          NO_STRIP: "true"
+        run: |
+          pnpm tauri build --bundles appimage,deb --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+
+      - name: Check bundled providers
+        run: scripts/check-bundled-providers.sh

@@ -80,6 +80,9 @@ build: ensure-providers
     cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
   fi
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    scripts/check-bundled-providers.sh
+  fi
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: ensure-providers

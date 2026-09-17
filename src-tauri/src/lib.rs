@@ -55,9 +55,16 @@ fn bundled_providers_dir(context: &tauri::Context) -> PathBuf {
         // In dev mode, Tauri doesn't copy resources — use the build output directly.
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("providers")
     } else {
-        tauri::utils::platform::resource_dir(context.package_info(), &tauri::Env::default())
-            .expect("failed to resolve bundled providers directory")
-            .join("providers")
+        let resource_dir =
+            tauri::utils::platform::resource_dir(context.package_info(), &tauri::Env::default())
+                .expect("failed to resolve bundled providers directory")
+                .join("providers");
+        #[cfg(target_os = "linux")]
+        {
+            linux_bundled_providers_dir(std::env::current_exe().ok().as_deref(), resource_dir)
+        }
+        #[cfg(not(target_os = "linux"))]
+        resource_dir
     };
 
     // Ensure bundled binaries are executable (unix only).
@@ -74,6 +81,59 @@ fn bundled_providers_dir(context: &tauri::Context) -> PathBuf {
     }
 
     providers_dir
+}
+
+#[cfg(target_os = "linux")]
+fn linux_bundled_providers_dir(
+    executable: Option<&std::path::Path>,
+    resource_providers: PathBuf,
+) -> PathBuf {
+    // linuxdeploy rewrites ELF resources under usr/lib, breaking musl static-PIE
+    // providers. AppImages ship them in usr/libexec instead; deb/rpm keep usr/lib.
+    if let Some(exe_dir) = executable.and_then(std::path::Path::parent) {
+        let providers = exe_dir.join("../libexec/renCal/providers");
+        if providers.is_dir() {
+            return providers;
+        }
+    }
+    resource_providers
+}
+
+#[cfg(all(test, target_os = "linux"))]
+mod bundled_providers_tests {
+    use super::linux_bundled_providers_dir;
+
+    #[test]
+    fn appimage_prefers_libexec_over_resources() {
+        let root = tempfile::tempdir().unwrap();
+        let executable = root.path().join("usr/bin/rencal");
+        let libexec = root.path().join("usr/libexec/renCal/providers");
+        let resources = root.path().join("usr/lib/renCal/providers");
+        std::fs::create_dir_all(executable.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&libexec).unwrap();
+        std::fs::create_dir_all(&resources).unwrap();
+
+        let selected = linux_bundled_providers_dir(Some(&executable), resources);
+        assert_eq!(selected.canonicalize().unwrap(), libexec);
+    }
+
+    #[test]
+    fn native_packages_fall_back_to_resources() {
+        let root = tempfile::tempdir().unwrap();
+        let executable = root.path().join("usr/bin/rencal");
+        let resources = root.path().join("usr/lib/renCal/providers");
+        std::fs::create_dir_all(executable.parent().unwrap()).unwrap();
+        std::fs::create_dir_all(&resources).unwrap();
+
+        assert_eq!(
+            linux_bundled_providers_dir(Some(&executable), resources.clone()),
+            resources
+        );
+        assert_eq!(
+            linux_bundled_providers_dir(None, resources.clone()),
+            resources
+        );
+    }
 }
 
 /// Returns whether a main window existed to focus; the single-instance

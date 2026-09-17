@@ -152,3 +152,25 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.tauri-args }}
+
+  check-linux-packages:
+    needs: [check-version, build]
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install caldir provider binaries
+        run: scripts/install-caldir-providers.sh
+
+      - name: Download published Linux packages
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v${{ needs.check-version.outputs.version }}
+        run: |
+          mkdir -p /tmp/rencal-bundle/{appimage,deb}
+          gh release download "$RELEASE_TAG" --pattern '*.AppImage' --dir /tmp/rencal-bundle/appimage
+          gh release download "$RELEASE_TAG" --pattern '*.deb' --dir /tmp/rencal-bundle/deb
+          chmod +x /tmp/rencal-bundle/appimage/*.AppImage
+
+      - name: Check published providers
+        run: scripts/check-bundled-providers.sh /tmp/rencal-bundle
