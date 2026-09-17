@@ -83,6 +83,7 @@ build: ensure-providers
   if [[ "$(uname -s)" == "Linux" ]]; then
     scripts/check-bundled-providers.sh
   fi
+  printf '\nrenCal built successfully.\n'
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: ensure-providers

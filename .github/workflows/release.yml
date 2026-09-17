@@ -132,7 +132,7 @@ jobs:
         working-directory: rencal/src-tauri
         run: cargo build --release -p rencal-notifierd
 
-      - name: Build and upload release
+      - name: Build and upload draft release
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -149,7 +149,7 @@ jobs:
           projectPath: rencal
           tagName: v${{ needs.check-version.outputs.version }}
           releaseName: v${{ needs.check-version.outputs.version }}
-          releaseDraft: false
+          releaseDraft: true
           prerelease: false
           args: ${{ matrix.tauri-args }}
 
@@ -162,7 +162,7 @@ jobs:
       - name: Install caldir provider binaries
         run: scripts/install-caldir-providers.sh
 
-      - name: Download published Linux packages
+      - name: Download draft Linux packages
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: v${{ needs.check-version.outputs.version }}
@@ -172,5 +172,11 @@ jobs:
           gh release download "$RELEASE_TAG" --pattern '*.deb' --dir /tmp/rencal-bundle/deb
           chmod +x /tmp/rencal-bundle/appimage/*.AppImage
 
-      - name: Check published providers
+      - name: Check bundled providers
         run: scripts/check-bundled-providers.sh /tmp/rencal-bundle
+
+      - name: Publish verified release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v${{ needs.check-version.outputs.version }}
+        run: gh release edit "$RELEASE_TAG" --draft=false
