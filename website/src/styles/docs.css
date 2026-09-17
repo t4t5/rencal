@@ -36,6 +36,10 @@ body {
   color: rgba(255, 255, 255, 0.7);
 }
 
+.sl-markdown-content {
+  font-size: 15px;
+}
+
 starlight-theme-select,
 starlight-rapide-theme-select {
   display: none !important;
