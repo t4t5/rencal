@@ -50,8 +50,10 @@ for provider in google icloud outlook caldav webcal; do
       echo "Provider has an RPATH/RUNPATH: $copy" >&2
       status=1
     fi
-    # A corrupted musl static-PIE dies before main(), even with --help.
-    if ! timeout 10s "$copy" --help >"$work/startup.log" 2>&1; then
+    # Providers read RPC requests from stdin and ignore CLI flags like --help.
+    # Close stdin so healthy providers exit instead of waiting for terminal input.
+    # A corrupted musl static-PIE still dies before main().
+    if ! timeout 10s "$copy" </dev/null >"$work/startup.log" 2>&1; then
       echo "Provider failed to start: $copy" >&2
       cat "$work/startup.log" >&2
       status=1
