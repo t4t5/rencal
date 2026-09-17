@@ -3,26 +3,34 @@ title: Installation
 description: Install and update renCal on Linux and macOS.
 ---
 
-Install renCal from the [download page](/download/).
+renCal ships packages for Linux and macOS. Pick your platform below, or grab a build from the [download page](/download/).
 
-## Nix
+## Omarchy / Arch Linux (AUR)
 
 ```sh
-nix run github:t4t5/rencal/v0.x.y
-nix build github:t4t5/rencal/v0.x.y
+yay -S rencal-bin
+```
+
+Update with `yay -Syu`.
+
+## Linux (deb / rpm / AppImage)
+
+Download the latest `.deb`, `.rpm` or AppImage from the [download page](/download/). To update, install the new package over the existing version.
+
+## macOS
+
+Download the latest `.dmg` from the [download page](/download/), open it, and drag renCal to `/Applications`. renCal prompts you in-app when a new version is available.
+
+## NixOS
+
+```sh
 nix profile install github:t4t5/rencal/v0.x.y
 ```
 
-Replace `v0.x.y` with the [latest release tag](https://github.com/t4t5/rencal/releases/latest). You can omit the tag to track `main`, but release tags are recommended for normal installs.
+Replace `v0.x.y` with the [latest release tag](https://github.com/t4t5/rencal/releases/latest). You can also `nix run` or `nix build` the same flake. Omit the tag to track `main`.
 
 ## Reminders support
 
-On Linux, the AUR, `.deb`, and `.rpm` packages also install `rencal-notifierd`, a background service that can notify you when events are coming up.
+On Linux, the AUR, `.deb` and `.rpm` packages also install `rencal-notifierd`, a background service that notifies you when events are coming up.
 
-If you're using the AppImage or are on macOS, you currently need to keep renCal running to receive reminder notifications.
-
-## Updating renCal
-
-- **AUR**: update with `yay -Syu`.
-- **`.deb` / `.rpm` / AppImage**: install the latest package from the [download page](/download/) over the existing version.
-- **macOS**: renCal prompts you in-app when a new version is available.
+With the AppImage or on macOS, keep renCal running to receive reminder notifications.

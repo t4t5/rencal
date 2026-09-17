@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://rencal.org">rencal.org</a> · <a href="#install">install</a> · <a href="#quick-start">quick start</a> · <a href="https://rencal.org/docs/installation/">docs</a>
+  <a href="https://rencal.org">rencal.org</a> · <a href="#install">install</a> · <a href="https://rencal.org/docs/installation/">docs</a>
 </p>
 
 <p align="center">
@@ -22,8 +22,7 @@
 
 <p align="center">
   <b>Modern, open-source calendar app. Built for Omarchy.</b><br>
-  Syncs with Google, iCloud, Outlook, and CalDAV.<br>
-  Powered by <a href="https://caldir.org">Caldir</a>.
+  Syncs with Google, iCloud, Outlook, and CalDAV using <a href="https://caldir.org">Caldir</a>.
 </p>
 
 ## Features
@@ -56,11 +55,9 @@ Download the latest `.dmg` from the [Download page](https://rencal.org/download/
 nix profile install github:t4t5/rencal/v0.x.y
 ```
 
-## Quick start
+## Docs
 
-1. Launch renCal and connect a Google, iCloud, Outlook or CalDAV account from the sidebar.
-2. Press <kbd>c</kbd> and type an event in plain English, e.g. "lunch with Sarah tomorrow at 1pm".
-3. Press <kbd>?</kbd> to see every keyboard shortcut.
+See the [renCal documentation](https://rencal.org/docs/installation/).
 
 ## Screenshots
 
