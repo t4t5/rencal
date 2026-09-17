@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { Contact } from "@/rpc/bindings"
-import { CALDIR_CHANGED } from "@/rpc/events"
+import { EVENTS_CHANGED } from "@/rpc/events"
 
 let cachedContacts: Contact[] | null = null
 let contactsPromise: Promise<Contact[]> | null = null
@@ -26,7 +26,7 @@ export function useContacts(enabled: boolean) {
 
     load()
 
-    const unlisten = listen(CALDIR_CHANGED, () => {
+    const unlisten = listen(EVENTS_CHANGED, () => {
       invalidateContacts()
       load()
     })

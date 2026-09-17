@@ -2,19 +2,19 @@ use super::types::{
     Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime,
     core_recurrence_to_rpc, rpc_time_to_core,
 };
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
-use caldir_core::{Caldir, DateRange, Event, Status};
+use crate::state::AppState;
+use caldir_core::{CalendarConfig, DateRange, Event, Provider, ProviderSlug, Status};
 use chrono::{DateTime, Utc};
 
-/// Load caldir with the bundled providers overlaid on top of any in `PATH`.
-pub(super) fn load_caldir() -> TauResult<Caldir> {
-    let caldir = Caldir::load().map_err(|e| e.to_string())?;
-
-    Ok(match crate::bundled_providers_dir() {
-        Some(dir) => caldir.with_bundled_providers(dir),
-        None => caldir,
-    })
+/// An owned handle to a provider binary (`Provider` is an `Arc` inside), so
+/// callers can talk to it without holding the caldir guard across the await.
+pub fn provider(state: &AppState, provider_name: &str) -> TauResult<Provider> {
+    state
+        .caldir()
+        .provider(&ProviderSlug::from(provider_name))
+        .map_err(|e| e.to_string())
+        .cloned()
 }
 
 pub fn is_visible(event: &Event) -> bool {
@@ -98,7 +98,10 @@ pub fn build_connect_options(
     options
 }
 
+/// Create local calendars for a freshly connected account, pick a default
+/// calendar if none is set, pull their events, and tell the webview.
 pub async fn save_connected_calendars(
+    state: &AppState,
     provider: &caldir_core::Provider,
     account_identifier: Option<String>,
     prefetched_calendars: Option<Vec<caldir_core::CalendarConfig>>,
@@ -117,16 +120,50 @@ pub async fn save_connected_calendars(
             .map_err(|e| format!("Failed to list calendars: {}", e))?
     };
 
-    let mut caldir = load_caldir()?;
+    let created = create_connected_calendars(state, calendar_configs)?;
+
+    let needs_default = state.caldir().config().default_calendar_slug().is_none();
+    if needs_default && let Some(slug) = created.first_writable_slug {
+        let mut config = state.caldir().config().clone();
+        config.set_default_calendar_slug(Some(slug));
+        state
+            .save_caldir_config(config)
+            .map_err(|e| e.to_string())?;
+    }
+
+    if let Err(err) = pull_created_calendar_events(state, &created.slugs).await {
+        log::warn!("failed to pull events after connecting provider: {err}");
+    }
+
+    state.notify_calendars_changed();
+
+    Ok(created.calendars)
+}
+
+struct CreatedCalendars {
+    calendars: Vec<Calendar>,
+    slugs: Vec<String>,
+    first_writable_slug: Option<String>,
+}
+
+/// Synchronous part of connecting: skips calendars that are already
+/// connected and creates the rest under the current data dir.
+fn create_connected_calendars(
+    state: &AppState,
+    calendar_configs: Vec<CalendarConfig>,
+) -> TauResult<CreatedCalendars> {
+    let caldir = state.caldir();
     let existing_connections: Vec<_> = caldir
         .connections()
         .into_iter()
         .filter_map(Result::ok)
         .collect();
 
-    let mut calendars = Vec::new();
-    let mut created_slugs = Vec::new();
-    let mut first_writable_slug = None;
+    let mut created = CreatedCalendars {
+        calendars: Vec::new(),
+        slugs: Vec::new(),
+        first_writable_slug: None,
+    };
 
     for config in calendar_configs {
         let already_connected = config.remote_config().is_some_and(|remote_cfg| {
@@ -148,39 +185,31 @@ pub async fn save_connected_calendars(
         if let Some(slug) = cal.slug() {
             let slug = slug.to_string();
 
-            if first_writable_slug.is_none() && !is_read_only {
-                first_writable_slug = Some(slug.clone());
+            if created.first_writable_slug.is_none() && !is_read_only {
+                created.first_writable_slug = Some(slug.clone());
             }
 
-            created_slugs.push(slug);
+            created.slugs.push(slug);
         }
 
-        calendars.push(Calendar::from(&cal));
+        created.calendars.push(Calendar::from(&cal));
     }
 
-    if caldir.config().default_calendar_slug().is_none()
-        && let Some(slug) = first_writable_slug
-    {
-        let mut config = caldir.config().clone();
-        config.set_default_calendar_slug(Some(slug));
-        caldir.save_config(config).map_err(|e| e.to_string())?;
-    }
-
-    if let Err(err) = pull_created_calendar_events(&caldir, &created_slugs).await {
-        log::warn!("failed to pull events after connecting provider: {err}");
-    }
-
-    Ok(calendars)
+    Ok(created)
 }
 
-async fn pull_created_calendar_events(caldir: &Caldir, calendar_slugs: &[String]) -> TauResult<()> {
+async fn pull_created_calendar_events(
+    state: &AppState,
+    calendar_slugs: &[String],
+) -> TauResult<()> {
     if calendar_slugs.is_empty() {
         return Ok(());
     }
 
     let range = DateRange::default_sync_window();
+    let connections = state.caldir().connections();
 
-    for connection in caldir.connections() {
+    for connection in connections {
         let mut connection = connection.map_err(|e| e.to_string())?;
         let slug = connection
             .local()
@@ -201,7 +230,7 @@ async fn pull_created_calendar_events(caldir: &Caldir, calendar_slugs: &[String]
             .apply_incoming_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
 
-        EVENT_CACHE.invalidate(&slug);
+        state.invalidate_events(&slug);
     }
 
     Ok(())

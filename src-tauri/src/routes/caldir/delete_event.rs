@@ -1,11 +1,12 @@
-use super::helpers::load_caldir;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::EventInstanceId;
 
-pub(super) async fn handler(calendar_slug: String, event_id: String) -> TauResult<()> {
-    let caldir = load_caldir()?;
-    let calendar = caldir.calendar(&calendar_slug).map_err(|e| e.to_string())?;
+pub(super) fn handler(state: &AppState, calendar_slug: String, event_id: String) -> TauResult<()> {
+    let calendar = state
+        .caldir()
+        .calendar(&calendar_slug)
+        .map_err(|e| e.to_string())?;
 
     let instance_id = EventInstanceId::from(event_id.as_str());
 
@@ -24,7 +25,7 @@ pub(super) async fn handler(calendar_slug: String, event_id: String) -> TauResul
             .map_err(|e| e.to_string())?;
     }
 
-    EVENT_CACHE.invalidate(&calendar_slug);
+    state.invalidate_events(&calendar_slug);
 
     Ok(())
 }

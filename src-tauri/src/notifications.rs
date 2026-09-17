@@ -8,8 +8,11 @@
 //! See `docs/notifications.md` for the design.
 
 use std::path::PathBuf;
+use std::sync::Arc;
 
 use tauri::{AppHandle, Manager};
+
+use crate::state::AppState;
 #[cfg(target_os = "windows")]
 use tauri_plugin_notification::NotificationExt;
 #[cfg(any(target_os = "macos", target_os = "windows"))]
@@ -46,12 +49,14 @@ impl Notifier for TauriNotifier {
 #[cfg(target_os = "macos")]
 struct MacOsNotifier {
     app: AppHandle,
+    state: Arc<AppState>,
 }
 
 #[cfg(target_os = "macos")]
 impl Notifier for MacOsNotifier {
     fn notify(&self, reminder: &ReminderNotification, icon: Option<&Path>) {
         let app = self.app.clone();
+        let state = self.state.clone();
         let reminder = reminder.clone();
         let icon = icon.map(|path| path.to_string_lossy().into_owned());
 
@@ -81,7 +86,7 @@ impl Notifier for MacOsNotifier {
             match notification.send() {
                 Ok(mac_notification_sys::NotificationResponse::Click)
                 | Ok(mac_notification_sys::NotificationResponse::ActionButton(_)) => {
-                    super::deep_links::enqueue_urls(&app, &[reminder.event_url]);
+                    super::deep_links::enqueue_urls(&app, &state.deep_links, &[reminder.event_url]);
                     super::focus_main_window(&app);
                 }
                 Ok(_) => {}
@@ -91,22 +96,23 @@ impl Notifier for MacOsNotifier {
     }
 }
 
-pub async fn run_reminder_loop(app: AppHandle) {
+pub async fn run_reminder_loop(app: AppHandle, state: Arc<AppState>) {
     let icon = icon_path(&app);
 
     #[cfg(target_os = "macos")]
     {
-        reminder_core::run_reminder_loop(MacOsNotifier { app }, icon).await;
+        reminder_core::run_reminder_loop(MacOsNotifier { app, state }, icon).await;
     }
 
     #[cfg(target_os = "windows")]
     {
+        let _ = state;
         reminder_core::run_reminder_loop(TauriNotifier { app }, icon).await;
     }
 
     #[cfg(target_os = "linux")]
     {
-        let _ = app;
+        let _ = (app, state);
         reminder_core::run_reminder_loop(reminder_core::NotifySendNotifier, icon).await;
     }
 }

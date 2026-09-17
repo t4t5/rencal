@@ -1,10 +1,14 @@
-use super::helpers::load_caldir;
 use crate::routes::TauResult;
+use crate::state::AppState;
 
-pub(super) async fn handler() -> TauResult<Vec<String>> {
-    let caldir = load_caldir()?;
+/// The one deliberate `PATH` rescan: a provider installed while the app runs
+/// shows up the moment Settings › Accounts opens. Every other handler reads
+/// the registry loaded at startup.
+pub(super) fn handler(state: &AppState) -> TauResult<Vec<String>> {
+    state.rescan_providers();
 
-    let mut names: Vec<String> = caldir
+    let mut names: Vec<String> = state
+        .caldir()
         .providers()
         .slugs()
         .into_iter()

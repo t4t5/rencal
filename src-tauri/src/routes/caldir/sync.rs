@@ -1,17 +1,17 @@
-use super::helpers::load_caldir;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{DateRange, EventChange};
 
 /// Number of pending push deletions that triggers the mass-delete safeguard.
 /// Mirrors `caldir-cli`'s `guards::MASS_DELETE_THRESHOLD`.
 const MASS_DELETE_THRESHOLD: u32 = 10;
 
-pub(super) async fn handler(allow_mass_delete: Vec<String>) -> TauResult<()> {
-    let caldir = load_caldir()?;
+pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) -> TauResult<()> {
     let range = DateRange::default_sync_window();
+    // Owned snapshot: the caldir guard must not live across the awaits below.
+    let connections = state.caldir().connections();
 
-    for connection in caldir.connections() {
+    for connection in connections {
         let mut connection = connection.map_err(|e| e.to_string())?;
         let slug = connection
             .local()
@@ -27,7 +27,7 @@ pub(super) async fn handler(allow_mass_delete: Vec<String>) -> TauResult<()> {
         connection
             .apply_incoming_diff(&diff)
             .map_err(|e| format!("[{}] {}", slug, e))?;
-        EVENT_CACHE.invalidate(&slug);
+        state.invalidate_events(&slug);
 
         if connection.read_only() {
             continue;
@@ -50,7 +50,7 @@ pub(super) async fn handler(allow_mass_delete: Vec<String>) -> TauResult<()> {
             .apply_outgoing_diff(&diff)
             .await
             .map_err(|e| format!("[{}] {}", slug, e))?;
-        EVENT_CACHE.invalidate(&slug);
+        state.invalidate_events(&slug);
     }
 
     Ok(())

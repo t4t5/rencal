@@ -5,17 +5,20 @@
 
 use std::ffi::OsStr;
 use std::path::Path;
-use std::time::Duration;
 
-use notify::{Event, EventKind, RecursiveMode, Watcher};
+use notify::RecursiveMode;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::mpsc;
-use tokio::time::sleep;
+
+use crate::fs_watch::{is_any_change, watch_debounced};
 
 pub const SYSTEM_TZ_CHANGED: &str = "system-tz-changed";
 
 fn is_localtime(path: &Path) -> bool {
     path.file_name() == Some(OsStr::new("localtime"))
+}
+
+fn is_localtime_change(event: &notify::Event) -> bool {
+    is_any_change(event) && event.paths.iter().any(|path| is_localtime(path))
 }
 
 pub async fn run_watcher(app: AppHandle) {
@@ -29,36 +32,16 @@ pub async fn run_watcher(app: AppHandle) {
 
     let mut last_tz = iana_time_zone::get_timezone().ok();
 
-    let (tx, mut rx) = mpsc::unbounded_channel::<()>();
-
-    let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
-        if let Ok(event) = res
-            && matches!(
-                event.kind,
-                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            )
-            && event.paths.iter().any(|p| is_localtime(p))
-        {
-            let _ = tx.send(());
-        }
-    }) {
-        Ok(w) => w,
-        Err(e) => {
-            log::warn!("Failed to init timezone watcher: {e}");
+    let mut watch = match watch_debounced(&[etc], RecursiveMode::NonRecursive, is_localtime_change)
+    {
+        Ok(watch) => watch,
+        Err(err) => {
+            log::warn!("timezone watcher: failed to watch /etc: {err}");
             return;
         }
     };
 
-    if let Err(e) = watcher.watch(etc, RecursiveMode::NonRecursive) {
-        log::warn!("Failed to watch /etc for timezone changes: {e}");
-        return;
-    }
-
-    while rx.recv().await.is_some() {
-        // The symlink swap arrives as a burst of remove/create events; coalesce.
-        sleep(Duration::from_millis(150)).await;
-        while rx.try_recv().is_ok() {}
-
+    while watch.changed().await.is_some() {
         let Ok(tz) = iana_time_zone::get_timezone() else {
             continue;
         };
@@ -68,8 +51,6 @@ pub async fn run_watcher(app: AppHandle) {
             let _ = app.emit(SYSTEM_TZ_CHANGED, tz);
         }
     }
-
-    drop(watcher);
 }
 
 #[cfg(test)]

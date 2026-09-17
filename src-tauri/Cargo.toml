@@ -2,9 +2,10 @@
 members = ["reminder-core", "notifierd", "rencal-config"]
 
 [workspace.dependencies]
-# One caldir tag pins caldir-core, the provider binaries, and the Nix flake input;
-# bump with `just bump-caldir <tag>`.
-caldir-core = { git = "https://github.com/t4t5/caldir", tag = "v0.14.1" }
+caldir-core = "0.15.1"
+
+[workspace.metadata.caldir]
+provider-tag = "v0.14.1"
 
 [package]
 name = "rencal"
@@ -56,6 +57,10 @@ log = "0.4.29"
 tauri-plugin-deep-link = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
+parking_lot = "0.12"
+
+[dev-dependencies]
+tempfile = "3"
 
 [target.'cfg(target_os = "linux")'.dependencies]
 libc = "0.2"

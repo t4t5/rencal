@@ -551,8 +551,9 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.15.0"
-source = "git+https://github.com/t4t5/caldir?tag=v0.14.1#2675ffec187d9539f90aaa927037b05df6c1cfb4"
+version = "0.15.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "99ba8b3e859dc5fb7a3252c3c1492a30f3522498c42abb4408dcc41521a17962"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4002,6 +4003,7 @@ dependencies = [
  "log",
  "mac-notification-sys",
  "notify",
+ "parking_lot",
  "reminder-core",
  "rencal-config",
  "serde",
@@ -4019,6 +4021,7 @@ dependencies = [
  "tauri-plugin-single-instance",
  "tauri-plugin-updater",
  "taurpc",
+ "tempfile",
  "tokio",
  "toml 0.8.2",
  "url",

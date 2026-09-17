@@ -1,7 +1,7 @@
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::collections::VecDeque;
-use std::sync::{LazyLock, Mutex};
 use tauri::{AppHandle, Emitter, Runtime};
 use url::Url;
 
@@ -13,8 +13,36 @@ pub struct EventDeepLink {
     pub recurrence_id: Option<String>,
 }
 
-static EVENT_LINK_INBOX: LazyLock<Mutex<VecDeque<EventDeepLink>>> =
-    LazyLock::new(|| Mutex::new(VecDeque::new()));
+/// Event links received before the frontend was ready to open them. Lives in
+/// `AppState`; drained through taurpc.
+#[derive(Default)]
+pub struct DeepLinkInbox {
+    queue: Mutex<VecDeque<EventDeepLink>>,
+}
+
+impl DeepLinkInbox {
+    /// Validates and queues `urls`, returning how many were accepted.
+    pub fn enqueue(&self, urls: &[String]) -> usize {
+        let accepted: Vec<_> = urls
+            .iter()
+            .filter_map(|raw| match parse_event_deep_link(raw) {
+                Ok(link) => Some(link),
+                Err(error) => {
+                    log::warn!("ignoring invalid event deep link: {error}");
+                    None
+                }
+            })
+            .collect();
+
+        let count = accepted.len();
+        self.queue.lock().extend(accepted);
+        count
+    }
+
+    pub fn take(&self) -> Vec<EventDeepLink> {
+        self.queue.lock().drain(..).collect()
+    }
+}
 
 pub fn parse_event_deep_link(raw: &str) -> Result<EventDeepLink, String> {
     let url = Url::parse(raw).map_err(|_| "invalid URL".to_string())?;
@@ -40,47 +68,21 @@ pub fn parse_event_deep_link(raw: &str) -> Result<EventDeepLink, String> {
 /// Validate and enqueue URLs, waking the frontend when any were accepted. The
 /// emitted event is only a wake-up signal; the inbox remains authoritative and
 /// is drained through taurpc.
-pub fn enqueue_urls<R: Runtime>(app: &AppHandle<R>, urls: &[String]) -> usize {
-    let count = enqueue(urls);
+pub fn enqueue_urls<R: Runtime>(
+    app: &AppHandle<R>,
+    inbox: &DeepLinkInbox,
+    urls: &[String],
+) -> usize {
+    let count = inbox.enqueue(urls);
     if count > 0 {
         let _ = app.emit(EVENT_DEEP_LINK_AVAILABLE, ());
     }
     count
 }
 
-fn enqueue(urls: &[String]) -> usize {
-    let accepted: Vec<_> = urls
-        .iter()
-        .filter_map(|raw| match parse_event_deep_link(raw) {
-            Ok(link) => Some(link),
-            Err(error) => {
-                log::warn!("ignoring invalid event deep link: {error}");
-                None
-            }
-        })
-        .collect();
-
-    let count = accepted.len();
-    EVENT_LINK_INBOX.lock().unwrap().extend(accepted);
-    count
-}
-
-pub fn take_pending_event_links() -> Vec<EventDeepLink> {
-    EVENT_LINK_INBOX.lock().unwrap().drain(..).collect()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::sync::MutexGuard;
-
-    static TEST_LOCK: Mutex<()> = Mutex::new(());
-
-    fn inbox_test_lock() -> MutexGuard<'static, ()> {
-        let guard = TEST_LOCK.lock().unwrap();
-        take_pending_event_links();
-        guard
-    }
 
     #[test]
     fn parses_uid_only_and_recurrence_links() {
@@ -131,15 +133,15 @@ mod tests {
 
     #[test]
     fn inbox_is_fifo_and_drain_is_atomic() {
-        let _guard = inbox_test_lock();
-        let accepted = enqueue(&[
+        let inbox = DeepLinkInbox::default();
+        let accepted = inbox.enqueue(&[
             "rencal://event?uid=first".into(),
             "not-a-url".into(),
             "rencal://event?uid=second".into(),
         ]);
         assert_eq!(accepted, 2);
 
-        let drained = take_pending_event_links();
+        let drained = inbox.take();
         assert_eq!(
             drained
                 .iter()
@@ -147,6 +149,6 @@ mod tests {
                 .collect::<Vec<_>>(),
             vec!["first", "second"]
         );
-        assert!(take_pending_event_links().is_empty());
+        assert!(inbox.take().is_empty());
     }
 }

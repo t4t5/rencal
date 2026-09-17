@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { listen } from "@tauri-apps/api/event"
 import {
   Dispatch,
   ReactNode,
@@ -11,6 +12,8 @@ import {
   useRef,
   useState,
 } from "react"
+
+import { EVENTS_CHANGED } from "@/rpc/events"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -69,7 +72,7 @@ export function CalEventsProvider({
   initialEvents,
   initialRange,
 }: CalEventsProviderProps) {
-  const { calendars, isLoadingCalendars } = useCalendars()
+  const { isLoadingCalendars } = useCalendars()
   const { activeDate, registerLoadEventsForDate } = useCalendarNavigation()
   const { settingsLoaded } = useSettings()
 
@@ -229,7 +232,16 @@ export function CalEventsProvider({
       coveredRangeRef.current = null
       setIsInitialLoading(false)
     }
-  }, [visibleCalendarKey, calendars, isLoadingCalendars, settingsLoaded])
+  }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
+
+  useEffect(() => {
+    const unlisten = listen(EVENTS_CHANGED, () => {
+      void reloadEvents()
+    })
+    return () => {
+      unlisten.then((fn) => fn())
+    }
+  }, [reloadEvents])
 
   // Each event's `dateInfo` bakes in the viewer's zone at conversion time, so an OS
   // timezone change must recompute it for every held event. The events themselves

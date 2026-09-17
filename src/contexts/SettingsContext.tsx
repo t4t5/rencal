@@ -2,14 +2,8 @@ import { emit, listen } from "@tauri-apps/api/event"
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
-import type { TimeFormat } from "@/rpc/bindings"
-import {
-  CALENDAR_DIR_CHANGED,
-  DEFAULT_CALENDAR_CHANGED,
-  DEFAULT_REMINDERS_CHANGED,
-  RENCAL_CONFIG_CHANGED,
-  TIME_FORMAT_CHANGED,
-} from "@/rpc/events"
+import type { CaldirSettings, TimeFormat } from "@/rpc/bindings"
+import { CALDIR_CONFIG_CHANGED, RENCAL_CONFIG_CHANGED } from "@/rpc/events"
 
 import { normalizeCalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek } from "@/lib/event-time"
@@ -57,24 +51,24 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [groups, setGroupsState] = useState<Record<string, string[]>>({})
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
 
+  const applyCaldirSettings = useCallback((settings: CaldirSettings) => {
+    setTimeFormatState(settings.time_format)
+    setDefaultRemindersState(settings.default_reminders)
+    setDefaultCalendarState(settings.default_calendar)
+    setCalendarDirState(settings.calendar_dir)
+  }, [])
+
   const reloadSettings = useCallback(async () => {
     try {
-      const [tf, reminders, cal, dir, notifs, autoSync, firstDay, weekNumbers, groupsResult] =
-        await Promise.all([
-          rpc.caldir.get_time_format(),
-          rpc.caldir.get_default_reminders(),
-          rpc.caldir.get_default_calendar(),
-          rpc.caldir.get_calendar_dir(),
-          rpc.config.get_notifications_enabled(),
-          rpc.config.get_auto_sync_enabled(),
-          rpc.config.get_first_day_of_week(),
-          rpc.config.get_show_week_numbers(),
-          rpc.config.get_groups(),
-        ])
-      setTimeFormatState(tf)
-      setDefaultRemindersState(reminders)
-      setDefaultCalendarState(cal)
-      setCalendarDirState(dir)
+      const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult] = await Promise.all([
+        rpc.caldir.get_caldir_settings(),
+        rpc.config.get_notifications_enabled(),
+        rpc.config.get_auto_sync_enabled(),
+        rpc.config.get_first_day_of_week(),
+        rpc.config.get_show_week_numbers(),
+        rpc.config.get_groups(),
+      ])
+      applyCaldirSettings(caldir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
       setFirstDayOfWeekState(firstDay)
@@ -85,22 +79,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       console.error(e)
     }
-  }, [])
+  }, [applyCaldirSettings])
 
   useEffect(() => {
     void reloadSettings()
 
-    const unlistenTimeFormat = listen<TimeFormat>(TIME_FORMAT_CHANGED, (event) => {
-      setTimeFormatState(event.payload)
-    })
-    const unlistenReminders = listen<number[]>(DEFAULT_REMINDERS_CHANGED, (event) => {
-      setDefaultRemindersState(event.payload)
-    })
-    const unlistenDefaultCalendar = listen<string | null>(DEFAULT_CALENDAR_CHANGED, (event) => {
-      setDefaultCalendarState(event.payload)
-    })
-    const unlistenCalendarDir = listen<string>(CALENDAR_DIR_CHANGED, (event) => {
-      setCalendarDirState(event.payload)
+    const unlistenCaldirConfig = listen<CaldirSettings>(CALDIR_CONFIG_CHANGED, (event) => {
+      applyCaldirSettings(event.payload)
     })
     // config.toml-backed settings (groups, notifications, auto-sync) don't get
     // per-field events; any change to the file — a hand-edit or our own write —
@@ -110,37 +95,29 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     })
 
     return () => {
-      unlistenTimeFormat.then((fn) => fn())
-      unlistenReminders.then((fn) => fn())
-      unlistenDefaultCalendar.then((fn) => fn())
-      unlistenCalendarDir.then((fn) => fn())
+      unlistenCaldirConfig.then((fn) => fn())
       unlistenConfig.then((fn) => fn())
     }
-  }, [reloadSettings])
+  }, [applyCaldirSettings, reloadSettings])
 
   const setTimeFormat = async (tf: TimeFormat) => {
     setTimeFormatState(tf)
     await rpc.caldir.set_time_format(tf)
-    await emit(TIME_FORMAT_CHANGED, tf)
   }
 
   const setDefaultReminders = async (mins: number[]) => {
     setDefaultRemindersState(mins)
     await rpc.caldir.set_default_reminders(mins)
-    await emit(DEFAULT_REMINDERS_CHANGED, mins)
   }
 
   const setDefaultCalendar = async (slug: string | null) => {
     setDefaultCalendarState(slug)
     await rpc.caldir.set_default_calendar(slug)
-    await emit(DEFAULT_CALENDAR_CHANGED, slug)
   }
 
+  // The state bridge broadcasts the complete stored settings after the save.
   const setCalendarDir = async (path: string) => {
     await rpc.caldir.set_calendar_dir(path)
-    const stored = await rpc.caldir.get_calendar_dir()
-    setCalendarDirState(stored)
-    await emit(CALENDAR_DIR_CHANGED, stored)
   }
 
   const setNotificationsEnabled = async (enabled: boolean) => {

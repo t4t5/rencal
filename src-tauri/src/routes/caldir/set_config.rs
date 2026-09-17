@@ -1,25 +1,20 @@
-use super::helpers::load_caldir;
 use super::helpers::tildify;
 use super::types::TimeFormat;
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{Reminder, TimeFormat as CoreTimeFormat};
 
-pub(super) async fn set_time_format(time_format: TimeFormat) -> TauResult<()> {
-    let mut caldir = load_caldir()?;
+pub(super) fn set_time_format(state: &AppState, time_format: TimeFormat) -> TauResult<()> {
     let core_tf = match time_format {
         TimeFormat::H24 => CoreTimeFormat::H24,
         TimeFormat::H12 => CoreTimeFormat::H12,
     };
-    let mut config = caldir.config().clone();
+    let mut config = state.caldir().config().clone();
     config.set_time_format(core_tf);
-    caldir.save_config(config).map_err(|e| e.to_string())?;
-    Ok(())
+    state.save_caldir_config(config).map_err(|e| e.to_string())
 }
 
-pub(super) async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()> {
-    let mut caldir = load_caldir()?;
-    let mut config = caldir.config().clone();
+pub(super) fn set_default_reminders(state: &AppState, minutes: Vec<i32>) -> TauResult<()> {
     let reminders = if minutes.is_empty() {
         None
     } else {
@@ -30,27 +25,21 @@ pub(super) async fn set_default_reminders(minutes: Vec<i32>) -> TauResult<()> {
                 .collect(),
         )
     };
+    let mut config = state.caldir().config().clone();
     config.set_default_reminders(reminders);
-    caldir.save_config(config).map_err(|e| e.to_string())?;
-    Ok(())
+    state.save_caldir_config(config).map_err(|e| e.to_string())
 }
 
-pub(super) async fn set_default_calendar(slug: Option<String>) -> TauResult<()> {
-    let mut caldir = load_caldir()?;
-    let mut config = caldir.config().clone();
+pub(super) fn set_default_calendar(state: &AppState, slug: Option<String>) -> TauResult<()> {
+    let mut config = state.caldir().config().clone();
     config.set_default_calendar_slug(slug);
-    caldir.save_config(config).map_err(|e| e.to_string())?;
-    Ok(())
+    state.save_caldir_config(config).map_err(|e| e.to_string())
 }
 
-pub(super) async fn set_calendar_dir(path: String) -> TauResult<()> {
-    let mut caldir = load_caldir()?;
-    let mut config = caldir.config().clone();
-
+/// Cache invalidation and state notifications happen inside
+/// `save_caldir_config`; nothing else to do here.
+pub(super) fn set_calendar_dir(state: &AppState, path: String) -> TauResult<()> {
+    let mut config = state.caldir().config().clone();
     config.set_data_dir(std::path::PathBuf::from(tildify(&path)));
-    caldir.save_config(config).map_err(|e| e.to_string())?;
-
-    EVENT_CACHE.invalidate_all();
-
-    Ok(())
+    state.save_caldir_config(config).map_err(|e| e.to_string())
 }

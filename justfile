@@ -80,6 +80,10 @@ build: ensure-providers
     cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
   fi
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+  if [[ "$(uname -s)" == "Linux" ]]; then
+    scripts/check-bundled-providers.sh
+  fi
+  printf '\nrenCal built successfully.\n'
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: ensure-providers
@@ -97,7 +101,7 @@ notarize: ensure-providers
 ensure-providers:
   scripts/install-caldir-providers.sh
 
-# Move caldir-core and the provider binaries to a caldir release, e.g. `just bump-caldir v0.13.1`.
+# Move the provider binaries to a caldir release, e.g. `just bump-caldir v0.14.1`.
 bump-caldir tag:
   scripts/bump-caldir.sh {{tag}}
 

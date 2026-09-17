@@ -2,15 +2,14 @@
 //! The frontend wraps it in `[data-theme="user:<slug>"] { … }` when injecting.
 
 use std::path::PathBuf;
-use std::time::Duration;
 
-use notify::{Event, EventKind, RecursiveMode, Watcher};
+use notify::RecursiveMode;
 use rencal_config::RencalConfig;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use tauri::{AppHandle, Emitter};
-use tokio::sync::mpsc;
-use tokio::time::sleep;
+
+use crate::fs_watch::{is_any_change, watch_debounced};
 
 pub const EXTERNAL_THEMES_CHANGED: &str = "external-themes-changed";
 
@@ -129,39 +128,18 @@ pub async fn run_watcher(app: AppHandle) {
         return;
     };
 
-    let (tx, mut rx) = mpsc::unbounded_channel::<()>();
-
-    let mut watcher = match notify::recommended_watcher(move |res: notify::Result<Event>| {
-        if let Ok(event) = res
-            && matches!(
-                event.kind,
-                EventKind::Modify(_) | EventKind::Create(_) | EventKind::Remove(_)
-            )
-        {
-            let _ = tx.send(());
-        }
-    }) {
-        Ok(w) => w,
-        Err(e) => {
-            log::warn!("Failed to init theme watcher: {e}");
+    let mut watch = match watch_debounced(&[&watch_dir], RecursiveMode::NonRecursive, is_any_change)
+    {
+        Ok(watch) => watch,
+        Err(err) => {
+            log::warn!("theme watcher: failed to watch {watch_dir:?}: {err}");
             return;
         }
     };
 
-    if let Err(e) = watcher.watch(&watch_dir, RecursiveMode::NonRecursive) {
-        log::warn!("Failed to watch {watch_dir:?}: {e}");
-        return;
-    }
-
-    while rx.recv().await.is_some() {
-        // Coalesce editor save bursts.
-        sleep(Duration::from_millis(150)).await;
-        while rx.try_recv().is_ok() {}
-
+    while watch.changed().await.is_some() {
         let _ = app.emit(EXTERNAL_THEMES_CHANGED, scan());
     }
-
-    drop(watcher);
 }
 
 #[cfg(test)]

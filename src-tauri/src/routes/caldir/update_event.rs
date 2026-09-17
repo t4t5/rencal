@@ -1,15 +1,13 @@
 use super::conference::apply_conference;
-use super::helpers::load_caldir;
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
-use crate::event_cache::EVENT_CACHE;
 use crate::routes::TauResult;
+use crate::state::AppState;
 use caldir_core::{Attendee, EventInstanceId, Reminder};
 use chrono::Utc;
 
-pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
-    let caldir = load_caldir()?;
-
-    let calendar = caldir
+pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()> {
+    let calendar = state
+        .caldir()
         .calendar(&input.calendar_slug)
         .map_err(|e| e.to_string())?;
 
@@ -54,7 +52,7 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
             })
             .map_err(|e| e.to_string())?;
 
-        EVENT_CACHE.invalidate(&input.calendar_slug);
+        state.invalidate_events(&input.calendar_slug);
 
         Ok(())
     } else {
@@ -85,7 +83,10 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
 
         if moving {
             let new_slug = input.new_calendar_slug.as_ref().unwrap();
-            let target_calendar = caldir.calendar(new_slug).map_err(|e| e.to_string())?;
+            let target_calendar = state
+                .caldir()
+                .calendar(new_slug)
+                .map_err(|e| e.to_string())?;
             apply_conference(
                 &mut updated_event,
                 &target_calendar,
@@ -105,15 +106,15 @@ pub(super) async fn handler(input: UpdateEventInput) -> TauResult<()> {
                 .delete()
                 .map_err(|e| e.to_string())?;
 
-            EVENT_CACHE.invalidate(&input.calendar_slug);
-            EVENT_CACHE.invalidate(new_slug);
+            state.invalidate_events(&input.calendar_slug);
+            state.invalidate_events(new_slug);
         } else {
             apply_conference(&mut updated_event, &calendar, input.conference.as_ref());
             existing_calendar_event
                 .update(updated_event)
                 .map_err(|e| e.to_string())?;
 
-            EVENT_CACHE.invalidate(&input.calendar_slug);
+            state.invalidate_events(&input.calendar_slug);
         }
 
         Ok(())

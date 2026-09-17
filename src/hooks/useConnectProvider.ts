@@ -1,9 +1,7 @@
-import { emit } from "@tauri-apps/api/event"
 import { useCallback, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { CredentialFieldInput } from "@/rpc/bindings"
-import { CALDIR_CHANGED } from "@/rpc/events"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -22,7 +20,6 @@ export const useConnectProvider = () => {
       try {
         await rpc.caldir.connect_provider(providerName)
         await Promise.all([reloadCalendars(), reloadSettings()])
-        await emit(CALDIR_CHANGED)
       } catch (error) {
         logger.error("Failed to connect provider:", error)
       } finally {
@@ -39,7 +36,6 @@ export const useConnectProvider = () => {
       try {
         await rpc.caldir.connect_provider_with_credentials(providerName, credentials)
         await Promise.all([reloadCalendars(), reloadSettings()])
-        await emit(CALDIR_CHANGED)
       } catch (error) {
         logger.error("Failed to connect provider:", error)
         throw error
