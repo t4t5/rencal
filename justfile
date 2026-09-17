@@ -22,6 +22,16 @@ dev: ensure-providers
 web:
   pnpm --dir website dev
 
+# Preview README as GitHub renders it (dark by default; `just readme-preview light`)
+readme-preview theme="dark":
+  #!/usr/bin/env bash
+  set -euo pipefail
+  out=.readme-preview.html
+  # Export next to the README so relative image paths keep working.
+  uvx grip --export --quiet --user "$(gh api user --jq .login)" --pass "$(gh auth token)" README.md "$out"
+  sed -i 's|<html lang="en">|<html lang="en" data-color-mode="{{theme}}" data-{{theme}}-theme="{{theme}}">|' "$out"
+  xdg-open "$out"
+
 # Force deploy website (used to update /releases)
 deploy-web:
   gh workflow run website.yml --ref main 
@@ -45,6 +55,7 @@ check:
 # Check TypeScript types only
 typecheck:
   pnpm typecheck
+  pnpm lint
   pnpm find:unused-exports
 
 # Run frontend and Rust tests, and verify generated bindings are current

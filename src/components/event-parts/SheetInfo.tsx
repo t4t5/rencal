@@ -1,12 +1,11 @@
 import { useEffect, useRef } from "react"
 
 import { EditEvent } from "@/components/event-parts/EditEvent"
+import { DragRegion } from "@/components/ui/drag-region"
 import { FastSheet, FastSheetContent } from "@/components/ui/fast-sheet"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
-
-import { DragRegion } from "../ui/drag-region"
 
 export function SheetEvent() {
   const { activeEvent, setActiveEventKey } = useCalEvents()
