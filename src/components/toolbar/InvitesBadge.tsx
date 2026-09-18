@@ -45,7 +45,7 @@ export function InvitesBadge() {
   const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
     setPendingInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
     try {
-      await api.events.respond(invite, response)
+      await api.events.rsvp(invite, response)
       void requestSync()
     } catch (e) {
       console.error("RSVP failed:", e)

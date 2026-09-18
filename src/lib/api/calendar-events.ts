@@ -219,5 +219,5 @@ export const events = {
   listInvites,
   create: createEvent,
   delete: deleteEvent,
-  respond: respondToEvent,
+  rsvp: respondToEvent,
 } as const

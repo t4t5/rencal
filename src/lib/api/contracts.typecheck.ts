@@ -61,9 +61,9 @@ function checkContracts(name: "theme-changed" | "rencal-config-changed", event: 
   void api.events.delete(ref)
 
   const response: ResponseStatus = "accepted"
-  void api.events.respond(ref, response)
+  void api.events.rsvp(ref, response)
   // @ts-expect-error RSVP uses the generated fixed set.
-  void api.events.respond(ref, "maybe")
+  void api.events.rsvp(ref, "maybe")
   // @ts-expect-error Event status uses the generated fixed set.
   const status: CalendarEvent["status"] = "unknown"
   void status

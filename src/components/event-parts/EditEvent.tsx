@@ -152,7 +152,7 @@ export const EditEvent = ({
     if (!dirtyEvent) return
 
     try {
-      await api.events.respond(dirtyEvent, response)
+      await api.events.rsvp(dirtyEvent, response)
       void requestSync()
       setActiveEventKey(null)
     } catch (err) {
