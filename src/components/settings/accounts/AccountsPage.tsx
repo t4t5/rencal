@@ -53,11 +53,7 @@ export function AccountsPage() {
       toast.error("Failed to reconnect account", {
         description: getErrorMessage(error, "Failed to reconnect account"),
       })
-      console.error(
-        "Failed to start provider reconnection",
-        getErrorMessage(error, "Failed to start provider reconnection"),
-        error,
-      )
+      console.error("Failed to start provider reconnection", error)
     })
   }
 
@@ -135,11 +131,7 @@ function Account({
         if (!cancelled) setStatus("connected")
       })
       .catch((error: unknown) => {
-        console.error(
-          "Failed to check provider connection",
-          getErrorMessage(error, "Failed to check provider connection"),
-          error,
-        )
+        console.error("Failed to check provider connection", error)
         if (!cancelled) setStatus("disconnected")
       })
 

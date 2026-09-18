@@ -87,7 +87,7 @@ export function GlobalShortcuts({
   // Native command IDs are open strings; unknown IDs are harmless.
   useEffect(() => {
     const unlisten = listenAppEvent("menu-action", (id) => {
-      Object.entries(handlers).find(([key]) => key === id)?.[1]()
+      if (Object.hasOwn(handlers, id)) handlers[id as ShortcutId]()
     })
     return () => unlisten.unlisten()
   }, [handlers])

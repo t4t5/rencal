@@ -60,7 +60,7 @@ pub struct ConfigApiImpl;
 #[taurpc::resolvers]
 impl ConfigApi for ConfigApiImpl {
     async fn get_theme(self) -> TauResult<Option<String>> {
-        if !RencalConfig::config_path()?.try_exists()? {
+        if !RencalConfig::exists() {
             return Ok(None);
         }
         Ok(Some(RencalConfig::load()?.theme))

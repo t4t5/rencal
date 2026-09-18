@@ -46,15 +46,19 @@ pub fn export_types() -> anyhow::Result<()> {
 
     let mut types = TypeCollection::default();
     AppEvent::definition_named_data_type(&mut types);
-    // Specta supplies the dependencies, including any nested payload types.
-    // These are already exported by the RPC router.
+    let body = specta_typescript::export::<AppEvent>(&Default::default())?;
+    // Specta also lists transitive dependencies; import only the payload types
+    // the union names. All of them are already exported by the RPC router.
     let mut imports: Vec<_> = types
         .into_iter()
         .filter(|(id, _)| *id != AppEvent::sid())
         .map(|(_, ty)| ty.name().to_string())
+        .filter(|name| {
+            body.split(|c: char| !c.is_alphanumeric() && c != '_')
+                .any(|t| t == name)
+        })
         .collect();
     imports.sort();
-    let body = specta_typescript::export::<AppEvent>(&Default::default())?;
     std::fs::write(
         concat!(
             env!("CARGO_MANIFEST_DIR"),
