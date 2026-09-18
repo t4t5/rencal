@@ -1,7 +1,6 @@
 import { useMemo } from "react"
 
-import type { Calendar } from "@/rpc/bindings"
-
+import type { Calendar } from "@/lib/api"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { DAY_MINUTES, epochDay } from "@/lib/event-time"

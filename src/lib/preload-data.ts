@@ -1,15 +1,9 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { rpc } from "@/rpc"
-import type { Calendar } from "@/rpc/bindings"
-
+import { api, type Calendar } from "@/lib/api"
 import type { CalendarEvent } from "@/lib/cal-events"
-import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
-import {
-  getStoredActiveGroup,
-  getVisibleCalendarSlugs,
-  normalizeCalendarGroups,
-} from "@/lib/calendar-groups"
+import { getStartRangeForDate } from "@/lib/cal-events-range"
+import { getStoredActiveGroup, getVisibleCalendarSlugs } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"
@@ -24,13 +18,13 @@ export type Preload = {
 export async function preloadCalendarData(): Promise<Preload> {
   try {
     const initialDate = today()
-    const [initialCalendars, groupsResult] = await Promise.all([
-      rpc.caldir.list_calendars(),
-      rpc.config.get_groups(),
+    const [initialCalendars, groups] = await Promise.all([
+      api.calendars.list(),
+      api.settings.getCalendarGroups(),
     ])
     const slugs = getVisibleCalendarSlugs({
       calendars: initialCalendars,
-      groups: normalizeCalendarGroups(groupsResult),
+      groups,
       activeGroup: getStoredActiveGroup(localStorage),
     })
 
@@ -39,11 +33,10 @@ export async function preloadCalendarData(): Promise<Preload> {
     }
 
     const initialRange = getStartRangeForDate(initialDate)
-    const initialEvents = await getCalendarEventsForRange(
-      slugs,
-      initialRange.start,
-      initialRange.end,
-    )
+    const initialEvents = await api.events.list({
+      calendar_slugs: slugs,
+      range: initialRange,
+    })
     return { initialCalendars, initialEvents, initialDate, initialRange }
   } catch (err) {
     logger.error("Preload failed, falling back to lazy load", err)

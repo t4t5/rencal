@@ -5,17 +5,15 @@ import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { rpc } from "@/rpc"
-import type { ResponseStatus, TimeFormat } from "@/rpc/bindings"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useToday } from "@/hooks/useToday"
-import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
-import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
+import { api } from "@/lib/api"
+import { eventKey, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
+import { dateInViewerZone, formatShortDate, formatTime, type TimeFormat } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export const INVITES_BUTTON_EL_ID = "global-invites-button"
@@ -35,10 +33,7 @@ export function InvitesBadge() {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
     if (slugs.length === 0) return
 
-    rpc.caldir
-      .list_invites(slugs)
-      .then((events) => setPendingInvites(rpcToCalendarEvents(events)))
-      .catch(console.error)
+    api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
   }, [calendars])
 
   const isMd = useBreakpoint("md")
@@ -50,7 +45,7 @@ export function InvitesBadge() {
   const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
     setPendingInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
     try {
-      await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
+      await api.events.rsvp(invite, response)
       void requestSync()
     } catch (e) {
       console.error("RSVP failed:", e)

@@ -1,8 +1,9 @@
 import type {
-  Calendar,
   ConferenceProvider as RpcConferenceProvider,
   EventConference as RpcEventConference,
 } from "@/rpc/bindings"
+
+import type { Calendar } from "@/lib/api/calendars"
 
 import type { EventDateInfo } from "./event-time"
 

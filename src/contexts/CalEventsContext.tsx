@@ -17,13 +17,9 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
-import { listenAppEvent } from "@/lib/api/events"
+import { api } from "@/lib/api"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
-import {
-  getCalendarEventsForRange,
-  getStartRangeForDate,
-  mergeEvents,
-} from "@/lib/cal-events-range"
+import { getStartRangeForDate, mergeEvents } from "@/lib/cal-events-range"
 import { subscribeViewerTzid } from "@/lib/event-time"
 import { createStrictContext } from "@/lib/strict-context"
 import { DateRange } from "@/lib/types"
@@ -136,11 +132,10 @@ export function CalEventsProvider({
 
         if (doForce || !covered) {
           // Full (re)fetch of the whole desired range.
-          const events = await getCalendarEventsForRange(
-            visibleCalendarIds,
-            desired.start,
-            desired.end,
-          )
+          const events = await api.events.list({
+            calendar_slugs: visibleCalendarIds,
+            range: desired,
+          })
           const latest = loadedRangeRef.current!
           // Selection changed, range widened or a reload landed mid-flight → redo as a full
           // fetch rather than applying stale results.
@@ -163,10 +158,16 @@ export function CalEventsProvider({
           if (needBefore || needAfter) {
             const [before, after] = await Promise.all([
               needBefore
-                ? getCalendarEventsForRange(visibleCalendarIds, desired.start, covered.start)
+                ? api.events.list({
+                    calendar_slugs: visibleCalendarIds,
+                    range: { start: desired.start, end: covered.start },
+                  })
                 : Promise.resolve<CalendarEvent[]>([]),
               needAfter
-                ? getCalendarEventsForRange(visibleCalendarIds, covered.end, desired.end)
+                ? api.events.list({
+                    calendar_slugs: visibleCalendarIds,
+                    range: { start: covered.end, end: desired.end },
+                  })
                 : Promise.resolve<CalendarEvent[]>([]),
             ])
             if (
@@ -246,7 +247,7 @@ export function CalEventsProvider({
   }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
 
   useEffect(() => {
-    const unlisten = listenAppEvent("events-changed", () => {
+    const unlisten = api.notifications.listen("events-changed", () => {
       void reloadEvents()
     })
     return () => {

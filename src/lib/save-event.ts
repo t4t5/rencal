@@ -1,12 +1,9 @@
 import type { Dispatch, SetStateAction } from "react"
 import { toast } from "sonner"
 
-import { rpc } from "@/rpc"
-
-import { getErrorMessage } from "@/lib/api/errors"
-import { eventKey, recurrenceToRpc, type CalendarEvent } from "@/lib/cal-events"
-import { conferenceToRpc } from "@/lib/conference"
-import { toRpcEventTime } from "@/lib/event-time/rpc"
+import { getErrorMessage } from "@/lib/api"
+import { replaceEvent } from "@/lib/api/internal"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 
 export type RequestSync = () => Promise<void>
 export type SetCalendarEvents = Dispatch<SetStateAction<CalendarEvent[]>>
@@ -22,7 +19,7 @@ export async function updateAndSyncEvent(
   setCalendarEvents((prev) => prev.map((e) => (eventKey(e) === eventKey(original) ? current : e)))
 
   try {
-    await rpc.caldir.update_event({
+    await replaceEvent({
       id: current.id,
       calendar_slug: original.calendar_slug,
       new_calendar_slug:
@@ -31,12 +28,12 @@ export async function updateAndSyncEvent(
       description: current.description,
       location: current.location,
       url: current.url,
-      start: toRpcEventTime(current.start),
-      end: toRpcEventTime(current.end),
-      recurrence: current.recurrence ? recurrenceToRpc(current.recurrence) : null,
+      start: current.start,
+      end: current.end,
+      recurrence: current.recurrence,
       reminders: current.reminders,
       attendees: current.attendees,
-      conference: conferenceToRpc(current.conference),
+      conference: current.conference,
     })
     await requestSync()
   } catch (err) {

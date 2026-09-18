@@ -19,13 +19,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
 
-import { rpc } from "@/rpc"
-import type { Calendar } from "@/rpc/bindings"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 
@@ -196,13 +193,13 @@ function CalendarDropdownMenuWrapper({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const isDefault = defaultCalendar === calendar.slug
 
-  const renameCalendar = async (name: string) => {
-    await rpc.caldir.rename_calendar(calendar.slug, name)
+  const handleRename = async (name: string) => {
+    await api.calendars.rename(calendar.slug, name)
     await reloadCalendars()
   }
 
   const changeCalendarColor = async (color: string) => {
-    await rpc.caldir.set_calendar_color(calendar.slug, color)
+    await api.calendars.setColor(calendar.slug, color)
     await reloadCalendars()
   }
 
@@ -243,7 +240,7 @@ function CalendarDropdownMenuWrapper({
         <RenameCalendarModal
           calendar={calendar}
           onClose={() => setShowRenameModal(false)}
-          onSubmit={renameCalendar}
+          onSubmit={handleRename}
         />
       )}
 
@@ -280,12 +277,12 @@ function DeleteCalendarDialog({
   const calendarName = calendar.name || calendar.slug
   const isLocal = calendar.provider === null
 
-  const deleteCalendar = async () => {
+  const handleDelete = async () => {
     setIsDeleting(true)
     setError(null)
 
     try {
-      await rpc.caldir.delete_calendar(calendar.slug)
+      await api.calendars.delete(calendar.slug)
       await onDeleted()
       onClose()
     } catch (err) {
@@ -310,7 +307,7 @@ function DeleteCalendarDialog({
           <Button variant="secondary" onClick={onClose} disabled={isDeleting} autoFocus>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={() => void deleteCalendar()} disabled={isDeleting}>
+          <Button variant="destructive" onClick={() => void handleDelete()} disabled={isDeleting}>
             {isDeleting
               ? isLocal
                 ? "Deleting..."

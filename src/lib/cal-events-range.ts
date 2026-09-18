@@ -1,9 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { rpc } from "@/rpc"
-
-import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
-import { getViewerTzid } from "@/lib/event-time"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { DateRange } from "@/lib/types"
 
 export const MONTHS_TO_LOAD = 2
@@ -30,22 +27,4 @@ export const getStartRangeForDate = (date: Temporal.PlainDate): DateRange => {
     start: monthStart.subtract({ months: MONTHS_TO_LOAD }),
     end: monthStart.add({ months: MONTHS_TO_LOAD + 1 }),
   }
-}
-
-/** Convert a viewer-zone day boundary to the UTC instant expected by the RPC. */
-function plainDateToUtcInstant(date: Temporal.PlainDate): string {
-  return date.toZonedDateTime(getViewerTzid()).toInstant().toString()
-}
-
-export async function getCalendarEventsForRange(
-  calendarSlugs: string[],
-  start: Temporal.PlainDate,
-  end: Temporal.PlainDate,
-): Promise<CalendarEvent[]> {
-  const events = await rpc.caldir.list_events(
-    calendarSlugs,
-    plainDateToUtcInstant(start),
-    plainDateToUtcInstant(end),
-  )
-  return rpcToCalendarEvents(events)
 }

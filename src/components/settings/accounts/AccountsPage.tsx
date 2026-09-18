@@ -10,12 +10,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-import { rpc } from "@/rpc"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, api } from "@/lib/api"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
@@ -130,8 +128,8 @@ function Account({
 
     setStatus("pending")
 
-    rpc.caldir
-      .check_provider_connection(provider, account)
+    api.providers
+      .checkConnection(provider, account)
       .then(() => {
         if (!cancelled) setStatus("connected")
       })

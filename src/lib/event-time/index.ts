@@ -42,6 +42,7 @@ export {
   formatWallclockTime,
   formatWeekday,
   getRelativeDayLabel,
+  type TimeFormat,
 } from "./display"
 export {
   addDays,

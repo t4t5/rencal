@@ -1,12 +1,10 @@
 import { useEffect } from "react"
 import { toast } from "sonner"
 
-import { rpc } from "@/rpc"
-
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
-import { getErrorMessage } from "@/lib/api/errors"
-import { listenAppEvent } from "@/lib/api/events"
-import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
+import { getErrorMessage, api } from "@/lib/api"
+import { takePendingEventLinks } from "@/lib/api/internal"
+import type { CalendarEvent } from "@/lib/cal-events"
 
 export function useEventDeepLinks(): void {
   const jumpToEvent = useJumpToEvent()
@@ -23,12 +21,12 @@ export function useEventDeepLinks(): void {
       let eventToOpen: CalendarEvent | undefined
 
       try {
-        const links = await rpc.platform.take_pending_event_links()
+        const links = await takePendingEventLinks()
         for (const link of links) {
           try {
-            const event = await rpc.caldir.find_event(link.uid, link.recurrence_id)
+            const event = await api.events.findByUid(link.uid, link.recurrence_id)
             if (event) {
-              eventToOpen = rpcToCalendarEvent(event)
+              eventToOpen = event
             } else {
               toast.error("Event not found", { description: "No matching local event." })
             }
@@ -44,7 +42,7 @@ export function useEventDeepLinks(): void {
     }
 
     let disposed = false
-    const subscription = listenAppEvent("event-deep-link-available", drain)
+    const subscription = api.notifications.listen("event-deep-link-available", drain)
     void subscription.ready.then(() => {
       if (!disposed) void drain()
     })

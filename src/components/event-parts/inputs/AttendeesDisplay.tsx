@@ -7,9 +7,8 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { StatusDot } from "@/components/ui/status-dot"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-import { EventAttendee } from "@/rpc/bindings"
-
 import { useContacts } from "@/hooks/useContacts"
+import type { EventAttendee } from "@/lib/cal-events"
 import { isValidContactEmail, suggestContacts } from "@/lib/contact-suggestions"
 import { cn } from "@/lib/utils"
 

@@ -12,9 +12,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 
-import { rpc } from "@/rpc"
-import type { ResponseStatus } from "@/rpc/bindings"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useDeleteEvent } from "@/contexts/DeleteEventContext"
@@ -22,8 +19,8 @@ import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
-import { getErrorMessage } from "@/lib/api/errors"
-import { withDates, type CalendarEvent } from "@/lib/cal-events"
+import { getErrorMessage, api } from "@/lib/api"
+import { withDates, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import {
   addMinutes,
@@ -155,7 +152,7 @@ export const EditEvent = ({
     if (!dirtyEvent) return
 
     try {
-      await rpc.caldir.rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
+      await api.events.rsvp(dirtyEvent, response)
       void requestSync()
       setActiveEventKey(null)
     } catch (err) {

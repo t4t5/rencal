@@ -3,10 +3,9 @@ import { ReactNode } from "react"
 import { InputGroupAddon } from "@/components/ui/input-group"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
-import { Calendar } from "@/rpc/bindings"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import type { Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { cn } from "@/lib/utils"
 

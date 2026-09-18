@@ -1,7 +1,7 @@
 import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event"
 import { beforeEach, describe, expect, it, vi } from "vitest"
 
-import { emitAppEvent, listenAppEvent } from "./events"
+import { emitAppEvent, listenNotification } from "./notifications"
 
 vi.mock("@tauri-apps/api/event", () => ({ emit: vi.fn(), listen: vi.fn() }))
 
@@ -12,7 +12,7 @@ describe("app notification adapter", () => {
     const stop = vi.fn()
     vi.mocked(listen).mockResolvedValue(stop)
     const handler = vi.fn()
-    const subscription = listenAppEvent("caldir-config-changed", handler)
+    const subscription = listenNotification("caldir-config-changed", handler)
     await subscription.ready
 
     const [name, dispatch] = vi.mocked(listen).mock.calls[0]
@@ -38,7 +38,7 @@ describe("app notification adapter", () => {
     vi.mocked(listen).mockReturnValue(registration.promise)
     const stop = vi.fn()
     const handler = vi.fn()
-    const subscription = listenAppEvent("events-changed", handler)
+    const subscription = listenNotification("events-changed", handler)
     subscription.unlisten()
     const [name, dispatch] = vi.mocked(listen).mock.calls[0]
     dispatch({ event: name, id: 1, payload: null })
@@ -51,7 +51,7 @@ describe("app notification adapter", () => {
 
   it("exposes registration failures to callers waiting for readiness", async () => {
     vi.mocked(listen).mockRejectedValue("registration failed")
-    const subscription = listenAppEvent("events-changed", () => {})
+    const subscription = listenNotification("events-changed", () => {})
     await expect(subscription.ready).rejects.toBe("registration failed")
     subscription.unlisten()
   })

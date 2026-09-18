@@ -4,8 +4,8 @@ import { act, useEffect } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { api } from "@/lib/api"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { getCalendarEventsForRange } from "@/lib/cal-events-range"
 
 import { CalEventsProvider, useCalEvents } from "./CalEventsContext"
 
@@ -26,12 +26,13 @@ vi.mock("@/hooks/cal-events/useVisibleCalendarIds", () => ({
   useVisibleCalendarIds: () => selection.ids,
 }))
 vi.mock("@/hooks/useEventDeepLinks", () => ({ useEventDeepLinks: () => {} }))
-vi.mock("@/lib/api/events", () => ({
-  listenAppEvent: () => ({ ready: Promise.resolve(), unlisten: () => {} }),
-}))
-vi.mock("@/lib/cal-events-range", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/cal-events-range")>()),
-  getCalendarEventsForRange: vi.fn(),
+vi.mock("@/lib/api", () => ({
+  api: {
+    events: { list: vi.fn() },
+    notifications: {
+      listen: () => ({ ready: Promise.resolve(), unlisten: () => {} }),
+    },
+  },
 }))
 
 function event(id: string, calendarSlug: string): CalendarEvent {
@@ -62,7 +63,7 @@ const initialRange = {
   end: Temporal.PlainDate.from("2026-10-01"),
 }
 const initialEvents = [event("initial", "work")]
-const fetchEvents = vi.mocked(getCalendarEventsForRange)
+const fetchEvents = vi.mocked(api.events.list)
 let root: Root
 let context: ReturnType<typeof useCalEvents>
 let committedEvents: string[][]
@@ -119,7 +120,7 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
 
     const pending = load()
     expect(fetchEvents).toHaveBeenCalledTimes(1)
-    expect(fetchEvents.mock.calls[0][0]).toEqual(["work"])
+    expect(fetchEvents.mock.calls[0][0].calendar_slugs).toEqual(["work"])
 
     selection.ids = ["personal"]
     await render()
@@ -127,7 +128,10 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
 
     await act(async () => oldRequest.resolve([event("stale", "work")]))
     expect(fetchEvents).toHaveBeenCalledTimes(2)
-    expect(fetchEvents).toHaveBeenLastCalledWith(["personal"], desired.start, desired.end)
+    expect(fetchEvents).toHaveBeenLastCalledWith({
+      calendar_slugs: ["personal"],
+      range: desired,
+    })
     expect(committedEvents).toEqual([["initial"]])
 
     await act(async () => {
@@ -161,7 +165,10 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
     fetchEvents.mockResolvedValueOnce([event("restored", "personal")])
     selection.ids = ["personal"]
     await render()
-    expect(fetchEvents).toHaveBeenLastCalledWith(["personal"], desired.start, desired.end)
+    expect(fetchEvents).toHaveBeenLastCalledWith({
+      calendar_slugs: ["personal"],
+      range: desired,
+    })
     expect(context.calendarEvents.map((event) => event.id)).toEqual(["restored"])
   })
 })

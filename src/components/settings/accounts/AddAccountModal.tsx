@@ -3,8 +3,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/components/ui/dialog"
 
-import type { ProviderField } from "@/rpc/bindings"
-
+import type { ProviderField } from "@/lib/api"
 import { getProviderDisplayName } from "@/lib/providers"
 
 import { CredentialsForm } from "./CredentialsForm"

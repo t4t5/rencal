@@ -3,8 +3,7 @@ import { openUrl } from "@tauri-apps/plugin-opener"
 import { Button } from "@/components/ui/button"
 import { InputGroupAddon } from "@/components/ui/input-group"
 
-import type { Calendar } from "@/rpc/bindings"
-
+import type { Calendar } from "@/lib/api"
 import {
   calendarConferenceProvider,
   conferenceLabel,

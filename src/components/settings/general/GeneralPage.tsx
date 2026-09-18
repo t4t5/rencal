@@ -15,10 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import type { TimeFormat } from "@/rpc/bindings"
-
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { TimeFormat } from "@/lib/event-time"
 import type { FirstDayOfWeek } from "@/lib/event-time"
 import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
 

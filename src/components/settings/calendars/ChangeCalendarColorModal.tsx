@@ -10,9 +10,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-import type { Calendar } from "@/rpc/bindings"
-
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, type Calendar } from "@/lib/api"
 import { hexToHue, hueToHex } from "@/lib/color-utils"
 
 export function ChangeCalendarColorModal({

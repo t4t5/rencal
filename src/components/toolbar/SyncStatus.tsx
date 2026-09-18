@@ -3,13 +3,12 @@ import { type ReactNode } from "react"
 import { Button } from "@/components/ui/button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
-import { SyncPreview } from "@/rpc/bindings"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
+import type { SyncPreview } from "@/lib/api"
 
 import { CloudIcon } from "@/icons/cloud"
 import { CloudCheckIcon } from "@/icons/cloud-check"

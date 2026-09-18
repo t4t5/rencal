@@ -1,10 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 
-import { rpc } from "@/rpc"
-import type { ExternalTheme } from "@/rpc/bindings"
-
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
-import { listenAppEvent } from "@/lib/api/events"
+import { api, type ExternalTheme } from "@/lib/api"
 
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
 
@@ -55,11 +52,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       applyExternalThemes(themes)
     }
 
-    void rpc.themes.list_external().then((themes) => {
+    void api.themes.listExternal().then((themes) => {
       if (!cancelled) update(themes)
     })
 
-    const unlistenPromise = listenAppEvent("external-themes-changed", (event) => {
+    const unlistenPromise = api.notifications.listen("external-themes-changed", (event) => {
       update(event)
     })
 

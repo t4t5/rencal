@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage } from "@/lib/api"
 import { getProviderDisplayName } from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"

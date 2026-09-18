@@ -4,14 +4,13 @@ import { memo, type MouseEvent } from "react"
 import { Button } from "@/components/ui/button"
 import { UntitledEventText } from "@/components/ui/untitled-event-text"
 
-import type { TimeFormat } from "@/rpc/bindings"
-
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useNow } from "@/hooks/useNow"
 import { CalendarEvent } from "@/lib/cal-events"
 import { getMeetingUrl, hasVideoMeeting, isWithinJoinWindow } from "@/lib/conference"
 import { getEventBlockColors } from "@/lib/event-styles"
+import type { TimeFormat } from "@/lib/event-time"
 import { type EventDateInfo, formatDateKey, formatTime, isSameDay } from "@/lib/event-time"
 
 import { VideoIcon } from "@/icons/video"

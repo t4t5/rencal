@@ -4,8 +4,7 @@ import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { rpc } from "@/rpc"
-
+import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
@@ -29,7 +28,7 @@ export async function openSettingsWindow() {
   const scale = monitor?.scaleFactor ?? 1
   const screenW = (monitor?.size.width ?? width) / scale
   const screenH = (monitor?.size.height ?? height) / scale
-  const needsNative = await rpc.platform.needs_native_decorations()
+  const needsNative = await needsNativeDecorations()
 
   const appearance = getActiveAppearance(activeThemeId())
 

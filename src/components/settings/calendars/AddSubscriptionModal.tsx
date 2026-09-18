@@ -5,7 +5,7 @@ import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/component
 import { Input } from "@/components/ui/input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage } from "@/lib/api"
 
 const WEBCAL_PROVIDER = "webcal"
 

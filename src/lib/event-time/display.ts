@@ -1,12 +1,13 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import type { TimeFormat } from "@/rpc/bindings"
-
 import { today } from "./constructors"
 import { epochDay } from "./day"
 import { getViewerTzid } from "./local-zone"
 import { dateInViewerZone, isAllDay, toViewerZonedDateTime } from "./projections"
 import type { EventTime } from "./types"
+
+/** App-level mirror of the RPC `TimeFormat` type. */
+export type TimeFormat = "24h" | "12h"
 
 type DatePartStyle = "short" | "long"
 

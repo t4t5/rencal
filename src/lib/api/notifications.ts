@@ -2,12 +2,14 @@ import { emit, listen, type UnlistenFn } from "@tauri-apps/api/event"
 
 import type { AppEvent, AppEventName, AppEventPayload } from "@/rpc/events.generated"
 
+export type NotificationSubscription = { ready: Promise<void>; unlisten: UnlistenFn }
+
 // Synchronous cleanup also handles registration completing after unmount.
 // `ready` lets inbox consumers wait for registration before their initial drain.
-export function listenAppEvent<N extends AppEventName>(
+export function listenNotification<N extends AppEventName>(
   name: N,
   handler: (payload: AppEventPayload<N>) => void,
-): { ready: Promise<void>; unlisten: UnlistenFn } {
+): NotificationSubscription {
   let disposed = false
   let stop: UnlistenFn | undefined
   const ready = listen<AppEventPayload<N>>(name, (event) => {
@@ -33,7 +35,10 @@ type EmitArgs<E = FrontendEvent> = E extends { name: infer N; payload: infer P }
     : [name: N, payload: P]
   : never
 
-// A union of tuples preserves name/payload correlation even for union callers.
+// Frontend broadcasts are a host mechanism and are intentionally absent from
+// the public client. A union of tuples preserves name/payload correlation.
 export function emitAppEvent(...[name, payload]: EmitArgs): Promise<void> {
   return emit(name, payload ?? null)
 }
+
+export const notifications = { listen: listenNotification } as const

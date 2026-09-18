@@ -9,7 +9,7 @@ import "virtual:rencal-themes.css"
 import { CalendarStateProvider } from "@/contexts/CalendarStateContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 
-import { listenAppEvent } from "@/lib/api/events"
+import { api } from "@/lib/api"
 import { setViewerTzid } from "@/lib/event-time"
 import { preloadCalendarData } from "@/lib/preload-data"
 
@@ -22,7 +22,7 @@ const appWindow = params.get("appWindow")
 
 // Keep the viewer's zone in sync with the OS: the Rust watcher emits the new
 // IANA tzid when /etc/localtime changes, and the viewer-zone store fans it out.
-void listenAppEvent("system-tz-changed", (event) => setViewerTzid(event))
+void api.notifications.listen("system-tz-changed", (event) => setViewerTzid(event))
 
 async function bootstrap() {
   const preload = appWindow === "settings" ? {} : await preloadCalendarData()

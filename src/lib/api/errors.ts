@@ -13,7 +13,9 @@ const errorKinds = {
   internal: true,
 } satisfies Record<RpcErrorKind, true>
 
-export function isRpcError(error: unknown): error is RpcError {
+export type RenCalError = RpcError
+
+export function isRenCalError(error: unknown): error is RenCalError {
   return (
     typeof error === "object" &&
     error !== null &&
@@ -27,7 +29,7 @@ export function isRpcError(error: unknown): error is RpcError {
 
 export function getErrorMessage(error: unknown, fallback: string): string {
   const message =
-    isRpcError(error) || error instanceof Error
+    isRenCalError(error) || error instanceof Error
       ? error.message
       : typeof error === "string"
         ? error
