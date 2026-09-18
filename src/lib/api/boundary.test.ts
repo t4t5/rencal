@@ -19,6 +19,7 @@ describe("app API boundary", () => {
     ["src/contexts/FooContext.tsx", 'import type { AppEvent } from "@/rpc/events.generated"'],
     ["src/hooks/useFoo.ts", 'import { listen } from "@tauri-apps/api/event"'],
     ["src/lib/foo.ts", 'import { rpc } from "@/rpc"'],
+    ["src/hooks/useFoo.ts", 'import { listCalendars } from "@/lib/api/calendars"'],
     ["src/lib/cal-events.ts", 'import { rpc } from "@/rpc"'],
     ["src/lib/api/foo.ts", 'import { emit } from "@tauri-apps/api/event"'],
     ["src/lib/api/foo.ts", 'import { rpc } from "../rpc"'],
@@ -28,10 +29,11 @@ describe("app API boundary", () => {
 
   it.each([
     ["src/lib/api/calendars.ts", 'import { rpc } from "@/rpc"'],
-    ["src/lib/api/events.ts", 'import { listen } from "@tauri-apps/api/event"'],
+    ["src/lib/api/notifications.ts", 'import { listen } from "@tauri-apps/api/event"'],
     ["src/lib/cal-events.ts", 'import type { RpcRecurrence } from "@/rpc/bindings"'],
     ["src/lib/event-time/rpc.ts", 'import type { RpcEventTime } from "@/rpc/bindings"'],
-    ["src/components/toolbar/Foo.tsx", 'import type { Calendar } from "@/lib/api/calendars"'],
+    ["src/components/toolbar/Foo.tsx", 'import type { Calendar } from "@/lib/api"'],
+    ["src/contexts/Foo.tsx", 'import { replaceEvent } from "@/lib/api/internal"'],
     ["src/hooks/useFoo.ts", 'import { getCurrentWindow } from "@tauri-apps/api/window"'],
   ])("permits %s importing %s", async (filePath, code) => {
     expect(await violations(filePath, code)).toEqual([])

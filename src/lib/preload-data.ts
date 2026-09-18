@@ -1,8 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { getCalendarEventsForRange } from "@/lib/api/calendar-events"
-import { listCalendars, type Calendar } from "@/lib/api/calendars"
-import { getCalendarGroups } from "@/lib/api/settings"
+import { rencal, type Calendar } from "@/lib/api"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getStartRangeForDate } from "@/lib/cal-events-range"
 import { getStoredActiveGroup, getVisibleCalendarSlugs } from "@/lib/calendar-groups"
@@ -20,7 +18,10 @@ export type Preload = {
 export async function preloadCalendarData(): Promise<Preload> {
   try {
     const initialDate = today()
-    const [initialCalendars, groups] = await Promise.all([listCalendars(), getCalendarGroups()])
+    const [initialCalendars, groups] = await Promise.all([
+      rencal.calendars.list(),
+      rencal.settings.getCalendarGroups(),
+    ])
     const slugs = getVisibleCalendarSlugs({
       calendars: initialCalendars,
       groups,
@@ -32,11 +33,10 @@ export async function preloadCalendarData(): Promise<Preload> {
     }
 
     const initialRange = getStartRangeForDate(initialDate)
-    const initialEvents = await getCalendarEventsForRange(
-      slugs,
-      initialRange.start,
-      initialRange.end,
-    )
+    const initialEvents = await rencal.events.list({
+      calendar_slugs: slugs,
+      range: initialRange,
+    })
     return { initialCalendars, initialEvents, initialDate, initialRange }
   } catch (err) {
     logger.error("Preload failed, falling back to lazy load", err)

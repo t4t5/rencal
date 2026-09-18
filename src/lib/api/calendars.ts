@@ -7,8 +7,8 @@ export function listCalendars(): Promise<Calendar[]> {
   return rpc.caldir.list_calendars()
 }
 
-export async function createLocalCalendar(name: string, color: string | null): Promise<void> {
-  await rpc.caldir.create_local_calendar(name, color)
+export async function createLocalCalendar(name: string, color: string | null): Promise<Calendar> {
+  return rpc.caldir.create_local_calendar(name, color)
 }
 
 export async function renameCalendar(calendarSlug: string, name: string): Promise<void> {
@@ -22,3 +22,11 @@ export async function setCalendarColor(calendarSlug: string, color: string): Pro
 export async function deleteCalendar(calendarSlug: string): Promise<void> {
   await rpc.caldir.delete_calendar(calendarSlug)
 }
+
+export const calendars = {
+  list: listCalendars,
+  create: createLocalCalendar,
+  rename: renameCalendar,
+  setColor: setCalendarColor,
+  delete: deleteCalendar,
+} as const

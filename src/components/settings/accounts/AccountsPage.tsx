@@ -13,8 +13,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api/errors"
-import { checkProviderConnection } from "@/lib/api/providers"
+import { getErrorMessage, rencal } from "@/lib/api"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
@@ -129,7 +128,8 @@ function Account({
 
     setStatus("pending")
 
-    checkProviderConnection(provider, account)
+    rencal.providers
+      .checkConnection(provider, account)
       .then(() => {
         if (!cancelled) setStatus("connected")
       })

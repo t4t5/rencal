@@ -4,7 +4,7 @@ import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
-import { needsNativeDecorations } from "@/lib/api/platform"
+import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"

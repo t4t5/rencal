@@ -72,3 +72,21 @@ export async function getCalendarGroups(): Promise<CalendarGroups> {
 export async function setCalendarGroups(groups: CalendarGroups): Promise<void> {
   await rpc.config.set_groups(groups)
 }
+
+export const settings = {
+  getCaldirSettings,
+  setTimeFormat,
+  setDefaultReminders,
+  setDefaultCalendar,
+  setCalendarDir,
+  getNotificationsEnabled,
+  setNotificationsEnabled,
+  getAutoSyncEnabled,
+  setAutoSyncEnabled,
+  getFirstDayOfWeek,
+  setFirstDayOfWeek,
+  getShowWeekNumbers,
+  setShowWeekNumbers,
+  getCalendarGroups,
+  setCalendarGroups,
+} as const

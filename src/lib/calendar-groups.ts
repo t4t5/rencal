@@ -1,4 +1,4 @@
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 
 export const DEFAULT_GROUP = "default"
 export const ACTIVE_GROUP_KEY = "activeGroup"

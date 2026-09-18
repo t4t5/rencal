@@ -3,8 +3,8 @@ import { useEffect, useRef } from "react"
 import { z } from "zod"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { emitAppEvent, listenAppEvent } from "@/lib/api/events"
-import { getConfiguredTheme, getOmarchyColors, setConfiguredTheme } from "@/lib/api/themes"
+import { rencal } from "@/lib/api"
+import { emitAppEvent } from "@/lib/api/internal"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
@@ -61,7 +61,7 @@ export function useTheme() {
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {
     let cancelled = false
-    void getConfiguredTheme().then(async (toml) => {
+    void rencal.themes.getConfigured().then(async (toml) => {
       if (cancelled) return
       if (toml === null) {
         // First run with this build: persist whatever the cache holds so the
@@ -72,7 +72,7 @@ export function useTheme() {
         const hadCachedTheme = localStorage.getItem("theme") !== null
         if (!hadCachedTheme) {
           try {
-            const colors = await getOmarchyColors()
+            const colors = await rencal.themes.getOmarchyColors()
             if (cancelled) return
             if (colors) {
               initial = "omarchy"
@@ -80,7 +80,7 @@ export function useTheme() {
             }
           } catch {}
         }
-        void setConfiguredTheme(initial)
+        void rencal.themes.setConfigured(initial)
         return
       }
       const parsed = themeSchema.safeParse(toml)
@@ -96,7 +96,7 @@ export function useTheme() {
 
   // Cross-window sync. Don't re-emit — would loop.
   useEffect(() => {
-    const unlistenPromise = listenAppEvent("theme-changed", (event) => {
+    const unlistenPromise = rencal.notifications.listen("theme-changed", (event) => {
       const parsed = themeSchema.safeParse(event)
       if (parsed.success && parsed.data !== themeRef.current) {
         setThemeLocal(parsed.data)
@@ -109,7 +109,8 @@ export function useTheme() {
 
   const setTheme = (t: Theme) => {
     setThemeLocal(t)
-    void setConfiguredTheme(t)
+    void rencal.themes
+      .setConfigured(t)
       .then(() => {
         void emitAppEvent("theme-changed", t)
       })

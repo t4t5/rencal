@@ -8,7 +8,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, type DraftEvent } from "@/contexts/EventDraftContext"
 
-import { getEvent } from "@/lib/api/calendar-events"
+import { getStoredEvent } from "@/lib/api/internal"
 import { type CalendarEvent, type Recurrence } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import { setDraftAnchor, type DraftAnchor } from "@/lib/draft-anchor"
@@ -136,7 +136,10 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
     // rule stay intact.
     if (event.recurring_event_id) {
       try {
-        const master = await getEvent(event.calendar_slug, event.recurring_event_id)
+        const master = await getStoredEvent({
+          calendar_slug: event.calendar_slug,
+          id: event.recurring_event_id,
+        })
         if (master) {
           openDuplicateDraft(
             master,

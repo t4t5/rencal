@@ -21,3 +21,10 @@ export function getConfiguredTheme(): Promise<string | null> {
 export async function setConfiguredTheme(theme: string): Promise<void> {
   await rpc.config.set_theme(theme)
 }
+
+export const themes = {
+  listExternal: listExternalThemes,
+  getOmarchyColors,
+  getConfigured: getConfiguredTheme,
+  setConfigured: setConfiguredTheme,
+} as const

@@ -22,8 +22,31 @@ import { conferenceToRpc, type EventConference } from "@/lib/conference"
 import { getViewerTzid, type EventTime } from "@/lib/event-time"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 
-/** The editable fields shared by event creation and updates. */
-export interface EventInput {
+/** A calendar-scoped event identity. Event ids are opaque. */
+export type EventRef = Pick<CalendarEvent, "calendar_slug" | "id">
+
+export interface EventRange {
+  start: Temporal.PlainDate
+  end: Temporal.PlainDate
+}
+
+export interface ListEventsParams {
+  calendar_slugs: string[]
+  /** Viewer-zone day boundaries in the half-open interval `[start, end)`. */
+  range: EventRange
+}
+
+export interface SearchEventsParams {
+  calendar_slugs: string[]
+  query: string
+}
+
+export interface ListInvitesParams {
+  calendar_slugs: string[]
+}
+
+/** The complete editable record used by the app's legacy replacement path. */
+export interface EventReplacement {
   summary: string
   description: string | null
   location: string | null
@@ -36,11 +59,25 @@ export interface EventInput {
   conference: EventConference | null
 }
 
-export interface CreateEventInput extends EventInput {
+/**
+ * Event creation parameters. Optional values have explicit, side-effect-free
+ * defaults: nullable fields become `null`, and collections become `[]`.
+ */
+export interface CreateEventParams {
   calendar_slug: string
+  summary: string
+  start: EventTime
+  end: EventTime
+  description?: string | null
+  location?: string | null
+  url?: string | null
+  recurrence?: Recurrence | null
+  reminders?: number[]
+  attendees?: EventAttendee[]
+  conference?: EventConference | null
 }
 
-export interface UpdateEventInput extends EventInput {
+export interface ReplaceEventInput extends EventReplacement {
   id: string
   calendar_slug: string
   /** If set and different from `calendar_slug`, moves the event to this calendar. */
@@ -60,7 +97,7 @@ export interface SplitRecurringSeriesInput {
   new_recurrence: Recurrence | null
 }
 
-function eventInputToRpc(input: EventInput): Omit<RpcCreateEventInput, "calendar_slug"> {
+function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "calendar_slug"> {
   return {
     summary: input.summary,
     description: input.description,
@@ -81,29 +118,26 @@ function plainDateToUtcInstant(date: Temporal.PlainDate): string {
 }
 
 /** Events overlapping `[start, end)` in viewer-zone days. Malformed events are skipped. */
-export async function getCalendarEventsForRange(
-  calendarSlugs: string[],
-  start: Temporal.PlainDate,
-  end: Temporal.PlainDate,
-): Promise<CalendarEvent[]> {
+export async function listEvents({
+  calendar_slugs,
+  range,
+}: ListEventsParams): Promise<CalendarEvent[]> {
+  if (calendar_slugs.length === 0) return []
   const events = await rpc.caldir.list_events(
-    calendarSlugs,
-    plainDateToUtcInstant(start),
-    plainDateToUtcInstant(end),
+    calendar_slugs,
+    plainDateToUtcInstant(range.start),
+    plainDateToUtcInstant(range.end),
   )
   return rpcToCalendarEvents(events)
 }
 
-export async function getEvent(
-  calendarSlug: string,
-  eventId: string,
-): Promise<CalendarEvent | null> {
-  const event = await rpc.caldir.get_event(calendarSlug, eventId)
+export async function getStoredEvent(ref: EventRef): Promise<CalendarEvent | null> {
+  const event = await rpc.caldir.get_event(ref.calendar_slug, ref.id)
   return event ? rpcToCalendarEvent(event) : null
 }
 
 /** Look an event up by UID across all calendars, e.g. from a deep link. */
-export async function findEvent(
+export async function findEventByUid(
   uid: string,
   recurrenceId: string | null,
 ): Promise<CalendarEvent | null> {
@@ -111,28 +145,40 @@ export async function findEvent(
   return event ? rpcToCalendarEvent(event) : null
 }
 
-export async function searchEvents(
-  calendarSlugs: string[],
-  query: string,
-): Promise<CalendarEvent[]> {
-  return rpcToCalendarEvents(await rpc.caldir.search_events(calendarSlugs, query))
+export async function searchEvents({
+  calendar_slugs,
+  query,
+}: SearchEventsParams): Promise<CalendarEvent[]> {
+  return rpcToCalendarEvents(await rpc.caldir.search_events(calendar_slugs, query))
 }
 
 /** Invitations awaiting a response on the given calendars. */
-export async function listInvites(calendarSlugs: string[]): Promise<CalendarEvent[]> {
-  return rpcToCalendarEvents(await rpc.caldir.list_invites(calendarSlugs))
+export async function listInvites({ calendar_slugs }: ListInvitesParams): Promise<CalendarEvent[]> {
+  return rpcToCalendarEvents(await rpc.caldir.list_invites(calendar_slugs))
 }
 
 /** Creates the event and returns it as stored. Recurring creates return only the master. */
-export async function createEvent(input: CreateEventInput): Promise<CalendarEvent> {
+export async function createEvent(input: CreateEventParams): Promise<CalendarEvent> {
+  const completeInput: EventReplacement = {
+    summary: input.summary,
+    description: input.description ?? null,
+    location: input.location ?? null,
+    url: input.url ?? null,
+    start: input.start,
+    end: input.end,
+    recurrence: input.recurrence ?? null,
+    reminders: input.reminders ?? [],
+    attendees: input.attendees ?? [],
+    conference: input.conference ?? null,
+  }
   const created = await rpc.caldir.create_event({
     calendar_slug: input.calendar_slug,
-    ...eventInputToRpc(input),
+    ...eventInputToRpc(completeInput),
   })
   return rpcToCalendarEvent(created)
 }
 
-export async function updateEvent(input: UpdateEventInput): Promise<void> {
+export async function replaceEvent(input: ReplaceEventInput): Promise<void> {
   await rpc.caldir.update_event({
     id: input.id,
     calendar_slug: input.calendar_slug,
@@ -141,8 +187,8 @@ export async function updateEvent(input: UpdateEventInput): Promise<void> {
   })
 }
 
-export async function deleteEvent(calendarSlug: string, eventId: string): Promise<void> {
-  await rpc.caldir.delete_event(calendarSlug, eventId)
+export async function deleteEvent(ref: EventRef): Promise<void> {
+  await rpc.caldir.delete_event(ref.calendar_slug, ref.id)
 }
 
 export async function deleteRecurringSeries(calendarSlug: string, uid: string): Promise<void> {
@@ -162,10 +208,16 @@ export async function splitRecurringSeriesAt(
   return rpcToCalendarEvent(newMaster)
 }
 
-export async function rsvp(
-  calendarSlug: string,
-  eventId: string,
-  response: ResponseStatus,
-): Promise<void> {
-  await rpc.caldir.rsvp(calendarSlug, eventId, response)
+export async function respondToEvent(ref: EventRef, response: ResponseStatus): Promise<void> {
+  await rpc.caldir.rsvp(ref.calendar_slug, ref.id, response)
 }
+
+export const events = {
+  list: listEvents,
+  findByUid: findEventByUid,
+  search: searchEvents,
+  listInvites,
+  create: createEvent,
+  delete: deleteEvent,
+  respond: respondToEvent,
+} as const

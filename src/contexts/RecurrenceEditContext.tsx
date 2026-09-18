@@ -6,8 +6,8 @@ import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConf
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
-import { getEvent, splitRecurringSeriesAt } from "@/lib/api/calendar-events"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage } from "@/lib/api"
+import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
 import { updateAndSyncEvent } from "@/lib/save-event"
@@ -100,7 +100,10 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
     closeDialog()
 
     try {
-      const master = await getEvent(original.calendar_slug, current.recurring_event_id)
+      const master = await getStoredEvent({
+        calendar_slug: original.calendar_slug,
+        id: current.recurring_event_id,
+      })
       if (!master) return
 
       // Apply the occurrence's edited range while retaining the master's anchor

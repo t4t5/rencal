@@ -11,7 +11,7 @@ import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
 import { UrlInput } from "@/components/event-parts/inputs/UrlInput"
 import { Textarea } from "@/components/ui/textarea"
 
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 import type { EventAttendee, ResponseStatus } from "@/lib/cal-events"
 import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"

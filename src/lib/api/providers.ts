@@ -33,3 +33,11 @@ export async function checkProviderConnection(
 ): Promise<void> {
   await rpc.caldir.check_provider_connection(providerName, account)
 }
+
+export const providers = {
+  list: listProviders,
+  getConnectInfo: getProviderConnectInfo,
+  connect: connectProvider,
+  connectWithCredentials: connectProviderWithCredentials,
+  checkConnection: checkProviderConnection,
+} as const

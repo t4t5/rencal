@@ -27,7 +27,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
-import { listenAppEvent } from "@/lib/api/events"
+import { rencal } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
@@ -86,7 +86,7 @@ export function GlobalShortcuts({
 
   // Native command IDs are open strings; unknown IDs are harmless.
   useEffect(() => {
-    const unlisten = listenAppEvent("menu-action", (id) => {
+    const unlisten = rencal.notifications.listen("menu-action", (id) => {
       if (Object.hasOwn(handlers, id)) handlers[id as ShortcutId]()
     })
     return () => unlisten.unlisten()

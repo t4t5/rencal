@@ -1,4 +1,4 @@
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 
 export const DEFAULT_CALENDAR_COLOR = "var(--primary)"
 

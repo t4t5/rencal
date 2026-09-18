@@ -1,4 +1,4 @@
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 import type { CalendarEvent, ResponseStatus } from "@/lib/cal-events"
 import { isAllDay } from "@/lib/event-time"
 

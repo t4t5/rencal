@@ -3,11 +3,7 @@ import { useCallback, useState } from "react"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import {
-  connectProvider,
-  connectProviderWithCredentials,
-  type CredentialFieldInput,
-} from "@/lib/api/providers"
+import { rencal, type CredentialFieldInput } from "@/lib/api"
 import { logger } from "@/lib/logger"
 
 export const useConnectProvider = () => {
@@ -20,7 +16,7 @@ export const useConnectProvider = () => {
       setIsConnecting(true)
 
       try {
-        await connectProvider(providerName)
+        await rencal.providers.connect(providerName)
         await Promise.all([reloadCalendars(), reloadSettings()])
       } catch (error) {
         logger.error("Failed to connect provider:", error)
@@ -37,7 +33,7 @@ export const useConnectProvider = () => {
       setIsConnecting(true)
 
       try {
-        await connectProviderWithCredentials(providerName, credentials)
+        await rencal.providers.connectWithCredentials(providerName, credentials)
         await Promise.all([reloadCalendars(), reloadSettings()])
       } catch (error) {
         logger.error("Failed to connect provider:", error)

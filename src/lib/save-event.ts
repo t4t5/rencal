@@ -1,8 +1,8 @@
 import type { Dispatch, SetStateAction } from "react"
 import { toast } from "sonner"
 
-import { updateEvent } from "@/lib/api/calendar-events"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage } from "@/lib/api"
+import { replaceEvent } from "@/lib/api/internal"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 
 export type RequestSync = () => Promise<void>
@@ -19,7 +19,7 @@ export async function updateAndSyncEvent(
   setCalendarEvents((prev) => prev.map((e) => (eventKey(e) === eventKey(original) ? current : e)))
 
   try {
-    await updateEvent({
+    await replaceEvent({
       id: current.id,
       calendar_slug: original.calendar_slug,
       new_calendar_slug:

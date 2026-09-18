@@ -22,7 +22,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
-import { searchEvents } from "@/lib/api/calendar-events"
+import { rencal } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { prepareSearchResults } from "@/lib/search-results"
@@ -73,7 +73,8 @@ export function SearchPalette({
       const requestId = ++requestIdRef.current
       setIsLoading(true)
 
-      void searchEvents(visibleCalendarIds, query)
+      void rencal.events
+        .search({ calendar_slugs: visibleCalendarIds, query })
         .then((found) => {
           if (requestId !== requestIdRef.current) return
           setResults(prepareSearchResults(found))

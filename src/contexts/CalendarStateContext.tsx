@@ -3,8 +3,7 @@ import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "re
 import { z } from "zod"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { listCalendars, type Calendar } from "@/lib/api/calendars"
-import { listenAppEvent } from "@/lib/api/events"
+import { rencal, type Calendar } from "@/lib/api"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
@@ -80,7 +79,7 @@ export function CalendarStateProvider({
 
   const loadCalendarsFromStore = async () => {
     try {
-      const result = await listCalendars()
+      const result = await rencal.calendars.list()
       logger.debug("Calendars loaded from store:", result.length)
       setCalendars(result)
     } finally {
@@ -93,7 +92,7 @@ export function CalendarStateProvider({
       void loadCalendarsFromStore()
     }
 
-    const unlistenCalendars = listenAppEvent("calendars-changed", () => {
+    const unlistenCalendars = rencal.notifications.listen("calendars-changed", () => {
       void loadCalendarsFromStore()
     })
 

@@ -6,13 +6,8 @@ import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialo
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
-import {
-  deleteEvent,
-  deleteRecurringSeries,
-  getEvent,
-  splitRecurringSeriesAt,
-} from "@/lib/api/calendar-events"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, rencal } from "@/lib/api"
+import { deleteRecurringSeries, getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { createStrictContext } from "@/lib/strict-context"
 
@@ -64,7 +59,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     const restore = removeOptimistically((e) => eventKey(e) === eventKey(event))
 
     try {
-      await deleteEvent(event.calendar_slug, event.id)
+      await rencal.events.delete(event)
       void requestSync()
     } catch (err) {
       restore()
@@ -106,7 +101,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     // Same when the target is the first occurrence: truncating the series
     // before it would only leave behind an empty ghost master.
     try {
-      const master = await getEvent(calendarSlug, masterUid)
+      const master = await getStoredEvent({ calendar_slug: calendarSlug, id: masterUid })
       if (master && event.dateInfo.startMs <= master.dateInfo.startMs) {
         return handleDeleteAll()
       }
@@ -132,7 +127,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
         split_end: event.end,
         new_recurrence: null,
       })
-      await deleteEvent(calendarSlug, newMaster.id)
+      await rencal.events.delete(newMaster)
       void requestSync()
     } catch (err) {
       restore()

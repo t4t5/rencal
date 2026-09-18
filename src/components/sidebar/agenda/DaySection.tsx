@@ -9,7 +9,7 @@ import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"

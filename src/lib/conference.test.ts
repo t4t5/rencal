@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 import {
   calendarConferenceProvider,
   conferenceForCalendar,

@@ -20,3 +20,9 @@ export async function syncCalendars(allowMassDelete: string[]): Promise<void> {
 export async function discardPendingChanges(): Promise<void> {
   await rpc.caldir.discard()
 }
+
+export const sync = {
+  preview: getSyncPreview,
+  run: syncCalendars,
+  discardPendingChanges,
+} as const

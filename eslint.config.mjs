@@ -7,16 +7,21 @@ const parentImports = {
 }
 const rpcProxy = {
   name: "@/rpc",
-  message: "Call the app API in `@/lib/api/*` instead of the raw RPC proxy.",
+  message: "Call the `rencal` client from `@/lib/api` instead of the raw RPC proxy.",
 }
 const generatedTypes = {
   group: ["@/rpc/*"],
   message:
-    "Use app-level types from `@/lib/api/*`, `@/lib/cal-events` or `@/lib/event-time`; generated RPC types stay in the boundary modules.",
+    "Use supported types from `@/lib/api`; generated RPC types stay in the boundary modules.",
 }
 const nativeEvents = {
   group: ["@tauri-apps/api/event"],
-  message: "Use `listenAppEvent`/`emitAppEvent` from `@/lib/api/events` for app notifications.",
+  message: "Use `rencal.notifications` from `@/lib/api` for app notifications.",
+}
+const apiImplementations = {
+  group: ["@/lib/api/*", "!@/lib/api/internal"],
+  message:
+    "Use the public `@/lib/api` entry point. Host orchestration may use `@/lib/api/internal`.",
 }
 
 // The transport and the app API facade may use the generated proxy directly.
@@ -30,9 +35,9 @@ const rpcTypeConverters = [
 ]
 // Only the notification adapter and its tests touch Tauri's event bus.
 const appEventTransport = [
-  "src/lib/api/events.ts",
-  "src/lib/api/events.test.ts",
-  "src/lib/api/events.transport.test.ts",
+  "src/lib/api/notifications.ts",
+  "src/lib/api/notifications.test.ts",
+  "src/lib/api/notifications.transport.test.ts",
 ]
 
 const restrictImports = ({ paths = [], patterns }) => ({
@@ -56,7 +61,7 @@ export default tseslint.config(
       "@typescript-eslint/no-explicit-any": "error",
       ...restrictImports({
         paths: [rpcProxy],
-        patterns: [parentImports, generatedTypes, nativeEvents],
+        patterns: [parentImports, generatedTypes, nativeEvents, apiImplementations],
       }),
     },
   },

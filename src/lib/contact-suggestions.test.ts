@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Contact } from "@/lib/api/contacts"
+import type { Contact } from "@/lib/api"
 
 import { suggestContacts } from "./contact-suggestions"
 

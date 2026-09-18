@@ -3,7 +3,7 @@ import { emit } from "@tauri-apps/api/event"
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks"
 import { afterEach, expect, it, vi } from "vitest"
 
-import { emitAppEvent, listenAppEvent } from "./events"
+import { emitAppEvent, listenNotification } from "./notifications"
 
 afterEach(clearMocks)
 
@@ -14,10 +14,10 @@ it("propagates frontend broadcasts and backend payloads through the native event
   const configChanged = vi.fn()
   const applySettings = vi.fn()
   const subscriptions = [
-    listenAppEvent("theme-changed", appTheme),
-    listenAppEvent("theme-changed", settingsTheme),
-    listenAppEvent("rencal-config-changed", configChanged),
-    listenAppEvent("caldir-config-changed", applySettings),
+    listenNotification("theme-changed", appTheme),
+    listenNotification("theme-changed", settingsTheme),
+    listenNotification("rencal-config-changed", configChanged),
+    listenNotification("caldir-config-changed", applySettings),
   ]
   await Promise.all(subscriptions.map((subscription) => subscription.ready))
 

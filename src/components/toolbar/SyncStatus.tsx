@@ -8,7 +8,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useIsOnline } from "@/hooks/useIsOnline"
-import type { SyncPreview } from "@/lib/api/sync"
+import type { SyncPreview } from "@/lib/api"
 
 import { CloudIcon } from "@/icons/cloud"
 import { CloudCheckIcon } from "@/icons/cloud-check"

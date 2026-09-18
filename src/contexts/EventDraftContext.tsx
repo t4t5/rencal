@@ -1,9 +1,7 @@
 import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import { createEvent } from "@/lib/api/calendar-events"
-import type { Calendar } from "@/lib/api/calendars"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, rencal, type Calendar } from "@/lib/api"
 import {
   type CalendarEvent,
   type EventAttendee,
@@ -215,7 +213,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
 
     let createdEvent: CalendarEvent
     try {
-      createdEvent = await createEvent({
+      createdEvent = await rencal.events.create({
         calendar_slug: draftEvent.calendarId,
         summary: draftEvent.summary ?? "",
         description: draftEvent.description,

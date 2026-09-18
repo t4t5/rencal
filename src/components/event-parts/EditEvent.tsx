@@ -19,8 +19,7 @@ import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
-import { rsvp } from "@/lib/api/calendar-events"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, rencal } from "@/lib/api"
 import { withDates, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import {
@@ -153,7 +152,7 @@ export const EditEvent = ({
     if (!dirtyEvent) return
 
     try {
-      await rsvp(dirtyEvent.calendar_slug, dirtyEvent.id, response)
+      await rencal.events.respond(dirtyEvent, response)
       void requestSync()
       setActiveEventKey(null)
     } catch (err) {

@@ -1,4 +1,4 @@
-import type { Contact } from "@/lib/api/contacts"
+import type { Contact } from "@/lib/api"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

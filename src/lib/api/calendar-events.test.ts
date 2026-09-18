@@ -5,14 +5,8 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { CalendarEvent as RpcCalendarEvent } from "@/rpc/bindings"
 
-import {
-  createEvent,
-  getCalendarEventsForRange,
-  getEvent,
-  splitRecurringSeriesAt,
-  updateEvent,
-} from "./calendar-events"
-import { isRpcError } from "./errors"
+import { isRenCalError, rencal } from "@/lib/api"
+import { getStoredEvent, replaceEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 
 afterEach(() => {
   clearMocks()
@@ -61,13 +55,28 @@ const zoned = (wallclock: string) =>
   }) as const
 
 describe("calendar event reads", () => {
+  it("does not interpret an empty calendar selection as all calendars", async () => {
+    const calls = mockRpc({})
+    const events = await rencal.events.list({
+      calendar_slugs: [],
+      range: {
+        start: Temporal.PlainDate.from("2026-09-18"),
+        end: Temporal.PlainDate.from("2026-09-19"),
+      },
+    })
+    expect(events).toEqual([])
+    expect(calls).toEqual([])
+  })
+
   it("queries viewer-zone day boundaries as UTC instants and converts the result", async () => {
     const calls = mockRpc({ "TauRPC__caldir.list_events": [rpcEvent()] })
-    const events = await getCalendarEventsForRange(
-      ["work"],
-      Temporal.PlainDate.from("2026-09-18"),
-      Temporal.PlainDate.from("2026-09-19"),
-    )
+    const events = await rencal.events.list({
+      calendar_slugs: ["work"],
+      range: {
+        start: Temporal.PlainDate.from("2026-09-18"),
+        end: Temporal.PlainDate.from("2026-09-19"),
+      },
+    })
     // The test zone is Europe/Berlin (vite.config.ts), UTC+2 in September.
     expect(calls).toEqual([
       {
@@ -95,18 +104,20 @@ describe("calendar event reads", () => {
         rpcEvent({ id: "ok" }),
       ],
     })
-    const events = await getCalendarEventsForRange(
-      ["work"],
-      Temporal.PlainDate.from("2026-09-18"),
-      Temporal.PlainDate.from("2026-09-19"),
-    )
+    const events = await rencal.events.list({
+      calendar_slugs: ["work"],
+      range: {
+        start: Temporal.PlainDate.from("2026-09-18"),
+        end: Temporal.PlainDate.from("2026-09-19"),
+      },
+    })
     expect(events.map((event) => event.id)).toEqual(["ok"])
     expect(warn).toHaveBeenCalledOnce()
   })
 
   it("returns null for a missing event and an app event otherwise", async () => {
     mockRpc({ "TauRPC__caldir.get_event": null })
-    expect(await getEvent("work", "missing")).toBeNull()
+    expect(await getStoredEvent({ calendar_slug: "work", id: "missing" })).toBeNull()
 
     clearMocks()
     mockRpc({
@@ -118,7 +129,7 @@ describe("calendar event reads", () => {
         },
       }),
     })
-    const event = await getEvent("work", "event")
+    const event = await getStoredEvent({ calendar_slug: "work", id: "event" })
     expect(event?.recurrence).toEqual({
       rrule: "FREQ=DAILY",
       exdates: [{ kind: "date", value: Temporal.PlainDate.from("2026-09-21") }],
@@ -128,9 +139,30 @@ describe("calendar event reads", () => {
 })
 
 describe("calendar event writes", () => {
+  it("applies documented defaults to the minimum creation input", async () => {
+    const calls = mockRpc({ "TauRPC__caldir.create_event": rpcEvent({ id: "minimal" }) })
+    await rencal.events.create({
+      calendar_slug: "work",
+      summary: "Standup",
+      start: zoned("2026-09-18T09:00:00"),
+      end: zoned("2026-09-18T09:30:00"),
+    })
+    expect(calls[0].args?.input).toEqual(
+      expect.objectContaining({
+        description: null,
+        location: null,
+        url: null,
+        recurrence: null,
+        reminders: [],
+        attendees: [],
+        conference: null,
+      }),
+    )
+  })
+
   it("converts create input once and returns the stored event converted once", async () => {
     const calls = mockRpc({ "TauRPC__caldir.create_event": rpcEvent({ id: "stored" }) })
-    const created = await createEvent({
+    const created = await rencal.events.create({
       calendar_slug: "work",
       summary: "Standup",
       description: null,
@@ -189,7 +221,7 @@ describe("calendar event writes", () => {
   it("sends update input on the wire shape and resolves without a value", async () => {
     const calls = mockRpc({ "TauRPC__caldir.update_event": null })
     await expect(
-      updateEvent({
+      replaceEvent({
         id: "event",
         calendar_slug: "work",
         new_calendar_slug: "personal",
@@ -250,8 +282,10 @@ describe("calendar event writes", () => {
   it("passes structured backend failures through unchanged", async () => {
     const failure = { kind: "calendar_not_found", message: "[archive]: No such calendar" }
     mockIPC(() => Promise.reject(failure))
-    const error: unknown = await getEvent("archive", "event").catch((value: unknown) => value)
+    const error: unknown = await getStoredEvent({ calendar_slug: "archive", id: "event" }).catch(
+      (value: unknown) => value,
+    )
     expect(error).toBe(failure)
-    expect(isRpcError(error) && error.kind).toBe("calendar_not_found")
+    expect(isRenCalError(error) && error.kind).toBe("calendar_not_found")
   })
 })

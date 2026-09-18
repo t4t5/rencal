@@ -1,27 +1,39 @@
-// Compile-time contract checks. This function is never executed.
-import { rpc } from "@/rpc"
-import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
+// Compile-time public contract checks. This function is never executed.
+import { Temporal } from "@js-temporal/polyfill"
 
-import { createEvent } from "./calendar-events"
-import { emitAppEvent, listenAppEvent } from "./events"
+import {
+  rencal,
+  type CalendarEvent,
+  type EventRef,
+  type EventTime,
+  type RenCalClient,
+  type ResponseStatus,
+} from "@/lib/api"
+import { emitAppEvent } from "@/lib/api/internal"
 
-function checkContracts(name: "theme-changed" | "rencal-config-changed") {
-  listenAppEvent("caldir-config-changed", (settings) => {
+function checkContracts(name: "theme-changed" | "rencal-config-changed", event: CalendarEvent) {
+  const client: RenCalClient = rencal
+  const ref: EventRef = event
+  const start: EventTime = { kind: "date", value: Temporal.PlainDate.from("2026-09-18") }
+  const end: EventTime = { kind: "date", value: Temporal.PlainDate.from("2026-09-19") }
+  void client
+
+  rencal.notifications.listen("caldir-config-changed", (settings) => {
     const format: "12h" | "24h" = settings.time_format
     void format
     // @ts-expect-error A settings notification has no theme payload.
     settings.css
   })
-  listenAppEvent("events-changed", (payload) => {
+  rencal.notifications.listen("events-changed", (payload) => {
     const empty: null = payload
     void empty
     // @ts-expect-error No-payload notifications cannot carry settings.
     payload.time_format
   })
   // @ts-expect-error Unknown notification name.
-  listenAppEvent("event-changed", () => {})
+  rencal.notifications.listen("event-changed", () => {})
   // @ts-expect-error Listener payloads are determined by the name.
-  listenAppEvent("theme-changed", (_payload: number) => {})
+  rencal.notifications.listen("theme-changed", (_payload: number) => {})
   void emitAppEvent("theme-changed", "user:custom")
   void emitAppEvent("rencal-config-changed")
   void emitAppEvent("rencal-config-changed", null)
@@ -36,29 +48,33 @@ function checkContracts(name: "theme-changed" | "rencal-config-changed") {
   // @ts-expect-error A union name cannot hide an uncorrelated payload.
   void emitAppEvent(name, "theme")
 
-  void createEvent({
+  void rencal.events.create({
     calendar_slug: "work",
     summary: "",
-    description: null,
-    location: null,
-    url: null,
-    // @ts-expect-error Facade inputs take app EventTime values, not wire shapes.
-    start: { kind: "date", date: "2026-09-18" },
-    // @ts-expect-error Facade inputs take app EventTime values, not wire shapes.
-    end: { kind: "date", date: "2026-09-19" },
-    recurrence: null,
-    reminders: [],
-    attendees: [],
-    conference: null,
+    start,
+    end,
   })
+  void rencal.events.list({
+    calendar_slugs: ["work"],
+    range: { start: start.value, end: end.value },
+  })
+  void rencal.events.delete(ref)
 
   const response: ResponseStatus = "accepted"
-  void rpc.caldir.rsvp("work", "event", response)
+  void rencal.events.respond(ref, response)
   // @ts-expect-error RSVP uses the generated fixed set.
-  void rpc.caldir.rsvp("work", "event", "maybe")
+  void rencal.events.respond(ref, "maybe")
   // @ts-expect-error Event status uses the generated fixed set.
   const status: CalendarEvent["status"] = "unknown"
   void status
+
+  void rencal.events.create({
+    calendar_slug: "work",
+    summary: "",
+    // @ts-expect-error Public inputs take app EventTime values, not wire shapes.
+    start: { kind: "date", date: "2026-09-18" },
+    end,
+  })
 }
 
 void checkContracts

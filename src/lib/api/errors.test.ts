@@ -8,7 +8,7 @@ import { rpc } from "@/rpc"
 import { rpcToCalendarEvent } from "@/lib/cal-events"
 import { updateAndSyncEvent } from "@/lib/save-event"
 
-import { getErrorMessage, isRpcError } from "./errors"
+import { getErrorMessage, isRenCalError } from "./index"
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }))
 
@@ -18,11 +18,11 @@ afterEach(() => {
   vi.clearAllMocks()
 })
 
-describe("RPC errors", () => {
+describe("renCal errors", () => {
   it("guards unknown values and retains access to the category", () => {
     const failure: unknown = { kind: "configuration", message: "Invalid config" }
-    expect(isRpcError(failure)).toBe(true)
-    if (!isRpcError(failure)) throw new Error("Expected an RPC error")
+    expect(isRenCalError(failure)).toBe(true)
+    if (!isRenCalError(failure)) throw new Error("Expected a renCal error")
     expect(failure.kind).toBe("configuration")
     for (const value of [
       null,
@@ -33,7 +33,7 @@ describe("RPC errors", () => {
       { kind: "unrecognized", message: "Oops" },
       { kind: "toString", message: "Oops" },
     ]) {
-      expect(isRpcError(value)).toBe(false)
+      expect(isRenCalError(value)).toBe(false)
     }
   })
 

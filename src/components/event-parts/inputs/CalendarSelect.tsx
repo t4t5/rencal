@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
-import type { Calendar } from "@/lib/api/calendars"
+import type { Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { cn } from "@/lib/utils"
 

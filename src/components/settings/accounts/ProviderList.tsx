@@ -3,8 +3,7 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api/errors"
-import { listProviders } from "@/lib/api/providers"
+import { getErrorMessage, rencal } from "@/lib/api"
 import {
   getProviderDisplayName,
   getProviderIcon,
@@ -28,7 +27,8 @@ export const ProviderList = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    listProviders()
+    rencal.providers
+      .list()
       .then((all) => {
         setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
       })

@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
-import { createLocalCalendar } from "@/lib/api/calendars"
-import { getErrorMessage } from "@/lib/api/errors"
+import { getErrorMessage, rencal } from "@/lib/api"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
 
@@ -41,7 +40,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
 
     setIsCreating(true)
     try {
-      await createLocalCalendar(trimmed, color)
+      await rencal.calendars.create(trimmed, color)
       await reloadCalendars()
       onClose()
     } catch (err) {

@@ -1,8 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
-import { listenAppEvent } from "@/lib/api/events"
-import { listExternalThemes, type ExternalTheme } from "@/lib/api/themes"
+import { rencal, type ExternalTheme } from "@/lib/api"
 
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
 
@@ -53,11 +52,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       applyExternalThemes(themes)
     }
 
-    void listExternalThemes().then((themes) => {
+    void rencal.themes.listExternal().then((themes) => {
       if (!cancelled) update(themes)
     })
 
-    const unlistenPromise = listenAppEvent("external-themes-changed", (event) => {
+    const unlistenPromise = rencal.notifications.listen("external-themes-changed", (event) => {
       update(event)
     })
 
