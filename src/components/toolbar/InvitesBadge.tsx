@@ -14,6 +14,7 @@ import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useToday } from "@/hooks/useToday"
+import { getErrorMessage } from "@/lib/api/errors"
 import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -53,7 +54,7 @@ export function InvitesBadge() {
       await rpc.caldir.rsvp(invite.calendar_slug, invite.id, response)
       void requestSync()
     } catch (e) {
-      console.error("RSVP failed:", e)
+      console.error("RSVP failed:", getErrorMessage(e, "RSVP failed"), e)
     }
   }
 

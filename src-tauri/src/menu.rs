@@ -1,7 +1,9 @@
 //! Native macOS application menu.
 
+use crate::events::AppEvent;
+
 use tauri::{
-    AppHandle, Emitter, Runtime,
+    AppHandle, Runtime,
     menu::{Menu, MenuEvent, MenuItemBuilder, SubmenuBuilder},
 };
 use tauri_plugin_opener::OpenerExt;
@@ -115,7 +117,7 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
             let _ = app.opener().open_url(ISSUES_URL, None::<&str>);
         }
         id => {
-            let _ = app.emit("menu-action", id);
+            let _ = AppEvent::MenuAction(id.to_string()).emit(app);
         }
     }
 }

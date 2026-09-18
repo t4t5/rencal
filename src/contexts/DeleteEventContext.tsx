@@ -8,6 +8,7 @@ import { rpc } from "@/rpc"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { eventKey, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { createStrictContext } from "@/lib/strict-context"
@@ -37,7 +38,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
   const closeDialog = () => setTargetEvent(null)
 
   const reportError = (procedure: string, err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err)
+    const message = getErrorMessage(err, "Failed to delete event")
     toast.error("Failed to delete event", { description: message })
     console.error(`${procedure} failed:`, err)
   }

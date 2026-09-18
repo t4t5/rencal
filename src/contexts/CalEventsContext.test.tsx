@@ -26,7 +26,9 @@ vi.mock("@/hooks/cal-events/useVisibleCalendarIds", () => ({
   useVisibleCalendarIds: () => selection.ids,
 }))
 vi.mock("@/hooks/useEventDeepLinks", () => ({ useEventDeepLinks: () => {} }))
-vi.mock("@tauri-apps/api/event", () => ({ listen: async () => () => {} }))
+vi.mock("@/lib/api/events", () => ({
+  listenAppEvent: () => ({ ready: Promise.resolve(), unlisten: () => {} }),
+}))
 vi.mock("@/lib/cal-events-range", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/lib/cal-events-range")>()),
   getCalendarEventsForRange: vi.fn(),

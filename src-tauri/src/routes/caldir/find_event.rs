@@ -1,6 +1,7 @@
 use super::helpers::to_calendar_event;
 use super::types::CalendarEvent;
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{Event, EventInstanceId, EventUid, expand_in_range};
 use chrono::Duration;
@@ -21,12 +22,12 @@ pub(super) fn handler(
 
     let calendars = state.caldir().calendars();
     let sources = calendars.into_iter().map(|calendar| {
-        let calendar = calendar.map_err(|error| error.to_string())?;
+        let calendar = calendar?;
         let slug = calendar
             .slug()
-            .ok_or_else(|| "calendar is missing a slug".to_string())?
+            .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar is missing a slug"))?
             .to_string();
-        let events = state.events(&slug).map_err(|error| error.to_string())?;
+        let events = state.events(&slug)?;
         Ok((slug, events))
     });
 
@@ -193,7 +194,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(found.summary, "cancelled single");
-        assert_eq!(found.status, "cancelled");
+        assert_eq!(found.status, super::super::types::EventStatus::Cancelled);
 
         let master = recurring("cancelled");
         let mut cancelled = event("cancelled", "cancelled override", 26);
@@ -205,7 +206,7 @@ mod tests {
             .unwrap()
             .unwrap();
         assert_eq!(found.summary, "cancelled override");
-        assert_eq!(found.status, "cancelled");
+        assert_eq!(found.status, super::super::types::EventStatus::Cancelled);
     }
 
     #[test]

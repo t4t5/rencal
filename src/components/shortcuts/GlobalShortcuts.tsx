@@ -1,5 +1,4 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { listen } from "@tauri-apps/api/event"
 import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
@@ -28,6 +27,7 @@ import { useSync } from "@/contexts/SyncContext"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
+import { listenAppEvent } from "@/lib/api/events"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { CalendarView } from "@/lib/calendar-view"
@@ -84,10 +84,12 @@ export function GlobalShortcuts({
     setActiveGroup,
   })
 
-  // Native macOS menu items (emit `menu-action` with a ShortcutId)
+  // Native command IDs are open strings; unknown IDs are harmless.
   useEffect(() => {
-    const unlisten = listen<ShortcutId>("menu-action", (e) => handlers[e.payload]?.())
-    return () => void unlisten.then((off) => off())
+    const unlisten = listenAppEvent("menu-action", (id) => {
+      Object.entries(handlers).find(([key]) => key === id)?.[1]()
+    })
+    return () => unlisten.unlisten()
   }, [handlers])
 
   const groupOptions = getGroupOptions(groups)

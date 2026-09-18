@@ -1,6 +1,7 @@
 use super::helpers::tildify;
 use super::types::TimeFormat;
 use crate::routes::TauResult;
+use crate::routes::error::RpcError;
 use crate::state::AppState;
 use caldir_core::{Reminder, TimeFormat as CoreTimeFormat};
 
@@ -11,7 +12,7 @@ pub(super) fn set_time_format(state: &AppState, time_format: TimeFormat) -> TauR
     };
     let mut config = state.caldir().config().clone();
     config.set_time_format(core_tf);
-    state.save_caldir_config(config).map_err(|e| e.to_string())
+    state.save_caldir_config(config).map_err(RpcError::from)
 }
 
 pub(super) fn set_default_reminders(state: &AppState, minutes: Vec<i32>) -> TauResult<()> {
@@ -27,13 +28,13 @@ pub(super) fn set_default_reminders(state: &AppState, minutes: Vec<i32>) -> TauR
     };
     let mut config = state.caldir().config().clone();
     config.set_default_reminders(reminders);
-    state.save_caldir_config(config).map_err(|e| e.to_string())
+    state.save_caldir_config(config).map_err(RpcError::from)
 }
 
 pub(super) fn set_default_calendar(state: &AppState, slug: Option<String>) -> TauResult<()> {
     let mut config = state.caldir().config().clone();
     config.set_default_calendar_slug(slug);
-    state.save_caldir_config(config).map_err(|e| e.to_string())
+    state.save_caldir_config(config).map_err(RpcError::from)
 }
 
 /// Cache invalidation and state notifications happen inside
@@ -41,5 +42,5 @@ pub(super) fn set_default_calendar(state: &AppState, slug: Option<String>) -> Ta
 pub(super) fn set_calendar_dir(state: &AppState, path: String) -> TauResult<()> {
     let mut config = state.caldir().config().clone();
     config.set_data_dir(std::path::PathBuf::from(tildify(&path)));
-    state.save_caldir_config(config).map_err(|e| e.to_string())
+    state.save_caldir_config(config).map_err(RpcError::from)
 }

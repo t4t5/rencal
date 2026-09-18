@@ -15,6 +15,7 @@ import { rpc } from "@/rpc"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
+import { getErrorMessage } from "@/lib/api/errors"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
@@ -48,7 +49,11 @@ export function AccountsPage() {
       onClose: () => setReconnectStep(null),
       onSetStep: setReconnectStep,
     }).catch((error: unknown) => {
-      console.error("Failed to start provider reconnection", error)
+      console.error(
+        "Failed to start provider reconnection",
+        getErrorMessage(error, "Failed to start provider reconnection"),
+        error,
+      )
     })
   }
 
@@ -126,7 +131,11 @@ function Account({
         if (!cancelled) setStatus("connected")
       })
       .catch((error: unknown) => {
-        console.error("Failed to check provider connection", error)
+        console.error(
+          "Failed to check provider connection",
+          getErrorMessage(error, "Failed to check provider connection"),
+          error,
+        )
         if (!cancelled) setStatus("disconnected")
       })
 

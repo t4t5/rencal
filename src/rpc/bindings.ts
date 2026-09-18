@@ -12,7 +12,7 @@ calendar_dir: string }
 
 export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: string; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: EventStatus; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**
  * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
  * Used by the frontend to cheaply detect content changes for reload dedup.
@@ -35,6 +35,8 @@ export type EventAttendee = { name: string | null; email: string; response_statu
 export type EventConference = { status: "requested"; provider: ConferenceProvider } | { status: "live"; provider: ConferenceProvider; url: string }
 
 export type EventDeepLink = { uid: string; recurrence_id: string | null }
+
+export type EventStatus = "confirmed" | "tentative" | "cancelled"
 
 export type ExternalTheme = { id: string; 
 /**
@@ -65,6 +67,10 @@ export type ProviderField = { id: string; label: string; field_type: ProviderFie
 export type ProviderFieldType = "text" | "password" | "url"
 
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
+
+export type RpcError = { kind: RpcErrorKind; message: string }
+
+export type RpcErrorKind = "calendar_not_found" | "event_not_found" | "provider_not_found" | "provider_failure" | "invalid_input" | "conflict" | "configuration" | "authentication" | "io" | "internal"
 
 /**
  * JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
@@ -150,7 +156,7 @@ list_events: (calendarSlugs: string[], start: string, end: string) => Promise<Ca
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<string[]>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
-rsvp: (calendarSlug: string, eventId: string, response: string) => Promise<null>, 
+rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
 set_calendar_color: (calendarSlug: string, color: string) => Promise<null>, 
 set_calendar_dir: (path: string) => Promise<null>, 

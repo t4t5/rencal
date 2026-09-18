@@ -3,6 +3,7 @@ use super::helpers::{build_connect_options, provider};
 use super::types::{Calendar, CredentialFieldInput};
 use crate::oauth;
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use tauri::{AppHandle, Runtime};
 
@@ -19,11 +20,20 @@ pub(super) async fn handler<R: Runtime>(
         cred_map.insert(field.id, serde_json::Value::String(field.value));
     }
 
-    let listener = oauth::server::create_localhost_listener(0)
-        .map_err(|e| format!("Failed to start callback server: {}", e))?;
+    let listener = oauth::server::create_localhost_listener(0).map_err(|e| {
+        RpcError::new(
+            RpcErrorKind::Io,
+            format!("Failed to start callback server: {e}"),
+        )
+    })?;
     let port = listener
         .local_addr()
-        .map_err(|e| format!("Failed to get listener port: {}", e))?
+        .map_err(|e| {
+            RpcError::new(
+                RpcErrorKind::Io,
+                format!("Failed to get listener port: {e}"),
+            )
+        })?
         .port();
     let redirect_uri = format!("http://localhost:{}/callback", port);
 

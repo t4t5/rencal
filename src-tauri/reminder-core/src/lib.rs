@@ -153,9 +153,7 @@ pub fn check_and_notify(
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
-    let notifications_enabled = RencalConfig::load()
-        .map_err(std::io::Error::other)?
-        .notifications_enabled;
+    let notifications_enabled = RencalConfig::load()?.notifications_enabled;
 
     let cache_path = delivered_cache_path();
     let mut cache = cache_path

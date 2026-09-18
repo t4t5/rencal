@@ -10,14 +10,14 @@ pub(super) fn handler(
     let mut invites = Vec::new();
 
     for slug in &calendar_slugs {
-        let calendar = state.caldir().calendar(slug).map_err(|e| e.to_string())?;
+        let calendar = state.caldir().calendar(slug)?;
 
         let email = match calendar.remote_email() {
             Some(e) => e.to_string(),
             None => continue,
         };
 
-        let parsed = state.events(slug).map_err(|e| e.to_string())?;
+        let parsed = state.events(slug)?;
         for event in parsed.iter() {
             if !is_visible(event) {
                 continue;

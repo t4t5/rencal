@@ -1,19 +1,14 @@
 //! The one task that turns `AppState` notifications into webview events.
-//! Every event name the backend emits for state changes is declared here.
+//! The shared notification contract lives in `events`; AppState stays Tauri-free.
+
+use crate::events::AppEvent;
 
 use std::sync::Arc;
 
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::routes::caldir::CaldirSettings;
 use crate::state::AppState;
-
-/// Payload: `CaldirSettings`. Fired on every caldir config change.
-pub const CALDIR_CONFIG_CHANGED: &str = "caldir-config-changed";
-/// No payload. The set of calendars or their metadata changed.
-pub const CALENDARS_CHANGED: &str = "calendars-changed";
-/// No payload. Event data on disk changed outside the calling RPC.
-pub const EVENTS_CHANGED: &str = "events-changed";
 
 pub async fn run(app: AppHandle, state: Arc<AppState>) {
     let mut config = state.subscribe_caldir_config();
@@ -31,21 +26,21 @@ pub async fn run(app: AppHandle, state: Arc<AppState>) {
                     return;
                 }
                 let settings = CaldirSettings::from(&*config.borrow_and_update());
-                let _ = app.emit(CALDIR_CONFIG_CHANGED, settings);
+                let _ = AppEvent::CaldirConfigChanged(settings).emit(&app);
             }
             changed = calendars.changed() => {
                 if changed.is_err() {
                     return;
                 }
                 calendars.borrow_and_update();
-                let _ = app.emit(CALENDARS_CHANGED, ());
+                let _ = AppEvent::CalendarsChanged(()).emit(&app);
             }
             changed = events.changed() => {
                 if changed.is_err() {
                     return;
                 }
                 events.borrow_and_update();
-                let _ = app.emit(EVENTS_CHANGED, ());
+                let _ = AppEvent::EventsChanged(()).emit(&app);
             }
         }
     }

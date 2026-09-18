@@ -1,12 +1,11 @@
-import { emit, listen } from "@tauri-apps/api/event"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useRef } from "react"
 import { z } from "zod"
 
 import { rpc } from "@/rpc"
-import { THEME_CHANGED } from "@/rpc/events"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { emitAppEvent, listenAppEvent } from "@/lib/api/events"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
@@ -98,14 +97,14 @@ export function useTheme() {
 
   // Cross-window sync. Don't re-emit — would loop.
   useEffect(() => {
-    const unlistenPromise = listen<Theme>(THEME_CHANGED, (event) => {
-      const parsed = themeSchema.safeParse(event.payload)
+    const unlistenPromise = listenAppEvent("theme-changed", (event) => {
+      const parsed = themeSchema.safeParse(event)
       if (parsed.success && parsed.data !== themeRef.current) {
         setThemeLocal(parsed.data)
       }
     })
     return () => {
-      void unlistenPromise.then((fn) => fn())
+      unlistenPromise.unlisten()
     }
   }, [])
 
@@ -114,7 +113,7 @@ export function useTheme() {
     void rpc.config
       .set_theme(t)
       .then(() => {
-        void emit(THEME_CHANGED, t)
+        void emitAppEvent("theme-changed", t)
       })
       .catch((err) => {
         console.error("Failed to persist theme:", err)

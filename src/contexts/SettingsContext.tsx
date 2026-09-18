@@ -1,10 +1,9 @@
-import { emit, listen } from "@tauri-apps/api/event"
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { CaldirSettings, TimeFormat } from "@/rpc/bindings"
-import { CALDIR_CONFIG_CHANGED, RENCAL_CONFIG_CHANGED } from "@/rpc/events"
 
+import { emitAppEvent, listenAppEvent } from "@/lib/api/events"
 import { normalizeCalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek } from "@/lib/event-time"
 import { createStrictContext } from "@/lib/strict-context"
@@ -84,19 +83,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void reloadSettings()
 
-    const unlistenCaldirConfig = listen<CaldirSettings>(CALDIR_CONFIG_CHANGED, (event) => {
-      applyCaldirSettings(event.payload)
+    const unlistenCaldirConfig = listenAppEvent("caldir-config-changed", (event) => {
+      applyCaldirSettings(event)
     })
     // config.toml-backed settings (groups, notifications, auto-sync) don't get
     // per-field events; any change to the file — a hand-edit or our own write —
     // fires this and we re-read everything.
-    const unlistenConfig = listen(RENCAL_CONFIG_CHANGED, () => {
+    const unlistenConfig = listenAppEvent("rencal-config-changed", () => {
       void reloadSettings()
     })
 
     return () => {
-      unlistenCaldirConfig.then((fn) => fn())
-      unlistenConfig.then((fn) => fn())
+      unlistenCaldirConfig.unlisten()
+      unlistenConfig.unlisten()
     }
   }, [applyCaldirSettings, reloadSettings])
 
@@ -123,31 +122,31 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const setNotificationsEnabled = async (enabled: boolean) => {
     setNotificationsEnabledState(enabled)
     await rpc.config.set_notifications_enabled(enabled)
-    await emit(RENCAL_CONFIG_CHANGED)
+    await emitAppEvent("rencal-config-changed")
   }
 
   const setFirstDayOfWeek = async (day: FirstDayOfWeek) => {
     setFirstDayOfWeekState(day)
     await rpc.config.set_first_day_of_week(day)
-    await emit(RENCAL_CONFIG_CHANGED)
+    await emitAppEvent("rencal-config-changed")
   }
 
   const setShowWeekNumbers = async (show: boolean) => {
     setShowWeekNumbersState(show)
     await rpc.config.set_show_week_numbers(show)
-    await emit(RENCAL_CONFIG_CHANGED)
+    await emitAppEvent("rencal-config-changed")
   }
 
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
     await rpc.config.set_auto_sync_enabled(enabled)
-    await emit(RENCAL_CONFIG_CHANGED)
+    await emitAppEvent("rencal-config-changed")
   }
 
   const setGroups = async (nextGroups: Record<string, string[]>) => {
     setGroupsState(nextGroups)
     await rpc.config.set_groups(nextGroups)
-    await emit(RENCAL_CONFIG_CHANGED)
+    await emitAppEvent("rencal-config-changed")
   }
 
   return (

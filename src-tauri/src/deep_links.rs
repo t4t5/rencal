@@ -1,11 +1,10 @@
+use crate::events::AppEvent;
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 use std::collections::VecDeque;
-use tauri::{AppHandle, Emitter, Runtime};
+use tauri::{AppHandle, Runtime};
 use url::Url;
-
-pub const EVENT_DEEP_LINK_AVAILABLE: &str = "event-deep-link-available";
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Type)]
 pub struct EventDeepLink {
@@ -75,7 +74,7 @@ pub fn enqueue_urls<R: Runtime>(
 ) -> usize {
     let count = inbox.enqueue(urls);
     if count > 0 {
-        let _ = app.emit(EVENT_DEEP_LINK_AVAILABLE, ());
+        let _ = AppEvent::EventDeepLinkAvailable(()).emit(app);
     }
     count
 }

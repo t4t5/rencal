@@ -1,15 +1,15 @@
-//! Watches `~/.config/rencal/config.toml` and emits `RENCAL_CONFIG_CHANGED` when it changes
+//! Watches `~/.config/rencal/config.toml` and emits `rencal-config-changed` when it changes
+
+use crate::events::AppEvent;
 
 use std::ffi::OsStr;
 use std::path::Path;
 
 use notify::RecursiveMode;
 use rencal_config::RencalConfig;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-
-pub const RENCAL_CONFIG_CHANGED: &str = "rencal-config-changed";
 
 fn is_config_file(path: &Path) -> bool {
     path.file_name() == Some(OsStr::new("config.toml"))
@@ -40,7 +40,7 @@ pub async fn run_watcher(app: AppHandle) {
         };
 
     while watch.changed().await.is_some() {
-        let _ = app.emit(RENCAL_CONFIG_CHANGED, ());
+        let _ = AppEvent::RencalConfigChanged(()).emit(&app);
     }
 }
 

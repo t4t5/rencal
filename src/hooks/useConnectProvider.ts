@@ -6,6 +6,7 @@ import type { CredentialFieldInput } from "@/rpc/bindings"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { logger } from "@/lib/logger"
 
 export const useConnectProvider = () => {
@@ -21,7 +22,11 @@ export const useConnectProvider = () => {
         await rpc.caldir.connect_provider(providerName)
         await Promise.all([reloadCalendars(), reloadSettings()])
       } catch (error) {
-        logger.error("Failed to connect provider:", error)
+        logger.error(
+          "Failed to connect provider:",
+          getErrorMessage(error, "Failed to connect provider"),
+          error,
+        )
       } finally {
         setIsConnecting(false)
       }
@@ -37,7 +42,11 @@ export const useConnectProvider = () => {
         await rpc.caldir.connect_provider_with_credentials(providerName, credentials)
         await Promise.all([reloadCalendars(), reloadSettings()])
       } catch (error) {
-        logger.error("Failed to connect provider:", error)
+        logger.error(
+          "Failed to connect provider:",
+          getErrorMessage(error, "Failed to connect provider"),
+          error,
+        )
         throw error
       } finally {
         setIsConnecting(false)

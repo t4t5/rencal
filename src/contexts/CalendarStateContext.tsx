@@ -1,13 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { listen } from "@tauri-apps/api/event"
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 
 import { rpc } from "@/rpc"
 import type { Calendar } from "@/rpc/bindings"
-import { CALENDARS_CHANGED } from "@/rpc/events"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { listenAppEvent } from "@/lib/api/events"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
@@ -96,12 +95,12 @@ export function CalendarStateProvider({
       void loadCalendarsFromStore()
     }
 
-    const unlistenCalendars = listen(CALENDARS_CHANGED, () => {
+    const unlistenCalendars = listenAppEvent("calendars-changed", () => {
       void loadCalendarsFromStore()
     })
 
     return () => {
-      unlistenCalendars.then((fn) => fn())
+      unlistenCalendars.unlisten()
     }
   }, [])
 

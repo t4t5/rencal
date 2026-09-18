@@ -7,6 +7,7 @@ import { rpc } from "@/rpc"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
 
@@ -46,7 +47,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
       onClose()
     } catch (err) {
       logger.error("Failed to create local calendar:", err)
-      setError(err instanceof Error ? err.message : "Failed to create calendar")
+      setError(getErrorMessage(err, "Failed to create calendar"))
     } finally {
       setIsCreating(false)
     }

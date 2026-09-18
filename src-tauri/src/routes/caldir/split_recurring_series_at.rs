@@ -9,10 +9,7 @@ pub(super) fn handler(
     state: &AppState,
     input: SplitRecurringSeriesInput,
 ) -> TauResult<CalendarEvent> {
-    let calendar = state
-        .caldir()
-        .calendar(&input.calendar_slug)
-        .map_err(|e| e.to_string())?;
+    let calendar = state.caldir().calendar(&input.calendar_slug)?;
 
     let split_start = rpc_time_to_core(&input.split_start)?;
     let split_end = rpc_time_to_core(&input.split_end)?;
@@ -22,14 +19,12 @@ pub(super) fn handler(
         .map(rpc_recurrence_to_core)
         .transpose()?;
 
-    let new_master = calendar
-        .split_recurring_series_at(
-            &EventUid::new(input.master_uid.as_str()),
-            split_start,
-            split_end,
-            new_recurrence,
-        )
-        .map_err(|e| e.to_string())?;
+    let new_master = calendar.split_recurring_series_at(
+        &EventUid::new(input.master_uid.as_str()),
+        split_start,
+        split_end,
+        new_recurrence,
+    )?;
     state.invalidate_events(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(

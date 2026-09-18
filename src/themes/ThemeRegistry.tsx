@@ -1,14 +1,13 @@
-import { listen } from "@tauri-apps/api/event"
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 
 import { rpc } from "@/rpc"
 import type { ExternalTheme } from "@/rpc/bindings"
 
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
+import { listenAppEvent } from "@/lib/api/events"
 
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
 
-const EXTERNAL_THEMES_CHANGED = "external-themes-changed"
 const STYLE_ATTR = "data-external-theme"
 
 // User themes are authored as bare declaration blocks; we add the
@@ -60,13 +59,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (!cancelled) update(themes)
     })
 
-    const unlistenPromise = listen<ExternalTheme[]>(EXTERNAL_THEMES_CHANGED, (event) => {
-      update(event.payload)
+    const unlistenPromise = listenAppEvent("external-themes-changed", (event) => {
+      update(event)
     })
 
     return () => {
       cancelled = true
-      void unlistenPromise.then((fn) => fn())
+      unlistenPromise.unlisten()
     }
   }, [])
 

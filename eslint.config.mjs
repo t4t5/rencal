@@ -1,7 +1,15 @@
 import tseslint from "typescript-eslint"
 
 export default tseslint.config(
-  { ignores: ["dist/**", "src-tauri/**", "website/**", "src/rpc/bindings.ts"] },
+  {
+    ignores: [
+      "dist/**",
+      "src-tauri/**",
+      "website/**",
+      "src/rpc/bindings.ts",
+      "src/rpc/events.generated.ts",
+    ],
+  },
   {
     files: ["src/**/*.{ts,tsx}"],
     extends: [tseslint.configs.base],

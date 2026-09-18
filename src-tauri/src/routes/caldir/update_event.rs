@@ -1,15 +1,13 @@
 use super::conference::apply_conference;
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{Attendee, EventInstanceId, Reminder};
 use chrono::Utc;
 
 pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()> {
-    let calendar = state
-        .caldir()
-        .calendar(&input.calendar_slug)
-        .map_err(|e| e.to_string())?;
+    let calendar = state.caldir().calendar(&input.calendar_slug)?;
 
     let id = EventInstanceId::from(input.id.as_str());
 
@@ -33,33 +31,35 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
     // "Edit only this event" of a recurring series:
     if id.recurrence_id().is_some() {
         if moving {
-            return Err("Cannot move a recurring instance to another calendar; \
-                 move the whole series instead"
-                .to_string());
+            return Err(RpcError::new(
+                RpcErrorKind::InvalidInput,
+                "Cannot move a recurring instance to another calendar; \
+                 move the whole series instead",
+            ));
         }
 
-        calendar
-            .update_recurring_instance(&id, |event| {
-                event.summary = Some(input.summary);
-                event.description = input.description;
-                event.location = input.location;
-                event.url = input.url;
-                event.start = start;
-                event.end = Some(end);
-                event.reminders = input_reminders;
-                event.attendees = input_attendees;
-                apply_conference(event, &calendar, input.conference.as_ref());
-            })
-            .map_err(|e| e.to_string())?;
+        calendar.update_recurring_instance(&id, |event| {
+            event.summary = Some(input.summary);
+            event.description = input.description;
+            event.location = input.location;
+            event.url = input.url;
+            event.start = start;
+            event.end = Some(end);
+            event.reminders = input_reminders;
+            event.attendees = input_attendees;
+            apply_conference(event, &calendar, input.conference.as_ref());
+        })?;
 
         state.invalidate_events(&input.calendar_slug);
 
         Ok(())
     } else {
-        let mut existing_calendar_event = calendar
-            .event_by_instance_id(&id)
-            .map_err(|e| e.to_string())?
-            .ok_or_else(|| format!("Event not found: {}", input.id))?;
+        let mut existing_calendar_event = calendar.event_by_instance_id(&id)?.ok_or_else(|| {
+            RpcError::new(
+                RpcErrorKind::EventNotFound,
+                format!("Event not found: {}", input.id),
+            )
+        })?;
 
         let mut updated_event = existing_calendar_event.event().clone();
 
@@ -83,10 +83,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
 
         if moving {
             let new_slug = input.new_calendar_slug.as_ref().unwrap();
-            let target_calendar = state
-                .caldir()
-                .calendar(new_slug)
-                .map_err(|e| e.to_string())?;
+            let target_calendar = state.caldir().calendar(new_slug)?;
             apply_conference(
                 &mut updated_event,
                 &target_calendar,
@@ -97,22 +94,16 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
             let moved_event = updated_event.with_new_uid();
 
             // Create in target calendar first (safe: if this fails, original is untouched)
-            target_calendar
-                .create_event(moved_event)
-                .map_err(|e| e.to_string())?;
+            target_calendar.create_event(moved_event)?;
 
             // Only delete from source after successful creation
-            existing_calendar_event
-                .delete()
-                .map_err(|e| e.to_string())?;
+            existing_calendar_event.delete()?;
 
             state.invalidate_events(&input.calendar_slug);
             state.invalidate_events(new_slug);
         } else {
             apply_conference(&mut updated_event, &calendar, input.conference.as_ref());
-            existing_calendar_event
-                .update(updated_event)
-                .map_err(|e| e.to_string())?;
+            existing_calendar_event.update(updated_event)?;
 
             state.invalidate_events(&input.calendar_slug);
         }

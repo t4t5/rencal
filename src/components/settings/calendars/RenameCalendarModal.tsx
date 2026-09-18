@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input"
 
 import type { Calendar } from "@/rpc/bindings"
 
+import { getErrorMessage } from "@/lib/api/errors"
+
 export function RenameCalendarModal({
   calendar,
   onClose,
@@ -37,7 +39,7 @@ export function RenameCalendarModal({
       await onSubmit(trimmedName)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to rename calendar")
+      setError(getErrorMessage(err, "Failed to rename calendar"))
     } finally {
       setIsSaving(false)
     }

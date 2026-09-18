@@ -1,14 +1,13 @@
+use crate::events::AppEvent;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 use notify::RecursiveMode;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-
-pub const OMARCHY_THEME_CHANGED: &str = "omarchy-theme-changed";
 
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, Type, PartialEq, Eq)]
 pub enum OmarchyMode {
@@ -174,7 +173,7 @@ pub fn read_colors() -> Option<OmarchyColors> {
 }
 
 /// Watches every existing Omarchy current-theme directory recursively and emits
-/// `OMARCHY_THEME_CHANGED` whenever its contents change. This includes both the
+/// `omarchy-theme-changed` whenever its contents change. This includes both the
 /// v3 and quattro paths and their atomic next-theme swaps.
 pub async fn run_watcher(app: AppHandle) {
     let Some(candidate_dirs) = candidate_dirs() else {
@@ -199,7 +198,7 @@ pub async fn run_watcher(app: AppHandle) {
 
     while watch.changed().await.is_some() {
         if let Some(colors) = read_colors() {
-            let _ = app.emit(OMARCHY_THEME_CHANGED, colors);
+            let _ = AppEvent::OmarchyThemeChanged(colors).emit(&app);
         }
     }
 }

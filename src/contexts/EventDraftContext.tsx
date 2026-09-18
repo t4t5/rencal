@@ -4,6 +4,7 @@ import { toast } from "sonner"
 import { rpc } from "@/rpc"
 import type { Calendar, CalendarEvent as RpcCalendarEvent, EventAttendee } from "@/rpc/bindings"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import {
   type CalendarEvent,
   reconcileOptimisticCreate,
@@ -232,7 +233,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       })
     } catch (err) {
       setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))
-      const message = err instanceof Error ? err.message : String(err)
+      const message = getErrorMessage(err, "Failed to create event")
       toast.error("Failed to create event", { description: message })
       console.error("create_event failed:", err)
       return

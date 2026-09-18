@@ -25,6 +25,7 @@ import type { Calendar } from "@/rpc/bindings"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 
@@ -288,7 +289,7 @@ function DeleteCalendarDialog({
       await onDeleted()
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(getErrorMessage(err, "Failed to delete calendar"))
       setIsDeleting(false)
     }
   }

@@ -22,6 +22,7 @@ import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
+import { getErrorMessage } from "@/lib/api/errors"
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import {
@@ -158,7 +159,7 @@ export const EditEvent = ({
       void requestSync()
       setActiveEventKey(null)
     } catch (err) {
-      const message = err instanceof Error ? err.message : String(err)
+      const message = getErrorMessage(err, "Failed to respond to invite")
       toast.error("Failed to respond to invite", { description: message })
       console.error("rsvp failed:", err)
     }

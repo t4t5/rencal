@@ -7,3 +7,4 @@ edition = "2024"
 dirs = "5"
 serde = { version = "1", features = ["derive"] }
 toml = "0.8"
+thiserror = "2"

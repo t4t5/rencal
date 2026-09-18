@@ -12,6 +12,7 @@ import {
 
 import type { Calendar } from "@/rpc/bindings"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { hexToHue, hueToHex } from "@/lib/color-utils"
 
 export function ChangeCalendarColorModal({
@@ -38,7 +39,7 @@ export function ChangeCalendarColorModal({
       await onSubmit(color)
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : String(err))
+      setError(getErrorMessage(err, "Failed to change calendar color"))
       setIsSaving(false)
     }
   }

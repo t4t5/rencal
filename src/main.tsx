@@ -1,17 +1,15 @@
 // Global styles first, then the built-in themes (whose [data-theme] rules must
 // win over the :root defaults declared in global.css).
-import { listen } from "@tauri-apps/api/event"
 import React from "react"
 import ReactDOM from "react-dom/client"
 
 import "@/global.css"
 import "virtual:rencal-themes.css"
 
-import { SYSTEM_TZ_CHANGED } from "@/rpc/events"
-
 import { CalendarStateProvider } from "@/contexts/CalendarStateContext"
 import { SettingsProvider } from "@/contexts/SettingsContext"
 
+import { listenAppEvent } from "@/lib/api/events"
 import { setViewerTzid } from "@/lib/event-time"
 import { preloadCalendarData } from "@/lib/preload-data"
 
@@ -24,7 +22,7 @@ const appWindow = params.get("appWindow")
 
 // Keep the viewer's zone in sync with the OS: the Rust watcher emits the new
 // IANA tzid when /etc/localtime changes, and the viewer-zone store fans it out.
-void listen<string>(SYSTEM_TZ_CHANGED, (event) => setViewerTzid(event.payload))
+void listenAppEvent("system-tz-changed", (event) => setViewerTzid(event))
 
 async function bootstrap() {
   const preload = appWindow === "settings" ? {} : await preloadCalendarData()

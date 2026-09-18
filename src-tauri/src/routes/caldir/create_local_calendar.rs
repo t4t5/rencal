@@ -13,10 +13,7 @@ pub(super) fn handler(
     let config = CalendarConfig::new(Some(name), color, None, None);
 
     let calendar = {
-        let cal = state
-            .caldir()
-            .create_calendar(&base_slug, Some(config))
-            .map_err(|e| e.to_string())?;
+        let cal = state.caldir().create_calendar(&base_slug, Some(config))?;
         Calendar::from(&cal)
     };
     state.notify_calendars_changed();

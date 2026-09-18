@@ -3,6 +3,7 @@ use super::types::{
     core_recurrence_to_rpc, rpc_time_to_core,
 };
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{CalendarConfig, DateRange, Event, Provider, ProviderSlug, Status};
 use chrono::{DateTime, Utc};
@@ -13,7 +14,7 @@ pub fn provider(state: &AppState, provider_name: &str) -> TauResult<Provider> {
     state
         .caldir()
         .provider(&ProviderSlug::from(provider_name))
-        .map_err(|e| e.to_string())
+        .map_err(RpcError::from)
         .cloned()
 }
 
@@ -110,14 +111,17 @@ pub async fn save_connected_calendars(
         calendars
     } else {
         let id = account_identifier.ok_or_else(|| {
-            "Provider completed without an account identifier or calendars".to_string()
+            RpcError::new(
+                RpcErrorKind::ProviderFailure,
+                "Provider completed without an account identifier or calendars",
+            )
         })?;
 
         provider
             .provider_account(id)
             .list_calendars()
             .await
-            .map_err(|e| format!("Failed to list calendars: {}", e))?
+            .map_err(|e| RpcError::from(e).context("Failed to list calendars"))?
     };
 
     let created = create_connected_calendars(state, calendar_configs)?;
@@ -126,9 +130,7 @@ pub async fn save_connected_calendars(
     if needs_default && let Some(slug) = created.first_writable_slug {
         let mut config = state.caldir().config().clone();
         config.set_default_calendar_slug(Some(slug));
-        state
-            .save_caldir_config(config)
-            .map_err(|e| e.to_string())?;
+        state.save_caldir_config(config)?;
     }
 
     if let Err(err) = pull_created_calendar_events(state, &created.slugs).await {
@@ -178,9 +180,7 @@ fn create_connected_calendars(
 
         let is_read_only = config.read_only() == Some(true);
         let base_slug = caldir_core::Calendar::base_slug_for(config.name());
-        let cal = caldir
-            .create_calendar(&base_slug, Some(config))
-            .map_err(|e| e.to_string())?;
+        let cal = caldir.create_calendar(&base_slug, Some(config))?;
 
         if let Some(slug) = cal.slug() {
             let slug = slug.to_string();
@@ -210,11 +210,11 @@ async fn pull_created_calendar_events(
     let connections = state.caldir().connections();
 
     for connection in connections {
-        let mut connection = connection.map_err(|e| e.to_string())?;
+        let mut connection = connection?;
         let slug = connection
             .local()
             .slug()
-            .ok_or_else(|| "calendar missing slug".to_string())?
+            .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
             .to_string();
 
         if !calendar_slugs.contains(&slug) {
@@ -224,11 +224,11 @@ async fn pull_created_calendar_events(
         let diff = connection
             .diff(&range)
             .await
-            .map_err(|e| format!("[{}] {}", slug, e))?;
+            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
 
         connection
             .apply_incoming_diff(&diff)
-            .map_err(|e| format!("[{}] {}", slug, e))?;
+            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
 
         state.invalidate_events(&slug);
     }
