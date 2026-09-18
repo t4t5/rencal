@@ -5,7 +5,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { getErrorMessage, rencal, type SyncPreview } from "@/lib/api"
+import { getErrorMessage, api, type SyncPreview } from "@/lib/api"
 import { createStrictContext } from "@/lib/strict-context"
 
 const MASS_DELETE_THRESHOLD = 10
@@ -58,7 +58,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setSyncStatus(manual ? "syncing" : "checking")
       setSyncError(null)
       try {
-        const previews = await rencal.sync.preview()
+        const previews = await api.sync.preview()
         const withWork = previews.filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
         setPendingPreviews(withWork)
 
@@ -72,7 +72,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         if (withWork.length > 0) {
           setSyncStatus("syncing")
-          await rencal.sync.run([])
+          await api.sync.run([])
           await reloadEvents()
         }
 
@@ -109,7 +109,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rencal.sync.run(slugs)
+      await api.sync.run(slugs)
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))
@@ -128,7 +128,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rencal.sync.discardPendingChanges()
+      await api.sync.discardPendingChanges()
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))

@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
-import { rencal, type CaldirSettings } from "@/lib/api"
+import { api, type CaldirSettings } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 import type { CalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
@@ -58,12 +58,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const reloadSettings = useCallback(async () => {
     try {
       const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult] = await Promise.all([
-        rencal.settings.getCaldirSettings(),
-        rencal.settings.getNotificationsEnabled(),
-        rencal.settings.getAutoSyncEnabled(),
-        rencal.settings.getFirstDayOfWeek(),
-        rencal.settings.getShowWeekNumbers(),
-        rencal.settings.getCalendarGroups(),
+        api.settings.getCaldirSettings(),
+        api.settings.getNotificationsEnabled(),
+        api.settings.getAutoSyncEnabled(),
+        api.settings.getFirstDayOfWeek(),
+        api.settings.getShowWeekNumbers(),
+        api.settings.getCalendarGroups(),
       ])
       applyCaldirSettings(caldir)
       setNotificationsEnabledState(notifs)
@@ -80,13 +80,13 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     void reloadSettings()
 
-    const unlistenCaldirConfig = rencal.notifications.listen("caldir-config-changed", (event) => {
+    const unlistenCaldirConfig = api.notifications.listen("caldir-config-changed", (event) => {
       applyCaldirSettings(event)
     })
     // config.toml-backed settings (groups, notifications, auto-sync) don't get
     // per-field events; any change to the file — a hand-edit or our own write —
     // fires this and we re-read everything.
-    const unlistenConfig = rencal.notifications.listen("rencal-config-changed", () => {
+    const unlistenConfig = api.notifications.listen("rencal-config-changed", () => {
       void reloadSettings()
     })
 
@@ -98,51 +98,51 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const setTimeFormat = async (tf: TimeFormat) => {
     setTimeFormatState(tf)
-    await rencal.settings.setTimeFormat(tf)
+    await api.settings.setTimeFormat(tf)
   }
 
   const setDefaultReminders = async (mins: number[]) => {
     setDefaultRemindersState(mins)
-    await rencal.settings.setDefaultReminders(mins)
+    await api.settings.setDefaultReminders(mins)
   }
 
   const setDefaultCalendar = async (slug: string | null) => {
     setDefaultCalendarState(slug)
-    await rencal.settings.setDefaultCalendar(slug)
+    await api.settings.setDefaultCalendar(slug)
   }
 
   // The state bridge broadcasts the complete stored settings after the save.
   const setCalendarDir = async (path: string) => {
-    await rencal.settings.setCalendarDir(path)
+    await api.settings.setCalendarDir(path)
   }
 
   const setNotificationsEnabled = async (enabled: boolean) => {
     setNotificationsEnabledState(enabled)
-    await rencal.settings.setNotificationsEnabled(enabled)
+    await api.settings.setNotificationsEnabled(enabled)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setFirstDayOfWeek = async (day: FirstDayOfWeek) => {
     setFirstDayOfWeekState(day)
-    await rencal.settings.setFirstDayOfWeek(day)
+    await api.settings.setFirstDayOfWeek(day)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setShowWeekNumbers = async (show: boolean) => {
     setShowWeekNumbersState(show)
-    await rencal.settings.setShowWeekNumbers(show)
+    await api.settings.setShowWeekNumbers(show)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
-    await rencal.settings.setAutoSyncEnabled(enabled)
+    await api.settings.setAutoSyncEnabled(enabled)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setGroups = async (nextGroups: CalendarGroups) => {
     setGroupsState(nextGroups)
-    await rencal.settings.setCalendarGroups(nextGroups)
+    await api.settings.setCalendarGroups(nextGroups)
     await emitAppEvent("rencal-config-changed")
   }
 

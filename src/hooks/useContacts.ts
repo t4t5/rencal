@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { rencal, type Contact } from "@/lib/api"
+import { api, type Contact } from "@/lib/api"
 
 let cachedContacts: Contact[] | null = null
 let contactsPromise: Promise<Contact[]> | null = null
@@ -23,7 +23,7 @@ export function useContacts(enabled: boolean) {
 
     load()
 
-    const unlisten = rencal.notifications.listen("events-changed", () => {
+    const unlisten = api.notifications.listen("events-changed", () => {
       invalidateContacts()
       load()
     })
@@ -40,7 +40,7 @@ export function useContacts(enabled: boolean) {
 function loadContacts(): Promise<Contact[]> {
   if (cachedContacts) return Promise.resolve(cachedContacts)
 
-  contactsPromise ??= rencal.contacts.list().then((contacts) => {
+  contactsPromise ??= api.contacts.list().then((contacts) => {
     cachedContacts = contacts
     contactsPromise = null
     return contacts

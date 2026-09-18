@@ -8,7 +8,7 @@
 
 ## App API boundary
 
-- `src/lib/api/` is the only frontend code that calls the generated `rpc` proxy. Consumers use the `rencal` resource client and supported types from `@/lib/api`; they do not import resource implementation modules. `notifications` wraps native app notifications and `errors` classifies caught failures (`isRenCalError`/`getErrorMessage`).
+- `src/lib/api/` is the only frontend code that calls the generated `rpc` proxy. Consumers use the `api` resource facade and supported types from `@/lib/api`; they do not import resource implementation modules. `notifications` wraps native app notifications and `errors` classifies caught failures (`isRenCalError`/`getErrorMessage`).
 - Host-only orchestration imports the narrow `@/lib/api/internal` surface for full-record event replacement, recurrence primitives, frontend broadcasts, native decoration checks, and destructive deep-link draining. These operations are intentionally absent from the public client.
 - ESLint rejects `@/rpc`, `@/rpc/*`, `@tauri-apps/api/event`, and direct `@/lib/api/*` implementation imports elsewhere. Only `@/lib/api/internal` and the existing pure conversion modules (`lib/cal-events.ts`, `lib/conference.ts`, `lib/event-time/rpc.ts`) have narrow exceptions.
 - Event-returning operations produce the app `CalendarEvent` (`EventTime` + `dateInfo`); mutation inputs take app values and are converted once in `lib/api/calendar-events.ts`. Never call `rpcToCalendarEvent`/`toRpcEventTime` outside `lib`.

@@ -6,7 +6,7 @@ import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialo
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
-import { getErrorMessage, rencal } from "@/lib/api"
+import { getErrorMessage, api } from "@/lib/api"
 import { deleteRecurringSeries, getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { createStrictContext } from "@/lib/strict-context"
@@ -59,7 +59,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     const restore = removeOptimistically((e) => eventKey(e) === eventKey(event))
 
     try {
-      await rencal.events.delete(event)
+      await api.events.delete(event)
       void requestSync()
     } catch (err) {
       restore()
@@ -127,7 +127,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
         split_end: event.end,
         new_recurrence: null,
       })
-      await rencal.events.delete(newMaster)
+      await api.events.delete(newMaster)
       void requestSync()
     } catch (err) {
       restore()

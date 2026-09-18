@@ -16,7 +16,7 @@ const generatedTypes = {
 }
 const nativeEvents = {
   group: ["@tauri-apps/api/event"],
-  message: "Use `rencal.notifications` from `@/lib/api` for app notifications.",
+  message: "Use `api.notifications` from `@/lib/api` for app notifications.",
 }
 const apiImplementations = {
   group: ["@/lib/api/*", "!@/lib/api/internal"],

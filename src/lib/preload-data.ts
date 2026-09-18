@@ -1,6 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { rencal, type Calendar } from "@/lib/api"
+import { api, type Calendar } from "@/lib/api"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { getStartRangeForDate } from "@/lib/cal-events-range"
 import { getStoredActiveGroup, getVisibleCalendarSlugs } from "@/lib/calendar-groups"
@@ -19,8 +19,8 @@ export async function preloadCalendarData(): Promise<Preload> {
   try {
     const initialDate = today()
     const [initialCalendars, groups] = await Promise.all([
-      rencal.calendars.list(),
-      rencal.settings.getCalendarGroups(),
+      api.calendars.list(),
+      api.settings.getCalendarGroups(),
     ])
     const slugs = getVisibleCalendarSlugs({
       calendars: initialCalendars,
@@ -33,7 +33,7 @@ export async function preloadCalendarData(): Promise<Preload> {
     }
 
     const initialRange = getStartRangeForDate(initialDate)
-    const initialEvents = await rencal.events.list({
+    const initialEvents = await api.events.list({
       calendar_slugs: slugs,
       range: initialRange,
     })

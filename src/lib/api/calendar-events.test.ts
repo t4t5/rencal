@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { CalendarEvent as RpcCalendarEvent } from "@/rpc/bindings"
 
-import { isRenCalError, rencal } from "@/lib/api"
+import { isRenCalError, api } from "@/lib/api"
 import { getStoredEvent, replaceEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 
 afterEach(() => {
@@ -57,7 +57,7 @@ const zoned = (wallclock: string) =>
 describe("calendar event reads", () => {
   it("does not interpret an empty calendar selection as all calendars", async () => {
     const calls = mockRpc({})
-    const events = await rencal.events.list({
+    const events = await api.events.list({
       calendar_slugs: [],
       range: {
         start: Temporal.PlainDate.from("2026-09-18"),
@@ -70,7 +70,7 @@ describe("calendar event reads", () => {
 
   it("queries viewer-zone day boundaries as UTC instants and converts the result", async () => {
     const calls = mockRpc({ "TauRPC__caldir.list_events": [rpcEvent()] })
-    const events = await rencal.events.list({
+    const events = await api.events.list({
       calendar_slugs: ["work"],
       range: {
         start: Temporal.PlainDate.from("2026-09-18"),
@@ -104,7 +104,7 @@ describe("calendar event reads", () => {
         rpcEvent({ id: "ok" }),
       ],
     })
-    const events = await rencal.events.list({
+    const events = await api.events.list({
       calendar_slugs: ["work"],
       range: {
         start: Temporal.PlainDate.from("2026-09-18"),
@@ -141,7 +141,7 @@ describe("calendar event reads", () => {
 describe("calendar event writes", () => {
   it("applies documented defaults to the minimum creation input", async () => {
     const calls = mockRpc({ "TauRPC__caldir.create_event": rpcEvent({ id: "minimal" }) })
-    await rencal.events.create({
+    await api.events.create({
       calendar_slug: "work",
       summary: "Standup",
       start: zoned("2026-09-18T09:00:00"),
@@ -162,7 +162,7 @@ describe("calendar event writes", () => {
 
   it("converts create input once and returns the stored event converted once", async () => {
     const calls = mockRpc({ "TauRPC__caldir.create_event": rpcEvent({ id: "stored" }) })
-    const created = await rencal.events.create({
+    const created = await api.events.create({
       calendar_slug: "work",
       summary: "Standup",
       description: null,

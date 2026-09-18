@@ -4,7 +4,7 @@ import { act, useEffect } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 
 import { CalEventsProvider, useCalEvents } from "./CalEventsContext"
@@ -27,7 +27,7 @@ vi.mock("@/hooks/cal-events/useVisibleCalendarIds", () => ({
 }))
 vi.mock("@/hooks/useEventDeepLinks", () => ({ useEventDeepLinks: () => {} }))
 vi.mock("@/lib/api", () => ({
-  rencal: {
+  api: {
     events: { list: vi.fn() },
     notifications: {
       listen: () => ({ ready: Promise.resolve(), unlisten: () => {} }),
@@ -63,7 +63,7 @@ const initialRange = {
   end: Temporal.PlainDate.from("2026-10-01"),
 }
 const initialEvents = [event("initial", "work")]
-const fetchEvents = vi.mocked(rencal.events.list)
+const fetchEvents = vi.mocked(api.events.list)
 let root: Root
 let context: ReturnType<typeof useCalEvents>
 let committedEvents: string[][]

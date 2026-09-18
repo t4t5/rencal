@@ -3,7 +3,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks"
 import { afterEach, expect, it } from "vitest"
 
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 
 afterEach(clearMocks)
 
@@ -32,7 +32,7 @@ it("creates an event through the public resource client", async () => {
     }
   })
 
-  const created = await rencal.events.create({
+  const created = await api.events.create({
     calendar_slug: "work",
     summary: "Design review",
     start: { kind: "date", value: Temporal.PlainDate.from("2026-09-18") },

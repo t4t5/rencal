@@ -1,7 +1,7 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect } from "react"
 
-import { rencal, type OmarchyColors } from "@/lib/api"
+import { api, type OmarchyColors } from "@/lib/api"
 
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
@@ -126,12 +126,12 @@ export function useOmarchyTheme() {
   useEffect(() => {
     let cancelled = false
 
-    void rencal.themes.getOmarchyColors().then((colors) => {
+    void api.themes.getOmarchyColors().then((colors) => {
       if (cancelled || !colors) return
       applyOmarchyColors(colors)
     })
 
-    const unlistenPromise = rencal.notifications.listen("omarchy-theme-changed", (event) => {
+    const unlistenPromise = api.notifications.listen("omarchy-theme-changed", (event) => {
       applyOmarchyColors(event)
     })
 

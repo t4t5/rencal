@@ -2,7 +2,7 @@
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks"
 import { afterEach, expect, it } from "vitest"
 
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 
 afterEach(clearMocks)
 
@@ -11,5 +11,5 @@ it("drops malformed group entries before they reach the app", async () => {
     if (cmd !== "TauRPC__config.get_groups") throw new Error(`Unexpected command ${cmd}`)
     return { work: ["work", "team"], broken: undefined }
   })
-  expect(await rencal.settings.getCalendarGroups()).toEqual({ work: ["work", "team"] })
+  expect(await api.settings.getCalendarGroups()).toEqual({ work: ["work", "team"] })
 })

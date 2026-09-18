@@ -1,4 +1,4 @@
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 
 import type { ModalStep } from "./AddAccountModal"
 
@@ -13,7 +13,7 @@ export async function beginProviderConnection({
   onClose: () => void
   onSetStep: (step: ModalStep) => void
 }) {
-  const info = await rencal.providers.getConnectInfo(provider)
+  const info = await api.providers.getConnectInfo(provider)
 
   if (info.step === "oauth_redirect" || info.step === "hosted_oauth") {
     await connect(provider)

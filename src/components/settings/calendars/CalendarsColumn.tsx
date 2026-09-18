@@ -22,7 +22,7 @@ import { Label } from "@/components/ui/label"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { getErrorMessage, rencal, type Calendar } from "@/lib/api"
+import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 
@@ -194,12 +194,12 @@ function CalendarDropdownMenuWrapper({
   const isDefault = defaultCalendar === calendar.slug
 
   const handleRename = async (name: string) => {
-    await rencal.calendars.rename(calendar.slug, name)
+    await api.calendars.rename(calendar.slug, name)
     await reloadCalendars()
   }
 
   const changeCalendarColor = async (color: string) => {
-    await rencal.calendars.setColor(calendar.slug, color)
+    await api.calendars.setColor(calendar.slug, color)
     await reloadCalendars()
   }
 
@@ -282,7 +282,7 @@ function DeleteCalendarDialog({
     setError(null)
 
     try {
-      await rencal.calendars.delete(calendar.slug)
+      await api.calendars.delete(calendar.slug)
       await onDeleted()
       onClose()
     } catch (err) {

@@ -7,7 +7,7 @@ import { settings } from "@/lib/api/settings"
 import { sync } from "@/lib/api/sync"
 import { themes } from "@/lib/api/themes"
 
-export const rencal = {
+export const api = {
   events,
   calendars,
   contacts,
@@ -18,7 +18,7 @@ export const rencal = {
   notifications,
 } as const
 
-export type RenCalClient = typeof rencal
+export type AppApi = typeof api
 
 export type {
   CreateEventParams,

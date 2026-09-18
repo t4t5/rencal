@@ -2,7 +2,7 @@ import { useEffect } from "react"
 import { toast } from "sonner"
 
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
-import { getErrorMessage, rencal } from "@/lib/api"
+import { getErrorMessage, api } from "@/lib/api"
 import { takePendingEventLinks } from "@/lib/api/internal"
 import type { CalendarEvent } from "@/lib/cal-events"
 
@@ -24,7 +24,7 @@ export function useEventDeepLinks(): void {
         const links = await takePendingEventLinks()
         for (const link of links) {
           try {
-            const event = await rencal.events.findByUid(link.uid, link.recurrence_id)
+            const event = await api.events.findByUid(link.uid, link.recurrence_id)
             if (event) {
               eventToOpen = event
             } else {
@@ -42,7 +42,7 @@ export function useEventDeepLinks(): void {
     }
 
     let disposed = false
-    const subscription = rencal.notifications.listen("event-deep-link-available", drain)
+    const subscription = api.notifications.listen("event-deep-link-available", drain)
     void subscription.ready.then(() => {
       if (!disposed) void drain()
     })

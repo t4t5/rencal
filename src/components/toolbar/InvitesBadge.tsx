@@ -11,7 +11,7 @@ import { useSync } from "@/contexts/SyncContext"
 
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useToday } from "@/hooks/useToday"
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { dateInViewerZone, formatShortDate, formatTime, type TimeFormat } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -33,10 +33,7 @@ export function InvitesBadge() {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
     if (slugs.length === 0) return
 
-    rencal.events
-      .listInvites({ calendar_slugs: slugs })
-      .then(setPendingInvites)
-      .catch(console.error)
+    api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
   }, [calendars])
 
   const isMd = useBreakpoint("md")
@@ -48,7 +45,7 @@ export function InvitesBadge() {
   const handleRsvp = async (invite: CalendarEvent, response: ResponseStatus) => {
     setPendingInvites((prev) => prev.filter((i) => eventKey(i) !== eventKey(invite)))
     try {
-      await rencal.events.respond(invite, response)
+      await api.events.respond(invite, response)
       void requestSync()
     } catch (e) {
       console.error("RSVP failed:", e)

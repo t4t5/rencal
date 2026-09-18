@@ -17,7 +17,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
 import { getStartRangeForDate, mergeEvents } from "@/lib/cal-events-range"
 import { subscribeViewerTzid } from "@/lib/event-time"
@@ -132,7 +132,7 @@ export function CalEventsProvider({
 
         if (doForce || !covered) {
           // Full (re)fetch of the whole desired range.
-          const events = await rencal.events.list({
+          const events = await api.events.list({
             calendar_slugs: visibleCalendarIds,
             range: desired,
           })
@@ -158,13 +158,13 @@ export function CalEventsProvider({
           if (needBefore || needAfter) {
             const [before, after] = await Promise.all([
               needBefore
-                ? rencal.events.list({
+                ? api.events.list({
                     calendar_slugs: visibleCalendarIds,
                     range: { start: desired.start, end: covered.start },
                   })
                 : Promise.resolve<CalendarEvent[]>([]),
               needAfter
-                ? rencal.events.list({
+                ? api.events.list({
                     calendar_slugs: visibleCalendarIds,
                     range: { start: covered.end, end: desired.end },
                   })
@@ -247,7 +247,7 @@ export function CalEventsProvider({
   }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
 
   useEffect(() => {
-    const unlisten = rencal.notifications.listen("events-changed", () => {
+    const unlisten = api.notifications.listen("events-changed", () => {
       void reloadEvents()
     })
     return () => {

@@ -2,7 +2,7 @@
 import { clearMocks, mockIPC } from "@tauri-apps/api/mocks"
 import { afterEach, expect, it } from "vitest"
 
-import { rencal } from "@/lib/api"
+import { api } from "@/lib/api"
 
 afterEach(clearMocks)
 
@@ -23,5 +23,5 @@ it("returns the calendar stored by local creation", async () => {
     return stored
   })
 
-  await expect(rencal.calendars.create("Design", "#7986cb")).resolves.toEqual(stored)
+  await expect(api.calendars.create("Design", "#7986cb")).resolves.toEqual(stored)
 })
