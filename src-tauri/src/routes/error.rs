@@ -75,6 +75,7 @@ map_error!(CaldirError, e => match e {
     CaldirError::Provider(e) => e.into(),
     CaldirError::Config(e) => e.into(),
     CaldirError::NoDefaultCalendar => Self::Configuration,
+    _ => Self::Internal,
 });
 map_error!(CalendarError, e => match e {
     CalendarError::AlreadyExists(_) => Self::Conflict,
@@ -85,49 +86,59 @@ map_error!(CalendarError, e => match e {
     CalendarError::Config(e) => e.into(),
     CalendarError::State(e) => e.into(),
     CalendarError::Event(e) => e.into(),
+    _ => Self::Internal,
 });
 map_error!(CalendarEventError, e => match e {
     CalendarEventError::NotFound(_) => Self::EventNotFound,
     CalendarEventError::Io(e) => e.into(),
     CalendarEventError::Event(e) | CalendarEventError::InvalidEvent(_, e) => e.into(),
     CalendarEventError::ExpectedSingleEvent { .. } | CalendarEventError::NotRecurring(_) => Self::InvalidInput,
+    _ => Self::Internal,
 });
 map_error!(EventError, e => match e {
     EventError::Io(_, e) => e.into(),
     EventError::InvalidIcs(..) | EventError::UnexpectedEventCount { .. }
     | EventError::MissingStart | EventError::MissingUid | EventError::AttendeeNotFound { .. } => Self::InvalidInput,
+    _ => Self::Internal,
 });
 map_error!(CalendarStateError, e => match e {
     CalendarStateError::Io(e) => e.into(),
     CalendarStateError::InvalidEvent(e) => e.into(),
+    _ => Self::Internal,
 });
 map_error!(CalendarConfigError, e => match e {
     CalendarConfigError::Io(e) => e.into(),
     CalendarConfigError::InvalidConfigFile(..) | CalendarConfigError::InvalidConfig(_) => Self::Configuration,
+    _ => Self::Configuration,
 });
 map_error!(CaldirConfigError, e => match e {
     CaldirConfigError::Io(e) => e.into(),
     CaldirConfigError::InvalidConfigFile(..) | CaldirConfigError::InvalidConfig(_)
     | CaldirConfigError::UnknownConfigDirectory => Self::Configuration,
+    _ => Self::Configuration,
 });
 map_error!(ProviderError, e => match e {
     ProviderError::ProviderNotFound(_) => Self::ProviderNotFound,
     ProviderError::NotExecutable(_) | ProviderError::InvalidProviderFilename(_) => Self::Configuration,
     ProviderError::Transport(e) => e.into(),
     ProviderError::Serialize(_) | ProviderError::Deserialize(_) | ProviderError::Provider(_) => Self::ProviderFailure,
+    _ => Self::ProviderFailure,
 });
 map_error!(ProviderTransportError, e => match e {
     ProviderTransportError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => Self::ProviderNotFound,
     ProviderTransportError::Spawn(_) | ProviderTransportError::Io(_) => Self::Io,
     ProviderTransportError::BadUtf8 | ProviderTransportError::EmptyResponse
     | ProviderTransportError::NonZeroExit { .. } | ProviderTransportError::Timeout(_) => Self::ProviderFailure,
+    _ => Self::ProviderFailure,
 });
 map_error!(ConnectionError, e => match e {
     ConnectionError::Remote(e) => e.into(),
     ConnectionError::Calendar(e) => e.into(),
+    _ => Self::Internal,
 });
 map_error!(RemoteError, e => match e {
     RemoteError::Provider(e) => e.into(),
+    _ => Self::Internal,
 });
 map_error!(ConfigError, e => match e {
     ConfigError::Read { .. } | ConfigError::Write { .. } => Self::Io,
