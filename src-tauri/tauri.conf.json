@@ -42,10 +42,16 @@
       "icons/icon.ico"
     ],
     "linux": {
+      "appimage": {
+        "files": {
+          "/usr/libexec/renCal/providers": "providers"
+        }
+      },
       "deb": {
         "depends": ["libnotify-bin"],
         "desktopTemplate": "linux/rencal.desktop",
         "files": {
+          "/usr/lib/renCal/providers": "providers",
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
           "/usr/share/icons/hicolor/scalable/apps/rencal.svg": "icons/linux/icon.svg"
@@ -55,6 +61,7 @@
         "depends": ["libnotify"],
         "desktopTemplate": "linux/rencal.desktop",
         "files": {
+          "/usr/lib/renCal/providers": "providers",
           "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
           "/usr/share/icons/hicolor/scalable/apps/rencal.svg": "icons/linux/icon.svg"

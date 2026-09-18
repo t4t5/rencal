@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a problem with renCal.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please check the [troubleshooting guide](https://rencal.org/docs/troubleshooting/) and [existing issues](https://github.com/t4t5/rencal/issues) first.
+        For sync problems, the guide explains how to install caldir-cli, check your data with `caldir doctor`, and gather errors with `caldir status` or `caldir sync` using your existing configuration.
+        This report is public. Remove passwords, tokens, private calendar URLs, and personal event details from anything you share.
+  - type: input
+    id: version
+    attributes:
+      label: renCal version
+      description: Find this in Settings → General → About. If renCal will not launch, use your package version; for source builds, include the commit.
+      placeholder: e.g. 0.7.1
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: Operating system and desktop
+      description: Include the OS or Linux distribution version and, on Linux, your desktop environment or window manager.
+      placeholder: e.g. Ubuntu 24.04 with GNOME on Wayland, Omarchy with Hyprland, or macOS 15.6
+    validations:
+      required: true
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - AUR (rencal-bin)
+        - .deb
+        - .rpm
+        - AppImage
+        - macOS (.dmg)
+        - Nix
+        - Built from source
+        - Other (describe below)
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected to happen instead. Include the exact error message if there is one.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: List the steps that trigger the problem. If you cannot reproduce it reliably, describe what you were doing when it happened.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: calendar
+    attributes:
+      label: Calendar and event details
+      description: For sync or event problems, name the provider (e.g. iCloud, Google, Outlook, or your CalDAV server software). For time issues, include system and event timezones. For recurring events, say whether you edited one occurrence, future occurrences, or the whole series.
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Diagnostic output
+      description: Paste relevant terminal output. For sync problems, include results from caldir doctor, caldir status, or caldir sync and the version from caldir --version. If the CLI succeeds or you could not run it, say so.
+      render: text
+  - type: textarea
+    id: context
+    attributes:
+      label: Screenshots, sample event, or other context
+      description: Include anything else that helps reproduce the problem, such as a redacted copy of an affected ICS file (zip it to attach). Keep relevant dates, timezones, and recurrence rules. Describe your installation here if you selected Other.

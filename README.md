@@ -1,22 +1,34 @@
+# renCal
+
 <p align="center">
-<img width="735" height="482" alt="screenshot-wrapper" src="https://github.com/user-attachments/assets/63f6b188-8247-4e82-af63-bce74d0c8410" />
+  <img src="website/public/app-icon.png" alt="renCal" width="100" />
 </p>
 
-<h1 align="center">renCal</h1>
+<p align="center">
+  <a href="https://rencal.org">rencal.org</a> · <a href="#install">install</a> · <a href="https://rencal.org/docs/installation/">docs</a>
+</p>
 
 <p align="center">
-  <b>Modern, open-source calendar app. Built for Omarchy.</b><br>
-  Syncs with Google, iCloud, Outlook, and CalDAV.<br>
-  Powered by <a href="https://caldir.org">Caldir</a>.
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-666666?labelColor=333333" alt="MIT license" /></a>
+  <a href="https://github.com/t4t5/rencal/releases/latest"><img src="https://img.shields.io/github/v/release/t4t5/rencal?label=release&labelColor=333333&color=666666" alt="latest release" /></a>
+  <a href="https://aur.archlinux.org/packages/rencal-bin"><img src="https://img.shields.io/aur/version/rencal-bin?label=aur&labelColor=333333&color=666666" alt="AUR version" /></a>
 </p>
 
 ---
 
+<p align="center">
+<img width="735" height="482" alt="renCal screenshot" src="https://github.com/user-attachments/assets/63f6b188-8247-4e82-af63-bce74d0c8410" />
+</p>
+
+<p align="center">
+  <b>Modern, open-source calendar app. Built for Omarchy.</b><br>
+  Syncs with Google, iCloud, Outlook, and CalDAV using <a href="https://caldir.org">Caldir</a>.
+</p>
+
 ## Features
 
-- **Local-first** — Your events are stored as plaintext `.ics` files. `grep` them, script
-  them or hand them to Claude Code.
-- **Connect any provider** — Two-way sync with your existing Google, iCloud, Outlook or CalDAV account.
+- **Local-first** — Your events are stored as plaintext `.ics` files. Human-readable and agent-friendly.
+- **Connect any provider** — Works with your existing Google, iCloud, Outlook or CalDAV account.
 - **Natural-language input** — e.g. "lunch with Sarah tomorrow at 1pm".
 - **Keyboard-driven** — Vim motions (`hjkl`) for navigation. See all shortcuts with <kbd>?</kbd>.
 - **Themes** — Tokyo Night, Catppuccin Latte... It syncs with your Omarchy theme!
@@ -29,20 +41,23 @@
 yay -S rencal-bin
 ```
 
-<details>
-<summary><b>Other platforms</b></summary>
-
 ### Linux (deb/rpm/AppImage)
 
-Download from [Releases](https://github.com/t4t5/rencal/releases).
+Download from the [Download page](https://rencal.org/download/).
 
 ### macOS
 
-Download the latest `.dmg` from [Releases](https://github.com/t4t5/rencal/releases), open it, and drag renCal to `/Applications`.
+Download the latest `.dmg` from the [Download page](https://rencal.org/download/), open it, and drag renCal to `/Applications`.
 
-> Signed and notarized with Apple Developer ID - installs without Gatekeeper warnings.
+### NixOS
 
-</details>
+```bash
+nix profile install github:t4t5/rencal/v0.x.y
+```
+
+## Docs
+
+See the [renCal documentation](https://rencal.org/docs/installation/).
 
 ## Screenshots
 
@@ -68,14 +83,3 @@ just dev
 
 The first run downloads the caldir provider binaries for your platform.
 Later runs reuse the binaries in `src-tauri/providers/`.
-
-### Using a local caldir checkout
-
-To develop against a local caldir checkout (`../caldir` by default), build the providers from it with `just build-providers-local`. For `caldir-core` itself, create a gitignored `.cargo/config.toml` in the repo root that patches the crate to the checkout (the path is relative to the repo root):
-
-```toml
-[patch.crates-io]
-caldir-core = { path = "../caldir/caldir-core" }
-```
-
-This also rewrites `src-tauri/Cargo.lock`, so don't commit that change. Delete `.cargo/config.toml` and `src-tauri/providers/` to go back to the pinned release.

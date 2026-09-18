@@ -7,16 +7,16 @@
         ]
       },
       "locked": {
-        "lastModified": 1789474209,
-        "narHash": "sha256-BUlNyH8OS0t9MaSJu+L8Dri8jfEb2bwfY3jBPXFY7w8=",
+        "lastModified": 1789632716,
+        "narHash": "sha256-SMc51k3TfR1LK5464/Dw3zs61N4dmjbVOD9NYTxh5RM=",
         "owner": "t4t5",
         "repo": "caldir",
-        "rev": "2675ffec187d9539f90aaa927037b05df6c1cfb4",
+        "rev": "2860ad2becd6c88a0b154de8f6a8d5a35c689cdd",
         "type": "github"
       },
       "original": {
         "owner": "t4t5",
-        "ref": "v0.14.1",
+        "ref": "v0.14.2",
         "repo": "caldir",
         "type": "github"
       }

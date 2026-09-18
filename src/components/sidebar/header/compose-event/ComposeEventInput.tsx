@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react"
 
+import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
@@ -12,7 +13,6 @@ import { cn } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
 
-import { useFlyAnimation } from "../FlyAnimation"
 import { MagicSegments } from "./MagicSegments"
 
 export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {

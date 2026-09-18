@@ -104,13 +104,17 @@ mod tests {
     #[tokio::test]
     async fn resolves_on_change_and_ends_when_watcher_is_gone() {
         let dir = tempfile::tempdir().unwrap();
+        // FSEvents resolves symlinks (e.g. /var -> /private/var on macOS).
+        // Watch and compare paths under the same resolved root on every OS.
+        let root = dir.path().canonicalize().unwrap();
         let mut watch =
-            watch_debounced(&[dir.path()], RecursiveMode::NonRecursive, is_any_change).unwrap();
+            watch_debounced(&[&root], RecursiveMode::NonRecursive, is_any_change).unwrap();
 
-        std::fs::write(dir.path().join("touched.txt"), "x").unwrap();
+        std::fs::write(root.join("touched.txt"), "x").unwrap();
         let changed = tokio::time::timeout(Duration::from_secs(5), watch.changed()).await;
         assert!(
-            matches!(changed, Ok(Some(paths)) if paths.contains(&dir.path().join("touched.txt")))
+            matches!(&changed, Ok(Some(paths)) if paths.contains(&root.join("touched.txt"))),
+            "expected a change under {root:?}, got {changed:?}"
         );
 
         let FsWatch {
@@ -123,10 +127,11 @@ mod tests {
     #[tokio::test]
     async fn a_change_survives_the_future_being_dropped_mid_coalesce() {
         let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().canonicalize().unwrap();
         let mut watch =
-            watch_debounced(&[dir.path()], RecursiveMode::NonRecursive, is_any_change).unwrap();
+            watch_debounced(&[&root], RecursiveMode::NonRecursive, is_any_change).unwrap();
 
-        std::fs::write(dir.path().join("touched.txt"), "x").unwrap();
+        std::fs::write(root.join("touched.txt"), "x").unwrap();
         // Long enough to receive the wakeup, too short for the coalesce window.
         let cut_short = tokio::time::timeout(Duration::from_millis(50), async {
             loop {
@@ -140,7 +145,8 @@ mod tests {
 
         let changed = tokio::time::timeout(Duration::from_secs(5), watch.changed()).await;
         assert!(
-            matches!(changed, Ok(Some(paths)) if paths.contains(&dir.path().join("touched.txt")))
+            matches!(&changed, Ok(Some(paths)) if paths.contains(&root.join("touched.txt"))),
+            "expected a change under {root:?}, got {changed:?}"
         );
     }
 
@@ -164,10 +170,11 @@ mod tests {
     #[tokio::test]
     async fn batches_and_deduplicates_paths_inside_the_window() {
         let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().canonicalize().unwrap();
         let mut watch =
-            watch_debounced(&[dir.path()], RecursiveMode::NonRecursive, is_any_change).unwrap();
-        let first = dir.path().join("first.txt");
-        let second = dir.path().join("second.txt");
+            watch_debounced(&[&root], RecursiveMode::NonRecursive, is_any_change).unwrap();
+        let first = root.join("first.txt");
+        let second = root.join("second.txt");
 
         std::fs::write(&first, "one").unwrap();
         std::fs::write(&second, "two").unwrap();
@@ -177,8 +184,11 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
-        assert!(paths.contains(&first));
-        assert!(paths.contains(&second));
+        assert!(paths.contains(&first), "expected {first:?}, got {paths:?}");
+        assert!(
+            paths.contains(&second),
+            "expected {second:?}, got {paths:?}"
+        );
         assert_eq!(paths.iter().filter(|path| *path == &first).count(), 1);
     }
 }
