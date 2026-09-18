@@ -7,7 +7,7 @@ import {
   SetStateAction,
   useCallback,
   useEffect,
-  useEffectEvent,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -77,6 +77,11 @@ export function CalEventsProvider({
   const { settingsLoaded } = useSettings()
 
   const visibleCalendarIds = useVisibleCalendarIds()
+  const visibleCalendarKey = visibleCalendarIds.join("|")
+  const loadInputsRef = useRef({ visibleCalendarIds, visibleCalendarKey, activeDate })
+  useLayoutEffect(() => {
+    loadInputsRef.current = { visibleCalendarIds, visibleCalendarKey, activeDate }
+  }, [visibleCalendarIds, visibleCalendarKey, activeDate])
 
   const loadedRangeRef = useRef<DateRange | null>(initialRange ?? null)
 
@@ -109,11 +114,7 @@ export function CalEventsProvider({
   const isSyncingRef = useRef(false)
   const pendingForceRef = useRef(false)
 
-  const syncEvents = useEffectEvent(async (force: boolean) => {
-    // Best-effort: with no calendars the desired range still grew (callers widen it before
-    // calling us), so the grid keeps scrolling; there's just nothing to fetch.
-    if (!visibleCalendarIds.length || !activeDate) return
-
+  const syncEvents = useCallback(async (force: boolean) => {
     if (isSyncingRef.current) {
       // A sync is already running; it re-reads the refs before finishing, so a widened range
       // is picked up automatically. Only a force-reload needs to be flagged.
@@ -125,6 +126,12 @@ export function CalEventsProvider({
     try {
       let doForce = force
       while (true) {
+        // Re-read the committed selection on every retry, not the one that started the load.
+        const { visibleCalendarIds, visibleCalendarKey, activeDate } = loadInputsRef.current
+        // The visibility effect clears events/coverage for an empty selection. An old fetch
+        // must stop here rather than putting its events back after that clear.
+        if (!visibleCalendarIds.length) return
+
         const desired = loadedRangeRef.current ?? getStartRangeForDate(activeDate)
         loadedRangeRef.current = desired
         const covered = coveredRangeRef.current
@@ -137,10 +144,11 @@ export function CalEventsProvider({
             desired.end,
           )
           const latest = loadedRangeRef.current!
-          // Range widened or a reload landed mid-flight → redo as a full fetch of the new
-          // range rather than applying a now-stale subset.
+          // Selection changed, range widened or a reload landed mid-flight → redo as a full
+          // fetch rather than applying stale results.
           if (
             pendingForceRef.current ||
+            visibleCalendarKey !== loadInputsRef.current.visibleCalendarKey ||
             Temporal.PlainDate.compare(latest.start, desired.start) < 0 ||
             Temporal.PlainDate.compare(latest.end, desired.end) > 0
           ) {
@@ -163,7 +171,10 @@ export function CalEventsProvider({
                 ? getCalendarEventsForRange(visibleCalendarIds, covered.end, desired.end)
                 : Promise.resolve<CalendarEvent[]>([]),
             ])
-            if (pendingForceRef.current) {
+            if (
+              pendingForceRef.current ||
+              visibleCalendarKey !== loadInputsRef.current.visibleCalendarKey
+            ) {
               pendingForceRef.current = false
               doForce = true
               continue
@@ -196,25 +207,27 @@ export function CalEventsProvider({
     } finally {
       isSyncingRef.current = false
     }
-  })
+  }, [])
 
   // Refetch the whole loaded range (content on disk changed, or calendars toggled).
-  const reloadEvents = useCallback(() => syncEvents(true), [])
+  const reloadEvents = useCallback(() => syncEvents(true), [syncEvents])
 
   // Ensure [start, end] is covered, fetching only what's missing. Widens the desired range
   // (never shrinks) and reconciles. Idempotent — safe to call on every scroll/range change.
-  const ensureRangeLoaded = useCallback((start: Temporal.PlainDate, end: Temporal.PlainDate) => {
-    const cur = loadedRangeRef.current
-    loadedRangeRef.current = cur
-      ? {
-          start: Temporal.PlainDate.compare(start, cur.start) < 0 ? start : cur.start,
-          end: Temporal.PlainDate.compare(end, cur.end) > 0 ? end : cur.end,
-        }
-      : { start, end }
-    return syncEvents(false)
-  }, [])
+  const ensureRangeLoaded = useCallback(
+    (start: Temporal.PlainDate, end: Temporal.PlainDate) => {
+      const cur = loadedRangeRef.current
+      loadedRangeRef.current = cur
+        ? {
+            start: Temporal.PlainDate.compare(start, cur.start) < 0 ? start : cur.start,
+            end: Temporal.PlainDate.compare(end, cur.end) > 0 ? end : cur.end,
+          }
+        : { start, end }
+      return syncEvents(false)
+    },
+    [syncEvents],
+  )
 
-  const visibleCalendarKey = visibleCalendarIds.join("|")
   useEffect(() => {
     // `useVisibleCalendarIds` returns [] until settings/groups have loaded. Don't treat
     // that transient startup state as "no visible calendars", otherwise the preloaded
