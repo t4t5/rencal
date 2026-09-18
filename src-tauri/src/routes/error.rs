@@ -54,7 +54,7 @@ impl std::fmt::Display for RpcError {
 
 impl std::error::Error for RpcError {}
 
-// Borrow to classify nested causes, then retain the complete outer message.
+// Classify before formatting the full error chain at the RPC boundary.
 macro_rules! map_error {
     ($ty:ty, $error:ident => $kind:expr) => {
         impl From<&$ty> for RpcErrorKind {
@@ -64,7 +64,10 @@ macro_rules! map_error {
         }
         impl From<$ty> for RpcError {
             fn from(error: $ty) -> Self {
-                Self::new(RpcErrorKind::from(&error), error.to_string())
+                Self::new(
+                    RpcErrorKind::from(&error),
+                    format!("{:#}", anyhow::Error::new(error)),
+                )
             }
         }
     };
@@ -90,7 +93,7 @@ map_error!(CalendarError, e => match e {
 });
 map_error!(CalendarEventError, e => match e {
     CalendarEventError::NotFound(_) => Self::EventNotFound,
-    CalendarEventError::Io(e) => e.into(),
+    CalendarEventError::Io(e) | CalendarEventError::Read(_, e) | CalendarEventError::Delete(_, e) => e.into(),
     CalendarEventError::Event(e) | CalendarEventError::InvalidEvent(_, e) => e.into(),
     CalendarEventError::ExpectedSingleEvent { .. } | CalendarEventError::NotRecurring(_) => Self::InvalidInput,
     _ => Self::Internal,
@@ -107,28 +110,23 @@ map_error!(CalendarStateError, e => match e {
     _ => Self::Internal,
 });
 map_error!(CalendarConfigError, e => match e {
-    CalendarConfigError::Io(e) => e.into(),
-    CalendarConfigError::InvalidConfigFile(..) | CalendarConfigError::InvalidConfig(_) => Self::Configuration,
+    CalendarConfigError::Io(e) | CalendarConfigError::Read(_, e) | CalendarConfigError::Write(_, e) => e.into(),
     _ => Self::Configuration,
 });
 map_error!(CaldirConfigError, e => match e {
-    CaldirConfigError::Io(e) => e.into(),
-    CaldirConfigError::InvalidConfigFile(..) | CaldirConfigError::InvalidConfig(_)
-    | CaldirConfigError::UnknownConfigDirectory => Self::Configuration,
+    CaldirConfigError::Io(e) | CaldirConfigError::Read(_, e) | CaldirConfigError::Write(_, e) => e.into(),
     _ => Self::Configuration,
 });
 map_error!(ProviderError, e => match e {
     ProviderError::ProviderNotFound(_) => Self::ProviderNotFound,
     ProviderError::NotExecutable(_) | ProviderError::InvalidProviderFilename(_) => Self::Configuration,
-    ProviderError::Transport(e) => e.into(),
-    ProviderError::Serialize(_) | ProviderError::Deserialize(_) | ProviderError::Provider(_) => Self::ProviderFailure,
+    ProviderError::Transport(e) | ProviderError::TransportFor(_, e) => e.into(),
     _ => Self::ProviderFailure,
 });
 map_error!(ProviderTransportError, e => match e {
-    ProviderTransportError::Spawn(e) if e.kind() == std::io::ErrorKind::NotFound => Self::ProviderNotFound,
-    ProviderTransportError::Spawn(_) | ProviderTransportError::Io(_) => Self::Io,
-    ProviderTransportError::BadUtf8 | ProviderTransportError::EmptyResponse
-    | ProviderTransportError::NonZeroExit { .. } | ProviderTransportError::Timeout(_) => Self::ProviderFailure,
+    ProviderTransportError::Spawn(e) | ProviderTransportError::SpawnBinary(_, e)
+        if e.kind() == std::io::ErrorKind::NotFound => Self::ProviderNotFound,
+    ProviderTransportError::Spawn(_) | ProviderTransportError::SpawnBinary(..) | ProviderTransportError::Io(_) => Self::Io,
     _ => Self::ProviderFailure,
 });
 map_error!(ConnectionError, e => match e {
@@ -137,14 +135,24 @@ map_error!(ConnectionError, e => match e {
     _ => Self::Internal,
 });
 map_error!(RemoteError, e => match e {
-    RemoteError::Provider(e) => e.into(),
+    RemoteError::Provider(e) | RemoteError::CreateEvent(_, e)
+    | RemoteError::UpdateEvent(_, e) | RemoteError::DeleteEvent(_, e) => e.into(),
     _ => Self::Internal,
 });
-map_error!(ConfigError, e => match e {
-    ConfigError::Read { .. } | ConfigError::Write { .. } => Self::Io,
-    ConfigError::PathResolution | ConfigError::Parse { .. } | ConfigError::Serialize(_) => Self::Configuration,
-});
 map_error!(std::io::Error, _e => Self::Io);
+
+impl From<ConfigError> for RpcError {
+    fn from(error: ConfigError) -> Self {
+        let kind = match &error {
+            ConfigError::Read { .. } | ConfigError::Write { .. } => RpcErrorKind::Io,
+            ConfigError::PathResolution | ConfigError::Parse { .. } | ConfigError::Serialize(_) => {
+                RpcErrorKind::Configuration
+            }
+        };
+        // renCal's config errors already include their causes in Display.
+        Self::new(kind, error.to_string())
+    }
+}
 
 #[cfg(test)]
 mod tests {
@@ -198,6 +206,12 @@ mod tests {
                 "config directory",
             ),
             (
+                CaldirConfigError::Write("config.toml".into(), std::io::Error::other("denied"))
+                    .into(),
+                RpcErrorKind::Io,
+                "denied",
+            ),
+            (
                 ConnectionError::Remote(RemoteError::Provider(ProviderError::Transport(
                     ProviderTransportError::Spawn(std::io::Error::from(
                         std::io::ErrorKind::NotFound,
@@ -227,21 +241,51 @@ mod tests {
     }
 
     #[test]
+    fn provider_spawn_errors_preserve_identity_and_classify_io_causes() {
+        for (cause, kind) in [
+            (std::io::ErrorKind::NotFound, RpcErrorKind::ProviderNotFound),
+            (std::io::ErrorKind::PermissionDenied, RpcErrorKind::Io),
+        ] {
+            let error = ConnectionError::Remote(RemoteError::UpdateEvent(
+                "meeting".into(),
+                ProviderError::TransportFor(
+                    "google".into(),
+                    ProviderTransportError::SpawnBinary(
+                        "/bin/caldir-provider-google".into(),
+                        std::io::Error::new(cause, "could not execute"),
+                    ),
+                ),
+            ));
+            let error = RpcError::from(error).context("[work]");
+            assert_eq!(error.kind, kind);
+            assert_eq!(
+                error.message,
+                "[work]: failed to update remote event meeting: provider google: failed to spawn provider executable /bin/caldir-provider-google: could not execute"
+            );
+        }
+    }
+
+    #[test]
     fn config_errors_are_classified_at_the_boundary() {
         let parse_error = toml::from_str::<rencal_config::RencalConfig>("theme = [")
             .err()
             .unwrap();
+        let expected_message = format!("Could not parse config file config.toml: {parse_error}");
         let error = RpcError::from(ConfigError::Parse {
             path: "config.toml".into(),
             source: parse_error,
         });
         assert_eq!(error.kind, RpcErrorKind::Configuration);
-        assert!(error.message.contains("config.toml"));
+        assert_eq!(error.message, expected_message);
         let error = RpcError::from(ConfigError::Write {
             path: "config.toml".into(),
             source: std::io::Error::other("permission denied"),
         });
         assert_eq!(error.kind, RpcErrorKind::Io);
+        assert_eq!(
+            error.message,
+            "Could not write config at config.toml: permission denied"
+        );
     }
 
     #[test]

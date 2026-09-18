@@ -17,10 +17,7 @@ pub(super) async fn handler(
 
     let options = build_connect_options(true, &redirect_uri);
 
-    let connect_response = provider
-        .connect(options, serde_json::Map::new())
-        .await
-        .map_err(|e| RpcError::from(e).context("Connect info failed"))?;
+    let connect_response = provider.connect(options, serde_json::Map::new()).await?;
 
     match connect_response {
         ConnectResponse::NeedsInput { step, data } => {

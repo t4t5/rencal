@@ -60,10 +60,7 @@ pub(super) async fn run_with_data<R: Runtime>(
     let mut listener = Some(listener);
 
     loop {
-        let connect_response = provider
-            .connect(options.clone(), data)
-            .await
-            .map_err(|e| RpcError::from(e).context("Connect failed"))?;
+        let connect_response = provider.connect(options.clone(), data).await?;
 
         match connect_response {
             ConnectResponse::Done {
