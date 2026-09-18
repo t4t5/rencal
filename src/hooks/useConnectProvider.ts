@@ -22,6 +22,7 @@ export const useConnectProvider = () => {
         await Promise.all([reloadCalendars(), reloadSettings()])
       } catch (error) {
         logger.error("Failed to connect provider:", error)
+        throw error
       } finally {
         setIsConnecting(false)
       }

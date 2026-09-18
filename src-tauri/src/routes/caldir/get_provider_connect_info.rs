@@ -1,6 +1,7 @@
 use super::helpers::{build_connect_options, map_fields, provider};
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
 pub(super) async fn handler(
@@ -16,10 +17,7 @@ pub(super) async fn handler(
 
     let options = build_connect_options(true, &redirect_uri);
 
-    let connect_response = provider
-        .connect(options, serde_json::Map::new())
-        .await
-        .map_err(|e| format!("Connect info failed: {}", e))?;
+    let connect_response = provider.connect(options, serde_json::Map::new()).await?;
 
     match connect_response {
         ConnectResponse::NeedsInput { step, data } => {
@@ -32,13 +30,21 @@ pub(super) async fn handler(
 
             let (fields, instructions) = match step {
                 ConnectStepKind::Credentials => {
-                    let cred_data: CredentialsData = serde_json::from_value(data)
-                        .map_err(|e| format!("Failed to parse credentials data: {}", e))?;
+                    let cred_data: CredentialsData = serde_json::from_value(data).map_err(|e| {
+                        RpcError::new(
+                            RpcErrorKind::ProviderFailure,
+                            format!("Failed to parse credentials data: {e}"),
+                        )
+                    })?;
                     (map_fields(cred_data.fields), None)
                 }
                 ConnectStepKind::NeedsSetup => {
-                    let setup_data: SetupData = serde_json::from_value(data)
-                        .map_err(|e| format!("Failed to parse setup data: {}", e))?;
+                    let setup_data: SetupData = serde_json::from_value(data).map_err(|e| {
+                        RpcError::new(
+                            RpcErrorKind::ProviderFailure,
+                            format!("Failed to parse setup data: {e}"),
+                        )
+                    })?;
                     (map_fields(setup_data.fields), Some(setup_data.instructions))
                 }
                 _ => (Vec::new(), None),
@@ -50,8 +56,9 @@ pub(super) async fn handler(
                 instructions,
             })
         }
-        ConnectResponse::Done { .. } => {
-            Err("Provider completed without requesting input".to_string())
-        }
+        ConnectResponse::Done { .. } => Err(RpcError::new(
+            RpcErrorKind::ProviderFailure,
+            "Provider completed without requesting input",
+        )),
     }
 }

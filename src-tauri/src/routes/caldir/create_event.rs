@@ -5,10 +5,7 @@ use crate::state::AppState;
 use caldir_core::{Event, Reminder};
 
 pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<CalendarEvent> {
-    let calendar = state
-        .caldir()
-        .calendar(&input.calendar_slug)
-        .map_err(|e| e.to_string())?;
+    let calendar = state.caldir().calendar(&input.calendar_slug)?;
 
     let start = rpc_time_to_core(&input.start)?;
     let end = rpc_time_to_core(&input.end)?;
@@ -35,7 +32,7 @@ pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<Ca
     event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();
     apply_conference(&mut event, &calendar, input.conference.as_ref());
 
-    let cal_event = calendar.create_event(event).map_err(|e| e.to_string())?;
+    let cal_event = calendar.create_event(event)?;
     state.invalidate_events(&input.calendar_slug);
 
     Ok(CalendarEvent::from_event(

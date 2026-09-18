@@ -1,5 +1,6 @@
 use super::helpers::provider;
 use crate::routes::TauResult;
+use crate::routes::error::RpcError;
 use crate::state::AppState;
 
 pub(super) async fn handler(
@@ -13,7 +14,7 @@ pub(super) async fn handler(
         .provider_account(account)
         .list_calendars()
         .await
-        .map_err(|e| format!("Failed to list calendars: {}", e))?;
+        .map_err(|e| RpcError::from(e).context("Failed to list calendars"))?;
 
     Ok(())
 }

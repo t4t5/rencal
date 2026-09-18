@@ -1,21 +1,20 @@
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
 pub(super) fn handler(state: &AppState, calendar_slug: String, color: String) -> TauResult<()> {
     if !is_hex_color(&color) {
-        return Err("Calendar color must be a hex color in the form #RRGGBB".to_string());
+        return Err(RpcError::new(
+            RpcErrorKind::InvalidInput,
+            "Calendar color must be a hex color in the form #RRGGBB",
+        ));
     }
 
-    let calendar = state
-        .caldir()
-        .calendar(&calendar_slug)
-        .map_err(|e| e.to_string())?;
+    let calendar = state.caldir().calendar(&calendar_slug)?;
     let mut config = calendar.config().cloned().unwrap_or_default();
     config.set_color(Some(color));
 
-    config
-        .write(&calendar.config_path())
-        .map_err(|e| e.to_string())?;
+    config.write(&calendar.config_path())?;
 
     state.notify_calendars_changed();
 

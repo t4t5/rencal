@@ -1,3 +1,7 @@
+use crate::routes::{
+    TauResult,
+    error::{RpcError, RpcErrorKind},
+};
 use caldir_core::{
     Attendee, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
     TimeFormat as CoreTimeFormat,
@@ -89,7 +93,7 @@ impl From<&CaldirConfig> for CaldirSettings {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize, Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
 pub enum ResponseStatus {
     #[serde(rename = "accepted")]
     Accepted,
@@ -99,6 +103,46 @@ pub enum ResponseStatus {
     Tentative,
     #[serde(rename = "needs-action")]
     NeedsAction,
+}
+
+impl From<ResponseStatus> for ParticipationStatus {
+    fn from(status: ResponseStatus) -> Self {
+        match status {
+            ResponseStatus::Accepted => Self::Accepted,
+            ResponseStatus::Declined => Self::Declined,
+            ResponseStatus::Tentative => Self::Tentative,
+            ResponseStatus::NeedsAction => Self::NeedsAction,
+        }
+    }
+}
+
+impl From<ParticipationStatus> for ResponseStatus {
+    fn from(status: ParticipationStatus) -> Self {
+        match status {
+            ParticipationStatus::Accepted => Self::Accepted,
+            ParticipationStatus::Declined => Self::Declined,
+            ParticipationStatus::Tentative => Self::Tentative,
+            ParticipationStatus::NeedsAction => Self::NeedsAction,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum EventStatus {
+    Confirmed,
+    Tentative,
+    Cancelled,
+}
+
+impl From<Status> for EventStatus {
+    fn from(status: Status) -> Self {
+        match status {
+            Status::Confirmed => Self::Confirmed,
+            Status::Tentative => Self::Tentative,
+            Status::Cancelled => Self::Cancelled,
+        }
+    }
 }
 
 #[derive(Clone, Serialize, Deserialize, Type)]
@@ -113,12 +157,7 @@ impl EventAttendee {
         Attendee {
             email: self.email.clone(),
             name: self.name.clone(),
-            status: self.response_status.as_ref().map(|s| match s {
-                ResponseStatus::Accepted => ParticipationStatus::Accepted,
-                ResponseStatus::Declined => ParticipationStatus::Declined,
-                ResponseStatus::Tentative => ParticipationStatus::Tentative,
-                ResponseStatus::NeedsAction => ParticipationStatus::NeedsAction,
-            }),
+            status: self.response_status.map(Into::into),
         }
     }
 }
@@ -128,12 +167,7 @@ impl From<&Attendee> for EventAttendee {
         EventAttendee {
             name: a.name.clone(),
             email: a.email.clone(),
-            response_status: a.status.map(|s| match s {
-                ParticipationStatus::Accepted => ResponseStatus::Accepted,
-                ParticipationStatus::Declined => ResponseStatus::Declined,
-                ParticipationStatus::Tentative => ResponseStatus::Tentative,
-                ParticipationStatus::NeedsAction => ResponseStatus::NeedsAction,
-            }),
+            response_status: a.status.map(Into::into),
         }
     }
 }
@@ -148,7 +182,7 @@ pub struct CalendarEvent {
     pub url: Option<String>,
     pub start: RpcEventTime,
     pub end: RpcEventTime,
-    pub status: String,
+    pub status: EventStatus,
     pub recurrence: Option<RpcRecurrence>,
     pub master_recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
@@ -326,25 +360,37 @@ impl From<&caldir_core::Calendar> for Calendar {
 
 /// Parse `YYYY-MM-DDTHH:MM:SS` (no offset, no Z) as a NaiveDateTime.
 /// Tolerates an optional fractional seconds component.
-pub fn parse_naive_datetime(s: &str) -> Result<NaiveDateTime, String> {
+pub fn parse_naive_datetime(s: &str) -> TauResult<NaiveDateTime> {
     NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
         .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f"))
-        .map_err(|e| format!("Invalid wallclock datetime '{}': {}", s, e))
+        .map_err(|e| {
+            RpcError::new(
+                RpcErrorKind::InvalidInput,
+                format!("Invalid wallclock datetime '{}': {}", s, e),
+            )
+        })
 }
 
 /// Convert an RPC event time into caldir-core's `EventTime`.
 /// 1:1 mapping; no instant computation for zoned times — the wallclock IS the
 /// source of truth on disk.
-pub fn rpc_time_to_core(w: &RpcEventTime) -> Result<EventTime, String> {
+pub fn rpc_time_to_core(w: &RpcEventTime) -> TauResult<EventTime> {
     match w {
         RpcEventTime::Date { date } => {
-            let d = NaiveDate::parse_from_str(date, "%Y-%m-%d")
-                .map_err(|e| format!("Invalid date '{}': {}", date, e))?;
+            let d = NaiveDate::parse_from_str(date, "%Y-%m-%d").map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Invalid date '{}': {}", date, e),
+                )
+            })?;
             Ok(EventTime::Date(d))
         }
         RpcEventTime::DatetimeUtc { instant } => {
             let dt: DateTime<Utc> = instant.parse().map_err(|e: chrono::ParseError| {
-                format!("Invalid UTC instant '{}': {}", instant, e)
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Invalid UTC instant '{}': {}", instant, e),
+                )
             })?;
             Ok(EventTime::DateTimeUtc(dt))
         }
@@ -354,8 +400,12 @@ pub fn rpc_time_to_core(w: &RpcEventTime) -> Result<EventTime, String> {
         RpcEventTime::DatetimeZoned { wallclock, tzid } => {
             let datetime = parse_naive_datetime(wallclock)?;
             // Validate the tzid is a known IANA zone, but store the original string.
-            tzid.parse::<chrono_tz::Tz>()
-                .map_err(|e| format!("Unknown IANA timezone '{}': {}", tzid, e))?;
+            tzid.parse::<chrono_tz::Tz>().map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Unknown IANA timezone '{}': {}", tzid, e),
+                )
+            })?;
             Ok(EventTime::DateTimeZoned {
                 datetime,
                 tzid: tzid.clone(),
@@ -384,7 +434,7 @@ pub fn core_time_to_rpc(e: &EventTime) -> RpcEventTime {
     }
 }
 
-pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> Result<Recurrence, String> {
+pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> TauResult<Recurrence> {
     let exdates = r
         .exdates
         .iter()
@@ -435,11 +485,7 @@ impl CalendarEvent {
             url: e.url.clone(),
             start: core_time_to_rpc(&e.start),
             end: end_rpc,
-            status: match e.status {
-                Status::Confirmed => "confirmed".to_string(),
-                Status::Tentative => "tentative".to_string(),
-                Status::Cancelled => "cancelled".to_string(),
-            },
+            status: e.status.into(),
             recurrence: e.recurrence.as_ref().map(core_recurrence_to_rpc),
             master_recurrence,
             reminders: e
@@ -467,6 +513,68 @@ impl CalendarEvent {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn all_rsvp_values_round_trip_and_convert_attendees() {
+        for (response, core, wire) in [
+            (
+                ResponseStatus::Accepted,
+                ParticipationStatus::Accepted,
+                "accepted",
+            ),
+            (
+                ResponseStatus::Declined,
+                ParticipationStatus::Declined,
+                "declined",
+            ),
+            (
+                ResponseStatus::Tentative,
+                ParticipationStatus::Tentative,
+                "tentative",
+            ),
+            (
+                ResponseStatus::NeedsAction,
+                ParticipationStatus::NeedsAction,
+                "needs-action",
+            ),
+        ] {
+            assert_eq!(ParticipationStatus::from(response), core);
+            assert_eq!(ResponseStatus::from(core), response);
+            assert_eq!(serde_json::to_value(response).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<ResponseStatus>(serde_json::json!(wire)).unwrap(),
+                response
+            );
+            let attendee = EventAttendee {
+                name: None,
+                email: "user@example.com".into(),
+                response_status: Some(response),
+            };
+            assert_eq!(attendee.to_core().status, Some(core));
+            assert_eq!(
+                EventAttendee::from(&attendee.to_core()).response_status,
+                Some(response)
+            );
+        }
+        assert!(serde_json::from_value::<ResponseStatus>(serde_json::json!("maybe")).is_err());
+    }
+
+    #[test]
+    fn all_event_status_values_preserve_the_wire_representation() {
+        for (core, status, wire) in [
+            (Status::Confirmed, EventStatus::Confirmed, "confirmed"),
+            (Status::Tentative, EventStatus::Tentative, "tentative"),
+            (Status::Cancelled, EventStatus::Cancelled, "cancelled"),
+        ] {
+            assert_eq!(EventStatus::from(core), status);
+            assert_eq!(serde_json::to_value(status).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<EventStatus>(serde_json::json!(wire)).unwrap(),
+                status
+            );
+        }
+        assert!(serde_json::from_value::<EventStatus>(serde_json::json!("unknown")).is_err());
+    }
 
     #[test]
     fn recurrence_rpc_round_trip_preserves_rdates() {

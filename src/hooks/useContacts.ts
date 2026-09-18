@@ -1,9 +1,9 @@
-import { listen } from "@tauri-apps/api/event"
 import { useEffect, useState } from "react"
 
 import { rpc } from "@/rpc"
 import type { Contact } from "@/rpc/bindings"
-import { EVENTS_CHANGED } from "@/rpc/events"
+
+import { listenAppEvent } from "@/lib/api/events"
 
 let cachedContacts: Contact[] | null = null
 let contactsPromise: Promise<Contact[]> | null = null
@@ -26,14 +26,14 @@ export function useContacts(enabled: boolean) {
 
     load()
 
-    const unlisten = listen(EVENTS_CHANGED, () => {
+    const unlisten = listenAppEvent("events-changed", () => {
       invalidateContacts()
       load()
     })
 
     return () => {
       cancelled = true
-      unlisten.then((fn) => fn())
+      unlisten.unlisten()
     }
   }, [enabled])
 

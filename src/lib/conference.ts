@@ -6,7 +6,7 @@ import type {
 
 import type { EventDateInfo } from "./event-time"
 
-export type ConferenceProvider = "google" | "outlook" | "proton"
+export type ConferenceProvider = RpcConferenceProvider
 
 export type EventConference =
   | { status: "requested"; provider: ConferenceProvider }
@@ -87,28 +87,10 @@ export const conferenceForCalendar = (
     ? null
     : conference
 
-const rpcToConferenceProvider = (provider: RpcConferenceProvider): ConferenceProvider => {
-  switch (provider) {
-    case "google":
-    case "outlook":
-    case "proton":
-      return provider
-  }
-}
-
-const conferenceProviderToRpc = (provider: ConferenceProvider): RpcConferenceProvider => {
-  switch (provider) {
-    case "google":
-    case "outlook":
-    case "proton":
-      return provider
-  }
-}
-
 export const rpcToConference = (conference: RpcEventConference | null): EventConference | null => {
   if (!conference) return null
 
-  const provider = rpcToConferenceProvider(conference.provider)
+  const provider = conference.provider
   return conference.status === "requested"
     ? { status: "requested", provider }
     : { status: "live", provider, url: conference.url }
@@ -117,7 +99,7 @@ export const rpcToConference = (conference: RpcEventConference | null): EventCon
 export const conferenceToRpc = (conference: EventConference | null): RpcEventConference | null => {
   if (!conference) return null
 
-  const provider = conferenceProviderToRpc(conference.provider)
+  const provider = conference.provider
   return conference.status === "requested"
     ? { status: "requested", provider }
     : { status: "live", provider, url: conference.url }

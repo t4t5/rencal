@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
+import { getErrorMessage } from "@/lib/api/errors"
 import { getProviderDisplayName } from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"
@@ -41,7 +42,7 @@ export const CredentialsForm = ({
       )
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to connect account")
+      setError(getErrorMessage(err, "Failed to connect account"))
     }
   }
 

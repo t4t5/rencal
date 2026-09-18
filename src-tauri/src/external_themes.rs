@@ -1,17 +1,17 @@
 //! User-supplied CSS themes loaded from `~/.config/rencal/themes/`.
 //! The frontend wraps it in `[data-theme="user:<slug>"] { … }` when injecting.
 
+use crate::events::AppEvent;
+
 use std::path::PathBuf;
 
 use notify::RecursiveMode;
 use rencal_config::RencalConfig;
 use serde::{Deserialize, Serialize};
 use specta::Type;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-
-pub const EXTERNAL_THEMES_CHANGED: &str = "external-themes-changed";
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 pub struct ExternalTheme {
@@ -122,7 +122,7 @@ pub fn scan() -> Vec<ExternalTheme> {
     themes
 }
 
-/// Watches `~/.config/rencal/themes/` and emits `EXTERNAL_THEMES_CHANGED` when anything changes
+/// Watches `~/.config/rencal/themes/` and emits `external-themes-changed` when anything changes
 pub async fn run_watcher(app: AppHandle) {
     let Some(watch_dir) = ensure_themes_dir() else {
         return;
@@ -138,7 +138,7 @@ pub async fn run_watcher(app: AppHandle) {
     };
 
     while watch.changed().await.is_some() {
-        let _ = app.emit(EXTERNAL_THEMES_CHANGED, scan());
+        let _ = AppEvent::ExternalThemesChanged(scan()).emit(&app);
     }
 }
 

@@ -5,6 +5,7 @@ import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/component
 import { Input } from "@/components/ui/input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
+import { getErrorMessage } from "@/lib/api/errors"
 
 const WEBCAL_PROVIDER = "webcal"
 
@@ -41,7 +42,7 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
       await connectWithCredentials(WEBCAL_PROVIDER, [{ id: "url", value: trimmedUrl }])
       onClose()
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to add subscription")
+      setError(getErrorMessage(err, "Failed to add subscription"))
     }
   }
 

@@ -11,7 +11,7 @@ pub(super) fn handler(
 ) -> TauResult<Option<CalendarEvent>> {
     let id = EventInstanceId::from(event_id);
 
-    let parsed = state.events(&calendar_slug).map_err(|e| e.to_string())?;
+    let parsed = state.events(&calendar_slug)?;
     Ok(parsed
         .iter()
         .find(|e| e.event_instance_id() == id)

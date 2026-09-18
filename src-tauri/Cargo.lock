@@ -551,9 +551,9 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.15.1"
+version = "0.16.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "99ba8b3e859dc5fb7a3252c3c1492a30f3522498c42abb4408dcc41521a17962"
+checksum = "d924755babb8a2a14e64e55143bcb4107efabc0ea662d353fd0418028e72bb7d"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4010,6 +4010,7 @@ dependencies = [
  "serde_json",
  "socket2 0.5.10",
  "specta",
+ "specta-typescript",
  "tauri",
  "tauri-build",
  "tauri-plugin-deep-link",
@@ -4033,6 +4034,7 @@ version = "0.1.0"
 dependencies = [
  "dirs 5.0.1",
  "serde",
+ "thiserror 2.0.18",
  "toml 0.8.2",
 ]
 

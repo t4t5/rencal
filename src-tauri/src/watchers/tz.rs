@@ -1,17 +1,17 @@
-//! Watches `/etc/localtime` and emits `SYSTEM_TZ_CHANGED` with the new IANA
+//! Watches `/etc/localtime` and emits `system-tz-changed` with the new IANA
 //! timezone name when the system timezone changes, so the frontend can re-render
 //! event times in the current zone. The webview's own `Intl` timezone is fixed
 //! at process start, so the frontend cannot detect this itself.
+
+use crate::events::AppEvent;
 
 use std::ffi::OsStr;
 use std::path::Path;
 
 use notify::RecursiveMode;
-use tauri::{AppHandle, Emitter};
+use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-
-pub const SYSTEM_TZ_CHANGED: &str = "system-tz-changed";
 
 fn is_localtime(path: &Path) -> bool {
     path.file_name() == Some(OsStr::new("localtime"))
@@ -48,7 +48,7 @@ pub async fn run_watcher(app: AppHandle) {
         if last_tz.as_deref() != Some(tz.as_str()) {
             log::info!("System timezone changed to {tz}");
             last_tz = Some(tz.clone());
-            let _ = app.emit(SYSTEM_TZ_CHANGED, tz);
+            let _ = AppEvent::SystemTzChanged(tz).emit(&app);
         }
     }
 }

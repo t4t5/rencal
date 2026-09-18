@@ -3,6 +3,7 @@ import { toast } from "sonner"
 
 import { rpc } from "@/rpc"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { eventKey, recurrenceToRpc, type CalendarEvent } from "@/lib/cal-events"
 import { conferenceToRpc } from "@/lib/conference"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
@@ -42,7 +43,7 @@ export async function updateAndSyncEvent(
     // Roll back: the optimistic pass replaced the row with `current`, so find it
     // by `current`'s key and restore the original.
     setCalendarEvents((prev) => prev.map((e) => (eventKey(e) === eventKey(current) ? original : e)))
-    const message = err instanceof Error ? err.message : String(err)
+    const message = getErrorMessage(err, "Failed to save event")
     toast.error("Failed to save event", { description: message })
     console.error("update_event failed:", err)
   }

@@ -1,5 +1,4 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { listen } from "@tauri-apps/api/event"
 import {
   Dispatch,
   ReactNode,
@@ -13,13 +12,12 @@ import {
   useState,
 } from "react"
 
-import { EVENTS_CHANGED } from "@/rpc/events"
-
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
+import { listenAppEvent } from "@/lib/api/events"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
 import {
   getCalendarEventsForRange,
@@ -248,11 +246,11 @@ export function CalEventsProvider({
   }, [visibleCalendarKey, isLoadingCalendars, settingsLoaded])
 
   useEffect(() => {
-    const unlisten = listen(EVENTS_CHANGED, () => {
+    const unlisten = listenAppEvent("events-changed", () => {
       void reloadEvents()
     })
     return () => {
-      unlisten.then((fn) => fn())
+      unlisten.unlisten()
     }
   }, [reloadEvents])
 

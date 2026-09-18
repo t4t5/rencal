@@ -8,6 +8,7 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { createStrictContext } from "@/lib/strict-context"
 
 const MASS_DELETE_THRESHOLD = 10
@@ -89,7 +90,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         setPendingPreviews([])
       } catch (e) {
-        setSyncError(e instanceof Error ? e.message : String(e))
+        setSyncError(getErrorMessage(e, "Failed to sync calendars"))
       }
       syncLockRef.current = false
       setSyncStatus("idle")
@@ -114,7 +115,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       await rpc.caldir.sync(slugs)
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
-      setSyncError(e instanceof Error ? e.message : String(e))
+      setSyncError(getErrorMessage(e, "Failed to sync calendars"))
     } finally {
       syncLockRef.current = false
       setSyncStatus("idle")
@@ -133,7 +134,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       await rpc.caldir.discard()
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
-      setSyncError(e instanceof Error ? e.message : String(e))
+      setSyncError(getErrorMessage(e, "Failed to sync calendars"))
     } finally {
       syncLockRef.current = false
       setSyncStatus("idle")

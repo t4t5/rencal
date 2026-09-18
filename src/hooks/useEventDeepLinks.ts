@@ -1,11 +1,11 @@
-import { listen } from "@tauri-apps/api/event"
 import { useEffect } from "react"
 import { toast } from "sonner"
 
 import { rpc } from "@/rpc"
-import { EVENT_DEEP_LINK_AVAILABLE } from "@/rpc/events"
 
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
+import { getErrorMessage } from "@/lib/api/errors"
+import { listenAppEvent } from "@/lib/api/events"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 
 export function useEventDeepLinks(): void {
@@ -14,7 +14,9 @@ export function useEventDeepLinks(): void {
   useEffect(() => {
     const showError = (error: unknown) => {
       console.error("Failed to open event deep link:", error)
-      toast.error("Couldn’t open event")
+      toast.error("Couldn’t open event", {
+        description: getErrorMessage(error, "Failed to load the linked event"),
+      })
     }
 
     const drain = async () => {
@@ -42,20 +44,14 @@ export function useEventDeepLinks(): void {
     }
 
     let disposed = false
-    let unlisten: (() => void) | undefined
-
-    void listen(EVENT_DEEP_LINK_AVAILABLE, drain).then((stopListening) => {
-      if (disposed) {
-        stopListening()
-        return
-      }
-      unlisten = stopListening
-      void drain()
+    const subscription = listenAppEvent("event-deep-link-available", drain)
+    void subscription.ready.then(() => {
+      if (!disposed) void drain()
     })
 
     return () => {
       disposed = true
-      unlisten?.()
+      subscription.unlisten()
     }
   }, [jumpToEvent])
 }

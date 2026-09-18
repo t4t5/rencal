@@ -1,5 +1,6 @@
 mod deep_links;
 mod event_cache;
+mod events;
 mod external_themes;
 mod fs_watch;
 #[cfg(target_os = "linux")]
@@ -39,6 +40,8 @@ const MIN_WINDOW_HEIGHT: f64 = 600.0;
 
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router(state: Arc<AppState>) -> Router<tauri::Wry> {
+    #[cfg(debug_assertions)]
+    events::export_types().expect("failed to export notification types");
     Router::new()
         .merge(CaldirApiImpl::new(state.clone()).into_handler())
         .merge(PlatformApiImpl::new(state).into_handler())

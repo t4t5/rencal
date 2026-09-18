@@ -15,6 +15,7 @@ import { rpc } from "@/rpc"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
+import { getErrorMessage } from "@/lib/api/errors"
 import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
@@ -30,6 +31,7 @@ export function AccountsPage() {
   const { connect } = useConnectProvider()
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [reconnectStep, setReconnectStep] = useState<ModalStep | null>(null)
+  const [reconnectError, setReconnectError] = useState<string | null>(null)
 
   const calendarsWithAccount = calendars.filter((c) => c.account != null)
   const calendarsByAccount = Object.groupBy(calendarsWithAccount, (c) => c.account!)
@@ -42,12 +44,14 @@ export function AccountsPage() {
   function reconnect(provider: string | null) {
     if (provider == null) return
 
+    setReconnectError(null)
     beginProviderConnection({
       provider,
       connect,
       onClose: () => setReconnectStep(null),
       onSetStep: setReconnectStep,
     }).catch((error: unknown) => {
+      setReconnectError(getErrorMessage(error, "Failed to reconnect account"))
       console.error("Failed to start provider reconnection", error)
     })
   }
@@ -69,6 +73,12 @@ export function AccountsPage() {
 
       {!accounts.length && (
         <div className="text-sm text-muted-foreground">No accounts connected yet.</div>
+      )}
+
+      {reconnectError && (
+        <p role="alert" className="text-sm text-destructive">
+          {reconnectError}
+        </p>
       )}
 
       <Button className="self-start gap-2" onClick={() => setShowAddAccount(true)}>

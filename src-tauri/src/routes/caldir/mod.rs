@@ -32,7 +32,8 @@ mod update_event;
 
 pub use types::{
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
-    ProviderConnectInfo, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    ProviderConnectInfo, ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat,
+    UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -69,7 +70,11 @@ pub trait CaldirApi {
     ) -> TauResult<Vec<CalendarEvent>>;
 
     async fn list_invites(calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>>;
-    async fn rsvp(calendar_slug: String, event_id: String, response: String) -> TauResult<()>;
+    async fn rsvp(
+        calendar_slug: String,
+        event_id: String,
+        response: ResponseStatus,
+    ) -> TauResult<()>;
 
     async fn sync_preview() -> TauResult<Vec<SyncPreview>>;
 
@@ -198,7 +203,7 @@ impl CaldirApi for CaldirApiImpl {
         self,
         calendar_slug: String,
         event_id: String,
-        response: String,
+        response: ResponseStatus,
     ) -> TauResult<()> {
         rsvp::handler(&self.state, calendar_slug, event_id, response)
     }

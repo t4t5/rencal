@@ -19,7 +19,7 @@ export function getViewerTzid(): string {
 
 /**
  * Update the viewer's zone after an OS timezone change (wired to the
- * SYSTEM_TZ_CHANGED event in main.tsx) and notify subscribers.
+ * system-tz-changed event in main.tsx) and notify subscribers.
  */
 export function setViewerTzid(tzid: string): void {
   if (tzid === getViewerTzid()) return

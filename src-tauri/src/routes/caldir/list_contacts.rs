@@ -36,7 +36,7 @@ pub(super) fn handler(state: &AppState) -> TauResult<Vec<Contact>> {
             continue;
         };
 
-        let events = state.events(slug).map_err(|e| e.to_string())?;
+        let events = state.events(slug)?;
         for event in events.iter() {
             fold_event_contacts(event, &own_addresses, &mut contacts, &mut counted_events);
         }

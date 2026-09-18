@@ -8,6 +8,7 @@ import { rpc } from "@/rpc"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import { getErrorMessage } from "@/lib/api/errors"
 import { recurrenceToRpc, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
@@ -43,7 +44,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const closeDialog = () => setPendingEdit(null)
 
   const reportError = (err: unknown) => {
-    const message = err instanceof Error ? err.message : String(err)
+    const message = getErrorMessage(err, "Failed to save event")
     toast.error("Failed to save event", { description: message })
     console.error("recurring update failed:", err)
   }

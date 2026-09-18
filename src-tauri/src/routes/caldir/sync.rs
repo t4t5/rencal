@@ -1,4 +1,5 @@
 use crate::routes::TauResult;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{DateRange, EventChange};
 
@@ -12,21 +13,21 @@ pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) ->
     let connections = state.caldir().connections();
 
     for connection in connections {
-        let mut connection = connection.map_err(|e| e.to_string())?;
+        let mut connection = connection?;
         let slug = connection
             .local()
             .slug()
-            .ok_or_else(|| "calendar missing slug".to_string())?
+            .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
             .to_string();
 
         let diff = connection
             .diff(&range)
             .await
-            .map_err(|e| format!("[{}] {}", slug, e))?;
+            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
 
         connection
             .apply_incoming_diff(&diff)
-            .map_err(|e| format!("[{}] {}", slug, e))?;
+            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
         state.invalidate_events(&slug);
 
         if connection.read_only() {
@@ -49,7 +50,7 @@ pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) ->
         connection
             .apply_outgoing_diff(&diff)
             .await
-            .map_err(|e| format!("[{}] {}", slug, e))?;
+            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
         state.invalidate_events(&slug);
     }
 

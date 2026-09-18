@@ -12,7 +12,7 @@ pub(super) fn handler(
     let query_lower = query.to_lowercase();
 
     for slug in &calendar_slugs {
-        let parsed = state.events(slug).map_err(|e| e.to_string())?;
+        let parsed = state.events(slug)?;
         for event in parsed.iter() {
             if !is_visible(event) {
                 continue;

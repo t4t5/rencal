@@ -9,6 +9,29 @@ use std::path::{Path, PathBuf};
 
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, thiserror::Error)]
+pub enum ConfigError {
+    #[error("Could not resolve user config directory")]
+    PathResolution,
+    #[error("Could not read config file {path}: {source}")]
+    Read {
+        path: PathBuf,
+        source: std::io::Error,
+    },
+    #[error("Could not parse config file {path}: {source}")]
+    Parse {
+        path: PathBuf,
+        source: toml::de::Error,
+    },
+    #[error("Could not serialize config: {0}")]
+    Serialize(#[source] toml::ser::Error),
+    #[error("Could not write config at {path}: {source}")]
+    Write {
+        path: PathBuf,
+        source: std::io::Error,
+    },
+}
+
 fn default_theme() -> String {
     "ren".to_string()
 }
@@ -66,13 +89,13 @@ impl Default for RencalConfig {
 
 impl RencalConfig {
     /// ~/.config/rencal
-    pub fn config_dir() -> Result<PathBuf, String> {
+    pub fn config_dir() -> Result<PathBuf, ConfigError> {
         dirs::config_dir()
-            .ok_or_else(|| "Could not resolve user config directory".to_string())
+            .ok_or(ConfigError::PathResolution)
             .map(|d| d.join("rencal"))
     }
 
-    pub fn config_path() -> Result<PathBuf, String> {
+    pub fn config_path() -> Result<PathBuf, ConfigError> {
         Ok(Self::config_dir()?.join("config.toml"))
     }
 
@@ -83,37 +106,40 @@ impl RencalConfig {
     /// A missing file means the user has not configured renCal yet. Existing
     /// files must be readable and valid so callers never overwrite a broken
     /// config with defaults.
-    pub fn load() -> Result<Self, String> {
+    pub fn load() -> Result<Self, ConfigError> {
         Self::load_from_path(&Self::config_path()?)
     }
 
-    fn load_from_path(path: &Path) -> Result<Self, String> {
+    fn load_from_path(path: &Path) -> Result<Self, ConfigError> {
         let contents = match std::fs::read_to_string(path) {
             Ok(contents) => contents,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
                 return Ok(Self::default());
             }
             Err(error) => {
-                return Err(format!(
-                    "Could not read config file {}: {error}",
-                    path.display()
-                ));
+                return Err(ConfigError::Read {
+                    path: path.to_owned(),
+                    source: error,
+                });
             }
         };
 
-        toml::from_str(&contents)
-            .map_err(|error| format!("Could not parse config file {}: {error}", path.display()))
+        toml::from_str(&contents).map_err(|source| ConfigError::Parse {
+            path: path.to_owned(),
+            source,
+        })
     }
 
-    pub fn save(&self) -> Result<(), String> {
+    pub fn save(&self) -> Result<(), ConfigError> {
         let path = Self::config_path()?;
         if let Some(parent) = path.parent() {
-            std::fs::create_dir_all(parent)
-                .map_err(|e| format!("Could not create config directory: {e}"))?;
+            std::fs::create_dir_all(parent).map_err(|source| ConfigError::Write {
+                path: parent.to_owned(),
+                source,
+            })?;
         }
-        let contents =
-            toml::to_string_pretty(self).map_err(|e| format!("Could not serialize config: {e}"))?;
-        std::fs::write(&path, contents).map_err(|e| format!("Could not write config file: {e}"))
+        let contents = toml::to_string_pretty(self).map_err(ConfigError::Serialize)?;
+        std::fs::write(&path, contents).map_err(|source| ConfigError::Write { path, source })
     }
 }
 
@@ -206,7 +232,7 @@ mod tests {
             Err(error) => error,
         };
 
-        assert!(error.contains("Could not parse config file"));
+        assert!(matches!(error, ConfigError::Parse { .. }));
         assert_eq!(
             std::fs::read_to_string(&path).expect("read malformed config"),
             "theme = [not valid TOML"
