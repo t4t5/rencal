@@ -2,7 +2,7 @@
 members = ["reminder-core", "notifierd", "rencal-config"]
 
 [workspace.dependencies]
-caldir-core = "0.15.1"
+caldir-core = "0.16.0"
 
 [workspace.metadata.caldir]
 provider-tag = "v0.14.2"

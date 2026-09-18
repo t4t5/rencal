@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { rpc } from "@/rpc"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
+import { getErrorMessage } from "@/lib/api/errors"
 import {
   getProviderDisplayName,
   getProviderIcon,
@@ -25,20 +26,31 @@ export const ProviderList = ({
   const { connect, isConnecting } = useConnectProvider()
 
   const [providers, setProviders] = useState<string[]>([])
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    rpc.caldir.list_providers().then((all) => {
-      setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
-    })
+    rpc.caldir
+      .list_providers()
+      .then((all) => {
+        setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
+      })
+      .catch((error: unknown) => {
+        setError(getErrorMessage(error, "Failed to load providers"))
+      })
   }, [])
 
   async function handleProviderClick(name: string) {
-    await beginProviderConnection({
-      provider: name,
-      connect,
-      onClose,
-      onSetStep,
-    })
+    setError(null)
+    try {
+      await beginProviderConnection({
+        provider: name,
+        connect,
+        onClose,
+        onSetStep,
+      })
+    } catch (error) {
+      setError(getErrorMessage(error, "Failed to connect account"))
+    }
   }
 
   return (
@@ -61,6 +73,11 @@ export const ProviderList = ({
           </Button>
         )
       })}
+      {error && (
+        <p role="alert" className="text-sm text-destructive">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

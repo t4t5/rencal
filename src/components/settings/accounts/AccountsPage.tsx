@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
@@ -49,6 +50,9 @@ export function AccountsPage() {
       onClose: () => setReconnectStep(null),
       onSetStep: setReconnectStep,
     }).catch((error: unknown) => {
+      toast.error("Failed to reconnect account", {
+        description: getErrorMessage(error, "Failed to reconnect account"),
+      })
       console.error(
         "Failed to start provider reconnection",
         getErrorMessage(error, "Failed to start provider reconnection"),

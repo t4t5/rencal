@@ -27,6 +27,7 @@ export const useConnectProvider = () => {
           getErrorMessage(error, "Failed to connect provider"),
           error,
         )
+        throw error
       } finally {
         setIsConnecting(false)
       }
