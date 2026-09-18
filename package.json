@@ -54,6 +54,7 @@
     "@types/react-dom": "^19.1.6",
     "@vitejs/plugin-react": "^4.6.0",
     "eslint": "^10.10.0",
+    "happy-dom": "^20.14.5",
     "husky": "^9.1.7",
     "knip": "^6.32.2",
     "lint-staged": "^16.2.6",
