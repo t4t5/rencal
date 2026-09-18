@@ -3,14 +3,13 @@ import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
 import { AGENDA_ITEM_SELECTOR } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 
-import { rpc } from "@/rpc"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
 import { useEventDraft, type DraftEvent } from "@/contexts/EventDraftContext"
 
-import { rpcToCalendarEvent, type CalendarEvent, type Recurrence } from "@/lib/cal-events"
+import { getEvent } from "@/lib/api/calendar-events"
+import { type CalendarEvent, type Recurrence } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import { setDraftAnchor, type DraftAnchor } from "@/lib/draft-anchor"
 import { getEventAnchor } from "@/lib/event-anchor"
@@ -137,9 +136,8 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
     // rule stay intact.
     if (event.recurring_event_id) {
       try {
-        const masterRpc = await rpc.caldir.get_event(event.calendar_slug, event.recurring_event_id)
-        if (masterRpc) {
-          const master = rpcToCalendarEvent(masterRpc)
+        const master = await getEvent(event.calendar_slug, event.recurring_event_id)
+        if (master) {
           openDuplicateDraft(
             master,
             master.recurrence ?? master.master_recurrence ?? event.master_recurrence,

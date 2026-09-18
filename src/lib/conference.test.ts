@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import type { Calendar } from "@/rpc/bindings"
-
+import type { Calendar } from "@/lib/api/calendars"
 import {
   calendarConferenceProvider,
   conferenceForCalendar,

@@ -4,8 +4,8 @@ import { act, useEffect } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
+import { getCalendarEventsForRange } from "@/lib/api/calendar-events"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { getCalendarEventsForRange } from "@/lib/cal-events-range"
 
 import { CalEventsProvider, useCalEvents } from "./CalEventsContext"
 
@@ -29,10 +29,7 @@ vi.mock("@/hooks/useEventDeepLinks", () => ({ useEventDeepLinks: () => {} }))
 vi.mock("@/lib/api/events", () => ({
   listenAppEvent: () => ({ ready: Promise.resolve(), unlisten: () => {} }),
 }))
-vi.mock("@/lib/cal-events-range", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/lib/cal-events-range")>()),
-  getCalendarEventsForRange: vi.fn(),
-}))
+vi.mock("@/lib/api/calendar-events", () => ({ getCalendarEventsForRange: vi.fn() }))
 
 function event(id: string, calendarSlug: string): CalendarEvent {
   return rpcToCalendarEvent({

@@ -2,10 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { z } from "zod"
 
-import { rpc } from "@/rpc"
-import type { Calendar } from "@/rpc/bindings"
-
 import { useLocalStorage } from "@/hooks/useLocalStorage"
+import { listCalendars, type Calendar } from "@/lib/api/calendars"
 import { listenAppEvent } from "@/lib/api/events"
 import { ACTIVE_GROUP_KEY, DEFAULT_GROUP } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
@@ -82,7 +80,7 @@ export function CalendarStateProvider({
 
   const loadCalendarsFromStore = async () => {
     try {
-      const result = await rpc.caldir.list_calendars()
+      const result = await listCalendars()
       logger.debug("Calendars loaded from store:", result.length)
       setCalendars(result)
     } finally {

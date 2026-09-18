@@ -1,19 +1,17 @@
 import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import { rpc } from "@/rpc"
-import type { Calendar, CalendarEvent as RpcCalendarEvent, EventAttendee } from "@/rpc/bindings"
-
+import { createEvent } from "@/lib/api/calendar-events"
+import type { Calendar } from "@/lib/api/calendars"
 import { getErrorMessage } from "@/lib/api/errors"
 import {
   type CalendarEvent,
+  type EventAttendee,
   reconcileOptimisticCreate,
   type Recurrence,
-  recurrenceToRpc,
   rollbackOptimisticCreate,
-  rpcToCalendarEvent,
 } from "@/lib/cal-events"
-import { conferenceToRpc, type EventConference } from "@/lib/conference"
+import type { EventConference } from "@/lib/conference"
 import {
   addMinutes,
   computeEventDateInfo,
@@ -21,7 +19,6 @@ import {
   nowZoned,
   type EventTime,
 } from "@/lib/event-time"
-import { toRpcEventTime } from "@/lib/event-time/rpc"
 import { logger } from "@/lib/logger"
 import { parseEventText } from "@/lib/magic-parser"
 import { createStrictContext } from "@/lib/strict-context"
@@ -216,20 +213,20 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     setDefaultDraftEvent()
     _setText("")
 
-    let created: RpcCalendarEvent
+    let createdEvent: CalendarEvent
     try {
-      created = await rpc.caldir.create_event({
+      createdEvent = await createEvent({
         calendar_slug: draftEvent.calendarId,
         summary: draftEvent.summary ?? "",
         description: draftEvent.description,
         location: draftEvent.location ?? null,
         url: draftEvent.url,
-        start: toRpcEventTime(draftEvent.start),
-        end: toRpcEventTime(draftEvent.end),
-        recurrence: draftEvent.recurrence ? recurrenceToRpc(draftEvent.recurrence) : null,
+        start: draftEvent.start,
+        end: draftEvent.end,
+        recurrence: draftEvent.recurrence,
         reminders: draftReminders,
         attendees: draftEvent.attendees,
-        conference: conferenceToRpc(draftEvent.conference),
+        conference: draftEvent.conference,
       })
     } catch (err) {
       setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))
@@ -244,7 +241,6 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       // expanded into individual instances on the calendar grid.
       await reloadEvents()
     } else {
-      const createdEvent = rpcToCalendarEvent(created)
       setCalendarEvents((prev) => reconcileOptimisticCreate(prev, optimisticEvent, createdEvent))
     }
     void requestSync()

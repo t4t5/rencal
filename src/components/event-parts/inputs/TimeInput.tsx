@@ -3,10 +3,9 @@ import { ReactNode, useState } from "react"
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 
-import type { TimeFormat } from "@/rpc/bindings"
-
 import { useSettings } from "@/contexts/SettingsContext"
 
+import type { TimeFormat } from "@/lib/event-time"
 import { formatWallclockTime, isAllDay, wallclockTime, type EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 

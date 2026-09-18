@@ -1,14 +1,17 @@
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
-import { rpc } from "@/rpc"
-import { SyncPreview } from "@/rpc/bindings"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { getErrorMessage } from "@/lib/api/errors"
+import {
+  discardPendingChanges,
+  getSyncPreview,
+  syncCalendars,
+  type SyncPreview,
+} from "@/lib/api/sync"
 import { createStrictContext } from "@/lib/strict-context"
 
 const MASS_DELETE_THRESHOLD = 10
@@ -61,7 +64,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
       setSyncStatus(manual ? "syncing" : "checking")
       setSyncError(null)
       try {
-        const previews = await rpc.caldir.sync_preview()
+        const previews = await getSyncPreview()
         const withWork = previews.filter((p) => p.to_push_count > 0 || p.to_pull_count > 0)
         setPendingPreviews(withWork)
 
@@ -75,7 +78,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         if (withWork.length > 0) {
           setSyncStatus("syncing")
-          await rpc.caldir.sync([])
+          await syncCalendars([])
           await reloadEvents()
         }
 
@@ -112,7 +115,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rpc.caldir.sync(slugs)
+      await syncCalendars(slugs)
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))
@@ -131,7 +134,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncError(null)
     try {
       const slugs = tripped.map((t) => t.calendar_slug)
-      await rpc.caldir.discard()
+      await discardPendingChanges()
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
       setSyncError(getErrorMessage(e, "Failed to sync calendars"))

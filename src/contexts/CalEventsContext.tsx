@@ -17,13 +17,10 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
+import { getCalendarEventsForRange } from "@/lib/api/calendar-events"
 import { listenAppEvent } from "@/lib/api/events"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
-import {
-  getCalendarEventsForRange,
-  getStartRangeForDate,
-  mergeEvents,
-} from "@/lib/cal-events-range"
+import { getStartRangeForDate, mergeEvents } from "@/lib/cal-events-range"
 import { subscribeViewerTzid } from "@/lib/event-time"
 import { createStrictContext } from "@/lib/strict-context"
 import { DateRange } from "@/lib/types"

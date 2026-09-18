@@ -1,5 +1,4 @@
-import type { ResponseStatus } from "@/rpc/bindings"
-
+import type { ResponseStatus } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"

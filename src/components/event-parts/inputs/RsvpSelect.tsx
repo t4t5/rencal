@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/select"
 import { StatusDot } from "@/components/ui/status-dot"
 
-import type { ResponseStatus } from "@/rpc/bindings"
+import type { ResponseStatus } from "@/lib/cal-events"
 
 const statusOptions: { value: ResponseStatus; label: string }[] = [
   { value: "accepted", label: "Accepted" },

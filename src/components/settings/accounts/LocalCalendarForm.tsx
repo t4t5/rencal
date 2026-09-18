@@ -3,10 +3,9 @@ import { FormEvent, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 
-import { rpc } from "@/rpc"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
+import { createLocalCalendar } from "@/lib/api/calendars"
 import { getErrorMessage } from "@/lib/api/errors"
 import { logger } from "@/lib/logger"
 import { cn } from "@/lib/utils"
@@ -42,7 +41,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
 
     setIsCreating(true)
     try {
-      await rpc.caldir.create_local_calendar(trimmed, color)
+      await createLocalCalendar(trimmed, color)
       await reloadCalendars()
       onClose()
     } catch (err) {

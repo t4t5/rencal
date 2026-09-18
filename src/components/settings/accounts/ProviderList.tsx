@@ -2,10 +2,9 @@ import { Dispatch, SetStateAction, useEffect, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
-import { rpc } from "@/rpc"
-
 import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { getErrorMessage } from "@/lib/api/errors"
+import { listProviders } from "@/lib/api/providers"
 import {
   getProviderDisplayName,
   getProviderIcon,
@@ -29,8 +28,7 @@ export const ProviderList = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    rpc.caldir
-      .list_providers()
+    listProviders()
       .then((all) => {
         setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
       })

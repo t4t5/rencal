@@ -4,8 +4,6 @@ import { RefObject, useLayoutEffect, useRef, useState } from "react"
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
 import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventBlock"
 
-import type { TimeFormat } from "@/rpc/bindings"
-
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -17,6 +15,7 @@ import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { minutesAtY } from "@/lib/drag-to-create"
+import type { TimeFormat } from "@/lib/event-time"
 import {
   atTime,
   formatWallclockTime,

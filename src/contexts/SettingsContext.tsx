@@ -1,11 +1,10 @@
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
-import { rpc } from "@/rpc"
-import type { CaldirSettings, TimeFormat } from "@/rpc/bindings"
-
 import { emitAppEvent, listenAppEvent } from "@/lib/api/events"
-import { normalizeCalendarGroups } from "@/lib/calendar-groups"
-import type { FirstDayOfWeek } from "@/lib/event-time"
+import * as settingsApi from "@/lib/api/settings"
+import type { CaldirSettings } from "@/lib/api/settings"
+import type { CalendarGroups } from "@/lib/calendar-groups"
+import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
 import { createStrictContext } from "@/lib/strict-context"
 
 interface SettingsContextType {
@@ -27,8 +26,8 @@ interface SettingsContextType {
   setAutoSyncEnabled: (enabled: boolean) => Promise<void>
   // Named calendar groups from config.toml's [groups] table. Which group is
   // active is app state — see activeGroup on useCalendars() in CalendarStateContext.
-  groups: Record<string, string[]>
-  setGroups: (groups: Record<string, string[]>) => Promise<void>
+  groups: CalendarGroups
+  setGroups: (groups: CalendarGroups) => Promise<void>
   reloadSettings: () => Promise<void>
   // False until persisted settings load, so startup consumers don't act on defaults.
   settingsLoaded: boolean
@@ -47,7 +46,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [calendarDir, setCalendarDirState] = useState<string>("")
   const [notificationsEnabled, setNotificationsEnabledState] = useState<boolean>(true)
   const [autoSyncEnabled, setAutoSyncEnabledState] = useState<boolean>(true)
-  const [groups, setGroupsState] = useState<Record<string, string[]>>({})
+  const [groups, setGroupsState] = useState<CalendarGroups>({})
   const [settingsLoaded, setSettingsLoaded] = useState<boolean>(false)
 
   const applyCaldirSettings = useCallback((settings: CaldirSettings) => {
@@ -60,20 +59,19 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const reloadSettings = useCallback(async () => {
     try {
       const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult] = await Promise.all([
-        rpc.caldir.get_caldir_settings(),
-        rpc.config.get_notifications_enabled(),
-        rpc.config.get_auto_sync_enabled(),
-        rpc.config.get_first_day_of_week(),
-        rpc.config.get_show_week_numbers(),
-        rpc.config.get_groups(),
+        settingsApi.getCaldirSettings(),
+        settingsApi.getNotificationsEnabled(),
+        settingsApi.getAutoSyncEnabled(),
+        settingsApi.getFirstDayOfWeek(),
+        settingsApi.getShowWeekNumbers(),
+        settingsApi.getCalendarGroups(),
       ])
       applyCaldirSettings(caldir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
       setFirstDayOfWeekState(firstDay)
       setShowWeekNumbersState(weekNumbers)
-      // The RPC type is Partial<Record<string, string[]>>; drop undefined values.
-      setGroupsState(normalizeCalendarGroups(groupsResult))
+      setGroupsState(groupsResult)
       setSettingsLoaded(true)
     } catch (e) {
       console.error(e)
@@ -101,51 +99,51 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const setTimeFormat = async (tf: TimeFormat) => {
     setTimeFormatState(tf)
-    await rpc.caldir.set_time_format(tf)
+    await settingsApi.setTimeFormat(tf)
   }
 
   const setDefaultReminders = async (mins: number[]) => {
     setDefaultRemindersState(mins)
-    await rpc.caldir.set_default_reminders(mins)
+    await settingsApi.setDefaultReminders(mins)
   }
 
   const setDefaultCalendar = async (slug: string | null) => {
     setDefaultCalendarState(slug)
-    await rpc.caldir.set_default_calendar(slug)
+    await settingsApi.setDefaultCalendar(slug)
   }
 
   // The state bridge broadcasts the complete stored settings after the save.
   const setCalendarDir = async (path: string) => {
-    await rpc.caldir.set_calendar_dir(path)
+    await settingsApi.setCalendarDir(path)
   }
 
   const setNotificationsEnabled = async (enabled: boolean) => {
     setNotificationsEnabledState(enabled)
-    await rpc.config.set_notifications_enabled(enabled)
+    await settingsApi.setNotificationsEnabled(enabled)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setFirstDayOfWeek = async (day: FirstDayOfWeek) => {
     setFirstDayOfWeekState(day)
-    await rpc.config.set_first_day_of_week(day)
+    await settingsApi.setFirstDayOfWeek(day)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setShowWeekNumbers = async (show: boolean) => {
     setShowWeekNumbersState(show)
-    await rpc.config.set_show_week_numbers(show)
+    await settingsApi.setShowWeekNumbers(show)
     await emitAppEvent("rencal-config-changed")
   }
 
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
-    await rpc.config.set_auto_sync_enabled(enabled)
+    await settingsApi.setAutoSyncEnabled(enabled)
     await emitAppEvent("rencal-config-changed")
   }
 
-  const setGroups = async (nextGroups: Record<string, string[]>) => {
+  const setGroups = async (nextGroups: CalendarGroups) => {
     setGroupsState(nextGroups)
-    await rpc.config.set_groups(nextGroups)
+    await settingsApi.setCalendarGroups(nextGroups)
     await emitAppEvent("rencal-config-changed")
   }
 

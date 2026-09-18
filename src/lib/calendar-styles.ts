@@ -1,4 +1,4 @@
-import { Calendar } from "@/rpc/bindings"
+import type { Calendar } from "@/lib/api/calendars"
 
 export const DEFAULT_CALENDAR_COLOR = "var(--primary)"
 

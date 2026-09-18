@@ -1,4 +1,4 @@
-import type { Contact } from "@/rpc/bindings"
+import type { Contact } from "@/lib/api/contacts"
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 

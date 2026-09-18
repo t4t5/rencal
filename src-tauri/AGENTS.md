@@ -1,6 +1,7 @@
 # Rust backend (Tauri v2 + taurpc)
 
 - Read the module docs at the top of `state.rs`, `state_bridge.rs`, `watchers/mod.rs`, `fs_watch.rs` and `tasks.rs` before touching backend state, events or watchers. They define the architecture; follow them.
+- Webview notifications are declared once in `events.rs` (`AppEvent`) and emitted through its adapter; route failures are classified in `routes/error.rs` (`RpcError`). Both are exported to `src/rpc/*.generated.ts`/`bindings.ts` by `just gen-types`, and the frontend consumes them only through `src/lib/api/`.
 - Avoid `i64` / `u64` in taurpc route types (Specta exports them as BigInt). Use `i32` / `u32`.
 - For fixed string sets, use Rust enums with `#[serde(rename = "...")]` variants.
 - Regenerate bindings with `just gen-types` when route types change.

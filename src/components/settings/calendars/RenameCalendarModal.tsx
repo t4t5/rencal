@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
-import type { Calendar } from "@/rpc/bindings"
-
+import type { Calendar } from "@/lib/api/calendars"
 import { getErrorMessage } from "@/lib/api/errors"
 
 export function RenameCalendarModal({

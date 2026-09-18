@@ -3,14 +3,12 @@ import { toast } from "sonner"
 
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
 
-import { rpc } from "@/rpc"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import { getEvent, splitRecurringSeriesAt } from "@/lib/api/calendar-events"
 import { getErrorMessage } from "@/lib/api/errors"
-import { recurrenceToRpc, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { toRpcEventTime } from "@/lib/event-time/rpc"
+import type { CalendarEvent } from "@/lib/cal-events"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
 import { updateAndSyncEvent } from "@/lib/save-event"
 import { createStrictContext } from "@/lib/strict-context"
@@ -68,15 +66,14 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
     closeDialog()
 
     try {
-      const newMasterRpc = await rpc.caldir.split_recurring_series_at({
+      const newMaster = await splitRecurringSeriesAt({
         calendar_slug: current.calendar_slug,
         master_uid: current.recurring_event_id,
-        split_start: toRpcEventTime(current.start),
-        split_end: toRpcEventTime(current.end),
-        new_recurrence: recurrenceToRpc(current.master_recurrence),
+        split_start: current.start,
+        split_end: current.end,
+        new_recurrence: current.master_recurrence,
       })
 
-      const newMaster = rpcToCalendarEvent(newMasterRpc)
       const updatedMaster: CalendarEvent = {
         ...newMaster,
         summary: current.summary,
@@ -103,12 +100,8 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
     closeDialog()
 
     try {
-      const masterRpc = await rpc.caldir.get_event(
-        original.calendar_slug,
-        current.recurring_event_id,
-      )
-      if (!masterRpc) return
-      const master = rpcToCalendarEvent(masterRpc)
+      const master = await getEvent(original.calendar_slug, current.recurring_event_id)
+      if (!master) return
 
       // Apply the occurrence's edited range while retaining the master's anchor
       // date. This also preserves date-only values when toggling the series all-day.

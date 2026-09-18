@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react"
 
-import { rpc } from "@/rpc"
-import type { Contact } from "@/rpc/bindings"
-
+import { listContacts, type Contact } from "@/lib/api/contacts"
 import { listenAppEvent } from "@/lib/api/events"
 
 let cachedContacts: Contact[] | null = null
@@ -43,7 +41,7 @@ export function useContacts(enabled: boolean) {
 function loadContacts(): Promise<Contact[]> {
   if (cachedContacts) return Promise.resolve(cachedContacts)
 
-  contactsPromise ??= rpc.caldir.list_contacts().then((contacts) => {
+  contactsPromise ??= listContacts().then((contacts) => {
     cachedContacts = contacts
     contactsPromise = null
     return contacts

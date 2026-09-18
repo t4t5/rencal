@@ -1,15 +1,11 @@
 import { Temporal } from "@js-temporal/polyfill"
 
-import { rpc } from "@/rpc"
-import type { Calendar } from "@/rpc/bindings"
-
+import { getCalendarEventsForRange } from "@/lib/api/calendar-events"
+import { listCalendars, type Calendar } from "@/lib/api/calendars"
+import { getCalendarGroups } from "@/lib/api/settings"
 import type { CalendarEvent } from "@/lib/cal-events"
-import { getCalendarEventsForRange, getStartRangeForDate } from "@/lib/cal-events-range"
-import {
-  getStoredActiveGroup,
-  getVisibleCalendarSlugs,
-  normalizeCalendarGroups,
-} from "@/lib/calendar-groups"
+import { getStartRangeForDate } from "@/lib/cal-events-range"
+import { getStoredActiveGroup, getVisibleCalendarSlugs } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 import type { DateRange } from "@/lib/types"
@@ -24,13 +20,10 @@ export type Preload = {
 export async function preloadCalendarData(): Promise<Preload> {
   try {
     const initialDate = today()
-    const [initialCalendars, groupsResult] = await Promise.all([
-      rpc.caldir.list_calendars(),
-      rpc.config.get_groups(),
-    ])
+    const [initialCalendars, groups] = await Promise.all([listCalendars(), getCalendarGroups()])
     const slugs = getVisibleCalendarSlugs({
       calendars: initialCalendars,
-      groups: normalizeCalendarGroups(groupsResult),
+      groups,
       activeGroup: getStoredActiveGroup(localStorage),
     })
 

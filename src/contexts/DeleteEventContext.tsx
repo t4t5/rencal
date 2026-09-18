@@ -3,14 +3,17 @@ import { toast } from "sonner"
 
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 
-import { rpc } from "@/rpc"
-
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useSync } from "@/contexts/SyncContext"
 
+import {
+  deleteEvent,
+  deleteRecurringSeries,
+  getEvent,
+  splitRecurringSeriesAt,
+} from "@/lib/api/calendar-events"
 import { getErrorMessage } from "@/lib/api/errors"
-import { eventKey, rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
-import { toRpcEventTime } from "@/lib/event-time/rpc"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { createStrictContext } from "@/lib/strict-context"
 
 interface DeleteEventContextValue {
@@ -61,7 +64,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     const restore = removeOptimistically((e) => eventKey(e) === eventKey(event))
 
     try {
-      await rpc.caldir.delete_event(event.calendar_slug, event.id)
+      await deleteEvent(event.calendar_slug, event.id)
       void requestSync()
     } catch (err) {
       restore()
@@ -83,7 +86,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     )
 
     try {
-      await rpc.caldir.delete_recurring_series(calendarSlug, parentId)
+      await deleteRecurringSeries(calendarSlug, parentId)
       void requestSync()
     } catch (err) {
       restore()
@@ -103,8 +106,8 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
     // Same when the target is the first occurrence: truncating the series
     // before it would only leave behind an empty ghost master.
     try {
-      const masterRpc = await rpc.caldir.get_event(calendarSlug, masterUid)
-      if (masterRpc && event.dateInfo.startMs <= rpcToCalendarEvent(masterRpc).dateInfo.startMs) {
+      const master = await getEvent(calendarSlug, masterUid)
+      if (master && event.dateInfo.startMs <= master.dateInfo.startMs) {
         return handleDeleteAll()
       }
     } catch {
@@ -122,14 +125,14 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
       // There's no dedicated "delete from here" procedure: split the series at
       // this occurrence (truncating the original master and dropping later
       // overrides), then delete the new master the split created.
-      const newMaster = await rpc.caldir.split_recurring_series_at({
+      const newMaster = await splitRecurringSeriesAt({
         calendar_slug: calendarSlug,
         master_uid: masterUid,
-        split_start: toRpcEventTime(event.start),
-        split_end: toRpcEventTime(event.end),
+        split_start: event.start,
+        split_end: event.end,
         new_recurrence: null,
       })
-      await rpc.caldir.delete_event(calendarSlug, newMaster.id)
+      await deleteEvent(calendarSlug, newMaster.id)
       void requestSync()
     } catch (err) {
       restore()

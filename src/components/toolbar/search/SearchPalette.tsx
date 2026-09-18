@@ -16,15 +16,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 
-import { rpc } from "@/rpc"
-
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useDebouncedEffect } from "@/hooks/useDebouncedEffect"
 import { useJumpToEvent } from "@/hooks/useJumpToEvent"
-import { eventKey, rpcToCalendarEvents, type CalendarEvent } from "@/lib/cal-events"
+import { searchEvents } from "@/lib/api/calendar-events"
+import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { prepareSearchResults } from "@/lib/search-results"
 
@@ -74,11 +73,10 @@ export function SearchPalette({
       const requestId = ++requestIdRef.current
       setIsLoading(true)
 
-      void rpc.caldir
-        .search_events(visibleCalendarIds, query)
+      void searchEvents(visibleCalendarIds, query)
         .then((found) => {
           if (requestId !== requestIdRef.current) return
-          setResults(prepareSearchResults(rpcToCalendarEvents(found)))
+          setResults(prepareSearchResults(found))
         })
         .catch((error: unknown) => {
           if (requestId !== requestIdRef.current) return

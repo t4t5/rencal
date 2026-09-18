@@ -1,4 +1,4 @@
-import type { Calendar } from "@/rpc/bindings"
+import type { Calendar } from "@/lib/api/calendars"
 
 export const DEFAULT_GROUP = "default"
 export const ACTIVE_GROUP_KEY = "activeGroup"

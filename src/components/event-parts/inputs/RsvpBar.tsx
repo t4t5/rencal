@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 
-import type { ResponseStatus } from "@/rpc/bindings"
+import type { ResponseStatus } from "@/lib/cal-events"
 
 export function RsvpBar({ onRsvp }: { onRsvp: (response: ResponseStatus) => void }) {
   return (

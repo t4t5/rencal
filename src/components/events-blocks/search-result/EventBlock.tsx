@@ -1,6 +1,5 @@
-import type { TimeFormat } from "@/rpc/bindings"
-
 import type { CalendarEvent } from "@/lib/cal-events"
+import type { TimeFormat } from "@/lib/event-time"
 import { formatShortDate, formatTime, isAllDay } from "@/lib/event-time"
 
 export function SearchResultEventBlock({

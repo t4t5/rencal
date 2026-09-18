@@ -2,6 +2,7 @@
 import { rpc } from "@/rpc"
 import type { CalendarEvent, ResponseStatus } from "@/rpc/bindings"
 
+import { createEvent } from "./calendar-events"
 import { emitAppEvent, listenAppEvent } from "./events"
 
 function checkContracts(name: "theme-changed" | "rencal-config-changed") {
@@ -34,6 +35,22 @@ function checkContracts(name: "theme-changed" | "rencal-config-changed") {
   void emitAppEvent("events-changed")
   // @ts-expect-error A union name cannot hide an uncorrelated payload.
   void emitAppEvent(name, "theme")
+
+  void createEvent({
+    calendar_slug: "work",
+    summary: "",
+    description: null,
+    location: null,
+    url: null,
+    // @ts-expect-error Facade inputs take app EventTime values, not wire shapes.
+    start: { kind: "date", date: "2026-09-18" },
+    // @ts-expect-error Facade inputs take app EventTime values, not wire shapes.
+    end: { kind: "date", date: "2026-09-19" },
+    recurrence: null,
+    reminders: [],
+    attendees: [],
+    conference: null,
+  })
 
   const response: ResponseStatus = "accepted"
   void rpc.caldir.rsvp("work", "event", response)
