@@ -4,11 +4,13 @@ import { toast } from "sonner"
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { getErrorMessage } from "@/lib/api"
 import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { isUserOrganizer } from "@/lib/event-utils"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
 import { updateAndSyncEvent } from "@/lib/save-event"
 import { createStrictContext } from "@/lib/strict-context"
@@ -28,8 +30,11 @@ export { useRecurrenceEdit }
 
 export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const { setCalendarEvents, reloadEvents } = useCalEvents()
+  const { calendars } = useCalendars()
   const { requestSync } = useSync()
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null)
+  const [shownEdit, setShownEdit] = useState(pendingEdit)
+  if (pendingEdit && pendingEdit !== shownEdit) setShownEdit(pendingEdit)
 
   const requestSave = (current: CalendarEvent, original: CalendarEvent) => {
     if (current.recurring_event_id !== null) {
@@ -142,6 +147,8 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       {children}
       <RecurrenceConfirmDialog
         isOpen={pendingEdit !== null}
+        // Only the organizer can split a recurring series.
+        canApplyToFuture={shownEdit ? isUserOrganizer(shownEdit.current, calendars) : true}
         onClose={closeDialog}
         onApplyToThis={handleApplyToThis}
         onApplyToFuture={handleApplyToFuture}
