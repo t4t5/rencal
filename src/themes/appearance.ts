@@ -1,4 +1,4 @@
-import { type Appearance, getDeclaredAppearance } from "./manifest"
+import { type Appearance, getDeclaredAppearance, type ThemeDescriptor } from "./manifest"
 
 function luminance(r: number, g: number, b: number): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
@@ -23,8 +23,11 @@ export function appearanceFromComputedBackground(): Appearance {
   return luminance(...rgb) > 0.5 ? "light" : "dark"
 }
 
-// Built-in themes declare their appearance; user/omarchy themes derive it from
-// the live --background once their styles are applied.
-export function getActiveAppearance(id: string): Appearance {
-  return getDeclaredAppearance(id) ?? appearanceFromComputedBackground()
+// Built-in and plugin themes declare their appearance; loose/omarchy themes
+// derive it from the live --background once their styles are applied.
+export function getActiveAppearance(
+  id: string,
+  descriptors: readonly ThemeDescriptor[],
+): Appearance {
+  return getDeclaredAppearance(id, descriptors) ?? appearanceFromComputedBackground()
 }

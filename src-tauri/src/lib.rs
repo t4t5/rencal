@@ -12,6 +12,7 @@ mod notifications;
 mod nvidia_workaround;
 mod oauth;
 mod omarchy;
+pub mod plugins;
 mod routes;
 mod signal;
 #[cfg(target_os = "linux")]

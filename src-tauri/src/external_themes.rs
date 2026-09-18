@@ -1,5 +1,5 @@
-//! User-supplied CSS themes loaded from `~/.config/rencal/themes/`.
-//! The frontend wraps it in `[data-theme="user:<slug>"] { … }` when injecting.
+//! User-supplied CSS themes loaded from the loose themes and plugin directories.
+//! The frontend wraps each one in `[data-theme="<id>"] { … }` when injecting.
 
 use crate::events::AppEvent;
 
@@ -12,13 +12,35 @@ use specta::Type;
 use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
+use crate::plugins::{self, Appearance};
+
+#[derive(Clone, Debug, Deserialize, Serialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ExternalThemeSource {
+    Loose,
+    Plugin { id: String, version: String },
+}
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 pub struct ExternalTheme {
     pub id: String,
-    /// Uses `@name` (or filename as fallback)
+    /// Loose themes use `@name` (or the filename as fallback).
     pub name: String,
     pub css: String,
+    pub source: ExternalThemeSource,
+    pub appearance: Option<Appearance>,
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize, Type)]
+pub struct ExternalThemeError {
+    pub package: String,
+    pub message: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Type)]
+pub struct ExternalThemesSnapshot {
+    pub themes: Vec<ExternalTheme>,
+    pub errors: Vec<ExternalThemeError>,
 }
 
 fn themes_dir() -> Option<PathBuf> {
@@ -87,11 +109,14 @@ fn parse_name(css: &str, fallback: &str) -> String {
     fallback.to_string()
 }
 
-pub fn scan() -> Vec<ExternalTheme> {
-    let Some(dir) = ensure_themes_dir() else {
-        return Vec::new();
-    };
-    let Ok(entries) = std::fs::read_dir(&dir) else {
+fn ensure_plugins_dir() -> Option<PathBuf> {
+    let dir = plugins::plugins_dir().ok()?;
+    std::fs::create_dir_all(&dir).ok()?;
+    Some(dir)
+}
+
+fn scan_loose(dir: &std::path::Path) -> Vec<ExternalTheme> {
+    let Ok(entries) = std::fs::read_dir(dir) else {
         return Vec::new();
     };
 
@@ -115,6 +140,8 @@ pub fn scan() -> Vec<ExternalTheme> {
             id: format!("user:{slug}"),
             name: parse_name(&css, stem),
             css,
+            source: ExternalThemeSource::Loose,
+            appearance: None,
         });
     }
 
@@ -122,17 +149,65 @@ pub fn scan() -> Vec<ExternalTheme> {
     themes
 }
 
-/// Watches `~/.config/rencal/themes/` and emits `external-themes-changed` when anything changes
+fn scan_from(
+    themes_dir: Option<&std::path::Path>,
+    plugins_dir: Option<&std::path::Path>,
+) -> ExternalThemesSnapshot {
+    let mut snapshot = ExternalThemesSnapshot::default();
+    if let Some(themes_dir) = themes_dir {
+        snapshot.themes = scan_loose(themes_dir);
+    }
+    if let Some(plugins_dir) = plugins_dir {
+        let packages = plugins::scan_packages(plugins_dir, plugins::running_app_version().as_ref());
+        for package in packages.packages {
+            for theme in package.themes {
+                snapshot.themes.push(ExternalTheme {
+                    id: theme.id,
+                    name: theme.name,
+                    css: theme.css,
+                    source: ExternalThemeSource::Plugin {
+                        id: package.id.clone(),
+                        version: package.version.clone(),
+                    },
+                    appearance: Some(theme.appearance),
+                });
+            }
+        }
+        snapshot.errors = packages
+            .errors
+            .into_iter()
+            .map(|error| ExternalThemeError {
+                package: error.package,
+                message: error.message,
+            })
+            .collect();
+    }
+    snapshot
+        .themes
+        .sort_by_key(|theme| theme.name.to_lowercase());
+    snapshot
+}
+
+pub fn scan() -> ExternalThemesSnapshot {
+    let themes_dir = ensure_themes_dir();
+    let plugins_dir = ensure_plugins_dir();
+    scan_from(themes_dir.as_deref(), plugins_dir.as_deref())
+}
+
+/// Watches loose themes and installed plugin packages, then emits one combined snapshot.
 pub async fn run_watcher(app: AppHandle) {
-    let Some(watch_dir) = ensure_themes_dir() else {
+    let (Some(themes_dir), Some(plugins_dir)) = (ensure_themes_dir(), ensure_plugins_dir()) else {
         return;
     };
 
-    let mut watch = match watch_debounced(&[&watch_dir], RecursiveMode::NonRecursive, is_any_change)
-    {
+    let mut watch = match watch_debounced(
+        &[&themes_dir, &plugins_dir],
+        RecursiveMode::Recursive,
+        is_any_change,
+    ) {
         Ok(watch) => watch,
         Err(err) => {
-            log::warn!("theme watcher: failed to watch {watch_dir:?}: {err}");
+            log::warn!("theme watcher: failed to watch {themes_dir:?} and {plugins_dir:?}: {err}");
             return;
         }
     };
@@ -144,7 +219,21 @@ pub async fn run_watcher(app: AppHandle) {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_name, slugify};
+    use super::{ExternalThemeSource, parse_name, scan_from, slugify};
+
+    const MANIFEST: &str = r#"
+id = "alice.dusk"
+name = "Dusk"
+version = "1.0.0"
+description = "A quiet theme"
+min_rencal_version = "0.8.0"
+
+[[contributes.themes]]
+id = "dark"
+name = "Dusk Dark"
+css = "theme.css"
+appearance = "dark"
+"#;
 
     #[test]
     fn slugify_lowercases_and_collapses() {
@@ -164,5 +253,29 @@ mod tests {
         assert_eq!(parse_name("--background: #000;", "file"), "file");
         // Trailing comment close is stripped, surrounding whitespace trimmed.
         assert_eq!(parse_name("/*@name   Solar  */", "file"), "Solar");
+    }
+
+    #[test]
+    fn combined_scan_preserves_loose_themes_and_reports_bad_packages() {
+        let temp = tempfile::tempdir().unwrap();
+        let themes = temp.path().join("themes");
+        let plugins = temp.path().join("plugins");
+        std::fs::create_dir_all(&themes).unwrap();
+        std::fs::create_dir_all(plugins.join("alice.dusk")).unwrap();
+        std::fs::create_dir_all(plugins.join("bob.broken")).unwrap();
+        std::fs::write(themes.join("local.css"), "--background: white;").unwrap();
+        std::fs::write(plugins.join("alice.dusk/rencal-plugin.toml"), MANIFEST).unwrap();
+        std::fs::write(plugins.join("alice.dusk/theme.css"), "--background: black;").unwrap();
+        std::fs::write(plugins.join("bob.broken/rencal-plugin.toml"), "invalid").unwrap();
+
+        let snapshot = scan_from(Some(&themes), Some(&plugins));
+
+        assert_eq!(snapshot.themes.len(), 2);
+        assert!(snapshot.themes.iter().any(|theme| {
+            theme.id == "alice.dusk/dark"
+                && matches!(theme.source, ExternalThemeSource::Plugin { .. })
+        }));
+        assert_eq!(snapshot.errors.len(), 1);
+        assert_eq!(snapshot.errors[0].package, "bob.broken");
     }
 }

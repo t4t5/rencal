@@ -1,59 +1,40 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react"
 
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
-import { api, type ExternalTheme } from "@/lib/api"
+import {
+  api,
+  type ExternalTheme,
+  type ExternalThemeError,
+  type ExternalThemesSnapshot,
+} from "@/lib/api"
 
+import { applyExternalThemes, externalThemeDescriptor } from "@/themes/external"
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
-
-const STYLE_ATTR = "data-external-theme"
-
-// User themes are authored as bare declaration blocks; we add the
-// `[data-theme="<id>"]` scope here (the same wrap the build-time plugin applies
-// to built-in themes), keeping every injected theme isolated so the settings
-// preview tiles can render inactive themes side by side.
-function applyExternalThemes(themes: ExternalTheme[]) {
-  const present = new Set(themes.map((t) => t.id))
-
-  for (const theme of themes) {
-    const selector = `style[${STYLE_ATTR}="${CSS.escape(theme.id)}"]`
-    let el = document.head.querySelector<HTMLStyleElement>(selector)
-    if (!el) {
-      el = document.createElement("style")
-      el.setAttribute(STYLE_ATTR, theme.id)
-      document.head.appendChild(el)
-    }
-    const next = `[data-theme="${theme.id}"] {\n${theme.css}\n}`
-    if (el.textContent !== next) el.textContent = next
-  }
-
-  // Drop styles for themes whose files were removed.
-  for (const el of document.head.querySelectorAll<HTMLStyleElement>(`style[${STYLE_ATTR}]`)) {
-    const id = el.getAttribute(STYLE_ATTR)
-    if (id && !present.has(id)) el.remove()
-  }
-}
 
 type ThemeRegistry = {
   descriptors: ThemeDescriptor[]
   externalThemes: ExternalTheme[]
+  errors: ExternalThemeError[]
 }
 
 const ThemeRegistryContext = createContext<ThemeRegistry | null>(null)
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [externalThemes, setExternalThemes] = useState<ExternalTheme[]>([])
+  const [errors, setErrors] = useState<ExternalThemeError[]>([])
 
-  // Fetch + inject user themes, then keep them in sync with the on-disk folder.
+  // Fetch + inject loose and plugin themes, then keep them in sync with disk.
   useEffect(() => {
     let cancelled = false
 
-    const update = (themes: ExternalTheme[]) => {
-      setExternalThemes(themes)
-      applyExternalThemes(themes)
+    const update = (snapshot: ExternalThemesSnapshot) => {
+      setExternalThemes(snapshot.themes)
+      setErrors(snapshot.errors)
+      applyExternalThemes(snapshot.themes)
     }
 
-    void api.themes.listExternal().then((themes) => {
-      if (!cancelled) update(themes)
+    void api.themes.listExternal().then((snapshot) => {
+      if (!cancelled) update(snapshot)
     })
 
     const unlistenPromise = api.notifications.listen("external-themes-changed", (event) => {
@@ -71,23 +52,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   useOmarchyTheme()
 
   const descriptors = useMemo<ThemeDescriptor[]>(
-    () => [
-      ...BUILTIN_DESCRIPTORS,
-      ...externalThemes.map(
-        (t): ThemeDescriptor => ({
-          id: t.id,
-          name: t.name,
-          appearance: null,
-          source: "external",
-        }),
-      ),
-    ],
+    () => [...BUILTIN_DESCRIPTORS, ...externalThemes.map(externalThemeDescriptor)],
     [externalThemes],
   )
 
   const value = useMemo<ThemeRegistry>(
-    () => ({ descriptors, externalThemes }),
-    [descriptors, externalThemes],
+    () => ({ descriptors, externalThemes, errors }),
+    [descriptors, errors, externalThemes],
   )
 
   return <ThemeRegistryContext.Provider value={value}>{children}</ThemeRegistryContext.Provider>

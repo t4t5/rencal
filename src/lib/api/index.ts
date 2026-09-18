@@ -35,7 +35,12 @@ export type { NotificationSubscription } from "@/lib/api/notifications"
 export type { CredentialFieldInput, ProviderField } from "@/lib/api/providers"
 export type { CaldirSettings } from "@/lib/api/settings"
 export type { SyncPreview } from "@/lib/api/sync"
-export type { ExternalTheme, OmarchyColors } from "@/lib/api/themes"
+export type {
+  ExternalTheme,
+  ExternalThemeError,
+  ExternalThemesSnapshot,
+  OmarchyColors,
+} from "@/lib/api/themes"
 export type { CalendarEvent, EventAttendee, Recurrence, ResponseStatus } from "@/lib/cal-events"
 export type { EventConference } from "@/lib/conference"
 export type { EventTime, FirstDayOfWeek, TimeFormat } from "@/lib/event-time"

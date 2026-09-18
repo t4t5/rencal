@@ -39,7 +39,7 @@ export function useTheme() {
     // Expose the appearance to CSS (`data-appearance`) and sync OS window chrome.
     // Omarchy/user styles are injected async, hence the `descriptors` dependency;
     // useOmarchyTheme re-syncs once its colors arrive.
-    const appearance = getActiveAppearance(theme)
+    const appearance = getActiveAppearance(theme, descriptors)
     document.body.dataset.appearance = appearance
     void getCurrentWindow().setTheme(appearance)
   }, [theme, descriptors])

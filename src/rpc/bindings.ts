@@ -4,6 +4,8 @@ import { createTauRPCProxy as createProxy, type InferCommandOutput } from 'taurp
 type TAURI_CHANNEL<T> = (response: T) => void
 
 
+export type Appearance = "light" | "dark"
+
 export type CaldirSettings = { time_format: TimeFormat; default_reminders: number[]; default_calendar: string | null; 
 /**
  * Tildified for display.
@@ -40,9 +42,15 @@ export type EventStatus = "confirmed" | "tentative" | "cancelled"
 
 export type ExternalTheme = { id: string; 
 /**
- * Uses `@name` (or filename as fallback)
+ * Loose themes use `@name` (or the filename as fallback).
  */
-name: string; css: string }
+name: string; css: string; source: ExternalThemeSource; appearance: Appearance | null }
+
+export type ExternalThemeError = { package: string; message: string }
+
+export type ExternalThemeSource = { kind: "loose" } | { kind: "plugin"; id: string; version: string }
+
+export type ExternalThemesSnapshot = { themes: ExternalTheme[]; errors: ExternalThemeError[] }
 
 /**
  * RPC mirror of `rencal_config::FirstDayOfWeek` (the config crate stays free
@@ -182,7 +190,7 @@ set_theme: (theme: string) => Promise<null>},
 "omarchy": {get_colors: () => Promise<OmarchyColors | null>},
 "platform": {needs_native_decorations: () => Promise<boolean>, 
 take_pending_event_links: () => Promise<EventDeepLink[]>},
-"themes": {list_external: () => Promise<ExternalTheme[]>} };
+"themes": {list_external: () => Promise<ExternalThemesSnapshot>} };
 
 
 export const createTauRPCProxy = () => createProxy<Router>(ARGS_MAP)

@@ -4006,6 +4006,7 @@ dependencies = [
  "parking_lot",
  "reminder-core",
  "rencal-config",
+ "semver",
  "serde",
  "serde_json",
  "socket2 0.5.10",

@@ -9,11 +9,20 @@ import type { ThemeDescriptor } from "@/themes/manifest"
 
 export function ThemesPage() {
   const { theme, setTheme } = useTheme()
-  const { descriptors } = useThemeRegistry()
+  const { descriptors, errors } = useThemeRegistry()
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
+      {errors.length > 0 && (
+        <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
+          {errors.map((error) => (
+            <p key={error.package}>
+              {error.package}: {error.message}
+            </p>
+          ))}
+        </div>
+      )}
     </SettingsContent>
   )
 }
