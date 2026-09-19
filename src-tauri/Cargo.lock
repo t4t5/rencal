@@ -4007,6 +4007,7 @@ dependencies = [
  "parking_lot",
  "reminder-core",
  "rencal-config",
+ "rencal-plugin-contract",
  "reqwest",
  "rustls",
  "semver",
@@ -4050,6 +4051,30 @@ dependencies = [
  "env_logger",
  "log",
  "reminder-core",
+ "tokio",
+]
+
+[[package]]
+name = "rencal-plugin-contract"
+version = "0.1.0"
+dependencies = [
+ "semver",
+ "serde",
+ "specta",
+ "toml 0.8.2",
+]
+
+[[package]]
+name = "rencal-plugin-indexer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rencal-plugin-contract",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tempfile",
  "tokio",
 ]
 

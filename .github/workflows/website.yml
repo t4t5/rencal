@@ -6,6 +6,13 @@ on:
     types: [completed]
     branches: [main]
   workflow_dispatch:
+  workflow_call:
+    inputs:
+      plugin_index_artifact:
+        description: Artifact containing a freshly generated plugins.json
+        required: false
+        type: string
+        default: ""
 
 concurrency:
   group: cloudflare-pages-${{ github.ref }}
@@ -16,12 +23,27 @@ jobs:
     if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       deployments: write
     steps:
       - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Preserve deployed plugin index
+        shell: bash
+        run: |
+          if curl --fail --silent --show-error https://rencal.org/plugins.json --output /tmp/rencal-plugins.json; then
+            mv /tmp/rencal-plugins.json website/public/plugins.json
+          fi
+
+      - name: Download fresh plugin index
+        if: ${{ inputs.plugin_index_artifact != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.plugin_index_artifact }}
+          path: website/public
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
