@@ -3998,6 +3998,7 @@ dependencies = [
  "chrono",
  "chrono-tz",
  "dirs 5.0.1",
+ "futures-util",
  "iana-time-zone",
  "libc",
  "log",
@@ -4006,6 +4007,10 @@ dependencies = [
  "parking_lot",
  "reminder-core",
  "rencal-config",
+ "rencal-plugin-contract",
+ "reqwest",
+ "rustls",
+ "semver",
  "serde",
  "serde_json",
  "socket2 0.5.10",
@@ -4025,6 +4030,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "toml 0.8.2",
+ "toml_edit 0.20.2",
  "url",
 ]
 
@@ -4046,6 +4052,30 @@ dependencies = [
  "env_logger",
  "log",
  "reminder-core",
+ "tokio",
+]
+
+[[package]]
+name = "rencal-plugin-contract"
+version = "0.1.0"
+dependencies = [
+ "semver",
+ "serde",
+ "specta",
+ "toml 0.8.2",
+]
+
+[[package]]
+name = "rencal-plugin-indexer"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "rencal-plugin-contract",
+ "reqwest",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tempfile",
  "tokio",
 ]
 

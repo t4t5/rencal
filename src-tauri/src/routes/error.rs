@@ -22,6 +22,11 @@ pub enum RpcErrorKind {
     Conflict,
     Configuration,
     Authentication,
+    Network,
+    RateLimited,
+    MissingRelease,
+    Incompatible,
+    InvalidPackage,
     Io,
     Internal,
 }

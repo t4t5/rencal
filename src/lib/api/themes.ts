@@ -1,10 +1,15 @@
 import { rpc } from "@/rpc"
-import type { ExternalTheme, OmarchyColors } from "@/rpc/bindings"
+import type {
+  ExternalTheme,
+  ExternalThemeError,
+  ExternalThemesSnapshot,
+  OmarchyColors,
+} from "@/rpc/bindings"
 
-export type { ExternalTheme, OmarchyColors }
+export type { ExternalTheme, ExternalThemeError, ExternalThemesSnapshot, OmarchyColors }
 
-/** User themes from the themes directory; `external-themes-changed` reports later edits. */
-export function listExternalThemes(): Promise<ExternalTheme[]> {
+/** Loose and plugin themes; `external-themes-changed` reports later edits. */
+export function listExternalThemes(): Promise<ExternalThemesSnapshot> {
   return rpc.themes.list_external()
 }
 

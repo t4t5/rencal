@@ -8,12 +8,8 @@ import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
-import { getActiveAppearance } from "@/themes/appearance"
-import { THEME_IDS } from "@/themes/manifest"
-
-function activeThemeId(): string {
-  return document.body.dataset.theme || THEME_IDS[0]
-}
+import { appearanceFromComputedBackground } from "@/themes/appearance"
+import type { Appearance } from "@/themes/manifest"
 
 export async function openSettingsWindow() {
   const existing = await WebviewWindow.getByLabel("settings")
@@ -30,7 +26,9 @@ export async function openSettingsWindow() {
   const screenH = (monitor?.size.height ?? height) / scale
   const needsNative = await needsNativeDecorations()
 
-  const appearance = getActiveAppearance(activeThemeId())
+  const appearance =
+    (document.body.dataset.appearance as Appearance | undefined) ??
+    appearanceFromComputedBackground()
 
   new WebviewWindow("settings", {
     url: "/?appWindow=settings",

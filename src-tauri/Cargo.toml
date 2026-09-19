@@ -1,5 +1,11 @@
 [workspace]
-members = ["reminder-core", "notifierd", "rencal-config"]
+members = [
+  "notifierd",
+  "plugin-contract",
+  "plugin-indexer",
+  "reminder-core",
+  "rencal-config",
+]
 
 [workspace.dependencies]
 caldir-core = "0.16.0"
@@ -46,10 +52,12 @@ caldir-core = { workspace = true }
 chrono = "0.4.43"
 reminder-core = { path = "reminder-core" }
 rencal-config = { path = "rencal-config" }
+rencal-plugin-contract = { path = "plugin-contract" }
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
 chrono-tz = "0.10.4"
 toml = "0.8"
+toml_edit = "0.20"
 notify = "6"
 iana-time-zone = "0.1"
 dirs = "5"
@@ -59,8 +67,10 @@ tauri-plugin-deep-link = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
 parking_lot = "0.12"
-
-[dev-dependencies]
+semver = "1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "stream"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+futures-util = "0.3"
 tempfile = "3"
 
 [target.'cfg(target_os = "linux")'.dependencies]

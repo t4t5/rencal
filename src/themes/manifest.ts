@@ -17,7 +17,7 @@ export type ThemeId = (typeof themes)[number]["id"]
 
 export const THEME_IDS = themes.map((t) => t.id) as [ThemeId, ...ThemeId[]]
 
-export type ThemeSource = "builtin" | "external"
+export type ThemeSource = "builtin" | "external" | "plugin"
 
 export type ThemeDescriptor = {
   id: string
@@ -33,9 +33,9 @@ export const BUILTIN_DESCRIPTORS: ThemeDescriptor[] = themes.map((t) => ({
   source: "builtin",
 }))
 
-export function getDeclaredAppearance(id: string): Appearance | null {
-  return (
-    (themes as readonly { id: string; appearance: Appearance | null }[]).find((t) => t.id === id)
-      ?.appearance ?? null
-  )
+export function getDeclaredAppearance(
+  id: string,
+  descriptors: readonly ThemeDescriptor[],
+): Appearance | null {
+  return descriptors.find((theme) => theme.id === id)?.appearance ?? null
 }

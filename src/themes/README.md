@@ -10,10 +10,12 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 --highlight: #7c3aed;
 ```
 
-The `[data-theme="<id>"]` scope that lets themes coexist (so the app picks one on `<body>` and the settings preview tiles can render others) is added **for you**:
+The `[data-theme="<id>"]` selector is added **for you**:
 
 - **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`).
-- **User themes** (`~/.config/rencal/themes/*.css`) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and wrapped + injected at runtime by `src/themes/ThemeRegistry.tsx`.
+- **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. `useTheme` injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
+
+External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets. Installing or updating an inactive theme therefore does not enable its full CSS.
 
 The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` (the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. fall out automatically. See `tokyonight.css` for a minimal example.
 
@@ -146,7 +148,7 @@ If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and
 
 ## Escape hatch: custom CSS rules
 
-If primitive overrides aren't enough, a theme file can include arbitrary CSS rules alongside its declarations. Write them as **nested selectors** — the file is already wrapped in the theme's `[data-theme="<id>"]` scope, so they won't leak to other themes:
+If primitive overrides aren't enough, a theme file can include arbitrary CSS rules alongside its declarations. Write them as **nested selectors** inside the theme's `[data-theme="<id>"]` wrapper:
 
 ```css
 --primary: #7c3aed;
@@ -158,5 +160,7 @@ If primitive overrides aren't enough, a theme file can include arbitrary CSS rul
 ```
 
 (Built-in themes get this flattened at build time; user themes rely on the webview's native CSS nesting.)
+
+The wrapper is a convenience, not a security boundary: malformed CSS can close it and introduce global rules. Selecting an external theme enables its unrestricted CSS for that window. Switching back to a built-in theme removes that CSS and restores the built-in styling. Inactive previews show custom-property palettes only; custom selectors take effect when selected.
 
 Prefer primitives first — the derivation chain covers most visual-identity needs. You can also override a derived token directly (e.g., set `--divider` explicitly in `classic.css`) when the computed value isn't right for the theme. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.
