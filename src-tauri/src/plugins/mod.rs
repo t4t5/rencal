@@ -312,8 +312,7 @@ pub fn scan_packages(root: &Path, app_version: Option<&Version>) -> PackageScan 
     let mut directories: Vec<_> = entries
         .flatten()
         .filter(|entry| {
-            entry.file_type().is_ok_and(|kind| kind.is_dir())
-                && !entry.file_name().to_string_lossy().starts_with('.')
+            entry.path().is_dir() && !entry.file_name().to_string_lossy().starts_with('.')
         })
         .collect();
     directories.sort_by_key(std::fs::DirEntry::file_name);
@@ -677,5 +676,27 @@ machine = 'laptop' # Future top-level metadata
         assert_eq!(scan.packages[0].themes[0].appearance, Appearance::Dark);
         assert_eq!(scan.errors.len(), 1);
         assert_eq!(scan.errors[0].package, "bob.broken");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn scan_follows_symlinked_package_directories() {
+        use std::os::unix::fs::symlink;
+
+        let temp = tempfile::tempdir().unwrap();
+        let plugins = temp.path().join("plugins");
+        let checkout = temp.path().join("checkout");
+        std::fs::create_dir_all(checkout.join("themes")).unwrap();
+        std::fs::write(checkout.join(MANIFEST_FILE), MANIFEST).unwrap();
+        std::fs::write(checkout.join("themes/dark.css"), "--background: #111;").unwrap();
+        std::fs::create_dir(&plugins).unwrap();
+        symlink(&checkout, plugins.join("alice.dusk")).unwrap();
+
+        let scan = scan_packages(&plugins, Some(&Version::new(0, 9, 0)));
+
+        assert!(scan.errors.is_empty(), "{:?}", scan.errors);
+        assert_eq!(scan.packages.len(), 1);
+        assert_eq!(scan.packages[0].id, "alice.dusk");
+        assert_eq!(scan.packages[0].themes[0].id, "alice.dusk/dark");
     }
 }
