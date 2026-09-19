@@ -340,6 +340,38 @@ appearance = "dark"
         let mixed = format!("{MANIFEST}\n[app]\nmain = \"main.js\"\n");
         let error = validate_manifest(&mixed, None).unwrap_err().to_string();
         assert!(error.contains("unsupported package contribution \"app\""));
+
+        let unsupported_kind = format!("{MANIFEST}\n[contributes.icons]\n");
+        let error = validate_manifest(&unsupported_kind, None)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("unsupported package contribution \"contributes.icons\""));
+    }
+
+    #[test]
+    fn tolerates_future_metadata_and_reports_newer_version_first() {
+        let with_future_metadata = MANIFEST
+            .replacen(
+                "name = \"Dusk\"",
+                "name = \"Dusk\"\nhomepage = \"https://example.com\"\nlicense = \"MIT\"",
+                1,
+            )
+            .replacen(
+                "appearance = \"dark\"",
+                "appearance = \"dark\"\npreview = \"themes/dark.png\"",
+                1,
+            );
+        assert!(validate_manifest(&with_future_metadata, None).is_ok());
+
+        let from_newer_rencal = MANIFEST.replacen("0.8.0", "9.0.0", 1).replacen(
+            "appearance = \"dark\"",
+            "appearance = \"adaptive\"",
+            1,
+        );
+        let error = validate_manifest(&from_newer_rencal, Some(&Version::new(0, 9, 0)))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains("requires renCal 9.0.0"), "{error}");
     }
 
     #[test]

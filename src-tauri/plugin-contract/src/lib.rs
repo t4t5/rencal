@@ -20,7 +20,6 @@ pub enum Appearance {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct ThemeContribution {
     pub id: String,
     pub name: String,
@@ -29,14 +28,12 @@ pub struct ThemeContribution {
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct Contributions {
     #[serde(default)]
     pub themes: Vec<ThemeContribution>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(deny_unknown_fields)]
 pub struct PluginManifest {
     pub id: String,
     pub name: String,
@@ -75,6 +72,7 @@ pub fn validate_manifest(
 ) -> Result<PluginManifest, PluginError> {
     let value: toml::Value = toml::from_str(contents)
         .map_err(|error| PluginError::new(format!("invalid {MANIFEST_FILE}: {error}")))?;
+    validate_compatibility(&value, app_version)?;
     reject_unsupported_contributions(&value)?;
     let manifest: PluginManifest = value
         .try_into()
@@ -94,20 +92,6 @@ pub fn validate_manifest(
             manifest.version
         ))
     })?;
-    let minimum = Version::parse(&manifest.min_rencal_version).map_err(|error| {
-        PluginError::new(format!(
-            "min_rencal_version {:?} is not semantic: {error}",
-            manifest.min_rencal_version
-        ))
-    })?;
-    if let Some(current) = app_version
-        && current < &minimum
-    {
-        return Err(PluginError::new(format!(
-            "requires renCal {minimum} or newer (running {current})"
-        )));
-    }
-
     if manifest.contributes.themes.is_empty() {
         return Err(PluginError::new(
             "unsupported package: at least one theme contribution is required",
@@ -133,6 +117,33 @@ pub fn validate_manifest(
     }
 
     Ok(manifest)
+}
+
+fn validate_compatibility(
+    value: &toml::Value,
+    app_version: Option<&Version>,
+) -> Result<(), PluginError> {
+    let Some(minimum) = value
+        .as_table()
+        .and_then(|table| table.get("min_rencal_version"))
+        .and_then(toml::Value::as_str)
+    else {
+        // Let the full manifest parse report a missing field or the wrong type.
+        return Ok(());
+    };
+    let minimum = Version::parse(minimum).map_err(|error| {
+        PluginError::new(format!(
+            "min_rencal_version {minimum:?} is not semantic: {error}"
+        ))
+    })?;
+    if let Some(current) = app_version
+        && current < &minimum
+    {
+        return Err(PluginError::new(format!(
+            "requires renCal {minimum} or newer (running {current})"
+        )));
+    }
+    Ok(())
 }
 
 /// Verify the package owner against the GitHub repository owner.
