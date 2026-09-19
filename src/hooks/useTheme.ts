@@ -8,6 +8,7 @@ import { emitAppEvent } from "@/lib/api/internal"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
+import { applyExternalThemes } from "@/themes/external"
 import { THEME_IDS } from "@/themes/manifest"
 
 // Theme id is a plain string: a built-in id or a user theme's `user:<slug>`.
@@ -29,20 +30,21 @@ function getDefaultTheme(): Theme {
 // either store. On mount we reconcile from TOML (TOML wins on conflict).
 export function useTheme() {
   const [theme, setThemeLocal] = useLocalStorage("theme", themeSchema, getDefaultTheme())
-  const { descriptors } = useThemeRegistry()
+  const { descriptors, externalThemes } = useThemeRegistry()
   const themeRef = useRef(theme)
   themeRef.current = theme
 
   useEffect(() => {
     document.body.dataset.theme = theme
     document.body.style.removeProperty("--background")
+    applyExternalThemes(externalThemes, theme)
     // Expose the appearance to CSS (`data-appearance`) and sync OS window chrome.
     // Omarchy/user styles are injected async, hence the `descriptors` dependency;
     // useOmarchyTheme re-syncs once its colors arrive.
     const appearance = getActiveAppearance(theme, descriptors)
     document.body.dataset.appearance = appearance
     void getCurrentWindow().setTheme(appearance)
-  }, [theme, descriptors])
+  }, [theme, descriptors, externalThemes])
 
   // Cache the resolved --background for index.html's flash-prevention.
   // Deferred by 1 frame so any runtime-injected user/omarchy styles are applied first.
@@ -56,7 +58,7 @@ export function useTheme() {
       }
     })
     return () => cancelAnimationFrame(raf)
-  }, [theme])
+  }, [theme, externalThemes])
 
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {

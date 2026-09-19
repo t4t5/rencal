@@ -8,7 +8,7 @@ import {
   type ExternalThemesSnapshot,
 } from "@/lib/api"
 
-import { applyExternalThemes, externalThemeDescriptor } from "@/themes/external"
+import { externalThemeDescriptor } from "@/themes/external"
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
 
 type ThemeRegistry = {
@@ -23,14 +23,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [externalThemes, setExternalThemes] = useState<ExternalTheme[]>([])
   const [errors, setErrors] = useState<ExternalThemeError[]>([])
 
-  // Fetch + inject loose and plugin themes, then keep them in sync with disk.
+  // Fetch loose and plugin themes, then keep them in sync with disk.
   useEffect(() => {
     let cancelled = false
 
     const update = (snapshot: ExternalThemesSnapshot) => {
       setExternalThemes(snapshot.themes)
       setErrors(snapshot.errors)
-      applyExternalThemes(snapshot.themes)
     }
 
     void api.themes.listExternal().then((snapshot) => {
