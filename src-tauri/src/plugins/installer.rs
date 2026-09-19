@@ -897,7 +897,31 @@ impl Downloader for ReqwestDownloader {
 
 impl Repository {
     fn parse(value: &str) -> Result<Self, PluginInstallError> {
-        let Some((owner, name)) = value.split_once('/') else {
+        let coordinates = if value.contains("://") {
+            let url = Url::parse(value).map_err(|_| Self::invalid(value))?;
+            if url.scheme() != "https"
+                || !url
+                    .host_str()
+                    .is_some_and(|host| host.eq_ignore_ascii_case("github.com"))
+                || !url.username().is_empty()
+                || url.password().is_some()
+                || url.port().is_some()
+                || url.query().is_some()
+                || url.fragment().is_some()
+            {
+                return Err(Self::invalid(value));
+            }
+            let path = url
+                .path()
+                .strip_prefix('/')
+                .unwrap_or_default()
+                .trim_end_matches('/');
+            path.strip_suffix(".git").unwrap_or(path).to_string()
+        } else {
+            value.to_string()
+        };
+
+        let Some((owner, name)) = coordinates.split_once('/') else {
             return Err(Self::invalid(value));
         };
         let valid_owner = valid_segment(owner, false);
@@ -908,14 +932,16 @@ impl Repository {
         Ok(Self {
             owner: owner.to_string(),
             name: name.to_string(),
-            display: value.to_string(),
+            display: format!("{owner}/{name}"),
         })
     }
 
     fn invalid(value: &str) -> PluginInstallError {
         PluginInstallError::new(
             PluginInstallErrorKind::InvalidInput,
-            format!("repository {value:?} must be owner/repo"),
+            format!(
+                "repository {value:?} must be owner/repo or an HTTPS github.com repository URL"
+            ),
         )
     }
 }
@@ -1270,5 +1296,33 @@ appearance = "dark"
         downloader.set("/repos/Alice/rencal-dusk/releases/latest", 429, Vec::new());
         let limited = manager.inspect("Alice/rencal-dusk").await.unwrap_err();
         assert_eq!(limited.kind, PluginInstallErrorKind::RateLimited);
+    }
+
+    #[test]
+    fn accepts_repository_coordinates_and_github_urls() {
+        for value in [
+            "Alice/rencal-dusk",
+            "https://github.com/Alice/rencal-dusk",
+            "https://github.com/Alice/rencal-dusk/",
+            "https://github.com/Alice/rencal-dusk.git",
+        ] {
+            let repository = Repository::parse(value).unwrap();
+            assert_eq!(repository.owner, "Alice");
+            assert_eq!(repository.name, "rencal-dusk");
+            assert_eq!(repository.display, "Alice/rencal-dusk");
+        }
+    }
+
+    #[test]
+    fn rejects_non_github_or_non_repository_urls() {
+        for value in [
+            "http://github.com/Alice/rencal-dusk",
+            "https://example.com/Alice/rencal-dusk",
+            "https://github.com/Alice/rencal-dusk/issues",
+            "https://github.com/Alice/rencal-dusk?tab=readme",
+        ] {
+            let error = Repository::parse(value).unwrap_err();
+            assert_eq!(error.kind, PluginInstallErrorKind::InvalidInput);
+        }
     }
 }

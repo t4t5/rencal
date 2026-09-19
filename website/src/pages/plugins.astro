@@ -132,10 +132,10 @@ const labelOf = (contribution: string) =>
             </div>
 
             <div class="plugin-install">
-              <span>Paste into Settings → Plugins:</span>
+              <span>Install from a terminal:</span>
               <CopyButton
-                command={plugin.repo}
-                label={`Copy ${plugin.repo} for installation`}
+                command={`rencal install ${plugin.repo}`}
+                label={`Copy installation command for ${plugin.repo}`}
                 showCommand
               />
             </div>
