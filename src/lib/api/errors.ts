@@ -9,6 +9,11 @@ const errorKinds = {
   conflict: true,
   configuration: true,
   authentication: true,
+  network: true,
+  rate_limited: true,
+  missing_release: true,
+  incompatible: true,
+  invalid_package: true,
   io: true,
   internal: true,
 } satisfies Record<RpcErrorKind, true>

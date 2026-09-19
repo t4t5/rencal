@@ -26,6 +26,7 @@ use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
+use routes::plugins::{PluginsApi, PluginsApiImpl};
 use routes::themes::{ThemesApi, ThemesApiImpl};
 use state::AppState;
 use std::path::PathBuf;
@@ -41,6 +42,14 @@ const MIN_WINDOW_HEIGHT: f64 = 600.0;
 
 /// Creates the taurpc router. Exposed for type generation.
 pub fn create_router(state: Arc<AppState>) -> Router<tauri::Wry> {
+    let plugins = plugins::PluginManager::system().expect("failed to resolve plugin storage");
+    create_router_with_plugins(state, plugins)
+}
+
+fn create_router_with_plugins(
+    state: Arc<AppState>,
+    plugins: plugins::PluginManager,
+) -> Router<tauri::Wry> {
     #[cfg(debug_assertions)]
     events::export_types().expect("failed to export notification types");
     Router::new()
@@ -48,6 +57,7 @@ pub fn create_router(state: Arc<AppState>) -> Router<tauri::Wry> {
         .merge(PlatformApiImpl::new(state).into_handler())
         .merge(OmarchyApiImpl.into_handler())
         .merge(ConfigApiImpl.into_handler())
+        .merge(PluginsApiImpl::new(plugins).into_handler())
         .merge(ThemesApiImpl.into_handler())
 }
 
@@ -233,7 +243,17 @@ pub async fn run() {
             return;
         }
     };
-    let router = create_router(state.clone());
+    let plugins = match plugins::PluginManager::system() {
+        Ok(plugins) => plugins,
+        Err(err) => {
+            run_fatal_dialog(
+                context,
+                format!("renCal cannot initialize plugin storage:\n{err}"),
+            );
+            return;
+        }
+    };
+    let router = create_router_with_plugins(state.clone(), plugins.clone());
 
     let builder = tauri::Builder::default();
 
@@ -315,6 +335,17 @@ pub async fn run() {
 
             // Omarchy theme, user CSS themes, caldir data + config, rencal config, timezone:
             watchers::spawn_all(app.handle(), &state);
+
+            let plugin_manager = plugins.clone();
+            spawn_task("plugin restore", async move {
+                for error in plugin_manager.restore_missing().await {
+                    log::error!(
+                        "could not restore plugin {}: {}",
+                        error.package,
+                        error.message
+                    );
+                }
+            });
 
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {

@@ -6,6 +6,7 @@
 
 use std::collections::HashSet;
 use std::fmt;
+use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use semver::Version;
@@ -13,6 +14,13 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 pub const MANIFEST_FILE: &str = "rencal-plugin.toml";
+
+mod installer;
+
+pub use installer::{
+    PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager,
+    PluginRestoreError, PluginThemeInspection,
+};
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -294,8 +302,42 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
             PluginError::new(format!("could not create {}: {error}", parent.display()))
         })?;
     }
-    std::fs::write(path, contents)
-        .map_err(|error| PluginError::new(format!("could not write {}: {error}", path.display())))
+    // Keep dotfile-manager symlinks intact while still replacing the actual
+    // declarations file atomically.
+    let destination = match std::fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_symlink() => {
+            std::fs::canonicalize(path).map_err(|error| {
+                PluginError::new(format!(
+                    "could not resolve plugins.toml symlink {}: {error}",
+                    path.display()
+                ))
+            })?
+        }
+        _ => path.to_path_buf(),
+    };
+    let parent = destination.parent().ok_or_else(|| {
+        PluginError::new(format!("{} has no parent directory", destination.display()))
+    })?;
+    let mut temporary = tempfile::NamedTempFile::new_in(parent).map_err(|error| {
+        PluginError::new(format!(
+            "could not create temporary plugins.toml beside {}: {error}",
+            path.display()
+        ))
+    })?;
+    temporary.write_all(contents.as_bytes()).map_err(|error| {
+        PluginError::new(format!("could not write temporary plugins.toml: {error}"))
+    })?;
+    temporary.as_file().sync_all().map_err(|error| {
+        PluginError::new(format!("could not sync temporary plugins.toml: {error}"))
+    })?;
+    temporary.persist(&destination).map_err(|error| {
+        PluginError::new(format!(
+            "could not replace {}: {}",
+            destination.display(),
+            error.error
+        ))
+    })?;
+    Ok(())
 }
 
 fn validate_plugins_file(file: &PluginsFile) -> Result<(), PluginError> {
@@ -401,7 +443,10 @@ pub fn scan_packages(root: &Path, app_version: Option<&Version>) -> PackageScan 
 
     let mut directories: Vec<_> = entries
         .flatten()
-        .filter(|entry| entry.file_type().is_ok_and(|kind| kind.is_dir()))
+        .filter(|entry| {
+            entry.file_type().is_ok_and(|kind| kind.is_dir())
+                && !entry.file_name().to_string_lossy().starts_with('.')
+        })
         .collect();
     directories.sort_by_key(std::fs::DirEntry::file_name);
 
@@ -543,6 +588,38 @@ appearance = "dark"
         assert!(load_plugins_file(&path).is_err());
         assert!(save_plugins_file(&path, &PluginsFile::default()).is_err());
         assert_eq!(std::fs::read_to_string(&path).unwrap(), before);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn atomic_save_preserves_a_dotfiles_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let temp = tempfile::tempdir().unwrap();
+        let dotfiles = temp.path().join("dotfiles/plugins.toml");
+        std::fs::create_dir_all(dotfiles.parent().unwrap()).unwrap();
+        std::fs::write(&dotfiles, "plugins = []\n").unwrap();
+        let path = temp.path().join("config/plugins.toml");
+        std::fs::create_dir_all(path.parent().unwrap()).unwrap();
+        symlink(&dotfiles, &path).unwrap();
+
+        let expected = PluginsFile {
+            plugins: vec![PluginEntry {
+                id: "alice.dusk".into(),
+                repo: "Alice/rencal-dusk".into(),
+                version: Some("1.2.3".into()),
+            }],
+        };
+        save_plugins_file(&path, &expected).unwrap();
+
+        assert!(
+            std::fs::symlink_metadata(&path)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert_eq!(load_plugins_file(&path).unwrap(), expected);
+        assert_eq!(load_plugins_file(&dotfiles).unwrap(), expected);
     }
 
     #[test]
