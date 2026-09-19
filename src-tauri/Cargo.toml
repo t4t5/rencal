@@ -57,6 +57,7 @@ tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
 chrono-tz = "0.10.4"
 toml = "0.8"
+toml_edit = "0.20"
 notify = "6"
 iana-time-zone = "0.1"
 dirs = "5"

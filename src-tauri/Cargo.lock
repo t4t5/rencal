@@ -4030,6 +4030,7 @@ dependencies = [
  "tempfile",
  "tokio",
  "toml 0.8.2",
+ "toml_edit 0.20.2",
  "url",
 ]
 
