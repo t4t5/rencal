@@ -22,7 +22,7 @@ use super::{
     validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
 };
 
-const RELEASE_RESPONSE_LIMIT: usize = 64 * 1024;
+const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
@@ -1222,6 +1222,36 @@ appearance = "dark"
                 .plugins
                 .is_empty()
         );
+    }
+
+    #[tokio::test]
+    async fn accepts_release_metadata_with_long_notes() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let release = format!(
+            r#"{{"tag_name":"v1.0.0","body":"{}"}}"#,
+            "x".repeat(125 * 1024)
+        );
+        downloader.set(
+            "/repos/Alice/rencal-dusk/releases/latest",
+            200,
+            release.into_bytes(),
+        );
+        downloader.set(
+            "/Alice/rencal-dusk/v1.0.0/rencal-plugin.toml",
+            200,
+            MANIFEST_V1.as_bytes().to_vec(),
+        );
+        downloader.set(
+            "/Alice/rencal-dusk/v1.0.0/themes/dark.css",
+            200,
+            b"--background: #111;".to_vec(),
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        let inspection = manager.inspect("Alice/rencal-dusk").await.unwrap();
+
+        assert_eq!(inspection.version, "1.0.0");
     }
 
     #[tokio::test]
