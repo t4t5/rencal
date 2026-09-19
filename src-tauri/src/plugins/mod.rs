@@ -18,8 +18,9 @@ pub const MANIFEST_FILE: &str = "rencal-plugin.toml";
 mod installer;
 
 pub use installer::{
-    PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager,
-    PluginRestoreError, PluginThemeInspection,
+    InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginInspection,
+    PluginInstallError, PluginInstallErrorKind, PluginManager, PluginRestoreError,
+    PluginThemeInspection,
 };
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
@@ -407,6 +408,7 @@ pub struct ScannedTheme {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ScannedPackage {
     pub id: String,
+    pub name: String,
     pub version: String,
     pub themes: Vec<ScannedTheme>,
 }
@@ -501,6 +503,7 @@ fn scan_package(
 
     Ok(ScannedPackage {
         id: manifest.id,
+        name: manifest.name,
         version: manifest.version,
         themes,
     })

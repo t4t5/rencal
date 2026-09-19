@@ -1,7 +1,21 @@
 import { rpc } from "@/rpc"
-import type { PluginInspection, PluginThemeInspection } from "@/rpc/bindings"
+import type {
+  InstalledPlugin,
+  InstalledPlugins,
+  PluginCatalog,
+  PluginCatalogEntry,
+  PluginInspection,
+  PluginThemeInspection,
+} from "@/rpc/bindings"
 
-export type { PluginInspection, PluginThemeInspection }
+export type {
+  InstalledPlugin,
+  InstalledPlugins,
+  PluginCatalog,
+  PluginCatalogEntry,
+  PluginInspection,
+  PluginThemeInspection,
+}
 
 /** Resolve and validate the latest stable release for an install review. */
 export function inspectPlugin(repo: string): Promise<PluginInspection> {
@@ -18,6 +32,8 @@ export async function uninstallPlugin(id: string): Promise<void> {
 }
 
 export const plugins = {
+  list: (): Promise<InstalledPlugins> => rpc.plugins.list(),
+  catalog: (): Promise<PluginCatalog> => rpc.plugins.catalog(),
   inspect: inspectPlugin,
   install: installPlugin,
   uninstall: uninstallPlugin,

@@ -1,9 +1,14 @@
-use crate::plugins::{PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager};
+use crate::plugins::{
+    InstalledPlugins, PluginCatalog, PluginInspection, PluginInstallError, PluginInstallErrorKind,
+    PluginManager,
+};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
 #[taurpc::procedures(path = "plugins", export_to = "../src/rpc/bindings.ts")]
 pub trait PluginsApi {
+    async fn list() -> TauResult<InstalledPlugins>;
+    async fn catalog() -> TauResult<PluginCatalog>;
     async fn inspect(repo: String) -> TauResult<PluginInspection>;
     async fn install(repo: String) -> TauResult<PluginInspection>;
     async fn uninstall(id: String) -> TauResult<()>;
@@ -22,6 +27,14 @@ impl PluginsApiImpl {
 
 #[taurpc::resolvers]
 impl PluginsApi for PluginsApiImpl {
+    async fn list(self) -> TauResult<InstalledPlugins> {
+        Ok(self.manager.list().await)
+    }
+
+    async fn catalog(self) -> TauResult<PluginCatalog> {
+        Ok(self.manager.catalog().await)
+    }
+
     async fn inspect(self, repo: String) -> TauResult<PluginInspection> {
         self.manager
             .inspect(&repo)

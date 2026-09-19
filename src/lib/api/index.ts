@@ -34,7 +34,14 @@ export type { Calendar } from "@/lib/api/calendars"
 export type { Contact } from "@/lib/api/contacts"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"
-export type { PluginInspection, PluginThemeInspection } from "@/lib/api/plugins"
+export type {
+  InstalledPlugin,
+  InstalledPlugins,
+  PluginCatalog,
+  PluginCatalogEntry,
+  PluginInspection,
+  PluginThemeInspection,
+} from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField } from "@/lib/api/providers"
 export type { CaldirSettings } from "@/lib/api/settings"
 export type { SyncPreview } from "@/lib/api/sync"

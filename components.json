@@ -18,5 +18,7 @@
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {}
+  "registries": {
+    "@loading-ui": "https://loading-ui.com/r/{name}.json"
+  }
 }

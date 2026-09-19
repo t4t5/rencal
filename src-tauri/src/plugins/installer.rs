@@ -18,14 +18,47 @@ use tokio::sync::Mutex;
 
 use super::{
     Appearance, MANIFEST_FILE, PluginEntry, PluginManifest, PluginsFile, load_plugins_file,
-    plugins_dir, plugins_file_path, running_app_version, save_plugins_file, validate_manifest,
-    validate_manifest_owner, validate_release_tag,
+    plugins_dir, plugins_file_path, running_app_version, save_plugins_file, scan_packages,
+    validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 64 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
+const CATALOG_URL: &str = "https://rencal.org/plugins.json";
+
+#[derive(Clone, Debug, Serialize, Type)]
+pub struct InstalledPlugin {
+    pub id: String,
+    pub name: String,
+    pub repo: Option<String>,
+    pub version: Option<String>,
+    pub update_version: Option<String>,
+    pub error: Option<String>,
+}
+
+#[derive(Clone, Debug, Serialize, Type)]
+pub struct InstalledPlugins {
+    pub plugins: Vec<InstalledPlugin>,
+    pub errors: Vec<String>,
+}
+
+/// The catalog is a JSON array. Extra indexer metadata is ignored by the app.
+#[derive(Clone, Debug, Deserialize, Serialize, Type)]
+pub struct PluginCatalogEntry {
+    pub id: String,
+    pub name: String,
+    pub repo: String,
+    pub description: String,
+    pub version: String,
+}
+
+#[derive(Clone, Debug, Serialize, Type)]
+pub struct PluginCatalog {
+    pub plugins: Vec<PluginCatalogEntry>,
+    pub error: Option<String>,
+}
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum PluginInstallErrorKind {
@@ -107,6 +140,7 @@ struct PluginManagerInner {
     declarations_path: PathBuf,
     packages_dir: PathBuf,
     mutations: Mutex<()>,
+    catalog: Mutex<Vec<PluginCatalogEntry>>,
 }
 
 struct DownloadResponse {
@@ -179,6 +213,7 @@ impl PluginManager {
         let _ = rustls::crypto::ring::default_provider().install_default();
         let client = reqwest::Client::builder()
             .user_agent(format!("renCal/{}", env!("CARGO_PKG_VERSION")))
+            .timeout(std::time::Duration::from_secs(30))
             .build()
             .map_err(|error| {
                 PluginInstallError::new(
@@ -210,8 +245,140 @@ impl PluginManager {
                 declarations_path,
                 packages_dir,
                 mutations: Mutex::new(()),
+                catalog: Mutex::new(Vec::new()),
             }),
         }
+    }
+
+    /// Include missing/broken declarations and manually placed packages, offline.
+    pub async fn list(&self) -> InstalledPlugins {
+        let _guard = self.inner.mutations.lock().await;
+        let mut errors = Vec::new();
+        let declarations = self.load_declarations().unwrap_or_else(|error| {
+            errors.push(error.to_string());
+            PluginsFile::default()
+        });
+        let scan = scan_packages(&self.inner.packages_dir, running_app_version().as_ref());
+        let mut plugins: Vec<_> = declarations
+            .plugins
+            .into_iter()
+            .map(|entry| InstalledPlugin {
+                name: entry.id.clone(),
+                id: entry.id,
+                repo: Some(entry.repo),
+                version: entry.version,
+                update_version: None,
+                error: Some(
+                    "Package files are missing. Install the repository again to restore it.".into(),
+                ),
+            })
+            .collect();
+        for package in scan.packages {
+            if let Some(row) = plugins.iter_mut().find(|row| row.id == package.id) {
+                row.name = package.name;
+                row.version = Some(package.version);
+                row.error = None;
+            } else {
+                plugins.push(InstalledPlugin {
+                    id: package.id,
+                    name: package.name,
+                    repo: None,
+                    version: Some(package.version),
+                    update_version: None,
+                    error: None,
+                });
+            }
+        }
+        for error in scan.errors {
+            if let Some(row) = plugins.iter_mut().find(|row| row.id == error.package) {
+                row.error = Some(error.message);
+            } else if validate_package_id(&error.package).is_ok() {
+                plugins.push(InstalledPlugin {
+                    name: error.package.clone(),
+                    id: error.package,
+                    repo: None,
+                    version: None,
+                    update_version: None,
+                    error: Some(error.message),
+                });
+            } else {
+                errors.push(format!("{}: {}", error.package, error.message));
+            }
+        }
+        let catalog = self.inner.catalog.lock().await;
+        for row in &mut plugins {
+            row.update_version = catalog
+                .iter()
+                .find(|entry| {
+                    row.id == entry.id
+                        && row
+                            .repo
+                            .as_ref()
+                            .is_some_and(|repo| repo.eq_ignore_ascii_case(&entry.repo))
+                        && row.version.as_ref().is_some_and(|version| {
+                            match (Version::parse(&entry.version), Version::parse(version)) {
+                                (Ok(latest), Ok(current)) => {
+                                    latest.cmp_precedence(&current).is_gt()
+                                }
+                                _ => false,
+                            }
+                        })
+                })
+                .map(|entry| entry.version.clone());
+        }
+        plugins.sort_by_key(|row| row.name.to_lowercase());
+        InstalledPlugins { plugins, errors }
+    }
+
+    /// Fetch through the backend so the webview's remote-resource CSP stays closed.
+    /// Keep the last successful catalog for this process if refresh fails.
+    pub async fn catalog(&self) -> PluginCatalog {
+        let result = self.fetch_catalog().await;
+        let mut cached = self.inner.catalog.lock().await;
+        let error = match result {
+            Ok(entries) => {
+                *cached = entries;
+                None
+            }
+            Err(error) => Some(error.to_string()),
+        };
+        let plugins = cached.clone();
+        PluginCatalog { plugins, error }
+    }
+
+    async fn fetch_catalog(&self) -> Result<Vec<PluginCatalogEntry>, PluginInstallError> {
+        let response = self
+            .inner
+            .downloader
+            .get(Url::parse(CATALOG_URL).expect("catalog URL"), PACKAGE_LIMIT)
+            .await?;
+        if !response.status.is_success() {
+            return Err(PluginInstallError::new(
+                PluginInstallErrorKind::Network,
+                format!("Plugin catalog is unavailable (HTTP {}).", response.status),
+            ));
+        }
+        let mut entries: Vec<PluginCatalogEntry> = serde_json::from_slice(&response.bytes)
+            .map_err(|error| {
+                PluginInstallError::invalid_package(format!("Invalid plugin catalog: {error}"))
+            })?;
+        let mut ids = std::collections::HashSet::new();
+        for entry in &entries {
+            validate_package_id(&entry.id)
+                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
+            let repo = Repository::parse(&entry.repo)?;
+            super::validate_manifest_owner_for_id(&entry.id, &repo.owner)
+                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
+            Version::parse(&entry.version)
+                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
+            if entry.name.trim().is_empty() || !ids.insert(&entry.id) {
+                return Err(PluginInstallError::invalid_package(
+                    "Invalid or duplicate catalog entry",
+                ));
+            }
+        }
+        entries.sort_by_key(|entry| entry.name.to_lowercase());
+        Ok(entries)
     }
 
     /// Resolve and validate the latest stable GitHub release without writing it.
@@ -234,16 +401,19 @@ impl PluginManager {
     /// Remove both the declaration and package directory. A missing directory
     /// is tolerated so a broken declaration can still be cleaned up.
     pub async fn uninstall(&self, id: &str) -> Result<(), PluginInstallError> {
+        validate_package_id(id).map_err(|error| {
+            PluginInstallError::new(PluginInstallErrorKind::InvalidInput, error.to_string())
+        })?;
         let _guard = self.inner.mutations.lock().await;
         let mut declarations = self.load_declarations()?;
-        let Some(index) = declarations.plugins.iter().position(|entry| entry.id == id) else {
+        let index = declarations.plugins.iter().position(|entry| entry.id == id);
+        let target = self.inner.packages_dir.join(id);
+        if index.is_none() && !target.is_dir() {
             return Err(PluginInstallError::new(
                 PluginInstallErrorKind::InvalidInput,
                 format!("plugin {id:?} is not installed"),
             ));
-        };
-
-        let target = self.inner.packages_dir.join(id);
+        }
         std::fs::create_dir_all(&self.inner.packages_dir).map_err(|error| {
             PluginInstallError::io(
                 format!("could not create {}", self.inner.packages_dir.display()),
@@ -264,7 +434,9 @@ impl PluginManager {
             false
         };
 
-        declarations.plugins.remove(index);
+        if let Some(index) = index {
+            declarations.plugins.remove(index);
+        }
         if let Err(error) = save_plugins_file(&self.inner.declarations_path, &declarations) {
             if moved {
                 let _ = std::fs::rename(&backup_package, &target);
@@ -864,6 +1036,135 @@ appearance = "dark"
             200,
             b"--background: #111;".to_vec(),
         );
+    }
+
+    #[tokio::test]
+    async fn lists_installed_missing_and_broken_packages_offline() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        downloader.responses.lock().unwrap().clear();
+
+        let snapshot = manager.list().await;
+        assert!(snapshot.errors.is_empty());
+        assert_eq!(snapshot.plugins[0].name, "Dusk");
+        assert_eq!(
+            snapshot.plugins[0].repo.as_deref(),
+            Some("Alice/rencal-dusk")
+        );
+        assert!(snapshot.plugins[0].error.is_none());
+
+        std::fs::remove_file(temp.path().join("data/plugins/alice.dusk/themes/dark.css")).unwrap();
+        assert!(
+            manager.list().await.plugins[0]
+                .error
+                .as_ref()
+                .unwrap()
+                .contains("dark.css")
+        );
+        std::fs::remove_dir_all(temp.path().join("data/plugins/alice.dusk")).unwrap();
+        assert!(
+            manager.list().await.plugins[0]
+                .error
+                .as_ref()
+                .unwrap()
+                .contains("missing")
+        );
+        manager.uninstall("alice.dusk").await.unwrap();
+        assert!(manager.list().await.plugins.is_empty());
+    }
+
+    #[tokio::test]
+    async fn lists_and_removes_manual_packages_without_hiding_config_errors() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let config = temp.path().join("config/plugins.toml");
+        std::fs::write(&config, "invalid toml").unwrap();
+        let snapshot = manager.list().await;
+        assert_eq!(snapshot.plugins[0].name, "Dusk");
+        assert!(snapshot.plugins[0].repo.is_none());
+        assert_eq!(snapshot.errors.len(), 1);
+        assert!(manager.uninstall("alice.dusk").await.is_err());
+        assert_eq!(std::fs::read_to_string(&config).unwrap(), "invalid toml");
+
+        // Simulate the user repairing the config; the normal writer deliberately
+        // refuses to overwrite malformed TOML.
+        std::fs::write(&config, "plugins = []\n").unwrap();
+        manager.uninstall("alice.dusk").await.unwrap();
+        assert!(manager.list().await.plugins.is_empty());
+        assert!(manager.uninstall("../plugins").await.is_err());
+    }
+
+    #[tokio::test]
+    async fn catalog_uses_semantic_versions_and_preserves_last_good_entries() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install("Alice/rencal-dusk").await.unwrap();
+
+        for (version, update) in [("1.0.0+build.2", false), ("0.9.0", false), ("1.10.0", true)] {
+            downloader.set(
+                "/plugins.json",
+                200,
+                serde_json::to_vec(&serde_json::json!([{
+                    "id": "alice.dusk", "name": "Dusk", "repo": "Alice/rencal-dusk",
+                    "description": "A quiet theme", "version": version,
+                    "tag": format!("v{version}"), "stars": 42
+                }]))
+                .unwrap(),
+            );
+            assert!(manager.catalog().await.error.is_none());
+            let installed = manager.list().await;
+            assert_eq!(
+                installed.plugins[0].update_version.as_deref(),
+                update.then_some(version)
+            );
+        }
+
+        downloader.set("/plugins.json", 503, Vec::new());
+        let catalog = manager.catalog().await;
+        assert!(catalog.error.unwrap().contains("503"));
+        assert_eq!(catalog.plugins[0].version, "1.10.0");
+        downloader.set("/plugins.json", 200, b"not json".to_vec());
+        let catalog = manager.catalog().await;
+        assert!(catalog.error.is_some());
+        assert_eq!(catalog.plugins[0].version, "1.10.0");
+
+        std::fs::write(
+            temp.path()
+                .join("data/plugins/alice.dusk/rencal-plugin.toml"),
+            MANIFEST_V1.replace("1.0.0", "2.0.0"),
+        )
+        .unwrap();
+        assert!(manager.list().await.plugins[0].update_version.is_none());
+
+        manager.uninstall("alice.dusk").await.unwrap();
+        assert!(manager.list().await.plugins.is_empty());
+    }
+
+    #[tokio::test]
+    async fn rejects_catalog_entries_with_mismatched_owners() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        downloader.set(
+            "/plugins.json",
+            200,
+            br#"[{
+            "id":"alice.dusk", "name":"Dusk", "repo":"bob/dusk",
+            "description":"Theme", "version":"1.0.0"
+        }]"#
+            .to_vec(),
+        );
+        let catalog = manager.catalog().await;
+        assert!(catalog.error.unwrap().contains("does not match"));
+        assert!(catalog.plugins.is_empty());
     }
 
     #[tokio::test]
