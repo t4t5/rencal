@@ -11,6 +11,8 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 pub const MANIFEST_FILE: &str = "rencal-plugin.toml";
+pub const MAX_NAME_LENGTH: usize = 100;
+pub const MAX_DESCRIPTION_LENGTH: usize = 500;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -74,17 +76,17 @@ pub fn validate_manifest(
         .map_err(|error| PluginError::new(format!("invalid {MANIFEST_FILE}: {error}")))?;
     validate_compatibility(&value, app_version)?;
     reject_unsupported_contributions(&value)?;
-    let manifest: PluginManifest = value
+    let mut manifest: PluginManifest = value
         .try_into()
         .map_err(|error| PluginError::new(format!("invalid {MANIFEST_FILE}: {error}")))?;
 
     validate_package_id(&manifest.id)?;
-    if manifest.name.trim().is_empty() {
-        return Err(PluginError::new("plugin name must not be empty"));
-    }
-    if manifest.description.trim().is_empty() {
-        return Err(PluginError::new("plugin description must not be empty"));
-    }
+    manifest.name = validate_display_text(&manifest.name, "plugin name", MAX_NAME_LENGTH)?;
+    manifest.description = validate_display_text(
+        &manifest.description,
+        "plugin description",
+        MAX_DESCRIPTION_LENGTH,
+    )?;
 
     Version::parse(&manifest.version).map_err(|error| {
         PluginError::new(format!(
@@ -99,7 +101,7 @@ pub fn validate_manifest(
     }
 
     let mut theme_ids = HashSet::new();
-    for theme in &manifest.contributes.themes {
+    for theme in &mut manifest.contributes.themes {
         validate_contribution_id(&theme.id)?;
         if !theme_ids.insert(&theme.id) {
             return Err(PluginError::new(format!(
@@ -107,16 +109,39 @@ pub fn validate_manifest(
                 theme.id
             )));
         }
-        if theme.name.trim().is_empty() {
-            return Err(PluginError::new(format!(
-                "theme {:?} name must not be empty",
-                theme.id
-            )));
-        }
+        theme.name = validate_display_text(
+            &theme.name,
+            &format!("theme {:?} name", theme.id),
+            MAX_NAME_LENGTH,
+        )?;
         validate_css_path(&theme.css)?;
     }
 
     Ok(manifest)
+}
+
+fn validate_display_text(
+    value: &str,
+    field: &str,
+    max_length: usize,
+) -> Result<String, PluginError> {
+    if value.chars().any(char::is_control) {
+        return Err(PluginError::new(format!(
+            "{field} must not contain control characters"
+        )));
+    }
+
+    let value = value.trim();
+    if value.is_empty() {
+        return Err(PluginError::new(format!("{field} must not be empty")));
+    }
+    if value.chars().count() > max_length {
+        return Err(PluginError::new(format!(
+            "{field} must be at most {max_length} characters"
+        )));
+    }
+
+    Ok(value.to_owned())
 }
 
 fn validate_compatibility(
@@ -253,4 +278,105 @@ fn validate_css_path(path: &str) -> Result<(), PluginError> {
         )));
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const MANIFEST: &str = r#"
+id = "alice.dusk"
+name = "Dusk"
+version = "1.2.3"
+description = "A quiet theme"
+min_rencal_version = "0.8.0"
+
+[[contributes.themes]]
+id = "dark"
+name = "Dusk Dark"
+css = "themes/dark.css"
+appearance = "dark"
+"#;
+
+    #[test]
+    fn trims_human_readable_fields() {
+        let contents = MANIFEST
+            .replacen("name = \"Dusk\"", "name = \"  Dusk  \"", 1)
+            .replacen(
+                "description = \"A quiet theme\"",
+                "description = \"  A quiet theme  \"",
+                1,
+            )
+            .replacen("name = \"Dusk Dark\"", "name = \"  Dusk Dark  \"", 1);
+
+        let manifest = validate_manifest(&contents, None).unwrap();
+
+        assert_eq!(manifest.name, "Dusk");
+        assert_eq!(manifest.description, "A quiet theme");
+        assert_eq!(manifest.contributes.themes[0].name, "Dusk Dark");
+    }
+
+    #[test]
+    fn caps_human_readable_fields_by_character_count() {
+        let max_name = "é".repeat(MAX_NAME_LENGTH);
+        let max_description = "d".repeat(MAX_DESCRIPTION_LENGTH);
+        let contents = MANIFEST
+            .replacen("Dusk\"", &format!("{max_name}\""), 1)
+            .replacen("A quiet theme", &max_description, 1);
+        let manifest = validate_manifest(&contents, None).unwrap();
+        assert_eq!(manifest.name, max_name);
+        assert_eq!(manifest.description, max_description);
+
+        for (from, too_long, expected) in [
+            (
+                "name = \"Dusk\"",
+                format!("name = \"{}\"", "n".repeat(MAX_NAME_LENGTH + 1)),
+                "plugin name must be at most 100 characters",
+            ),
+            (
+                "description = \"A quiet theme\"",
+                format!(
+                    "description = \"{}\"",
+                    "d".repeat(MAX_DESCRIPTION_LENGTH + 1)
+                ),
+                "plugin description must be at most 500 characters",
+            ),
+            (
+                "name = \"Dusk Dark\"",
+                format!("name = \"{}\"", "n".repeat(MAX_NAME_LENGTH + 1)),
+                "theme \"dark\" name must be at most 100 characters",
+            ),
+        ] {
+            let error = validate_manifest(&MANIFEST.replacen(from, &too_long, 1), None)
+                .unwrap_err()
+                .to_string();
+            assert_eq!(error, expected);
+        }
+    }
+
+    #[test]
+    fn rejects_control_characters_in_human_readable_fields() {
+        for (from, with_control, expected) in [
+            (
+                "name = \"Dusk\"",
+                "name = \"Dusk\\u0000\"",
+                "plugin name must not contain control characters",
+            ),
+            (
+                "description = \"A quiet theme\"",
+                "description = \"A quiet\\n theme\"",
+                "plugin description must not contain control characters",
+            ),
+            (
+                "name = \"Dusk Dark\"",
+                "name = \"Dusk\\tDark\"",
+                "theme \"dark\" name must not contain control characters",
+            ),
+        ] {
+            let error = validate_manifest(&MANIFEST.replacen(from, with_control, 1), None)
+                .unwrap_err()
+                .to_string();
+            assert_eq!(error, expected);
+        }
+    }
 }
