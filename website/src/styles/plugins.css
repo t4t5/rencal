@@ -153,3 +153,30 @@
   border: 1px solid var(--separator);
   text-align: center;
 }
+
+.plugin-preview {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: color-mix(in srgb, var(--muted) 7%, var(--background));
+  border: 1px solid var(--separator);
+}
+
+.plugin-preview-fallback {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.plugin-preview.has-preview .plugin-preview-fallback {
+  visibility: hidden;
+}
+
+.plugin-preview img {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  visibility: hidden;
+}

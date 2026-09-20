@@ -17,12 +17,16 @@ interface PluginIndexEntry {
   released_at: string
   stars: number
   contributions: string[]
+  preview_url?: string
 }
 
 function isPluginIndexEntry(value: unknown): value is PluginIndexEntry {
   if (typeof value !== "object" || value === null) return false
   const entry = value as Record<string, unknown>
   return (
+    (entry.preview_url === undefined ||
+      (typeof entry.preview_url === "string" &&
+        /^https:\/\/rencal\.org\/plugin-previews\/[0-9a-f]{64}\.png$/.test(entry.preview_url))) &&
     typeof entry.id === "string" &&
     typeof entry.name === "string" &&
     typeof entry.repo === "string" &&
@@ -108,6 +112,20 @@ const installUrlOf = (repo: string) => {
             data-updated={plugin.released_at}
             data-contributions={plugin.contributions.join(" ")}
           >
+            <div class="plugin-preview">
+              <span class="plugin-preview-fallback">No preview available</span>
+              {plugin.preview_url && (
+                <img
+                  src={plugin.preview_url}
+                  alt={`${plugin.name} preview`}
+                  width="960"
+                  height="540"
+                  loading="lazy"
+                  decoding="async"
+                  data-plugin-preview
+                />
+              )}
+            </div>
             <div class="plugin-card-header">
               <div class="flex min-w-0 flex-col gap-1">
                 <h2>
@@ -164,6 +182,17 @@ const installUrlOf = (repo: string) => {
   </section>
 
   <script>
+    for (const image of document.querySelectorAll<HTMLImageElement>("[data-plugin-preview]")) {
+      const updatePreview = () => {
+        const loaded = image.complete && image.naturalWidth > 0
+        image.style.visibility = loaded ? "visible" : "hidden"
+        image.parentElement?.classList.toggle("has-preview", loaded)
+      }
+      image.addEventListener("load", updatePreview)
+      image.addEventListener("error", updatePreview)
+      updatePreview()
+    }
+
     const grid = document.querySelector<HTMLElement>("[data-plugin-grid]")
     const filter = document.querySelector<HTMLSelectElement>("[data-plugin-filter]")
     const sort = document.querySelector<HTMLSelectElement>("[data-plugin-sort]")

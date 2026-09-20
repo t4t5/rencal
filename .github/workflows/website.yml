@@ -9,7 +9,7 @@ on:
   workflow_call:
     inputs:
       plugin_index_artifact:
-        description: Artifact containing a freshly generated plugins.json
+        description: Artifact containing plugins.json and plugin-previews/
         required: false
         type: string
         default: ""
@@ -31,20 +31,6 @@ jobs:
         with:
           ref: ${{ github.event.workflow_run.head_sha || github.sha }}
 
-      - name: Preserve deployed plugin index
-        shell: bash
-        run: |
-          if curl --fail --silent --show-error https://rencal.org/plugins.json --output /tmp/rencal-plugins.json; then
-            mv /tmp/rencal-plugins.json website/public/plugins.json
-          fi
-
-      - name: Download fresh plugin index
-        if: ${{ inputs.plugin_index_artifact != '' }}
-        uses: actions/download-artifact@v4
-        with:
-          name: ${{ inputs.plugin_index_artifact }}
-          path: website/public
-
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
@@ -55,6 +41,20 @@ jobs:
           node-version: 22
           cache: pnpm
           cache-dependency-path: website/pnpm-lock.yaml
+
+      - name: Preserve deployed plugin index and previews
+        if: ${{ inputs.plugin_index_artifact == '' }}
+        run: node scripts/preserve-plugin-index.mjs website/public
+
+      - name: Download fresh plugin index
+        if: ${{ inputs.plugin_index_artifact != '' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.plugin_index_artifact }}
+          path: website/public
+
+      - name: Validate plugin preview files
+        run: node scripts/preserve-plugin-index.mjs website/public --local
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-workspace

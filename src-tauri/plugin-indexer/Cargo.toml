@@ -5,6 +5,8 @@ edition = "2024"
 
 [dependencies]
 anyhow = "1"
+image = { version = "0.25", default-features = false, features = ["png"] }
+sha2 = "0.10"
 rencal-plugin-contract = { path = "../plugin-contract" }
 reqwest = { version = "0.13", default-features = false, features = ["rustls-no-provider"] }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }

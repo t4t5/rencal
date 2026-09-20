@@ -51,7 +51,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: plugin-index
-          path: website/public/plugins.json
+          path: |
+            website/public/plugins.json
+            website/public/plugin-previews/
           if-no-files-found: error
           retention-days: 1
 

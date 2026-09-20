@@ -178,11 +178,12 @@ export function PluginsPage() {
       ...installed.plugins.map((plugin) => ({
         ...plugin,
         description: catalogById.get(plugin.id)?.description ?? null,
+        preview_url: catalogById.get(plugin.id)?.preview_url ?? null,
         installed: plugin,
       })),
       ...(catalog?.plugins ?? [])
         .filter((plugin) => !installedIds.has(plugin.id))
-        .map((plugin) => ({ ...plugin, installed: null })),
+        .map((plugin) => ({ ...plugin, preview_url: plugin.preview_url ?? null, installed: null })),
     ]
     const query = search.trim().toLowerCase()
 
@@ -240,6 +241,7 @@ export function PluginsPage() {
           <PluginRow
             key={plugin.id}
             name={plugin.name}
+            previewUrl={plugin.preview_url}
             owner={plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]}
             version={plugin.installed?.version ?? plugin.version}
           >
@@ -286,6 +288,7 @@ export function PluginsPage() {
 
 type PluginListItem = (InstalledPlugin | PluginCatalogEntry) & {
   description: string | null
+  preview_url: string | null
   installed: InstalledPlugin | null
 }
 
@@ -354,25 +357,52 @@ function PluginActions({
 
 function PluginRow({
   name,
+  previewUrl,
   owner,
   version,
   children,
 }: {
   name: string
+  previewUrl: string | null
   owner: string
   version: string | null
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-3 rounded-md border border-border p-4 min-w-0">
-      <div className="flex flex-col gap-1 min-w-0">
-        <h3 className="heading text-sm break-words">{name}</h3>
-        <p className="text-xs text-muted-foreground break-words">
-          {owner}
-          {version && ` · ${version}`}
-        </p>
+    <div className="flex gap-4 rounded-md border border-border p-4 min-w-0">
+      <PluginPreview key={previewUrl} url={previewUrl} name={name} />
+      <div className="flex flex-1 flex-col gap-3 min-w-0">
+        <div className="flex flex-col gap-1 min-w-0">
+          <h3 className="heading text-sm break-words">{name}</h3>
+          <p className="text-xs text-muted-foreground break-words">
+            {owner}
+            {version && ` · ${version}`}
+          </p>
+        </div>
+        {children}
       </div>
-      {children}
+    </div>
+  )
+}
+
+function PluginPreview({ url, name }: { url: string | null; name: string }) {
+  const [failed, setFailed] = useState(false)
+  return (
+    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded border border-border bg-muted/10">
+      {url && !failed ? (
+        <img
+          src={url}
+          alt={`${name} preview`}
+          width={160}
+          height={90}
+          loading="lazy"
+          decoding="async"
+          className="absolute size-full object-contain"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="px-2 text-center text-xs text-muted-foreground">No preview available</span>
+      )}
     </div>
   )
 }

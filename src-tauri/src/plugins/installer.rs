@@ -52,6 +52,28 @@ pub struct PluginCatalogEntry {
     pub repo: String,
     pub description: String,
     pub version: String,
+    #[serde(default, deserialize_with = "deserialize_preview_url")]
+    pub preview_url: Option<String>,
+}
+
+/// Preview metadata is optional: bad values must never hide an installable plugin.
+fn deserialize_preview_url<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Option<String>, D::Error> {
+    let value = serde_json::Value::deserialize(deserializer)?;
+    Ok(value
+        .as_str()
+        .filter(|url| {
+            url.strip_prefix("https://rencal.org/plugin-previews/")
+                .and_then(|filename| filename.strip_suffix(".png"))
+                .is_some_and(|hash| {
+                    hash.len() == 64
+                        && hash
+                            .bytes()
+                            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+                })
+        })
+        .map(str::to_owned))
 }
 
 #[derive(Clone, Debug, Serialize, Type)]

@@ -11,6 +11,8 @@ use rencal_plugin_contract::{
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 
+mod preview;
+
 const TOPIC: &str = "rencal-plugin";
 const PAGE_SIZE: usize = 100;
 const MAX_RESPONSE_SIZE: usize = 8 * 1024 * 1024;
@@ -18,7 +20,7 @@ const MAX_RESPONSE_SIZE: usize = 8 * 1024 * 1024;
 type ClientFuture<'a> = Pin<Box<dyn Future<Output = Result<HttpResponse>> + Send + 'a>>;
 
 trait GithubClient: Send + Sync {
-    fn get(&self, url: Url) -> ClientFuture<'_>;
+    fn get(&self, url: Url, limit: usize) -> ClientFuture<'_>;
 }
 
 struct ReqwestGithubClient {
@@ -31,25 +33,36 @@ struct HttpResponse {
 }
 
 impl GithubClient for ReqwestGithubClient {
-    fn get(&self, url: Url) -> ClientFuture<'_> {
+    fn get(&self, url: Url, limit: usize) -> ClientFuture<'_> {
         Box::pin(async move {
-            let response = self
+            let mut response = self
                 .client
                 .get(url)
                 .send()
                 .await
                 .context("GitHub request failed")?;
             let status = response.status();
-            let body = response.bytes().await.context("GitHub response failed")?;
-            if body.len() > MAX_RESPONSE_SIZE {
-                bail!("GitHub response exceeded {MAX_RESPONSE_SIZE} bytes");
+            if response
+                .content_length()
+                .is_some_and(|size| size > limit as u64)
+            {
+                bail!("GitHub response exceeded {limit} bytes");
             }
-            Ok(HttpResponse {
-                status,
-                body: body.to_vec(),
-            })
+            let mut body = Vec::new();
+            while let Some(chunk) = response.chunk().await.context("GitHub response failed")? {
+                append_chunk(&mut body, &chunk, limit)?;
+            }
+            Ok(HttpResponse { status, body })
         })
     }
+}
+
+fn append_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> Result<()> {
+    if chunk.len() > limit.saturating_sub(body.len()) {
+        bail!("GitHub response exceeded {limit} bytes");
+    }
+    body.extend_from_slice(chunk);
+    Ok(())
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,11 +123,14 @@ struct PluginIndexEntry {
     released_at: String,
     stars: u64,
     contributions: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    preview_url: Option<String>,
 }
 
 struct IndexResult {
     entries: Vec<PluginIndexEntry>,
     warnings: Vec<String>,
+    previews: Vec<preview::Preview>,
 }
 
 enum FetchResult<T> {
@@ -127,7 +143,7 @@ async fn fetch_json<T: DeserializeOwned>(
     url: Url,
     context: &str,
 ) -> Result<FetchResult<T>> {
-    let response = client.get(url).await?;
+    let response = client.get(url, MAX_RESPONSE_SIZE).await?;
     if response.status == StatusCode::NOT_FOUND {
         return Ok(FetchResult::Missing);
     }
@@ -144,7 +160,7 @@ async fn fetch_text(
     url: Url,
     context: &str,
 ) -> Result<FetchResult<String>> {
-    let response = client.get(url).await?;
+    let response = client.get(url, MAX_RESPONSE_SIZE).await?;
     if response.status == StatusCode::NOT_FOUND {
         return Ok(FetchResult::Missing);
     }
@@ -165,7 +181,12 @@ fn api_url(base: &Url, segments: &[&str]) -> Result<Url> {
     Ok(url)
 }
 
-fn raw_manifest_url(base: &Url, repository: &SearchRepository, reference: &str) -> Result<Url> {
+fn raw_file_url(
+    base: &Url,
+    repository: &SearchRepository,
+    reference: &str,
+    file: &str,
+) -> Result<Url> {
     let mut url = base.clone();
     url.path_segments_mut()
         .map_err(|_| anyhow!("GitHub raw base URL cannot hold path segments"))?
@@ -173,7 +194,7 @@ fn raw_manifest_url(base: &Url, repository: &SearchRepository, reference: &str) 
         .push(&repository.owner.login)
         .push(&repository.name)
         .push(reference)
-        .push(MANIFEST_FILE);
+        .push(file);
     Ok(url)
 }
 
@@ -222,6 +243,7 @@ async fn build_index(
     let repositories = search_repositories(client, api_base).await?;
     let mut entries = Vec::new();
     let mut warnings = Vec::new();
+    let mut previews = Vec::new();
     let mut ids = HashSet::new();
 
     for repository in repositories {
@@ -243,11 +265,37 @@ async fn build_index(
         )
         .await?
         {
-            FetchResult::Found(release) => PackageSource {
-                reference: release.tag_name.clone(),
-                release_tag: Some(release.tag_name),
-                released_at: release.published_at,
-            },
+            FetchResult::Found(release) => {
+                let url = api_url(
+                    api_base,
+                    &[
+                        "repos",
+                        &repository.owner.login,
+                        &repository.name,
+                        "commits",
+                        &release.tag_name,
+                    ],
+                )?;
+                let commit: GithubCommit =
+                    match fetch_json(client, url, &format!("release commit for {repo}")).await? {
+                        FetchResult::Found(commit) => commit,
+                        FetchResult::Missing => {
+                            warnings.push(format!("Skipping {repo}: release commit is missing"));
+                            continue;
+                        }
+                    };
+                if !valid_commit_sha(&commit.sha) {
+                    warnings.push(format!(
+                        "Skipping {repo}: release returned an invalid commit SHA"
+                    ));
+                    continue;
+                }
+                PackageSource {
+                    reference: commit.sha,
+                    release_tag: Some(release.tag_name),
+                    released_at: release.published_at,
+                }
+            }
             FetchResult::Missing => {
                 let mut commit_url = api_url(
                     api_base,
@@ -293,7 +341,7 @@ async fn build_index(
             }
         };
 
-        let manifest_url = raw_manifest_url(raw_base, &repository, &source.reference)?;
+        let manifest_url = raw_file_url(raw_base, &repository, &source.reference, MANIFEST_FILE)?;
         let manifest_text =
             match fetch_text(client, manifest_url, &format!("{MANIFEST_FILE} for {repo}")).await? {
                 FetchResult::Found(manifest) => manifest,
@@ -328,16 +376,43 @@ async fn build_index(
             continue;
         }
 
+        let preview_url = match preview::fetch(
+            client,
+            raw_file_url(
+                raw_base,
+                &repository,
+                &repository.default_branch,
+                "preview.png",
+            )?,
+        )
+        .await
+        {
+            Ok(Some(preview)) => {
+                let url = preview.url();
+                previews.push(preview);
+                Some(url)
+            }
+            Ok(None) => None,
+            Err(error) => {
+                warnings.push(format!(
+                    "{repo} on {}: could not use preview.png: {error:#}",
+                    repository.default_branch
+                ));
+                None
+            }
+        };
+
         entries.push(PluginIndexEntry {
             id: manifest.id,
             name: manifest.name,
             repo,
             description: manifest.description,
             version: manifest.version,
-            tag: source.reference,
+            tag: source.release_tag.unwrap_or(source.reference),
             released_at: source.released_at,
             stars: repository.stargazers_count,
             contributions: vec!["theme".into()],
+            preview_url,
         });
     }
 
@@ -347,7 +422,11 @@ async fn build_index(
             .cmp(&right.name.to_lowercase())
             .then_with(|| left.id.cmp(&right.id))
     });
-    Ok(IndexResult { entries, warnings })
+    Ok(IndexResult {
+        entries,
+        warnings,
+        previews,
+    })
 }
 
 fn write_index(path: &Path, entries: &[PluginIndexEntry]) -> Result<()> {
@@ -380,7 +459,23 @@ async fn refresh_index(
     raw_base: &Url,
     output: &Path,
 ) -> Result<IndexResult> {
-    let result = build_index(client, api_base, raw_base).await?;
+    let mut result = build_index(client, api_base, raw_base).await?;
+    let directory = output
+        .parent()
+        .unwrap_or(Path::new("."))
+        .join("plugin-previews");
+    for preview in &result.previews {
+        if let Err(error) = preview.write(&directory) {
+            result
+                .warnings
+                .push(format!("Could not publish {}: {error:#}", preview.url()));
+            for entry in &mut result.entries {
+                if entry.preview_url.as_deref() == Some(&preview.url()) {
+                    entry.preview_url = None;
+                }
+            }
+        }
+    }
     write_index(output, &result.entries)?;
     Ok(result)
 }
@@ -472,7 +567,7 @@ mod tests {
     }
 
     impl GithubClient for MockClient {
-        fn get(&self, url: Url) -> ClientFuture<'_> {
+        fn get(&self, url: Url, _limit: usize) -> ClientFuture<'_> {
             self.requests.lock().unwrap().push(url);
             let reply = self.replies.lock().unwrap().pop_front().unwrap();
             Box::pin(async move {
@@ -508,6 +603,13 @@ mod tests {
         }))
     }
 
+    fn commit() -> MockReply {
+        json(serde_json::json!({
+            "sha": "1111111111111111111111111111111111111111",
+            "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } }
+        }))
+    }
+
     fn manifest(owner: &str, version: &str) -> String {
         format!(
             r#"id = "{owner}.dusk"
@@ -540,7 +642,9 @@ appearance = "dark"
                 "items": [repository("Alice", "rencal-dusk", 42)],
             })),
             release("v1.2.3"),
+            commit(),
             text(&manifest("alice", "1.2.3")),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
         ]);
         let (api, raw) = bases();
 
@@ -552,6 +656,24 @@ appearance = "dark"
         assert_eq!(index.entries[0].version, "1.2.3");
         assert_eq!(index.entries[0].stars, 42);
         assert_eq!(index.entries[0].contributions, ["theme"]);
+        assert!(index.entries[0].preview_url.is_none());
+        assert!(
+            !serde_json::to_value(&index.entries[0])
+                .unwrap()
+                .as_object()
+                .unwrap()
+                .contains_key("preview_url")
+        );
+        let requests = client.requests();
+        assert!(requests.iter().any(|url| {
+            url.path()
+                == "/Alice/rencal-dusk/1111111111111111111111111111111111111111/rencal-plugin.toml"
+        }));
+        assert!(
+            requests
+                .iter()
+                .any(|url| url.path() == "/Alice/rencal-dusk/main/preview.png")
+        );
     }
 
     #[tokio::test]
@@ -568,6 +690,7 @@ appearance = "dark"
                 "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
             }])),
             text(&manifest("alice", "1.2.3")),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
         ]);
         let (api, raw) = bases();
 
@@ -598,10 +721,13 @@ appearance = "dark"
                 ],
             })),
             release("1.0.0"),
+            commit(),
             text(&manifest("someone-else", "1.0.0")),
             release("1.0.0"),
+            commit(),
             text(&unsupported),
             release("1.0.0"),
+            commit(),
             text("not = [valid toml"),
         ]);
         let (api, raw) = bases();
