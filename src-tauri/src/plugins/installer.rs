@@ -1,8 +1,8 @@
 //! GitHub-backed installation for data-only theme packages.
 //!
-//! Downloads are bounded and written to a staging directory. Package swaps and
-//! `plugins.toml` updates are serialized so a failed install or update can put
-//! the previous directory back before returning.
+//! Downloads are bounded and written to a staging directory. Package swaps,
+//! declarations, and lockfile updates are serialized so a failed install or
+//! update can put the previous state back before returning.
 
 use std::future::Future;
 use std::path::{Path, PathBuf};
@@ -17,8 +17,9 @@ use specta::Type;
 use tokio::sync::Mutex;
 
 use super::{
-    Appearance, MANIFEST_FILE, PluginEntry, PluginManifest, PluginsFile, load_plugins_file,
-    plugins_dir, plugins_file_path, running_app_version, save_plugins_file, scan_packages,
+    Appearance, MANIFEST_FILE, PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile,
+    load_plugin_lock_file, load_plugins_file, plugins_dir, plugins_file_path, plugins_lock_path,
+    running_app_version, save_plugin_lock_file, save_plugins_file, scan_packages,
     validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
 };
 
@@ -160,6 +161,7 @@ struct PluginManagerInner {
     api_base: Url,
     raw_base: Url,
     declarations_path: PathBuf,
+    lock_path: PathBuf,
     packages_dir: PathBuf,
     mutations: Mutex<()>,
     catalog: Mutex<Vec<PluginCatalogEntry>>,
@@ -222,8 +224,12 @@ impl PluginManager {
         let packages_dir = plugins_dir().map_err(|error| {
             PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
         })?;
+        let lock_path = plugins_lock_path().map_err(|error| {
+            PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+        })?;
         Self::new(
             declarations_path,
+            lock_path,
             packages_dir,
             Url::parse("https://api.github.com/").expect("valid GitHub API URL"),
             Url::parse("https://raw.githubusercontent.com/").expect("valid GitHub raw URL"),
@@ -232,6 +238,7 @@ impl PluginManager {
 
     fn new(
         declarations_path: PathBuf,
+        lock_path: PathBuf,
         packages_dir: PathBuf,
         api_base: Url,
         raw_base: Url,
@@ -251,6 +258,7 @@ impl PluginManager {
             })?;
         Ok(Self::with_downloader(
             declarations_path,
+            lock_path,
             packages_dir,
             api_base,
             raw_base,
@@ -260,6 +268,7 @@ impl PluginManager {
 
     fn with_downloader(
         declarations_path: PathBuf,
+        lock_path: PathBuf,
         packages_dir: PathBuf,
         api_base: Url,
         raw_base: Url,
@@ -271,6 +280,7 @@ impl PluginManager {
                 api_base,
                 raw_base,
                 declarations_path,
+                lock_path,
                 packages_dir,
                 mutations: Mutex::new(()),
                 catalog: Mutex::new(Vec::new()),
@@ -282,19 +292,36 @@ impl PluginManager {
     pub async fn list(&self) -> InstalledPlugins {
         let _guard = self.inner.mutations.lock().await;
         let mut errors = Vec::new();
-        let declarations = self.load_declarations().unwrap_or_else(|error| {
+        let (declarations, locks) = self.load_state().unwrap_or_else(|error| {
             errors.push(error.to_string());
-            PluginsFile::default()
+            (PluginsFile::default(), PluginLockFile::default())
         });
         let scan = scan_packages(&self.inner.packages_dir, running_app_version().as_ref());
-        let mut plugins: Vec<_> = declarations
+        for repo in &declarations.plugins {
+            if !locks
+                .plugins
+                .iter()
+                .any(|entry| entry.repo.eq_ignore_ascii_case(repo))
+            {
+                errors.push(format!(
+                    "Plugin repository {repo:?} has not been resolved. Restart renCal while online to install it."
+                ));
+            }
+        }
+        let mut plugins: Vec<_> = locks
             .plugins
             .into_iter()
+            .filter(|entry| {
+                declarations
+                    .plugins
+                    .iter()
+                    .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
+            })
             .map(|entry| InstalledPlugin {
                 name: entry.id.clone(),
                 id: entry.id,
                 repo: Some(entry.repo),
-                version: entry.version,
+                version: Some(entry.version),
                 update_version: None,
                 error: Some(
                     "Package files are missing. Install the repository again to restore it.".into(),
@@ -419,10 +446,10 @@ impl PluginManager {
     pub async fn install(&self, repo: &str) -> Result<PluginInspection, PluginInstallError> {
         let repository = Repository::parse(repo)?;
         let _guard = self.inner.mutations.lock().await;
-        let declarations = self.load_declarations()?;
+        let (declarations, locks) = self.load_state()?;
         let package = self.resolve_latest(&repository).await?;
         self.require_compatible(&package.inspection)?;
-        self.install_resolved(&repository, package, declarations, None)
+        self.install_resolved(&repository, package, declarations, locks, None)
             .await
     }
 
@@ -433,8 +460,9 @@ impl PluginManager {
             PluginInstallError::new(PluginInstallErrorKind::InvalidInput, error.to_string())
         })?;
         let _guard = self.inner.mutations.lock().await;
-        let mut declarations = self.load_declarations()?;
-        let index = declarations.plugins.iter().position(|entry| entry.id == id);
+        let (mut declarations, mut locks) = self.load_state()?;
+        let previous_locks = locks.clone();
+        let index = locks.plugins.iter().position(|entry| entry.id == id);
         let target = self.inner.packages_dir.join(id);
         if index.is_none() && !target.is_dir() {
             return Err(PluginInstallError::new(
@@ -463,9 +491,22 @@ impl PluginManager {
         };
 
         if let Some(index) = index {
-            declarations.plugins.remove(index);
+            let entry = locks.plugins.remove(index);
+            declarations
+                .plugins
+                .retain(|repo| !repo.eq_ignore_ascii_case(&entry.repo));
+        }
+        if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, &locks) {
+            if moved {
+                let _ = std::fs::rename(&backup_package, &target);
+            }
+            return Err(PluginInstallError::new(
+                PluginInstallErrorKind::Configuration,
+                error.to_string(),
+            ));
         }
         if let Err(error) = save_plugins_file(&self.inner.declarations_path, &declarations) {
+            let _ = save_plugin_lock_file(&self.inner.lock_path, &previous_locks);
             if moved {
                 let _ = std::fs::rename(&backup_package, &target);
             }
@@ -477,12 +518,11 @@ impl PluginManager {
         Ok(())
     }
 
-    /// Restore declarations whose package directory is absent. Commit pins are
-    /// fetched exactly; legacy entries resolve latest and are written back with
-    /// a commit after a successful install.
+    /// Restore declared repositories whose package directory is absent. Locked
+    /// commits are fetched exactly; new declarations resolve the latest release.
     pub async fn restore_missing(&self) -> Vec<PluginRestoreError> {
-        let declarations = match self.load_declarations() {
-            Ok(declarations) => declarations,
+        let (declarations, locks) = match self.load_state() {
+            Ok(state) => state,
             Err(error) => {
                 return vec![PluginRestoreError {
                     package: self.inner.declarations_path.display().to_string(),
@@ -493,17 +533,20 @@ impl PluginManager {
         let missing: Vec<_> = declarations
             .plugins
             .into_iter()
-            .filter(|entry| {
-                (entry.version.is_none() && entry.commit.is_none())
-                    || !self.inner.packages_dir.join(&entry.id).is_dir()
+            .filter(|repo| {
+                locks
+                    .plugins
+                    .iter()
+                    .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
+                    .is_none_or(|entry| !self.inner.packages_dir.join(&entry.id).is_dir())
             })
             .collect();
 
         let mut errors = Vec::new();
-        for entry in missing {
-            if let Err(error) = self.restore_entry(&entry).await {
+        for repo in missing {
+            if let Err(error) = self.restore_entry(&repo).await {
                 errors.push(PluginRestoreError {
-                    package: entry.id,
+                    package: repo,
                     message: error.to_string(),
                 });
             }
@@ -511,26 +554,44 @@ impl PluginManager {
         errors
     }
 
-    async fn restore_entry(&self, entry: &PluginEntry) -> Result<(), PluginInstallError> {
-        let repository = Repository::parse(&entry.repo)?;
+    async fn restore_entry(&self, repo: &str) -> Result<(), PluginInstallError> {
+        let repository = Repository::parse(repo)?;
         let _guard = self.inner.mutations.lock().await;
-        let declarations = self.load_declarations()?;
-        let package = match &entry.commit {
-            Some(commit) => {
-                self.resolve_commit_ref(&repository, commit.clone(), None)
+        let (declarations, locks) = self.load_state()?;
+        let locked = locks
+            .plugins
+            .iter()
+            .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
+            .cloned();
+        let package = match &locked {
+            Some(entry) => {
+                self.resolve_commit_ref(&repository, entry.commit.clone(), None)
                     .await?
             }
             None => self.resolve_latest(&repository).await?,
         };
-        if package.manifest.id != entry.id {
+        if locked
+            .as_ref()
+            .is_some_and(|entry| package.manifest.id != entry.id)
+        {
             return Err(PluginInstallError::invalid_package(format!(
                 "manifest id {:?} does not match declared plugin id {:?}",
-                package.manifest.id, entry.id
+                package.manifest.id,
+                locked
+                    .as_ref()
+                    .map(|entry| entry.id.as_str())
+                    .unwrap_or_default()
             )));
         }
         self.require_compatible(&package.inspection)?;
-        self.install_resolved(&repository, package, declarations, Some(&entry.id))
-            .await?;
+        self.install_resolved(
+            &repository,
+            package,
+            declarations,
+            locks,
+            locked.as_ref().map(|entry| entry.id.as_str()),
+        )
+        .await?;
         Ok(())
     }
 
@@ -538,6 +599,14 @@ impl PluginManager {
         load_plugins_file(&self.inner.declarations_path).map_err(|error| {
             PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
         })
+    }
+
+    fn load_state(&self) -> Result<(PluginsFile, PluginLockFile), PluginInstallError> {
+        let declarations = self.load_declarations()?;
+        let locks = load_plugin_lock_file(&self.inner.lock_path).map_err(|error| {
+            PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+        })?;
+        Ok((declarations, locks))
     }
 
     async fn resolve_latest(
@@ -672,6 +741,7 @@ impl PluginManager {
         repository: &Repository,
         package: ResolvedPackage,
         mut declarations: PluginsFile,
+        mut locks: PluginLockFile,
         expected_id: Option<&str>,
     ) -> Result<PluginInspection, PluginInstallError> {
         if expected_id.is_some_and(|id| id != package.manifest.id) {
@@ -720,22 +790,53 @@ impl PluginManager {
             ));
         }
 
-        let entry = PluginEntry {
+        let previous_locks = locks.clone();
+        let entry = PluginLockEntry {
             id: package.manifest.id.clone(),
             repo: repository.display.clone(),
-            version: Some(package.manifest.version.clone()),
-            commit: Some(package.commit.clone()),
+            version: package.manifest.version.clone(),
+            commit: package.commit.clone(),
         };
-        if let Some(existing) = declarations
+        let replaced_repo = locks
+            .plugins
+            .iter()
+            .find(|existing| existing.id == entry.id)
+            .map(|existing| existing.repo.clone());
+        if let Some(existing) = locks
             .plugins
             .iter_mut()
             .find(|existing| existing.id == entry.id)
         {
             *existing = entry;
         } else {
-            declarations.plugins.push(entry);
+            locks.plugins.push(entry);
+        }
+        if let Some(replaced_repo) = replaced_repo
+            && !replaced_repo.eq_ignore_ascii_case(&repository.display)
+        {
+            declarations
+                .plugins
+                .retain(|repo| !repo.eq_ignore_ascii_case(&replaced_repo));
+        }
+        if !declarations
+            .plugins
+            .iter()
+            .any(|repo| repo.eq_ignore_ascii_case(&repository.display))
+        {
+            declarations.plugins.push(repository.display.clone());
+        }
+        if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, &locks) {
+            let _ = remove_path(&target);
+            if had_previous {
+                let _ = std::fs::rename(&backup_package, &target);
+            }
+            return Err(PluginInstallError::new(
+                PluginInstallErrorKind::Configuration,
+                error.to_string(),
+            ));
         }
         if let Err(error) = save_plugins_file(&self.inner.declarations_path, &declarations) {
+            let _ = save_plugin_lock_file(&self.inner.lock_path, &previous_locks);
             let _ = remove_path(&target);
             if had_previous {
                 let _ = std::fs::rename(&backup_package, &target);
@@ -1109,6 +1210,7 @@ appearance = "dark"
     fn manager(temp: &tempfile::TempDir, downloader: Arc<FixtureDownloader>) -> PluginManager {
         PluginManager::with_downloader(
             temp.path().join("config/plugins.toml"),
+            temp.path().join("data/plugins.lock"),
             temp.path().join("data/plugins"),
             downloader.base.clone(),
             downloader.base.clone(),
@@ -1287,8 +1389,10 @@ appearance = "dark"
             "--background: #111;"
         );
         let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
-        assert_eq!(declarations.plugins[0].version.as_deref(), Some("1.0.0"));
-        assert_eq!(declarations.plugins[0].commit.as_deref(), Some(COMMIT_V1));
+        assert_eq!(declarations.plugins, ["Alice/rencal-dusk"]);
+        let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
+        assert_eq!(locks.plugins[0].version, "1.0.0");
+        assert_eq!(locks.plugins[0].commit, COMMIT_V1);
 
         manager.uninstall("alice.dusk").await.unwrap();
         assert!(!temp.path().join("data/plugins/alice.dusk").exists());
@@ -1324,8 +1428,8 @@ appearance = "dark"
         let inspection = manager.install("Alice/rencal-dusk").await.unwrap();
 
         assert_eq!(inspection.version, "1.0.0");
-        let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
-        assert_eq!(declarations.plugins[0].commit.as_deref(), Some(COMMIT_V1));
+        let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
+        assert_eq!(locks.plugins[0].commit, COMMIT_V1);
     }
 
     #[tokio::test]
@@ -1394,8 +1498,8 @@ appearance = "dark"
                 .unwrap(),
             "--background: #111;"
         );
-        let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
-        assert_eq!(declarations.plugins[0].version.as_deref(), Some("1.0.0"));
+        let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
+        assert_eq!(locks.plugins[0].version, "1.0.0");
     }
 
     #[tokio::test]
@@ -1416,11 +1520,18 @@ appearance = "dark"
         save_plugins_file(
             &temp.path().join("config/plugins.toml"),
             &PluginsFile {
-                plugins: vec![PluginEntry {
+                plugins: vec!["Alice/rencal-dusk".into()],
+            },
+        )
+        .unwrap();
+        save_plugin_lock_file(
+            &temp.path().join("data/plugins.lock"),
+            &PluginLockFile {
+                plugins: vec![PluginLockEntry {
                     id: "alice.dusk".into(),
                     repo: "Alice/rencal-dusk".into(),
-                    version: Some("1.0.0".into()),
-                    commit: Some(COMMIT_V1.into()),
+                    version: "1.0.0".into(),
+                    commit: COMMIT_V1.into(),
                 }],
             },
         )
@@ -1428,6 +1539,28 @@ appearance = "dark"
 
         assert!(manager.restore_missing().await.is_empty());
         assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+    }
+
+    #[tokio::test]
+    async fn resolves_a_repository_only_declaration_and_writes_the_lockfile() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        save_plugins_file(
+            &temp.path().join("config/plugins.toml"),
+            &PluginsFile {
+                plugins: vec!["Alice/rencal-dusk".into()],
+            },
+        )
+        .unwrap();
+
+        assert!(manager.restore_missing().await.is_empty());
+        assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+        let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
+        assert_eq!(locks.plugins[0].id, "alice.dusk");
+        assert_eq!(locks.plugins[0].version, "1.0.0");
+        assert_eq!(locks.plugins[0].commit, COMMIT_V1);
     }
 
     #[tokio::test]

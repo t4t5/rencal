@@ -1,10 +1,10 @@
 //! Tauri-free plugin package contract and on-disk storage helpers.
 //!
 //! Theme packages are deliberately plain data: this module parses and validates
-//! their manifests, reads `plugins.toml`, and scans installed package directories
-//! without depending on the app runtime.
+//! their manifests, reads user declarations and the internal lockfile, and scans
+//! installed package directories without depending on the app runtime.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
@@ -14,7 +14,7 @@ pub use rencal_plugin_contract::{
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
-use toml_edit::{ArrayOfTables, Document, InlineTable, Item, Table, TableLike, Value};
+use toml_edit::{Array, Document, Item, Value};
 
 mod installer;
 
@@ -32,17 +32,21 @@ pub(crate) fn normalize_repository(value: &str) -> Result<String, PluginInstallE
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PluginsFile {
     #[serde(default)]
-    pub plugins: Vec<PluginEntry>,
+    pub plugins: Vec<String>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
+pub struct PluginLockFile {
+    #[serde(default)]
+    pub plugins: Vec<PluginLockEntry>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-pub struct PluginEntry {
+pub struct PluginLockEntry {
     pub id: String,
     pub repo: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub commit: Option<String>,
+    pub version: String,
+    pub commit: String,
 }
 
 pub fn load_plugins_file(path: &Path) -> Result<PluginsFile, PluginError> {
@@ -78,7 +82,32 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
         PluginError::new(format!("could not parse {}: {error}", path.display()))
     })?;
     update_plugins_document(&mut document, file);
-    let contents = document.to_string();
+    write_atomic(path, document.to_string().as_bytes(), "plugins.toml", true)
+}
+
+pub fn load_plugin_lock_file(path: &Path) -> Result<PluginLockFile, PluginError> {
+    let contents = read_plugins_file(path)?;
+    let file: PluginLockFile = toml::from_str(&contents).map_err(|error| {
+        PluginError::new(format!("could not parse {}: {error}", path.display()))
+    })?;
+    validate_plugin_lock_file(&file)?;
+    Ok(file)
+}
+
+pub fn save_plugin_lock_file(path: &Path, file: &PluginLockFile) -> Result<(), PluginError> {
+    validate_plugin_lock_file(file)?;
+    let contents = toml::to_string_pretty(file).map_err(|error| {
+        PluginError::new(format!("could not serialize plugin lockfile: {error}"))
+    })?;
+    write_atomic(path, contents.as_bytes(), "plugins.lock", false)
+}
+
+fn write_atomic(
+    path: &Path,
+    contents: &[u8],
+    label: &str,
+    follow_symlink: bool,
+) -> Result<(), PluginError> {
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|error| {
             PluginError::new(format!("could not create {}: {error}", parent.display()))
@@ -87,10 +116,10 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
     // Keep dotfile-manager symlinks intact while still replacing the actual
     // declarations file atomically.
     let destination = match std::fs::symlink_metadata(path) {
-        Ok(metadata) if metadata.file_type().is_symlink() => {
+        Ok(metadata) if follow_symlink && metadata.file_type().is_symlink() => {
             std::fs::canonicalize(path).map_err(|error| {
                 PluginError::new(format!(
-                    "could not resolve plugins.toml symlink {}: {error}",
+                    "could not resolve {label} symlink {}: {error}",
                     path.display()
                 ))
             })?
@@ -102,16 +131,17 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
     })?;
     let mut temporary = tempfile::NamedTempFile::new_in(parent).map_err(|error| {
         PluginError::new(format!(
-            "could not create temporary plugins.toml beside {}: {error}",
+            "could not create temporary {label} beside {}: {error}",
             path.display()
         ))
     })?;
-    temporary.write_all(contents.as_bytes()).map_err(|error| {
-        PluginError::new(format!("could not write temporary plugins.toml: {error}"))
-    })?;
-    temporary.as_file().sync_all().map_err(|error| {
-        PluginError::new(format!("could not sync temporary plugins.toml: {error}"))
-    })?;
+    temporary
+        .write_all(contents)
+        .map_err(|error| PluginError::new(format!("could not write temporary {label}: {error}")))?;
+    temporary
+        .as_file()
+        .sync_all()
+        .map_err(|error| PluginError::new(format!("could not sync temporary {label}: {error}")))?;
     temporary.persist(&destination).map_err(|error| {
         PluginError::new(format!(
             "could not replace {}: {}",
@@ -122,141 +152,106 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
     Ok(())
 }
 
-fn update_plugins_document(document: &mut Document, file: &PluginsFile) {
-    let mut remaining: HashMap<_, _> = file
-        .plugins
-        .iter()
-        .map(|entry| (entry.id.as_str(), entry))
-        .collect();
-
-    // Keep the user's entry order and syntax, including inline table arrays.
-    // Only removed IDs lose their metadata; new IDs are appended below.
-    if let Some(array) = document.get_mut("plugins").and_then(Item::as_array_mut) {
-        array.retain(|value| {
-            remaining.contains_key(plugin_table_id(
-                value.as_inline_table().expect("validated plugin"),
-            ))
-        });
-        for value in array.iter_mut() {
-            update_existing_plugin(
-                value.as_inline_table_mut().expect("validated plugin"),
-                &mut remaining,
-            );
-        }
-        for entry in &file.plugins {
-            if remaining.contains_key(entry.id.as_str()) {
-                let mut table = InlineTable::new();
-                update_plugin_table(&mut table, entry);
-                array.push(table);
-            }
-        }
-        return;
-    }
-
-    if document.get("plugins").is_none() {
-        if file.plugins.is_empty() {
-            return;
-        }
-        document["plugins"] = Item::ArrayOfTables(ArrayOfTables::new());
-    }
-    let tables = document["plugins"]
-        .as_array_of_tables_mut()
-        .expect("validated plugins array");
-    tables.retain(|table| remaining.contains_key(plugin_table_id(table)));
-    for table in tables.iter_mut() {
-        update_existing_plugin(table, &mut remaining);
-    }
-    for entry in &file.plugins {
-        if remaining.contains_key(entry.id.as_str()) {
-            let mut table = Table::new();
-            update_plugin_table(&mut table, entry);
-            tables.push(table);
-        }
-    }
-}
-
-fn plugin_table_id(table: &dyn TableLike) -> &str {
-    table
-        .get("id")
-        .and_then(Item::as_str)
-        .expect("validated plugin id")
-}
-
-fn update_existing_plugin(table: &mut dyn TableLike, remaining: &mut HashMap<&str, &PluginEntry>) {
-    let entry = remaining
-        .remove(plugin_table_id(table))
-        .expect("retained plugin");
-    update_plugin_table(table, entry);
-}
-
-fn update_plugin_table(table: &mut dyn TableLike, entry: &PluginEntry) {
-    for (key, value) in [
-        ("id", Some(entry.id.as_str())),
-        ("repo", Some(entry.repo.as_str())),
-        ("version", entry.version.as_deref()),
-        ("commit", entry.commit.as_deref()),
-    ] {
-        match (table.get_mut(key), value) {
-            (Some(item), Some(value)) => {
-                let existing = item.as_value_mut().expect("validated plugin field");
-                if existing.as_str() != Some(value) {
-                    let mut replacement = Value::from(value);
-                    *replacement.decor_mut() = existing.decor().clone();
-                    *existing = replacement;
-                }
-            }
-            (None, Some(value)) => {
-                table.insert(key, toml_edit::value(value));
-            }
-            (_, None) => {
-                table.remove(key);
-            }
-        }
-    }
-}
-
-fn validate_plugins_file(file: &PluginsFile) -> Result<(), PluginError> {
+fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
     let mut ids = HashSet::new();
+    let mut repositories = HashSet::new();
     for entry in &file.plugins {
         validate_package_id(&entry.id)?;
-        if !ids.insert(&entry.id) {
+        let owner = validate_repository(&entry.repo)?;
+        validate_manifest_owner_for_id(&entry.id, owner)?;
+        Version::parse(&entry.version).map_err(|error| {
+            PluginError::new(format!(
+                "plugin version {:?} is not semantic: {error}",
+                entry.version
+            ))
+        })?;
+        if entry.commit.len() != 40
+            || !entry
+                .commit
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+        {
             return Err(PluginError::new(format!(
-                "duplicate plugin entry {:?}",
+                "plugin commit {:?} must be a lowercase 40-character SHA",
+                entry.commit
+            )));
+        }
+        if !ids.insert(entry.id.to_ascii_lowercase()) {
+            return Err(PluginError::new(format!(
+                "duplicate locked plugin id {:?}",
                 entry.id
             )));
         }
-        let Some((owner, repo)) = entry.repo.split_once('/') else {
+        if !repositories.insert(entry.repo.to_ascii_lowercase()) {
             return Err(PluginError::new(format!(
-                "plugin repo {:?} must be owner/repo",
+                "duplicate locked plugin repository {:?}",
                 entry.repo
-            )));
-        };
-        if owner.is_empty() || repo.is_empty() || repo.contains('/') {
-            return Err(PluginError::new(format!(
-                "plugin repo {:?} must be owner/repo",
-                entry.repo
-            )));
-        }
-        validate_manifest_owner_for_id(&entry.id, owner)?;
-        if let Some(version) = &entry.version {
-            Version::parse(version).map_err(|error| {
-                PluginError::new(format!(
-                    "plugin version {version:?} is not semantic: {error}"
-                ))
-            })?;
-        }
-        if let Some(commit) = &entry.commit
-            && (commit.len() != 40
-                || !commit
-                    .bytes()
-                    .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()))
-        {
-            return Err(PluginError::new(format!(
-                "plugin commit {commit:?} must be a lowercase 40-character SHA"
             )));
         }
     }
     Ok(())
+}
+
+fn update_plugins_document(document: &mut Document, file: &PluginsFile) {
+    let mut remaining: Vec<_> = file.plugins.iter().map(String::as_str).collect();
+
+    // Keep comments and spelling on existing repository strings.
+    if let Some(array) = document.get_mut("plugins").and_then(Item::as_array_mut) {
+        let mut index = 0;
+        while index < array.len() {
+            let repo = array
+                .get(index)
+                .and_then(Value::as_str)
+                .expect("validated plugin repository");
+            if let Some(remaining_index) = remaining.iter().position(|candidate| *candidate == repo)
+            {
+                remaining.remove(remaining_index);
+                index += 1;
+            } else {
+                array.remove(index);
+            }
+        }
+        for repo in remaining {
+            array.push(repo);
+        }
+        return;
+    }
+
+    if document.get("plugins").is_none() && file.plugins.is_empty() {
+        return;
+    }
+    let mut array = Array::new();
+    for repo in &file.plugins {
+        array.push(repo.as_str());
+    }
+    document["plugins"] = Item::Value(Value::Array(array));
+}
+
+fn validate_plugins_file(file: &PluginsFile) -> Result<(), PluginError> {
+    let mut repositories = HashSet::new();
+    for repo in &file.plugins {
+        validate_repository(repo)?;
+        if !repositories.insert(repo.to_ascii_lowercase()) {
+            return Err(PluginError::new(format!(
+                "duplicate plugin repository {repo:?}"
+            )));
+        }
+    }
+    Ok(())
+}
+
+fn validate_repository(repo: &str) -> Result<&str, PluginError> {
+    let Some((owner, name)) = repo.split_once('/') else {
+        return Err(PluginError::new(format!(
+            "plugin repository {repo:?} must be owner/repo"
+        )));
+    };
+    if owner.is_empty() || name.is_empty() || name.contains('/') {
+        return Err(PluginError::new(format!(
+            "plugin repository {repo:?} must be owner/repo"
+        )));
+    }
+    Ok(owner)
 }
 
 fn validate_manifest_owner_for_id(id: &str, repository_owner: &str) -> Result<(), PluginError> {
@@ -278,6 +273,12 @@ pub fn plugins_file_path() -> Result<PathBuf, PluginError> {
 pub fn plugins_dir() -> Result<PathBuf, PluginError> {
     dirs::data_local_dir()
         .map(|path| path.join("rencal/plugins"))
+        .ok_or_else(|| PluginError::new("could not resolve user data directory"))
+}
+
+pub fn plugins_lock_path() -> Result<PathBuf, PluginError> {
+    dirs::data_local_dir()
+        .map(|path| path.join("rencal/plugins.lock"))
         .ok_or_else(|| PluginError::new("could not resolve user data directory"))
 }
 
@@ -492,17 +493,12 @@ appearance = "dark"
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("config/plugins.toml");
         let expected = PluginsFile {
-            plugins: vec![PluginEntry {
-                id: "alice.dusk".into(),
-                repo: "Alice/rencal-dusk".into(),
-                version: Some("1.2.3".into()),
-                commit: Some("1111111111111111111111111111111111111111".into()),
-            }],
+            plugins: vec!["Alice/rencal-dusk".into()],
         };
         save_plugins_file(&path, &expected).unwrap();
         assert_eq!(load_plugins_file(&path).unwrap(), expected);
 
-        std::fs::write(&path, "[[plugins]\nid = [").unwrap();
+        std::fs::write(&path, "plugins = [").unwrap();
         let before = std::fs::read_to_string(&path).unwrap();
         assert!(load_plugins_file(&path).is_err());
         assert!(save_plugins_file(&path, &PluginsFile::default()).is_err());
@@ -511,19 +507,10 @@ appearance = "dark"
 
     const FUTURE_PLUGINS: &str = r#"# Synced between machines
 schema = 2 # Written by a newer renCal
-
-[[plugins]] # My preferred theme
-repo = 'Alice/rencal-dusk' # Keep repository spelling
-id = 'alice.dusk'
-version = '1.2.3' # Pinned version
-enabled = true
-
-[plugins.settings]
-contrast = 'high' # Future plugin metadata
-
-[[plugins]]
-id = 'bob.dawn'
-repo = 'bob/rencal-dawn'
+plugins = [
+  'Alice/rencal-dusk', # My preferred theme
+  'bob/rencal-dawn',
+]
 
 [sync]
 machine = 'laptop' # Future top-level metadata
@@ -542,29 +529,6 @@ machine = 'laptop' # Future top-level metadata
     }
 
     #[test]
-    fn plugins_file_updates_only_changed_values_and_preserves_entry_order() {
-        let temp = tempfile::tempdir().unwrap();
-        let path = temp.path().join("plugins.toml");
-        std::fs::write(&path, FUTURE_PLUGINS).unwrap();
-
-        let mut file = load_plugins_file(&path).unwrap();
-        file.plugins[0].version = Some("2.0.0".into());
-        file.plugins.reverse();
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            FUTURE_PLUGINS.replace("'1.2.3'", "\"2.0.0\"")
-        );
-
-        file.plugins[1].version = None;
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            FUTURE_PLUGINS.replace("version = '1.2.3' # Pinned version\n", "")
-        );
-    }
-
-    #[test]
     fn plugins_file_adds_and_removes_entries_without_losing_other_metadata() {
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("plugins.toml");
@@ -572,60 +536,20 @@ machine = 'laptop' # Future top-level metadata
 
         let mut file = load_plugins_file(&path).unwrap();
         file.plugins.pop();
-        file.plugins.push(PluginEntry {
-            id: "carol.noon".into(),
-            repo: "carol/rencal-noon".into(),
-            version: Some("1.0.0".into()),
-            commit: None,
-        });
+        file.plugins.push("carol/rencal-noon".into());
         save_plugins_file(&path, &file).unwrap();
         assert_eq!(load_plugins_file(&path).unwrap(), file);
         let contents = std::fs::read_to_string(&path).unwrap();
-        assert!(
-            contents.starts_with(
-                FUTURE_PLUGINS
-                    .split("[[plugins]]\nid = 'bob.dawn'")
-                    .next()
-                    .unwrap()
-            )
-        );
+        assert!(contents.contains("'Alice/rencal-dusk'"));
+        assert!(contents.contains("\"carol/rencal-noon\""));
         assert!(contents.contains("[sync]\nmachine = 'laptop' # Future top-level metadata\n"));
-        assert!(!contents.contains("bob.dawn"));
+        assert!(!contents.contains("bob/rencal-dawn"));
 
         save_plugins_file(&path, &PluginsFile::default()).unwrap();
         assert_eq!(load_plugins_file(&path).unwrap(), PluginsFile::default());
         let contents = std::fs::read_to_string(&path).unwrap();
         assert!(contents.contains("schema = 2 # Written by a newer renCal"));
         assert!(contents.contains("[sync]\nmachine = 'laptop' # Future top-level metadata"));
-        assert!(!contents.contains("contrast"));
-    }
-
-    #[test]
-    fn plugins_file_preserves_inline_tables() {
-        let temp = tempfile::tempdir().unwrap();
-        let path = temp.path().join("plugins.toml");
-        let original = "# Inline declarations\nplugins = [\n  { repo = 'alice/dusk', id = 'alice.dusk', version = '1.0.0', future = { enabled = true } }, # My theme\n] # End\n";
-        std::fs::write(&path, original).unwrap();
-        let mut file = load_plugins_file(&path).unwrap();
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(std::fs::read_to_string(&path).unwrap(), original);
-        file.plugins[0].version = Some("2.0.0".into());
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(
-            std::fs::read_to_string(&path).unwrap(),
-            original.replace("'1.0.0'", "\"2.0.0\"")
-        );
-        file.plugins.push(PluginEntry {
-            id: "bob.dawn".into(),
-            repo: "bob/dawn".into(),
-            version: None,
-            commit: None,
-        });
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(load_plugins_file(&path).unwrap(), file);
-        file.plugins.remove(0);
-        save_plugins_file(&path, &file).unwrap();
-        assert_eq!(load_plugins_file(&path).unwrap(), file);
     }
 
     #[test]
@@ -633,13 +557,11 @@ machine = 'laptop' # Future top-level metadata
         let temp = tempfile::tempdir().unwrap();
         let path = temp.path().join("plugins.toml");
         for contents in [
-            "[[plugins]]\nid = 'alice.dusk'\n",
-            "[[plugins]]\nid = 'invalid'\nrepo = 'alice/dusk'\n",
-            "[[plugins]]\nid = 'alice.dusk'\nrepo = 'bob/dusk'\n",
-            "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\nversion = 'invalid'\n",
-            "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\ncommit = 'main'\n",
-            "[[plugins]]\nid = 'alice.dusk'\nrepo = 42\n",
-            "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\n[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\n",
+            "plugins = ['alice']\n",
+            "plugins = ['alice/dusk/more']\n",
+            "plugins = [42]\n",
+            "plugins = ['alice/dusk', 'ALICE/DUSK']\n",
+            "[[plugins]]\nrepo = 'alice/dusk'\n",
         ] {
             std::fs::write(&path, contents).unwrap();
             assert!(load_plugins_file(&path).is_err(), "{contents}");
@@ -662,12 +584,7 @@ machine = 'laptop' # Future top-level metadata
         symlink(&dotfiles, &path).unwrap();
 
         let expected = PluginsFile {
-            plugins: vec![PluginEntry {
-                id: "alice.dusk".into(),
-                repo: "Alice/rencal-dusk".into(),
-                version: Some("1.2.3".into()),
-                commit: None,
-            }],
+            plugins: vec!["Alice/rencal-dusk".into()],
         };
         save_plugins_file(&path, &expected).unwrap();
 
@@ -679,6 +596,22 @@ machine = 'laptop' # Future top-level metadata
         );
         assert_eq!(load_plugins_file(&path).unwrap(), expected);
         assert_eq!(load_plugins_file(&dotfiles).unwrap(), expected);
+    }
+
+    #[test]
+    fn plugin_lock_file_round_trips_and_validates_resolved_metadata() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("data/plugins.lock");
+        let expected = PluginLockFile {
+            plugins: vec![PluginLockEntry {
+                id: "alice.dusk".into(),
+                repo: "Alice/rencal-dusk".into(),
+                version: "1.2.3".into(),
+                commit: "1111111111111111111111111111111111111111".into(),
+            }],
+        };
+        save_plugin_lock_file(&path, &expected).unwrap();
+        assert_eq!(load_plugin_lock_file(&path).unwrap(), expected);
     }
 
     #[test]

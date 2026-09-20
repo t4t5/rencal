@@ -20,7 +20,15 @@ appearance = "dark"
 
 For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. A stable GitHub release is optional. If one exists, its tag must match the manifest version (`1.0.0` or `v1.0.0`); otherwise renCal uses the head of the default branch. Bump the manifest version to publish an update.
 
-renCal resolves the selected release or branch head to a commit SHA before downloading files and records that SHA in `plugins.toml`, so every installed package can be restored from the same source revision.
+Declare installed plugins by repository in `~/.config/rencal/plugins.toml`:
+
+```toml
+plugins = [
+  "alice/rencal-dusk",
+]
+```
+
+renCal resolves the selected release or branch head to a commit SHA before downloading files. Resolved IDs, versions, and commits are kept in the internal data file `plugins.lock`, alongside the installed `plugins/` directory, so missing package files can be restored from the same source revision without exposing generated metadata in user configuration.
 
 Users normally install a plugin with the **Install in renCal** button on the [plugin directory](https://rencal.org/plugins), which opens the package in **Settings → Plugins** for review before anything is installed.
 
