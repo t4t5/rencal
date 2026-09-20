@@ -249,17 +249,20 @@ async fn build_index(
                 released_at: release.published_at,
             },
             FetchResult::Missing => {
-                let commit_url = api_url(
+                let mut commit_url = api_url(
                     api_base,
                     &[
                         "repos",
                         &repository.owner.login,
                         &repository.name,
                         "commits",
-                        &repository.default_branch,
                     ],
                 )?;
-                let commit: GithubCommit = match fetch_json(
+                commit_url
+                    .query_pairs_mut()
+                    .append_pair("sha", &repository.default_branch)
+                    .append_pair("per_page", "1");
+                let commits: Vec<GithubCommit> = match fetch_json(
                     client,
                     commit_url,
                     &format!("default branch head for {repo}"),
@@ -271,6 +274,10 @@ async fn build_index(
                         warnings.push(format!("Skipping {repo}: default branch head is missing"));
                         continue;
                     }
+                };
+                let Some(commit) = commits.into_iter().next() else {
+                    warnings.push(format!("Skipping {repo}: default branch has no commits"));
+                    continue;
                 };
                 if !valid_commit_sha(&commit.sha) {
                     warnings.push(format!(
@@ -448,18 +455,25 @@ mod tests {
 
     struct MockClient {
         replies: Mutex<VecDeque<MockReply>>,
+        requests: Mutex<Vec<Url>>,
     }
 
     impl MockClient {
         fn new(replies: Vec<MockReply>) -> Self {
             Self {
                 replies: Mutex::new(replies.into()),
+                requests: Mutex::new(Vec::new()),
             }
+        }
+
+        fn requests(&self) -> Vec<Url> {
+            self.requests.lock().unwrap().clone()
         }
     }
 
     impl GithubClient for MockClient {
-        fn get(&self, _url: Url) -> ClientFuture<'_> {
+        fn get(&self, url: Url) -> ClientFuture<'_> {
+            self.requests.lock().unwrap().push(url);
             let reply = self.replies.lock().unwrap().pop_front().unwrap();
             Box::pin(async move {
                 match reply {
@@ -549,10 +563,10 @@ appearance = "dark"
                 "items": [repository("Alice", "rencal-dusk", 42)],
             })),
             MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
-            json(serde_json::json!({
+            json(serde_json::json!([{
                 "sha": commit,
                 "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
-            })),
+            }])),
             text(&manifest("alice", "1.2.3")),
         ]);
         let (api, raw) = bases();
@@ -563,6 +577,12 @@ appearance = "dark"
         assert_eq!(index.entries[0].tag, commit);
         assert_eq!(index.entries[0].released_at, "2026-09-19T12:00:00Z");
         assert_eq!(index.entries[0].version, "1.2.3");
+        let commit_request = client
+            .requests()
+            .into_iter()
+            .find(|url| url.path() == "/repos/Alice/rencal-dusk/commits")
+            .unwrap();
+        assert_eq!(commit_request.query().unwrap(), "sha=main&per_page=1");
     }
 
     #[tokio::test]

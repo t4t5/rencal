@@ -182,18 +182,12 @@ struct GithubRelease {
 }
 
 #[derive(Deserialize)]
-struct GithubRepository {
-    default_branch: String,
-}
-
-#[derive(Deserialize)]
 struct GithubCommit {
     sha: String,
 }
 
 enum MissingResponse {
     Release,
-    Repository,
     Commit,
     PackageFile(String),
 }
@@ -536,47 +530,41 @@ impl PluginManager {
                     format!("GitHub returned an invalid release response: {error}"),
                 )
             })?;
-            let commit = self.resolve_commit(repository, &release.tag_name).await?;
+            let commit = self
+                .resolve_commit(repository, Some(&release.tag_name))
+                .await?;
             return self
                 .resolve_commit_ref(repository, commit, Some(&release.tag_name))
                 .await;
         }
 
-        let bytes = self
-            .fetch_bounded(
-                self.api_url(repository, &[]),
-                RELEASE_RESPONSE_LIMIT,
-                MissingResponse::Repository,
-            )
-            .await?;
-        let metadata: GithubRepository = serde_json::from_slice(&bytes).map_err(|error| {
-            PluginInstallError::new(
-                PluginInstallErrorKind::Network,
-                format!("GitHub returned an invalid repository response: {error}"),
-            )
-        })?;
-        let commit = self
-            .resolve_commit(repository, &metadata.default_branch)
-            .await?;
+        let commit = self.resolve_commit(repository, None).await?;
         self.resolve_commit_ref(repository, commit, None).await
     }
 
     async fn resolve_commit(
         &self,
         repository: &Repository,
-        reference: &str,
+        reference: Option<&str>,
     ) -> Result<String, PluginInstallError> {
+        let mut url = self.api_url(repository, &["commits"]);
+        if let Some(reference) = reference {
+            url.query_pairs_mut().append_pair("sha", reference);
+        }
+        url.query_pairs_mut().append_pair("per_page", "1");
         let bytes = self
-            .fetch_bounded(
-                self.api_url(repository, &["commits", reference]),
-                RELEASE_RESPONSE_LIMIT,
-                MissingResponse::Commit,
-            )
+            .fetch_bounded(url, RELEASE_RESPONSE_LIMIT, MissingResponse::Commit)
             .await?;
-        let commit: GithubCommit = serde_json::from_slice(&bytes).map_err(|error| {
+        let commits: Vec<GithubCommit> = serde_json::from_slice(&bytes).map_err(|error| {
             PluginInstallError::new(
                 PluginInstallErrorKind::Network,
                 format!("GitHub returned an invalid commit response: {error}"),
+            )
+        })?;
+        let commit = commits.into_iter().next().ok_or_else(|| {
+            PluginInstallError::new(
+                PluginInstallErrorKind::MissingRelease,
+                "repository reference was not found",
             )
         })?;
         validate_commit_sha(&commit.sha).map_err(PluginInstallError::invalid_package)?;
@@ -841,10 +829,6 @@ impl PluginManager {
                     PluginInstallErrorKind::MissingRelease,
                     "repository has no matching stable release",
                 ),
-                MissingResponse::Repository => PluginInstallError::new(
-                    PluginInstallErrorKind::MissingRelease,
-                    "GitHub repository was not found",
-                ),
                 MissingResponse::Commit => PluginInstallError::new(
                     PluginInstallErrorKind::MissingRelease,
                     "repository reference was not found",
@@ -1069,11 +1053,16 @@ appearance = "dark"
         ) -> Pin<Box<dyn Future<Output = Result<DownloadResponse, PluginInstallError>> + Send + '_>>
         {
             Box::pin(async move {
+                let mut key = url.path().to_owned();
+                if let Some(query) = url.query() {
+                    key.push('?');
+                    key.push_str(query);
+                }
                 let (status, bytes) = self
                     .responses
                     .lock()
                     .unwrap()
-                    .get(url.path())
+                    .get(&key)
                     .cloned()
                     .unwrap_or((404, Vec::new()));
                 if bytes.len() > limit {
@@ -1108,9 +1097,9 @@ appearance = "dark"
             br#"{"tag_name":"v1.0.0"}"#.to_vec(),
         );
         downloader.set(
-            "/repos/Alice/rencal-dusk/commits/v1.0.0",
+            "/repos/Alice/rencal-dusk/commits?sha=v1.0.0&per_page=1",
             200,
-            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+            format!(r#"[{{"sha":"{COMMIT_V1}"}}]"#).into_bytes(),
         );
         downloader.set(
             &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
@@ -1289,14 +1278,9 @@ appearance = "dark"
     async fn installs_default_branch_head_without_a_release() {
         let downloader = Arc::new(FixtureDownloader::new());
         downloader.set(
-            "/repos/Alice/rencal-dusk",
+            "/repos/Alice/rencal-dusk/commits?per_page=1",
             200,
-            br#"{"default_branch":"main"}"#.to_vec(),
-        );
-        downloader.set(
-            "/repos/Alice/rencal-dusk/commits/main",
-            200,
-            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+            format!(r#"[{{"sha":"{COMMIT_V1}"}}]"#).into_bytes(),
         );
         downloader.set(
             &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
@@ -1331,9 +1315,9 @@ appearance = "dark"
             release.into_bytes(),
         );
         downloader.set(
-            "/repos/Alice/rencal-dusk/commits/v1.0.0",
+            "/repos/Alice/rencal-dusk/commits?sha=v1.0.0&per_page=1",
             200,
-            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+            format!(r#"[{{"sha":"{COMMIT_V1}"}}]"#).into_bytes(),
         );
         downloader.set(
             &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
@@ -1368,9 +1352,9 @@ appearance = "dark"
             br#"{"tag_name":"v2.0.0"}"#.to_vec(),
         );
         downloader.set(
-            "/repos/Alice/rencal-dusk/commits/v2.0.0",
+            "/repos/Alice/rencal-dusk/commits?sha=v2.0.0&per_page=1",
             200,
-            format!(r#"{{"sha":"{COMMIT_V2}"}}"#).into_bytes(),
+            format!(r#"[{{"sha":"{COMMIT_V2}"}}]"#).into_bytes(),
         );
         downloader.set(
             &format!("/Alice/rencal-dusk/{COMMIT_V2}/rencal-plugin.toml"),
