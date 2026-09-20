@@ -7,7 +7,7 @@ use serde::Serialize;
 use specta::Type;
 use tauri::{Emitter, Runtime};
 
-use crate::external_themes::ExternalTheme;
+use crate::external_themes::ExternalThemesSnapshot;
 use crate::omarchy::OmarchyColors;
 use crate::routes::caldir::CaldirSettings;
 
@@ -18,10 +18,11 @@ pub enum AppEvent {
     CalendarsChanged(()),
     EventsChanged(()),
     EventDeepLinkAvailable(()),
+    PluginDeepLinkAvailable(()),
     RencalConfigChanged(()),
     SystemTzChanged(String),
     OmarchyThemeChanged(OmarchyColors),
-    ExternalThemesChanged(Vec<ExternalTheme>),
+    ExternalThemesChanged(ExternalThemesSnapshot),
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     MenuAction(String),
     #[allow(dead_code)] // Emitted by the frontend only; still part of the contract.
@@ -99,11 +100,7 @@ mod tests {
             yellow: "#ffff00".into(),
             blue: "#0000ff".into(),
         };
-        let themes = vec![ExternalTheme {
-            id: "user:test".into(),
-            name: "Test".into(),
-            css: "--background: red".into(),
-        }];
+        let themes = ExternalThemesSnapshot::default();
         let cases: Vec<(AppEvent, &str, Value)> = vec![
             (
                 AppEvent::CaldirConfigChanged(settings.clone()),
@@ -119,6 +116,11 @@ mod tests {
             (
                 AppEvent::EventDeepLinkAvailable(()),
                 "event-deep-link-available",
+                Value::Null,
+            ),
+            (
+                AppEvent::PluginDeepLinkAvailable(()),
+                "plugin-deep-link-available",
                 Value::Null,
             ),
             (

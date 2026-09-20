@@ -26,6 +26,7 @@ vi.mock("@/hooks/cal-events/useVisibleCalendarIds", () => ({
   useVisibleCalendarIds: () => selection.ids,
 }))
 vi.mock("@/hooks/useEventDeepLinks", () => ({ useEventDeepLinks: () => {} }))
+vi.mock("@/hooks/usePluginDeepLinks", () => ({ usePluginDeepLinks: () => {} }))
 vi.mock("@/lib/api", () => ({
   api: {
     events: { list: vi.fn() },

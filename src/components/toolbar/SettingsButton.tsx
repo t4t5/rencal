@@ -1,6 +1,7 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 
+import type { SettingsTab } from "@/components/settings/SettingsSidebar"
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
@@ -8,14 +9,10 @@ import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
-import { getActiveAppearance } from "@/themes/appearance"
-import { THEME_IDS } from "@/themes/manifest"
+import { appearanceFromComputedBackground } from "@/themes/appearance"
+import type { Appearance } from "@/themes/manifest"
 
-function activeThemeId(): string {
-  return document.body.dataset.theme || THEME_IDS[0]
-}
-
-export async function openSettingsWindow() {
+export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
   const existing = await WebviewWindow.getByLabel("settings")
   if (existing) {
     await existing.setFocus()
@@ -30,10 +27,15 @@ export async function openSettingsWindow() {
   const screenH = (monitor?.size.height ?? height) / scale
   const needsNative = await needsNativeDecorations()
 
-  const appearance = getActiveAppearance(activeThemeId())
+  const appearance =
+    (document.body.dataset.appearance as Appearance | undefined) ??
+    appearanceFromComputedBackground()
+
+  const params = new URLSearchParams({ appWindow: "settings" })
+  if (options.tab) params.set("tab", options.tab)
 
   new WebviewWindow("settings", {
-    url: "/?appWindow=settings",
+    url: `/?${params.toString()}`,
     title: "Settings",
     titleBarStyle: isMacOS ? "overlay" : undefined,
     width,

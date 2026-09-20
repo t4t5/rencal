@@ -1,0 +1,64 @@
+name: Index plugins
+
+on:
+  schedule:
+    # Run off the hour to avoid peak GitHub Actions cron congestion.
+    - cron: "17 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: plugin-index
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+  deployments: write
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri -> target
+          key: plugin-indexer
+
+      - name: Build plugin index
+        run: cargo run --manifest-path src-tauri/Cargo.toml -p rencal-plugin-indexer -- website/public/plugins.json
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compare with deployed plugin index
+        id: compare
+        shell: bash
+        run: |
+          if curl --fail --silent --show-error https://rencal.org/plugins.json --output /tmp/deployed-plugins.json \
+            && cmp --silent /tmp/deployed-plugins.json website/public/plugins.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload plugin index
+        if: ${{ steps.compare.outputs.changed == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-index
+          path: website/public/plugins.json
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    needs: index
+    if: ${{ needs.index.outputs.changed == 'true' }}
+    uses: ./.github/workflows/website.yml
+    with:
+      plugin_index_artifact: plugin-index
+    secrets: inherit

@@ -6,13 +6,24 @@ import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useTheme } from "@/hooks/useTheme"
+import { api } from "@/lib/api"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
 
 export function SettingsWindow() {
-  const [activeTab, setActiveTab] = useState<SettingsTab>("general")
+  const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
+    const requested = new URLSearchParams(window.location.search).get("tab")
+    return NAV_ITEMS.find((item) => item.tab === requested)?.tab ?? "general"
+  })
   useTheme()
+
+  useEffect(() => {
+    const subscription = api.notifications.listen("plugin-deep-link-available", () => {
+      setActiveTab("plugins")
+    })
+    return subscription.unlisten
+  }, [])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

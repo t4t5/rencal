@@ -15,26 +15,8 @@
   </head>
 
   <body data-default-theme="ren">
-    <script>
-      // Restore persisted theme before React mounts to avoid a flash
-      const DEFAULT_THEME = document.body.dataset.defaultTheme || "ren"
-      try {
-        document.body.dataset.theme = JSON.parse(localStorage.getItem("theme")) || DEFAULT_THEME
-      } catch {
-        document.body.dataset.theme = DEFAULT_THEME
-      }
-      // Apply the active theme's last-known background so we don't flash a stale
-      // color before the CSS bundle (and any user-theme <style>) loads. Works
-      // for every theme — built-in, omarchy, or user-supplied — because
-      // useTheme caches the resolved --background on each change.
-      try {
-        const bg = localStorage.getItem("themeBackground")
-        if (bg) {
-          document.body.style.setProperty("--background", bg)
-          document.documentElement.style.backgroundColor = bg
-        }
-      } catch {}
-    </script>
+    <!-- Parser-blocking so the saved theme is restored before first paint. -->
+    <script src="/theme-bootstrap.js"></script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
