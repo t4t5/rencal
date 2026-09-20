@@ -113,8 +113,11 @@ mod tests {
         use std::os::unix::fs::symlink;
 
         let temp = tempfile::tempdir().unwrap();
-        let config = temp.path().join("config");
-        let dotfiles = temp.path().join("dotfiles");
+        // macOS resolves /var to /private/var when canonicalizing the symlink
+        // target, so construct both expected paths from the resolved root.
+        let root = temp.path().canonicalize().unwrap();
+        let config = root.join("config");
+        let dotfiles = root.join("dotfiles");
         std::fs::create_dir_all(&config).unwrap();
         std::fs::create_dir_all(&dotfiles).unwrap();
         std::fs::write(dotfiles.join("plugins.toml"), "plugins = []\n").unwrap();
