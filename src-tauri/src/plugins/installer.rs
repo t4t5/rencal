@@ -146,7 +146,7 @@ pub struct PluginInspection {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
-pub struct PluginRestoreError {
+pub struct PluginReconcileError {
     pub package: String,
     pub message: String,
 }
@@ -198,6 +198,12 @@ struct ResolvedPackage {
     manifest: PluginManifest,
     manifest_text: Vec<u8>,
     commit: String,
+}
+
+#[derive(Clone, Copy)]
+enum DeclarationPolicy {
+    Ensure,
+    RequireExisting,
 }
 
 #[derive(Deserialize)]
@@ -304,7 +310,7 @@ impl PluginManager {
                 .any(|entry| entry.repo.eq_ignore_ascii_case(repo))
             {
                 errors.push(format!(
-                    "Plugin repository {repo:?} has not been resolved. Restart renCal while online to install it."
+                    "Plugin repository {repo:?} has not been resolved. Re-save plugins.toml while online to install it."
                 ));
             }
         }
@@ -449,8 +455,15 @@ impl PluginManager {
         let (declarations, locks) = self.load_state()?;
         let package = self.resolve_latest(&repository).await?;
         self.require_compatible(&package.inspection)?;
-        self.install_resolved(&repository, package, declarations, locks, None)
-            .await
+        self.install_resolved(
+            &repository,
+            package,
+            declarations,
+            locks,
+            None,
+            DeclarationPolicy::Ensure,
+        )
+        .await
     }
 
     /// Remove both the declaration and package directory. A missing directory
@@ -518,34 +531,44 @@ impl PluginManager {
         Ok(())
     }
 
-    /// Restore declared repositories whose package directory is absent. Locked
-    /// commits are fetched exactly; new declarations resolve the latest release.
-    pub async fn restore_missing(&self) -> Vec<PluginRestoreError> {
-        let (declarations, locks) = match self.load_state() {
-            Ok(state) => state,
-            Err(error) => {
-                return vec![PluginRestoreError {
+    /// Make managed packages match the declarations file. Undeclared packages
+    /// are removed only when a lock entry proves renCal installed them; loose
+    /// directories and symlinked development checkouts remain untouched.
+    pub async fn reconcile(&self) -> Vec<PluginReconcileError> {
+        let missing = {
+            let _guard = self.inner.mutations.lock().await;
+            let (declarations, mut locks) = match self.load_state() {
+                Ok(state) => state,
+                Err(error) => {
+                    return vec![PluginReconcileError {
+                        package: self.inner.declarations_path.display().to_string(),
+                        message: error.to_string(),
+                    }];
+                }
+            };
+            if let Err(error) = self.prune_undeclared(&declarations, &mut locks) {
+                return vec![PluginReconcileError {
                     package: self.inner.declarations_path.display().to_string(),
                     message: error.to_string(),
                 }];
             }
+            declarations
+                .plugins
+                .into_iter()
+                .filter(|repo| {
+                    locks
+                        .plugins
+                        .iter()
+                        .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
+                        .is_none_or(|entry| !self.inner.packages_dir.join(&entry.id).is_dir())
+                })
+                .collect::<Vec<_>>()
         };
-        let missing: Vec<_> = declarations
-            .plugins
-            .into_iter()
-            .filter(|repo| {
-                locks
-                    .plugins
-                    .iter()
-                    .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
-                    .is_none_or(|entry| !self.inner.packages_dir.join(&entry.id).is_dir())
-            })
-            .collect();
 
         let mut errors = Vec::new();
         for repo in missing {
             if let Err(error) = self.restore_entry(&repo).await {
-                errors.push(PluginRestoreError {
+                errors.push(PluginReconcileError {
                     package: repo,
                     message: error.to_string(),
                 });
@@ -554,10 +577,100 @@ impl PluginManager {
         errors
     }
 
+    fn prune_undeclared(
+        &self,
+        declarations: &PluginsFile,
+        locks: &mut PluginLockFile,
+    ) -> Result<(), PluginInstallError> {
+        let removed: Vec<_> = locks
+            .plugins
+            .iter()
+            .filter(|entry| {
+                !declarations
+                    .plugins
+                    .iter()
+                    .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
+            })
+            .cloned()
+            .collect();
+        if removed.is_empty() {
+            return Ok(());
+        }
+
+        std::fs::create_dir_all(&self.inner.packages_dir).map_err(|error| {
+            PluginInstallError::io(
+                format!("could not create {}", self.inner.packages_dir.display()),
+                error,
+            )
+        })?;
+        let backup = tempfile::Builder::new()
+            .prefix(".rencal-prune-")
+            .tempdir_in(&self.inner.packages_dir)
+            .map_err(|error| PluginInstallError::io("could not create prune backup", error))?;
+        let mut moved = Vec::new();
+        for entry in &removed {
+            let target = self.inner.packages_dir.join(&entry.id);
+            match std::fs::symlink_metadata(&target) {
+                Ok(_) => {
+                    let backup_package = backup.path().join(&entry.id);
+                    if let Err(error) = std::fs::rename(&target, &backup_package) {
+                        restore_pruned_packages(&moved);
+                        return Err(PluginInstallError::io(
+                            format!("could not prune plugin {:?}", entry.id),
+                            error,
+                        ));
+                    }
+                    moved.push((backup_package, target));
+                }
+                Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                Err(error) => {
+                    restore_pruned_packages(&moved);
+                    return Err(PluginInstallError::io(
+                        format!("could not inspect plugin {:?}", entry.id),
+                        error,
+                    ));
+                }
+            }
+        }
+
+        let previous_locks = locks.clone();
+        locks.plugins.retain(|entry| {
+            declarations
+                .plugins
+                .iter()
+                .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
+        });
+        if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, locks) {
+            *locks = previous_locks;
+            restore_pruned_packages(&moved);
+            return Err(PluginInstallError::new(
+                PluginInstallErrorKind::Configuration,
+                error.to_string(),
+            ));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn declarations_path(&self) -> &Path {
+        &self.inner.declarations_path
+    }
+
+    /// Restore one declared repository. Locked commits are fetched exactly;
+    /// new declarations resolve the latest release.
     async fn restore_entry(&self, repo: &str) -> Result<(), PluginInstallError> {
         let repository = Repository::parse(repo)?;
         let _guard = self.inner.mutations.lock().await;
-        let (declarations, locks) = self.load_state()?;
+        let (declarations, locks) = match self.load_state() {
+            Ok(state) => state,
+            Err(error) => return Err(error),
+        };
+        if !declarations
+            .plugins
+            .iter()
+            .any(|declared| declared.eq_ignore_ascii_case(repo))
+        {
+            return Ok(());
+        }
         let locked = locks
             .plugins
             .iter()
@@ -590,6 +703,7 @@ impl PluginManager {
             declarations,
             locks,
             locked.as_ref().map(|entry| entry.id.as_str()),
+            DeclarationPolicy::RequireExisting,
         )
         .await?;
         Ok(())
@@ -743,6 +857,7 @@ impl PluginManager {
         mut declarations: PluginsFile,
         mut locks: PluginLockFile,
         expected_id: Option<&str>,
+        declaration_policy: DeclarationPolicy,
     ) -> Result<PluginInspection, PluginInstallError> {
         if expected_id.is_some_and(|id| id != package.manifest.id) {
             return Err(PluginInstallError::invalid_package(
@@ -761,6 +876,29 @@ impl PluginManager {
             .map_err(|error| PluginInstallError::io("could not create install staging", error))?;
         self.write_staged_package(staging.path(), repository, &package)
             .await?;
+
+        // A hand edit can remove the declaration while the package downloads.
+        // Reload immediately before committing so reconciliation never writes
+        // that stale declaration back or installs an unwanted package.
+        if matches!(declaration_policy, DeclarationPolicy::RequireExisting) {
+            (declarations, locks) = self.load_state()?;
+            if !declarations
+                .plugins
+                .iter()
+                .any(|repo| repo.eq_ignore_ascii_case(&repository.display))
+            {
+                return Ok(package.inspection);
+            }
+            if let Some(existing) = locks.plugins.iter().find(|entry| {
+                entry.id == package.manifest.id
+                    && !entry.repo.eq_ignore_ascii_case(&repository.display)
+            }) {
+                return Err(PluginInstallError::invalid_package(format!(
+                    "plugin id {:?} is already managed by repository {:?}",
+                    package.manifest.id, existing.repo
+                )));
+            }
+        }
 
         let target = self.inner.packages_dir.join(&package.manifest.id);
         let backup = tempfile::Builder::new()
@@ -811,19 +949,21 @@ impl PluginManager {
         } else {
             locks.plugins.push(entry);
         }
-        if let Some(replaced_repo) = replaced_repo
-            && !replaced_repo.eq_ignore_ascii_case(&repository.display)
-        {
-            declarations
+        if matches!(declaration_policy, DeclarationPolicy::Ensure) {
+            if let Some(replaced_repo) = replaced_repo
+                && !replaced_repo.eq_ignore_ascii_case(&repository.display)
+            {
+                declarations
+                    .plugins
+                    .retain(|repo| !repo.eq_ignore_ascii_case(&replaced_repo));
+            }
+            if !declarations
                 .plugins
-                .retain(|repo| !repo.eq_ignore_ascii_case(&replaced_repo));
-        }
-        if !declarations
-            .plugins
-            .iter()
-            .any(|repo| repo.eq_ignore_ascii_case(&repository.display))
-        {
-            declarations.plugins.push(repository.display.clone());
+                .iter()
+                .any(|repo| repo.eq_ignore_ascii_case(&repository.display))
+            {
+                declarations.plugins.push(repository.display.clone());
+            }
         }
         if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, &locks) {
             let _ = remove_path(&target);
@@ -835,7 +975,9 @@ impl PluginManager {
                 error.to_string(),
             ));
         }
-        if let Err(error) = save_plugins_file(&self.inner.declarations_path, &declarations) {
+        if matches!(declaration_policy, DeclarationPolicy::Ensure)
+            && let Err(error) = save_plugins_file(&self.inner.declarations_path, &declarations)
+        {
             let _ = save_plugin_lock_file(&self.inner.lock_path, &previous_locks);
             let _ = remove_path(&target);
             if had_previous {
@@ -1120,12 +1262,17 @@ fn validate_commit_sha(value: &str) -> Result<(), String> {
 }
 
 fn remove_path(path: &Path) -> std::io::Result<()> {
-    if path.is_dir() {
-        std::fs::remove_dir_all(path)
-    } else if path.exists() {
-        std::fs::remove_file(path)
-    } else {
-        Ok(())
+    match std::fs::symlink_metadata(path) {
+        Ok(metadata) if metadata.file_type().is_dir() => std::fs::remove_dir_all(path),
+        Ok(_) => std::fs::remove_file(path),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error),
+    }
+}
+
+fn restore_pruned_packages(moved: &[(PathBuf, PathBuf)]) {
+    for (backup, target) in moved.iter().rev() {
+        let _ = std::fs::rename(backup, target);
     }
 }
 
@@ -1134,6 +1281,7 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
     use std::sync::Mutex as StdMutex;
+    use tokio::sync::Notify;
 
     const COMMIT_V1: &str = "1111111111111111111111111111111111111111";
     const COMMIT_V2: &str = "2222222222222222222222222222222222222222";
@@ -1154,6 +1302,14 @@ appearance = "dark"
     struct FixtureDownloader {
         base: Url,
         responses: Arc<StdMutex<HashMap<String, (u16, Vec<u8>)>>>,
+        pause: Arc<StdMutex<Option<DownloadPause>>>,
+    }
+
+    #[derive(Clone)]
+    struct DownloadPause {
+        path: String,
+        started: Arc<Notify>,
+        resume: Arc<Notify>,
     }
 
     impl FixtureDownloader {
@@ -1161,6 +1317,7 @@ appearance = "dark"
             Self {
                 base: Url::parse("https://fixture.invalid/").unwrap(),
                 responses: Arc::new(StdMutex::new(HashMap::new())),
+                pause: Arc::new(StdMutex::new(None)),
             }
         }
 
@@ -1169,6 +1326,17 @@ appearance = "dark"
                 .lock()
                 .unwrap()
                 .insert(path.into(), (status, body.into()));
+        }
+
+        fn pause_on(&self, path: impl Into<String>) -> (Arc<Notify>, Arc<Notify>) {
+            let pause = DownloadPause {
+                path: path.into(),
+                started: Arc::new(Notify::new()),
+                resume: Arc::new(Notify::new()),
+            };
+            let handles = (pause.started.clone(), pause.resume.clone());
+            *self.pause.lock().unwrap() = Some(pause);
+            handles
         }
     }
 
@@ -1196,6 +1364,11 @@ appearance = "dark"
                     return Err(PluginInstallError::invalid_package(format!(
                         "download exceeds the {limit} byte limit"
                     )));
+                }
+                let pause = self.pause.lock().unwrap().clone();
+                if let Some(pause) = pause.filter(|pause| pause.path == key) {
+                    pause.started.notify_one();
+                    pause.resume.notified().await;
                 }
                 Ok(DownloadResponse {
                     status: StatusCode::from_u16(status).unwrap(),
@@ -1537,7 +1710,7 @@ appearance = "dark"
         )
         .unwrap();
 
-        assert!(manager.restore_missing().await.is_empty());
+        assert!(manager.reconcile().await.is_empty());
         assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
     }
 
@@ -1555,12 +1728,129 @@ appearance = "dark"
         )
         .unwrap();
 
-        assert!(manager.restore_missing().await.is_empty());
+        assert!(manager.reconcile().await.is_empty());
         assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
         assert_eq!(locks.plugins[0].id, "alice.dusk");
         assert_eq!(locks.plugins[0].version, "1.0.0");
         assert_eq!(locks.plugins[0].commit, COMMIT_V1);
+    }
+
+    #[tokio::test]
+    async fn restore_does_not_readd_a_declaration_removed_during_download() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let (started, resume) =
+            downloader.pause_on(format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"));
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let declarations_path = temp.path().join("config/plugins.toml");
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec!["Alice/rencal-dusk".into()],
+            },
+        )
+        .unwrap();
+
+        let task = tokio::spawn({
+            let manager = manager.clone();
+            async move { manager.reconcile().await }
+        });
+        started.notified().await;
+        save_plugins_file(&declarations_path, &PluginsFile::default()).unwrap();
+        resume.notify_one();
+
+        assert!(task.await.unwrap().is_empty());
+        assert!(
+            load_plugins_file(&declarations_path)
+                .unwrap()
+                .plugins
+                .is_empty()
+        );
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .is_empty()
+        );
+    }
+
+    #[tokio::test]
+    async fn reconcile_prunes_undeclared_managed_packages_only() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let manual = temp.path().join("data/plugins/local.manual");
+        std::fs::create_dir_all(&manual).unwrap();
+        std::fs::write(manual.join("notes.txt"), "unmanaged").unwrap();
+        save_plugins_file(
+            &temp.path().join("config/plugins.toml"),
+            &PluginsFile::default(),
+        )
+        .unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+        assert!(manual.is_dir());
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .is_empty()
+        );
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn reconcile_leaves_an_unlocked_symlinked_checkout_alone() {
+        use std::os::unix::fs::symlink;
+
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let packages = temp.path().join("data/plugins");
+        let checkout = temp.path().join("checkout");
+        std::fs::create_dir_all(&packages).unwrap();
+        std::fs::create_dir_all(&checkout).unwrap();
+        symlink(&checkout, packages.join("local.checkout")).unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+
+        assert!(
+            std::fs::symlink_metadata(packages.join("local.checkout"))
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert!(checkout.is_dir());
+    }
+
+    #[tokio::test]
+    async fn reconcile_does_not_prune_when_declarations_are_malformed() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        std::fs::write(temp.path().join("config/plugins.toml"), "plugins = [").unwrap();
+
+        let errors = manager.reconcile().await;
+
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("could not parse"));
+        assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+        assert_eq!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .len(),
+            1
+        );
     }
 
     #[tokio::test]

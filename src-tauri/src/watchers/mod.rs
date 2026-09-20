@@ -11,10 +11,15 @@ use crate::{external_themes, omarchy};
 
 pub mod caldir;
 pub mod caldir_config;
+pub mod plugins;
 pub mod rencal_config;
 pub mod tz;
 
-pub fn spawn_all(app: &AppHandle, state: &Arc<AppState>) {
+pub fn spawn_all(
+    app: &AppHandle,
+    state: &Arc<AppState>,
+    plugin_manager: &crate::plugins::PluginManager,
+) {
     spawn_task("omarchy theme watcher", omarchy::run_watcher(app.clone()));
     spawn_task(
         "external themes watcher",
@@ -28,6 +33,10 @@ pub fn spawn_all(app: &AppHandle, state: &Arc<AppState>) {
     spawn_task(
         "rencal config watcher",
         rencal_config::run_watcher(app.clone()),
+    );
+    spawn_task(
+        "plugin declarations watcher",
+        plugins::run_watcher(app.clone(), plugin_manager.clone()),
     );
     spawn_task("timezone watcher", tz::run_watcher(app.clone()));
 }

@@ -28,6 +28,10 @@ plugins = [
 ]
 ```
 
+This list is authoritative and reloads while renCal is running. Adding a repository installs it;
+removing one deletes the package and its lock entry. Manually placed package directories that have
+no lock entry, including symlinked development checkouts, are left alone.
+
 renCal resolves the selected release or branch head to a commit SHA before downloading files. Resolved IDs, versions, and commits are kept in the internal data file `plugins.lock`, alongside the installed `plugins/` directory, so missing package files can be restored from the same source revision without exposing generated metadata in user configuration.
 
 Users normally install a plugin with the **Install in renCal** button on the [plugin directory](https://rencal.org/plugins), which opens the package in **Settings → Plugins** for review before anything is installed.

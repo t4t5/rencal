@@ -334,18 +334,7 @@ pub async fn run() {
             );
 
             // Omarchy theme, user CSS themes, caldir data + config, rencal config, timezone:
-            watchers::spawn_all(app.handle(), &state);
-
-            let plugin_manager = plugins.clone();
-            spawn_task("plugin restore", async move {
-                for error in plugin_manager.restore_missing().await {
-                    log::error!(
-                        "could not restore plugin {}: {}",
-                        error.package,
-                        error.message
-                    );
-                }
-            });
+            watchers::spawn_all(app.handle(), &state, &plugins);
 
             if let Some(window) = app.get_webview_window("main") {
                 if needs_native_decorations() {
