@@ -10,3 +10,8 @@ export function needsNativeDecorations(): Promise<boolean> {
 export function takePendingEventLinks(): Promise<EventDeepLink[]> {
   return rpc.platform.take_pending_event_links()
 }
+
+/** Check for a queued plugin link without taking it from the settings window. */
+export function hasPendingPluginInstall(): Promise<boolean> {
+  return rpc.platform.has_pending_plugin_install()
+}

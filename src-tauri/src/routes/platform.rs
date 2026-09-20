@@ -38,7 +38,7 @@ pub fn needs_native_decorations() -> bool {
     false
 }
 
-use crate::deep_links::EventDeepLink;
+use crate::deep_links::{EventDeepLink, PluginInstallLink};
 use crate::state::AppState;
 use std::sync::Arc;
 
@@ -46,6 +46,8 @@ use std::sync::Arc;
 pub trait PlatformApi {
     async fn needs_native_decorations() -> bool;
     async fn take_pending_event_links() -> Vec<EventDeepLink>;
+    async fn has_pending_plugin_install() -> bool;
+    async fn take_pending_plugin_install() -> Option<PluginInstallLink>;
 }
 
 #[derive(Clone)]
@@ -67,5 +69,13 @@ impl PlatformApi for PlatformApiImpl {
 
     async fn take_pending_event_links(self) -> Vec<EventDeepLink> {
         self.state.deep_links.take()
+    }
+
+    async fn has_pending_plugin_install(self) -> bool {
+        self.state.deep_links.has_plugin_install()
+    }
+
+    async fn take_pending_plugin_install(self) -> Option<PluginInstallLink> {
+        self.state.deep_links.take_plugin_install()
     }
 }

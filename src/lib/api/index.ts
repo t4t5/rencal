@@ -40,6 +40,7 @@ export type {
   PluginCatalog,
   PluginCatalogEntry,
   PluginInspection,
+  PluginInstallLink,
   PluginThemeInspection,
 } from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField } from "@/lib/api/providers"

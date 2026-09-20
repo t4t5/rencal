@@ -55,6 +55,11 @@ const dateFormat = new Intl.DateTimeFormat("en-GB", {
 const authorOf = (repo: string) => repo.split("/", 1)[0]
 const labelOf = (contribution: string) =>
   contribution.charAt(0).toUpperCase() + contribution.slice(1)
+const installUrlOf = (repo: string) => {
+  const url = new URL("rencal://plugin/install")
+  url.searchParams.set("repo", repo)
+  return url.toString()
+}
 ---
 
 <BaseLayout
@@ -85,6 +90,12 @@ const labelOf = (contribution: string) =>
         </select>
       </label>
     </div>
+
+    <p class="plugin-install-note">
+      Install links need renCal 0.8.0 or newer. Older versions ignore them. Don’t have renCal yet? <a
+        href="/download">Download it.</a
+      >
+    </p>
 
     <div class="plugin-grid" data-plugin-grid>
       {
@@ -132,7 +143,10 @@ const labelOf = (contribution: string) =>
             </div>
 
             <div class="plugin-install">
-              <span>Install from a terminal:</span>
+              <a class="plugin-install-button" href={installUrlOf(plugin.repo)}>
+                Install in renCal
+              </a>
+              <span>Terminal or dotfiles (Linux):</span>
               <CopyButton
                 command={`rencal plugin install ${plugin.repo}`}
                 label={`Copy installation command for ${plugin.repo}`}

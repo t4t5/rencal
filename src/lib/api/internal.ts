@@ -8,4 +8,8 @@ export {
   type SplitRecurringSeriesInput,
 } from "@/lib/api/calendar-events"
 export { emitAppEvent } from "@/lib/api/notifications"
-export { needsNativeDecorations, takePendingEventLinks } from "@/lib/api/platform"
+export {
+  hasPendingPluginInstall,
+  needsNativeDecorations,
+  takePendingEventLinks,
+} from "@/lib/api/platform"

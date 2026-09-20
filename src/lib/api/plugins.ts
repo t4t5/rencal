@@ -5,6 +5,7 @@ import type {
   PluginCatalog,
   PluginCatalogEntry,
   PluginInspection,
+  PluginInstallLink,
   PluginThemeInspection,
 } from "@/rpc/bindings"
 
@@ -14,6 +15,7 @@ export type {
   PluginCatalog,
   PluginCatalogEntry,
   PluginInspection,
+  PluginInstallLink,
   PluginThemeInspection,
 }
 
@@ -34,6 +36,8 @@ export async function uninstallPlugin(id: string): Promise<void> {
 export const plugins = {
   list: (): Promise<InstalledPlugins> => rpc.plugins.list(),
   catalog: (): Promise<PluginCatalog> => rpc.plugins.catalog(),
+  takePendingInstall: (): Promise<PluginInstallLink | null> =>
+    rpc.platform.take_pending_plugin_install(),
   inspect: inspectPlugin,
   install: installPlugin,
   uninstall: uninstallPlugin,

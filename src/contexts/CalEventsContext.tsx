@@ -17,6 +17,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useEventDeepLinks } from "@/hooks/useEventDeepLinks"
+import { usePluginDeepLinks } from "@/hooks/usePluginDeepLinks"
 import { api } from "@/lib/api"
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
 import { getStartRangeForDate, mergeEvents } from "@/lib/cal-events-range"
@@ -300,6 +301,7 @@ export function CalEventsProvider({
   return (
     <CalEventsContextProvider value={value}>
       <EventDeepLinkListener />
+      <PluginDeepLinkListener />
       {children}
     </CalEventsContextProvider>
   )
@@ -307,5 +309,10 @@ export function CalEventsProvider({
 
 function EventDeepLinkListener() {
   useEventDeepLinks()
+  return null
+}
+
+function PluginDeepLinkListener() {
+  usePluginDeepLinks()
   return null
 }

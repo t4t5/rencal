@@ -968,6 +968,10 @@ impl Repository {
     }
 }
 
+pub(super) fn normalize_repository(value: &str) -> Result<String, PluginInstallError> {
+    Repository::parse(value).map(|repository| repository.display)
+}
+
 fn valid_segment(value: &str, allow_dot: bool) -> bool {
     !value.is_empty()
         && value.bytes().all(|byte| {

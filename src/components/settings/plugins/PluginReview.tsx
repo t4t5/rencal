@@ -16,17 +16,20 @@ export function PluginReview({
   updating,
   onClose,
   onInstalled,
+  onInstallingChange,
 }: {
   plugin: PluginInspection
   updating: boolean
   onClose: () => void
   onInstalled: () => void
+  onInstallingChange: (installing: boolean) => void
 }) {
   const [installing, setInstalling] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   async function install() {
     setInstalling(true)
+    onInstallingChange(true)
     setError(null)
     try {
       await api.plugins.install(plugin.repo)
@@ -34,6 +37,7 @@ export function PluginReview({
     } catch (error) {
       setError(getErrorMessage(error, "Failed to install plugin"))
       setInstalling(false)
+      onInstallingChange(false)
     }
   }
 

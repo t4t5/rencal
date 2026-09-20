@@ -24,6 +24,11 @@ pub use installer::{
     PluginThemeInspection,
 };
 
+/// Validate a GitHub repository reference and return its canonical owner/name form.
+pub(crate) fn normalize_repository(value: &str) -> Result<String, PluginInstallError> {
+    installer::normalize_repository(value)
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PluginsFile {
     #[serde(default)]

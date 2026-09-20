@@ -22,4 +22,6 @@ For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and 
 
 renCal resolves the selected release or branch head to a commit SHA before downloading files and records that SHA in `plugins.toml`, so every installed package can be restored from the same source revision.
 
-Users can install a plugin with `rencal plugin install owner/repository` or from **Settings → Plugins**.
+Users normally install a plugin with the **Install in renCal** button on the [plugin directory](https://rencal.org/plugins), which opens the package in **Settings → Plugins** for review before anything is installed.
+
+On Linux, `rencal plugin install owner/repository` remains available for terminal use and dotfiles.

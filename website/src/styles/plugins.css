@@ -54,6 +54,17 @@
   border: 1px solid var(--separator);
 }
 
+.plugin-install-note {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.plugin-install-note a {
+  color: var(--foreground);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .plugin-card {
   display: flex;
   min-width: 0;
@@ -115,6 +126,26 @@
 .plugin-install > span {
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+.plugin-install-button {
+  display: flex;
+  min-height: 2.5rem;
+  align-items: center;
+  justify-content: center;
+  background: var(--primary);
+  color: var(--background);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+}
+
+.plugin-install-button:hover {
+  background: #ff7b33;
+}
+
+.plugin-install-button:focus-visible {
+  outline: 2px solid var(--foreground);
+  outline-offset: 2px;
 }
 
 .plugin-empty {

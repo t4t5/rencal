@@ -12,6 +12,7 @@ vi.mock("@/lib/api", () => ({
     plugins: {
       list: vi.fn(),
       catalog: vi.fn(),
+      takePendingInstall: vi.fn(),
       inspect: vi.fn(),
       install: vi.fn(),
       uninstall: vi.fn(),
@@ -51,6 +52,7 @@ beforeEach(() => {
   root = createRoot(container)
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [plugin], error: null })
+  vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
   vi.mocked(api.plugins.inspect).mockResolvedValue(plugin)
   vi.mocked(api.plugins.install).mockResolvedValue(plugin)
   vi.mocked(api.plugins.uninstall).mockResolvedValue(undefined)
@@ -108,6 +110,20 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(document.body.textContent).toContain("1.10.0")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
+})
+
+it("reviews an install received from a deep link", async () => {
+  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
+  await render()
+  expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Dusk")
+})
+
+it("does nothing when there is no pending deep-link install", async () => {
+  await render()
+  expect(api.plugins.takePendingInstall).toHaveBeenCalledOnce()
+  expect(api.plugins.inspect).not.toHaveBeenCalled()
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
 })
 
 it("blocks incompatible installs and lets the user cancel", async () => {

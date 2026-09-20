@@ -18,6 +18,7 @@ pub enum AppEvent {
     CalendarsChanged(()),
     EventsChanged(()),
     EventDeepLinkAvailable(()),
+    PluginDeepLinkAvailable(()),
     RencalConfigChanged(()),
     SystemTzChanged(String),
     OmarchyThemeChanged(OmarchyColors),
@@ -115,6 +116,11 @@ mod tests {
             (
                 AppEvent::EventDeepLinkAvailable(()),
                 "event-deep-link-available",
+                Value::Null,
+            ),
+            (
+                AppEvent::PluginDeepLinkAvailable(()),
+                "plugin-deep-link-available",
                 Value::Null,
             ),
             (

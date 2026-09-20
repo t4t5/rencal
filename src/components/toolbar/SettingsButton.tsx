@@ -1,6 +1,7 @@
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 
+import type { SettingsTab } from "@/components/settings/SettingsSidebar"
 import { Button } from "@/components/ui/button"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
@@ -11,7 +12,7 @@ import { SettingsIcon } from "@/icons/settings"
 import { appearanceFromComputedBackground } from "@/themes/appearance"
 import type { Appearance } from "@/themes/manifest"
 
-export async function openSettingsWindow() {
+export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
   const existing = await WebviewWindow.getByLabel("settings")
   if (existing) {
     await existing.setFocus()
@@ -30,8 +31,11 @@ export async function openSettingsWindow() {
     (document.body.dataset.appearance as Appearance | undefined) ??
     appearanceFromComputedBackground()
 
+  const params = new URLSearchParams({ appWindow: "settings" })
+  if (options.tab) params.set("tab", options.tab)
+
   new WebviewWindow("settings", {
-    url: "/?appWindow=settings",
+    url: `/?${params.toString()}`,
     title: "Settings",
     titleBarStyle: isMacOS ? "overlay" : undefined,
     width,

@@ -13,6 +13,7 @@ import {
   type PluginCatalog,
   type PluginCatalogEntry,
   type PluginInspection,
+  type PluginInstallLink,
 } from "@/lib/api"
 
 import { PluginReview } from "./PluginReview"
@@ -25,8 +26,27 @@ export function PluginsPage() {
   const [search, setSearch] = useState("")
   const [busy, setBusy] = useState<string | null>(null)
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [installLinkError, setInstallLinkError] = useState<string | null>(null)
   const [review, setReview] = useState<PluginInspection | null>(null)
   const listRequest = useRef(0)
+  const busyRef = useRef<string | null>(null)
+  const pendingInstall = useRef<PluginInstallLink | null>(null)
+  const inspectRef = useRef<
+    (repository: string, key: string, fromInstallLink?: boolean) => Promise<void>
+  >(async () => {})
+
+  function startBusy(key: string) {
+    busyRef.current = key
+    setBusy(key)
+  }
+
+  function finishBusy() {
+    busyRef.current = null
+    setBusy(null)
+    const pending = pendingInstall.current
+    pendingInstall.current = null
+    if (pending) void inspectRef.current(pending.repo, pending.repo, true)
+  }
 
   const refreshInstalled = useCallback(async () => {
     const request = ++listRequest.current
@@ -68,6 +88,45 @@ export function PluginsPage() {
     }
   }, [refreshInstalled, refreshCatalog])
 
+  useEffect(() => {
+    let disposed = false
+
+    const drainPendingInstall = async () => {
+      try {
+        const link = await api.plugins.takePendingInstall()
+        if (disposed || !link) return
+        if (busyRef.current) {
+          pendingInstall.current = link
+        } else {
+          void inspectRef.current(link.repo, link.repo, true)
+        }
+      } catch (error) {
+        if (!disposed) {
+          setInstallLinkError(getErrorMessage(error, "Failed to open plugin install link"))
+        }
+      }
+    }
+
+    const subscription = api.notifications.listen(
+      "plugin-deep-link-available",
+      () => void drainPendingInstall(),
+    )
+    void subscription.ready
+      .then(() => {
+        if (!disposed) void drainPendingInstall()
+      })
+      .catch((error: unknown) => {
+        if (!disposed) {
+          setInstallLinkError(getErrorMessage(error, "Failed to watch plugin install links"))
+        }
+      })
+
+    return () => {
+      disposed = true
+      subscription.unlisten()
+    }
+  }, [])
+
   function clearError(key: string) {
     setErrors((previous) => {
       const next = { ...previous }
@@ -76,23 +135,24 @@ export function PluginsPage() {
     })
   }
 
-  async function inspect(repository: string, key: string) {
-    setBusy(key)
+  async function inspect(repository: string, key: string, fromInstallLink = false) {
+    startBusy(key)
     clearError(key)
+    if (fromInstallLink) setInstallLinkError(null)
     try {
       setReview(await api.plugins.inspect(repository.trim()))
     } catch (error) {
-      setErrors((previous) => ({
-        ...previous,
-        [key]: getErrorMessage(error, "Failed to inspect plugin"),
-      }))
+      const message = getErrorMessage(error, "Failed to inspect plugin")
+      if (fromInstallLink) setInstallLinkError(message)
+      else setErrors((previous) => ({ ...previous, [key]: message }))
     } finally {
-      setBusy(null)
+      finishBusy()
     }
   }
+  inspectRef.current = inspect
 
   async function uninstall(id: string) {
-    setBusy(id)
+    startBusy(id)
     clearError(id)
     try {
       await api.plugins.uninstall(id)
@@ -103,7 +163,7 @@ export function PluginsPage() {
         [id]: getErrorMessage(error, "Failed to uninstall plugin"),
       }))
     } finally {
-      setBusy(null)
+      finishBusy()
     }
   }
 
@@ -153,6 +213,7 @@ export function PluginsPage() {
             </Button>
           </div>
         )}
+        <ErrorMessage message={installLinkError} />
         {installed?.errors.map((error) => (
           <ErrorMessage key={error} message={error} />
         ))}
@@ -209,8 +270,13 @@ export function PluginsPage() {
           updating={installed?.plugins.some((plugin) => plugin.id === review.id) ?? false}
           onClose={() => setReview(null)}
           onInstalled={() => {
+            finishBusy()
             setReview(null)
             void refreshInstalled()
+          }}
+          onInstallingChange={(installing) => {
+            if (installing) startBusy(review.repo)
+            else finishBusy()
           }}
         />
       )}
