@@ -2,7 +2,8 @@ name: Index plugins
 
 on:
   schedule:
-    - cron: "17 3 * * *"
+    # Run off the hour to avoid peak GitHub Actions cron congestion.
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 concurrency:
@@ -17,6 +18,8 @@ permissions:
 jobs:
   index:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.compare.outputs.changed }}
     steps:
       - uses: actions/checkout@v4
 
@@ -32,7 +35,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Compare with deployed plugin index
+        id: compare
+        shell: bash
+        run: |
+          if curl --fail --silent --show-error https://rencal.org/plugins.json --output /tmp/deployed-plugins.json \
+            && cmp --silent /tmp/deployed-plugins.json website/public/plugins.json; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Upload plugin index
+        if: ${{ steps.compare.outputs.changed == 'true' }}
         uses: actions/upload-artifact@v4
         with:
           name: plugin-index
@@ -42,6 +57,7 @@ jobs:
 
   deploy:
     needs: index
+    if: ${{ needs.index.outputs.changed == 'true' }}
     uses: ./.github/workflows/website.yml
     with:
       plugin_index_artifact: plugin-index
