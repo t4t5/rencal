@@ -1,30 +1,34 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
-use std::ffi::OsString;
+use std::ffi::{OsStr, OsString};
 use std::process::ExitCode;
 
-const INSTALL_USAGE: &str = "usage: rencal install <owner/repo-or-github-url>";
+const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
 
 #[derive(Debug, Eq, PartialEq)]
 enum Command {
     LaunchApp,
-    Install(String),
+    InstallPlugin(String),
 }
 
 fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command, ()> {
     let Some(command) = args.next() else {
         return Ok(Command::LaunchApp);
     };
-    if command != "install" {
+    if command != "plugin" {
         // Preserve the existing handling of deep links and platform-injected
-        // arguments by passing every command other than `install` to Tauri.
+        // arguments by passing every command other than `plugin` to Tauri.
         return Ok(Command::LaunchApp);
+    }
+
+    if args.next().as_deref() != Some(OsStr::new("install")) {
+        return Err(());
     }
 
     let repository = args.next().and_then(|value| value.into_string().ok());
     match (repository, args.next()) {
-        (Some(repository), None) => Ok(Command::Install(repository)),
+        (Some(repository), None) => Ok(Command::InstallPlugin(repository)),
         _ => Err(()),
     }
 }
@@ -44,7 +48,7 @@ fn main() -> ExitCode {
             rencal_lib::run();
             ExitCode::SUCCESS
         }
-        Ok(Command::Install(repository)) => match install_plugin(&repository) {
+        Ok(Command::InstallPlugin(repository)) => match install_plugin(&repository) {
             Ok(plugin) => {
                 println!(
                     "Installed {} ({}) v{}",
@@ -58,7 +62,7 @@ fn main() -> ExitCode {
             }
         },
         Err(()) => {
-            eprintln!("{INSTALL_USAGE}");
+            eprintln!("{PLUGIN_INSTALL_USAGE}");
             ExitCode::from(2)
         }
     }
@@ -82,19 +86,29 @@ mod tests {
     }
 
     #[test]
-    fn install_requires_exactly_one_repository() {
+    fn plugin_install_requires_exactly_one_repository() {
         assert_eq!(
-            command_from_args(args(&["install", "alice/rencal-dusk"])),
-            Ok(Command::Install("alice/rencal-dusk".into()))
+            command_from_args(args(&["plugin", "install", "alice/rencal-dusk"])),
+            Ok(Command::InstallPlugin("alice/rencal-dusk".into()))
         );
-        assert!(command_from_args(args(&["install"])).is_err());
-        assert!(command_from_args(args(&["install", "alice/dusk", "extra"])).is_err());
+        assert!(command_from_args(args(&["plugin", "install"])).is_err());
+        assert!(command_from_args(args(&["plugin", "install", "alice/dusk", "extra"])).is_err());
+    }
+
+    #[test]
+    fn plugin_requires_a_known_subcommand() {
+        assert!(command_from_args(args(&["plugin"])).is_err());
+        assert!(command_from_args(args(&["plugin", "unknown"])).is_err());
     }
 
     #[test]
     fn other_arguments_keep_the_existing_app_launch_behavior() {
         assert_eq!(
             command_from_args(args(&["rencal://event/123"])),
+            Ok(Command::LaunchApp)
+        );
+        assert_eq!(
+            command_from_args(args(&["install", "alice/rencal-dusk"])),
             Ok(Command::LaunchApp)
         );
     }
