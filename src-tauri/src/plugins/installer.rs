@@ -173,7 +173,7 @@ struct ResolvedPackage {
     inspection: PluginInspection,
     manifest: PluginManifest,
     manifest_text: Vec<u8>,
-    tag: String,
+    commit: String,
 }
 
 #[derive(Deserialize)]
@@ -181,8 +181,20 @@ struct GithubRelease {
     tag_name: String,
 }
 
+#[derive(Deserialize)]
+struct GithubRepository {
+    default_branch: String,
+}
+
+#[derive(Deserialize)]
+struct GithubCommit {
+    sha: String,
+}
+
 enum MissingResponse {
     Release,
+    Repository,
+    Commit,
     PackageFile(String),
 }
 
@@ -381,13 +393,13 @@ impl PluginManager {
         Ok(entries)
     }
 
-    /// Resolve and validate the latest stable GitHub release without writing it.
+    /// Resolve and validate the latest stable release or default-branch commit.
     pub async fn inspect(&self, repo: &str) -> Result<PluginInspection, PluginInstallError> {
         let repository = Repository::parse(repo)?;
         Ok(self.resolve_latest(&repository).await?.inspection)
     }
 
-    /// Install the latest stable release, or replace the installed package with it.
+    /// Install the latest package, or replace the installed package with it.
     pub async fn install(&self, repo: &str) -> Result<PluginInspection, PluginInstallError> {
         let repository = Repository::parse(repo)?;
         let _guard = self.inner.mutations.lock().await;
@@ -449,9 +461,9 @@ impl PluginManager {
         Ok(())
     }
 
-    /// Restore declarations whose package directory is absent. Versioned
-    /// entries fetch that exact release; an omitted version resolves latest and
-    /// is written back after a successful install.
+    /// Restore declarations whose package directory is absent. Commit pins are
+    /// fetched exactly; legacy entries resolve latest and are written back with
+    /// a commit after a successful install.
     pub async fn restore_missing(&self) -> Vec<PluginRestoreError> {
         let declarations = match self.load_declarations() {
             Ok(declarations) => declarations,
@@ -466,7 +478,8 @@ impl PluginManager {
             .plugins
             .into_iter()
             .filter(|entry| {
-                entry.version.is_none() || !self.inner.packages_dir.join(&entry.id).is_dir()
+                (entry.version.is_none() && entry.commit.is_none())
+                    || !self.inner.packages_dir.join(&entry.id).is_dir()
             })
             .collect();
 
@@ -486,8 +499,11 @@ impl PluginManager {
         let repository = Repository::parse(&entry.repo)?;
         let _guard = self.inner.mutations.lock().await;
         let declarations = self.load_declarations()?;
-        let package = match &entry.version {
-            Some(version) => self.resolve_version(&repository, version).await?,
+        let package = match &entry.commit {
+            Some(commit) => {
+                self.resolve_commit_ref(&repository, commit.clone(), None)
+                    .await?
+            }
             None => self.resolve_latest(&repository).await?,
         };
         if package.manifest.id != entry.id {
@@ -513,57 +529,68 @@ impl PluginManager {
         repository: &Repository,
     ) -> Result<ResolvedPackage, PluginInstallError> {
         let url = self.api_url(repository, &["releases", "latest"]);
+        if let Some(bytes) = self.fetch_optional(url, RELEASE_RESPONSE_LIMIT).await? {
+            let release: GithubRelease = serde_json::from_slice(&bytes).map_err(|error| {
+                PluginInstallError::new(
+                    PluginInstallErrorKind::Network,
+                    format!("GitHub returned an invalid release response: {error}"),
+                )
+            })?;
+            let commit = self.resolve_commit(repository, &release.tag_name).await?;
+            return self
+                .resolve_commit_ref(repository, commit, Some(&release.tag_name))
+                .await;
+        }
+
         let bytes = self
-            .fetch_bounded(url, RELEASE_RESPONSE_LIMIT, MissingResponse::Release)
+            .fetch_bounded(
+                self.api_url(repository, &[]),
+                RELEASE_RESPONSE_LIMIT,
+                MissingResponse::Repository,
+            )
             .await?;
-        let release: GithubRelease = serde_json::from_slice(&bytes).map_err(|error| {
+        let metadata: GithubRepository = serde_json::from_slice(&bytes).map_err(|error| {
             PluginInstallError::new(
                 PluginInstallErrorKind::Network,
-                format!("GitHub returned an invalid release response: {error}"),
+                format!("GitHub returned an invalid repository response: {error}"),
             )
         })?;
-        self.resolve_tag(repository, release.tag_name).await
+        let commit = self
+            .resolve_commit(repository, &metadata.default_branch)
+            .await?;
+        self.resolve_commit_ref(repository, commit, None).await
     }
 
-    async fn resolve_version(
+    async fn resolve_commit(
         &self,
         repository: &Repository,
-        version: &str,
-    ) -> Result<ResolvedPackage, PluginInstallError> {
-        for tag in [format!("v{version}"), version.to_string()] {
-            let url = self.api_url(repository, &["releases", "tags", &tag]);
-            match self
-                .fetch_optional_release(url, RELEASE_RESPONSE_LIMIT)
-                .await?
-            {
-                Some(bytes) => {
-                    let release: GithubRelease =
-                        serde_json::from_slice(&bytes).map_err(|error| {
-                            PluginInstallError::new(
-                                PluginInstallErrorKind::Network,
-                                format!("GitHub returned an invalid release response: {error}"),
-                            )
-                        })?;
-                    return self.resolve_tag(repository, release.tag_name).await;
-                }
-                None => continue,
-            }
-        }
-        Err(PluginInstallError::new(
-            PluginInstallErrorKind::MissingRelease,
-            format!(
-                "repository {:?} has no release for version {version}",
-                repository.display
-            ),
-        ))
+        reference: &str,
+    ) -> Result<String, PluginInstallError> {
+        let bytes = self
+            .fetch_bounded(
+                self.api_url(repository, &["commits", reference]),
+                RELEASE_RESPONSE_LIMIT,
+                MissingResponse::Commit,
+            )
+            .await?;
+        let commit: GithubCommit = serde_json::from_slice(&bytes).map_err(|error| {
+            PluginInstallError::new(
+                PluginInstallErrorKind::Network,
+                format!("GitHub returned an invalid commit response: {error}"),
+            )
+        })?;
+        validate_commit_sha(&commit.sha).map_err(PluginInstallError::invalid_package)?;
+        Ok(commit.sha)
     }
 
-    async fn resolve_tag(
+    async fn resolve_commit_ref(
         &self,
         repository: &Repository,
-        tag: String,
+        commit: String,
+        release_tag: Option<&str>,
     ) -> Result<ResolvedPackage, PluginInstallError> {
-        let manifest_url = self.raw_url(repository, &tag, MANIFEST_FILE);
+        validate_commit_sha(&commit).map_err(PluginInstallError::invalid_package)?;
+        let manifest_url = self.raw_url(repository, &commit, MANIFEST_FILE);
         let manifest_text = self
             .fetch_bounded(
                 manifest_url,
@@ -582,8 +609,10 @@ impl PluginManager {
             .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
         validate_manifest_owner(&manifest, &repository.owner)
             .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
-        validate_release_tag(&manifest, &tag)
-            .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
+        if let Some(tag) = release_tag {
+            validate_release_tag(&manifest, tag)
+                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
+        }
 
         let minimum = Version::parse(&manifest.min_rencal_version)
             .expect("validated manifest minimum version");
@@ -611,7 +640,7 @@ impl PluginManager {
             inspection,
             manifest,
             manifest_text,
-            tag,
+            commit,
         })
     }
 
@@ -685,6 +714,7 @@ impl PluginManager {
             id: package.manifest.id.clone(),
             repo: repository.display.clone(),
             version: Some(package.manifest.version.clone()),
+            commit: Some(package.commit.clone()),
         };
         if let Some(existing) = declarations
             .plugins
@@ -721,7 +751,7 @@ impl PluginManager {
         for theme in &package.manifest.contributes.themes {
             let bytes = self
                 .fetch_bounded(
-                    self.raw_url(repository, &package.tag, &theme.css),
+                    self.raw_url(repository, &package.commit, &theme.css),
                     CSS_FILE_LIMIT,
                     MissingResponse::PackageFile(theme.css.clone()),
                 )
@@ -755,16 +785,16 @@ impl PluginManager {
         url
     }
 
-    fn raw_url(&self, repository: &Repository, tag: &str, path: &str) -> Url {
+    fn raw_url(&self, repository: &Repository, reference: &str, path: &str) -> Url {
         let mut url = self.inner.raw_base.clone();
         url.path_segments_mut()
             .expect("GitHub raw base can be a path base")
-            .extend([&repository.owner, &repository.name, tag])
+            .extend([&repository.owner, &repository.name, reference])
             .extend(path.split('/'));
         url
     }
 
-    async fn fetch_optional_release(
+    async fn fetch_optional(
         &self,
         url: Url,
         limit: usize,
@@ -811,8 +841,16 @@ impl PluginManager {
                     PluginInstallErrorKind::MissingRelease,
                     "repository has no matching stable release",
                 ),
+                MissingResponse::Repository => PluginInstallError::new(
+                    PluginInstallErrorKind::MissingRelease,
+                    "GitHub repository was not found",
+                ),
+                MissingResponse::Commit => PluginInstallError::new(
+                    PluginInstallErrorKind::MissingRelease,
+                    "repository reference was not found",
+                ),
                 MissingResponse::PackageFile(path) => PluginInstallError::invalid_package(format!(
-                    "release does not contain {path:?}"
+                    "plugin reference does not contain {path:?}"
                 )),
             });
         }
@@ -956,6 +994,20 @@ fn valid_segment(value: &str, allow_dot: bool) -> bool {
         })
 }
 
+fn validate_commit_sha(value: &str) -> Result<(), String> {
+    if value.len() == 40
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+    {
+        Ok(())
+    } else {
+        Err(format!(
+            "commit {value:?} must be a lowercase 40-character SHA"
+        ))
+    }
+}
+
 fn remove_path(path: &Path) -> std::io::Result<()> {
     if path.is_dir() {
         std::fs::remove_dir_all(path)
@@ -971,6 +1023,9 @@ mod tests {
     use super::*;
     use std::collections::HashMap;
     use std::sync::Mutex as StdMutex;
+
+    const COMMIT_V1: &str = "1111111111111111111111111111111111111111";
+    const COMMIT_V2: &str = "2222222222222222222222222222222222222222";
 
     const MANIFEST_V1: &str = r#"id = "alice.dusk"
 name = "Dusk"
@@ -1053,12 +1108,17 @@ appearance = "dark"
             br#"{"tag_name":"v1.0.0"}"#.to_vec(),
         );
         downloader.set(
-            "/Alice/rencal-dusk/v1.0.0/rencal-plugin.toml",
+            "/repos/Alice/rencal-dusk/commits/v1.0.0",
+            200,
+            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
             200,
             MANIFEST_V1.as_bytes().to_vec(),
         );
         downloader.set(
-            "/Alice/rencal-dusk/v1.0.0/themes/dark.css",
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
             200,
             b"--background: #111;".to_vec(),
         );
@@ -1213,6 +1273,7 @@ appearance = "dark"
         );
         let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
         assert_eq!(declarations.plugins[0].version.as_deref(), Some("1.0.0"));
+        assert_eq!(declarations.plugins[0].commit.as_deref(), Some(COMMIT_V1));
 
         manager.uninstall("alice.dusk").await.unwrap();
         assert!(!temp.path().join("data/plugins/alice.dusk").exists());
@@ -1222,6 +1283,39 @@ appearance = "dark"
                 .plugins
                 .is_empty()
         );
+    }
+
+    #[tokio::test]
+    async fn installs_default_branch_head_without_a_release() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        downloader.set(
+            "/repos/Alice/rencal-dusk",
+            200,
+            br#"{"default_branch":"main"}"#.to_vec(),
+        );
+        downloader.set(
+            "/repos/Alice/rencal-dusk/commits/main",
+            200,
+            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
+            200,
+            MANIFEST_V1.as_bytes().to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
+            200,
+            b"--background: #111;".to_vec(),
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        let inspection = manager.install("Alice/rencal-dusk").await.unwrap();
+
+        assert_eq!(inspection.version, "1.0.0");
+        let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
+        assert_eq!(declarations.plugins[0].commit.as_deref(), Some(COMMIT_V1));
     }
 
     #[tokio::test]
@@ -1237,12 +1331,17 @@ appearance = "dark"
             release.into_bytes(),
         );
         downloader.set(
-            "/Alice/rencal-dusk/v1.0.0/rencal-plugin.toml",
+            "/repos/Alice/rencal-dusk/commits/v1.0.0",
+            200,
+            format!(r#"{{"sha":"{COMMIT_V1}"}}"#).into_bytes(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
             200,
             MANIFEST_V1.as_bytes().to_vec(),
         );
         downloader.set(
-            "/Alice/rencal-dusk/v1.0.0/themes/dark.css",
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
             200,
             b"--background: #111;".to_vec(),
         );
@@ -1269,7 +1368,12 @@ appearance = "dark"
             br#"{"tag_name":"v2.0.0"}"#.to_vec(),
         );
         downloader.set(
-            "/Alice/rencal-dusk/v2.0.0/rencal-plugin.toml",
+            "/repos/Alice/rencal-dusk/commits/v2.0.0",
+            200,
+            format!(r#"{{"sha":"{COMMIT_V2}"}}"#).into_bytes(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V2}/rencal-plugin.toml"),
             200,
             manifest_v2.into_bytes(),
         );
@@ -1285,13 +1389,17 @@ appearance = "dark"
     }
 
     #[tokio::test]
-    async fn restores_the_exact_declared_version() {
+    async fn restores_the_exact_declared_commit() {
         let downloader = Arc::new(FixtureDownloader::new());
-        serve_v1(&downloader);
         downloader.set(
-            "/repos/Alice/rencal-dusk/releases/tags/v1.0.0",
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
             200,
-            br#"{"tag_name":"v1.0.0"}"#.to_vec(),
+            MANIFEST_V1.as_bytes().to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
+            200,
+            b"--background: #111;".to_vec(),
         );
         let temp = tempfile::tempdir().unwrap();
         let manager = manager(&temp, downloader);
@@ -1302,6 +1410,7 @@ appearance = "dark"
                     id: "alice.dusk".into(),
                     repo: "Alice/rencal-dusk".into(),
                     version: Some("1.0.0".into()),
+                    commit: Some(COMMIT_V1.into()),
                 }],
             },
         )

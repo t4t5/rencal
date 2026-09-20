@@ -17,12 +17,12 @@ export type {
   PluginThemeInspection,
 }
 
-/** Resolve and validate the latest stable release for an install review. */
+/** Resolve and validate the latest release or default-branch package. */
 export function inspectPlugin(repo: string): Promise<PluginInspection> {
   return rpc.plugins.inspect(repo)
 }
 
-/** Install or update a package from its latest stable release. */
+/** Install or update a package from its latest release or default branch. */
 export function installPlugin(repo: string): Promise<PluginInspection> {
   return rpc.plugins.install(repo)
 }

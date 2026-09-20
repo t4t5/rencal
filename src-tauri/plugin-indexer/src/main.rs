@@ -63,6 +63,7 @@ struct SearchRepository {
     name: String,
     owner: RepositoryOwner,
     stargazers_count: u64,
+    default_branch: String,
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -74,6 +75,28 @@ struct RepositoryOwner {
 struct GithubRelease {
     tag_name: String,
     published_at: String,
+}
+
+#[derive(Debug, Deserialize)]
+struct GithubCommit {
+    sha: String,
+    commit: GithubCommitDetails,
+}
+
+#[derive(Debug, Deserialize)]
+struct GithubCommitDetails {
+    committer: GithubCommitter,
+}
+
+#[derive(Debug, Deserialize)]
+struct GithubCommitter {
+    date: String,
+}
+
+struct PackageSource {
+    reference: String,
+    release_tag: Option<String>,
+    released_at: String,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -142,16 +165,23 @@ fn api_url(base: &Url, segments: &[&str]) -> Result<Url> {
     Ok(url)
 }
 
-fn raw_manifest_url(base: &Url, repository: &SearchRepository, tag: &str) -> Result<Url> {
+fn raw_manifest_url(base: &Url, repository: &SearchRepository, reference: &str) -> Result<Url> {
     let mut url = base.clone();
     url.path_segments_mut()
         .map_err(|_| anyhow!("GitHub raw base URL cannot hold path segments"))?
         .clear()
         .push(&repository.owner.login)
         .push(&repository.name)
-        .push(tag)
+        .push(reference)
         .push(MANIFEST_FILE);
     Ok(url)
+}
+
+fn valid_commit_sha(value: &str) -> bool {
+    value.len() == 40
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 async fn search_repositories(
@@ -206,23 +236,64 @@ async fn build_index(
                 "latest",
             ],
         )?;
-        let release: GithubRelease =
-            match fetch_json(client, release_url, &format!("latest release for {repo}")).await? {
-                FetchResult::Found(release) => release,
-                FetchResult::Missing => {
-                    warnings.push(format!("Skipping {repo}: no stable release"));
+        let source = match fetch_json::<GithubRelease>(
+            client,
+            release_url,
+            &format!("latest release for {repo}"),
+        )
+        .await?
+        {
+            FetchResult::Found(release) => PackageSource {
+                reference: release.tag_name.clone(),
+                release_tag: Some(release.tag_name),
+                released_at: release.published_at,
+            },
+            FetchResult::Missing => {
+                let commit_url = api_url(
+                    api_base,
+                    &[
+                        "repos",
+                        &repository.owner.login,
+                        &repository.name,
+                        "commits",
+                        &repository.default_branch,
+                    ],
+                )?;
+                let commit: GithubCommit = match fetch_json(
+                    client,
+                    commit_url,
+                    &format!("default branch head for {repo}"),
+                )
+                .await?
+                {
+                    FetchResult::Found(commit) => commit,
+                    FetchResult::Missing => {
+                        warnings.push(format!("Skipping {repo}: default branch head is missing"));
+                        continue;
+                    }
+                };
+                if !valid_commit_sha(&commit.sha) {
+                    warnings.push(format!(
+                        "Skipping {repo}: default branch returned an invalid commit SHA"
+                    ));
                     continue;
                 }
-            };
+                PackageSource {
+                    reference: commit.sha,
+                    release_tag: None,
+                    released_at: commit.commit.committer.date,
+                }
+            }
+        };
 
-        let manifest_url = raw_manifest_url(raw_base, &repository, &release.tag_name)?;
+        let manifest_url = raw_manifest_url(raw_base, &repository, &source.reference)?;
         let manifest_text =
             match fetch_text(client, manifest_url, &format!("{MANIFEST_FILE} for {repo}")).await? {
                 FetchResult::Found(manifest) => manifest,
                 FetchResult::Missing => {
                     warnings.push(format!(
                         "Skipping {repo}: {MANIFEST_FILE} is missing at {}",
-                        release.tag_name
+                        source.reference
                     ));
                     continue;
                 }
@@ -230,7 +301,9 @@ async fn build_index(
 
         let manifest = match validate_manifest(&manifest_text, None).and_then(|manifest| {
             validate_manifest_owner(&manifest, &repository.owner.login)?;
-            validate_release_tag(&manifest, &release.tag_name)?;
+            if let Some(tag) = &source.release_tag {
+                validate_release_tag(&manifest, tag)?;
+            }
             Ok(manifest)
         }) {
             Ok(manifest) => manifest,
@@ -254,8 +327,8 @@ async fn build_index(
             repo,
             description: manifest.description,
             version: manifest.version,
-            tag: release.tag_name,
-            released_at: release.published_at,
+            tag: source.reference,
+            released_at: source.released_at,
             stars: repository.stargazers_count,
             contributions: vec!["theme".into()],
         });
@@ -410,6 +483,7 @@ mod tests {
             "name": name,
             "owner": { "login": owner },
             "stargazers_count": stars,
+            "default_branch": "main",
         })
     }
 
@@ -464,6 +538,31 @@ appearance = "dark"
         assert_eq!(index.entries[0].version, "1.2.3");
         assert_eq!(index.entries[0].stars, 42);
         assert_eq!(index.entries[0].contributions, ["theme"]);
+    }
+
+    #[tokio::test]
+    async fn indexes_default_branch_head_without_a_release() {
+        let commit = "1111111111111111111111111111111111111111";
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 1,
+                "items": [repository("Alice", "rencal-dusk", 42)],
+            })),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+            json(serde_json::json!({
+                "sha": commit,
+                "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
+            })),
+            text(&manifest("alice", "1.2.3")),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert!(index.warnings.is_empty());
+        assert_eq!(index.entries[0].tag, commit);
+        assert_eq!(index.entries[0].released_at, "2026-09-19T12:00:00Z");
+        assert_eq!(index.entries[0].version, "1.2.3");
     }
 
     #[tokio::test]

@@ -36,6 +36,8 @@ pub struct PluginEntry {
     pub repo: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub version: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub commit: Option<String>,
 }
 
 pub fn load_plugins_file(path: &Path) -> Result<PluginsFile, PluginError> {
@@ -187,6 +189,7 @@ fn update_plugin_table(table: &mut dyn TableLike, entry: &PluginEntry) {
         ("id", Some(entry.id.as_str())),
         ("repo", Some(entry.repo.as_str())),
         ("version", entry.version.as_deref()),
+        ("commit", entry.commit.as_deref()),
     ] {
         match (table.get_mut(key), value) {
             (Some(item), Some(value)) => {
@@ -236,6 +239,16 @@ fn validate_plugins_file(file: &PluginsFile) -> Result<(), PluginError> {
                     "plugin version {version:?} is not semantic: {error}"
                 ))
             })?;
+        }
+        if let Some(commit) = &entry.commit
+            && (commit.len() != 40
+                || !commit
+                    .bytes()
+                    .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase()))
+        {
+            return Err(PluginError::new(format!(
+                "plugin commit {commit:?} must be a lowercase 40-character SHA"
+            )));
         }
     }
     Ok(())
@@ -478,6 +491,7 @@ appearance = "dark"
                 id: "alice.dusk".into(),
                 repo: "Alice/rencal-dusk".into(),
                 version: Some("1.2.3".into()),
+                commit: Some("1111111111111111111111111111111111111111".into()),
             }],
         };
         save_plugins_file(&path, &expected).unwrap();
@@ -557,6 +571,7 @@ machine = 'laptop' # Future top-level metadata
             id: "carol.noon".into(),
             repo: "carol/rencal-noon".into(),
             version: Some("1.0.0".into()),
+            commit: None,
         });
         save_plugins_file(&path, &file).unwrap();
         assert_eq!(load_plugins_file(&path).unwrap(), file);
@@ -599,6 +614,7 @@ machine = 'laptop' # Future top-level metadata
             id: "bob.dawn".into(),
             repo: "bob/dawn".into(),
             version: None,
+            commit: None,
         });
         save_plugins_file(&path, &file).unwrap();
         assert_eq!(load_plugins_file(&path).unwrap(), file);
@@ -616,6 +632,7 @@ machine = 'laptop' # Future top-level metadata
             "[[plugins]]\nid = 'invalid'\nrepo = 'alice/dusk'\n",
             "[[plugins]]\nid = 'alice.dusk'\nrepo = 'bob/dusk'\n",
             "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\nversion = 'invalid'\n",
+            "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\ncommit = 'main'\n",
             "[[plugins]]\nid = 'alice.dusk'\nrepo = 42\n",
             "[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\n[[plugins]]\nid = 'alice.dusk'\nrepo = 'alice/dusk'\n",
         ] {
@@ -644,6 +661,7 @@ machine = 'laptop' # Future top-level metadata
                 id: "alice.dusk".into(),
                 repo: "Alice/rencal-dusk".into(),
                 version: Some("1.2.3".into()),
+                commit: None,
             }],
         };
         save_plugins_file(&path, &expected).unwrap();
