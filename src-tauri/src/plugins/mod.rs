@@ -20,7 +20,7 @@ mod installer;
 
 pub use installer::{
     InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginInspection,
-    PluginInstallError, PluginInstallErrorKind, PluginManager, PluginRestoreError,
+    PluginInstallError, PluginInstallErrorKind, PluginManager, PluginReconcileError,
     PluginThemeInspection,
 };
 
@@ -82,7 +82,13 @@ pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginEr
         PluginError::new(format!("could not parse {}: {error}", path.display()))
     })?;
     update_plugins_document(&mut document, file);
-    write_atomic(path, document.to_string().as_bytes(), "plugins.toml", true)
+    write_atomic(
+        path,
+        document.to_string().as_bytes(),
+        "plugins.toml",
+        true,
+        0o644,
+    )
 }
 
 pub fn load_plugin_lock_file(path: &Path) -> Result<PluginLockFile, PluginError> {
@@ -99,7 +105,7 @@ pub fn save_plugin_lock_file(path: &Path, file: &PluginLockFile) -> Result<(), P
     let contents = toml::to_string_pretty(file).map_err(|error| {
         PluginError::new(format!("could not serialize plugin lockfile: {error}"))
     })?;
-    write_atomic(path, contents.as_bytes(), "plugins.lock", false)
+    write_atomic(path, contents.as_bytes(), "plugins.lock", false, 0o600)
 }
 
 fn write_atomic(
@@ -107,7 +113,10 @@ fn write_atomic(
     contents: &[u8],
     label: &str,
     follow_symlink: bool,
+    new_file_mode: u32,
 ) -> Result<(), PluginError> {
+    #[cfg(not(unix))]
+    let _ = new_file_mode;
     if let Some(parent) = path.parent() {
         std::fs::create_dir_all(parent).map_err(|error| {
             PluginError::new(format!("could not create {}: {error}", parent.display()))
@@ -129,6 +138,22 @@ fn write_atomic(
     let parent = destination.parent().ok_or_else(|| {
         PluginError::new(format!("{} has no parent directory", destination.display()))
     })?;
+
+    #[cfg(unix)]
+    let destination_mode = match std::fs::metadata(&destination) {
+        Ok(metadata) => {
+            use std::os::unix::fs::PermissionsExt;
+            metadata.permissions().mode()
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => new_file_mode,
+        Err(error) => {
+            return Err(PluginError::new(format!(
+                "could not read permissions for {}: {error}",
+                destination.display()
+            )));
+        }
+    };
+
     let mut temporary = tempfile::NamedTempFile::new_in(parent).map_err(|error| {
         PluginError::new(format!(
             "could not create temporary {label} beside {}: {error}",
@@ -138,6 +163,19 @@ fn write_atomic(
     temporary
         .write_all(contents)
         .map_err(|error| PluginError::new(format!("could not write temporary {label}: {error}")))?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        let permissions = std::fs::Permissions::from_mode(destination_mode);
+        temporary
+            .as_file()
+            .set_permissions(permissions)
+            .map_err(|error| {
+                PluginError::new(format!(
+                    "could not set temporary {label} permissions: {error}"
+                ))
+            })?;
+    }
     temporary
         .as_file()
         .sync_all()
@@ -505,6 +543,35 @@ appearance = "dark"
         assert_eq!(std::fs::read_to_string(&path).unwrap(), before);
     }
 
+    #[cfg(unix)]
+    #[test]
+    fn plugins_file_is_world_readable_when_created() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("config/plugins.toml");
+        save_plugins_file(&path, &PluginsFile::default()).unwrap();
+
+        let mode = std::fs::metadata(path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o644);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn plugins_file_save_preserves_existing_mode() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("plugins.toml");
+        std::fs::write(&path, "plugins = []\n").unwrap();
+        std::fs::set_permissions(&path, std::fs::Permissions::from_mode(0o640)).unwrap();
+
+        save_plugins_file(&path, &PluginsFile::default()).unwrap();
+
+        let mode = std::fs::metadata(path).unwrap().permissions().mode() & 0o777;
+        assert_eq!(mode, 0o640);
+    }
+
     const FUTURE_PLUGINS: &str = r#"# Synced between machines
 schema = 2 # Written by a newer renCal
 plugins = [
@@ -573,12 +640,13 @@ machine = 'laptop' # Future top-level metadata
     #[cfg(unix)]
     #[test]
     fn atomic_save_preserves_a_dotfiles_symlink() {
-        use std::os::unix::fs::symlink;
+        use std::os::unix::fs::{PermissionsExt, symlink};
 
         let temp = tempfile::tempdir().unwrap();
         let dotfiles = temp.path().join("dotfiles/plugins.toml");
         std::fs::create_dir_all(dotfiles.parent().unwrap()).unwrap();
         std::fs::write(&dotfiles, "plugins = []\n").unwrap();
+        std::fs::set_permissions(&dotfiles, std::fs::Permissions::from_mode(0o640)).unwrap();
         let path = temp.path().join("config/plugins.toml");
         std::fs::create_dir_all(path.parent().unwrap()).unwrap();
         symlink(&dotfiles, &path).unwrap();
@@ -596,6 +664,10 @@ machine = 'laptop' # Future top-level metadata
         );
         assert_eq!(load_plugins_file(&path).unwrap(), expected);
         assert_eq!(load_plugins_file(&dotfiles).unwrap(), expected);
+        assert_eq!(
+            std::fs::metadata(&dotfiles).unwrap().permissions().mode() & 0o777,
+            0o640
+        );
     }
 
     #[test]
