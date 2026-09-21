@@ -9,6 +9,7 @@ import { emitAppEvent } from "@/lib/api/internal"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
 import { applyExternalThemes } from "@/themes/external"
+import { updateExternalFonts } from "@/themes/external-fonts"
 import { THEME_IDS } from "@/themes/manifest"
 
 // Theme id is a plain string: a built-in id or a user theme's `user:<slug>`.
@@ -38,6 +39,7 @@ export function useTheme() {
     document.body.dataset.theme = theme
     document.body.style.removeProperty("--background")
     applyExternalThemes(externalThemes, theme)
+    updateExternalFonts(theme, externalThemes)
     // Expose the appearance to CSS (`data-appearance`) and sync OS window chrome.
     // Omarchy/user styles are injected async, hence the `descriptors` dependency;
     // useOmarchyTheme re-syncs once its colors arrive.

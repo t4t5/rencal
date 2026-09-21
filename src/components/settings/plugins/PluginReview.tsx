@@ -77,6 +77,18 @@ export function PluginReview({
             ))}
           </ul>
         </div>
+        {plugin.fonts.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground">Fonts</span>
+            <ul className="flex flex-col gap-1">
+              {plugin.fonts.map((font) => (
+                <li key={`${font.family}-${font.weight}-${font.style}`} className="break-words">
+                  {font.family} · {font.weight} · {font.style} · {font.file.split("/").at(-1)}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         <p className="text-muted-foreground">
           Listings are unreviewed community packages. Choose a theme in Settings → Themes after
           installing. Your current selection will stay the same.

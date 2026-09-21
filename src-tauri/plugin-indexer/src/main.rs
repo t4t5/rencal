@@ -677,6 +677,32 @@ appearance = "dark"
     }
 
     #[tokio::test]
+    async fn indexes_a_theme_plugin_with_font_contributions() {
+        let manifest = manifest("alice", "1.2.3").replacen(
+            "[[contributes.themes]]",
+            "[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/pixel.woff2\"\n\n[[contributes.themes]]",
+            1,
+        );
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 1,
+                "items": [repository("Alice", "rencal-dusk", 42)],
+            })),
+            release("v1.2.3"),
+            commit(),
+            text(&manifest),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert!(index.warnings.is_empty());
+        assert_eq!(index.entries.len(), 1);
+        assert_eq!(index.entries[0].contributions, ["theme"]);
+    }
+
+    #[tokio::test]
     async fn indexes_default_branch_head_without_a_release() {
         let commit = "1111111111111111111111111111111111111111";
         let client = MockClient::new(vec![

@@ -9,6 +9,7 @@ import {
 } from "@/lib/api"
 
 import { externalThemeDescriptor } from "@/themes/external"
+import { disposeExternalFonts } from "@/themes/external-fonts"
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
 
 type ThemeRegistry = {
@@ -22,6 +23,8 @@ const ThemeRegistryContext = createContext<ThemeRegistry | null>(null)
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [externalThemes, setExternalThemes] = useState<ExternalTheme[]>([])
   const [errors, setErrors] = useState<ExternalThemeError[]>([])
+
+  useEffect(() => disposeExternalFonts, [])
 
   // Fetch loose and plugin themes, then keep them in sync with disk.
   useEffect(() => {

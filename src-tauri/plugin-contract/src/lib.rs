@@ -13,6 +13,7 @@ use specta::Type;
 pub const MANIFEST_FILE: &str = "rencal-plugin.toml";
 pub const MAX_NAME_LENGTH: usize = 100;
 pub const MAX_DESCRIPTION_LENGTH: usize = 500;
+pub const MAX_FONT_FACES: usize = 8;
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -29,10 +30,35 @@ pub struct ThemeContribution {
     pub appearance: Appearance,
 }
 
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum FontStyle {
+    #[default]
+    Normal,
+    Italic,
+    Oblique,
+}
+
+const fn default_font_weight() -> u16 {
+    400
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct FontContribution {
+    pub family: String,
+    pub file: String,
+    #[serde(default = "default_font_weight")]
+    pub weight: u16,
+    #[serde(default)]
+    pub style: FontStyle,
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Contributions {
     #[serde(default)]
     pub themes: Vec<ThemeContribution>,
+    #[serde(default)]
+    pub fonts: Vec<FontContribution>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -115,6 +141,30 @@ pub fn validate_manifest(
             MAX_NAME_LENGTH,
         )?;
         validate_css_path(&theme.css)?;
+    }
+
+    if manifest.contributes.fonts.len() > MAX_FONT_FACES {
+        return Err(PluginError::new(format!(
+            "plugin packages may contribute at most {MAX_FONT_FACES} font faces"
+        )));
+    }
+    let mut font_faces = HashSet::new();
+    for font in &mut manifest.contributes.fonts {
+        font.family = validate_display_text(&font.family, "font family", MAX_NAME_LENGTH)?;
+        validate_font_path(&font.file)?;
+        if !(1..=1000).contains(&font.weight) {
+            return Err(PluginError::new(format!(
+                "font {:?} weight must be between 1 and 1000",
+                font.family
+            )));
+        }
+        let face = (font.family.to_lowercase(), font.weight, font.style);
+        if !font_faces.insert(face) {
+            return Err(PluginError::new(format!(
+                "duplicate font face {:?} with weight {} and style {:?}",
+                font.family, font.weight, font.style
+            )));
+        }
     }
 
     Ok(manifest)
@@ -212,7 +262,7 @@ fn reject_unsupported_contributions(value: &toml::Value) -> Result<(), PluginErr
     }
     if let Some(contributes) = table.get("contributes").and_then(toml::Value::as_table) {
         for key in contributes.keys() {
-            if key != "themes" {
+            if key != "themes" && key != "fonts" {
                 return Err(PluginError::new(format!(
                     "unsupported package contribution {:?}",
                     format!("contributes.{key}")
@@ -263,18 +313,30 @@ fn valid_slug(value: &str) -> bool {
             .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-')
 }
 
-fn validate_css_path(path: &str) -> Result<(), PluginError> {
-    let safe = !path.is_empty()
+fn validate_safe_relative_path(path: &str) -> bool {
+    !path.is_empty()
         && !path.starts_with('/')
         && !path.contains('\\')
         && !path.contains(':')
-        && path.ends_with(".css")
         && path
             .split('/')
-            .all(|component| !component.is_empty() && component != "." && component != "..");
+            .all(|component| !component.is_empty() && component != "." && component != "..")
+}
+
+fn validate_css_path(path: &str) -> Result<(), PluginError> {
+    let safe = !path.is_empty() && validate_safe_relative_path(path) && path.ends_with(".css");
     if !safe {
         return Err(PluginError::new(format!(
             "theme CSS path {path:?} must be a relative .css path within the package"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_font_path(path: &str) -> Result<(), PluginError> {
+    if !validate_safe_relative_path(path) || !path.ends_with(".woff2") {
+        return Err(PluginError::new(format!(
+            "font file path {path:?} must be a relative .woff2 path within the package"
         )));
     }
     Ok(())
@@ -378,5 +440,147 @@ appearance = "dark"
                 .to_string();
             assert_eq!(error, expected);
         }
+    }
+
+    #[test]
+    fn validates_font_defaults_styles_and_weight_boundaries() {
+        let fonts = r#"
+[[contributes.fonts]]
+family = "  Pixelated MS Sans Serif  "
+file = "fonts/regular.woff2"
+
+[[contributes.fonts]]
+family = "Pixelated MS Sans Serif"
+file = "fonts/italic.woff2"
+weight = 1
+style = "italic"
+
+[[contributes.fonts]]
+family = "Pixelated MS Sans Serif"
+file = "fonts/oblique.woff2"
+weight = 1000
+style = "oblique"
+"#;
+        let manifest = validate_manifest(&format!("{MANIFEST}{fonts}"), None).unwrap();
+
+        assert_eq!(
+            manifest.contributes.fonts[0].family,
+            "Pixelated MS Sans Serif"
+        );
+        assert_eq!(manifest.contributes.fonts[0].weight, 400);
+        assert_eq!(manifest.contributes.fonts[0].style, FontStyle::Normal);
+        assert_eq!(manifest.contributes.fonts[1].weight, 1);
+        assert_eq!(manifest.contributes.fonts[1].style, FontStyle::Italic);
+        assert_eq!(manifest.contributes.fonts[2].weight, 1000);
+        assert_eq!(manifest.contributes.fonts[2].style, FontStyle::Oblique);
+    }
+
+    #[test]
+    fn rejects_invalid_font_fields_and_duplicate_faces() {
+        let valid = "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/pixel.woff2\"\n";
+        for (font, expected) in [
+            (
+                "\n[[contributes.fonts]]\nfamily = \"  \"\nfile = \"font.woff2\"\n",
+                "font family must not be empty",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Bad\\u0000Font\"\nfile = \"font.woff2\"\n",
+                "font family must not contain control characters",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"../font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"/font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts\\\\font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"C:font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts//font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/./font.woff2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"font.WOFF2\"\n",
+                "must be a relative .woff2 path",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"font.woff2\"\nweight = 0\n",
+                "weight must be between 1 and 1000",
+            ),
+            (
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"font.woff2\"\nweight = 1001\n",
+                "weight must be between 1 and 1000",
+            ),
+        ] {
+            let error = validate_manifest(&format!("{MANIFEST}{font}"), None)
+                .unwrap_err()
+                .to_string();
+            assert!(error.contains(expected), "{error}");
+        }
+
+        let long_family = format!(
+            "{MANIFEST}\n[[contributes.fonts]]\nfamily = \"{}\"\nfile = \"font.woff2\"\n",
+            "f".repeat(MAX_NAME_LENGTH + 1)
+        );
+        assert!(
+            validate_manifest(&long_family, None)
+                .unwrap_err()
+                .to_string()
+                .contains("font family must be at most 100 characters")
+        );
+        let invalid_style = format!(
+            "{MANIFEST}\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"font.woff2\"\nstyle = \"slanted\"\n"
+        );
+        assert!(validate_manifest(&invalid_style, None).is_err());
+
+        let duplicate = format!(
+            "{MANIFEST}{valid}[[contributes.fonts]]\nfamily = \" pixel \"\nfile = \"fonts/other.woff2\"\n"
+        );
+        assert!(
+            validate_manifest(&duplicate, None)
+                .unwrap_err()
+                .to_string()
+                .contains("duplicate font face")
+        );
+    }
+
+    #[test]
+    fn caps_font_faces_and_accepts_the_new_contribution_key() {
+        let mut fonts = String::new();
+        for weight in 1..=MAX_FONT_FACES {
+            fonts.push_str(&format!(
+                "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/{weight}.woff2\"\nweight = {weight}\n"
+            ));
+        }
+        assert!(validate_manifest(&format!("{MANIFEST}{fonts}"), None).is_ok());
+        fonts.push_str(
+            "\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/extra.woff2\"\nweight = 9\n",
+        );
+        assert!(
+            validate_manifest(&format!("{MANIFEST}{fonts}"), None)
+                .unwrap_err()
+                .to_string()
+                .contains("at most 8 font faces")
+        );
+
+        let old_unknown = format!("{MANIFEST}\n[contributes.icons]\n");
+        assert!(
+            validate_manifest(&old_unknown, None)
+                .unwrap_err()
+                .to_string()
+                .contains("contributes.icons")
+        );
     }
 }

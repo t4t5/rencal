@@ -11,12 +11,23 @@ version = "1.0.0"
 description = "A quiet dark theme for renCal"
 min_rencal_version = "0.8.0"
 
+[[contributes.fonts]]
+family = "Pixelated MS Sans Serif"
+file = "fonts/ms_sans_serif.woff2"
+
+[[contributes.fonts]]
+family = "Pixelated MS Sans Serif"
+file = "fonts/ms_sans_serif_bold.woff2"
+weight = 700
+
 [[contributes.themes]]
 id = "dark"
 name = "Dusk Dark"
 css = "theme.css"
 appearance = "dark"
 ```
+
+Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 
 For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. A stable GitHub release is optional. If one exists, its tag must match the manifest version (`1.0.0` or `v1.0.0`); otherwise renCal uses the head of the default branch. Bump the manifest version to publish an update.
 
