@@ -90,7 +90,7 @@ export function ReminderSelect({
   onRemove,
   placeholder = "Reminders",
   addon,
-  ghost,
+  variant,
   withInputGroupAddon = true,
 }: {
   reminders: number[]
@@ -98,7 +98,7 @@ export function ReminderSelect({
   onRemove: (mins: number) => void
   placeholder?: string
   addon?: ReactNode
-  ghost?: boolean
+  variant?: "ghost" | "default"
   withInputGroupAddon?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -123,7 +123,7 @@ export function ReminderSelect({
         open={open}
         setOpen={setOpen}
         addon={resolvedAddon}
-        ghost={ghost}
+        variant={variant}
       >
         {values.length ? (
           <CommandGroup>
@@ -174,7 +174,7 @@ const ReminderRow = ({
     <div
       key={mins}
       className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary focus-within:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height",
+        "flex h-control items-center justify-between rounded-md px-2 pr-3 text-sm hover:bg-secondary focus-within:bg-secondary group cursor-default",
         withInputGroupAddon && "pl-0",
         className,
       )}

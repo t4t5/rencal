@@ -70,7 +70,7 @@ function DragFloatCard({ drag }: { drag: ActiveEventDrag }) {
     <div
       ref={ref}
       className={cn(
-        "absolute overflow-hidden rounded text-xs shadow-xl",
+        "absolute overflow-hidden rounded-base text-xs shadow-xl",
         float.kind === "block" ? "px-1.5 py-1" : "px-1.5 py-0.5 whitespace-nowrap",
       )}
       style={{
@@ -84,7 +84,7 @@ function DragFloatCard({ drag }: { drag: ActiveEventDrag }) {
     >
       <div className="font-medium leading-tight truncate">{summary}</div>
       {showTime && (
-        <div className="opacity-80 leading-tight truncate">
+        <div className="text-muted-foreground leading-tight truncate">
           {formatTime(range.start, timeFormat)} – {formatTime(range.end, timeFormat)}
         </div>
       )}

@@ -56,7 +56,7 @@ export function MonthAllDayEvent({
       data-event-clickable={!isStatic || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
-        "absolute truncate px-1 py-px leading-4",
+        "absolute truncate px-1 py-px text-xs",
         isDashed && "opacity-50",
         !isStatic && dimmed && "opacity-50",
         item.isStart && "rounded-l",

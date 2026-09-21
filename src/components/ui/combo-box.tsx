@@ -16,7 +16,7 @@ export function Combobox({
   setQuery,
   open,
   setOpen,
-  ghost = true,
+  variant = "ghost",
   readOnly = false,
   disabled = false,
   onInputKeyDown,
@@ -30,7 +30,7 @@ export function Combobox({
   setQuery: (query: string) => void
   open: boolean
   setOpen: (open: boolean) => void
-  ghost?: boolean
+  variant?: "ghost" | "default"
   readOnly?: boolean
   disabled?: boolean
   onInputKeyDown?: KeyboardEventHandler<HTMLInputElement>
@@ -56,7 +56,7 @@ export function Combobox({
               "hover:shadow-input-border focus-within:bg-secondary focus-within:shadow-none! cursor-text",
             {
               "bg-secondary shadow-none!": open,
-              "shadow-input-border": !ghost && interactive,
+              "shadow-input-border": variant === "default" && interactive,
             },
           )}
           onClick={() => interactive && setOpen(true)}
@@ -75,7 +75,7 @@ export function Combobox({
             />
           </InputGroup>
 
-          {interactive && <DropdownArrow forceVisible={open || !ghost} />}
+          {interactive && <DropdownArrow forceVisible={open || variant === "default"} />}
         </div>
       </PopoverAnchor>
       <PopoverContent

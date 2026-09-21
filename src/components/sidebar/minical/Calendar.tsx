@@ -13,6 +13,7 @@ import {
 } from "react-day-picker"
 
 import { Button, buttonVariants } from "@/components/ui/button"
+import { calendarSharedStyles } from "@/components/ui/calendar-styles"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -60,7 +61,8 @@ function Calendar({
       fixedWeeks
       today={plainDateToJsDate(today())}
       className={cn(
-        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        calendarSharedStyles.root,
+        "in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
@@ -75,35 +77,23 @@ function Calendar({
       }}
       classNames={{
         root: cn("w-full"),
-        months: cn("flex gap-4 flex-col md:flex-row relative", defaultClassNames.months),
+        months: cn(calendarSharedStyles.months, defaultClassNames.months),
         month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden!"),
-        nav: cn(
-          "flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between",
-          defaultClassNames.nav,
-        ),
+        nav: cn(calendarSharedStyles.nav, defaultClassNames.nav),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
+          calendarSharedStyles.navButton,
           defaultClassNames.button_previous,
         ),
         button_next: cn(
           buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
+          calendarSharedStyles.navButton,
           defaultClassNames.button_next,
         ),
-        month_caption: cn(
-          "flex items-center justify-center h-(--cell-size) w-full px-(--cell-size)",
-          defaultClassNames.month_caption,
-        ),
-        dropdowns: cn(
-          "w-full flex items-center text-sm font-medium justify-center h-(--cell-size) gap-1.5",
-          defaultClassNames.dropdowns,
-        ),
-        dropdown_root: cn(
-          "relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md",
-          defaultClassNames.dropdown_root,
-        ),
-        dropdown: cn("absolute bg-popover inset-0 opacity-0", defaultClassNames.dropdown),
+        month_caption: cn(calendarSharedStyles.monthCaption, defaultClassNames.month_caption),
+        dropdowns: cn(calendarSharedStyles.dropdowns, defaultClassNames.dropdowns),
+        dropdown_root: cn(calendarSharedStyles.dropdownRoot, defaultClassNames.dropdown_root),
+        dropdown: cn(calendarSharedStyles.dropdown, defaultClassNames.dropdown),
         caption_label: cn(
           "select-none font-medium",
           captionLayout === "label"
@@ -111,18 +101,18 @@ function Calendar({
             : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm [&>svg]:text-muted-foreground [&>svg]:size-3.5",
           defaultClassNames.caption_label,
         ),
-        table: "w-full border-collapse",
-        weekdays: cn("flex", defaultClassNames.weekdays),
+        table: calendarSharedStyles.table,
+        weekdays: cn(calendarSharedStyles.weekdays, defaultClassNames.weekdays),
         weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal select-none text-[11px]",
+          "text-muted-foreground rounded-md flex-1 font-normal select-none text-2xs",
           defaultClassNames.weekday,
         ),
         week: cn("flex w-full", defaultClassNames.week),
-        week_number_header: cn("select-none w-(--cell-size)", defaultClassNames.week_number_header),
-        week_number: cn(
-          "text-[0.8rem] select-none text-muted-foreground",
-          defaultClassNames.week_number,
+        week_number_header: cn(
+          calendarSharedStyles.weekNumberHeader,
+          defaultClassNames.week_number_header,
         ),
+        week_number: cn(calendarSharedStyles.weekNumber, defaultClassNames.week_number),
         day: cn(
           "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
           showWeekNumber
@@ -134,11 +124,8 @@ function Calendar({
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn("rounded-r-md bg-accent", defaultClassNames.range_end),
         // today: cn("text-active", defaultClassNames.today),
-        outside: cn(
-          "text-muted-foreground aria-selected:text-muted-foreground",
-          defaultClassNames.outside,
-        ),
-        disabled: cn("text-muted-foreground opacity-50", defaultClassNames.disabled),
+        outside: cn(calendarSharedStyles.outside, defaultClassNames.outside),
+        disabled: cn(calendarSharedStyles.disabled, defaultClassNames.disabled),
         hidden: cn("invisible"),
         ...classNames,
       }}
@@ -202,7 +189,7 @@ function Calendar({
           const firstRowDay = week.days[0]
           return (
             <td {...props}>
-              <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-[10px] text-muted-foreground">
+              <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-2xs text-muted-foreground">
                 {firstRowDay
                   ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
                   : null}
@@ -285,7 +272,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
       data-range-middle={modifiers.range_middle}
       data-today={modifiers.today}
       className={cn(
-        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle! text-sm",
+        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle text-sm",
         defaultClassNames.day,
         "data-[selected-single=true]:bg-accent! data-[selected-single=true]:font-bold! data-[selected-single=true]:text-lg!", // selected day
         "data-[today=true]:text-today data-[today=true]:data-[selected-single=true]:bg-today! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today

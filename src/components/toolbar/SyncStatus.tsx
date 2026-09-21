@@ -89,7 +89,7 @@ const DiffCounterBadge = ({ count }: { count: number }) => {
   if (autoSyncEnabled) return null
 
   return (
-    <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium leading-[14px] text-center">
+    <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-[3px] rounded-full bg-primary text-primary-foreground text-2xs font-medium leading-[14px] text-center">
       {count}
     </span>
   )

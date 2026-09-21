@@ -12,7 +12,7 @@ export function Textarea({
     <div
       role="group"
       className={cn(
-        "group/input-group w-full border border-transparent hover:border-input min-h-control-height h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md",
+        "group/input-group w-full border border-transparent hover:border-input min-h-control h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md",
         readOnly && "hover:border-transparent! focus-within:bg-transparent!",
       )}
     >

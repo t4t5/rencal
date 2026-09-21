@@ -233,7 +233,7 @@ const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
       dateKey={dateKey}
       state={state}
       allDay
-      className="rounded outline-none"
+      className="rounded-base outline-none"
       {...handlers}
     >
       <AgendaAllDayEventBlock

@@ -21,7 +21,7 @@ export function BoardColumn({
   return (
     <div
       className={cn(
-        "flex flex-col flex-1 min-w-0 border-r border-divider overflow-hidden",
+        "flex flex-col flex-1 min-w-0 border-r border-border overflow-hidden",
         isLast && "border-r-0",
         className,
       )}
@@ -29,14 +29,14 @@ export function BoardColumn({
       {/* Column header — matches the weekday label bar style */}
       <div
         className={cn(
-          "flex items-center justify-between px-3 py-2 border-b border-divider shrink-0",
+          "flex items-center justify-between px-3 py-2 border-b border-border shrink-0",
           isToday && "bg-accent",
         )}
       >
-        <span className="text-[11px] text-muted-foreground font-medium numerical uppercase tracking-wide">
+        <span className="text-2xs text-muted-foreground font-medium numerical uppercase tracking-wide">
           {title}
         </span>
-        <span className="text-[11px] text-muted-foreground numerical tabular-nums">
+        <span className="text-2xs text-muted-foreground numerical tabular-nums">
           {events.length > 0 ? events.length : ""}
         </span>
       </div>

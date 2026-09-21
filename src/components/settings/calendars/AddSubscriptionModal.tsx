@@ -58,7 +58,7 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
 
         <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3 w-full">
           <Input
-            ghost={false}
+            variant="default"
             type="url"
             placeholder="https://example.com/calendar.ics"
             autoFocus

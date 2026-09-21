@@ -97,7 +97,7 @@ function ConferenceItem({
   const Icon = conferenceIcon[provider]
 
   return (
-    <div className="group flex h-control-height items-center justify-between rounded-md p-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
+    <div className="group flex h-control items-center justify-between rounded-md px-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
       <div className="flex min-w-0 items-center gap-2">
         <InputGroupAddon>
           <Icon />

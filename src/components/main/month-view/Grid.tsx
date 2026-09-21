@@ -369,7 +369,7 @@ export function MonthGrid({
                 height: `${virtualRow.size}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex flex-col border-b border-divider"
+              className="flex flex-col border-b border-border"
             >
               <MonthWeekRow
                 weekDays={weekDays}

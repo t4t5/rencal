@@ -80,20 +80,20 @@ const Palette = ({ themeId }: { themeId: string }) => {
       className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3 w-full"
     >
       <div className="flex justify-between items-center gap-3">
-        <div className="grow h-[5px] rounded bg-foreground" />
+        <div className="grow h-[5px] rounded-base bg-foreground" />
         <div className="size-4 rounded-circle bg-primary" />
       </div>
 
       <div className="grow relative">
         <div className="absolute inset-0 gap-2 flex justify-between">
-          <div className="bg-(--hover-tint) grow opacity-5"></div>
-          <div className="bg-(--hover-tint) grow opacity-5"></div>
-          <div className="bg-(--hover-tint) grow opacity-10"></div>
+          <div className="bg-card grow"></div>
+          <div className="bg-card grow"></div>
+          <div className="bg-accent grow"></div>
         </div>
 
         <div className="absolute inset-0 flex flex-col">
           <div className="grow"></div>
-          <div className="bg-(--hover-tint) grow opacity-5"></div>
+          <div className="bg-card grow"></div>
         </div>
       </div>
     </div>

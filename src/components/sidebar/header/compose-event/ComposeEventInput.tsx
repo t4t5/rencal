@@ -40,7 +40,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
       <Input
         ref={inputRef}
         data-compose-event-input
-        ghost={false}
+        variant="default"
         value={showText ? displayText : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}

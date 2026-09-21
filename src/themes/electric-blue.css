@@ -3,7 +3,7 @@
 
 --background: white;
 --foreground: var(--electric-blue);
---muted: color-mix(in srgb, var(--electric-blue) 90%, transparent);
+--muted-foreground: color-mix(in srgb, var(--electric-blue) 90%, transparent);
 --primary: var(--electric-blue);
 --highlight: var(--electric-blue);
 --today: var(--electric-blue);
@@ -12,10 +12,10 @@
 --event-foreground: white;
 --hover-tint: var(--electric-blue);
 --hover-mix: 6%;
---radius-base: 0rem;
---font-heading: var(--mono);
---font-button: var(--mono);
---font-numerical: var(--mono);
+--radius: 0px;
+--font-heading: var(--font-mono);
+--font-button: var(--font-mono);
+--font-numerical: var(--font-mono);
 --font-heading-transform: uppercase;
 --font-button-transform: uppercase;
 --font-numerical-transform: uppercase;

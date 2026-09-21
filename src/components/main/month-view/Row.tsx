@@ -16,7 +16,7 @@ import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
 
 import { MonthDragToCreateSelection } from "./DragToCreateSelection"
 import { TopLeftDate } from "./TopLeftDate"
-import { LANE_GAP, LANE_HEIGHT } from "./lane-geometry"
+import { reservedAllDayHeight } from "./lane-geometry"
 
 const MAX_ALL_DAY_LANES = 3
 const MONTH_BOUNDARY_COLOR = "color-mix(in srgb, var(--foreground) 28%, var(--background))"
@@ -115,7 +115,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
           />
         ))}
         {showWeekNumbers && weekDays[0] && (
-          <span className="pointer-events-none absolute left-1 top-1 z-10 text-[10px] leading-[18px] text-muted-foreground numerical select-none">
+          <span className="pointer-events-none absolute left-1 top-1 z-10 text-2xs leading-[18px] text-muted-foreground numerical select-none">
             {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
           </span>
         )}
@@ -163,9 +163,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               day={day}
               timedEvents={layout.timedByCol[colIndex]}
               hiddenAllDayCount={hiddenAllDay}
-              reservedAllDayHeight={
-                reservedLanes[colIndex] > 0 ? reservedLanes[colIndex] * LANE_HEIGHT - LANE_GAP : 0
-              }
+              reservedAllDayHeight={reservedAllDayHeight(reservedLanes[colIndex])}
               activeEventKey={activeEventKey}
               selectedEventKey={selectedEventKey}
               isActiveDay={day.dateKey === activeDateKey}

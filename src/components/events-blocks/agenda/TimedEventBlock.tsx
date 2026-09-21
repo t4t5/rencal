@@ -32,7 +32,10 @@ export const AgendaTimedEventBlock = memo(function EventRow({
 
   return (
     <div className="flex gap-3 pl-3.5 pr-2">
-      <div className="w-[3px] shrink-0 rounded" style={{ backgroundColor: colors.borderColor }} />
+      <div
+        className="w-[3px] shrink-0 rounded-base"
+        style={{ backgroundColor: colors.borderColor }}
+      />
       <div className="relative flex-1 min-w-0 text-sm">
         <div className="flex items-center gap-1.5 text-muted-foreground numerical text-xs h-4">
           <span>{timeLabel}</span>

@@ -53,7 +53,7 @@ export function MonthTimedEvent({
       ref={ref}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded shrink-0",
+        "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded-base shrink-0",
         highlighted && "bg-accent!",
         (isPending || isDeclined) && "opacity-50",
         !isStatic && dimmed && "opacity-50",
@@ -91,7 +91,7 @@ export function MonthTimedEvent({
       <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: colors.borderColor }} />
       <span className="truncate">
         <span
-          className="text-[10px] numerical"
+          className="text-2xs numerical"
           style={{
             color: colors.tintedTextColor,
           }}

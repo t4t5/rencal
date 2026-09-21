@@ -46,7 +46,7 @@ export const BoardCard = memo(function BoardCard({
 
   return (
     <div
-      className="cursor-default hover:bg-secondary py-1.5 border-b border-divider last:border-b-0 outline-none"
+      className="cursor-default hover:bg-secondary py-1.5 border-b border-border last:border-b-0 outline-none"
       data-event-clickable
       onClick={handleClick}
     >

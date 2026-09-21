@@ -186,7 +186,7 @@ const barStyle = (bar: AllDayBar) =>
 >
   <!-- Sidebar (the only pane on narrow widths; fixed-width next to Main on xl+) -->
   <div
-    class="flex grow flex-col overflow-hidden xl:w-[280px] xl:grow-0 xl:shrink-0 xl:border-r xl:border-(--divider)"
+    class="flex grow flex-col overflow-hidden xl:w-[280px] xl:grow-0 xl:shrink-0 xl:border-r xl:border-(--border)"
   >
     <!-- Toolbar with the compose (+) button -->
     <div class="flex justify-end p-4 pb-0">
@@ -235,7 +235,7 @@ const barStyle = (bar: AllDayBar) =>
             weekdayLabels.map((label, i) => (
               <div
                 class:list={[
-                  "rc-numerical flex-1 text-center text-[11px] text-(--muted)",
+                  "rc-numerical flex-1 text-center text-[11px] text-(--muted-foreground)",
                   i >= 5 && "bg-(--weekend)",
                   i === 4 && "text-(--today)",
                 ]}
@@ -258,7 +258,7 @@ const barStyle = (bar: AllDayBar) =>
                     <div
                       class:list={[
                         "relative flex size-8 items-center justify-center text-sm",
-                        day.outside && "text-(--muted)",
+                        day.outside && "text-(--muted-foreground)",
                         isSelected &&
                           "rc-circle bg-(--today) font-bold text-(--primary-foreground)",
                       ]}
@@ -288,7 +288,7 @@ const barStyle = (bar: AllDayBar) =>
     <div class="mt-3 flex min-h-0 grow flex-col overflow-hidden">
       {
         agenda.map((section) => (
-          <div class="border-b border-(--divider)">
+          <div class="border-b border-(--border)">
             <div class="flex h-8 items-center gap-2 px-3 py-1.5 text-sm">
               <span
                 class:list={["rc-numerical font-bold uppercase", section.today && "text-(--today)"]}
@@ -296,7 +296,10 @@ const barStyle = (bar: AllDayBar) =>
                 {section.label}
               </span>
               <span
-                class:list={["rc-numerical", section.today ? "text-(--today)" : "text-(--muted)"]}
+                class:list={[
+                  "rc-numerical",
+                  section.today ? "text-(--today)" : "text-(--muted-foreground)",
+                ]}
               >
                 {section.date}
               </span>
@@ -304,7 +307,7 @@ const barStyle = (bar: AllDayBar) =>
 
             <div class="flex flex-col gap-1 pb-2">
               {!section.allDay?.length && !section.rows.length && (
-                <div class="px-3 py-1 text-sm text-(--muted)">No events</div>
+                <div class="px-3 py-1 text-sm text-(--muted-foreground)">No events</div>
               )}
 
               {section.allDay && section.allDay.length > 0 && (
@@ -327,7 +330,7 @@ const barStyle = (bar: AllDayBar) =>
                 >
                   <div class="w-[3px] shrink-0 rounded-[2px] bg-(--ev-paint)" />
                   <div class="text-sm">
-                    <div class="rc-numerical h-4 text-xs text-(--muted)">{row.time}</div>
+                    <div class="rc-numerical h-4 text-xs text-(--muted-foreground)">{row.time}</div>
                     <div class="font-medium">{row.title}</div>
                   </div>
                 </div>
@@ -357,7 +360,7 @@ const barStyle = (bar: AllDayBar) =>
         Month
         <svg
           viewBox="0 0 24 24"
-          class="size-4 text-(--muted)"
+          class="size-4 text-(--muted-foreground)"
           fill="none"
           stroke="currentColor"
           stroke-width="2"
@@ -374,12 +377,12 @@ const barStyle = (bar: AllDayBar) =>
     </div>
 
     <!-- Weekday labels -->
-    <div class="grid grid-cols-7 border-b border-(--divider)">
+    <div class="grid grid-cols-7 border-b border-(--border)">
       {
         weekdayLabels.map((label, i) => (
           <div
             class:list={[
-              "rc-numerical py-2 text-center text-[11px] font-medium text-(--muted) uppercase",
+              "rc-numerical py-2 text-center text-[11px] font-medium text-(--muted-foreground) uppercase",
               i >= 5 && "bg-(--weekend)",
             ]}
           >
@@ -393,18 +396,18 @@ const barStyle = (bar: AllDayBar) =>
     <div class="flex min-h-0 grow flex-col">
       {
         weeks.map((week) => (
-          <div class="flex min-h-0 grow basis-0 flex-col border-b border-(--divider) last:border-b-0">
+          <div class="flex min-h-0 grow basis-0 flex-col border-b border-(--border) last:border-b-0">
             <div class="relative grid shrink-0 grid-cols-7">
               {week.days.map((day) => (
                 <div
                   class:list={[
-                    "rc-numerical flex min-w-0 items-center justify-end gap-1 overflow-hidden border-r border-(--divider) p-1 last:border-r-0",
+                    "rc-numerical flex min-w-0 items-center justify-end gap-1 overflow-hidden border-r border-(--border) p-1 last:border-r-0",
                     day.weekend && "bg-(--weekend)",
                     day.active && "bg-(--accent)",
                   ]}
                 >
                   {day.monthLabel && (
-                    <span class="truncate text-xs text-(--muted)">{day.monthLabel}</span>
+                    <span class="truncate text-xs text-(--muted-foreground)">{day.monthLabel}</span>
                   )}
                   <span
                     class:list={[
@@ -437,7 +440,7 @@ const barStyle = (bar: AllDayBar) =>
               {week.days.map((day) => (
                 <div
                   class:list={[
-                    "flex min-h-0 flex-col gap-1 overflow-hidden border-r border-(--divider) px-1 pb-1 last:border-r-0",
+                    "flex min-h-0 flex-col gap-1 overflow-hidden border-r border-(--border) px-1 pb-1 last:border-r-0",
                     day.weekend && "bg-(--weekend)",
                     day.active && "bg-(--accent)",
                   ]}
@@ -456,7 +459,7 @@ const barStyle = (bar: AllDayBar) =>
                     </div>
                   ))}
                   {day.more && (
-                    <div class="shrink-0 truncate px-0.5 text-xs text-(--muted)">
+                    <div class="shrink-0 truncate px-0.5 text-xs text-(--muted-foreground)">
                       +{day.more} more
                     </div>
                   )}

@@ -12,12 +12,12 @@ export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
   const { firstDayOfWeek } = useSettings()
 
   return (
-    <div className="grid grid-cols-7 border-b border-divider">
+    <div className="grid grid-cols-7 border-b border-border">
       {WEEKDAY_LABELS[firstDayOfWeek].map((label) => (
         <div
           key={label}
           className={cn(
-            "text-[11px]! text-muted-foreground py-2 text-center font-medium numerical uppercase",
+            "text-2xs text-muted-foreground py-2 text-center font-medium numerical uppercase",
             (label === "Sat" || label === "Sun") && "bg-weekend",
             dimmed && "opacity-50",
           )}

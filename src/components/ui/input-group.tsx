@@ -14,13 +14,13 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       className={cn(
         "group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
-        "min-h-control-height min-w-0",
+        "min-h-control min-w-0",
 
         // Focus state.
         "focus-within:bg-secondary focus-within:border-transparent!",
 
         // Error state.
-        "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive dark:has-[[data-slot][aria-invalid=true]]:ring-destructive/40",
+        "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive",
 
         "has-disabled:pointer-events-none",
 
@@ -37,7 +37,7 @@ function InputGroupAddon({ className, ...props }: React.ComponentProps<"div">) {
       role="group"
       data-slot="input-group-addon"
       className={cn(
-        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 py-1.5 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[28px]",
+        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[28px]",
         className,
       )}
       onClick={(e) => {
@@ -101,7 +101,7 @@ function InputGroupInput({ className, ...props }: React.ComponentProps<"input">)
     <Input
       data-slot="input-group-control"
       className={cn(
-        "flex-1 rounded-none border-0 bg-transparent! shadow-none focus-visible:ring-0 dark:bg-transparent min-w-full",
+        "flex-1 rounded-none border-0 bg-transparent! shadow-none focus-visible:ring-0 min-w-full",
         className,
       )}
       {...props}

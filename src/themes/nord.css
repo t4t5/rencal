@@ -1,6 +1,6 @@
 --background: #2e3440;
 --foreground: #eceff4;
---muted: #d8dee9;
+--muted-foreground: #d8dee9;
 --hover-tint: #88c0d0;
 --hover-mix: 12%;
 --primary: #88c0d0;
@@ -11,5 +11,5 @@
 --warning: #ebcb8b;
 --error: #bf616a;
 --ring: #88c0d0;
---radius-base: 0.35rem;
+--radius: 5.6px;
 --radius-circle: calc(infinity * 1px);

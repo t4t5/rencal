@@ -60,7 +60,7 @@ export function WeekAllDayBar({
         data-event-clickable={!isStatic || undefined}
         className={cn(
           getEventBlockClasses(highlighted, isDeclined),
-          "flex items-center px-1 py-px leading-4 rounded",
+          "flex items-center px-1 py-px leading-4 rounded-base",
           !isStatic && dimmed && "opacity-50",
           isDraft && "font-medium",
           dragRole === "source" && "opacity-40",

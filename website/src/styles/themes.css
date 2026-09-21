@@ -1,32 +1,33 @@
 /* Styles for the /themes playground page.
  *
  * The `.rc-scope` block mirrors renCal's theme system: the ren defaults from
- * the app's src/global.css `:root` block, plus the derived-token chain from
- * its `body` block. Theme primitives are applied as inline styles on top of
+ * the app's src/global.css `:root` block, plus its `[data-theme]` derivation.
+ * Theme primitives are applied as inline styles on top of
  * this scope (the website equivalent of the app's `[data-theme]` wrapping),
  * so the derivations react to them exactly like in the app.
  * Keep the values in sync with src/global.css.
  */
 
 .rc-scope {
-  --mono: "Geist Mono", ui-monospace, monospace;
-  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --font-heading: var(--mono);
-  --font-button: var(--mono);
-  --font-numerical: var(--mono);
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-mono);
+  --font-button: var(--font-mono);
+  --font-numerical: var(--font-mono);
 
   --font-heading-transform: uppercase;
   --font-button-transform: uppercase;
   --font-numerical-transform: uppercase;
 
-  --radius-base: 0px;
+  --radius: 0px;
   --radius-circle: 0px;
   --control-height: 34px;
 
   --background: #131313;
   --foreground: white;
-  --muted: rgba(255, 255, 255, 0.5);
+  --muted-foreground: rgba(255, 255, 255, 0.5);
 
   --primary: #f56313;
 
@@ -42,26 +43,30 @@
   --popover-tint: black;
   --popover-mix: 4%;
 
-  /* Derived tokens — same formulas as the app's global.css `body` block */
+  /* Derived tokens — same formulas as the app's global.css `[data-theme]` block */
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
   --secondary: var(--hover);
   --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+  --secondary-foreground: var(--foreground);
   --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --accent-foreground: var(--foreground);
+  --muted: var(--secondary);
   --weekend: var(--hover);
-  --divider: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --border: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
   --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
-  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--divider));
+  --card-foreground: var(--foreground);
+  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--border));
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
   --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
 
   --month-boundary: color-mix(in srgb, var(--foreground) 28%, var(--background));
 
-  /* Radius steps (app: Tailwind radius scale derived from --radius-base) */
-  --radius-md: max(0px, calc(var(--radius-base) - 2px));
-  --radius-ev: max(0px, calc(var(--radius-base) - 6px));
+  /* Radius steps (app: Tailwind radius scale derived from --radius) */
+  --radius-md: max(0px, calc(var(--radius) - 2px));
+  --radius-ev: max(0px, calc(var(--radius) - 6px));
 
-  font-family: var(--sans);
+  font-family: var(--font-body);
 }
 
 /* App typography utilities (see the @utility blocks in the app's global.css) */

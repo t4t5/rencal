@@ -31,7 +31,7 @@ export const AgendaAllDayEventBlock = ({
     <div
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
-        "px-1 py-px leading-4 rounded inline-flex text-[13px]!",
+        "px-1 py-px leading-4 rounded-base inline-flex text-xs",
         isDraft && "font-medium",
       )}
       style={style}

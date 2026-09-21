@@ -26,7 +26,7 @@ type MonthDayCellProps = {
   day: MonthDay
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
-  reservedAllDayHeight: number
+  reservedAllDayHeight: string | null
   activeEventKey: string | null
   selectedEventKey: string | null
   isActiveDay: boolean
@@ -69,7 +69,7 @@ export function MonthDayCell({
       <ContextMenuTrigger asChild>
         <div
           className={cn(
-            "flex flex-col gap-1 px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-divider last:border-r-0",
+            "flex flex-col gap-1 px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
             day.isWeekend && "bg-weekend",
             isActiveDay && "bg-accent",
           )}
@@ -86,10 +86,10 @@ export function MonthDayCell({
             handleCreateEvent(e.currentTarget)
           }}
         >
-          {reservedAllDayHeight > 0 && (
+          {reservedAllDayHeight && (
             <div
               className="pointer-events-none"
-              style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }}
+              style={{ height: reservedAllDayHeight, flexShrink: 0 }}
             />
           )}
           {visibleTimed.map((item) => {

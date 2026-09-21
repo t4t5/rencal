@@ -62,7 +62,7 @@ export function InvitesBadge() {
             onFocus={(event) => {
               if (restoringFocusRef.current) event.preventDefault()
             }}
-            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none"
+            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-destructive-foreground hover:bg-highlight/90 transition-colors outline-none"
           >
             {invites.length}
           </button>
@@ -121,7 +121,7 @@ function InviteCard({
       <div className="flex gap-3 p-3">
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white bg-muted-foreground",
+            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-destructive-foreground bg-muted-foreground",
           )}
         >
           {initial}

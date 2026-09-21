@@ -54,7 +54,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
   return (
     <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 w-full">
       <Input
-        ghost={false}
+        variant="default"
         type="text"
         placeholder="Calendar name"
         autoFocus

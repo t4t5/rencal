@@ -2,6 +2,8 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
+import { sheetSharedStyles } from "./sheet-styles"
+
 function Sheet({
   open,
   onOpenChange,
@@ -27,8 +29,10 @@ function Sheet({
     <>
       {/* Overlay */}
       <div
+        data-slot="sheet-overlay"
         className={cn(
-          "fixed inset-0 z-50 bg-black/50 transition-opacity duration-150",
+          sheetSharedStyles.overlay,
+          "transition-opacity duration-150",
           open ? "opacity-100" : "opacity-0 pointer-events-none",
         )}
         onClick={() => onOpenChange(false)}
@@ -67,9 +71,11 @@ function SheetContent({
 
   return (
     <div
+      data-slot="sheet-content"
       ref={ref}
       className={cn(
-        "bg-background fixed z-50 flex flex-col gap-4 overflow-y-auto shadow-lg outline-none transition-transform duration-150 will-change-transform",
+        sheetSharedStyles.content,
+        "overflow-y-auto transition-transform duration-150",
         position,
         translate,
         className,
@@ -81,19 +87,31 @@ function SheetContent({
 }
 
 function SheetHeader({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("flex flex-col gap-1.5 p-4", className)} {...props} />
+  return (
+    <div data-slot="sheet-header" className={cn(sheetSharedStyles.header, className)} {...props} />
+  )
 }
 
 function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("mt-auto flex flex-col gap-2 p-4", className)} {...props} />
+  return (
+    <div data-slot="sheet-footer" className={cn(sheetSharedStyles.footer, className)} {...props} />
+  )
 }
 
 function SheetTitle({ className, ...props }: React.ComponentProps<"h2">) {
-  return <h2 className={cn("text-foreground font-semibold heading", className)} {...props} />
+  return (
+    <h2 data-slot="sheet-title" className={cn(sheetSharedStyles.title, className)} {...props} />
+  )
 }
 
 function SheetDescription({ className, ...props }: React.ComponentProps<"p">) {
-  return <p className={cn("text-muted-foreground text-sm", className)} {...props} />
+  return (
+    <p
+      data-slot="sheet-description"
+      className={cn(sheetSharedStyles.description, className)}
+      {...props}
+    />
+  )
 }
 
 export {

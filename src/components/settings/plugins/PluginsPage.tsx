@@ -199,7 +199,7 @@ export function PluginsPage() {
   return (
     <SettingsContent className="w-full min-w-0 mt-3">
       <Input
-        ghost={false}
+        variant="default"
         aria-label="Search plugins"
         placeholder="Search plugins…"
         value={search}
@@ -407,7 +407,7 @@ function PluginRow({
 function PluginPreview({ url, name }: { url: string | null; name: string }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded border border-border bg-muted/10">
+    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-base border border-border bg-muted/10">
       {url && !failed ? (
         <img
           src={url}

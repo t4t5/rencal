@@ -17,7 +17,7 @@ The `[data-theme="<id>"]` selector is added **for you**:
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets. Installing or updating an inactive theme therefore does not enable its full CSS.
 
-The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` (the `body { ... }` block in `src/global.css`). In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme — hover, card, divider, secondary, etc. fall out automatically. See `tokyonight.css` for a minimal example.
+The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` on `[data-theme]`. In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, and the other surfaces follow automatically. See `tokyonight.css` for a minimal example.
 
 ## Adding a built-in theme
 
@@ -43,22 +43,22 @@ Most user themes only set variables, which is plain scoped CSS. If a theme adds 
 
 ## Primitives
 
-These are the variables theme files override. Everything else (`--hover`, `--card`, `--secondary`, `--divider`, `--accent`, `--weekend`, `--popover`, `--input`, `--primary-hover`, `--primary-foreground`) is derived from these in `global.css` and should not be set directly unless you need to break out of the derivation.
+These are the variables theme files normally override. Surfaces and state colors (`--hover`, `--card`, `--secondary`, `--border`, `--accent`, `--muted`, `--popover`, `--input`, and their foregrounds) are derived on the `[data-theme]` node. They use the same meanings as shadcn tokens and remain directly overridable.
 
 ### Colors
 
-| Variable       | Purpose                         |
-| -------------- | ------------------------------- |
-| `--background` | App background                  |
-| `--foreground` | Primary text                    |
-| `--muted`      | De-emphasized text              |
-| `--primary`    | Primary action color            |
-| `--today`      | "Today" indicator color         |
-| `--highlight`  | Brand accent (year badge, etc.) |
-| `--ring`       | Focus rings                     |
-| `--success`    | Success / accepted state        |
-| `--warning`    | Warning / tentative state       |
-| `--error`      | Error / declined state          |
+| Variable             | Purpose                         |
+| -------------------- | ------------------------------- |
+| `--background`       | App background                  |
+| `--foreground`       | Primary text                    |
+| `--muted-foreground` | De-emphasized text              |
+| `--primary`          | Primary action color            |
+| `--today`            | "Today" indicator color         |
+| `--highlight`        | Brand accent (year badge, etc.) |
+| `--ring`             | Focus rings                     |
+| `--success`          | Success / accepted state        |
+| `--warning`          | Warning / tentative state       |
+| `--error`            | Error / declined state          |
 
 #### Optional colors
 
@@ -82,7 +82,7 @@ Event text is derived from each event's accent colour. With these unset (the dar
 
 ### Hover / tint system
 
-The derived tokens (`--hover`, `--secondary`, `--accent`, `--card`, `--divider`, `--input`, …) are all built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
+The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
 
 | Variable         | Purpose                                                           |
 | ---------------- | ----------------------------------------------------------------- |
@@ -101,22 +101,26 @@ Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed i
 
 ### Sizing
 
-| Variable            | Purpose                                          |
-| ------------------- | ------------------------------------------------ |
-| `--radius-base`     | Base border radius                               |
-| `--radius-circle`   | Pill/avatar radius (set to `0` for sharp themes) |
-| `--control-height`  | Button/input height                              |
-| `--tab-gap`         | Tab spacing                                      |
-| `--tab-list-shadow` | Tab list outline                                 |
+| Variable              | Purpose                                          |
+| --------------------- | ------------------------------------------------ |
+| `--radius`            | Base border radius (shadcn-compatible)           |
+| `--radius-circle`     | Pill/avatar radius (set to `0` for sharp themes) |
+| `--control-height`    | Button/input height                              |
+| `--control-height-sm` | Small button height                              |
+| `--control-height-lg` | Large button height                              |
+| `--tab-gap`           | Tab spacing                                      |
+| `--tab-list-shadow`   | Tab list outline                                 |
 
 ### Typography (fonts)
 
-| Variable           | Purpose                                      |
-| ------------------ | -------------------------------------------- |
-| `--font-body`      | Application body and `.bodytext` font-family |
-| `--font-heading`   | Heading font-family                          |
-| `--font-button`    | Button font-family                           |
-| `--font-numerical` | Numeric font-family                          |
+| Variable           | Purpose                          |
+| ------------------ | -------------------------------- |
+| `--font-sans`      | Tailwind/shadcn sans family      |
+| `--font-mono`      | Tailwind/shadcn monospace family |
+| `--font-body`      | Application body font-family     |
+| `--font-heading`   | Heading role font-family         |
+| `--font-button`    | Button role font-family          |
+| `--font-numerical` | Numeric role font-family         |
 
 Plugin themes can bundle WOFF2 faces declared by their package manifest. The family is then used like any other CSS font value, with a fallback stack for graceful degradation:
 
@@ -133,23 +137,43 @@ file = "fonts/ms_sans_serif.woff2"
 
 ### Typography identity (optional)
 
-These are unset by default. Setting them from a theme opts into theme-specific typography without targeting elements directly. Unset variables fall through to Tailwind's utilities.
+These are unset by default. Setting them opts into role-specific typography without targeting elements directly. A `text-*` utility on the same element intentionally uses the global scale instead.
 
-| Variable                         | Purpose                                                    |
-| -------------------------------- | ---------------------------------------------------------- |
-| `--font-body-transform`          | `text-transform` for the application body and `.bodytext`  |
-| `--font-heading-transform`       | `text-transform` for `.font-heading` (e.g., `uppercase`)   |
-| `--font-button-transform`        | `text-transform` for `.font-button`                        |
-| `--font-button-size`             | Override button font size                                  |
-| `--font-numerical-size`          | Override numerical font size                               |
-| `--font-heading-size`            | Base heading size (`.font-heading` with no `text-*` class) |
-| `--font-heading-line-height`     | Base heading line-height                                   |
-| `--font-heading-lg-size`         | Override `.font-heading.text-lg` size                      |
-| `--font-heading-lg-line-height`  | Override `.font-heading.text-lg` line-height               |
-| `--font-heading-xl-size`         | Override `.font-heading.text-xl` size                      |
-| `--font-heading-xl-line-height`  | Override `.font-heading.text-xl` line-height               |
-| `--font-heading-2xl-size`        | Override `.font-heading.text-2xl` size                     |
-| `--font-heading-2xl-line-height` | Override `.font-heading.text-2xl` line-height              |
+| Variable                       | Purpose                         |
+| ------------------------------ | ------------------------------- |
+| `--font-heading-transform`     | Heading role `text-transform`   |
+| `--font-button-transform`      | Button role `text-transform`    |
+| `--font-numerical-transform`   | Numerical role `text-transform` |
+| `--font-heading-size`          | Heading role size               |
+| `--font-heading-line-height`   | Heading role line height        |
+| `--font-button-size`           | Button role size                |
+| `--font-button-line-height`    | Button role line height         |
+| `--font-numerical-size`        | Numerical role size             |
+| `--font-numerical-line-height` | Numerical role line height      |
+
+### Type scale
+
+Tailwind utilities consume these variables directly: `--text-2xs`, `--text-xs`, `--text-sm`, `--text-base`, `--text-lg`, `--text-xl`, `--text-2xl`, and the matching `--text-<step>--line-height` token. Use pixel line heights because month-view lane height is `calc(var(--text-xs--line-height) + 4px)`.
+
+This compact theme changes density and typography only through top-level tokens. `24px` is the supported minimum control height:
+
+```css
+--control-height: 24px;
+--control-height-sm: 24px;
+--control-height-lg: 28px;
+--text-base: 14px;
+--text-base--line-height: 20px;
+--text-sm: 12px;
+--text-sm--line-height: 16px;
+--text-xs: 11px;
+--text-xs--line-height: 14px;
+```
+
+There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's `38px` day target, portal viewport limits and trigger dimensions, dialog widths, the input-group add-on width, and fixed calendar/grid geometry such as hour height and gutter width.
+
+### Pasting a shadcn theme
+
+shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--hover-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
 
 ## Omarchy auto-sync
 
@@ -168,8 +192,8 @@ If primitive overrides aren't enough, a theme file can include arbitrary CSS rul
 ```css
 --primary: #7c3aed;
 
-.some-component {
-  /* automatically becomes [data-theme="<id>"] .some-component */
+[data-slot="button"] {
+  /* automatically becomes [data-theme="<id>"] [data-slot="button"] */
   border-radius: 0;
 }
 ```
@@ -178,4 +202,8 @@ If primitive overrides aren't enough, a theme file can include arbitrary CSS rul
 
 The wrapper is a convenience, not a security boundary: malformed CSS can close it and introduce global rules. Selecting an external theme enables its unrestricted CSS for that window. Switching back to a built-in theme removes that CSS and restores the built-in styling. Inactive previews show custom-property palettes only; custom selectors take effect when selected.
 
-Prefer primitives first — the derivation chain covers most visual-identity needs. You can also override a derived token directly (e.g., set `--divider` explicitly in `classic.css`) when the computed value isn't right for the theme. Reach for custom rules only when a theme needs to reshape a specific component beyond what the contract exposes.
+Prefer primitives first—the derivation chain covers most visual-identity needs. You can also override a derived token directly (for example, set `--border`) when the computed value is not right for the theme. Target stable `data-slot` attributes in custom rules; class names are implementation details.
+
+## Compatibility
+
+The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. `--divider` → `--border`, `--radius-base` → `--radius`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.

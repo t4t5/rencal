@@ -23,10 +23,35 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 /* @name My Theme */
 --background: #0f0f0f;
 --foreground: #eaeaea;
---muted: rgba(234, 234, 234, 0.6);
+--muted-foreground: rgba(234, 234, 234, 0.6);
 --primary: #7c3aed;
 --highlight: #7c3aed;
 --hover-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--muted`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives surfaces, dividers, hover states, and other colors from those values.
+Most themes only need to set `--background`, `--foreground`, `--muted-foreground`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values.
+
+Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block and add `--hover-tint` if it is missing.
+
+You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `--text-base`, and the matching `--text-<step>--line-height` properties. Line heights must use pixels because month lanes derive their height from `--text-xs--line-height`.
+
+```css
+/* Compact example; 24px is the supported minimum control height. */
+--control-height: 24px;
+--control-height-sm: 24px;
+--control-height-lg: 28px;
+--text-base: 14px;
+--text-base--line-height: 20px;
+--text-xs: 11px;
+--text-xs--line-height: 14px;
+```
+
+For component-specific custom CSS, target stable slot attributes:
+
+```css
+[data-slot="button"] {
+  border-width: 2px;
+}
+```
+
+The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. `--divider` and `--radius-base` have temporary compatibility fallbacks, but new themes should use `--border` and `--radius`.

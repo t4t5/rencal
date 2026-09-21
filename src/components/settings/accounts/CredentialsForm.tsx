@@ -52,7 +52,7 @@ export const CredentialsForm = ({
         <div key={field.id} className="flex flex-col gap-1">
           {field.field_type === "password" ? (
             <PasswordInput
-              ghost={false}
+              variant="default"
               placeholder={field.label}
               value={fieldValues[field.id] ?? ""}
               disabled={isConnecting}
@@ -60,7 +60,7 @@ export const CredentialsForm = ({
             />
           ) : (
             <Input
-              ghost={false}
+              variant="default"
               type="text"
               placeholder={field.label}
               value={fieldValues[field.id] ?? ""}

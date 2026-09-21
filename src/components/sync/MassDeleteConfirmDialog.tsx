@@ -35,7 +35,7 @@ export function MassDeleteConfirmDialog() {
           {items.map((p) => (
             <li
               key={p.calendar_slug}
-              className="flex justify-between gap-4 border border-divider p-2 rounded"
+              className="flex justify-between gap-4 border border-border p-2 rounded-base"
             >
               <span className="truncate">{calendarLabel(p.calendar_slug)}</span>
               <span className="text-muted-foreground tabular-nums">{p.to_push_delete_count}</span>

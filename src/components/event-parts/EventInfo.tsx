@@ -106,7 +106,7 @@ export function EventInfo({
   return (
     <div className="flex flex-col gap-1 grow">
       {(canEdit || !!summary?.trim()) && (
-        <div className="flex min-h-control-height items-center">
+        <div className="flex min-h-control items-center">
           <Textarea
             ref={summaryRef}
             placeholder="Event Title"

@@ -74,7 +74,7 @@ function WeekTimedEventImpl({
       data-event-clickable={!isStatic || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),
-        "absolute overflow-hidden rounded px-1",
+        "absolute overflow-hidden rounded-base px-1",
         hasStripe && "pl-1.5",
         !isStatic && dimmed && "opacity-50",
         isDraft && "font-medium",
@@ -120,13 +120,13 @@ function WeekTimedEventImpl({
         <div className="flex items-baseline gap-1">
           {/* Title + time on one line */}
           <span className="truncate font-medium leading-tight min-w-0 flex-1">{summary}</span>
-          <span className="text-[10px] opacity-70 shrink-0 leading-tight">{startTime}</span>
+          <span className="text-2xs text-muted-foreground shrink-0 leading-tight">{startTime}</span>
         </div>
       ) : mode === "sm" ? (
         <div>
           {/* Title + time on separate lines, no padding */}
           <div className="truncate font-medium leading-tight">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div className="truncate text-muted-foreground leading-tight">
             {startTime} - {endTime}
           </div>
         </div>
@@ -134,7 +134,7 @@ function WeekTimedEventImpl({
         <div className="py-0.5">
           {/* Title + time on separate lines, with padding */}
           <div className="font-medium leading-tight">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div className="truncate text-muted-foreground leading-tight">
             {startTime} – {endTime}
           </div>
         </div>
@@ -142,7 +142,7 @@ function WeekTimedEventImpl({
         <div className="py-0.5">
           {/* Title = 2 lines, time = 1 line, with padding */}
           <div className="font-medium leading-tight line-clamp-2">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div className="truncate text-muted-foreground leading-tight">
             {startTime} – {endTime}
           </div>
         </div>

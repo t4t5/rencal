@@ -213,7 +213,7 @@ export function WeekTimeGrid({
         >
           {/* Gutter spacer — sticky left, spans all rows */}
           <div
-            className="sticky left-0 z-30 bg-background border-r border-b border-divider"
+            className="sticky left-0 z-30 bg-background border-r border-b border-border"
             style={{ gridColumn: 1, gridRow: "1 / -1" }}
           />
           <DayHeaders
@@ -234,7 +234,7 @@ export function WeekTimeGrid({
                 >
                   <div
                     className={cn(
-                      "border-r border-b border-divider",
+                      "border-r border-b border-border",
                       day.dateKey === activeDateKey
                         ? "bg-secondary-hover"
                         : day.isWeekend && "bg-weekend",
@@ -275,7 +275,7 @@ export function WeekTimeGrid({
           className="grid relative"
           style={{ gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
         >
-          <div className="sticky left-0 z-10 bg-background border-r border-divider">
+          <div className="sticky left-0 z-10 bg-background border-r border-border">
             <TimeGutter timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
@@ -289,7 +289,7 @@ export function WeekTimeGrid({
             >
               <div
                 className={cn(
-                  "relative border-r border-divider cursor-default",
+                  "relative border-r border-border cursor-default",
                   day.dateKey === activeDateKey
                     ? "bg-secondary-hover"
                     : day.isWeekend && "bg-weekend",
@@ -302,7 +302,7 @@ export function WeekTimeGrid({
                         : day.isWeekend
                           ? "var(--weekend)"
                           : "var(--background)",
-                    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT}px)`,
+                    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px)`,
                   } as React.CSSProperties
                 }
                 id={day.dateKey === activeDateKey ? ACTIVE_DAY_EL_ID : undefined}
@@ -352,7 +352,7 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
         return (
           <span
             key={h}
-            className="absolute right-1.5 text-[11px] text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
+            className="absolute right-1.5 text-2xs text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
             {formatWallclockTime(h, 0, timeFormat)}
@@ -378,7 +378,7 @@ const DayHeaders = ({
     <div
       key={day.dateKey}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default numerical",
+        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default numerical",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
@@ -388,12 +388,12 @@ const DayHeaders = ({
       data-drop-zone="all-day"
       onClick={() => onDayClick(day.date)}
     >
-      <span className="text-[11px] text-muted-foreground uppercase">
+      <span className="text-2xs text-muted-foreground uppercase">
         {formatWeekday(day.date, "short")}
       </span>
       <span
         className={cn(
-          "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
+          "text-xs font-medium w-7 h-7 flex items-center justify-center rounded-circle",
           day.isToday && "bg-today text-primary-foreground",
           dimmed && "opacity-50",
         )}
