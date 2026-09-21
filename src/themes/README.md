@@ -214,8 +214,10 @@ Prefer primitives first—the derivation chain covers most visual-identity needs
 The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; row roots similarly expose `data-control-layout="row"`. Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
 Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
-interactive counterpart to a select's `select-icon`; themes can give both the
+interactive counterpart to a select or combobox's `select-icon`; themes can give both the
 same trailing-well treatment while leaving their positioning to the controls.
+Editable comboboxes also expose `data-control="select"` on their outer surface
+so themes can apply the same field padding as other dropdowns.
 
 Themes that intentionally retain an inset event action can scope that exception to the footer:
 

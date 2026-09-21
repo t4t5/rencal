@@ -51,6 +51,7 @@ export function Combobox({
         <div
           ref={anchorRef}
           data-slot="combobox"
+          data-control={interactive ? "select" : undefined}
           data-control-layout="row"
           className={cn(
             "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
@@ -82,7 +83,7 @@ export function Combobox({
           />
 
           {interactive && (
-            <ControlTrailing>
+            <ControlTrailing data-slot="select-icon" aria-hidden="true">
               <DropdownArrow forceVisible={open || variant === "default"} />
             </ControlTrailing>
           )}
