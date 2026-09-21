@@ -109,6 +109,8 @@ export const TimeZoneSelect = ({
         <button
           type="button"
           disabled={readOnly}
+          data-slot="select-trigger"
+          data-control="select"
           data-control-layout="row"
           className={cn(
             "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
@@ -122,7 +124,7 @@ export const TimeZoneSelect = ({
             <TimeZoneLabel offset={timeZoneOffsetLabel(tzid, value)} city={timeZoneCity(tzid)} />
           </ControlContent>
           {!readOnly && (
-            <ControlTrailing>
+            <ControlTrailing data-slot="select-icon" aria-hidden="true">
               <DropdownArrow forceVisible={open} />
             </ControlTrailing>
           )}

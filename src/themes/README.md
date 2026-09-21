@@ -243,7 +243,10 @@ Calendar chrome exposes these slots for scoped theme rules:
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
 
 Toolbar group/view dropdowns retain their button slot and expose
-`data-control="select"`. Mini-calendar navigation buttons expose
+`data-control="select"`. The searchable timezone dropdown also exposes
+`data-control="select"`, with `select-trigger` on its button and `select-icon` on
+its trailing arrow, so themes can style it like other selects while retaining
+its search popover. Mini-calendar navigation buttons expose
 `data-direction="previous"` / `"next"`. Month dates and day bodies expose
 `data-active="true"`; day numbers expose `data-today="true"`. Highlighted timed
 month events and agenda rows expose `data-highlighted="true"`. False states
