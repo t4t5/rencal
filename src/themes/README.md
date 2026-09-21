@@ -233,6 +233,18 @@ Older custom rules that painted `[data-slot="input-group"]` inside a combobox sh
 
 The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. `--divider` → `--border`, `--radius-base` → `--radius`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
 
+### Settings styling hooks
+
+Settings sections use vertical Tabs. Their `tabs-list` exposes
+`data-variant="navigation"`, with standard `tabs-trigger` slots and
+`data-state="active"` / `"inactive"` selection states. This variant lets themes
+style navigation independently of property-sheet tabs while retaining Radix
+keyboard navigation and tab/panel accessibility.
+
+Calendar group rows expose `data-slot="settings-calendar-group"` and
+`data-active="true"` when selected, omitting the latter otherwise. Group menu
+actions remain separate from the settings tab list.
+
 ### Calendar shell styling hooks
 
 The main view fills the space below its toolbar using flex sizing; toolbar padding

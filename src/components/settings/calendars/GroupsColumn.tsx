@@ -82,6 +82,8 @@ export function GroupsColumn({
           return (
             <div
               key={group}
+              data-slot="settings-calendar-group"
+              data-active={selectedGroup === group || undefined}
               role="button"
               tabIndex={0}
               onClick={() => onSelect(group)}

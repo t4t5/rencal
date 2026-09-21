@@ -55,3 +55,39 @@ it("falls back to General for an unknown tab", async () => {
   expect(document.body.textContent).toContain("General settings")
   expect(document.body.textContent).not.toContain("Plugin settings")
 })
+
+it("links the selected settings tab to its panel and switches on click", async () => {
+  await renderAt("?appWindow=settings&tab=plugins")
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+  expect(tabs).toHaveLength(6)
+  expect(document.querySelector('[role="tablist"]')?.getAttribute("aria-orientation")).toBe(
+    "vertical",
+  )
+  const plugins = tabs.find((tab) => tab.textContent === "Plugins")!
+  const general = tabs.find((tab) => tab.textContent === "General")!
+  expect(plugins.getAttribute("aria-selected")).toBe("true")
+  const panel = document.getElementById(plugins.getAttribute("aria-controls")!)!
+  expect(panel.getAttribute("aria-labelledby")).toBe(plugins.id)
+  expect(panel.textContent).toContain("Plugin settings")
+
+  await act(async () =>
+    general.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 })),
+  )
+  expect(general.getAttribute("aria-selected")).toBe("true")
+  expect(plugins.getAttribute("aria-selected")).toBe("false")
+  expect(document.body.textContent).toContain("General settings")
+  expect(document.body.textContent).not.toContain("Plugin settings")
+})
+
+it("navigates settings vertically with the arrow keys", async () => {
+  await renderAt("?appWindow=settings")
+  const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
+  await act(async () => tabs[0].focus())
+  await act(async () => {
+    tabs[0].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true }))
+    await new Promise((resolve) => setTimeout(resolve, 10))
+  })
+  expect(document.activeElement).toBe(tabs[1])
+  expect(tabs[1].getAttribute("aria-selected")).toBe("true")
+  expect(tabs[0].getAttribute("aria-selected")).toBe("false")
+})

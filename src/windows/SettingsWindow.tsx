@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
@@ -41,10 +42,6 @@ export function SettingsWindow() {
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [])
 
-  const activeItem = NAV_ITEMS.find((item) => item.tab === activeTab)
-  if (!activeItem) return null
-  const { page: ActivePage } = activeItem
-
   return (
     <div className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}>
       <DragRegion
@@ -70,11 +67,23 @@ export function SettingsWindow() {
         </button>
       </ShortcutTooltip>
 
-      <div className="flex h-screen">
-        <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs
+        orientation="vertical"
+        value={activeTab}
+        onValueChange={(value) => {
+          const item = NAV_ITEMS.find((item) => item.tab === value)
+          if (item) setActiveTab(item.tab)
+        }}
+        className="min-h-0 flex-1"
+      >
+        <SettingsSidebar />
 
-        <ActivePage />
-      </div>
+        {NAV_ITEMS.map(({ tab, page: Page }) => (
+          <TabsContent key={tab} value={tab} className="min-h-0 min-w-0 data-[state=active]:flex">
+            <Page />
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   )
 }
