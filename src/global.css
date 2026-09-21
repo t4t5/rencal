@@ -319,6 +319,16 @@
     justify-content: center;
   }
 
+  [data-slot="select-icon"] {
+    display: flex;
+    width: var(--control-leading-size);
+    min-width: var(--control-leading-size);
+    aspect-ratio: 1;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+  }
+
   .heading {
     font-family: var(--font-heading);
     text-transform: var(--font-heading-transform, none);
