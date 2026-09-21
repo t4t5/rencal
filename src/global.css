@@ -223,9 +223,17 @@
     scrollbar-width: var(--scrollbar-width, none);
   }
 
-  /* react-textarea-autosize reuses a hidden textarea for synchronous sizing.
-   * Theme transitions must not delay its font, width, or padding updates. */
-  textarea[aria-hidden="true"] {
+  /* Autosizing must settle synchronously, both in the hidden measuring textarea
+   * and in the visible field. Even a tiny theme transition on height leaves a
+   * popover measuring the old height and then jumping when the field shrinks. */
+  textarea[aria-hidden="true"],
+  textarea[data-slot="textarea"] {
+    transition: none !important;
+  }
+
+  /* Radix moves this wrapper from its off-screen measuring position into place.
+   * Theme-wide transitions must not animate that positioning transform. */
+  [data-radix-popper-content-wrapper] {
     transition: none !important;
   }
 

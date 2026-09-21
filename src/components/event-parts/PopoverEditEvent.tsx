@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from "react"
+import { useLayoutEffect, useMemo, useRef, useState } from "react"
 
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
@@ -13,18 +13,22 @@ import { useEventPopoverTabTrap } from "./useEventPopoverTabTrap"
 export function PopoverEditEvent() {
   const { activeEvent, setActiveEventKey } = useCalEvents()
   const { requestSave } = useRecurrenceEdit()
-  const anchorRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
-  const [pos, setPos] = useState({ top: 0, left: 0, width: 0 })
+  const [anchorRect, setAnchorRect] = useState(() => new DOMRect())
+  // A new virtual reference explicitly triggers positioning. Moving the old
+  // zero-height DOM anchor can go unnoticed by Radix's resize observer.
+  const anchorRef = useMemo(
+    () => ({ current: { getBoundingClientRect: () => anchorRect } }),
+    [anchorRect],
+  )
 
   useLayoutEffect(() => {
     if (!activeEvent) return
 
-    const el = getEventAnchor()
-    if (!el) return
-
-    const rect = el.getBoundingClientRect()
-    setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
+    const rect = getEventAnchor()?.getBoundingClientRect()
+    if (rect) {
+      setAnchorRect(new DOMRect(rect.left, rect.top + rect.height / 2, rect.width, 0))
+    }
   }, [activeEvent])
 
   useEventPopoverTabTrap({ enabled: !!activeEvent, contentRef })
@@ -36,14 +40,10 @@ export function PopoverEditEvent() {
         if (!open) setActiveEventKey(null)
       }}
     >
-      <PopoverAnchor
-        ref={anchorRef}
-        className="fixed pointer-events-none"
-        style={{ top: pos.top, left: pos.left, width: pos.width, height: 0 }}
-      />
+      <PopoverAnchor virtualRef={anchorRef} />
       <PopoverContent
         ref={contentRef}
-        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl data-[state=open]:animate-none data-[state=closed]:animate-none"
         side="right"
         align="center"
         sideOffset={8}

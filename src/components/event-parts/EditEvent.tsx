@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react"
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
 
@@ -48,13 +48,14 @@ export const EditEvent = ({
   const { setActiveEventKey } = useCalEvents()
   const { requestSync } = useSync()
 
-  const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
-  const originalEventRef = useRef<CalendarEvent | null>(null)
+  const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(event)
+  const originalEventRef = useRef<CalendarEvent | null>(event)
 
   const { triggerDelete } = useDeleteEvent()
   const { triggerDuplicate } = useDuplicateEvent()
 
-  useEffect(() => {
+  // Populate the form before the popover measures it, including when switching events.
+  useLayoutEffect(() => {
     if (event) {
       setDirtyEvent(event)
       originalEventRef.current = event
