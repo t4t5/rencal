@@ -27,20 +27,7 @@ css = "theme.css"
 appearance = "dark"
 ```
 
-Fonts are package-level contributions shared by every theme in the package. Only WOFF2 is supported. `weight` defaults to `400`, `style` defaults to `normal`, and the accepted styles are `normal`, `italic`, and `oblique`. A package may declare at most eight distinct `(family, weight, style)` faces. Font families are limited to 100 characters; font and CSS files must use safe relative package paths.
-
-Each CSS or font file is limited to 1 MiB, and the manifest plus all contributed files share a 4 MiB package download limit. renCal verifies the WOFF2 signature both during installation and before use. Declared files are downloaded from the package's pinned commit, installed atomically, and restored from that exact commit when missing, so selected themes remain usable offline.
-
-Fonts are loaded lazily only while one of their package's themes is selected. Theme CSS should always retain suitable fallbacks:
-
-```css
---font-body: "Pixelated MS Sans Serif", Arial, sans-serif;
---font-heading: "Pixelated MS Sans Serif", Arial, sans-serif;
---font-button: "Pixelated MS Sans Serif", Arial, sans-serif;
---font-numerical: "Pixelated MS Sans Serif", Arial, sans-serif;
-```
-
-Plugin authors are responsible for the right to redistribute bundled fonts and for including all required font license and attribution notices in their repository. Set `min_rencal_version` to `0.8.0` or later when using `contributes.fonts`; older releases reject this contribution instead of silently ignoring it.
+Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 
 For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. A stable GitHub release is optional. If one exists, its tag must match the manifest version (`1.0.0` or `v1.0.0`); otherwise renCal uses the head of the default branch. Bump the manifest version to publish an update.
 
