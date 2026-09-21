@@ -124,7 +124,7 @@ export const ComposeEventInner = ({
         />
       </div>
 
-      <div data-slot="event-form-footer" className="py-2 pb-3">
+      <div data-slot="event-form-footer" className="py-2">
         <Button
           onClick={onCreate}
           onKeyDown={(e) => {

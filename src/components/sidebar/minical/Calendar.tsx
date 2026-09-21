@@ -114,10 +114,7 @@ function Calendar({
         ),
         week_number: cn(calendarSharedStyles.weekNumber, defaultClassNames.week_number),
         day: cn(
-          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
-          showWeekNumber
-            ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
-            : "[&:first-child[data-selected=true]_button]:rounded-l-md",
+          "relative w-full h-full p-0 text-center group/day select-none",
           defaultClassNames.day,
         ),
         range_start: cn("rounded-l-md bg-accent", defaultClassNames.range_start),
