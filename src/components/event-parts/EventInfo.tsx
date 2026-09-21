@@ -124,6 +124,8 @@ export function EventInfo({
         </div>
       )}
 
+      <Divider />
+
       <div className="flex flex-col gap-1">
         {(canEdit || !!location?.trim()) && (
           <LocationInput

@@ -18,6 +18,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
+import { MoreButton } from "@/components/ui/more-button"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -26,7 +27,6 @@ import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { getProviderDisplayName } from "@/lib/providers"
 
-import { MoreHorizIcon } from "@/icons/more-horiz"
 import { RssIcon } from "@/icons/rss"
 
 import { AddSubscriptionModal } from "./AddSubscriptionModal"
@@ -211,9 +211,7 @@ function CalendarDropdownMenuWrapper({
 
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" className="h-7 w-7">
-            <MoreHorizIcon className="size-4" />
-          </Button>
+          <MoreButton />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem

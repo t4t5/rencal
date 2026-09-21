@@ -8,6 +8,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { MoreButton } from "@/components/ui/more-button"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -18,7 +19,6 @@ import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
 import { CalendarIcon } from "@/icons/calendar"
-import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
 import { AddAccountModal, type ModalStep } from "./AddAccountModal"
@@ -186,9 +186,7 @@ const MoreMenu = ({ onReconnect }: { onReconnect: () => void }) => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <MoreHorizIcon className="size-4" />
-        </Button>
+        <MoreButton />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onReconnect}>Reconnect...</DropdownMenuItem>

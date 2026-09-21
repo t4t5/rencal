@@ -3,7 +3,6 @@ import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
 
 import { EventInfo } from "@/components/event-parts/EventInfo"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { MoreButton } from "@/components/ui/more-button"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -32,8 +32,6 @@ import {
 } from "@/lib/event-time"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
-
-import { MoreHorizIcon } from "@/icons/more-horiz"
 
 export const EditEvent = ({
   event,
@@ -165,7 +163,7 @@ export const EditEvent = ({
 
   return (
     <div data-slot="event-form" className="event-form pt-2 pb-2 flex flex-col grow">
-      <div className="flex justify-end px-1 pb-1">
+      <div className="flex justify-end pb-1">
         {children}
 
         {!isReadonly && (
@@ -258,9 +256,7 @@ const OverflowMenu = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <MoreHorizIcon className="size-4" />
-        </Button>
+        <MoreButton />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onDuplicate}>

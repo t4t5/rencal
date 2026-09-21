@@ -17,13 +17,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { MoreButton } from "@/components/ui/more-button"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { cn } from "@/lib/utils"
 
-import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
 const DEFAULT_GROUP = "default"
@@ -70,7 +70,7 @@ export function GroupsColumn({
       <div className="flex justify-between items-center w-full">
         <span className="text-sm text-muted-foreground pl-1 heading">Groups</span>
 
-        <Button size="icon-sm" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
+        <Button size="icon" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
           <PlusIcon className="size-4" />
         </Button>
       </div>
@@ -216,14 +216,10 @@ const MoreMenu = ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xs"
+        <MoreButton
           className="invisible group-hover:visible"
           onClick={(event) => event.stopPropagation()}
-        >
-          <MoreHorizIcon className="size-4" />
-        </Button>
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
