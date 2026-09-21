@@ -144,45 +144,51 @@ export function Agenda() {
 
   return (
     <div
-      ref={scrollContainerRef}
       data-slot="agenda"
-      data-agenda-scroll-container
       className={cn(
-        "grow overflow-auto flex-col gap-6 select-none bg-background outline-none scroll-pt-8 scroll-pb-2",
+        "grow min-h-0 flex flex-col overflow-hidden select-none bg-background scroll-pt-8 scroll-pb-2",
         !hasInitiallyScrolled && "invisible",
       )}
     >
-      {sectionsToRender.map(({ date, events, isGhost }) => {
-        const dateStr = formatDateKey(date)
+      {/* Keep themed borders and padding outside the scrolling viewport. */}
+      <div
+        ref={scrollContainerRef}
+        data-slot="agenda-scroll"
+        data-agenda-scroll-container
+        className="grow min-h-0 overflow-auto outline-none [scroll-padding:inherit]"
+      >
+        {sectionsToRender.map(({ date, events, isGhost }) => {
+          const dateStr = formatDateKey(date)
 
-        return (
-          <DaySection
-            key={dateStr}
-            ref={(el) => {
-              if (!el) {
-                // Clear on unmount so scrollToDate doesn't find a stale detached node
-                // and skip the ghost branch (happens when a draft on an empty date is dismissed).
-                if (isGhost) {
-                  ghostRef.current = null
-                } else {
-                  sectionRefs.current.delete(dateStr)
+          return (
+            <DaySection
+              key={dateStr}
+              ref={(el) => {
+                if (!el) {
+                  // Clear on unmount so scrollToDate doesn't find a stale detached node
+                  // and skip the ghost branch (happens when a draft on an empty date is dismissed).
+                  if (isGhost) {
+                    ghostRef.current = null
+                  } else {
+                    sectionRefs.current.delete(dateStr)
+                  }
+                  return
                 }
-                return
-              }
-              if (isGhost) {
-                ghostRef.current = el
-              } else {
-                addSectionRef(dateStr, el)
-              }
-            }}
-            events={events}
-            date={date}
-            calendars={calendars}
-            draftEvent={draftCalEvent}
-            onDeleteEvent={triggerDelete}
-          />
-        )
-      })}
+                if (isGhost) {
+                  ghostRef.current = el
+                } else {
+                  addSectionRef(dateStr, el)
+                }
+              }}
+              events={events}
+              date={date}
+              calendars={calendars}
+              draftEvent={draftCalEvent}
+              onDeleteEvent={triggerDelete}
+            />
+          )
+        })}
+      </div>
     </div>
   )
 }

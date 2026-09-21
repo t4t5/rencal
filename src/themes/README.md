@@ -240,7 +240,7 @@ Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-navigation`, `calendar-event-dots`;
-- `agenda`, `agenda-day`, `agenda-date`, `agenda-timed-event`;
+- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-timed-event`;
 - `month-weekdays`, `month-weekday`, `month-week`, `month-date`, `month-day`,
   `month-day-number`, `month-timed-event`, `month-all-day-event`;
 - `event-color-marker` and `event-time` on timed month/agenda events;
@@ -257,6 +257,12 @@ month events and agenda rows expose `data-highlighted="true"`. False states
 omit these attributes. Mini-calendar buttons retain their existing explicit
 `true`/`false` selection attributes, and their selection styles can be overridden
 without `!important`.
+
+The `agenda` slot is the fixed outer frame: apply backgrounds, borders, shadows,
+and padding there. Its `agenda-scroll` child owns scrolling and clips the day
+sections and sticky date headers inside that frame. Set scrollbar and overflow
+rules on `agenda-scroll`. Scroll padding is inherited from `agenda` unless
+overridden on `agenda-scroll`, so existing theme scroll-padding rules still apply.
 
 Scrollbars remain hidden by default. Set `--scrollbar-width: auto` to restore
 native scrollbars; WebKit scrollbar pseudo-elements can customize their appearance.
