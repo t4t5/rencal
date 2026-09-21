@@ -1,5 +1,7 @@
 import * as React from "react"
 
+import { Button } from "@/components/ui/button"
+
 import { cn } from "@/lib/utils"
 
 function Input({
@@ -25,4 +27,28 @@ function Input({
   )
 }
 
-export { Input }
+function InputAction({
+  className,
+  type = "button",
+  variant = "ghost",
+  size = "icon-xs",
+  round = true,
+  ...props
+}: React.ComponentProps<typeof Button>) {
+  return (
+    <Button
+      data-slot="input-action"
+      type={type}
+      variant={variant}
+      size={size}
+      round={round}
+      className={cn(
+        "absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground",
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+export { Input, InputAction }
