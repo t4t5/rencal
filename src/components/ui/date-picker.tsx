@@ -14,13 +14,11 @@ export const DatePicker = ({
   setDate,
   className,
   readOnly,
-  embedded = false,
 }: {
   date: Temporal.PlainDate | null
   setDate: (date: Temporal.PlainDate | null) => void
   className?: string
   readOnly?: boolean
-  embedded?: boolean
 }) => {
   const [open, setOpen] = useState(false)
 
@@ -32,18 +30,14 @@ export const DatePicker = ({
         <Button
           variant="input"
           typography="field"
-          data-control-part={embedded ? "content" : undefined}
           disabled={readOnly}
           className={cn(
-            "group cursor-default transition-none focus-visible:border-transparent focus-visible:bg-secondary focus-visible:ring-0",
-            embedded
-              ? "h-full min-w-0 flex-1 justify-start rounded-none border-0 bg-transparent px-0 shadow-none hover:border-transparent hover:bg-transparent data-[state=open]:bg-transparent"
-              : "justify-between px-2",
+            "group cursor-default justify-start px-[var(--control-padding-inline)] transition-none focus-visible:border-transparent focus-visible:bg-secondary focus-visible:ring-0",
             readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
             className,
           )}
         >
-          {date ? formattedDate : "Select date"}
+          <span>{date ? formattedDate : "Select date"}</span>
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">

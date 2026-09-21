@@ -2,7 +2,7 @@ import { Temporal } from "@js-temporal/polyfill"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { ControlLeading, ControlRow } from "@/components/ui/control-row"
+import { ControlLeading } from "@/components/ui/control-row"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
@@ -245,15 +245,17 @@ const DateSelect = ({
 }) => {
   return (
     <div className="flex flex-wrap gap-y-1">
-      <ControlRow
-        className="h-control shrink-0 rounded-md border border-transparent hover:border-input focus-within:border-transparent focus-within:bg-secondary has-[[data-state=open]]:bg-secondary"
+      <div
+        className="flex shrink-0 items-center"
         style={{
           width: FIRST_INPUT_WIDTH,
         }}
       >
-        <ControlLeading>{icon}</ControlLeading>
-        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} embedded />
-      </ControlRow>
+        <span className="flex w-[calc(var(--control-padding-inline)+var(--control-leading-size))] shrink-0 justify-end">
+          <ControlLeading>{icon}</ControlLeading>
+        </span>
+        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
+      </div>
 
       {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
 
