@@ -80,21 +80,24 @@ export function useEventPopoverTabTrap({
       const focusables = getFocusableElements(content)
       if (!focusables.length) return
 
+      const activeIndex = activeElement ? focusables.indexOf(activeElement) : -1
+      const nextIndex = activeIndex + (e.shiftKey ? -1 : 1)
+
+      // Let the browser move between fields so it preserves keyboard focus
+      // styling (:focus-visible), and each field can handle Tab itself.
+      // Only take over when entering the popover or wrapping at an edge.
+      if (activeIndex !== -1 && nextIndex >= 0 && nextIndex < focusables.length) return
+
       e.preventDefault()
       e.stopPropagation()
       e.stopImmediatePropagation()
-
-      const activeIndex = activeElement ? focusables.indexOf(activeElement) : -1
 
       if (activeIndex === -1) {
         entryField(focusables, e.shiftKey)?.focus()
         return
       }
 
-      const nextIndex =
-        (activeIndex + (e.shiftKey ? -1 : 1) + focusables.length) % focusables.length
-
-      focusables[nextIndex]?.focus()
+      focusables[(nextIndex + focusables.length) % focusables.length]?.focus()
     }
 
     window.addEventListener("keydown", handleTab, { capture: true })
