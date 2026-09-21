@@ -36,12 +36,19 @@ Declare installed plugins by repository in `~/.config/rencal/plugins.toml`:
 ```toml
 plugins = [
   "alice/rencal-dusk",
+  "~/dev/rencal-dusk",
 ]
 ```
 
 This list is authoritative and reloads while renCal is running. Adding a repository installs it;
 removing one deletes the package and its lock entry. Manually placed package directories that have
 no lock entry, including symlinked development checkouts, are left alone.
+
+An absolute path or a path beginning with `~/` declares a local checkout. The checkout must contain
+a valid `rencal-plugin.toml`. renCal links it into `~/.local/share/rencal/plugins/<manifest-id>` so
+theme edits reload immediately. When a local checkout has the same plugin ID as a repository entry,
+the checkout takes precedence; removing its path restores the repository at its locked commit.
+Relative paths are rejected because a symlinked `plugins.toml` has no unambiguous working directory.
 
 renCal resolves the selected release or branch head to a commit SHA before downloading files. Resolved IDs, versions, and commits are kept in the internal data file `plugins.lock`, alongside the installed `plugins/` directory, so missing package files can be restored from the same source revision without exposing generated metadata in user configuration.
 
