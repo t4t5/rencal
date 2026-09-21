@@ -269,7 +269,9 @@ overridden on `agenda-scroll`, so existing theme scroll-padding rules still appl
 Scrollbars remain hidden by default. Set `--scrollbar-width: auto` to restore
 native scrollbars; WebKit scrollbar pseudo-elements can customize their appearance.
 Themes should preserve the calendar's scroll containers, virtual row heights, and
-event positioning when styling these slots.
+event positioning when styling these slots. Month date labels always align to the
+right; the calendar enforces this alignment with an important utility. Themes can
+style their typography and surfaces, but should not reposition them.
 
 Buttons also expose `data-button=""`. Use this attribute for button surface rules:
 Radix `asChild` composition may replace `data-slot` with `tooltip-trigger`,
