@@ -65,7 +65,7 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
           className="size-3 shrink-0 rounded-xs"
           style={{ backgroundColor: getCalendarColor(calendar) }}
         />
-        <span className="truncate text-sm text-foreground">{name || slug}</span>
+        <span className="truncate text-sm">{name || slug}</span>
       </div>
 
       {children}
