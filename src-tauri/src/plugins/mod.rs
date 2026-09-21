@@ -36,10 +36,47 @@ pub struct PluginsFile {
     pub plugins: Vec<String>,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum PluginDeclaration {
+    Repository(String),
+    Local(PathBuf),
+}
+
+impl PluginDeclaration {
+    pub fn parse(value: &str) -> Result<Self, PluginError> {
+        if value == "~" || value.starts_with("~/") || value.starts_with('/') {
+            if value == "~/" {
+                return Err(PluginError::new(
+                    "local plugin path \"~/\" must name a checkout directory",
+                ));
+            }
+            return expand_home(value).map(Self::Local);
+        }
+        if value.starts_with("./") || value.starts_with("../") || value.starts_with('~') {
+            return Err(PluginError::new(format!(
+                "local plugin path {value:?} must be absolute or start with ~/"
+            )));
+        }
+        validate_repository(value)?;
+        Ok(Self::Repository(value.to_owned()))
+    }
+}
+
+impl PluginsFile {
+    pub fn declarations(&self) -> Result<Vec<PluginDeclaration>, PluginError> {
+        self.plugins
+            .iter()
+            .map(|value| PluginDeclaration::parse(value))
+            .collect()
+    }
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PluginLockFile {
     #[serde(default)]
     pub plugins: Vec<PluginLockEntry>,
+    #[serde(default)]
+    pub local: Vec<LocalLockEntry>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -48,6 +85,39 @@ pub struct PluginLockEntry {
     pub repo: String,
     pub version: String,
     pub commit: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct LocalLockEntry {
+    pub id: String,
+    pub dir: String,
+}
+
+fn expand_home_with(value: &str, home: &Path) -> Result<PathBuf, PluginError> {
+    if value == "~" {
+        return Ok(home.to_path_buf());
+    }
+    if let Some(rest) = value.strip_prefix("~/") {
+        if rest.is_empty() {
+            return Err(PluginError::new(
+                "local plugin path \"~/\" must name a checkout directory",
+            ));
+        }
+        return Ok(home.join(rest));
+    }
+    let path = PathBuf::from(value);
+    if path.is_absolute() {
+        return Ok(path);
+    }
+    Err(PluginError::new(format!(
+        "local plugin path {value:?} must be absolute or start with ~/"
+    )))
+}
+
+pub fn expand_home(value: &str) -> Result<PathBuf, PluginError> {
+    let home = dirs::home_dir()
+        .ok_or_else(|| PluginError::new("could not resolve user home directory"))?;
+    expand_home_with(value, &home)
 }
 
 pub fn load_plugins_file(path: &Path) -> Result<PluginsFile, PluginError> {
@@ -228,6 +298,22 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
             )));
         }
     }
+    let mut local_ids = HashSet::new();
+    for entry in &file.local {
+        validate_package_id(&entry.id)?;
+        if !Path::new(&entry.dir).is_absolute() {
+            return Err(PluginError::new(format!(
+                "local plugin directory {:?} must be absolute",
+                entry.dir
+            )));
+        }
+        if !local_ids.insert(entry.id.to_ascii_lowercase()) {
+            return Err(PluginError::new(format!(
+                "duplicate local plugin id {:?}",
+                entry.id
+            )));
+        }
+    }
     Ok(())
 }
 
@@ -268,12 +354,24 @@ fn update_plugins_document(document: &mut Document, file: &PluginsFile) {
 
 fn validate_plugins_file(file: &PluginsFile) -> Result<(), PluginError> {
     let mut repositories = HashSet::new();
-    for repo in &file.plugins {
-        validate_repository(repo)?;
-        if !repositories.insert(repo.to_ascii_lowercase()) {
-            return Err(PluginError::new(format!(
-                "duplicate plugin repository {repo:?}"
-            )));
+    let mut local_paths = HashSet::new();
+    for declaration in file.declarations()? {
+        match declaration {
+            PluginDeclaration::Repository(repo) => {
+                if !repositories.insert(repo.to_ascii_lowercase()) {
+                    return Err(PluginError::new(format!(
+                        "duplicate plugin repository {repo:?}"
+                    )));
+                }
+            }
+            PluginDeclaration::Local(path) => {
+                if !local_paths.insert(path.clone()) {
+                    return Err(PluginError::new(format!(
+                        "duplicate local plugin directory {:?}",
+                        path.display().to_string()
+                    )));
+                }
+            }
         }
     }
     Ok(())
@@ -577,6 +675,7 @@ appearance = "dark"
 schema = 2 # Written by a newer renCal
 plugins = [
   'Alice/rencal-dusk', # My preferred theme
+  '~/dev/rencal-dusk', # Local checkout
   'bob/rencal-dawn',
 ]
 
@@ -591,7 +690,7 @@ machine = 'laptop' # Future top-level metadata
         std::fs::write(&path, FUTURE_PLUGINS).unwrap();
 
         let file = load_plugins_file(&path).unwrap();
-        assert_eq!(file.plugins.len(), 2);
+        assert_eq!(file.plugins.len(), 3);
         save_plugins_file(&path, &file).unwrap();
         assert_eq!(std::fs::read_to_string(&path).unwrap(), FUTURE_PLUGINS);
     }
@@ -682,9 +781,53 @@ machine = 'laptop' # Future top-level metadata
                 version: "1.2.3".into(),
                 commit: "1111111111111111111111111111111111111111".into(),
             }],
+            local: vec![LocalLockEntry {
+                id: "alice.dusk".into(),
+                dir: "/home/alice/dev/rencal-dusk".into(),
+            }],
         };
         save_plugin_lock_file(&path, &expected).unwrap();
         assert_eq!(load_plugin_lock_file(&path).unwrap(), expected);
+
+        let mut invalid = expected.clone();
+        invalid.local[0].dir = "relative/checkout".into();
+        assert!(save_plugin_lock_file(&path, &invalid).is_err());
+        let mut duplicate = expected.clone();
+        duplicate.local.push(expected.local[0].clone());
+        assert!(save_plugin_lock_file(&path, &duplicate).is_err());
+    }
+
+    #[test]
+    fn parses_local_and_repository_declarations() {
+        assert!(matches!(
+            PluginDeclaration::parse("/opt/rencal-dusk").unwrap(),
+            PluginDeclaration::Local(_)
+        ));
+        assert!(matches!(
+            PluginDeclaration::parse("alice/dusk").unwrap(),
+            PluginDeclaration::Repository(_)
+        ));
+        for value in ["./dusk", "../dusk", "~alice/dusk", "~/"] {
+            assert!(PluginDeclaration::parse(value).is_err(), "{value}");
+        }
+    }
+
+    #[test]
+    fn local_declarations_dedupe_by_expanded_path() {
+        let home = Path::new("/home/alice");
+        assert_eq!(
+            expand_home_with("~/dev/dusk", home).unwrap(),
+            Path::new("/home/alice/dev/dusk")
+        );
+        let file = PluginsFile {
+            plugins: vec!["~/dev/dusk".into(), "/home/alice/dev/dusk".into()],
+        };
+        let expanded: Vec<_> = file
+            .plugins
+            .iter()
+            .map(|value| expand_home_with(value, home).unwrap())
+            .collect();
+        assert_eq!(expanded[0], expanded[1]);
     }
 
     #[test]

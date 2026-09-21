@@ -189,7 +189,7 @@ export function PluginsPage() {
 
     return query
       ? plugins.filter((plugin) =>
-          `${plugin.name} ${plugin.repo ?? ""} ${plugin.description ?? ""}`
+          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""}`
             .toLowerCase()
             .includes(query),
         )
@@ -248,9 +248,14 @@ export function PluginsPage() {
             {plugin.description && (
               <p className="text-sm text-muted-foreground">{plugin.description}</p>
             )}
-            {plugin.installed?.repo === null && (
+            {plugin.installed?.local_dir ? (
+              <p className="text-xs text-muted-foreground break-words">
+                Local checkout · {plugin.installed.local_dir}
+                {plugin.installed.repo && ` · shadows ${plugin.installed.repo}`}
+              </p>
+            ) : plugin.installed?.repo === null ? (
               <p className="text-xs text-muted-foreground">Installed locally</p>
-            )}
+            ) : null}
             <ErrorMessage
               message={
                 errors[plugin.installed?.id ?? plugin.repo ?? plugin.id] ?? plugin.installed?.error
@@ -317,6 +322,20 @@ function PluginActions({
         onClick={() => void onInspect(repository, repository)}
       >
         {busy === repository ? "Checking…" : "Review install"}
+      </Button>
+    )
+  }
+
+  if (installed?.local_dir) {
+    return (
+      <Button
+        size="sm"
+        className="self-start"
+        variant="secondary"
+        disabled={disabled}
+        onClick={() => void onUninstall(installed.id)}
+      >
+        {busy === installed.id ? "Working…" : "Uninstall"}
       </Button>
     )
   }

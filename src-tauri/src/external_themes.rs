@@ -272,24 +272,12 @@ fn load_fonts_from(
     })?;
 
     let package_dir = plugins_root.join(package_id);
-    let canonical_root = std::fs::canonicalize(plugins_root).map_err(|error| {
-        ExternalThemeFontError::new(
-            ExternalThemeFontErrorKind::Io,
-            format!("could not resolve {}: {error}", plugins_root.display()),
-        )
-    })?;
     let canonical_package = std::fs::canonicalize(&package_dir).map_err(|error| {
         ExternalThemeFontError::new(
             ExternalThemeFontErrorKind::Io,
             format!("could not resolve {}: {error}", package_dir.display()),
         )
     })?;
-    if !canonical_package.starts_with(&canonical_root) {
-        return Err(ExternalThemeFontError::new(
-            ExternalThemeFontErrorKind::InvalidPackage,
-            format!("plugin package {package_id:?} resolves outside the plugin directory"),
-        ));
-    }
     let manifest_path = canonical_package.join(MANIFEST_FILE);
     let contents = std::fs::read_to_string(&manifest_path).map_err(|error| {
         ExternalThemeFontError::new(
@@ -297,8 +285,9 @@ fn load_fonts_from(
             format!("could not read {}: {error}", manifest_path.display()),
         )
     })?;
-    let manifest = plugins::validate_manifest(&contents, plugins::running_app_version().as_ref())
-        .map_err(|error| {
+    let app_version = plugins::running_app_version();
+    let manifest =
+        plugins::validate_manifest(&contents, app_version.as_ref()).map_err(|error| {
             ExternalThemeFontError::new(
                 ExternalThemeFontErrorKind::InvalidPackage,
                 error.to_string(),
@@ -394,7 +383,21 @@ pub async fn run_watcher(app: AppHandle) {
         }
     };
 
-    while watch.changed().await.is_some() {
+    while let Some(paths) = watch.changed().await {
+        if paths
+            .iter()
+            .any(|path| path.parent() == Some(plugins_dir.as_path()))
+        {
+            // inotify does not walk into a symlink created after the initial watch.
+            match watch_debounced(
+                &[&themes_dir, &plugins_dir],
+                RecursiveMode::Recursive,
+                is_any_change,
+            ) {
+                Ok(rebuilt) => watch = rebuilt,
+                Err(error) => log::warn!("theme watcher: failed to rebuild watch: {error}"),
+            }
+        }
         let _ = AppEvent::ExternalThemesChanged(scan()).emit(&app);
     }
 }
@@ -552,5 +555,52 @@ appearance = "dark"
 
         let traversal = load_fonts_from(temp.path(), "../outside").unwrap_err();
         assert_eq!(traversal.kind, ExternalThemeFontErrorKind::InvalidInput);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn loads_fonts_from_a_symlinked_checkout() {
+        use std::os::unix::fs::symlink;
+
+        let temp = tempfile::tempdir().unwrap();
+        let plugins = temp.path().join("plugins");
+        let checkout = temp.path().join("checkout");
+        std::fs::create_dir_all(checkout.join("fonts")).unwrap();
+        std::fs::create_dir(&plugins).unwrap();
+        std::fs::write(checkout.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
+        std::fs::write(checkout.join("fonts/pixel.woff2"), b"wOF2font").unwrap();
+        symlink(&checkout, plugins.join("alice.dusk")).unwrap();
+
+        let fonts = load_fonts_from(&plugins, "alice.dusk/dark").unwrap();
+        assert_eq!(fonts.fonts.len(), 1);
+
+        std::fs::write(checkout.join("rencal-plugin.toml"), MANIFEST).unwrap();
+        assert!(
+            load_fonts_from(&plugins, "alice.dusk/dark")
+                .unwrap()
+                .fonts
+                .is_empty()
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn rejects_fonts_resolving_outside_a_local_checkout() {
+        use std::os::unix::fs::symlink;
+
+        let temp = tempfile::tempdir().unwrap();
+        let plugins = temp.path().join("plugins");
+        let checkout = temp.path().join("checkout");
+        std::fs::create_dir_all(checkout.join("fonts")).unwrap();
+        std::fs::create_dir(&plugins).unwrap();
+        std::fs::write(checkout.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
+        let outside = temp.path().join("outside.woff2");
+        std::fs::write(&outside, b"wOF2font").unwrap();
+        symlink(&outside, checkout.join("fonts/pixel.woff2")).unwrap();
+        symlink(&checkout, plugins.join("alice.dusk")).unwrap();
+
+        let error = load_fonts_from(&plugins, "alice.dusk/dark").unwrap_err();
+        assert_eq!(error.kind, ExternalThemeFontErrorKind::InvalidPackage);
+        assert!(error.to_string().contains("outside its plugin package"));
     }
 }

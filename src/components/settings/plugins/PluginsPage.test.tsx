@@ -46,6 +46,7 @@ const installed: InstalledPlugin = {
   id: plugin.id,
   name: plugin.name,
   repo: plugin.repo,
+  local_dir: null,
   version: "1.2.0",
   update_version: "1.10.0",
   error: null,
@@ -201,6 +202,31 @@ it("shows installed plugins first and filters the unified list", async () => {
   expect(document.body.textContent).not.toContain("Dusk")
   await searchFor("missing")
   expect(document.body.textContent).toContain("No plugins match your search.")
+})
+
+it("shows local checkout details and only an uninstall action", async () => {
+  vi.mocked(api.plugins.list).mockResolvedValue({
+    plugins: [
+      {
+        ...installed,
+        local_dir: "/home/alice/dev/rencal-dusk",
+        update_version: "9.0.0",
+        error: "Package files are missing",
+      },
+    ],
+    errors: [],
+  })
+  await render()
+
+  expect(document.body.textContent).toContain(
+    "Local checkout · /home/alice/dev/rencal-dusk · shadows alice/dusk",
+  )
+  expect(document.body.textContent).not.toContain("Update to")
+  expect(document.body.textContent).not.toContain("Reinstall")
+  expect(button("Uninstall")).toBeTruthy()
+
+  await searchFor("/home/alice/dev")
+  expect(document.body.textContent).toContain("Dusk")
 })
 
 it("retries the catalog when it is unavailable", async () => {

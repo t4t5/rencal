@@ -64,7 +64,7 @@ export type FirstDayOfWeek = "monday" | "sunday"
 
 export type FontStyle = "normal" | "italic" | "oblique"
 
-export type InstalledPlugin = { id: string; name: string; repo: string | null; version: string | null; update_version: string | null; error: string | null }
+export type InstalledPlugin = { id: string; name: string; repo: string | null; local_dir: string | null; version: string | null; update_version: string | null; error: string | null }
 
 export type InstalledPlugins = { plugins: InstalledPlugin[]; errors: string[] }
 

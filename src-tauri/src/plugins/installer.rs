@@ -17,12 +17,14 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 use tokio::sync::Mutex;
 
+#[cfg(unix)]
+use super::LocalLockEntry;
 use super::{
-    Appearance, FontStyle, MANIFEST_FILE, PluginLockEntry, PluginLockFile, PluginManifest,
-    PluginsFile, load_plugin_lock_file, load_plugins_file, plugins_dir, plugins_file_path,
-    plugins_lock_path, running_app_version, save_plugin_lock_file, save_plugins_file,
-    scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
-    validate_release_tag,
+    Appearance, FontStyle, MANIFEST_FILE, PluginDeclaration, PluginLockEntry, PluginLockFile,
+    PluginManifest, PluginsFile, load_plugin_lock_file, load_plugins_file, plugins_dir,
+    plugins_file_path, plugins_lock_path, running_app_version, save_plugin_lock_file,
+    save_plugins_file, scan_packages, validate_manifest, validate_manifest_owner,
+    validate_package_id, validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
@@ -37,6 +39,7 @@ pub struct InstalledPlugin {
     pub id: String,
     pub name: String,
     pub repo: Option<String>,
+    pub local_dir: Option<String>,
     pub version: Option<String>,
     pub update_version: Option<String>,
     pub error: Option<String>,
@@ -315,7 +318,11 @@ impl PluginManager {
             (PluginsFile::default(), PluginLockFile::default())
         });
         let scan = scan_packages(&self.inner.packages_dir, running_app_version().as_ref());
-        for repo in &declarations.plugins {
+        let parsed = declarations.declarations().unwrap_or_default();
+        for repo in parsed.iter().filter_map(|declaration| match declaration {
+            PluginDeclaration::Repository(repo) => Some(repo),
+            PluginDeclaration::Local(_) => None,
+        }) {
             if !locks
                 .plugins
                 .iter()
@@ -328,17 +335,19 @@ impl PluginManager {
         }
         let mut plugins: Vec<_> = locks
             .plugins
-            .into_iter()
+            .iter()
             .filter(|entry| {
                 declarations
                     .plugins
                     .iter()
                     .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
             })
+            .cloned()
             .map(|entry| InstalledPlugin {
                 name: entry.id.clone(),
                 id: entry.id,
                 repo: Some(entry.repo),
+                local_dir: None,
                 version: Some(entry.version),
                 update_version: None,
                 error: Some(
@@ -356,6 +365,7 @@ impl PluginManager {
                     id: package.id,
                     name: package.name,
                     repo: None,
+                    local_dir: None,
                     version: Some(package.version),
                     update_version: None,
                     error: None,
@@ -370,6 +380,7 @@ impl PluginManager {
                     name: error.package.clone(),
                     id: error.package,
                     repo: None,
+                    local_dir: None,
                     version: None,
                     update_version: None,
                     error: Some(error.message),
@@ -378,8 +389,35 @@ impl PluginManager {
                 errors.push(format!("{}: {}", error.package, error.message));
             }
         }
+        for entry in &locks.local {
+            if let Some(row) = plugins.iter_mut().find(|row| row.id == entry.id) {
+                row.local_dir = Some(entry.dir.clone());
+                if row
+                    .error
+                    .as_deref()
+                    .is_some_and(|error| error.starts_with("Package files are missing."))
+                {
+                    row.error = None;
+                }
+            } else {
+                plugins.push(InstalledPlugin {
+                    id: entry.id.clone(),
+                    name: entry.id.clone(),
+                    repo: None,
+                    local_dir: Some(entry.dir.clone()),
+                    version: None,
+                    update_version: None,
+                    error: None,
+                });
+            }
+        }
+        self.append_local_declaration_errors(&parsed, &locks, &mut errors);
+
         let catalog = self.inner.catalog.lock().await;
         for row in &mut plugins {
+            if row.local_dir.is_some() {
+                continue;
+            }
             row.update_version = catalog
                 .iter()
                 .find(|entry| {
@@ -401,6 +439,40 @@ impl PluginManager {
         }
         plugins.sort_by_key(|row| row.name.to_lowercase());
         InstalledPlugins { plugins, errors }
+    }
+
+    fn append_local_declaration_errors(
+        &self,
+        declarations: &[PluginDeclaration],
+        locks: &PluginLockFile,
+        errors: &mut Vec<String>,
+    ) {
+        for dir in declarations
+            .iter()
+            .filter_map(|declaration| match declaration {
+                PluginDeclaration::Local(path) => Some(path),
+                PluginDeclaration::Repository(_) => None,
+            })
+        {
+            let manifest = match read_local_manifest(dir) {
+                Ok(manifest) => manifest,
+                Err(error) => {
+                    errors.push(format!("Local plugin {}: {error}", dir.display()));
+                    continue;
+                }
+            };
+            let target = self.inner.packages_dir.join(&manifest.id);
+            if let Ok(metadata) = std::fs::symlink_metadata(&target)
+                && !metadata.file_type().is_symlink()
+                && !locks.plugins.iter().any(|entry| entry.id == manifest.id)
+            {
+                errors.push(format!(
+                    "{} is an unmanaged plugin directory; remove it by hand before using the local checkout at {}",
+                    target.display(),
+                    dir.display()
+                ));
+            }
+        }
     }
 
     /// Fetch through the backend so the webview's remote-resource CSP stays closed.
@@ -488,8 +560,9 @@ impl PluginManager {
         let (mut declarations, mut locks) = self.load_state()?;
         let previous_locks = locks.clone();
         let index = locks.plugins.iter().position(|entry| entry.id == id);
+        let local_index = locks.local.iter().position(|entry| entry.id == id);
         let target = self.inner.packages_dir.join(id);
-        if index.is_none() && !target.is_dir() {
+        if index.is_none() && local_index.is_none() && std::fs::symlink_metadata(&target).is_err() {
             return Err(PluginInstallError::new(
                 PluginInstallErrorKind::InvalidInput,
                 format!("plugin {id:?} is not installed"),
@@ -506,7 +579,7 @@ impl PluginManager {
             .tempdir_in(&self.inner.packages_dir)
             .map_err(|error| PluginInstallError::io("could not create uninstall backup", error))?;
         let backup_package = backup.path().join("package");
-        let moved = if target.exists() {
+        let moved = if std::fs::symlink_metadata(&target).is_ok() {
             std::fs::rename(&target, &backup_package).map_err(|error| {
                 PluginInstallError::io(format!("could not remove plugin {id:?}"), error)
             })?;
@@ -520,6 +593,17 @@ impl PluginManager {
             declarations
                 .plugins
                 .retain(|repo| !repo.eq_ignore_ascii_case(&entry.repo));
+        }
+        if let Some(index) = local_index {
+            let entry = locks.local.remove(index);
+            declarations.plugins.retain(|value| {
+                PluginDeclaration::parse(value)
+                    .ok()
+                    .is_none_or(|declaration| match declaration {
+                        PluginDeclaration::Local(path) => path != Path::new(&entry.dir),
+                        PluginDeclaration::Repository(_) => true,
+                    })
+            });
         }
         if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, &locks) {
             if moved {
@@ -547,7 +631,7 @@ impl PluginManager {
     /// are removed only when a lock entry proves renCal installed them; loose
     /// directories and symlinked development checkouts remain untouched.
     pub async fn reconcile(&self) -> Vec<PluginReconcileError> {
-        let missing = {
+        let (missing, mut errors) = {
             let _guard = self.inner.mutations.lock().await;
             let (declarations, mut locks) = match self.load_state() {
                 Ok(state) => state,
@@ -564,9 +648,15 @@ impl PluginManager {
                     message: error.to_string(),
                 }];
             }
-            declarations
-                .plugins
+            let local_errors = self.apply_local(&declarations, &mut locks);
+            let repositories = declarations
+                .declarations()
+                .expect("loaded declarations are valid")
                 .into_iter()
+                .filter_map(|declaration| match declaration {
+                    PluginDeclaration::Repository(repo) => Some(repo),
+                    PluginDeclaration::Local(_) => None,
+                })
                 .filter(|repo| {
                     locks
                         .plugins
@@ -574,10 +664,10 @@ impl PluginManager {
                         .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
                         .is_none_or(|entry| !self.inner.packages_dir.join(&entry.id).is_dir())
                 })
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>();
+            (repositories, local_errors)
         };
 
-        let mut errors = Vec::new();
         for repo in missing {
             if let Err(error) = self.restore_entry(&repo).await {
                 errors.push(PluginReconcileError {
@@ -594,18 +684,40 @@ impl PluginManager {
         declarations: &PluginsFile,
         locks: &mut PluginLockFile,
     ) -> Result<(), PluginInstallError> {
-        let removed: Vec<_> = locks
+        let parsed = declarations.declarations().map_err(|error| {
+            PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+        })?;
+        let repositories: Vec<_> = parsed
+            .iter()
+            .filter_map(|declaration| match declaration {
+                PluginDeclaration::Repository(repo) => Some(repo.as_str()),
+                PluginDeclaration::Local(_) => None,
+            })
+            .collect();
+        let local_dirs: HashSet<_> = parsed
+            .iter()
+            .filter_map(|declaration| match declaration {
+                PluginDeclaration::Local(path) => Some(path.clone()),
+                PluginDeclaration::Repository(_) => None,
+            })
+            .collect();
+        let removed_plugins: Vec<_> = locks
             .plugins
             .iter()
             .filter(|entry| {
-                !declarations
-                    .plugins
+                !repositories
                     .iter()
                     .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
             })
             .cloned()
             .collect();
-        if removed.is_empty() {
+        let removed_local: Vec<_> = locks
+            .local
+            .iter()
+            .filter(|entry| !local_dirs.contains(Path::new(&entry.dir)))
+            .cloned()
+            .collect();
+        if removed_plugins.is_empty() && removed_local.is_empty() {
             return Ok(());
         }
 
@@ -620,15 +732,30 @@ impl PluginManager {
             .tempdir_in(&self.inner.packages_dir)
             .map_err(|error| PluginInstallError::io("could not create prune backup", error))?;
         let mut moved = Vec::new();
-        for entry in &removed {
-            let target = self.inner.packages_dir.join(&entry.id);
+        let mut ids = HashSet::new();
+        for entry in &removed_plugins {
+            let has_retained_local = locks
+                .local
+                .iter()
+                .any(|local| local.id == entry.id && local_dirs.contains(Path::new(&local.dir)));
+            if !has_retained_local {
+                ids.insert(entry.id.clone());
+            }
+        }
+        ids.extend(removed_local.iter().map(|entry| entry.id.clone()));
+        for id in ids {
+            let target = self.inner.packages_dir.join(&id);
             match std::fs::symlink_metadata(&target) {
+                Ok(metadata)
+                    if removed_local.iter().any(|entry| entry.id == id)
+                        && !removed_plugins.iter().any(|entry| entry.id == id)
+                        && !metadata.file_type().is_symlink() => {}
                 Ok(_) => {
-                    let backup_package = backup.path().join(&entry.id);
+                    let backup_package = backup.path().join(&id);
                     if let Err(error) = std::fs::rename(&target, &backup_package) {
                         restore_pruned_packages(&moved);
                         return Err(PluginInstallError::io(
-                            format!("could not prune plugin {:?}", entry.id),
+                            format!("could not prune plugin {id:?}"),
                             error,
                         ));
                     }
@@ -638,7 +765,7 @@ impl PluginManager {
                 Err(error) => {
                     restore_pruned_packages(&moved);
                     return Err(PluginInstallError::io(
-                        format!("could not inspect plugin {:?}", entry.id),
+                        format!("could not inspect plugin {id:?}"),
                         error,
                     ));
                 }
@@ -647,11 +774,13 @@ impl PluginManager {
 
         let previous_locks = locks.clone();
         locks.plugins.retain(|entry| {
-            declarations
-                .plugins
+            repositories
                 .iter()
                 .any(|repo| repo.eq_ignore_ascii_case(&entry.repo))
         });
+        locks
+            .local
+            .retain(|entry| local_dirs.contains(Path::new(&entry.dir)));
         if let Err(error) = save_plugin_lock_file(&self.inner.lock_path, locks) {
             *locks = previous_locks;
             restore_pruned_packages(&moved);
@@ -661,6 +790,176 @@ impl PluginManager {
             ));
         }
         Ok(())
+    }
+
+    fn apply_local(
+        &self,
+        declarations: &PluginsFile,
+        locks: &mut PluginLockFile,
+    ) -> Vec<PluginReconcileError> {
+        let local: Vec<_> = declarations
+            .declarations()
+            .expect("loaded declarations are valid")
+            .into_iter()
+            .filter_map(|declaration| match declaration {
+                PluginDeclaration::Local(path) => Some(path),
+                PluginDeclaration::Repository(_) => None,
+            })
+            .collect();
+        if local.is_empty() {
+            return Vec::new();
+        }
+
+        #[cfg(not(unix))]
+        return local
+            .into_iter()
+            .map(|path| PluginReconcileError {
+                package: path.display().to_string(),
+                message: "local plugins are not supported on this platform yet".into(),
+            })
+            .collect();
+
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::symlink;
+
+            let mut errors = Vec::new();
+            if let Err(error) = std::fs::create_dir_all(&self.inner.packages_dir) {
+                return vec![PluginReconcileError {
+                    package: self.inner.packages_dir.display().to_string(),
+                    message: format!("could not create plugin directory: {error}"),
+                }];
+            }
+            let backup = match tempfile::Builder::new()
+                .prefix(".rencal-shadow-")
+                .tempdir_in(&self.inner.packages_dir)
+            {
+                Ok(backup) => backup,
+                Err(error) => {
+                    return vec![PluginReconcileError {
+                        package: self.inner.packages_dir.display().to_string(),
+                        message: format!("could not create local plugin backup: {error}"),
+                    }];
+                }
+            };
+            let previous_locks = locks.clone();
+            let mut moved = Vec::new();
+            let mut created = Vec::new();
+            let mut claimed = HashSet::new();
+
+            for dir in local {
+                let label = dir.display().to_string();
+                let manifest = match read_local_manifest(&dir) {
+                    Ok(manifest) => manifest,
+                    Err(error) => {
+                        errors.push(PluginReconcileError {
+                            package: label,
+                            message: error.to_string(),
+                        });
+                        continue;
+                    }
+                };
+                let id = manifest.id;
+                if !claimed.insert(id.clone()) {
+                    errors.push(PluginReconcileError {
+                        package: label,
+                        message: format!(
+                            "plugin id {id:?} is already provided by another local checkout"
+                        ),
+                    });
+                    continue;
+                }
+                let target = self.inner.packages_dir.join(&id);
+                let mut moved_this = None;
+                let mut needs_link = true;
+                match std::fs::symlink_metadata(&target) {
+                    Ok(metadata) if metadata.file_type().is_symlink() => {
+                        if symlink_points_to(&target, &dir) {
+                            needs_link = false;
+                        } else {
+                            let backup_path = backup.path().join(format!("{}-{}", moved.len(), id));
+                            if let Err(error) = std::fs::rename(&target, &backup_path) {
+                                errors.push(PluginReconcileError {
+                                    package: label,
+                                    message: format!(
+                                        "could not replace local plugin link: {error}"
+                                    ),
+                                });
+                                continue;
+                            }
+                            moved_this = Some((backup_path, target.clone()));
+                        }
+                    }
+                    Ok(_) => {
+                        if locks.plugins.iter().any(|entry| entry.id == id) {
+                            let backup_path = backup.path().join(format!("{}-{}", moved.len(), id));
+                            if let Err(error) = std::fs::rename(&target, &backup_path) {
+                                errors.push(PluginReconcileError {
+                                    package: label,
+                                    message: format!(
+                                        "could not shadow managed plugin {id:?}: {error}"
+                                    ),
+                                });
+                                continue;
+                            }
+                            moved_this = Some((backup_path, target.clone()));
+                        } else {
+                            errors.push(PluginReconcileError {
+                                package: label,
+                                message: format!("{} is an unmanaged plugin directory; remove it by hand before using this local checkout", target.display()),
+                            });
+                            continue;
+                        }
+                    }
+                    Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+                    Err(error) => {
+                        errors.push(PluginReconcileError {
+                            package: label,
+                            message: format!(
+                                "could not inspect plugin slot {}: {error}",
+                                target.display()
+                            ),
+                        });
+                        continue;
+                    }
+                }
+
+                if needs_link {
+                    if let Err(error) = symlink(&dir, &target) {
+                        if let Some((backup_path, original)) = &moved_this {
+                            let _ = std::fs::rename(backup_path, original);
+                        }
+                        errors.push(PluginReconcileError {
+                            package: label,
+                            message: format!("could not link local plugin {id:?}: {error}"),
+                        });
+                        continue;
+                    }
+                    created.push(target);
+                    if let Some(moved_entry) = moved_this {
+                        moved.push(moved_entry);
+                    }
+                }
+
+                locks.local.retain(|entry| entry.id != id);
+                locks.local.push(LocalLockEntry { id, dir: label });
+            }
+
+            if *locks != previous_locks
+                && let Err(error) = save_plugin_lock_file(&self.inner.lock_path, locks)
+            {
+                for target in created.iter().rev() {
+                    let _ = remove_path(target);
+                }
+                restore_pruned_packages(&moved);
+                *locks = previous_locks;
+                errors.push(PluginReconcileError {
+                    package: self.inner.lock_path.display().to_string(),
+                    message: error.to_string(),
+                });
+            }
+            errors
+        }
     }
 
     pub(crate) fn declarations_path(&self) -> &Path {
@@ -921,6 +1220,42 @@ impl PluginManager {
                     package.manifest.id, existing.repo
                 )));
             }
+        }
+
+        if let Some(local) = locks
+            .local
+            .iter()
+            .find(|entry| entry.id == package.manifest.id)
+        {
+            if matches!(declaration_policy, DeclarationPolicy::Ensure) {
+                return Err(PluginInstallError::new(
+                    PluginInstallErrorKind::InvalidInput,
+                    format!(
+                        "plugin id {:?} is provided by the local checkout at {}; remove that line from plugins.toml to install from GitHub",
+                        package.manifest.id, local.dir
+                    ),
+                ));
+            }
+
+            let entry = PluginLockEntry {
+                id: package.manifest.id.clone(),
+                repo: repository.display.clone(),
+                version: package.manifest.version.clone(),
+                commit: package.commit.clone(),
+            };
+            if let Some(existing) = locks
+                .plugins
+                .iter_mut()
+                .find(|existing| existing.id == entry.id)
+            {
+                *existing = entry;
+            } else {
+                locks.plugins.push(entry);
+            }
+            save_plugin_lock_file(&self.inner.lock_path, &locks).map_err(|error| {
+                PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+            })?;
+            return Ok(package.inspection);
         }
 
         let target = self.inner.packages_dir.join(&package.manifest.id);
@@ -1274,6 +1609,36 @@ impl Repository {
     }
 }
 
+fn read_local_manifest(dir: &Path) -> Result<PluginManifest, PluginInstallError> {
+    if !dir.is_dir() {
+        return Err(PluginInstallError::new(
+            PluginInstallErrorKind::Configuration,
+            format!("local plugin directory {} does not exist", dir.display()),
+        ));
+    }
+    let path = dir.join(MANIFEST_FILE);
+    let contents = std::fs::read_to_string(&path).map_err(|error| {
+        PluginInstallError::new(
+            PluginInstallErrorKind::Configuration,
+            format!("could not read {}: {error}", path.display()),
+        )
+    })?;
+    validate_manifest(&contents, running_app_version().as_ref()).map_err(|error| {
+        PluginInstallError::new(
+            PluginInstallErrorKind::Configuration,
+            format!("invalid local plugin manifest {}: {error}", path.display()),
+        )
+    })
+}
+
+#[cfg(unix)]
+fn symlink_points_to(link: &Path, expected: &Path) -> bool {
+    std::fs::canonicalize(link)
+        .ok()
+        .zip(std::fs::canonicalize(expected).ok())
+        .is_some_and(|(actual, expected)| actual == expected)
+}
+
 pub(super) fn normalize_repository(value: &str) -> Result<String, PluginInstallError> {
     Repository::parse(value).map(|repository| repository.display)
 }
@@ -1510,6 +1875,20 @@ appearance = "dark"
             200,
             font.to_vec(),
         );
+    }
+
+    fn write_local_checkout(path: &Path) {
+        write_local_checkout_as(path, "alice.dusk");
+    }
+
+    fn write_local_checkout_as(path: &Path, id: &str) {
+        std::fs::create_dir_all(path.join("themes")).unwrap();
+        std::fs::write(
+            path.join(MANIFEST_FILE),
+            MANIFEST_V1.replacen("alice.dusk", id, 1),
+        )
+        .unwrap();
+        std::fs::write(path.join("themes/dark.css"), "--background: local;").unwrap();
     }
 
     #[tokio::test]
@@ -1940,6 +2319,7 @@ appearance = "dark"
                     version: "1.0.0".into(),
                     commit: COMMIT_V1.into(),
                 }],
+                local: Vec::new(),
             },
         )
         .unwrap();
@@ -2070,6 +2450,359 @@ appearance = "dark"
                 .is_symlink()
         );
         assert!(checkout.is_dir());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn reconcile_links_a_local_checkout_and_lists_it() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let checkout = temp.path().join("checkout");
+        write_local_checkout(&checkout);
+        save_plugins_file(
+            &temp.path().join("config/plugins.toml"),
+            &PluginsFile {
+                plugins: vec![checkout.display().to_string()],
+            },
+        )
+        .unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+        let link = temp.path().join("data/plugins/alice.dusk");
+        assert!(
+            std::fs::symlink_metadata(&link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert_eq!(
+            std::fs::canonicalize(link).unwrap(),
+            checkout.canonicalize().unwrap()
+        );
+        let snapshot = manager.list().await;
+        assert!(snapshot.errors.is_empty(), "{:?}", snapshot.errors);
+        assert_eq!(snapshot.plugins[0].name, "Dusk");
+        assert_eq!(snapshot.plugins[0].local_dir.as_deref(), checkout.to_str());
+        assert_eq!(snapshot.plugins[0].repo, None);
+
+        *manager.inner.catalog.lock().await = vec![PluginCatalogEntry {
+            id: "alice.dusk".into(),
+            name: "Dusk".into(),
+            repo: "Alice/rencal-dusk".into(),
+            description: "A newer Dusk".into(),
+            version: "9.0.0".into(),
+            preview_url: None,
+        }];
+        assert!(manager.list().await.plugins[0].update_version.is_none());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn reconcile_repoints_and_prunes_local_checkouts_without_touching_them() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let first = temp.path().join("first");
+        let second = temp.path().join("second");
+        write_local_checkout(&first);
+        write_local_checkout(&second);
+        let declarations_path = temp.path().join("config/plugins.toml");
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec![first.display().to_string()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec![second.display().to_string()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+        let link = temp.path().join("data/plugins/alice.dusk");
+        assert_eq!(
+            std::fs::canonicalize(&link).unwrap(),
+            second.canonicalize().unwrap()
+        );
+        assert!(first.join(MANIFEST_FILE).is_file());
+
+        save_plugins_file(&declarations_path, &PluginsFile::default()).unwrap();
+        assert!(manager.reconcile().await.is_empty());
+        assert!(std::fs::symlink_metadata(link).is_err());
+        assert!(second.join(MANIFEST_FILE).is_file());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn local_checkout_shadows_managed_install_and_restores_locked_commit() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let checkout = temp.path().join("checkout");
+        write_local_checkout(&checkout);
+        let declarations_path = temp.path().join("config/plugins.toml");
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec!["Alice/rencal-dusk".into(), checkout.display().to_string()],
+            },
+        )
+        .unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+        let link = temp.path().join("data/plugins/alice.dusk");
+        assert!(
+            std::fs::symlink_metadata(&link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
+        assert_eq!(locks.plugins[0].commit, COMMIT_V1);
+        assert_eq!(locks.local[0].id, "alice.dusk");
+
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec!["Alice/rencal-dusk".into()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+        assert!(
+            !std::fs::symlink_metadata(&link)
+                .unwrap()
+                .file_type()
+                .is_symlink()
+        );
+        assert_eq!(
+            std::fs::read_to_string(link.join("themes/dark.css")).unwrap(),
+            "--background: #111;"
+        );
+        assert_eq!(
+            downloader.request_count("/repos/Alice/rencal-dusk/releases/latest"),
+            1
+        );
+        assert_eq!(
+            downloader.request_count(&format!(
+                "/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"
+            )),
+            2
+        );
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn repository_added_while_local_exists_records_lock_without_replacing_link() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        let checkout = temp.path().join("checkout");
+        write_local_checkout(&checkout);
+        let declarations_path = temp.path().join("config/plugins.toml");
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec![checkout.display().to_string()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec![checkout.display().to_string(), "Alice/rencal-dusk".into()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+        let requests = downloader.request_count("/repos/Alice/rencal-dusk/releases/latest");
+        assert_eq!(requests, 1);
+        assert!(manager.reconcile().await.is_empty());
+        assert_eq!(
+            downloader.request_count("/repos/Alice/rencal-dusk/releases/latest"),
+            requests
+        );
+        assert_eq!(
+            std::fs::canonicalize(temp.path().join("data/plugins/alice.dusk")).unwrap(),
+            checkout.canonicalize().unwrap()
+        );
+        let listed = manager.list().await;
+        assert_eq!(listed.plugins[0].repo.as_deref(), Some("Alice/rencal-dusk"));
+        assert_eq!(listed.plugins[0].local_dir.as_deref(), checkout.to_str());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn install_refuses_a_locally_provided_id_and_uninstall_removes_it() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let checkout = temp.path().join("checkout");
+        write_local_checkout(&checkout);
+        let declarations_path = temp.path().join("config/plugins.toml");
+        save_plugins_file(
+            &declarations_path,
+            &PluginsFile {
+                plugins: vec![checkout.display().to_string()],
+            },
+        )
+        .unwrap();
+        assert!(manager.reconcile().await.is_empty());
+
+        let error = manager.install("Alice/rencal-dusk").await.unwrap_err();
+        assert_eq!(error.kind, PluginInstallErrorKind::InvalidInput);
+        assert!(error.to_string().contains("provided by the local checkout"));
+        manager.uninstall("alice.dusk").await.unwrap();
+        assert!(
+            load_plugins_file(&declarations_path)
+                .unwrap()
+                .plugins
+                .is_empty()
+        );
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .local
+                .is_empty()
+        );
+        assert!(checkout.join(MANIFEST_FILE).is_file());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn invalid_local_declarations_are_listed_without_creating_links() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let missing = temp.path().join("missing");
+        save_plugins_file(
+            &temp.path().join("config/plugins.toml"),
+            &PluginsFile {
+                plugins: vec![missing.display().to_string()],
+            },
+        )
+        .unwrap();
+
+        assert_eq!(manager.reconcile().await.len(), 1);
+        let listed = manager.list().await;
+        assert_eq!(listed.errors.len(), 1);
+        assert!(listed.errors[0].contains(missing.to_str().unwrap()));
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn unlocked_manual_directory_blocks_a_local_checkout() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let checkout = temp.path().join("checkout");
+        write_local_checkout(&checkout);
+        let manual = temp.path().join("data/plugins/alice.dusk");
+        std::fs::create_dir_all(&manual).unwrap();
+        std::fs::write(manual.join("keep.txt"), "manual").unwrap();
+        save_plugins_file(
+            &temp.path().join("config/plugins.toml"),
+            &PluginsFile {
+                plugins: vec![checkout.display().to_string()],
+            },
+        )
+        .unwrap();
+
+        let errors = manager.reconcile().await;
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("remove it by hand"));
+        assert_eq!(
+            std::fs::read_to_string(manual.join("keep.txt")).unwrap(),
+            "manual"
+        );
+        let listed = manager.list().await;
+        assert!(
+            listed
+                .errors
+                .iter()
+                .any(|error| error.contains("remove it by hand"))
+        );
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .local
+                .is_empty()
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn apply_local_rolls_back_filesystem_changes_when_lock_save_fails() {
+        use std::os::unix::fs::symlink;
+
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        let packages = temp.path().join("data/plugins");
+        std::fs::create_dir_all(packages.join("alice.dusk")).unwrap();
+        std::fs::write(packages.join("alice.dusk/managed.txt"), "managed").unwrap();
+
+        let old_bob = temp.path().join("old-bob");
+        write_local_checkout_as(&old_bob, "bob.dawn");
+        symlink(&old_bob, packages.join("bob.dawn")).unwrap();
+
+        let alice = temp.path().join("alice");
+        let bob = temp.path().join("bob");
+        let carol = temp.path().join("carol");
+        write_local_checkout_as(&alice, "alice.dusk");
+        write_local_checkout_as(&bob, "bob.dawn");
+        write_local_checkout_as(&carol, "carol.noon");
+        let declarations = PluginsFile {
+            plugins: vec![
+                alice.display().to_string(),
+                bob.display().to_string(),
+                carol.display().to_string(),
+            ],
+        };
+        let mut locks = PluginLockFile {
+            plugins: vec![PluginLockEntry {
+                id: "alice.dusk".into(),
+                repo: "alice/rencal-dusk".into(),
+                version: "1.0.0".into(),
+                commit: COMMIT_V1.into(),
+            }],
+            local: vec![LocalLockEntry {
+                id: "bob.dawn".into(),
+                dir: old_bob.display().to_string(),
+            }],
+        };
+        let previous_locks = locks.clone();
+        std::fs::create_dir_all(&manager.inner.lock_path).unwrap();
+
+        let errors = manager.apply_local(&declarations, &mut locks);
+
+        assert_eq!(errors.len(), 1);
+        assert_eq!(locks, previous_locks);
+        assert_eq!(
+            std::fs::read_to_string(packages.join("alice.dusk/managed.txt")).unwrap(),
+            "managed"
+        );
+        assert_eq!(
+            std::fs::canonicalize(packages.join("bob.dawn")).unwrap(),
+            old_bob.canonicalize().unwrap()
+        );
+        assert!(std::fs::symlink_metadata(packages.join("carol.noon")).is_err());
+        for checkout in [&alice, &bob, &carol, &old_bob] {
+            assert!(checkout.join(MANIFEST_FILE).is_file());
+        }
     }
 
     #[tokio::test]
