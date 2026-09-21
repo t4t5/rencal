@@ -80,12 +80,12 @@ export function ConferenceDisplay({
 
 function ConferenceLink({ url, label }: { url: string; label: string }) {
   return (
-    <div className="flex flex-col gap-1 px-3 py-1">
+    <div className="flex flex-col gap-1 py-1">
       <Button className="w-full cursor-pointer" onClick={() => openUrl(url)}>
         <VideoIcon />
         Join {label}
       </Button>
-      <span className="text-xs text-muted-foreground truncate px-1">{url}</span>
+      <span className="text-xs text-muted-foreground truncate">{url}</span>
     </div>
   )
 }
