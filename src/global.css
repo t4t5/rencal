@@ -63,6 +63,9 @@
   --control-height: 34px;
   --control-height-sm: 32px;
   --control-height-lg: 40px;
+  --control-padding-inline: 8px;
+  --control-leading-size: 20px;
+  --control-content-gap: 8px;
 
   --background: #131313;
   --foreground: white;
@@ -262,6 +265,45 @@
 }
 
 @layer components {
+  .event-form {
+    padding-inline: 8px;
+  }
+
+  .control-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    column-gap: var(--control-content-gap);
+    padding-inline: var(--control-padding-inline);
+  }
+
+  .control-leading {
+    display: flex;
+    width: var(--control-leading-size);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+  }
+
+  .control-leading > svg:not([class*="size-"]) {
+    width: 1rem;
+    height: 1rem;
+  }
+
+  .control-content {
+    min-width: 0;
+    flex: 1 1 0%;
+  }
+
+  .control-trailing {
+    display: flex;
+    min-width: var(--control-leading-size);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+  }
+
   .heading {
     font-family: var(--font-heading);
     text-transform: var(--font-heading-transform, none);
@@ -274,6 +316,13 @@
     text-transform: var(--font-button-transform, none);
     font-size: var(--font-button-size, var(--text-sm));
     line-height: var(--tw-leading, var(--font-button-line-height, var(--text-sm--line-height)));
+  }
+
+  .field-action {
+    font-family: var(--font-body);
+    text-transform: none;
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
   }
 
   .numerical {

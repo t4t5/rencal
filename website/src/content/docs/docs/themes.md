@@ -40,6 +40,9 @@ You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `
 --control-height: 24px;
 --control-height-sm: 24px;
 --control-height-lg: 28px;
+--control-padding-inline: 6px;
+--control-leading-size: 18px;
+--control-content-gap: 6px;
 --text-base: 14px;
 --text-base--line-height: 20px;
 --text-xs: 11px;
@@ -53,5 +56,17 @@ For component-specific custom CSS, target stable slot attributes:
   border-width: 2px;
 }
 ```
+
+The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-leading-size` reserves the icon or checkbox column, and `--control-content-gap` separates the leading, content, and trailing parts.
+
+Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows expose `control-leading`, `control-content`, and `control-trailing`; existing primitives keep their original slots and identify the same roles with `data-control-part="leading"`, `"content"`, or `"trailing"`. Row roots use `data-control-layout="row"`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
+
+```css
+[data-slot="event-form-footer"] {
+  padding-inline: 8px;
+}
+```
+
+Buttons expose `data-typography="action"` for ordinary actions and `data-typography="field"` for actions embedded in event fields. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
 
 The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. `--divider` and `--radius-base` have temporary compatibility fallbacks, but new themes should use `--border` and `--radius`.

@@ -1,4 +1,3 @@
-import { InputGroup } from "@/components/ui/input-group"
 import {
   Select,
   SelectContent,
@@ -24,20 +23,18 @@ export function RsvpSelect({
   onRsvp: (response: ResponseStatus) => void
 }) {
   return (
-    <InputGroup>
-      <Select value={status ?? undefined} onValueChange={(v) => onRsvp(v as ResponseStatus)}>
-        <SelectTrigger className="w-full border-0 shadow-none">
-          <SelectValue placeholder="My status" />
-        </SelectTrigger>
-        <SelectContent>
-          {statusOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              <StatusDot status={opt.value} />
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </InputGroup>
+    <Select value={status ?? undefined} onValueChange={(v) => onRsvp(v as ResponseStatus)}>
+      <SelectTrigger className="w-full">
+        <SelectValue placeholder="My status" />
+      </SelectTrigger>
+      <SelectContent>
+        {statusOptions.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            <StatusDot status={opt.value} />
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

@@ -101,15 +101,18 @@ Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed i
 
 ### Sizing
 
-| Variable              | Purpose                                          |
-| --------------------- | ------------------------------------------------ |
-| `--radius`            | Base border radius (shadcn-compatible)           |
-| `--radius-circle`     | Pill/avatar radius (set to `0` for sharp themes) |
-| `--control-height`    | Button/input height                              |
-| `--control-height-sm` | Small button height                              |
-| `--control-height-lg` | Large button height                              |
-| `--tab-gap`           | Tab spacing                                      |
-| `--tab-list-shadow`   | Tab list outline                                 |
+| Variable                   | Purpose                                                                              |
+| -------------------------- | ------------------------------------------------------------------------------------ |
+| `--radius`                 | Base border radius (shadcn-compatible)                                               |
+| `--radius-circle`          | Pill/avatar radius (set to `0` for sharp themes)                                     |
+| `--control-height`         | Button/input height                                                                  |
+| `--control-height-sm`      | Small button height                                                                  |
+| `--control-height-lg`      | Large button height                                                                  |
+| `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                        |
+| `--control-leading-size`   | Width of the centered event-field icon, swatch, or checkbox slot (`20px` by default) |
+| `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default)  |
+| `--tab-gap`                | Tab spacing                                                                          |
+| `--tab-list-shadow`        | Tab list outline                                                                     |
 
 ### Typography (fonts)
 
@@ -151,6 +154,8 @@ These are unset by default. Setting them opts into role-specific typography with
 | `--font-numerical-size`        | Numerical role size             |
 | `--font-numerical-line-height` | Numerical role line height      |
 
+Buttons expose their role through `data-typography`: ordinary actions use `action`, while inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
+
 ### Type scale
 
 Tailwind utilities consume these variables directly: `--text-2xs`, `--text-xs`, `--text-sm`, `--text-base`, `--text-lg`, `--text-xl`, `--text-2xl`, and the matching `--text-<step>--line-height` token. Use pixel line heights because month-view lane height is `calc(var(--text-xs--line-height) + 4px)`.
@@ -169,7 +174,9 @@ This compact theme changes density and typography only through top-level tokens.
 --text-xs--line-height: 14px;
 ```
 
-There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's `38px` day target, portal viewport limits and trigger dimensions, dialog widths, the input-group add-on width, and fixed calendar/grid geometry such as hour height and gutter width.
+The three control-spacing properties apply to the event composer and editor. Override them together or independently to change field density without repairing individual rows. A larger text scale should also use control heights that leave enough room for the resulting line height.
+
+There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
 
 ### Pasting a shadcn theme
 
@@ -203,6 +210,18 @@ If primitive overrides aren't enough, a theme file can include arbitrary CSS rul
 The wrapper is a convenience, not a security boundary: malformed CSS can close it and introduce global rules. Selecting an external theme enables its unrestricted CSS for that window. Switching back to a built-in theme removes that CSS and restores the built-in styling. Inactive previews show custom-property palettes only; custom selectors take effect when selected.
 
 Prefer primitives first—the derivation chain covers most visual-identity needs. You can also override a derived token directly (for example, set `--border`) when the computed value is not right for the theme. Target stable `data-slot` attributes in custom rules; class names are implementation details.
+
+The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; row roots similarly expose `data-control-layout="row"`. Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
+
+Themes that intentionally retain an inset event action can scope that exception to the footer:
+
+```css
+[data-slot="event-form-footer"] {
+  padding-inline: 8px;
+}
+```
+
+Older custom rules that painted `[data-slot="input-group"]` inside a combobox should move that surface styling to `[data-slot="combobox"]`.
 
 ## Compatibility
 

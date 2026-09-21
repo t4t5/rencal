@@ -5,7 +5,7 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md font-medium button transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive select-none",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 aria-invalid:border-destructive select-none",
   {
     variants: {
       variant: {
@@ -32,10 +32,15 @@ const buttonVariants = cva(
         true: "rounded-circle",
         false: "rounded-md",
       },
+      typography: {
+        action: "button font-medium",
+        field: "field-action font-normal",
+      },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
+      typography: "action",
     },
   },
 )
@@ -45,6 +50,7 @@ function Button({
   variant,
   size,
   round,
+  typography,
   asChild = false,
   ...props
 }: React.ComponentProps<"button"> &
@@ -56,7 +62,8 @@ function Button({
   return (
     <Comp
       data-slot="button"
-      className={cn(buttonVariants({ variant, size, round, className }))}
+      data-typography={typography ?? "action"}
+      className={cn(buttonVariants({ variant, size, round, typography, className }))}
       {...props}
     />
   )

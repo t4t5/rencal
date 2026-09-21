@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { InputGroupAddon } from "@/components/ui/input-group"
+import { ControlContent, ControlLeading, ControlTrailing } from "@/components/ui/control-row"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DropdownArrow } from "@/components/ui/select"
 
@@ -108,20 +108,24 @@ export const TimeZoneSelect = ({
       <PopoverTrigger asChild>
         <button
           type="button"
+          disabled={readOnly}
+          data-control-layout="row"
           className={cn(
-            "group flex h-control w-full min-w-0 items-center gap-2 rounded-md border border-transparent bg-transparent pl-0 pr-3 text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
-            readOnly && "pointer-events-none",
+            "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
+            readOnly && "pointer-events-none disabled:cursor-default",
           )}
         >
-          <InputGroupAddon>
+          <ControlLeading>
             <GlobeIcon />
-          </InputGroupAddon>
-          <TimeZoneLabel
-            offset={timeZoneOffsetLabel(tzid, value)}
-            city={timeZoneCity(tzid)}
-            className="grow"
-          />
-          {!readOnly && <DropdownArrow forceVisible={open} />}
+          </ControlLeading>
+          <ControlContent>
+            <TimeZoneLabel offset={timeZoneOffsetLabel(tzid, value)} city={timeZoneCity(tzid)} />
+          </ControlContent>
+          {!readOnly && (
+            <ControlTrailing>
+              <DropdownArrow forceVisible={open} />
+            </ControlTrailing>
+          )}
         </button>
       </PopoverTrigger>
 

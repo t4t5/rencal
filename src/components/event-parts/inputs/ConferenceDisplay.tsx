@@ -1,7 +1,12 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 
 import { Button } from "@/components/ui/button"
-import { InputGroupAddon } from "@/components/ui/input-group"
+import {
+  ControlContent,
+  ControlLeading,
+  ControlRow,
+  ControlTrailing,
+} from "@/components/ui/control-row"
 
 import type { Calendar } from "@/lib/api"
 import {
@@ -97,16 +102,17 @@ function ConferenceItem({
   const Icon = conferenceIcon[provider]
 
   return (
-    <div className="group flex h-control items-center justify-between rounded-md px-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
-      <div className="flex min-w-0 items-center gap-2">
-        <InputGroupAddon>
-          <Icon />
-        </InputGroupAddon>
-        <span>{conferenceLabel[provider]}</span>
-      </div>
-
-      {!readonly && onRemove && <RemoveItemButton onClick={onRemove} />}
-    </div>
+    <ControlRow className="group h-control rounded-md border border-transparent text-sm hover:bg-secondary focus-within:bg-secondary">
+      <ControlLeading>
+        <Icon />
+      </ControlLeading>
+      <ControlContent className="truncate">{conferenceLabel[provider]}</ControlContent>
+      {!readonly && onRemove && (
+        <ControlTrailing>
+          <RemoveItemButton onClick={onRemove} />
+        </ControlTrailing>
+      )}
+    </ControlRow>
   )
 }
 
@@ -118,16 +124,19 @@ function ConferenceRequestButton({
   onClick: () => void
 }) {
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      className="w-full justify-start px-0 text-muted-foreground bodytext!"
-      onClick={onClick}
-    >
-      <InputGroupAddon>
-        <VideoIcon />
-      </InputGroupAddon>
-      Add {conferenceLabel[provider]}
-    </Button>
+    <ControlRow asChild>
+      <Button
+        type="button"
+        variant="ghost"
+        typography="field"
+        className="w-full justify-start gap-[var(--control-content-gap)] px-[var(--control-padding-inline)] text-muted-foreground"
+        onClick={onClick}
+      >
+        <ControlLeading>
+          <VideoIcon />
+        </ControlLeading>
+        <ControlContent className="text-left">Add {conferenceLabel[provider]}</ControlContent>
+      </Button>
+    </ControlRow>
   )
 }

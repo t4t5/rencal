@@ -2,7 +2,12 @@ import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
-import { InputGroupAddon } from "@/components/ui/input-group"
+import {
+  ControlContent,
+  ControlLeading,
+  ControlRow,
+  ControlTrailing,
+} from "@/components/ui/control-row"
 
 import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -91,7 +96,7 @@ export function ReminderSelect({
   placeholder = "Reminders",
   addon,
   variant,
-  withInputGroupAddon = true,
+  indentRows = true,
 }: {
   reminders: number[]
   onSelect: (mins: number) => void
@@ -99,7 +104,7 @@ export function ReminderSelect({
   placeholder?: string
   addon?: ReactNode
   variant?: "ghost" | "default"
-  withInputGroupAddon?: boolean
+  indentRows?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
@@ -107,9 +112,9 @@ export function ReminderSelect({
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
   const resolvedAddon =
     addon === undefined ? (
-      <InputGroupAddon>
+      <ControlLeading>
         <BellIcon />
-      </InputGroupAddon>
+      </ControlLeading>
     ) : (
       addon
     )
@@ -152,7 +157,7 @@ export function ReminderSelect({
             key={mins}
             mins={mins}
             onRemove={() => onRemove(mins)}
-            withInputGroupAddon={withInputGroupAddon}
+            indented={indentRows}
           />
         ))}
     </div>
@@ -163,39 +168,38 @@ const ReminderRow = ({
   mins,
   className,
   onRemove,
-  withInputGroupAddon,
+  indented,
 }: {
   mins: number
   className?: string
   onRemove: () => void
-  withInputGroupAddon?: boolean
+  indented?: boolean
 }) => {
   return (
-    <div
+    <ControlRow
       key={mins}
       className={cn(
-        "flex h-control items-center justify-between rounded-md px-2 pr-3 text-sm hover:bg-secondary focus-within:bg-secondary group cursor-default",
-        withInputGroupAddon && "pl-0",
+        "group h-control cursor-default rounded-md border border-transparent text-sm hover:bg-secondary focus-within:bg-secondary",
+        !indented && "gap-0",
         className,
       )}
     >
-      <div className="flex gap-2">
-        {withInputGroupAddon && <InputGroupAddon />}
-        <span>
-          <HumanDuration mins={mins} />
-        </span>
-      </div>
-
-      <RemoveItemButton onClick={onRemove} />
-    </div>
+      {indented && <ControlLeading aria-hidden="true" />}
+      <ControlContent>
+        <HumanDuration mins={mins} />
+      </ControlContent>
+      <ControlTrailing>
+        <RemoveItemButton onClick={onRemove} />
+      </ControlTrailing>
+    </ControlRow>
   )
 }
 
 const HumanDuration = ({ mins }: { mins: number }) => {
   return (
-    <div className="flex gap-1.5 items-baseline">
+    <span className="flex gap-1.5 items-baseline">
       <span>{humanDuration(mins)}</span>
       {mins > 0 && <span className="text-muted-foreground">before</span>}
-    </div>
+    </span>
   )
 }

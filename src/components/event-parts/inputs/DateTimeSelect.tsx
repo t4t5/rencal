@@ -2,8 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { ControlLeading, ControlRow } from "@/components/ui/control-row"
 import { DatePicker } from "@/components/ui/date-picker"
-import { InputGroupAddon } from "@/components/ui/input-group"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
@@ -116,7 +116,8 @@ export const DateTimeSelect = ({
             <Button
               type="button"
               variant="ghost"
-              className="px-2 font-normal text-muted-foreground bodytext!"
+              typography="field"
+              className="px-[var(--control-padding-inline)] text-muted-foreground"
               onClick={() => setTimeZoneRequested(true)}
             >
               Add timezone
@@ -204,9 +205,9 @@ const TimeSelect = ({
         <TimeInput
           value={start}
           addon={
-            <InputGroupAddon>
+            <ControlLeading>
               <ClockIcon />
-            </InputGroupAddon>
+            </ControlLeading>
           }
           readOnly={readOnly}
           disabled={allDay}
@@ -244,15 +245,15 @@ const DateSelect = ({
 }) => {
   return (
     <div className="flex flex-wrap gap-y-1">
-      <div
-        className="shrink-0 flex"
+      <ControlRow
+        className="h-control shrink-0 rounded-md border border-transparent hover:border-input focus-within:border-transparent focus-within:bg-secondary has-[[data-state=open]]:bg-secondary"
         style={{
           width: FIRST_INPUT_WIDTH,
         }}
       >
-        <InputGroupAddon>{icon}</InputGroupAddon>
-        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
-      </div>
+        <ControlLeading>{icon}</ControlLeading>
+        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} embedded />
+      </ControlRow>
 
       {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
 

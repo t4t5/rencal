@@ -1,7 +1,7 @@
 import { KeyboardEventHandler, ReactNode, useRef } from "react"
 
 import { Command, CommandList } from "@/components/ui/command"
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
+import { ControlTrailing } from "@/components/ui/control-row"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
@@ -50,32 +50,42 @@ export function Combobox({
       <PopoverAnchor asChild>
         <div
           ref={anchorRef}
+          data-slot="combobox"
+          data-control-layout="row"
           className={cn(
-            "flex items-center rounded-md pr-3 group",
+            "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
             interactive &&
-              "hover:shadow-input-border focus-within:bg-secondary focus-within:shadow-none! cursor-text",
+              "cursor-text hover:border-input focus-within:border-transparent focus-within:bg-secondary",
             {
-              "bg-secondary shadow-none!": open,
-              "shadow-input-border": variant === "default" && interactive,
+              "border-transparent bg-secondary": open,
+              "border-input": variant === "default" && interactive,
             },
           )}
-          onClick={() => interactive && setOpen(true)}
+          onClick={() => {
+            if (!interactive) return
+            setOpen(true)
+            anchorRef.current?.querySelector("input")?.focus()
+          }}
         >
-          <InputGroup className="border-none! bg-transparent!">
-            {addon}
-            <InputGroupInput
-              className="pl-2"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder={placeholder}
-              onFocus={() => interactive && setOpen(true)}
-              onKeyDown={onInputKeyDown}
-              readOnly={readOnly}
-              disabled={disabled}
-            />
-          </InputGroup>
+          {addon}
+          <input
+            data-slot="combobox-input"
+            data-control-part="content"
+            className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder={placeholder}
+            onFocus={() => interactive && setOpen(true)}
+            onKeyDown={onInputKeyDown}
+            readOnly={readOnly}
+            disabled={disabled}
+          />
 
-          {interactive && <DropdownArrow forceVisible={open || variant === "default"} />}
+          {interactive && (
+            <ControlTrailing>
+              <DropdownArrow forceVisible={open || variant === "default"} />
+            </ControlTrailing>
+          )}
         </div>
       </PopoverAnchor>
       <PopoverContent

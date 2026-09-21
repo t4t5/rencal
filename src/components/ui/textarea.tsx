@@ -10,10 +10,11 @@ export function Textarea({
 }: React.ComponentProps<typeof TextareaInner>) {
   return (
     <div
+      data-slot="textarea-wrapper"
       role="group"
       className={cn(
-        "group/input-group w-full border border-transparent hover:border-input min-h-control h-auto focus-within:bg-secondary focus-within:border-transparent! px-3 flex items-center rounded-md",
-        readOnly && "hover:border-transparent! focus-within:bg-transparent!",
+        "group/input-group w-full border border-transparent hover:border-input min-h-control h-auto focus-within:bg-secondary focus-within:border-transparent px-[var(--control-padding-inline)] flex items-center rounded-md",
+        readOnly && "hover:border-transparent focus-within:bg-transparent",
       )}
     >
       <TextareaInner {...props} readOnly={readOnly} className={cn("h-full", className)} />
@@ -21,7 +22,7 @@ export function Textarea({
   )
 }
 
-const innerCss = "flex-1 resize-none border-0 bg-transparent outline-none! py-2 text-sm"
+const innerCss = "min-w-0 flex-1 resize-none border-0 bg-transparent outline-none! py-2 text-sm"
 
 export function TextareaInner({
   autosize = true,

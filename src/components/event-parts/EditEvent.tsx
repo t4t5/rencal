@@ -163,7 +163,7 @@ export const EditEvent = ({
   }
 
   return (
-    <div className="px-2 pt-2 pb-2 flex flex-col grow">
+    <div data-slot="event-form" className="event-form pt-2 pb-2 flex flex-col grow">
       <div className="flex justify-end px-1 pb-1">
         {children}
 

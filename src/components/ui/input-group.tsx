@@ -11,13 +11,16 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
+      data-control-layout="row"
       role="group"
       className={cn(
-        "group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
+        "control-row group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
         "min-h-control min-w-0",
 
         // Focus state.
-        "focus-within:bg-secondary focus-within:border-transparent!",
+        "focus-within:bg-secondary focus-within:border-transparent",
+
+        "data-[readonly=true]:hover:border-transparent data-[readonly=true]:focus-within:bg-transparent",
 
         // Error state.
         "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive",
@@ -34,17 +37,19 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
 function InputGroupAddon({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      role="group"
       data-slot="input-group-addon"
+      data-control-part="leading"
       className={cn(
-        "pl-2 text-muted-foreground flex h-auto cursor-text items-center justify-center gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50 shrink-0 w-[28px]",
+        "control-leading h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
         className,
       )}
       onClick={(e) => {
         if ((e.target as HTMLElement).closest("button")) {
           return
         }
-        e.currentTarget.parentElement?.querySelector("input")?.focus()
+        e.currentTarget.parentElement
+          ?.querySelector<HTMLInputElement | HTMLTextAreaElement>("input, textarea")
+          ?.focus()
       }}
       {...props}
     />
@@ -77,6 +82,7 @@ function InputGroupButton({
     <Button
       type={type}
       data-size={size}
+      data-control-part="trailing"
       variant={variant}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
@@ -87,6 +93,7 @@ function InputGroupButton({
 function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
+      data-control-part="content"
       className={cn(
         "text-muted-foreground flex items-center gap-2 text-sm [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
         className,
@@ -100,8 +107,9 @@ function InputGroupInput({ className, ...props }: React.ComponentProps<"input">)
   return (
     <Input
       data-slot="input-group-control"
+      data-control-part="content"
       className={cn(
-        "flex-1 rounded-none border-0 bg-transparent! shadow-none focus-visible:ring-0 min-w-full",
+        "h-auto min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none hover:border-transparent focus:bg-transparent focus-visible:ring-0 min-w-0 px-0",
         className,
       )}
       {...props}
@@ -117,6 +125,7 @@ function InputGroupTextarea({
   return (
     <TextareaInner
       data-slot="input-group-control"
+      data-control-part="content"
       autosize={autosize}
       className={className}
       {...props}

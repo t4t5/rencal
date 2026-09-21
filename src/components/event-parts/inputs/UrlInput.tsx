@@ -1,5 +1,6 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 
+import { ControlContent } from "@/components/ui/control-row"
 import {
   InputGroup,
   InputGroupAddon,
@@ -50,7 +51,7 @@ export const UrlInput = ({
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="min-w-0 pl-2"
+            className="min-w-0"
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -63,7 +64,7 @@ export const UrlInput = ({
             <InputGroupButton
               size="icon-xs"
               aria-label="Open link"
-              className="mr-1 h-6! shrink-0 text-muted-foreground hover:text-foreground"
+              className="h-6! shrink-0 text-muted-foreground hover:text-foreground"
               onClick={() => openUrl(toOpenableUrl(url))}
             >
               <ArrowUpRightIcon />
@@ -81,25 +82,26 @@ export const UrlInput = ({
  */
 function UrlLink({ url, hint }: { url: string; hint?: string }) {
   return (
-    <InputGroup className="pr-1">
+    <InputGroup>
       <InputGroupAddon>
         <LinkIcon />
       </InputGroupAddon>
 
-      <div className="flex min-w-0 flex-1">
+      <ControlContent className="flex">
         <button
           type="button"
-          className="min-w-0 cursor-pointer truncate rounded-xs px-2 py-1 text-sm outline-none hover:underline focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+          className="min-w-0 cursor-pointer truncate rounded-xs py-1 text-sm outline-none hover:underline focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           onClick={() => openUrl(toOpenableUrl(url))}
         >
           {url}
         </button>
-      </div>
+      </ControlContent>
 
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild tabIndex={-1}>
             <span
+              data-control-part="trailing"
               className="flex size-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
               aria-label={hint}
             >
