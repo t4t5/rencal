@@ -33,8 +33,15 @@ function PopoverContent({
   )
 }
 
-function PopoverAnchor({ ...props }: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
-  return <PopoverPrimitive.Anchor data-slot="popover-anchor" {...props} />
+function PopoverAnchor({
+  asChild,
+  ...props
+}: React.ComponentProps<typeof PopoverPrimitive.Anchor>) {
+  if (asChild) {
+    return <PopoverPrimitive.Anchor data-popover-anchor="" asChild {...props} />
+  }
+
+  return <PopoverPrimitive.Anchor data-slot="popover-anchor" data-popover-anchor="" {...props} />
 }
 
 function PopoverArrow({
