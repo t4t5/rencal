@@ -222,6 +222,13 @@
     @apply border-border outline-ring/50;
     scrollbar-width: var(--scrollbar-width, none);
   }
+
+  /* react-textarea-autosize reuses a hidden textarea for synchronous sizing.
+   * Theme transitions must not delay its font, width, or padding updates. */
+  textarea[aria-hidden="true"] {
+    transition: none !important;
+  }
+
   html,
   body {
     @apply bg-background text-foreground;

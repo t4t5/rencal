@@ -34,7 +34,7 @@ export function TextareaInner({
     return (
       <TextareaAutosizeComponent
         data-slot="textarea"
-        className={cn(innerCss, className)}
+        className={cn(innerCss, "overflow-hidden", className)}
         {...props}
       />
     )
