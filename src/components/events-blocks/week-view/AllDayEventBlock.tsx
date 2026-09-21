@@ -49,6 +49,7 @@ export function WeekAllDayBar({
 
   const inner = (
     <div
+      data-slot="week-all-day-lane"
       className={cn("p-0.5 py-px pr-[3px]", isDragPreview && "pointer-events-none")}
       style={{
         gridColumn: `${item.startCol + colOffset} / ${item.endCol + colOffset}`,
@@ -57,6 +58,8 @@ export function WeekAllDayBar({
     >
       <div
         ref={ref}
+        data-slot="week-all-day-event"
+        data-highlighted={highlighted || undefined}
         data-event-clickable={!isStatic || undefined}
         className={cn(
           getEventBlockClasses(highlighted, isDeclined),

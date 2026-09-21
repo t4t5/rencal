@@ -50,7 +50,7 @@ export function getEventBlockColors({
     const textColor = tintText(borderColor, 40)
     return {
       borderColor,
-      backgroundColor: `color-mix(in srgb, ${boostedColor} 15%, var(--background))`,
+      backgroundColor: `color-mix(in srgb, ${boostedColor} 15%, var(--event-tint-surface, var(--background)))`,
       textColor,
       tintedTextColor: textColor,
     }
@@ -64,7 +64,7 @@ export function getEventBlockColors({
   const tintedTextColor = tintText(borderColor, 60)
 
   // Themes can replace the derived tint with a solid fill (see themes/README.md).
-  const fill = `var(--event-background, color-mix(in srgb, ${boostedColor} 20%, var(--background)))`
+  const fill = `var(--event-background, color-mix(in srgb, ${boostedColor} 20%, var(--event-tint-surface, var(--background))))`
   const textColor = `var(--event-foreground, ${tintedTextColor})`
 
   return {

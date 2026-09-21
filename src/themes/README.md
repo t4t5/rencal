@@ -290,3 +290,29 @@ Radix `asChild` composition may replace `data-slot` with `tooltip-trigger`,
 `dropdown-menu-trigger`, or another trigger slot. `data-button` survives that
 composition while each trigger keeps its own slot. The collapsible sidebar draft
 exposes `sidebar-draft` for adjusting the space above its content.
+
+### Week view styling hooks
+
+Week view exposes `week-scroll`, `week-header`, `week-header-gutter`,
+`week-day-header`, `week-weekday`, `week-day-number`, `week-all-day`,
+`week-time-grid`, `week-time-gutter`, and `week-hour-label`. Timed columns expose
+`week-day`; all-day lane wrappers expose `week-all-day-lane`. Headers, all-day
+backgrounds, and timed columns expose `data-active="true"` for the selected date;
+day numbers expose `data-today="true"`. False states omit these attributes.
+
+Events expose `week-timed-event` and `week-all-day-event`, with
+`data-highlighted="true"` for selection or an open context menu. Timed event
+stripes and time labels use the shared `event-color-marker` and `event-time`
+slots, including compact events. Draft and drag-preview blocks retain the slots.
+
+`--week-grid-background` optionally replaces the timed columns' background image.
+Use the app-provided `--week-hour-height` measurement to align custom grid lines
+and gutter backgrounds. This measurement is read-only: changing it does not
+change event positioning or pointer-to-time conversion. Preserve the grid's
+column widths, height, scrolling, and positioned event geometry.
+
+`--event-tint-surface` sets the surface mixed with calendar/event colours in
+filled blocks and drafts (default: `--background`). Unlike `--event-background`,
+it preserves per-event colours. It can be scoped to `week-scroll` to give the
+week's events lighter fills independently of the calendar canvas. Solid event
+background overrides, selection, RSVP borders, and drag-preview rings still apply.
