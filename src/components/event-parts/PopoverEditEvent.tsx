@@ -43,7 +43,7 @@ export function PopoverEditEvent() {
       <PopoverAnchor virtualRef={anchorRef} />
       <PopoverContent
         ref={contentRef}
-        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl data-[state=open]:animate-none data-[state=closed]:animate-none"
+        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
         side="right"
         align="center"
         sideOffset={8}
