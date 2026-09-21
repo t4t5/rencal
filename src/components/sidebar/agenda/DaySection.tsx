@@ -124,7 +124,12 @@ export const DaySection = forwardRef<
   }
 
   return (
-    <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">
+    <div
+      ref={ref}
+      data-slot="agenda-day"
+      data-date={dateKey}
+      className="relative border-b border-b-divider"
+    >
       <DateBar date={date} />
 
       <div className="flex flex-col gap-1 pb-2">
@@ -211,6 +216,7 @@ const AgendaEventRowShell = ({
   <div
     tabIndex={-1}
     data-event-clickable={!state.isDraft || undefined}
+    data-highlighted={state.isActive || state.isSelected || undefined}
     data-agenda-item
     data-event-key={state.key}
     data-date-key={dateKey}
@@ -257,7 +263,7 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
       dateKey={dateKey}
       state={state}
       className={cn("cursor-default hover:bg-secondary py-1 outline-none", {
-        "bg-accent!": isActive || isSelected,
+        "bg-accent! text-accent-foreground": isActive || isSelected,
         "opacity-50": isPending || isDeclined || isDraft,
         "line-through": isDeclined,
       })}
@@ -273,6 +279,7 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
 
   return (
     <div
+      data-slot="agenda-date"
       className={cn(
         "sticky top-0 z-10 text-sm bg-background px-3 py-1.5 flex gap-2 h-8 items-center",
         { "text-today": isToday },

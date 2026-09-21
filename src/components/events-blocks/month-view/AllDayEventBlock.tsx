@@ -53,6 +53,7 @@ export function MonthAllDayEvent({
   const inner = (
     <div
       ref={ref}
+      data-slot="month-all-day-event"
       data-event-clickable={!isStatic || undefined}
       className={cn(
         getEventBlockClasses(highlighted, isDeclined),

@@ -51,10 +51,12 @@ export function MonthTimedEvent({
   const inner = (
     <div
       ref={ref}
+      data-slot="month-timed-event"
+      data-highlighted={highlighted || undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
         "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded-base shrink-0",
-        highlighted && "bg-accent!",
+        highlighted && "bg-accent! text-accent-foreground",
         (isPending || isDeclined) && "opacity-50",
         !isStatic && dimmed && "opacity-50",
         isDraft && "font-medium border border-dashed",
@@ -88,12 +90,17 @@ export function MonthTimedEvent({
             }
       }
     >
-      <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: colors.borderColor }} />
+      <div
+        data-slot="event-color-marker"
+        className="w-0.5 h-full shrink-0"
+        style={{ backgroundColor: colors.borderColor }}
+      />
       <span className="truncate">
         <span
+          data-slot="event-time"
           className="text-2xs numerical"
           style={{
-            color: colors.tintedTextColor,
+            color: highlighted ? "var(--accent-foreground)" : colors.tintedTextColor,
           }}
         >
           {formatTime(item.event.start, timeFormat)}

@@ -220,7 +220,7 @@
 @layer base {
   * {
     @apply border-border outline-ring/50;
-    scrollbar-width: none;
+    scrollbar-width: var(--scrollbar-width, none);
   }
   html,
   body {
@@ -330,5 +330,11 @@
     text-transform: var(--font-numerical-transform, none);
     font-size: var(--font-numerical-size, var(--text-xs));
     line-height: var(--tw-leading, var(--font-numerical-line-height, var(--text-xs--line-height)));
+  }
+}
+
+@layer components {
+  [data-agenda-item][data-highlighted] [data-slot="event-time"] {
+    color: inherit;
   }
 }

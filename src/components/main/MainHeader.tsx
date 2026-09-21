@@ -34,7 +34,7 @@ export function MainHeader({
   const { navigateToDate } = useCalendarNavigation()
 
   return (
-    <div className="shrink-0 flex gap-2 p-4">
+    <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 
@@ -81,9 +81,16 @@ const CalendarViewDropdown = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
+        <Button
+          data-control="select"
+          tabIndex={-1}
+          variant="secondary"
+          className="min-w-24 justify-between"
+        >
           {currentView?.name ?? "View"}
-          <ChevronDownIcon className="size-3 text-muted-foreground" />
+          <span data-slot="select-icon" aria-hidden="true">
+            <ChevronDownIcon className="size-3 text-muted-foreground" />
+          </span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -117,9 +124,16 @@ const GroupSwitcher = () => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
+        <Button
+          data-control="select"
+          tabIndex={-1}
+          variant="secondary"
+          className="min-w-24 justify-between"
+        >
           {formatGroupName(activeGroup)}
-          <ChevronDownIcon className="size-3 text-muted-foreground" />
+          <span data-slot="select-icon" aria-hidden="true">
+            <ChevronDownIcon className="size-3 text-muted-foreground" />
+          </span>
         </Button>
       </DropdownMenuTrigger>
 

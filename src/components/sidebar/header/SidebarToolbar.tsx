@@ -16,6 +16,7 @@ export function SidebarToolbar() {
 
   return (
     <div
+      data-slot="sidebar-toolbar"
       className={cn("flex justify-end items-center gap-3 md:justify-end relative", {
         "pl-[78px] md:pl-0": isMacOS && !isFullscreen,
       })}

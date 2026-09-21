@@ -56,7 +56,9 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <DropdownArrow forceVisible={variant === "default"} />
+        <span data-slot="select-icon" aria-hidden="true">
+          <DropdownArrow forceVisible={variant === "default"} />
+        </span>
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )

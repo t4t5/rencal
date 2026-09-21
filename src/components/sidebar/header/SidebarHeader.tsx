@@ -37,7 +37,7 @@ function SidebarHeaderContent() {
   }, [showDraft])
 
   return (
-    <div className="flex flex-col p-4 pb-0">
+    <div data-slot="sidebar-header" className="flex flex-col p-4 pb-0">
       <SidebarToolbar />
 
       <div
@@ -52,7 +52,7 @@ function SidebarHeaderContent() {
           }
         }}
       >
-        <div className="overflow-hidden pt-4">
+        <div data-slot="sidebar-draft" className="overflow-hidden pt-4">
           {renderDraft && (
             <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", hideCard && "opacity-0")}>
               <ComposeEventInner

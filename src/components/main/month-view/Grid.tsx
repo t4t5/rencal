@@ -360,6 +360,7 @@ export function MonthGrid({
 
           return (
             <div
+              data-slot="month-week"
               key={weekDays[0].dateKey}
               style={{
                 position: "absolute",

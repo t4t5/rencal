@@ -176,7 +176,7 @@ This compact theme changes density and typography only through top-level tokens.
 
 The three control-spacing properties apply to the event composer and editor. Override them together or independently to change field density without repairing individual rows. A larger text scale should also use control heights that leave enough room for the resulting line height.
 
-There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
+There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's default `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
 
 ### Pasting a shadcn theme
 
@@ -226,3 +226,38 @@ Older custom rules that painted `[data-slot="input-group"]` inside a combobox sh
 ## Compatibility
 
 The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. `--divider` → `--border`, `--radius-base` → `--radius`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
+
+### Calendar shell styling hooks
+
+The main view fills the space below its toolbar using flex sizing; toolbar padding
+and control height can change without a fixed viewport-height offset.
+
+Calendar chrome exposes these slots for scoped theme rules:
+
+- `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
+- `minical-header`, `minical-title`, `minical-navigation`, `calendar-event-dots`;
+- `agenda`, `agenda-day`, `agenda-date`, `agenda-timed-event`;
+- `month-weekdays`, `month-weekday`, `month-week`, `month-date`, `month-day`,
+  `month-day-number`, `month-timed-event`, `month-all-day-event`;
+- `event-color-marker` and `event-time` on timed month/agenda events;
+- `select-icon` on select triggers and the toolbar's group/view dropdowns.
+
+Toolbar group/view dropdowns retain their button slot and expose
+`data-control="select"`. Mini-calendar navigation buttons expose
+`data-direction="previous"` / `"next"`. Month dates and day bodies expose
+`data-active="true"`; day numbers expose `data-today="true"`. Highlighted timed
+month events and agenda rows expose `data-highlighted="true"`. False states
+omit these attributes. Mini-calendar buttons retain their existing explicit
+`true`/`false` selection attributes, and their selection styles can be overridden
+without `!important`.
+
+Scrollbars remain hidden by default. Set `--scrollbar-width: auto` to restore
+native scrollbars; WebKit scrollbar pseudo-elements can customize their appearance.
+Themes should preserve the calendar's scroll containers, virtual row heights, and
+event positioning when styling these slots.
+
+Buttons also expose `data-button=""`. Use this attribute for button surface rules:
+Radix `asChild` composition may replace `data-slot` with `tooltip-trigger`,
+`dropdown-menu-trigger`, or another trigger slot. `data-button` survives that
+composition while each trigger keeps its own slot. The collapsible sidebar draft
+exposes `sidebar-draft` for adjusting the space above its content.
