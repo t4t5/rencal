@@ -2,15 +2,31 @@ import { rpc } from "@/rpc"
 import type {
   ExternalTheme,
   ExternalThemeError,
+  ExternalThemeFont,
+  ExternalThemeFonts,
   ExternalThemesSnapshot,
+  FontStyle,
   OmarchyColors,
 } from "@/rpc/bindings"
 
-export type { ExternalTheme, ExternalThemeError, ExternalThemesSnapshot, OmarchyColors }
+export type {
+  ExternalTheme,
+  ExternalThemeError,
+  ExternalThemeFont,
+  ExternalThemeFonts,
+  ExternalThemesSnapshot,
+  FontStyle,
+  OmarchyColors,
+}
 
 /** Loose and plugin themes; `external-themes-changed` reports later edits. */
 export function listExternalThemes(): Promise<ExternalThemesSnapshot> {
   return rpc.themes.list_external()
+}
+
+/** Lazily read the manifest-declared WOFF2 faces owned by an installed plugin theme. */
+export function loadExternalThemeFonts(themeId: string): Promise<ExternalThemeFonts> {
+  return rpc.themes.load_fonts(themeId)
 }
 
 /** The active Omarchy palette, or null when Omarchy is not installed. */
@@ -29,6 +45,7 @@ export async function setConfiguredTheme(theme: string): Promise<void> {
 
 export const themes = {
   listExternal: listExternalThemes,
+  loadFonts: loadExternalThemeFonts,
   getOmarchyColors,
   getConfigured: getConfiguredTheme,
   setConfigured: setConfiguredTheme,

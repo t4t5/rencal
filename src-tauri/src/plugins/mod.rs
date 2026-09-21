@@ -9,19 +9,20 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
-    Appearance, Contributions, MANIFEST_FILE, PluginError, PluginManifest, ThemeContribution,
-    validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
+    Appearance, Contributions, FontContribution, FontStyle, MANIFEST_FILE, PluginError,
+    PluginManifest, ThemeContribution, validate_manifest, validate_manifest_owner,
+    validate_package_id, validate_release_tag,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
 use toml_edit::{Array, Document, Item, Value};
 
-mod installer;
+pub(crate) mod installer;
 
 pub use installer::{
-    InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginInspection,
-    PluginInstallError, PluginInstallErrorKind, PluginManager, PluginReconcileError,
-    PluginThemeInspection,
+    InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginFontInspection,
+    PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager,
+    PluginReconcileError, PluginThemeInspection,
 };
 
 /// Validate a GitHub repository reference and return its canonical owner/name form.

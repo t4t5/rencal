@@ -3,8 +3,9 @@
 
 use crate::events::AppEvent;
 
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
+use base64::Engine;
 use notify::RecursiveMode;
 use rencal_config::RencalConfig;
 use serde::{Deserialize, Serialize};
@@ -12,7 +13,7 @@ use specta::Type;
 use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-use crate::plugins::{self, Appearance};
+use crate::plugins::{self, Appearance, FontStyle, MANIFEST_FILE};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -42,6 +43,49 @@ pub struct ExternalThemesSnapshot {
     pub themes: Vec<ExternalTheme>,
     pub errors: Vec<ExternalThemeError>,
 }
+
+#[derive(Clone, Debug, Deserialize, Serialize, Type)]
+pub struct ExternalThemeFont {
+    pub family: String,
+    pub weight: u16,
+    pub style: FontStyle,
+    pub data: String,
+}
+
+#[derive(Clone, Debug, Default, Deserialize, Serialize, Type)]
+pub struct ExternalThemeFonts {
+    pub fonts: Vec<ExternalThemeFont>,
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum ExternalThemeFontErrorKind {
+    InvalidInput,
+    InvalidPackage,
+    Io,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ExternalThemeFontError {
+    pub kind: ExternalThemeFontErrorKind,
+    message: String,
+}
+
+impl ExternalThemeFontError {
+    fn new(kind: ExternalThemeFontErrorKind, message: impl Into<String>) -> Self {
+        Self {
+            kind,
+            message: message.into(),
+        }
+    }
+}
+
+impl std::fmt::Display for ExternalThemeFontError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.message)
+    }
+}
+
+impl std::error::Error for ExternalThemeFontError {}
 
 fn themes_dir() -> Option<PathBuf> {
     RencalConfig::config_dir().ok().map(|d| d.join("themes"))
@@ -194,6 +238,144 @@ pub fn scan() -> ExternalThemesSnapshot {
     scan_from(themes_dir.as_deref(), plugins_dir.as_deref())
 }
 
+pub fn load_fonts(theme_id: &str) -> Result<ExternalThemeFonts, ExternalThemeFontError> {
+    if theme_id.starts_with("user:") {
+        return Ok(ExternalThemeFonts::default());
+    }
+    let root = plugins::plugins_dir().map_err(|error| {
+        ExternalThemeFontError::new(ExternalThemeFontErrorKind::Io, error.to_string())
+    })?;
+    load_fonts_from(&root, theme_id)
+}
+
+fn load_fonts_from(
+    plugins_root: &Path,
+    theme_id: &str,
+) -> Result<ExternalThemeFonts, ExternalThemeFontError> {
+    if theme_id.starts_with("user:") {
+        return Ok(ExternalThemeFonts::default());
+    }
+    let Some((package_id, contribution_id)) = theme_id.split_once('/') else {
+        return Err(ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::InvalidInput,
+            format!("external theme id {theme_id:?} is not a plugin theme"),
+        ));
+    };
+    if contribution_id.contains('/') {
+        return Err(ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::InvalidInput,
+            format!("external theme id {theme_id:?} is invalid"),
+        ));
+    }
+    plugins::validate_package_id(package_id).map_err(|error| {
+        ExternalThemeFontError::new(ExternalThemeFontErrorKind::InvalidInput, error.to_string())
+    })?;
+
+    let package_dir = plugins_root.join(package_id);
+    let canonical_root = std::fs::canonicalize(plugins_root).map_err(|error| {
+        ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::Io,
+            format!("could not resolve {}: {error}", plugins_root.display()),
+        )
+    })?;
+    let canonical_package = std::fs::canonicalize(&package_dir).map_err(|error| {
+        ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::Io,
+            format!("could not resolve {}: {error}", package_dir.display()),
+        )
+    })?;
+    if !canonical_package.starts_with(&canonical_root) {
+        return Err(ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::InvalidPackage,
+            format!("plugin package {package_id:?} resolves outside the plugin directory"),
+        ));
+    }
+    let manifest_path = canonical_package.join(MANIFEST_FILE);
+    let contents = std::fs::read_to_string(&manifest_path).map_err(|error| {
+        ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::Io,
+            format!("could not read {}: {error}", manifest_path.display()),
+        )
+    })?;
+    let manifest = plugins::validate_manifest(&contents, plugins::running_app_version().as_ref())
+        .map_err(|error| {
+            ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::InvalidPackage,
+                error.to_string(),
+            )
+        })?;
+    if manifest.id != package_id
+        || !manifest
+            .contributes
+            .themes
+            .iter()
+            .any(|theme| theme.id == contribution_id)
+    {
+        return Err(ExternalThemeFontError::new(
+            ExternalThemeFontErrorKind::InvalidInput,
+            format!("plugin theme {theme_id:?} is not installed"),
+        ));
+    }
+
+    let mut fonts = Vec::with_capacity(manifest.contributes.fonts.len());
+    for font in manifest.contributes.fonts {
+        let path = canonical_package.join(&font.file);
+        let canonical = std::fs::canonicalize(&path).map_err(|error| {
+            ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::Io,
+                format!(
+                    "could not read active-theme font {}: {error}",
+                    path.display()
+                ),
+            )
+        })?;
+        if !canonical.starts_with(&canonical_package) {
+            return Err(ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::InvalidPackage,
+                format!(
+                    "active-theme font {:?} resolves outside its plugin package",
+                    font.file
+                ),
+            ));
+        }
+        let bytes = std::fs::read(&canonical).map_err(|error| {
+            ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::Io,
+                format!(
+                    "could not read active-theme font {}: {error}",
+                    path.display()
+                ),
+            )
+        })?;
+        if bytes.len() > plugins::installer::FONT_FILE_LIMIT {
+            return Err(ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::InvalidPackage,
+                format!(
+                    "active-theme font {:?} exceeds the {} byte limit",
+                    font.file,
+                    plugins::installer::FONT_FILE_LIMIT
+                ),
+            ));
+        }
+        if !bytes.starts_with(b"wOF2") {
+            return Err(ExternalThemeFontError::new(
+                ExternalThemeFontErrorKind::InvalidPackage,
+                format!(
+                    "active-theme font {:?} does not have a valid WOFF2 signature",
+                    font.file
+                ),
+            ));
+        }
+        fonts.push(ExternalThemeFont {
+            family: font.family,
+            weight: font.weight,
+            style: font.style,
+            data: base64::engine::general_purpose::STANDARD.encode(bytes),
+        });
+    }
+    Ok(ExternalThemeFonts { fonts })
+}
+
 /// Watches loose themes and installed plugin packages, then emits one combined snapshot.
 pub async fn run_watcher(app: AppHandle) {
     let (Some(themes_dir), Some(plugins_dir)) = (ensure_themes_dir(), ensure_plugins_dir()) else {
@@ -219,7 +401,11 @@ pub async fn run_watcher(app: AppHandle) {
 
 #[cfg(test)]
 mod tests {
-    use super::{ExternalThemeSource, parse_name, scan_from, slugify};
+    use super::{
+        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from, parse_name, scan_from,
+        slugify,
+    };
+    use base64::Engine;
 
     const MANIFEST: &str = r#"
 id = "alice.dusk"
@@ -227,6 +413,26 @@ name = "Dusk"
 version = "1.0.0"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
+
+[[contributes.themes]]
+id = "dark"
+name = "Dusk Dark"
+css = "theme.css"
+appearance = "dark"
+"#;
+
+    const FONT_MANIFEST: &str = r#"
+id = "alice.dusk"
+name = "Dusk"
+version = "1.0.0"
+description = "A quiet theme"
+min_rencal_version = "0.8.0"
+
+[[contributes.fonts]]
+family = "Pixel"
+file = "fonts/pixel.woff2"
+weight = 700
+style = "italic"
 
 [[contributes.themes]]
 id = "dark"
@@ -277,5 +483,74 @@ appearance = "dark"
         }));
         assert_eq!(snapshot.errors.len(), 1);
         assert_eq!(snapshot.errors[0].package, "bob.broken");
+    }
+
+    #[test]
+    fn loads_declared_fonts_for_an_exact_installed_theme() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.dusk");
+        std::fs::create_dir_all(package.join("fonts")).unwrap();
+        std::fs::write(package.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
+        std::fs::write(package.join("fonts/pixel.woff2"), b"wOF2font").unwrap();
+
+        let result = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap();
+
+        assert_eq!(result.fonts.len(), 1);
+        assert_eq!(result.fonts[0].family, "Pixel");
+        assert_eq!(result.fonts[0].weight, 700);
+        assert_eq!(result.fonts[0].style, crate::plugins::FontStyle::Italic);
+        assert_eq!(
+            result.fonts[0].data,
+            base64::engine::general_purpose::STANDARD.encode(b"wOF2font")
+        );
+    }
+
+    #[test]
+    fn returns_no_fonts_for_loose_or_fontless_themes() {
+        assert!(
+            load_fonts_from(std::path::Path::new("unused"), "user:local")
+                .unwrap()
+                .fonts
+                .is_empty()
+        );
+
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.dusk");
+        std::fs::create_dir_all(&package).unwrap();
+        std::fs::write(package.join("rencal-plugin.toml"), MANIFEST).unwrap();
+        assert!(
+            load_fonts_from(temp.path(), "alice.dusk/dark")
+                .unwrap()
+                .fonts
+                .is_empty()
+        );
+    }
+
+    #[test]
+    fn rejects_missing_invalid_and_oversized_installed_fonts() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.dusk");
+        std::fs::create_dir_all(package.join("fonts")).unwrap();
+        std::fs::write(package.join("rencal-plugin.toml"), FONT_MANIFEST).unwrap();
+        let path = package.join("fonts/pixel.woff2");
+
+        let missing = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap_err();
+        assert_eq!(missing.kind, ExternalThemeFontErrorKind::Io);
+
+        std::fs::write(&path, b"invalid").unwrap();
+        let invalid = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap_err();
+        assert_eq!(invalid.kind, ExternalThemeFontErrorKind::InvalidPackage);
+
+        let mut oversized = vec![0; crate::plugins::installer::FONT_FILE_LIMIT + 1];
+        oversized[..4].copy_from_slice(b"wOF2");
+        std::fs::write(path, oversized).unwrap();
+        let oversized = load_fonts_from(temp.path(), "alice.dusk/dark").unwrap_err();
+        assert_eq!(oversized.kind, ExternalThemeFontErrorKind::InvalidPackage);
+
+        let unknown = load_fonts_from(temp.path(), "alice.dusk/missing").unwrap_err();
+        assert_eq!(unknown.kind, ExternalThemeFontErrorKind::InvalidInput);
+
+        let traversal = load_fonts_from(temp.path(), "../outside").unwrap_err();
+        assert_eq!(traversal.kind, ExternalThemeFontErrorKind::InvalidInput);
     }
 }

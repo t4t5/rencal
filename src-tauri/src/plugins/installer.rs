@@ -4,6 +4,7 @@
 //! declarations, and lockfile updates are serialized so a failed install or
 //! update can put the previous state back before returning.
 
+use std::collections::HashSet;
 use std::future::Future;
 use std::path::{Path, PathBuf};
 use std::pin::Pin;
@@ -17,15 +18,17 @@ use specta::Type;
 use tokio::sync::Mutex;
 
 use super::{
-    Appearance, MANIFEST_FILE, PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile,
-    load_plugin_lock_file, load_plugins_file, plugins_dir, plugins_file_path, plugins_lock_path,
-    running_app_version, save_plugin_lock_file, save_plugins_file, scan_packages,
-    validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
+    Appearance, FontStyle, MANIFEST_FILE, PluginLockEntry, PluginLockFile, PluginManifest,
+    PluginsFile, load_plugin_lock_file, load_plugins_file, plugins_dir, plugins_file_path,
+    plugins_lock_path, running_app_version, save_plugin_lock_file, save_plugins_file,
+    scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
+    validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
+pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
 const CATALOG_URL: &str = "https://rencal.org/plugins.json";
 
@@ -134,6 +137,14 @@ pub struct PluginThemeInspection {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+pub struct PluginFontInspection {
+    pub family: String,
+    pub file: String,
+    pub weight: u16,
+    pub style: FontStyle,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 pub struct PluginInspection {
     pub id: String,
     pub name: String,
@@ -143,6 +154,7 @@ pub struct PluginInspection {
     pub min_rencal_version: String,
     pub compatible: bool,
     pub themes: Vec<PluginThemeInspection>,
+    pub fonts: Vec<PluginFontInspection>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -828,6 +840,17 @@ impl PluginManager {
                     appearance: theme.appearance,
                 })
                 .collect(),
+            fonts: manifest
+                .contributes
+                .fonts
+                .iter()
+                .map(|font| PluginFontInspection {
+                    family: font.family.clone(),
+                    file: font.file.clone(),
+                    weight: font.weight,
+                    style: font.style,
+                })
+                .collect(),
         };
         Ok(ResolvedPackage {
             inspection,
@@ -1001,14 +1024,32 @@ impl PluginManager {
             PluginInstallError::io(format!("could not stage {MANIFEST_FILE}"), error)
         })?;
         let mut package_size = package.manifest_text.len();
+        let mut files = Vec::new();
+        let mut seen = HashSet::new();
         for theme in &package.manifest.contributes.themes {
+            if seen.insert(theme.css.as_str()) {
+                files.push((theme.css.as_str(), CSS_FILE_LIMIT, false));
+            }
+        }
+        for font in &package.manifest.contributes.fonts {
+            if seen.insert(font.file.as_str()) {
+                files.push((font.file.as_str(), FONT_FILE_LIMIT, true));
+            }
+        }
+
+        for (file, limit, is_font) in files {
             let bytes = self
                 .fetch_bounded(
-                    self.raw_url(repository, &package.commit, &theme.css),
-                    CSS_FILE_LIMIT,
-                    MissingResponse::PackageFile(theme.css.clone()),
+                    self.raw_url(repository, &package.commit, file),
+                    limit,
+                    MissingResponse::PackageFile(file.to_owned()),
                 )
                 .await?;
+            if is_font && !bytes.starts_with(b"wOF2") {
+                return Err(PluginInstallError::invalid_package(format!(
+                    "font file {file:?} does not have a valid WOFF2 signature"
+                )));
+            }
             package_size += bytes.len();
             if package_size > PACKAGE_LIMIT {
                 return Err(PluginInstallError::invalid_package(format!(
@@ -1016,7 +1057,7 @@ impl PluginManager {
                     PACKAGE_LIMIT
                 )));
             }
-            let path = directory.join(&theme.css);
+            let path = directory.join(file);
             if let Some(parent) = path.parent() {
                 std::fs::create_dir_all(parent).map_err(|error| {
                     PluginInstallError::io(format!("could not create {}", parent.display()), error)
@@ -1299,9 +1340,32 @@ css = "themes/dark.css"
 appearance = "dark"
 "#;
 
+    const MANIFEST_WITH_FONTS: &str = r#"id = "alice.dusk"
+name = "Dusk"
+version = "1.0.0"
+description = "A quiet theme"
+min_rencal_version = "0.8.0"
+
+[[contributes.fonts]]
+family = "Pixel"
+file = "fonts/pixel.woff2"
+
+[[contributes.fonts]]
+family = "Pixel"
+file = "fonts/pixel.woff2"
+weight = 700
+
+[[contributes.themes]]
+id = "dark"
+name = "Dusk Dark"
+css = "themes/dark.css"
+appearance = "dark"
+"#;
+
     struct FixtureDownloader {
         base: Url,
         responses: Arc<StdMutex<HashMap<String, (u16, Vec<u8>)>>>,
+        requests: Arc<StdMutex<HashMap<String, usize>>>,
         pause: Arc<StdMutex<Option<DownloadPause>>>,
     }
 
@@ -1317,6 +1381,7 @@ appearance = "dark"
             Self {
                 base: Url::parse("https://fixture.invalid/").unwrap(),
                 responses: Arc::new(StdMutex::new(HashMap::new())),
+                requests: Arc::new(StdMutex::new(HashMap::new())),
                 pause: Arc::new(StdMutex::new(None)),
             }
         }
@@ -1338,6 +1403,15 @@ appearance = "dark"
             *self.pause.lock().unwrap() = Some(pause);
             handles
         }
+
+        fn request_count(&self, path: &str) -> usize {
+            self.requests
+                .lock()
+                .unwrap()
+                .get(path)
+                .copied()
+                .unwrap_or_default()
+        }
     }
 
     impl Downloader for FixtureDownloader {
@@ -1353,6 +1427,12 @@ appearance = "dark"
                     key.push('?');
                     key.push_str(query);
                 }
+                *self
+                    .requests
+                    .lock()
+                    .unwrap()
+                    .entry(key.clone())
+                    .or_default() += 1;
                 let (status, bytes) = self
                     .responses
                     .lock()
@@ -1411,6 +1491,24 @@ appearance = "dark"
             &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
             200,
             b"--background: #111;".to_vec(),
+        );
+    }
+
+    fn serve_fonts(downloader: &FixtureDownloader, commit: &str, manifest: &str, font: &[u8]) {
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{commit}/rencal-plugin.toml"),
+            200,
+            manifest.as_bytes().to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{commit}/themes/dark.css"),
+            200,
+            b"--font-body: Pixel;".to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{commit}/fonts/pixel.woff2"),
+            200,
+            font.to_vec(),
         );
     }
 
@@ -1578,6 +1676,151 @@ appearance = "dark"
     }
 
     #[tokio::test]
+    async fn inspects_and_installs_deduplicated_font_files() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        serve_fonts(&downloader, COMMIT_V1, MANIFEST_WITH_FONTS, b"wOF2font-v1");
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+
+        let inspection = manager.inspect("Alice/rencal-dusk").await.unwrap();
+        assert_eq!(inspection.fonts.len(), 2);
+        assert_eq!(inspection.fonts[0].family, "Pixel");
+        assert_eq!(inspection.fonts[0].weight, 400);
+        assert_eq!(inspection.fonts[1].weight, 700);
+
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let font_path = temp
+            .path()
+            .join("data/plugins/alice.dusk/fonts/pixel.woff2");
+        assert_eq!(std::fs::read(font_path).unwrap(), b"wOF2font-v1");
+        let request_path = format!("/Alice/rencal-dusk/{COMMIT_V1}/fonts/pixel.woff2");
+        assert_eq!(downloader.request_count(&request_path), 1);
+    }
+
+    #[tokio::test]
+    async fn invalid_font_downloads_do_not_replace_an_installed_package() {
+        for (status, font) in [
+            (404, Vec::new()),
+            (200, vec![b'x'; FONT_FILE_LIMIT + 1]),
+            (200, b"not-a-woff2".to_vec()),
+        ] {
+            let downloader = Arc::new(FixtureDownloader::new());
+            serve_v1(&downloader);
+            let temp = tempfile::tempdir().unwrap();
+            let manager = manager(&temp, downloader.clone());
+            manager.install("Alice/rencal-dusk").await.unwrap();
+
+            let manifest_v2 = MANIFEST_WITH_FONTS.replace("1.0.0", "2.0.0");
+            downloader.set(
+                "/repos/Alice/rencal-dusk/releases/latest",
+                200,
+                br#"{"tag_name":"v2.0.0"}"#.to_vec(),
+            );
+            downloader.set(
+                "/repos/Alice/rencal-dusk/commits?sha=v2.0.0&per_page=1",
+                200,
+                format!(r#"[{{"sha":"{COMMIT_V2}"}}]"#).into_bytes(),
+            );
+            serve_fonts(&downloader, COMMIT_V2, &manifest_v2, &font);
+            downloader.set(
+                &format!("/Alice/rencal-dusk/{COMMIT_V2}/fonts/pixel.woff2"),
+                status,
+                font,
+            );
+
+            assert!(manager.install("Alice/rencal-dusk").await.is_err());
+            assert_eq!(
+                std::fs::read_to_string(
+                    temp.path().join("data/plugins/alice.dusk/themes/dark.css")
+                )
+                .unwrap(),
+                "--background: #111;"
+            );
+            assert_eq!(
+                load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                    .unwrap()
+                    .plugins[0]
+                    .version,
+                "1.0.0"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn package_limit_counts_font_bytes() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let manifest = MANIFEST_WITH_FONTS
+            .replace(
+                "[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/pixel.woff2\"\nweight = 700\n",
+                "[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/two.woff2\"\nweight = 700\n\n[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/three.woff2\"\nweight = 900\n",
+            );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
+            200,
+            manifest,
+        );
+        downloader.set(
+            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
+            200,
+            vec![b'c'; CSS_FILE_LIMIT],
+        );
+        for file in ["pixel.woff2", "two.woff2", "three.woff2"] {
+            let mut bytes = vec![0; FONT_FILE_LIMIT];
+            bytes[..4].copy_from_slice(b"wOF2");
+            downloader.set(
+                &format!("/Alice/rencal-dusk/{COMMIT_V1}/fonts/{file}"),
+                200,
+                bytes,
+            );
+        }
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        let error = manager.install("Alice/rencal-dusk").await.unwrap_err();
+        assert!(error.to_string().contains("package exceeds"));
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+    }
+
+    #[tokio::test]
+    async fn updating_replaces_font_bytes() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        serve_fonts(&downloader, COMMIT_V1, MANIFEST_WITH_FONTS, b"wOF2font-v1");
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install("Alice/rencal-dusk").await.unwrap();
+
+        downloader.set(
+            "/repos/Alice/rencal-dusk/releases/latest",
+            200,
+            br#"{"tag_name":"v2.0.0"}"#.to_vec(),
+        );
+        downloader.set(
+            "/repos/Alice/rencal-dusk/commits?sha=v2.0.0&per_page=1",
+            200,
+            format!(r#"[{{"sha":"{COMMIT_V2}"}}]"#).into_bytes(),
+        );
+        serve_fonts(
+            &downloader,
+            COMMIT_V2,
+            &MANIFEST_WITH_FONTS.replace("1.0.0", "2.0.0"),
+            b"wOF2font-v2",
+        );
+
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        assert_eq!(
+            std::fs::read(
+                temp.path()
+                    .join("data/plugins/alice.dusk/fonts/pixel.woff2")
+            )
+            .unwrap(),
+            b"wOF2font-v2"
+        );
+    }
+
+    #[tokio::test]
     async fn installs_default_branch_head_without_a_release() {
         let downloader = Arc::new(FixtureDownloader::new());
         downloader.set(
@@ -1678,16 +1921,7 @@ appearance = "dark"
     #[tokio::test]
     async fn restores_the_exact_declared_commit() {
         let downloader = Arc::new(FixtureDownloader::new());
-        downloader.set(
-            &format!("/Alice/rencal-dusk/{COMMIT_V1}/rencal-plugin.toml"),
-            200,
-            MANIFEST_V1.as_bytes().to_vec(),
-        );
-        downloader.set(
-            &format!("/Alice/rencal-dusk/{COMMIT_V1}/themes/dark.css"),
-            200,
-            b"--background: #111;".to_vec(),
-        );
+        serve_fonts(&downloader, COMMIT_V1, MANIFEST_WITH_FONTS, b"wOF2restored");
         let temp = tempfile::tempdir().unwrap();
         let manager = manager(&temp, downloader);
         save_plugins_file(
@@ -1712,6 +1946,14 @@ appearance = "dark"
 
         assert!(manager.reconcile().await.is_empty());
         assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+        assert_eq!(
+            std::fs::read(
+                temp.path()
+                    .join("data/plugins/alice.dusk/fonts/pixel.woff2")
+            )
+            .unwrap(),
+            b"wOF2restored"
+        );
     }
 
     #[tokio::test]

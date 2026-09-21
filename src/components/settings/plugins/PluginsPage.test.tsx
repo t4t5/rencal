@@ -33,6 +33,14 @@ const plugin: PluginInspection = {
   min_rencal_version: "0.7.0",
   compatible: true,
   themes: [{ id: "dark", name: "Dusk Dark", appearance: "dark" }],
+  fonts: [
+    {
+      family: "Pixel",
+      file: "fonts/pixel-bold.woff2",
+      weight: 700,
+      style: "normal",
+    },
+  ],
 }
 const installed: InstalledPlugin = {
   id: plugin.id,
@@ -99,6 +107,7 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   expect(api.plugins.install).not.toHaveBeenCalled()
   const dialog = document.querySelector('[role="dialog"]')!
   expect(dialog.textContent).toContain("Dusk Dark")
+  expect(dialog.textContent).toContain("Pixel · 700 · normal · pixel-bold.woff2")
   expect(dialog.textContent).toContain("Compatible")
   expect(dialog.textContent).toContain("unreviewed community packages")
   vi.mocked(api.plugins.list).mockResolvedValue({
@@ -110,6 +119,13 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(document.body.textContent).toContain("1.10.0")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
+})
+
+it("omits the font review section for a package without fonts", async () => {
+  vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, fonts: [] })
+  await render()
+  await click("Review install")
+  expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain("Fonts")
 })
 
 it("reviews an install received from a deep link", async () => {

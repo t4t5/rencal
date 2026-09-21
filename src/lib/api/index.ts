@@ -39,6 +39,7 @@ export type {
   InstalledPlugins,
   PluginCatalog,
   PluginCatalogEntry,
+  PluginFontInspection,
   PluginInspection,
   PluginInstallLink,
   PluginThemeInspection,
@@ -49,7 +50,10 @@ export type { SyncPreview } from "@/lib/api/sync"
 export type {
   ExternalTheme,
   ExternalThemeError,
+  ExternalThemeFont,
+  ExternalThemeFonts,
   ExternalThemesSnapshot,
+  FontStyle,
   OmarchyColors,
 } from "@/lib/api/themes"
 export type { CalendarEvent, EventAttendee, Recurrence, ResponseStatus } from "@/lib/cal-events"

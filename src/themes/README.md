@@ -111,11 +111,25 @@ Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed i
 
 ### Typography (fonts)
 
-| Variable           | Purpose             |
-| ------------------ | ------------------- |
-| `--font-heading`   | Heading font-family |
-| `--font-button`    | Button font-family  |
-| `--font-numerical` | Numeric font-family |
+| Variable           | Purpose                                      |
+| ------------------ | -------------------------------------------- |
+| `--font-body`      | Application body and `.bodytext` font-family |
+| `--font-heading`   | Heading font-family                          |
+| `--font-button`    | Button font-family                           |
+| `--font-numerical` | Numeric font-family                          |
+
+Plugin themes can bundle WOFF2 faces declared by their package manifest. The family is then used like any other CSS font value, with a fallback stack for graceful degradation:
+
+```toml
+[[contributes.fonts]]
+family = "Pixelated MS Sans Serif"
+file = "fonts/ms_sans_serif.woff2"
+```
+
+```css
+--font-body: "Pixelated MS Sans Serif", Arial, sans-serif;
+--font-heading: "Pixelated MS Sans Serif", Arial, sans-serif;
+```
 
 ### Typography identity (optional)
 
@@ -123,6 +137,7 @@ These are unset by default. Setting them from a theme opts into theme-specific t
 
 | Variable                         | Purpose                                                    |
 | -------------------------------- | ---------------------------------------------------------- |
+| `--font-body-transform`          | `text-transform` for the application body and `.bodytext`  |
 | `--font-heading-transform`       | `text-transform` for `.font-heading` (e.g., `uppercase`)   |
 | `--font-button-transform`        | `text-transform` for `.font-button`                        |
 | `--font-button-size`             | Override button font size                                  |
