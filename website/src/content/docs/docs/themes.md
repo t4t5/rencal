@@ -35,6 +35,9 @@ Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-for
 
 Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block and add `--hover-tint` if it is missing.
 
+renCal adds `--selected` and `--selected-foreground` for persistent selection;
+they derive one tint step beyond `--accent` unless the theme sets them directly.
+
 You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `--text-base`, and the matching `--text-<step>--line-height` properties. Line heights must use pixels because month lanes derive their height from `--text-xs--line-height`.
 
 ```css
@@ -72,5 +75,33 @@ Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` sl
 ```
 
 Buttons expose `data-typography="action"` for ordinary actions and `data-typography="field"` for actions embedded in event fields. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
+
+### Calendar events
+
+Every event block exposes `data-slot="calendar-event"`, including week, month,
+agenda, board, search, and drag renderings. Use `data-view` to specialize a view
+and `data-kind` (`timed` or `all-day`) to specialize its shape. Event content
+uses the stable `calendar-event-title`, `calendar-event-time`, and
+`calendar-event-color-marker` slots.
+
+The event root carries `data-highlighted`, `data-rsvp`, `data-draft`,
+`data-dimmed`, and `data-drag-state` when those states apply. RSVP values are
+`accepted`, `tentative`, `declined`, and `needs-action`; false boolean states are
+omitted. Do not style `data-event-clickable`, which is an internal interaction
+marker.
+
+renCal sets the event's source colour as `--calendar-event-color`. All visible
+paint is regular CSS, so a theme can override backgrounds, text, borders, and
+shadows without `!important`. Preserve inline positioning and sizing: those
+values are event geometry.
+
+Event hover uses `--hover`. On unfilled blocks, `data-highlighted` uses
+`--selected` / `--selected-foreground`; filled blocks use the derived
+`--calendar-event-selected-fill`.
+
+Composed controls retain their primitive slot. For example, the searchable
+timezone button remains a `popover-trigger` and exposes `data-control="select"`
+plus a `select-icon` child; cross-primitive select rules should target the
+control marker rather than replacing its slot.
 
 The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. `--divider` and `--radius-base` have temporary compatibility fallbacks, but new themes should use `--border` and `--radius`.

@@ -25,6 +25,7 @@ import { useJumpToEvent } from "@/hooks/useJumpToEvent"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { prepareSearchResults } from "@/lib/search-results"
 
 export function SearchPalette({
@@ -156,6 +157,7 @@ export function SearchPalette({
                     event={event}
                     color={getCalendarColor(calendarBySlug.get(event.calendar_slug))}
                     timeFormat={timeFormat}
+                    rsvp={getUserResponseStatus(event, calendars)}
                   />
                 </CommandItem>
               ))}

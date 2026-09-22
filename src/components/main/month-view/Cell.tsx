@@ -17,7 +17,7 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_TIMED_VISIBLE = 4
@@ -73,7 +73,7 @@ export function MonthDayCell({
           className={cn(
             "flex flex-col gap-1 px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
             day.isWeekend && "bg-weekend",
-            isActiveDay && "bg-accent",
+            isActiveDay && "bg-selected",
           )}
           id={isActiveDay ? ACTIVE_DAY_EL_ID : undefined}
           data-drop-day={day.dateKey}
@@ -102,8 +102,7 @@ export function MonthDayCell({
                 key={key}
                 item={item}
                 highlighted={key === activeEventKey || key === selectedEventKey}
-                isPending={isPendingEvent(item.event, calendars)}
-                isDeclined={isDeclinedEvent(item.event, calendars)}
+                rsvp={getUserResponseStatus(item.event, calendars)}
                 isDraft={item.event === draftEvent}
                 dimmed={dimmed}
                 onClick={() => onEventClick(key)}

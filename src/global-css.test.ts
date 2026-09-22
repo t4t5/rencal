@@ -54,6 +54,8 @@ describe("global CSS contract", () => {
   it("compiles every shadcn color utility used by shared UI", () => {
     const candidates = [
       "text-accent-foreground",
+      "bg-selected",
+      "text-selected-foreground",
       "bg-border",
       "border-border",
       "text-card-foreground",
@@ -74,6 +76,22 @@ describe("global CSS contract", () => {
 
     expect(css).toContain('[data-appearance="dark"]')
     expect(css).not.toContain("prefers-color-scheme")
+  })
+
+  it("keeps calendar event hover and selection on separate tokens", () => {
+    const calendarEventRules = [
+      ...source.matchAll(/([^{}]*\[data-slot="calendar-event"\][^{}]*)\{([^{}]*)\}/g),
+    ]
+
+    for (const [, selector, declarations] of calendarEventRules) {
+      if (selector.includes(":hover")) {
+        expect(declarations, selector.trim()).not.toContain("var(--accent)")
+      }
+    }
+
+    expect(source).toMatch(
+      /:where\([\s\S]*?\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-view="agenda"\]\[data-kind="timed"\][\s\S]*?\[data-view="board"\][\s\S]*?\)\[data-highlighted\]\s*\{[^}]*background:\s*var\(--selected\);[^}]*color:\s*var\(--selected-foreground\);[^}]*\}/,
+    )
   })
 
   it("keeps scale utilities runtime-themeable and roles in the components layer", () => {

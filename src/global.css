@@ -122,6 +122,8 @@
 
   --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
   --accent-foreground: var(--foreground);
+  --selected: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--accent));
+  --selected-foreground: var(--foreground);
   --muted: var(--secondary);
   --weekend: var(--hover);
 
@@ -204,6 +206,8 @@
   --color-weekend: var(--weekend);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
 
   --color-border: var(--border);
   --color-divider: var(--border);
@@ -381,16 +385,148 @@
 }
 
 @layer components {
-  :is(
+  :where(
     [data-slot="agenda-date"],
     [data-slot="agenda-empty"],
     [data-slot="agenda-all-day-events"],
-    [data-slot="agenda-timed-event"]
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
   ) {
     padding-inline: var(--agenda-padding-inline);
   }
 
-  [data-agenda-item][data-highlighted] [data-slot="event-time"] {
+  [data-slot="calendar-event"] {
+    --calendar-event-boosted-color: oklch(from var(--calendar-event-color) l calc(c * 1.4) h);
+    --calendar-event-tinted-color: oklch(
+      from var(--calendar-event-color) min(l, var(--event-text-max-lightness, 1))
+        calc(c * var(--event-text-chroma, 1.4)) h
+    );
+    --calendar-event-tinted-foreground: color-mix(
+      in srgb,
+      var(--foreground) var(--event-text-foreground-mix, 60%),
+      var(--calendar-event-tinted-color)
+    );
+    --calendar-event-fill: var(
+      --event-background,
+      color-mix(
+        in srgb,
+        var(--calendar-event-boosted-color) 20%,
+        var(--event-tint-surface, var(--background))
+      )
+    );
+    --calendar-event-selected-fill: color-mix(
+      in srgb,
+      var(--calendar-event-fill) 80%,
+      var(--event-foreground, var(--foreground))
+    );
+    --calendar-event-foreground: var(--event-foreground, var(--calendar-event-tinted-foreground));
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="drag-overlay"]
+  ) {
+    background: var(--calendar-event-fill);
+    color: var(--calendar-event-foreground);
+  }
+
+  :where([data-slot="calendar-event"][data-view="week"][data-kind="timed"]) {
+    border: 1px solid var(--background);
+  }
+
+  :where(
+      [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
+      [data-slot="calendar-event"][data-view="board"]
+    ):not([data-highlighted]):hover {
+    background: var(--hover);
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
+    [data-slot="calendar-event"][data-view="board"]
+  )[data-highlighted] {
+    background: var(--selected);
+    color: var(--selected-foreground);
+  }
+
+  :where(
+      [data-slot="calendar-event"][data-view="week"],
+      [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
+    ):not([data-highlighted], [data-draft], [data-drag-state="preview"]):hover {
+    filter: brightness(1.05);
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="drag-overlay"]
+  )[data-highlighted] {
+    background: var(--calendar-event-selected-fill);
+  }
+
+  [data-slot="calendar-event"] [data-slot="calendar-event-color-marker"] {
+    background: var(--calendar-event-color);
+  }
+
+  [data-slot="calendar-event"][data-rsvp="declined"] {
+    text-decoration: line-through;
+  }
+
+  [data-slot="calendar-event"]:is([data-rsvp="declined"], [data-rsvp="needs-action"]) {
+    opacity: 0.5;
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
+  ):is([data-rsvp="declined"], [data-rsvp="needs-action"]) {
+    border: 1px dashed var(--calendar-event-color);
+    background: transparent;
+    color: color-mix(
+      in srgb,
+      var(--foreground) var(--event-text-foreground-mix, 50%),
+      var(--calendar-event-tinted-color)
+    );
+  }
+
+  [data-slot="calendar-event"][data-draft] {
+    border: 1px dashed var(--calendar-event-color);
+    background: color-mix(
+      in srgb,
+      var(--calendar-event-boosted-color) 15%,
+      var(--event-tint-surface, var(--background))
+    );
+    color: color-mix(
+      in srgb,
+      var(--foreground) var(--event-text-foreground-mix, 40%),
+      var(--calendar-event-tinted-color)
+    );
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--calendar-event-color) 25%, transparent);
+    font-weight: var(--font-weight-medium);
+  }
+
+  [data-slot="calendar-event"][data-dimmed] {
+    opacity: 0.5;
+  }
+
+  [data-slot="calendar-event"][data-drag-state="source"] {
+    opacity: 0.4;
+  }
+
+  [data-slot="calendar-event"][data-drag-state="preview"] {
+    pointer-events: none;
+    background: var(--calendar-event-fill);
+    color: var(--calendar-event-foreground);
+    box-shadow: 0 0 0 1.5px var(--calendar-event-color);
+  }
+
+  [data-slot="calendar-event"][data-highlighted] [data-slot="calendar-event-time"] {
     color: inherit;
   }
 }

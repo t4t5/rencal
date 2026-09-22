@@ -43,7 +43,7 @@ Most user themes only set variables, which is plain scoped CSS. If a theme adds 
 
 ## Primitives
 
-These are the variables theme files normally override. Surfaces and state colors (`--hover`, `--card`, `--secondary`, `--border`, `--accent`, `--muted`, `--popover`, `--input`, and their foregrounds) are derived on the `[data-theme]` node. They use the same meanings as shadcn tokens and remain directly overridable.
+These are the variables theme files normally override. Surfaces and state colors (`--hover`, `--card`, `--secondary`, `--border`, `--accent`, `--selected`, `--muted`, `--popover`, `--input`, and their foregrounds) are derived on the `[data-theme]` node. The shadcn tokens keep their standard meanings; renCal's additional selection pair remains directly overridable too.
 
 ### Colors
 
@@ -63,13 +63,16 @@ These are the variables theme files normally override. Surfaces and state colors
 
 #### Optional colors
 
-Unset by default; a theme sets them to opt in.
+The selection pair is derived by default and can be overridden as a unit. Event
+colour overrides are unset by default and opt in to their documented behaviour.
 
-| Variable             | Purpose                                                                                                                                                    |
-| -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--event-color`      | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
-| `--event-background` | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
-| `--event-foreground` | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                                   |
+| Variable                | Purpose                                                                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--selected`            | Persistent selection surface; defaults to one tint step beyond `--accent`.                                                                                 |
+| `--selected-foreground` | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
+| `--event-color`         | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
+| `--event-background`    | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
+| `--event-foreground`    | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                                   |
 
 #### Event text
 
@@ -94,13 +97,19 @@ The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `
 
 Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
 
-Shared components keep semantic background and foreground pairs together:
-`accent` is the interactive highlight surface and uses `accent-foreground`,
+Interactive state has three tiers. `accent` / `accent-foreground` is the
+transient highlight for menu items, keyboard focus, ghost buttons, and neutral
+control rows. `hover` is a transparent content tint with no paired foreground,
+so event and agenda text keeps its own colour. `selected` /
+`selected-foreground` is the persistent state for highlighted events, active
+month days, and selected mini-calendar days. Selection never uses `accent`, and
+a selected item does not react to hover. Keyboard focus remains transient and
+uses a ring or `accent`, never `selected`.
+
 `secondary` is a secondary button surface, and `muted` is a static
-de-emphasized surface. `hover` is the exception: it is a transparent tint and
-does not replace the inherited foreground. If a theme needs lighter menu
-highlights, change its `accent` value rather than pairing an unrelated surface
-with `accent-foreground`.
+de-emphasized surface. If a theme needs lighter menu highlights, change its
+`accent` value rather than pairing an unrelated surface with
+`accent-foreground`.
 
 For development, `contract-debug.css` supplies deliberately clashing values for
 these surfaces. It is intentionally absent from the manifest, so it does not
@@ -279,23 +288,53 @@ Calendar chrome exposes these slots for scoped theme rules:
 - `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-navigation`, `calendar-event-dots`;
 - `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-empty`,
-  `agenda-all-day-events`, `agenda-timed-event`;
+  `agenda-all-day-events`;
 - `month-weekdays`, `month-weekday`, `month-week`, `month-date`, `month-day`,
-  `month-day-number`, `month-timed-event`, `month-all-day-event`;
-- `event-color-marker` and `event-time` on timed month/agenda events;
+  `month-day-number`;
+- `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
+  `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
 
 Toolbar group/view dropdowns retain their button slot and expose
-`data-control="select"`. The searchable timezone dropdown also exposes
-`data-control="select"`, with `select-trigger` on its button and `select-icon` on
-its trailing arrow, so themes can style it like other selects while retaining
-its search popover. Mini-calendar navigation buttons expose
-`data-direction="previous"` / `"next"`. Month dates and day bodies expose
-`data-active="true"`; day numbers expose `data-today="true"`. Highlighted timed
-month events and agenda rows expose `data-highlighted="true"`. False states
-omit these attributes. Mini-calendar buttons retain their existing explicit
-`true`/`false` selection attributes, and their selection styles can be overridden
-without `!important`.
+`data-control="select"`. The searchable timezone dropdown exposes that control
+marker and `select-icon` on its trailing arrow. Its button intentionally keeps
+the `popover-trigger` slot: composed triggers retain their primitive slot and
+use control markers for cross-primitive styling. Mini-calendar navigation
+buttons expose `data-direction="previous"` / `"next"`. Month dates and day
+bodies expose `data-active="true"`; day numbers expose `data-today="true"`.
+Mini-calendar buttons retain their existing explicit `true`/`false` selection
+attributes, and their selection styles can be overridden without `!important`.
+
+### Calendar event styling hooks
+
+Every rendered event uses `data-slot="calendar-event"`. The `data-view` values
+are `week`, `month`, `agenda`, `board`, `search`, and `drag-overlay`; the
+`data-kind` values are `timed` and `all-day`. The stable child slots are
+`calendar-event-title`, `calendar-event-time`, and
+`calendar-event-color-marker`; a part is omitted when that rendering does not
+need it.
+
+Event state is metadata on the same element that owns its visual treatment:
+
+- `data-highlighted="true"` marks selection or an open context menu;
+- `data-rsvp` exposes `accepted`, `tentative`, `declined`, or `needs-action` for
+  the current user and is omitted when the event has no applicable response;
+- `data-draft="true"` and `data-dimmed="true"` expose transient editor states;
+- `data-drag-state` uses `source`, `preview`, or `overlay` to distinguish the
+  original block, its drop-position preview, and the pointer-following copy.
+
+False boolean states are omitted. `data-event-clickable` remains an internal
+interaction marker and is not part of the styling contract.
+
+The app sets only `--calendar-event-color` inline. Backgrounds, foregrounds,
+borders, opacity, and shadows are CSS, so ordinary theme selectors can override
+them without `!important`. Hover uses `--hover`. On unfilled blocks,
+`data-highlighted` paints with `--selected`; filled blocks use
+`--calendar-event-selected-fill`. The derived `--calendar-event-fill`,
+`--calendar-event-selected-fill`, `--calendar-event-foreground`, and
+`--calendar-event-tinted-foreground` custom properties are also available on
+each event. Inline `top`, `left`, `width`, `height`, and grid placement are
+layout geometry and must be preserved.
 
 The `agenda` slot is the fixed outer frame: apply backgrounds, borders, shadows,
 and padding there. Its `agenda-scroll` child owns scrolling and clips the day
@@ -325,10 +364,8 @@ Week view exposes `week-scroll`, `week-header`, `week-header-gutter`,
 backgrounds, and timed columns expose `data-active="true"` for the selected date;
 day numbers expose `data-today="true"`. False states omit these attributes.
 
-Events expose `week-timed-event` and `week-all-day-event`, with
-`data-highlighted="true"` for selection or an open context menu. Timed event
-stripes and time labels use the shared `event-color-marker` and `event-time`
-slots, including compact events. Draft and drag-preview blocks retain the slots.
+Week events use the shared calendar-event contract above. The all-day lane
+wrapper retains `week-all-day-lane`; it is geometry rather than event paint.
 
 `--week-grid-background` optionally replaces the timed columns' background image.
 Use the app-provided `--week-hour-height` measurement to align custom grid lines

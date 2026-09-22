@@ -10,9 +10,10 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import type { Calendar } from "@/lib/api"
-import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import {
   coversFullDay,
   epochDay,
@@ -21,7 +22,7 @@ import {
   getRelativeDayLabel,
   today,
 } from "@/lib/event-time"
-import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import {
@@ -57,8 +58,7 @@ export const DaySection = forwardRef<
       isDraft,
       isActive: !isDraft && !!activeEvent && key === eventKey(activeEvent),
       isSelected: key === selectedEventKey,
-      isPending: isPendingEvent(event, calendars),
-      isDeclined: isDeclinedEvent(event, calendars),
+      rsvp: getUserResponseStatus(event, calendars),
     }
   }
 
@@ -179,8 +179,7 @@ type RowState = {
   isActive: boolean
   isSelected: boolean
   isDraft: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
 }
 
 type RowHandlers = {
@@ -219,8 +218,13 @@ const AgendaEventRowShell = ({
 }: AgendaEventRowShellProps) => (
   <div
     tabIndex={-1}
+    data-slot="calendar-event"
+    data-view="agenda"
+    data-kind={allDay ? "all-day" : "timed"}
     data-event-clickable={!state.isDraft || undefined}
     data-highlighted={state.isActive || state.isSelected || undefined}
+    data-rsvp={state.rsvp ?? undefined}
+    data-draft={state.isDraft || undefined}
     data-agenda-item
     data-event-key={state.key}
     data-date-key={dateKey}
@@ -230,50 +234,40 @@ const AgendaEventRowShell = ({
     onKeyDown={(e) => onKeyDown(event, e)}
     onClick={state.isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
     className={className}
+    style={getCalendarEventStyle({
+      calendarColor: state.calendarColor,
+      eventColor: event.color,
+    })}
   >
     {children}
   </div>
 )
 
 const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
-  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
   return (
     <AgendaEventRowShell
       event={event}
       dateKey={dateKey}
       state={state}
       allDay
-      className="rounded-base outline-none"
+      className="rounded-base outline-none px-1 py-px leading-4 inline-flex text-xs cursor-default"
       {...handlers}
     >
-      <AgendaAllDayEventBlock
-        event={event}
-        calendarColor={calendarColor}
-        highlighted={isActive || isSelected}
-        isDashed={isPending || isDeclined}
-        isDeclined={isDeclined}
-        isDraft={isDraft}
-      />
+      <AgendaAllDayEventBlock event={event} />
     </AgendaEventRowShell>
   )
 }
 
 const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
-  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
-
   return (
     <AgendaEventRowShell
       event={event}
       dateKey={dateKey}
       state={state}
-      className={cn("cursor-default hover:bg-secondary py-1 outline-none", {
-        "bg-accent! text-accent-foreground": isActive || isSelected,
-        "opacity-50": isPending || isDeclined || isDraft,
-        "line-through": isDeclined,
-      })}
+      className="flex gap-3 cursor-default py-1 outline-none"
       {...handlers}
     >
-      <AgendaTimedEventBlock event={event} calendarColor={calendarColor} dateKey={dateKey} />
+      <AgendaTimedEventBlock event={event} dateKey={dateKey} />
     </AgendaEventRowShell>
   )
 }

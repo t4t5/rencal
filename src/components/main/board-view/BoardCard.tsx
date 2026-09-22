@@ -10,7 +10,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { CalendarEvent, eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockColors } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import {
   dateInViewerZone,
   formatMonth,
@@ -18,6 +18,7 @@ import {
   formatTime,
   isSameDay,
 } from "@/lib/event-time"
+import { getUserResponseStatus } from "@/lib/event-utils"
 
 export const BoardCard = memo(function BoardCard({
   event,
@@ -30,8 +31,9 @@ export const BoardCard = memo(function BoardCard({
   const { calendars } = useCalendars()
   const calendarBySlug = useMemo(() => new Map(calendars.map((c) => [c.slug, c])), [calendars])
   const calendarColor = getCalendarColor(calendarBySlug.get(event.calendar_slug))
-  const colors = getEventBlockColors({ calendarColor, eventColor: event.color })
-  const { toggleActiveEventKey } = useCalEvents()
+  const rsvp = getUserResponseStatus(event, calendars)
+  const { activeEvent, toggleActiveEventKey } = useCalEvents()
+  const highlighted = activeEvent ? eventKey(activeEvent) === eventKey(event) : false
 
   const formatRangeDate = (date: CalendarEvent["start"]): string => {
     const plainDate = dateInViewerZone(date)
@@ -46,29 +48,38 @@ export const BoardCard = memo(function BoardCard({
 
   return (
     <div
-      className="cursor-default hover:bg-secondary py-1.5 border-b border-border last:border-b-0 outline-none"
+      data-slot="calendar-event"
+      data-view="board"
+      data-kind={event.start.kind === "date" ? "all-day" : "timed"}
+      data-highlighted={highlighted || undefined}
+      data-rsvp={rsvp ?? undefined}
+      className="cursor-default py-1.5 border-b border-border last:border-b-0 outline-none"
       data-event-clickable
+      style={getCalendarEventStyle({ calendarColor, eventColor: event.color })}
       onClick={handleClick}
     >
       <div className="flex gap-3 pl-3 pr-2">
         {/* Left accent bar — no rounding, matches event blocks in other views */}
-        <div
-          className="w-[3px] shrink-0 self-stretch"
-          style={{ backgroundColor: colors.borderColor }}
-        />
+        <div data-slot="calendar-event-color-marker" className="w-[3px] shrink-0 self-stretch" />
         <div className="min-w-0">
           {showDate && (
-            <div className="text-xs text-muted-foreground numerical h-4">
+            <div
+              data-slot="calendar-event-time"
+              className="text-xs text-muted-foreground numerical h-4"
+            >
               {formatShortDate(event.start)}
             </div>
           )}
 
-          <div className="text-sm font-medium truncate">
+          <div data-slot="calendar-event-title" className="text-sm font-medium truncate">
             {event.summary || <UntitledEventText />}
           </div>
 
           {event.start.kind !== "date" && (
-            <div className="text-muted-foreground numerical text-xs h-4">
+            <div
+              data-slot="calendar-event-time"
+              className="text-muted-foreground numerical text-xs h-4"
+            >
               {isSameDay(event.start, event.end)
                 ? `${formatTime(event.start, timeFormat)} - ${formatTime(event.end, timeFormat)}`
                 : `${formatRangeDate(event.start)} ${formatTime(event.start, timeFormat)} - ${formatRangeDate(event.end)} ${formatTime(event.end, timeFormat)}`}
@@ -76,7 +87,9 @@ export const BoardCard = memo(function BoardCard({
           )}
 
           {event.start.kind === "date" && (
-            <div className="text-xs text-muted-foreground h-4">All day</div>
+            <div data-slot="calendar-event-time" className="text-xs text-muted-foreground h-4">
+              All day
+            </div>
           )}
 
           {event.location && (

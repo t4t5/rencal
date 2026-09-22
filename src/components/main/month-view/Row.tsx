@@ -12,7 +12,7 @@ import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { isoWeekNumber } from "@/lib/event-time"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { MonthDragToCreateSelection } from "./DragToCreateSelection"
 import { TopLeftDate } from "./TopLeftDate"
@@ -132,8 +132,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               key={key}
               item={item}
               highlighted={key === activeEventKey || key === selectedEventKey}
-              isPending={isPendingEvent(item.event, calendars)}
-              isDeclined={isDeclinedEvent(item.event, calendars)}
+              rsvp={getUserResponseStatus(item.event, calendars)}
               isDraft={item.event === draftEvent}
               dimmed={dimmed}
               onClick={() => onEventClick(key)}

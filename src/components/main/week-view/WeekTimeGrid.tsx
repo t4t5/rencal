@@ -24,7 +24,7 @@ import {
   startOfWeek,
   type FirstDayOfWeek,
 } from "@/lib/event-time"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import { AllDayContextMenu } from "./AllDayContextMenu"
@@ -276,8 +276,7 @@ export function WeekTimeGrid({
                     colOffset={1}
                     rowOffset={1}
                     highlighted={key === activeEventKey || key === selectedEventKey}
-                    isPending={isPendingEvent(item.event, calendars)}
-                    isDeclined={isDeclinedEvent(item.event, calendars)}
+                    rsvp={getUserResponseStatus(item.event, calendars)}
                     isDraft={item.event === draftEvent}
                     dimmed={dimmed}
                     onClick={() => onEventClick(key)}
@@ -343,8 +342,7 @@ export function WeekTimeGrid({
                       key={key}
                       layout={layout}
                       highlighted={key === activeEventKey || key === selectedEventKey}
-                      isPending={isPendingEvent(layout.event, calendars)}
-                      isDeclined={isDeclinedEvent(layout.event, calendars)}
+                      rsvp={getUserResponseStatus(layout.event, calendars)}
                       isDraft={layout.event === draftEvent}
                       dimmed={dimmed}
                       onEventClick={onEventClick}

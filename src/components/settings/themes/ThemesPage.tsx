@@ -50,7 +50,9 @@ function ThemeGrid({
             onClick={() => onSelect(t.id)}
             className={cn(
               "relative flex flex-col gap-2 p-3 rounded-md border-2 text-left transition-colors",
-              isActive ? "border-primary" : "border-transparent hover:bg-secondary",
+              isActive
+                ? "border-primary"
+                : "border-transparent hover:bg-accent hover:text-accent-foreground",
             )}
           >
             <Palette themeId={t.id} />

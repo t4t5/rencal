@@ -102,7 +102,7 @@ function ConferenceItem({
   const Icon = conferenceIcon[provider]
 
   return (
-    <ControlRow className="group h-control rounded-md border border-transparent text-sm hover:bg-secondary focus-within:bg-secondary">
+    <ControlRow className="group h-control rounded-md border border-transparent text-sm hover:bg-accent hover:text-accent-foreground focus-within:bg-accent focus-within:text-accent-foreground">
       <ControlLeading>
         <Icon />
       </ControlLeading>

@@ -179,7 +179,7 @@ const ReminderRow = ({
     <ControlRow
       key={mins}
       className={cn(
-        "group h-control cursor-default rounded-md border border-transparent text-sm hover:bg-secondary focus-within:bg-secondary",
+        "group h-control cursor-default rounded-md border border-transparent text-sm hover:bg-accent hover:text-accent-foreground focus-within:bg-accent focus-within:text-accent-foreground",
         !indented && "gap-0",
         className,
       )}

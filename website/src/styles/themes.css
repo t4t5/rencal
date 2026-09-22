@@ -51,6 +51,8 @@
   --secondary-foreground: var(--foreground);
   --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
   --accent-foreground: var(--foreground);
+  --selected: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--accent));
+  --selected-foreground: var(--foreground);
   --muted: var(--secondary);
   --weekend: var(--hover);
   --border: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));

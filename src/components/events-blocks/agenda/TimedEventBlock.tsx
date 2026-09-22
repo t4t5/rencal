@@ -9,7 +9,6 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useNow } from "@/hooks/useNow"
 import { CalendarEvent } from "@/lib/cal-events"
 import { getMeetingUrl, hasVideoMeeting, isWithinJoinWindow } from "@/lib/conference"
-import { getEventBlockColors } from "@/lib/event-styles"
 import type { TimeFormat } from "@/lib/event-time"
 import { type EventDateInfo, formatDateKey, formatTime, isSameDay } from "@/lib/event-time"
 
@@ -17,38 +16,33 @@ import { VideoIcon } from "@/icons/video"
 
 export const AgendaTimedEventBlock = memo(function EventRow({
   event,
-  calendarColor,
   dateKey,
 }: {
   event: CalendarEvent
-  calendarColor: string
   dateKey: string
 }) {
   const { timeFormat } = useSettings()
 
-  const colors = getEventBlockColors({ calendarColor, eventColor: event.color })
   const timeLabel = getTimeLabel(event, dateKey, timeFormat)
   const meetingUrl = getMeetingUrl(event)
 
   return (
-    <div data-slot="agenda-timed-event" className="flex gap-3">
-      <div
-        data-slot="event-color-marker"
-        className="w-[3px] shrink-0 rounded-base"
-        style={{ backgroundColor: colors.borderColor }}
-      />
+    <>
+      <div data-slot="calendar-event-color-marker" className="w-[3px] shrink-0 rounded-base" />
       <div className="relative flex-1 min-w-0 text-sm">
         <div
-          data-slot="event-time"
+          data-slot="calendar-event-time"
           className="flex items-center gap-1.5 text-muted-foreground numerical text-xs h-4"
         >
           <span>{timeLabel}</span>
           {hasVideoMeeting(event) && <VideoIcon className="size-3 shrink-0" />}
         </div>
-        <div className="font-medium">{event.summary || <UntitledEventText />}</div>
+        <div data-slot="calendar-event-title" className="font-medium">
+          {event.summary || <UntitledEventText />}
+        </div>
       </div>
       {meetingUrl && <JoinMeetingButton url={meetingUrl} dateInfo={event.dateInfo} />}
-    </div>
+    </>
   )
 })
 

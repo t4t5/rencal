@@ -7,23 +7,22 @@ import { UntitledEventText } from "@/components/ui/untitled-event-text"
 import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
+import type { ResponseStatus } from "@/lib/cal-events"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
 export function MonthAllDayEvent({
   item,
   highlighted: highlightedByParent,
-  isPending,
-  isDeclined,
+  rsvp,
   isDraft,
   dimmed,
   onClick,
 }: {
   item: AllDayLaneItem
   highlighted: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
   isDraft: boolean
   dimmed: boolean
   onClick: () => void
@@ -38,8 +37,6 @@ export function MonthAllDayEvent({
   const onDragPointerDown = useEventDragHandle(item.event, { disabled: isStatic })
 
   const highlighted = highlightedByParent || contextOpen
-  const isDashed = isPending || isDeclined
-
   const fillsRow = item.endCol - item.startCol === 7
 
   const handleClick: MouseEventHandler<HTMLDivElement> | undefined = (e) => {
@@ -53,33 +50,31 @@ export function MonthAllDayEvent({
   const inner = (
     <div
       ref={ref}
-      data-slot="month-all-day-event"
+      data-slot="calendar-event"
+      data-view="month"
+      data-kind="all-day"
+      data-highlighted={highlighted || undefined}
+      data-rsvp={rsvp ?? undefined}
+      data-draft={isDraft || undefined}
+      data-dimmed={(!isStatic && dimmed) || undefined}
+      data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        getEventBlockClasses(highlighted, isDeclined),
-        "absolute truncate px-1 py-px text-xs",
-        isDashed && "opacity-50",
-        !isStatic && dimmed && "opacity-50",
+        "absolute truncate px-1 py-px text-xs cursor-default",
         item.isStart && "rounded-l",
         item.isEnd && "rounded-r",
-        dragRole === "source" && "opacity-40",
-        isDragPreview && "pointer-events-none",
       )}
       style={{
         ...allDayBarStyle(item, item.lane),
-        ...getEventBlockStyle({
+        ...getCalendarEventStyle({
           calendarColor: item.calendarColor,
           eventColor: item.event.color,
-          highlighted,
-          isDashed,
-          isDraft,
-          isDragPreview,
         }),
       }}
       onPointerDown={onDragPointerDown}
       onClick={handleClick}
     >
-      {item.event.summary || <UntitledEventText />}
+      <span data-slot="calendar-event-title">{item.event.summary || <UntitledEventText />}</span>
     </div>
   )
 
