@@ -100,7 +100,12 @@ function SheetFooter({ className, ...props }: React.ComponentProps<"div">) {
 
 function SheetTitle({ className, ...props }: React.ComponentProps<"h2">) {
   return (
-    <h2 data-slot="sheet-title" className={cn(sheetSharedStyles.title, className)} {...props} />
+    <h2
+      data-slot="sheet-title"
+      data-typography="heading"
+      className={cn(sheetSharedStyles.title, className)}
+      {...props}
+    />
   )
 }
 

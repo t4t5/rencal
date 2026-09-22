@@ -107,8 +107,16 @@ describe("global CSS contract", () => {
     const css = build(["text-sm"])
 
     expect(css).toMatch(/\.text-sm[^{]*\{[^}]*font-size:\s*var\(--text-sm\)/s)
-    expect(css).toMatch(/@layer components\s*\{[\s\S]*?\.button\s*\{/)
+    expect(css).toMatch(/@layer components\s*\{[\s\S]*?\[data-typography="action"\]\s*\{/)
     expect(css).toContain("@layer theme, base, components, utilities")
+  })
+
+  it("uses explicit typography roles instead of generic global classes", () => {
+    expect(source).not.toMatch(/^\s*\.(?:button|heading|numerical|field-action)\s*\{/m)
+
+    for (const role of ["action", "field", "heading", "numerical"]) {
+      expect(source).toContain(`[data-typography="${role}"]`)
+    }
   })
 
   it("exposes one spacing token to every control sizing utility", () => {

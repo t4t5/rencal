@@ -16,9 +16,10 @@ export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
       {WEEKDAY_LABELS[firstDayOfWeek].map((label) => (
         <div
           data-slot="month-weekday"
+          data-typography="numerical"
           key={label}
           className={cn(
-            "text-2xs text-muted-foreground py-2 text-center font-medium numerical uppercase",
+            "text-2xs text-muted-foreground py-2 text-center font-medium uppercase",
             (label === "Sat" || label === "Sun") && "bg-weekend",
             dimmed && "opacity-50",
           )}

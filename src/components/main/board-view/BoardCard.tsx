@@ -65,7 +65,8 @@ export const BoardCard = memo(function BoardCard({
           {showDate && (
             <div
               data-slot="calendar-event-time"
-              className="text-xs text-muted-foreground numerical h-4"
+              data-typography="numerical"
+              className="text-xs text-muted-foreground h-4"
             >
               {formatShortDate(event.start)}
             </div>
@@ -78,7 +79,8 @@ export const BoardCard = memo(function BoardCard({
           {event.start.kind !== "date" && (
             <div
               data-slot="calendar-event-time"
-              className="text-muted-foreground numerical text-xs h-4"
+              data-typography="numerical"
+              className="text-muted-foreground text-xs h-4"
             >
               {isSameDay(event.start, event.end)
                 ? `${formatTime(event.start, timeFormat)} - ${formatTime(event.end, timeFormat)}`

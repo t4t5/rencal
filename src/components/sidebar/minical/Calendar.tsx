@@ -12,7 +12,7 @@ import {
   Weekday,
 } from "react-day-picker"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
 import { calendarSharedStyles } from "@/components/ui/calendar-styles"
 
 import { useSettings } from "@/contexts/SettingsContext"
@@ -80,16 +80,8 @@ function Calendar({
         months: cn(calendarSharedStyles.months, defaultClassNames.months),
         month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden"),
         nav: cn(calendarSharedStyles.nav, defaultClassNames.nav),
-        button_previous: cn(
-          buttonVariants({ variant: buttonVariant }),
-          calendarSharedStyles.navButton,
-          defaultClassNames.button_previous,
-        ),
-        button_next: cn(
-          buttonVariants({ variant: buttonVariant }),
-          calendarSharedStyles.navButton,
-          defaultClassNames.button_next,
-        ),
+        button_previous: cn(calendarSharedStyles.navButton, defaultClassNames.button_previous),
+        button_next: cn(calendarSharedStyles.navButton, defaultClassNames.button_next),
         month_caption: cn(calendarSharedStyles.monthCaption, defaultClassNames.month_caption),
         dropdowns: cn(calendarSharedStyles.dropdowns, defaultClassNames.dropdowns),
         dropdown_root: cn(calendarSharedStyles.dropdownRoot, defaultClassNames.dropdown_root),
@@ -158,10 +150,10 @@ function Calendar({
           return <Nav className={cn(className, "w-auto left-auto right-0 pr-4")} {...props} />
         },
         PreviousMonthButton: ({ className, ...props }) => {
-          return <Button variant="secondary" className={className} {...props} />
+          return <Button variant={buttonVariant} className={className} {...props} />
         },
         NextMonthButton: ({ className, ...props }) => {
-          return <Button variant="secondary" className={className} {...props} />
+          return <Button variant={buttonVariant} className={className} {...props} />
         },
         Week: ({ className, ...weekProps }) => {
           const { week } = weekProps

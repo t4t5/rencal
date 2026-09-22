@@ -33,10 +33,13 @@ export function BoardColumn({
           isToday && "bg-accent",
         )}
       >
-        <span className="text-2xs text-muted-foreground font-medium numerical uppercase tracking-wide">
+        <span
+          data-typography="numerical"
+          className="text-2xs text-muted-foreground font-medium uppercase tracking-wide"
+        >
           {title}
         </span>
-        <span className="text-2xs text-muted-foreground numerical tabular-nums">
+        <span data-typography="numerical" className="text-2xs text-muted-foreground tabular-nums">
           {events.length > 0 ? events.length : ""}
         </span>
       </div>
@@ -52,7 +55,12 @@ export function BoardColumn({
         ))}
 
         {events.length === 0 && (
-          <div className="text-xs text-muted-foreground text-center py-8 numerical">—</div>
+          <div
+            data-typography="numerical"
+            className="text-xs text-muted-foreground text-center py-8"
+          >
+            —
+          </div>
         )}
       </div>
     </div>

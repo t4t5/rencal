@@ -23,6 +23,7 @@ it("preserves a themeable button surface when Radix composes tooltip and menu tr
   const button = container.querySelector("button")!
   expect(container.querySelectorAll("button")).toHaveLength(1)
   expect(button.hasAttribute("data-button")).toBe(true)
+  expect(button.dataset.typography).toBe("action")
   expect(button.dataset.slot).toBe("tooltip-trigger")
   expect(button.getAttribute("aria-haspopup")).toBe("menu")
 })

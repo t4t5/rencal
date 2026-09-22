@@ -156,7 +156,9 @@ function Account({
       </div>
 
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
-        <span className="heading text-sm">{displayName}</span>
+        <span data-typography="heading" className="text-sm">
+          {displayName}
+        </span>
 
         <div className="flex items-center gap-1">
           <Tooltip>

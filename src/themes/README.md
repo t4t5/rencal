@@ -187,7 +187,7 @@ These are unset by default. Setting them opts into role-specific typography with
 | `--font-numerical-size`        | Numerical role size             |
 | `--font-numerical-line-height` | Numerical role line height      |
 
-Buttons expose their role through `data-typography`: ordinary actions use `action`, while inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
+Elements expose their role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `action`, and inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
 
 ### Type scale
 

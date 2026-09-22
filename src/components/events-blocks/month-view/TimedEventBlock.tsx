@@ -72,7 +72,7 @@ export function MonthTimedEvent({
     >
       <div data-slot="calendar-event-color-marker" className="w-0.5 h-full shrink-0" />
       <span className="truncate">
-        <span data-slot="calendar-event-time" className="text-2xs numerical">
+        <span data-slot="calendar-event-time" data-typography="numerical" className="text-2xs">
           {formatTime(item.event.start, timeFormat)}
         </span>{" "}
         <span data-slot="calendar-event-title">{item.event.summary || <UntitledEventText />}</span>

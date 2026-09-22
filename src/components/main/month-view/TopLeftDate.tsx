@@ -21,10 +21,11 @@ export function TopLeftDate({
   return (
     <div
       data-slot="month-date"
+      data-typography="numerical"
       data-active={isActive || undefined}
       className={cn(
         // Date alignment belongs to the calendar layout, not the active theme.
-        "numerical flex items-center justify-end gap-1 p-1 cursor-default border-r border-border last:border-r-0",
+        "flex items-center justify-end gap-1 p-1 cursor-default border-r border-border last:border-r-0",
         day.isWeekend && "bg-weekend",
         isActive && "bg-selected",
       )}

@@ -173,7 +173,7 @@ export function AttendeesDisplay({
                 data-typography="field"
                 value={inputValue}
                 placeholder={"Add participant"}
-                className="field-action min-w-0"
+                className="min-w-0"
                 aria-invalid={hasInvalidEmail}
                 onChange={(e) => {
                   setInputValue(e.target.value)

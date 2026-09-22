@@ -282,12 +282,17 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
         "text-today": isToday,
       })}
     >
-      <span data-slot="agenda-day-label" className="font-bold uppercase numerical">
+      <span
+        data-slot="agenda-day-label"
+        data-typography="numerical"
+        className="font-bold uppercase"
+      >
         {getRelativeDayLabel(date)}
       </span>
       <span
         data-slot="agenda-date-label"
-        className={cn("text-muted-foreground numerical", { "text-today": isToday })}
+        data-typography="numerical"
+        className={cn("text-muted-foreground", { "text-today": isToday })}
       >
         {formatDayMonth(date)}
       </span>

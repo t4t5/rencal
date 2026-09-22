@@ -74,7 +74,7 @@ Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` sl
 }
 ```
 
-Buttons expose `data-typography="action"` for ordinary actions and `data-typography="field"` for actions embedded in event fields. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
+Elements expose their typography role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `action`, and actions embedded in event fields use `field`. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
 
 ### Calendar events
 

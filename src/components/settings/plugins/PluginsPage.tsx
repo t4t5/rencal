@@ -392,7 +392,9 @@ function PluginRow({
       <PluginPreview key={previewUrl} url={previewUrl} name={name} />
       <div className="flex flex-1 flex-col gap-3 min-w-0">
         <div className="flex flex-col gap-1 min-w-0">
-          <h3 className="heading text-sm break-words">{name}</h3>
+          <h3 data-typography="heading" className="text-sm break-words">
+            {name}
+          </h3>
           <p className="text-xs text-muted-foreground break-words">
             {owner}
             {version && ` · ${version}`}

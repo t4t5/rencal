@@ -34,8 +34,8 @@ const buttonVariants = cva(
         false: "rounded-md",
       },
       typography: {
-        action: "button font-medium",
-        field: "field-action font-normal",
+        action: "font-medium",
+        field: "font-normal",
       },
     },
     defaultVariants: {

@@ -375,7 +375,8 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
           <span
             key={h}
             data-slot="week-hour-label"
-            className="absolute right-1.5 text-2xs text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
+            data-typography="numerical"
+            className="absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
             {formatWallclockTime(h, 0, timeFormat)}
@@ -401,9 +402,10 @@ const DayHeaders = ({
     <div
       key={day.dateKey}
       data-slot="week-day-header"
+      data-typography="numerical"
       data-active={day.dateKey === activeDateKey || undefined}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default numerical",
+        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}

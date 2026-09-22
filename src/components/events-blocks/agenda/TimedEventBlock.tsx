@@ -32,7 +32,8 @@ export const AgendaTimedEventBlock = memo(function EventRow({
       <div className="relative flex-1 min-w-0 text-sm">
         <div
           data-slot="calendar-event-time"
-          className="flex items-center gap-1.5 text-muted-foreground numerical text-xs h-4"
+          data-typography="numerical"
+          className="flex items-center gap-1.5 text-muted-foreground text-xs h-4"
         >
           <span>{timeLabel}</span>
           {hasVideoMeeting(event) && <VideoIcon className="size-3 shrink-0" />}
