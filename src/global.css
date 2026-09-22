@@ -45,15 +45,6 @@
    theme. */
 :root,
 [data-theme="ren"] {
-  /* Compatibility aliases for pre-contract themes. */
-  --mono: var(--font-mono);
-  --sans: var(--font-sans);
-
-  --font-body: var(--font-sans);
-  --font-heading: var(--font-mono);
-  --font-button: var(--font-mono);
-  --font-numerical: var(--font-mono);
-
   --font-heading-transform: uppercase;
   --font-button-transform: uppercase;
   --font-numerical-transform: uppercase;
@@ -98,6 +89,25 @@
 /* Variables computed from theme primitives. Keeping these on the themed node
    makes scoped previews and plugin-owned subtrees derive their own surfaces. */
 [data-theme] {
+  /* Recompute font roles where theme primitives are applied. Resetting the
+     legacy names also prevents a nested theme from inheriting an old alias. */
+  --mono: initial;
+  --sans: initial;
+  --font-mono: var(--mono, "Geist Mono", ui-monospace, monospace);
+  --font-sans: var(
+    --sans,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    sans-serif
+  );
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-mono);
+  --font-button: var(--font-mono);
+  --font-numerical: var(--font-mono);
+
   --control-icon-size: calc(var(--control-height) - 10px);
   --placeholder-foreground: var(--muted-foreground);
 

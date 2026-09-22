@@ -3,9 +3,22 @@ import { compile } from "tailwindcss"
 import { beforeAll, describe, expect, it } from "vitest"
 
 let build: Awaited<ReturnType<typeof compile>>["build"]
+let source: string
+
+function declarationsFor(selector: string) {
+  const rule = source.match(new RegExp(`${selector}\\s*\\{([\\s\\S]*?)\\n\\}`))
+  if (!rule?.[1]) throw new Error(`Missing CSS rule for ${selector}`)
+
+  return new Map(
+    [...rule[1].matchAll(/^\s*(--[\w-]+):\s*([^;]+);/gm)].map((match) => [
+      match[1],
+      match[2].trim(),
+    ]),
+  )
+}
 
 beforeAll(async () => {
-  const source = await readFile(new URL("./global.css", import.meta.url), "utf8")
+  source = await readFile(new URL("./global.css", import.meta.url), "utf8")
   const withoutImports = source.replace(/^@import .*;$/gm, "")
   const compiled = await compile(
     `@layer theme, base, components, utilities;\n@tailwind utilities;\n${withoutImports}`,
@@ -14,6 +27,30 @@ beforeAll(async () => {
 })
 
 describe("global CSS contract", () => {
+  it("redeclares direct token aliases on every theme scope", () => {
+    const defaults = declarationsFor(':root,\\s*\\[data-theme="ren"\\]')
+    const themed = declarationsFor("\\[data-theme\\]")
+
+    for (const [name, value] of defaults) {
+      if (value.startsWith("var(--")) {
+        expect(themed.has(name), `${name} depends on another theme token`).toBe(true)
+      }
+    }
+  })
+
+  it("derives font roles and font primitives on every theme scope", () => {
+    const themed = declarationsFor("\\[data-theme\\]")
+
+    expect(themed.get("--font-body")).toBe("var(--font-sans)")
+    expect(themed.get("--font-heading")).toBe("var(--font-mono)")
+    expect(themed.get("--font-button")).toBe("var(--font-mono)")
+    expect(themed.get("--font-numerical")).toBe("var(--font-mono)")
+    expect(themed.get("--font-sans")).toContain("var(\n    --sans,")
+    expect(themed.get("--font-mono")).toBe('var(--mono, "Geist Mono", ui-monospace, monospace)')
+    expect(themed.get("--sans")).toBe("initial")
+    expect(themed.get("--mono")).toBe("initial")
+  })
+
   it("compiles every shadcn color utility used by shared UI", () => {
     const candidates = [
       "text-accent-foreground",
