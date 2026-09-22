@@ -44,7 +44,15 @@ gen-types:
 
 # Test production version of app (needs build first)
 start:
-  src-tauri/target/release/bundle/appimage/renCal_0.0.1_amd64.AppImage
+  #!/usr/bin/env bash
+  set -euo pipefail
+  shopt -s nullglob
+  appimages=(src-tauri/target/release/bundle/appimage/renCal_*.AppImage)
+  if [[ ${#appimages[@]} -ne 1 ]]; then
+    echo "Expected exactly one AppImage in src-tauri/target/release/bundle/appimage. Run 'just build' first." >&2
+    exit 1
+  fi
+  "${appimages[0]}"
 
 # Check Rust and TypeScript types
 check:
