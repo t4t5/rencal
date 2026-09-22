@@ -105,4 +105,4 @@ controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
 
-The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. `--divider` and `--radius-base` have temporary compatibility fallbacks, but new themes should use `--border` and `--radius`.
+The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. The old `--divider` token is no longer supported; use `--border`. `--radius-base` has a temporary compatibility fallback, but new themes should use `--radius`.

@@ -40,7 +40,7 @@ export function SettingsSidebar() {
     <TabsList
       variant="navigation"
       aria-label="Settings"
-      className="w-[200px] shrink-0 self-stretch justify-start rounded-none border-r border-r-divider px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
+      className="w-[200px] shrink-0 self-stretch justify-start rounded-none border-r border-border px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
     >
       {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
         <TabsTrigger key={tab} value={tab}>

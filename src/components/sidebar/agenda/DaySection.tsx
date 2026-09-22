@@ -128,7 +128,7 @@ export const DaySection = forwardRef<
       ref={ref}
       data-slot="agenda-day"
       data-date={dateKey}
-      className="relative border-b border-b-divider"
+      className="relative border-b border-border"
     >
       <DateBar date={date} />
 

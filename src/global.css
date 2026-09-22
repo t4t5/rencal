@@ -114,7 +114,6 @@
   /* One-release fallbacks for the pre-contract names. */
   --radius-base: initial;
   --radius: var(--radius-base, 0px);
-  --divider: initial;
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
   --secondary: var(--hover);
   --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
@@ -127,10 +126,7 @@
   --muted: var(--secondary);
   --weekend: var(--hover);
 
-  --border: var(
-    --divider,
-    color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover))
-  );
+  --border: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
 
   /* same as hover, but solid color: */
   --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
@@ -210,7 +206,6 @@
   --color-selected-foreground: var(--selected-foreground);
 
   --color-border: var(--border);
-  --color-divider: var(--border);
   --color-input: var(--input);
 
   --color-ring: var(--ring);

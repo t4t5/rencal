@@ -268,7 +268,7 @@ Older custom rules that painted `[data-slot="input-group"]` inside a combobox sh
 
 ## Compatibility
 
-The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. `--divider` → `--border`, `--radius-base` → `--radius`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
+The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. The old `--divider` token is no longer supported; use `--border`. `--radius-base` → `--radius` and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
 
 ### Settings styling hooks
 
