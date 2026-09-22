@@ -111,6 +111,7 @@ Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed i
 | `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                        |
 | `--control-leading-size`   | Width of the centered event-field icon, swatch, or checkbox slot (`20px` by default) |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default)  |
+| `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                             |
 | `--tab-gap`                | Tab spacing                                                                          |
 | `--tab-list-shadow`        | Tab list outline                                                                     |
 
@@ -174,7 +175,7 @@ This compact theme changes density and typography only through top-level tokens.
 --text-xs--line-height: 14px;
 ```
 
-The three control-spacing properties apply to the event composer and editor. Override them together or independently to change field density without repairing individual rows. A larger text scale should also use control heights that leave enough room for the resulting line height.
+The four control-spacing properties apply to the event composer and editor. Override them together or independently to change field density without repairing individual rows. A larger text scale should also use control heights that leave enough room for the resulting line height.
 
 There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's default `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
 

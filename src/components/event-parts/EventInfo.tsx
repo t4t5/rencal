@@ -126,7 +126,7 @@ export function EventInfo({
 
       <Divider />
 
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col gap-[var(--control-row-gap)]">
         {(canEdit || !!location?.trim()) && (
           <LocationInput
             value={location}

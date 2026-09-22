@@ -66,6 +66,7 @@
   --control-padding-inline: 8px;
   --control-leading-size: 20px;
   --control-content-gap: 8px;
+  --control-row-gap: 4px;
 
   --background: #131313;
   --foreground: white;
