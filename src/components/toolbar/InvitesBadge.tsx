@@ -33,7 +33,15 @@ export function InvitesBadge() {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
     if (slugs.length === 0) return
 
-    api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
+    const load = () =>
+      api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
+
+    load()
+    // Synced or externally pulled .ics changes fire this; refetch so the badge stays current.
+    const unlisten = api.notifications.listen("events-changed", load)
+    return () => {
+      unlisten.unlisten()
+    }
   }, [calendars])
 
   const isMd = useBreakpoint("md")
