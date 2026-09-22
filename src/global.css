@@ -64,7 +64,8 @@
   --control-height-sm: 32px;
   --control-height-lg: 40px;
   --control-padding-inline: 8px;
-  --control-leading-size: 20px;
+  /* Root fallback; recomputed from the local height on each theme scope below. */
+  --control-icon-size: calc(var(--control-height) - 10px);
   --control-content-gap: 8px;
   --control-row-gap: 4px;
 
@@ -95,6 +96,8 @@
 /* Variables computed from theme primitives. Keeping these on the themed node
    makes scoped previews and plugin-owned subtrees derive their own surfaces. */
 [data-theme] {
+  --control-icon-size: calc(var(--control-height) - 10px);
+
   /* One-release fallbacks for the pre-contract names. */
   --radius-base: initial;
   --radius: var(--radius-base, 0px);
@@ -299,7 +302,7 @@
 
   .control-leading {
     display: flex;
-    width: var(--control-leading-size);
+    width: var(--control-icon-size);
     flex: none;
     align-items: center;
     justify-content: center;
@@ -318,7 +321,7 @@
 
   .control-trailing {
     display: flex;
-    min-width: var(--control-leading-size);
+    min-width: var(--control-icon-size);
     flex: none;
     align-items: center;
     justify-content: center;
@@ -326,8 +329,8 @@
 
   [data-slot="select-icon"] {
     display: flex;
-    width: var(--control-leading-size);
-    min-width: var(--control-leading-size);
+    width: var(--control-icon-size);
+    min-width: var(--control-icon-size);
     aspect-ratio: 1;
     flex: none;
     align-items: center;

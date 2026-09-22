@@ -167,7 +167,7 @@ const ZoneSwitchButton = ({
         <Button
           type="button"
           variant="secondary"
-          size="icon-md"
+          size="icon-sm"
           className="text-muted-foreground"
           aria-label={label}
           onClick={onClick}
@@ -251,7 +251,7 @@ const DateSelect = ({
           width: FIRST_INPUT_WIDTH,
         }}
       >
-        <span className="flex w-[calc(var(--control-padding-inline)+var(--control-leading-size))] shrink-0 justify-end">
+        <span className="flex w-[calc(var(--control-padding-inline)+var(--control-icon-size))] shrink-0 justify-end">
           <ControlLeading>{icon}</ControlLeading>
         </span>
         <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />

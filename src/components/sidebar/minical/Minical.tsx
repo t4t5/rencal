@@ -60,7 +60,10 @@ const CurrentMonth = () => {
   const { activeDate } = useCalendarNavigation()
 
   return (
-    <h2 data-slot="minical-title" className="text-2xl font-bold heading">
+    <h2
+      data-slot="minical-title"
+      className="text-2xl font-bold heading whitespace-nowrap overflow-hidden text-ellipsis"
+    >
       {formatMonth(activeDate, "long")}{" "}
       <span className="text-highlight font-normal">{activeDate.year}</span>
     </h2>

@@ -109,19 +109,19 @@ active outline can set it to `var(--border)` or another color.
 
 ### Sizing
 
-| Variable                   | Purpose                                                                              |
-| -------------------------- | ------------------------------------------------------------------------------------ |
-| `--radius`                 | Base border radius (shadcn-compatible)                                               |
-| `--radius-circle`          | Pill/avatar radius (set to `0` for sharp themes)                                     |
-| `--control-height`         | Button/input height                                                                  |
-| `--control-height-sm`      | Small button height                                                                  |
-| `--control-height-lg`      | Large button height                                                                  |
-| `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                        |
-| `--control-leading-size`   | Width of the centered event-field icon, swatch, or checkbox slot (`20px` by default) |
-| `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default)  |
-| `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                             |
-| `--tab-gap`                | Tab spacing                                                                          |
-| `--tab-list-shadow`        | Tab list outline                                                                     |
+| Variable                   | Purpose                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------- |
+| `--radius`                 | Base border radius (shadcn-compatible)                                              |
+| `--radius-circle`          | Pill/avatar radius (set to `0` for sharp themes)                                    |
+| `--control-height`         | Button/input height                                                                 |
+| `--control-height-sm`      | Small button height                                                                 |
+| `--control-height-lg`      | Large button height                                                                 |
+| `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                       |
+| `--control-icon-size`      | Event-field icon slot size; defaults to `calc(var(--control-height) - 4px)`         |
+| `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
+| `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
+| `--tab-gap`                | Tab spacing                                                                         |
+| `--tab-list-shadow`        | Tab list outline                                                                    |
 
 ### Typography (fonts)
 
