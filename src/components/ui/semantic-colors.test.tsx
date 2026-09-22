@@ -3,6 +3,7 @@ import { expect, it } from "vitest"
 import { buttonVariants } from "./button"
 import { CommandItem } from "./command"
 import { SelectItem } from "./select"
+import { TabsTrigger } from "./tabs"
 
 it("pairs accent highlights with accent foregrounds in shared primitives", () => {
   const ghostButton = buttonVariants({ variant: "ghost" })
@@ -20,4 +21,17 @@ it("pairs accent highlights with accent foregrounds in shared primitives", () =>
   expect(selectItem).toContain("focus:bg-accent")
   expect(selectItem).toContain("focus:text-accent-foreground")
   expect(selectItem).not.toContain("focus:bg-hover")
+})
+
+it("pairs navigation tab surfaces with their secondary foreground", () => {
+  const navigationTab = TabsTrigger({ value: "settings", children: "Settings" }).props
+    .className as string
+
+  expect(navigationTab).toContain("data-[state=active]:bg-secondary")
+  expect(navigationTab).toContain(
+    "group-data-[variant=navigation]/tabs-list:data-[state=active]:text-secondary-foreground",
+  )
+  expect(navigationTab).not.toContain(
+    "group-data-[variant=navigation]/tabs-list:data-[state=active]:text-accent-foreground",
+  )
 })
