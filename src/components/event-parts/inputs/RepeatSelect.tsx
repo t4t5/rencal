@@ -66,7 +66,7 @@ export const RepeatSelect = ({
           {value ? (
             <span className="block truncate">{getHumanInterval(value)}</span>
           ) : (
-            <span className="text-muted-foreground">Repeat</span>
+            <span className="text-placeholder-foreground">Repeat</span>
           )}
         </ControlContent>
       </SelectTrigger>
