@@ -47,6 +47,10 @@ jobs:
             rust-target: x86_64-unknown-linux-gnu
             caldir-target: x86_64-unknown-linux-musl
             tauri-args: ""
+          - runner: ubuntu-22.04-arm
+            rust-target: aarch64-unknown-linux-gnu
+            caldir-target: aarch64-unknown-linux-musl
+            tauri-args: ""
     runs-on: ${{ matrix.runner }}
     steps:
       - name: Checkout rencal
@@ -77,7 +81,7 @@ jobs:
           workspaces: rencal/src-tauri -> target
 
       - name: Install Linux system dependencies
-        if: matrix.runner == 'ubuntu-22.04'
+        if: runner.os == 'Linux'
         run: |
           sudo apt-get update
           sudo apt-get install -y \
@@ -108,14 +112,14 @@ jobs:
         run: scripts/install-caldir-providers.sh
 
       - name: Import Apple signing certificate
-        if: matrix.runner == 'macos-latest'
+        if: runner.os == 'macOS'
         uses: apple-actions/import-codesign-certs@v3
         with:
           p12-file-base64: ${{ secrets.APPLE_CERTIFICATE }}
           p12-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
 
       - name: Pre-sign bundled provider binaries
-        if: matrix.runner == 'macos-latest'
+        if: runner.os == 'macOS'
         working-directory: rencal
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
@@ -128,7 +132,7 @@ jobs:
       # via bundle.linux.{deb,rpm}.files. Linux only — macOS/Windows run the
       # reminder loop in-process via tauri-plugin-notification.
       - name: Build rencal-notifierd
-        if: matrix.runner == 'ubuntu-22.04'
+        if: runner.os == 'Linux'
         working-directory: rencal/src-tauri
         run: cargo build --release -p rencal-notifierd
 
@@ -153,9 +157,25 @@ jobs:
           prerelease: false
           args: ${{ matrix.tauri-args }}
 
+  # check-bundled-providers.sh executes each packaged provider, so the packages
+  # for an architecture have to be checked on a runner of that architecture.
   check-linux-packages:
     needs: [check-version, build]
-    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: ubuntu-22.04
+            caldir-target: x86_64-unknown-linux-musl
+            appimage: "*_amd64.AppImage"
+            deb: "*_amd64.deb"
+            rpm: "*.x86_64.rpm"
+          - runner: ubuntu-22.04-arm
+            caldir-target: aarch64-unknown-linux-musl
+            appimage: "*_aarch64.AppImage"
+            deb: "*_arm64.deb"
+            rpm: "*.aarch64.rpm"
+    runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
 
@@ -165,6 +185,8 @@ jobs:
           sudo apt-get install -y libarchive-tools
 
       - name: Install caldir provider binaries
+        env:
+          CALDIR_TARGET: ${{ matrix.caldir-target }}
         run: scripts/install-caldir-providers.sh
 
       - name: Download draft Linux packages
@@ -173,16 +195,21 @@ jobs:
           RELEASE_TAG: v${{ needs.check-version.outputs.version }}
         run: |
           mkdir -p /tmp/rencal-bundle/{appimage,deb,rpm}
-          gh release download "$RELEASE_TAG" --pattern '*.AppImage' --dir /tmp/rencal-bundle/appimage
-          gh release download "$RELEASE_TAG" --pattern '*.deb' --dir /tmp/rencal-bundle/deb
-          gh release download "$RELEASE_TAG" --pattern '*.rpm' --dir /tmp/rencal-bundle/rpm
+          gh release download "$RELEASE_TAG" --pattern '${{ matrix.appimage }}' --dir /tmp/rencal-bundle/appimage
+          gh release download "$RELEASE_TAG" --pattern '${{ matrix.deb }}' --dir /tmp/rencal-bundle/deb
+          gh release download "$RELEASE_TAG" --pattern '${{ matrix.rpm }}' --dir /tmp/rencal-bundle/rpm
           chmod +x /tmp/rencal-bundle/appimage/*.AppImage
 
       - name: Check bundled providers
         run: scripts/check-bundled-providers.sh /tmp/rencal-bundle
 
+  # Separate job so the release is published once, after every architecture passes.
+  publish-release:
+    needs: [check-version, check-linux-packages]
+    runs-on: ubuntu-latest
+    steps:
       - name: Publish verified release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: v${{ needs.check-version.outputs.version }}
-        run: gh release edit "$RELEASE_TAG" --draft=false
+        run: gh release edit "$RELEASE_TAG" --repo ${{ github.repository }} --draft=false

@@ -29,6 +29,28 @@ jobs:
         run: |
           sed "s/VERSION_PLACEHOLDER/${{ steps.version.outputs.version }}/" \
               aur/PKGBUILD-bin.template > PKGBUILD
+
+      - name: Fill in per-architecture checksums
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          # updpkgsums only regenerates the sums for the runner's own CARCH, which
+          # would leave sha256sums_aarch64 as SKIP. Hash both release debs instead.
+          tmp="$(mktemp -d)"
+          gh release download "v${VERSION}" --repo t4t5/rencal --dir "$tmp" \
+            --pattern "renCal_${VERSION}_amd64.deb" \
+            --pattern "renCal_${VERSION}_arm64.deb"
+          amd64_sum="$(sha256sum "$tmp/renCal_${VERSION}_amd64.deb" | cut -d ' ' -f 1)"
+          arm64_sum="$(sha256sum "$tmp/renCal_${VERSION}_arm64.deb" | cut -d ' ' -f 1)"
+          sed -i \
+            -e "s/^sha256sums_x86_64=('SKIP')/sha256sums_x86_64=('${amd64_sum}')/" \
+            -e "s/^sha256sums_aarch64=('SKIP')/sha256sums_aarch64=('${arm64_sum}')/" \
+            PKGBUILD
+          if grep -q SKIP PKGBUILD; then
+            echo "A checksum was left as SKIP" >&2
+            exit 1
+          fi
           cat PKGBUILD
 
       - name: Publish to AUR
@@ -40,4 +62,3 @@ jobs:
           commit_email: ${{ vars.AUR_EMAIL }}
           ssh_private_key: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
           commit_message: "Update to v${{ steps.version.outputs.version }}"
-          updpkgsums: true
