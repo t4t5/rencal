@@ -56,7 +56,7 @@ export function Combobox({
           className={cn(
             "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
             interactive &&
-              "cursor-text hover:border-input focus-within:border-transparent focus-within:bg-secondary",
+              "cursor-default hover:border-input focus-within:border-transparent focus-within:bg-secondary",
             {
               "border-transparent bg-secondary": open,
               "border-input": variant === "default" && interactive,
@@ -72,7 +72,7 @@ export function Combobox({
           <input
             data-slot="combobox-input"
             data-control-part="content"
-            className="placeholder:text-muted-foreground h-full min-w-0 flex-1 bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="placeholder:text-muted-foreground h-full min-w-0 flex-1 cursor-default bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}

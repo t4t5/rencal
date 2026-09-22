@@ -22,7 +22,7 @@ export const AllDayCheckbox = ({
       <Label
         htmlFor={id}
         className={cn(
-          "h-control w-fit cursor-pointer gap-[var(--control-content-gap)] rounded-md border border-transparent font-normal",
+          "h-control w-fit gap-[var(--control-content-gap)] rounded-md border border-transparent font-normal",
           readOnly && "pointer-events-none",
         )}
       >
