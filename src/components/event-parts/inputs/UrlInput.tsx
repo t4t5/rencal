@@ -64,7 +64,7 @@ export const UrlInput = ({
             <InputGroupButton
               size="icon-xs"
               aria-label="Open link"
-              className="h-6! shrink-0 text-muted-foreground hover:text-foreground"
+              className="shrink-0 text-muted-foreground hover:text-foreground"
               onClick={() => openUrl(toOpenableUrl(url))}
             >
               <ArrowUpRightIcon />

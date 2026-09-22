@@ -31,7 +31,7 @@ function App() {
   return (
     <main className="flex h-screen overflow-clip">
       <GlobalShortcuts onChangeCalendarView={setCalendarView} onToggleSidebar={toggleCollapsed} />
-      <DragRegion className="absolute h-4! w-full" />
+      <DragRegion className="absolute h-4 w-full" />
 
       <Sidebar collapsed={collapsed} />
 

@@ -78,7 +78,7 @@ function Calendar({
       classNames={{
         root: cn("w-full"),
         months: cn(calendarSharedStyles.months, defaultClassNames.months),
-        month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden!"),
+        month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden"),
         nav: cn(calendarSharedStyles.nav, defaultClassNames.nav),
         button_previous: cn(
           buttonVariants({ variant: buttonVariant }),
@@ -220,8 +220,8 @@ function Calendar({
           return (
             <Day
               {...dayProps}
-              className={cn(className, "flex justify-center bg-transparent!", {
-                "bg-weekend!": isWeekend,
+              className={cn(className, "flex justify-center bg-transparent", {
+                "bg-weekend": isWeekend,
               })}
             />
           )

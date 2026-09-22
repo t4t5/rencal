@@ -28,7 +28,7 @@ export function Textarea({
 
 // One line fills exactly one control height; the 1px offsets the wrapper border.
 const innerCss =
-  "placeholder:text-placeholder-foreground min-w-0 flex-1 resize-none border-0 bg-transparent outline-none! py-[calc((var(--control-height)-1lh)/2-1px)] text-sm"
+  "placeholder:text-placeholder-foreground min-w-0 flex-1 resize-none border-0 bg-transparent outline-none py-[calc((var(--control-height)-1lh)/2-1px)] text-sm"
 
 export function TextareaInner({
   autosize = true,
