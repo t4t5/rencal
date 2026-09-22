@@ -44,6 +44,7 @@ You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `
 --control-height-lg: 28px;
 --control-padding-inline: 6px;
 --control-content-gap: 6px;
+--agenda-padding-inline: 6px;
 --text-base: 14px;
 --text-base--line-height: 20px;
 --text-xs: 11px;
@@ -59,6 +60,8 @@ For component-specific custom CSS, target stable slot attributes:
 ```
 
 The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-icon-size` sizes the icon, checkbox, or icon-button slot, and `--control-content-gap` separates the leading, content, and trailing parts. By default, the icon size is derived as `calc(var(--control-height) - 4px)`, so compact themes only need to change the control height.
+
+`--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
 Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows expose `control-leading`, `control-content`, and `control-trailing`; existing primitives keep their original slots and identify the same roles with `data-control-part="leading"`, `"content"`, or `"trailing"`. Row roots use `data-control-layout="row"`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
 

@@ -31,7 +31,7 @@ export const AgendaTimedEventBlock = memo(function EventRow({
   const meetingUrl = getMeetingUrl(event)
 
   return (
-    <div data-slot="agenda-timed-event" className="flex gap-3 pl-3.5 pr-2">
+    <div data-slot="agenda-timed-event" className="flex gap-3">
       <div
         data-slot="event-color-marker"
         className="w-[3px] shrink-0 rounded-base"

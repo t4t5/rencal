@@ -133,10 +133,14 @@ export const DaySection = forwardRef<
       <DateBar date={date} />
 
       <div className="flex flex-col gap-1 pb-2">
-        {!events.length && <div className="px-3 py-1 text-sm text-muted-foreground">No events</div>}
+        {!events.length && (
+          <div data-slot="agenda-empty" className="py-1 text-sm text-muted-foreground">
+            No events
+          </div>
+        )}
 
         {allDayEvents.length > 0 && (
-          <div className="px-3 py-1 flex flex-wrap gap-1">
+          <div data-slot="agenda-all-day-events" className="py-1 flex flex-wrap gap-1">
             {allDayEvents.map((event) => (
               <AllDayRow
                 key={eventKey(event)}
@@ -280,10 +284,9 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
   return (
     <div
       data-slot="agenda-date"
-      className={cn(
-        "sticky top-0 z-10 text-sm bg-background px-3 py-1.5 flex gap-2 h-8 items-center",
-        { "text-today": isToday },
-      )}
+      className={cn("sticky top-0 z-10 text-sm bg-background py-1.5 flex gap-2 h-8 items-center", {
+        "text-today": isToday,
+      })}
     >
       <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
       <span className={cn("text-muted-foreground numerical", { "text-today": isToday })}>

@@ -121,6 +121,7 @@ active outline can set it to `var(--border)` or another color.
 | `--control-icon-size`      | Event-field icon slot size; defaults to `calc(var(--control-height) - 4px)`         |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
+| `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)             |
 | `--tab-gap`                | Tab spacing                                                                         |
 | `--tab-list-shadow`        | Tab list outline                                                                    |
 
@@ -264,7 +265,8 @@ Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-navigation`, `calendar-event-dots`;
-- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-timed-event`;
+- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-empty`,
+  `agenda-all-day-events`, `agenda-timed-event`;
 - `month-weekdays`, `month-weekday`, `month-week`, `month-date`, `month-day`,
   `month-day-number`, `month-timed-event`, `month-all-day-event`;
 - `event-color-marker` and `event-time` on timed month/agenda events;
