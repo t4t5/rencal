@@ -135,7 +135,7 @@ function InviteCard({
         </div>
       </div>
 
-      <div className="pt-0">
+      <div className="p-3">
         <RsvpBar onRsvp={(response) => onRsvp(invite, response)} />
       </div>
     </div>

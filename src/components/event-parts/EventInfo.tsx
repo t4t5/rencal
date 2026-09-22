@@ -22,7 +22,7 @@ import { RsvpBar } from "./inputs/RsvpBar"
 import { RsvpSelect } from "./inputs/RsvpSelect"
 
 const Divider = () => (
-  <div className="my-2 opacity-75">
+  <div className="py-1 opacity-75">
     <hr />
   </div>
 )

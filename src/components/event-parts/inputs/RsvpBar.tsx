@@ -4,7 +4,7 @@ import type { ResponseStatus } from "@/lib/cal-events"
 
 export function RsvpBar({ onRsvp }: { onRsvp: (response: ResponseStatus) => void }) {
   return (
-    <div className="flex gap-1.5 p-3 justify-between">
+    <div className="flex justify-between gap-1.5">
       <Button size="sm" variant="secondary" onClick={() => onRsvp("tentative")}>
         Maybe
       </Button>
