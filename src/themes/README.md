@@ -94,6 +94,19 @@ The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `
 
 Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
 
+Shared components keep semantic background and foreground pairs together:
+`accent` is the interactive highlight surface and uses `accent-foreground`,
+`secondary` is a secondary button surface, and `muted` is a static
+de-emphasized surface. `hover` is the exception: it is a transparent tint and
+does not replace the inherited foreground. If a theme needs lighter menu
+highlights, change its `accent` value rather than pairing an unrelated surface
+with `accent-foreground`.
+
+For development, `contract-debug.css` supplies deliberately clashing values for
+these surfaces. It is intentionally absent from the manifest, so it does not
+appear in the theme picker or public playground. Apply it temporarily from the
+browser console with `document.body.dataset.theme = "contract-debug"`.
+
 ### Structure
 
 | Variable                      | Purpose                                                                        |

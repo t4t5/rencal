@@ -17,7 +17,7 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20",
         input: `bg-transparent border border-transparent hover:border-input focus-visible:ring-0 ${controlSurfaceActive.focusVisible} ${controlSurfaceActive.open}`,
-        ghost: "hover:bg-hover hover:text-accent-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground",
       },
       size: {
         default: "h-control px-3 has-[>svg]:px-3",
