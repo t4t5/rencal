@@ -94,6 +94,15 @@ describe("global CSS contract", () => {
     )
   })
 
+  it("tints timed month event labels with their event color", () => {
+    expect(source).toMatch(
+      /\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-slot="calendar-event-time"\]\s*\{[^}]*color:\s*var\(--calendar-event-tinted-foreground\);[^}]*\}/,
+    )
+    expect(source).toMatch(
+      /\[data-highlighted\]\s*\[data-slot="calendar-event-time"\]\s*\{[^}]*color:\s*inherit;/,
+    )
+  })
+
   it("keeps scale utilities runtime-themeable and roles in the components layer", () => {
     const css = build(["text-sm"])
 

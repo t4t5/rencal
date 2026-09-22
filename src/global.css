@@ -473,6 +473,11 @@
     background: var(--calendar-event-color);
   }
 
+  [data-slot="calendar-event"][data-view="month"][data-kind="timed"]
+    [data-slot="calendar-event-time"] {
+    color: var(--calendar-event-tinted-foreground);
+  }
+
   [data-slot="calendar-event"][data-rsvp="declined"] {
     text-decoration: line-through;
   }
