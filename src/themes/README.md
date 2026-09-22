@@ -242,9 +242,9 @@ Settings sections use vertical Tabs. Their `tabs-list` exposes
 style navigation independently of property-sheet tabs while retaining Radix
 keyboard navigation and tab/panel accessibility.
 
-Calendar group rows expose `data-slot="settings-calendar-group"` and
-`data-active="true"` when selected, omitting the latter otherwise. Group menu
-actions remain separate from the settings tab list.
+Calendar groups use the same vertical navigation tabs as the settings sidebar,
+including the standard `tabs-list` / `tabs-trigger` slots and selection states.
+Group menu actions remain separate from their tab triggers.
 
 ### Calendar shell styling hooks
 

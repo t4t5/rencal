@@ -18,11 +18,10 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { MoreButton } from "@/components/ui/more-button"
+import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
-
-import { cn } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons/plus"
 
@@ -75,39 +74,27 @@ export function GroupsColumn({
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <TabsList variant="navigation" aria-label="Calendar groups" className="w-full">
         {groups.map((group) => {
           const isDefault = group === DEFAULT_GROUP
 
           return (
-            <div
-              key={group}
-              data-slot="settings-calendar-group"
-              data-active={selectedGroup === group || undefined}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelect(group)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") onSelect(group)
-              }}
-              className={cn(
-                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-2 py-2 group text-left",
-                {
-                  "bg-secondary text-accent-foreground": selectedGroup === group,
-                },
-              )}
-            >
-              <span className="overflow-hidden text-ellipsis">{formatGroupName(group)}</span>
+            <div key={group} className="group relative w-full">
+              <TabsTrigger value={group} className={isDefault ? undefined : "pr-10"}>
+                <span className="overflow-hidden text-ellipsis">{formatGroupName(group)}</span>
+              </TabsTrigger>
               {!isDefault && (
-                <MoreMenu
-                  onEdit={() => setModalState({ mode: "edit", group })}
-                  onDelete={() => void deleteGroup(group)}
-                />
+                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                  <MoreMenu
+                    onEdit={() => setModalState({ mode: "edit", group })}
+                    onDelete={() => void deleteGroup(group)}
+                  />
+                </div>
               )}
             </div>
           )
         })}
-      </div>
+      </TabsList>
 
       {modalState && (
         <GroupModal
