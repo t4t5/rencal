@@ -72,6 +72,7 @@
   --background: #131313;
   --foreground: white;
   --muted-foreground: rgba(255, 255, 255, 0.5);
+  --placeholder-foreground: var(--muted-foreground);
 
   --primary: #f56313;
 
@@ -97,6 +98,7 @@
    makes scoped previews and plugin-owned subtrees derive their own surfaces. */
 [data-theme] {
   --control-icon-size: calc(var(--control-height) - 10px);
+  --placeholder-foreground: var(--muted-foreground);
 
   /* One-release fallbacks for the pre-contract names. */
   --radius-base: initial;
@@ -170,6 +172,7 @@
   --color-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder-foreground: var(--placeholder-foreground);
 
   --color-hover: var(--hover);
   --color-primary: var(--primary);

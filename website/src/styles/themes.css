@@ -28,6 +28,7 @@
   --background: #131313;
   --foreground: white;
   --muted-foreground: rgba(255, 255, 255, 0.5);
+  --placeholder-foreground: var(--muted-foreground);
 
   --primary: #f56313;
 

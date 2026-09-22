@@ -6,7 +6,7 @@ import { controlSurfaceActive } from "@/components/ui/control-surface"
 import { cn } from "@/lib/utils"
 
 const inputContentCss =
-  "placeholder:text-muted-foreground min-w-0 bg-transparent text-sm outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
+  "placeholder:text-placeholder-foreground min-w-0 bg-transparent text-sm outline-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50"
 
 function Input({
   className,

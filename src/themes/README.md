@@ -47,18 +47,19 @@ These are the variables theme files normally override. Surfaces and state colors
 
 ### Colors
 
-| Variable             | Purpose                         |
-| -------------------- | ------------------------------- |
-| `--background`       | App background                  |
-| `--foreground`       | Primary text                    |
-| `--muted-foreground` | De-emphasized text              |
-| `--primary`          | Primary action color            |
-| `--today`            | "Today" indicator color         |
-| `--highlight`        | Brand accent (year badge, etc.) |
-| `--ring`             | Focus rings                     |
-| `--success`          | Success / accepted state        |
-| `--warning`          | Warning / tentative state       |
-| `--error`            | Error / declined state          |
+| Variable                   | Purpose                                            |
+| -------------------------- | -------------------------------------------------- |
+| `--background`             | App background                                     |
+| `--foreground`             | Primary text                                       |
+| `--muted-foreground`       | De-emphasized text                                 |
+| `--placeholder-foreground` | Placeholder text; defaults to `--muted-foreground` |
+| `--primary`                | Primary action color                               |
+| `--today`                  | "Today" indicator color                            |
+| `--highlight`              | Brand accent (year badge, etc.)                    |
+| `--ring`                   | Focus rings                                        |
+| `--success`                | Success / accepted state                           |
+| `--warning`                | Warning / tentative state                          |
+| `--error`                  | Error / declined state                             |
 
 #### Optional colors
 

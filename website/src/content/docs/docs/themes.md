@@ -31,6 +31,8 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 
 Most themes only need to set `--background`, `--foreground`, `--muted-foreground`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values.
 
+Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
+
 Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block and add `--hover-tint` if it is missing.
 
 You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `--text-base`, and the matching `--text-<step>--line-height` properties. Line heights must use pixels because month lanes derive their height from `--text-xs--line-height`.
