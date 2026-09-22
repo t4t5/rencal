@@ -2,7 +2,8 @@ import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+import { InputInner } from "@/components/ui/input"
 import { TextareaInner } from "@/components/ui/textarea"
 
 import { cn } from "@/lib/utils"
@@ -11,16 +12,17 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
+      data-control-surface=""
       data-control-layout="row"
       role="group"
       className={cn(
-        "control-row group/input-group border-transparent hover:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
+        "control-row group/input-group border-transparent [&:not(:focus-within):not([data-readonly=true]):hover]:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
         "min-h-control min-w-0",
 
         // Focus state.
-        "focus-within:bg-secondary focus-within:border-transparent",
+        controlSurfaceActive.focusWithin,
 
-        "data-[readonly=true]:hover:border-transparent data-[readonly=true]:focus-within:bg-transparent",
+        "data-[readonly=true]:focus-within:border-transparent data-[readonly=true]:focus-within:bg-transparent",
 
         // Error state.
         "has-[[data-slot][aria-invalid=true]]:ring-destructive/20 has-[[data-slot][aria-invalid=true]]:border-destructive",
@@ -105,13 +107,10 @@ function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
 
 function InputGroupInput({ className, ...props }: React.ComponentProps<"input">) {
   return (
-    <Input
+    <InputInner
       data-slot="input-group-control"
       data-control-part="content"
-      className={cn(
-        "h-auto min-h-0 flex-1 rounded-none border-0 bg-transparent shadow-none hover:border-transparent focus:bg-transparent focus-visible:ring-0 min-w-0 px-0",
-        className,
-      )}
+      className={cn("h-auto min-h-0 flex-1 border-0 px-0 shadow-none", className)}
       {...props}
     />
   )

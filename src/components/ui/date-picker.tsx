@@ -32,7 +32,7 @@ export const DatePicker = ({
           typography="field"
           disabled={readOnly}
           className={cn(
-            "group cursor-default justify-start px-[var(--control-padding-inline)] transition-none focus-visible:border-transparent focus-visible:bg-secondary focus-visible:ring-0",
+            "group cursor-default justify-start px-[var(--control-padding-inline)] transition-none",
             readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
             className,
           )}

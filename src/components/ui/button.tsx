@@ -2,6 +2,8 @@ import { Slot } from "@radix-ui/react-slot"
 import { cva, type VariantProps } from "class-variance-authority"
 import * as React from "react"
 
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
@@ -14,8 +16,7 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary-hover shadow-button-border",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20",
-        input:
-          "bg-transparent border border-transparent hover:border-input data-[state=open]:bg-secondary data-[state=open]:border-transparent",
+        input: `bg-transparent border border-transparent hover:border-input focus-visible:ring-0 ${controlSurfaceActive.focusVisible} ${controlSurfaceActive.open}`,
         ghost: "hover:bg-hover hover:text-accent-foreground",
       },
       size: {
@@ -63,6 +64,7 @@ function Button({
     <Comp
       data-slot="button"
       data-button=""
+      data-control-surface={variant === "input" ? "" : undefined}
       data-typography={typography ?? "action"}
       className={cn(buttonVariants({ variant, size, round, typography, className }))}
       {...props}

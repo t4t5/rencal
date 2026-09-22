@@ -121,6 +121,10 @@
   /* same as border, but stronger tint */
   --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--border));
 
+  /* Interactive controls use one uninterrupted surface while active. */
+  --control-active-background: var(--secondary);
+  --control-active-border: transparent;
+
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
 

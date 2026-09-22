@@ -2,6 +2,8 @@ import { KeyboardEventHandler, ReactNode, useRef } from "react"
 
 import { Command, CommandList } from "@/components/ui/command"
 import { ControlTrailing } from "@/components/ui/control-row"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+import { InputInner } from "@/components/ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
@@ -51,14 +53,19 @@ export function Combobox({
         <div
           ref={anchorRef}
           data-slot="combobox"
+          data-control-surface=""
           data-control={interactive ? "select" : undefined}
           data-control-layout="row"
+          data-state={open ? "open" : "closed"}
+          data-variant={variant}
           className={cn(
             "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
-            interactive &&
-              "cursor-default hover:border-input focus-within:border-transparent focus-within:bg-secondary",
+            interactive && [
+              "cursor-default [&:not(:focus-within):hover]:border-input",
+              controlSurfaceActive.focusWithin,
+              controlSurfaceActive.open,
+            ],
             {
-              "border-transparent bg-secondary": open,
               "border-input": variant === "default" && interactive,
             },
           )}
@@ -69,10 +76,10 @@ export function Combobox({
           }}
         >
           {addon}
-          <input
+          <InputInner
             data-slot="combobox-input"
             data-control-part="content"
-            className="placeholder:text-muted-foreground h-full min-w-0 flex-1 cursor-default bg-transparent text-sm outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            className="h-full flex-1 cursor-default"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}

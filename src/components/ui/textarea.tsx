@@ -1,6 +1,8 @@
 import * as React from "react"
 import TextareaAutosizeComponent from "react-textarea-autosize"
 
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+
 import { cn } from "@/lib/utils"
 
 export function Textarea({
@@ -11,10 +13,13 @@ export function Textarea({
   return (
     <div
       data-slot="textarea-wrapper"
+      data-control-surface=""
+      data-readonly={readOnly || undefined}
       role="group"
       className={cn(
-        "group/input-group w-full border border-transparent hover:border-input min-h-control h-auto focus-within:bg-secondary focus-within:border-transparent px-[var(--control-padding-inline)] flex items-center rounded-md",
-        readOnly && "hover:border-transparent focus-within:bg-transparent",
+        "group/input-group w-full border border-transparent [&:not(:focus-within):not([data-readonly=true]):hover]:border-input min-h-control h-auto px-[var(--control-padding-inline)] flex items-center rounded-md",
+        controlSurfaceActive.focusWithin,
+        readOnly && "focus-within:border-transparent focus-within:bg-transparent",
       )}
     >
       <TextareaInner {...props} readOnly={readOnly} className={cn("h-full", className)} />

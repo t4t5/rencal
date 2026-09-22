@@ -9,6 +9,7 @@ import {
   CommandList,
 } from "@/components/ui/command"
 import { ControlContent, ControlLeading, ControlTrailing } from "@/components/ui/control-row"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { DropdownArrow } from "@/components/ui/select"
 
@@ -110,10 +111,13 @@ export const TimeZoneSelect = ({
           type="button"
           disabled={readOnly}
           data-slot="select-trigger"
+          data-control-surface=""
           data-control="select"
           data-control-layout="row"
           className={cn(
-            "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input focus-visible:bg-secondary data-[state=open]:bg-secondary",
+            "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input",
+            controlSurfaceActive.focusVisible,
+            controlSurfaceActive.open,
             readOnly && "pointer-events-none disabled:cursor-default",
           )}
         >

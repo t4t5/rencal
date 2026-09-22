@@ -95,9 +95,17 @@ Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed i
 
 ### Structure
 
-| Variable          | Purpose                                     |
-| ----------------- | ------------------------------------------- |
-| `--border-button` | Button outline/shadow (often `transparent`) |
+| Variable                      | Purpose                                                                        |
+| ----------------------------- | ------------------------------------------------------------------------------ |
+| `--border-button`             | Button outline/shadow (often `transparent`)                                    |
+| `--control-active-background` | Complete input/select surface while focused or open; defaults to `--secondary` |
+| `--control-active-border`     | Input/select border while focused or open; defaults to `transparent`           |
+
+Control primitives decide whether focus, focus-within, or an open popup makes
+their complete surface active. Themes only supply the paint. Keeping
+`--control-active-border` transparent lets the background extend beneath the
+reserved border without adding a second translucent layer; themes that want an
+active outline can set it to `var(--border)` or another color.
 
 ### Sizing
 
