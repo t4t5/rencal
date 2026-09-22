@@ -140,7 +140,7 @@ active outline can set it to `var(--border)` or another color.
 | `--control-height-sm`      | Small button height                                                                 |
 | `--control-height-lg`      | Large button height                                                                 |
 | `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                       |
-| `--control-icon-size`      | Event-field icon slot size; defaults to `calc(var(--control-height) - 4px)`         |
+| `--control-icon-size`      | Event-field icon slot size; defaults to `calc(var(--control-height) - 10px)`        |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
 | `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)             |
@@ -244,13 +244,17 @@ The wrapper is a convenience, not a security boundary: malformed CSS can close i
 
 Prefer primitives first—the derivation chain covers most visual-identity needs. You can also override a derived token directly (for example, set `--border`) when the computed value is not right for the theme. Target stable `data-slot` attributes in custom rules; class names are implementation details.
 
+Custom rules may select on `data-slot` for identity and on the state attributes documented below. Every other `data-*` attribute (`data-drop-zone`, `data-drag-scroll`, `data-date-key`, `data-create-selection`, `data-agenda-item`, `data-event-clickable`, and similar) is an interaction hook for the app's own scripts and is not part of the styling contract; it can change without notice. Use the same rule for element and descendant selectors: prefer a child slot such as `minical-year` over `[data-slot="minical-title"] span`.
+
 The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; row roots similarly expose `data-control-layout="row"`. Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
 Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
 interactive counterpart to a select or combobox's `select-icon`; themes can give both the
 same trailing-well treatment while leaving their positioning to the controls.
-Editable comboboxes also expose `data-control="select"` on their outer surface
-so themes can apply the same field padding as other dropdowns.
+Every select-like trigger exposes `data-control="select"`: the Select trigger,
+editable comboboxes, the toolbar's group/view dropdowns, and the searchable
+timezone button. Use that marker for shared dropdown-field styling; the
+`select-trigger` slot identifies only the real Select component.
 
 Themes that intentionally retain an inset event action can scope that exception to the footer:
 
@@ -286,23 +290,25 @@ and control height can change without a fixed viewport-height offset.
 Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
-- `minical-header`, `minical-title`, `minical-navigation`, `calendar-event-dots`;
-- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-empty`,
-  `agenda-all-day-events`;
-- `month-weekdays`, `month-weekday`, `month-week`, `month-date`, `month-day`,
-  `month-day-number`;
+- `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
+  `calendar-day`, `calendar-event-dots`;
+- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-day-label`,
+  `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`;
+- `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`, `month-date`,
+  `month-day`, `month-day-number`, `month-create-selection`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
   `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
 
-Toolbar group/view dropdowns retain their button slot and expose
-`data-control="select"`. The searchable timezone dropdown exposes that control
-marker and `select-icon` on its trailing arrow. Its button intentionally keeps
+Toolbar group/view dropdowns retain their button slot and, like every
+select-like trigger, expose `data-control="select"`. The searchable timezone
+dropdown exposes that control marker and `select-icon` on its trailing arrow. Its button intentionally keeps
 the `popover-trigger` slot: composed triggers retain their primitive slot and
 use control markers for cross-primitive styling. Mini-calendar navigation
 buttons expose `data-direction="previous"` / `"next"`. Month dates and day
 bodies expose `data-active="true"`; day numbers expose `data-today="true"`.
-Mini-calendar buttons retain their existing explicit `true`/`false` selection
+Mini-calendar day buttons expose `calendar-day` (replacing the generic button
+slot; `data-button` remains) and retain their explicit `true`/`false` selection
 attributes, and their selection styles can be overridden without `!important`.
 
 ### Calendar event styling hooks
@@ -323,8 +329,8 @@ Event state is metadata on the same element that owns its visual treatment:
 - `data-drag-state` uses `source`, `preview`, or `overlay` to distinguish the
   original block, its drop-position preview, and the pointer-following copy.
 
-False boolean states are omitted. `data-event-clickable` remains an internal
-interaction marker and is not part of the styling contract.
+False boolean states are omitted. `data-event-clickable` is an internal
+interaction marker; style `calendar-event` instead.
 
 The app sets only `--calendar-event-color` inline. Backgrounds, foregrounds,
 borders, opacity, and shadows are CSS, so ordinary theme selectors can override

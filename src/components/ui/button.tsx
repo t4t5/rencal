@@ -64,7 +64,6 @@ function Button({
     <Comp
       data-slot="button"
       data-button=""
-      data-control-surface={variant === "input" ? "" : undefined}
       data-typography={typography ?? "action"}
       className={cn(buttonVariants({ variant, size, round, typography, className }))}
       {...props}

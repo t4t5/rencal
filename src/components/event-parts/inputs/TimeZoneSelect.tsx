@@ -110,7 +110,6 @@ export const TimeZoneSelect = ({
         <button
           type="button"
           disabled={readOnly}
-          data-control-surface=""
           data-control="select"
           data-control-layout="row"
           className={cn(

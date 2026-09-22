@@ -13,7 +13,6 @@ export function Textarea({
   return (
     <div
       data-slot="textarea-wrapper"
-      data-control-surface=""
       data-readonly={readOnly || undefined}
       role="group"
       className={cn(

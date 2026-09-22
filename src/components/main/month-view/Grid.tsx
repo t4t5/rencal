@@ -329,6 +329,7 @@ export function MonthGrid({
     <div
       ref={scrollRef}
       data-drag-scroll
+      data-slot="month-scroll"
       style={{ overflowAnchor: "none" }}
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",

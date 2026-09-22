@@ -12,7 +12,6 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
-      data-control-surface=""
       data-control-layout="row"
       role="group"
       className={cn(

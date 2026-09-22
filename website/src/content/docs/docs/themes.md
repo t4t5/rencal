@@ -54,7 +54,7 @@ You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `
 --text-xs--line-height: 14px;
 ```
 
-For component-specific custom CSS, target stable slot attributes:
+For component-specific custom CSS, target stable slot attributes. Select on `data-slot` for identity and on the documented state attributes for state; other `data-*` attributes such as `data-drop-zone`, `data-drag-scroll`, `data-date-key`, and `data-event-clickable` are internal interaction hooks and may change without notice. Prefer a child slot over a descendant element selector.
 
 ```css
 [data-slot="button"] {
@@ -62,7 +62,7 @@ For component-specific custom CSS, target stable slot attributes:
 }
 ```
 
-The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-icon-size` sizes the icon, checkbox, or icon-button slot, and `--control-content-gap` separates the leading, content, and trailing parts. By default, the icon size is derived as `calc(var(--control-height) - 4px)`, so compact themes only need to change the control height.
+The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-icon-size` sizes the icon, checkbox, or icon-button slot, and `--control-content-gap` separates the leading, content, and trailing parts. By default, the icon size is derived as `calc(var(--control-height) - 10px)`, so compact themes only need to change the control height.
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
@@ -99,9 +99,10 @@ Event hover uses `--hover`. On unfilled blocks, `data-highlighted` uses
 `--selected` / `--selected-foreground`; filled blocks use the derived
 `--calendar-event-selected-fill`.
 
-Composed controls retain their primitive slot. For example, the searchable
-timezone button remains a `popover-trigger` and exposes `data-control="select"`
-plus a `select-icon` child; cross-primitive select rules should target the
-control marker rather than replacing its slot.
+Every select-like trigger exposes `data-control="select"`: the Select trigger,
+comboboxes, toolbar dropdowns, and the searchable timezone button. Composed
+controls retain their primitive slot, so the timezone button remains a
+`popover-trigger` with a `select-icon` child; shared dropdown-field rules should
+target the control marker, and `select-trigger` identifies only the real Select.
 
 The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. `--divider` and `--radius-base` have temporary compatibility fallbacks, but new themes should use `--border` and `--radius`.

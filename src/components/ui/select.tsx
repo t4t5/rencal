@@ -46,7 +46,7 @@ function SelectTrigger({
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
-      data-control-surface=""
+      data-control="select"
       data-variant={variant}
       data-size={size}
       data-control-layout={controlLayout ? "row" : undefined}

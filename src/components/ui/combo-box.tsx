@@ -53,7 +53,6 @@ export function Combobox({
         <div
           ref={anchorRef}
           data-slot="combobox"
-          data-control-surface=""
           data-control={interactive ? "select" : undefined}
           data-control-layout="row"
           data-state={open ? "open" : "closed"}
