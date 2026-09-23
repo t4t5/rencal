@@ -3,6 +3,10 @@ import { extendTailwindMerge } from "tailwind-merge"
 
 const twMerge = extendTailwindMerge({
   extend: {
+    // Custom --spacing-* tokens, so e.g. h-4 overrides h-control
+    theme: {
+      spacing: ["control", "control-sm", "control-lg"],
+    },
     classGroups: {
       rounded: ["rounded-circle", "rounded-base"],
     },
