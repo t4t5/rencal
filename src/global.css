@@ -113,9 +113,6 @@
   --event-background: initial;
   --event-foreground: initial;
   --event-tint-surface: initial;
-  --event-text-max-lightness: initial;
-  --event-text-chroma: initial;
-  --event-text-foreground-mix: initial;
   --week-grid-background: initial;
 
   --font-mono: "Geist Mono", ui-monospace, monospace;
@@ -194,11 +191,11 @@
   color-scheme: light;
 }
 
-/* Event text on light themes (see tintText in src/lib/event-styles.ts):
-   keep the accent's hue and cap its lightness instead of mixing in --foreground. */
+/* Event text on light themes: keep the accent's hue and cap its lightness
+   instead of mixing in --foreground. Internal knobs, not part of the theme contract. */
 [data-appearance="light"] {
-  --event-text-max-lightness: 0.45;
-  --event-text-foreground-mix: 0%;
+  --calendar-event-text-max-lightness: 0.45;
+  --calendar-event-text-foreground-mix: 0%;
 }
 
 @theme inline {
@@ -455,12 +452,12 @@
   [data-slot="calendar-event"] {
     --calendar-event-boosted-color: oklch(from var(--calendar-event-color) l calc(c * 1.4) h);
     --calendar-event-tinted-color: oklch(
-      from var(--calendar-event-color) min(l, var(--event-text-max-lightness, 1))
-        calc(c * var(--event-text-chroma, 1.4)) h
+      from var(--calendar-event-color) min(l, var(--calendar-event-text-max-lightness, 1))
+        calc(c * 1.4) h
     );
     --calendar-event-tinted-foreground: color-mix(
       in srgb,
-      var(--foreground) var(--event-text-foreground-mix, 60%),
+      var(--foreground) var(--calendar-event-text-foreground-mix, 60%),
       var(--calendar-event-tinted-color)
     );
     --calendar-event-fill: var(
@@ -553,7 +550,7 @@
     background: transparent;
     color: color-mix(
       in srgb,
-      var(--foreground) var(--event-text-foreground-mix, 50%),
+      var(--foreground) var(--calendar-event-text-foreground-mix, 50%),
       var(--calendar-event-tinted-color)
     );
   }
@@ -567,7 +564,7 @@
     );
     color: color-mix(
       in srgb,
-      var(--foreground) var(--event-text-foreground-mix, 40%),
+      var(--foreground) var(--calendar-event-text-foreground-mix, 40%),
       var(--calendar-event-tinted-color)
     );
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--calendar-event-color) 25%, transparent);

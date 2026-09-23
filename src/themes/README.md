@@ -96,13 +96,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 #### Event text
 
-Event text is derived from each event's accent colour. With these unset (the dark-theme default) it is the accent, chroma-boosted, mixed into `--foreground` for a soft pastel. That mix muddies accents on a light background (yellow + black is olive), so `global.css` overrides the first and last for `[data-appearance="light"]` — `useTheme` puts the theme's appearance on `<body>` — and a theme can set any of them directly.
-
-| Variable                      | Purpose                                                                                                       | Dark     | Light  |
-| ----------------------------- | ------------------------------------------------------------------------------------------------------------- | -------- | ------ |
-| `--event-text-max-lightness`  | Cap on the accent's OKLCH lightness before it becomes text                                                    | `1`      | `0.45` |
-| `--event-text-chroma`         | Chroma multiplier applied to the accent                                                                       | `1.4`    | `1.4`  |
-| `--event-text-foreground-mix` | Share of `--foreground` mixed into the text. Unset it varies per block state (40–60%, dashed and draft lower) | `40–60%` | `0%`   |
+Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
 
 ### Hover / tint system
 
