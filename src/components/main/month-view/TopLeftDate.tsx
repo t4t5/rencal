@@ -20,7 +20,7 @@ export function TopLeftDate({
 }) {
   return (
     <div
-      data-slot="month-date"
+      data-slot="month-day-header"
       data-typography="numerical"
       data-selected={isActive || undefined}
       data-weekend={day.isWeekend || undefined}

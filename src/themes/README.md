@@ -350,14 +350,15 @@ and control height can change without a fixed viewport-height offset.
 
 Calendar chrome exposes these slots for scoped theme rules:
 
-- `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
+- `main-toolbar`, `main-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
-  `calendar-weekday`, `calendar-day`, `calendar-event-dots`;
-- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-day-label`,
-  `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`; today's
-  `agenda-date` exposes `data-today`;
-- `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`, `month-date`,
-  `month-day`, `month-day-number`, `month-create-selection`, and
+  `minical-event-dots`, plus the shared date-grid slots `calendar-weekday` and
+  `calendar-day` (also used by the date picker);
+- `agenda`, `agenda-scroll`, `agenda-day`, `agenda-day-header`, `agenda-weekday`,
+  `agenda-day-number`, `agenda-empty`, `agenda-all-day-events`; today's
+  `agenda-day-header` exposes `data-today`;
+- `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`,
+  `month-day-header`, `month-day`, `month-day-number`, `month-create-selection`, and
   `month-boundary` (the line where a new month starts, with
   `data-orientation="horizontal"` or `"vertical"`);
 - `week-create-selection` for the range drawn while creating a timed event;
@@ -372,13 +373,19 @@ select-like trigger, expose `data-control="select"`. The searchable timezone
 dropdown exposes that control marker and `select-icon` on its trailing arrow. Its button intentionally keeps
 the `popover-trigger` slot: composed triggers retain their primitive slot and
 use control markers for cross-primitive styling. Mini-calendar navigation
-buttons expose `data-direction="previous"` / `"next"`. Month dates and day
+buttons expose `data-direction="previous"` / `"next"`. Month day headers and day
 bodies expose `data-selected` for the selected date; day numbers expose
-`data-today`. Weekend weekday labels, month dates, day bodies, and mini-calendar
-days expose `data-weekend`.
-Mini-calendar day buttons expose `calendar-day` (replacing the generic button
-slot; `data-button` remains) with `data-selected` and `data-today`, and their
-selection styles can be overridden without `!important`.
+`data-today`. Weekend weekday labels, month day headers, day bodies, and
+mini-calendar days expose `data-weekend`.
+Day buttons in the mini-calendar and date picker expose `calendar-day`
+(replacing the generic button slot; `data-button` remains) with `data-selected`
+and `data-today`, and their selection styles can be overridden without
+`!important`.
+
+Across views, `{view}-day` is a day's container, `{view}-day-header` its header,
+`{view}-day-number` its date and `{view}-weekday` its weekday name. Board columns
+are date buckets rather than days, so they keep `board-column` and
+`board-column-header`.
 
 renCal's own state attributes are present when true and omitted when false;
 match them with `[data-selected]`, not `[data-selected="true"]`. Selection is

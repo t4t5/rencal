@@ -265,7 +265,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
       {children}
       {dotColors && dotColors.length > 0 && (
         <div
-          data-slot="calendar-event-dots"
+          data-slot="minical-event-dots"
           className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]"
         >
           {dotColors.map((color, i) => (

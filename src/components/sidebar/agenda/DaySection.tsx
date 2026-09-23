@@ -277,21 +277,17 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
 
   return (
     <div
-      data-slot="agenda-date"
+      data-slot="agenda-day-header"
       data-today={isToday || undefined}
       className={cn("sticky top-0 z-10 text-sm bg-background py-1.5 flex gap-2 h-8 items-center", {
         "text-today": isToday,
       })}
     >
-      <span
-        data-slot="agenda-day-label"
-        data-typography="numerical"
-        className="font-bold uppercase"
-      >
+      <span data-slot="agenda-weekday" data-typography="numerical" className="font-bold uppercase">
         {getRelativeDayLabel(date)}
       </span>
       <span
-        data-slot="agenda-date-label"
+        data-slot="agenda-day-number"
         data-typography="numerical"
         className={cn("text-muted-foreground", { "text-today": isToday })}
       >

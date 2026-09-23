@@ -21,7 +21,7 @@ export function Main({
     >
       <MainHeader calendarView={calendarView} onChangeCalendarView={onChangeCalendarView} />
 
-      <div data-slot="calendar-viewport" className="flex-1 min-h-0 select-none">
+      <div data-slot="main-viewport" className="flex-1 min-h-0 select-none">
         <TabsContent value="week" className="h-full">
           <WeekView />
         </TabsContent>

@@ -448,7 +448,7 @@
 
 @layer components {
   :where(
-    [data-slot="agenda-date"],
+    [data-slot="agenda-day-header"],
     [data-slot="agenda-empty"],
     [data-slot="agenda-all-day-events"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
