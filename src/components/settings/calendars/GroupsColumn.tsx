@@ -71,7 +71,7 @@ export function GroupsColumn({
           Groups
         </span>
 
-        <Button size="icon" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
+        <Button size="icon-sm" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
           <PlusIcon className="size-4" />
         </Button>
       </div>
@@ -86,7 +86,7 @@ export function GroupsColumn({
                 <span className="overflow-hidden text-ellipsis">{formatGroupName(group)}</span>
               </TabsTrigger>
               {!isDefault && (
-                <div className="absolute right-0 top-1/2 -translate-y-1/2">
+                <div className="absolute inset-y-0 right-0 flex aspect-square items-center justify-center">
                   <MoreMenu
                     onEdit={() => setModalState({ mode: "edit", group })}
                     onDelete={() => void deleteGroup(group)}
