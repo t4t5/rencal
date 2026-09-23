@@ -88,7 +88,7 @@
 
   --success: #4caf50;
   --warning: #fd8742;
-  --error: #e25252;
+  --destructive: #e25252;
 
   --hover-tint: var(--foreground);
   --hover-mix: 5%;
@@ -179,7 +179,6 @@
   --popover-muted-foreground: var(--muted-foreground);
   --tooltip-muted-foreground: var(--muted-foreground);
 
-  --destructive: var(--error);
   --destructive-foreground: white;
   --overlay: rgb(0 0 0 / 0.5);
 
@@ -252,7 +251,6 @@
   /* Attendee status */
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --color-error: var(--error);
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);

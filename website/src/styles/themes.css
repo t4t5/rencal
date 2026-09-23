@@ -37,7 +37,7 @@
 
   --success: #4caf50;
   --warning: #fd8742;
-  --error: #e25252;
+  --destructive: #e25252;
 
   --hover-tint: var(--foreground);
   --hover-mix: 5%;

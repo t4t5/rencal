@@ -72,7 +72,7 @@ These are the variables theme files normally override. Surfaces and state colors
 | `--ring`                   | Focus rings                                        |
 | `--success`                | Success / accepted state                           |
 | `--warning`                | Warning / tentative state                          |
-| `--error`                  | Error / declined state                             |
+| `--destructive`            | Destructive actions, error / declined state        |
 
 #### Optional colors
 

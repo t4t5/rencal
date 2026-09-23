@@ -20,7 +20,7 @@ const CSS_VARS = [
   "--muted-foreground",
   "--success",
   "--warning",
-  "--error",
+  "--destructive",
   "--event-color",
   "--event-background",
   "--event-foreground",
@@ -64,7 +64,7 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
     "--muted-foreground": `color-mix(in srgb, ${fg} 55%, transparent)`,
     "--success": c.green,
     "--warning": c.yellow,
-    "--error": c.red,
+    "--destructive": c.red,
   }
   if (!isMonochrome(c)) return vars
   // Mirrors electric-blue.css: accent for every emphasis, events as a solid accent fill.

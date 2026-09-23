@@ -51,7 +51,7 @@ export const SyncStatus = () => {
   }
 
   if (!isOnline) {
-    icon = <CloudOffIcon className="size-4 text-error pointer-events-none" />
+    icon = <CloudOffIcon className="size-4 text-destructive pointer-events-none" />
     tooltipContent = <>No internet connection</>
   }
 
