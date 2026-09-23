@@ -257,7 +257,8 @@ export function WeekTimeGrid({
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
                     data-slot="week-all-day"
-                    data-active={day.dateKey === activeDateKey || undefined}
+                    data-selected={day.dateKey === activeDateKey || undefined}
+                    data-weekend={day.isWeekend || undefined}
                     data-drop-day={day.dateKey}
                     data-drop-zone="all-day"
                     onContextMenu={(e) => {
@@ -330,7 +331,8 @@ export function WeekTimeGrid({
                 data-drop-day={day.dateKey}
                 data-drop-zone="timed"
                 data-slot="week-day"
-                data-active={day.dateKey === activeDateKey || undefined}
+                data-selected={day.dateKey === activeDateKey || undefined}
+                data-weekend={day.isWeekend || undefined}
                 onPointerDown={(event) => startCreateDrag(day.date, event)}
                 onClick={() => onDayClick(day.date)}
               >
@@ -403,7 +405,8 @@ const DayHeaders = ({
       key={day.dateKey}
       data-slot="week-day-header"
       data-typography="numerical"
-      data-active={day.dateKey === activeDateKey || undefined}
+      data-selected={day.dateKey === activeDateKey || undefined}
+      data-weekend={day.isWeekend || undefined}
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
         day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",

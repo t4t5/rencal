@@ -460,7 +460,7 @@
       [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
       [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
       [data-slot="calendar-event"][data-view="board"]
-    ):not([data-highlighted]):hover {
+    ):not([data-selected]):hover {
     background: var(--hover);
   }
 
@@ -468,7 +468,7 @@
     [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
     [data-slot="calendar-event"][data-view="board"]
-  )[data-highlighted] {
+  )[data-selected] {
     background: var(--selected);
     color: var(--selected-foreground);
   }
@@ -477,7 +477,7 @@
       [data-slot="calendar-event"][data-view="week"],
       [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
       [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
-    ):not([data-highlighted], [data-draft], [data-drag-state="preview"]):hover {
+    ):not([data-selected], [data-draft], [data-drag-state="preview"]):hover {
     filter: brightness(1.05);
   }
 
@@ -486,7 +486,7 @@
     [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
     [data-slot="calendar-event"][data-view="drag-overlay"]
-  )[data-highlighted] {
+  )[data-selected] {
     background: var(--calendar-event-selected-fill);
   }
 
@@ -552,7 +552,7 @@
     box-shadow: 0 0 0 1.5px var(--calendar-event-color);
   }
 
-  [data-slot="calendar-event"][data-highlighted] [data-slot="calendar-event-time"] {
+  [data-slot="calendar-event"][data-selected] [data-slot="calendar-event-time"] {
     color: inherit;
   }
 }

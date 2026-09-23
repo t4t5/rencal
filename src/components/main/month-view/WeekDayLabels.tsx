@@ -8,6 +8,8 @@ const WEEKDAY_LABELS: Record<FirstDayOfWeek, string[]> = {
   sunday: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
 }
 
+const isWeekendLabel = (label: string) => label === "Sat" || label === "Sun"
+
 export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
   const { firstDayOfWeek } = useSettings()
 
@@ -17,10 +19,11 @@ export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
         <div
           data-slot="month-weekday"
           data-typography="numerical"
+          data-weekend={isWeekendLabel(label) || undefined}
           key={label}
           className={cn(
             "text-2xs text-muted-foreground py-2 text-center font-medium uppercase",
-            (label === "Sat" || label === "Sun") && "bg-weekend",
+            isWeekendLabel(label) && "bg-weekend",
             dimmed && "opacity-50",
           )}
         >

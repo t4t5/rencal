@@ -102,7 +102,7 @@ describe("global CSS contract", () => {
     }
 
     expect(source).toMatch(
-      /:where\([\s\S]*?\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-view="agenda"\]\[data-kind="timed"\][\s\S]*?\[data-view="board"\][\s\S]*?\)\[data-highlighted\]\s*\{[^}]*background:\s*var\(--selected\);[^}]*color:\s*var\(--selected-foreground\);[^}]*\}/,
+      /:where\([\s\S]*?\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-view="agenda"\]\[data-kind="timed"\][\s\S]*?\[data-view="board"\][\s\S]*?\)\[data-selected\]\s*\{[^}]*background:\s*var\(--selected\);[^}]*color:\s*var\(--selected-foreground\);[^}]*\}/,
     )
   })
 
@@ -111,7 +111,7 @@ describe("global CSS contract", () => {
       /\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-slot="calendar-event-time"\]\s*\{[^}]*color:\s*var\(--calendar-event-tinted-foreground\);[^}]*\}/,
     )
     expect(source).toMatch(
-      /\[data-highlighted\]\s*\[data-slot="calendar-event-time"\]\s*\{[^}]*color:\s*inherit;/,
+      /\[data-selected\]\s*\[data-slot="calendar-event-time"\]\s*\{[^}]*color:\s*inherit;/,
     )
   })
 

@@ -51,7 +51,7 @@ export const BoardCard = memo(function BoardCard({
       data-slot="calendar-event"
       data-view="board"
       data-kind={event.start.kind === "date" ? "all-day" : "timed"}
-      data-highlighted={highlighted || undefined}
+      data-selected={highlighted || undefined}
       data-rsvp={rsvp ?? undefined}
       className="cursor-default py-1.5 border-b border-border last:border-b-0 outline-none"
       data-event-clickable

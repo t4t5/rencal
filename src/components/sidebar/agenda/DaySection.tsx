@@ -222,7 +222,7 @@ const AgendaEventRowShell = ({
     data-view="agenda"
     data-kind={allDay ? "all-day" : "timed"}
     data-event-clickable={!state.isDraft || undefined}
-    data-highlighted={state.isActive || state.isSelected || undefined}
+    data-selected={state.isActive || state.isSelected || undefined}
     data-rsvp={state.rsvp ?? undefined}
     data-draft={state.isDraft || undefined}
     data-agenda-item
@@ -278,6 +278,7 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
   return (
     <div
       data-slot="agenda-date"
+      data-today={isToday || undefined}
       className={cn("sticky top-0 z-10 text-sm bg-background py-1.5 flex gap-2 h-8 items-center", {
         "text-today": isToday,
       })}

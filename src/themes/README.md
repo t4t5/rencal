@@ -327,11 +327,12 @@ Calendar chrome exposes these slots for scoped theme rules:
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
   `calendar-weekday`, `calendar-day`, `calendar-event-dots`;
 - `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-day-label`,
-  `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`;
+  `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`; today's
+  `agenda-date` exposes `data-today`;
 - `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`, `month-date`,
   `month-day`, `month-day-number`, `month-create-selection`;
 - `board-column` and `board-column-header`; today's header exposes
-  `data-today="true"`;
+  `data-today`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
   `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
@@ -342,10 +343,17 @@ dropdown exposes that control marker and `select-icon` on its trailing arrow. It
 the `popover-trigger` slot: composed triggers retain their primitive slot and
 use control markers for cross-primitive styling. Mini-calendar navigation
 buttons expose `data-direction="previous"` / `"next"`. Month dates and day
-bodies expose `data-active="true"`; day numbers expose `data-today="true"`.
+bodies expose `data-selected` for the selected date; day numbers expose
+`data-today`. Weekend weekday labels, month dates, day bodies, and mini-calendar
+days expose `data-weekend`.
 Mini-calendar day buttons expose `calendar-day` (replacing the generic button
-slot; `data-button` remains) and retain their explicit `true`/`false` selection
-attributes, and their selection styles can be overridden without `!important`.
+slot; `data-button` remains) with `data-selected` and `data-today`, and their
+selection styles can be overridden without `!important`.
+
+renCal's own state attributes are present when true and omitted when false;
+match them with `[data-selected]`, not `[data-selected="true"]`. Selection is
+always `data-selected`, painted with `--selected`. `data-highlighted` keeps its
+Radix meaning: the keyboard or pointer highlight inside menus.
 
 ### Calendar event styling hooks
 
@@ -358,7 +366,7 @@ need it.
 
 Event state is metadata on the same element that owns its visual treatment:
 
-- `data-highlighted="true"` marks selection or an open context menu;
+- `data-selected` marks selection or an open context menu;
 - `data-rsvp` exposes `accepted`, `tentative`, `declined`, or `needs-action` for
   the current user and is omitted when the event has no applicable response;
 - `data-draft="true"` and `data-dimmed="true"` expose transient editor states;
@@ -371,7 +379,7 @@ interaction marker; style `calendar-event` instead.
 The app sets only `--calendar-event-color` inline. Backgrounds, foregrounds,
 borders, opacity, and shadows are CSS, so ordinary theme selectors can override
 them without `!important`. Hover uses `--hover`. On unfilled blocks,
-`data-highlighted` paints with `--selected`; filled blocks use
+`data-selected` paints with `--selected`; filled blocks use
 `--calendar-event-selected-fill`. The derived `--calendar-event-fill`,
 `--calendar-event-selected-fill`, `--calendar-event-foreground`, and
 `--calendar-event-tinted-foreground` custom properties are also available on
@@ -403,8 +411,9 @@ Week view exposes `week-scroll`, `week-header`, `week-header-gutter`,
 `week-day-header`, `week-weekday`, `week-day-number`, `week-all-day`,
 `week-time-grid`, `week-time-gutter`, and `week-hour-label`. Timed columns expose
 `week-day`; all-day lane wrappers expose `week-all-day-lane`. Headers, all-day
-backgrounds, and timed columns expose `data-active="true"` for the selected date;
-day numbers expose `data-today="true"`. False states omit these attributes.
+backgrounds, and timed columns expose `data-selected` for the selected date and
+`data-weekend` on weekends; day numbers expose `data-today`. False states omit
+these attributes.
 
 Week events use the shared calendar-event contract above. The all-day lane
 wrapper retains `week-all-day-lane`; it is geometry rather than event paint.

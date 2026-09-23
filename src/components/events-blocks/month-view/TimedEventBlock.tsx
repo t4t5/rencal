@@ -46,7 +46,7 @@ export function MonthTimedEvent({
       data-slot="calendar-event"
       data-view="month"
       data-kind="timed"
-      data-highlighted={highlighted || undefined}
+      data-selected={highlighted || undefined}
       data-rsvp={rsvp ?? undefined}
       data-draft={isDraft || undefined}
       data-dimmed={(!isStatic && dimmed) || undefined}

@@ -74,7 +74,7 @@ function DragFloatCard({ drag }: { drag: ActiveEventDrag }) {
       data-slot="calendar-event"
       data-view="drag-overlay"
       data-kind={isAllDay(range.start) ? "all-day" : "timed"}
-      data-highlighted="true"
+      data-selected="true"
       data-rsvp={getUserResponseStatus(event, calendars) ?? undefined}
       data-drag-state="overlay"
       className={cn(

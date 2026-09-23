@@ -94,7 +94,7 @@ and `data-kind` (`timed` or `all-day`) to specialize its shape. Event content
 uses the stable `calendar-event-title`, `calendar-event-time`, and
 `calendar-event-color-marker` slots.
 
-The event root carries `data-highlighted`, `data-rsvp`, `data-draft`,
+The event root carries `data-selected`, `data-rsvp`, `data-draft`,
 `data-dimmed`, and `data-drag-state` when those states apply. RSVP values are
 `accepted`, `tentative`, `declined`, and `needs-action`; false boolean states are
 omitted. Do not style `data-event-clickable`, which is an internal interaction
@@ -105,7 +105,7 @@ paint is regular CSS, so a theme can override backgrounds, text, borders, and
 shadows without `!important`. Preserve inline positioning and sizing: those
 values are event geometry.
 
-Event hover uses `--hover`. On unfilled blocks, `data-highlighted` uses
+Event hover uses `--hover`. On unfilled blocks, `data-selected` uses
 `--selected` / `--selected-foreground`; filled blocks use the derived
 `--calendar-event-selected-fill`.
 
