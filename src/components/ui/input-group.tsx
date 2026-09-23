@@ -48,7 +48,7 @@ function InputGroupAddon({
       data-align={align}
       className={cn(
         start ? "control-leading order-first" : "control-trailing order-last",
-        "h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
+        "h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-sm group-data-[disabled=true]/input-group:opacity-50",
         className,
       )}
       onClick={(e) => {
@@ -67,10 +67,10 @@ function InputGroupAddon({
 const inputGroupButtonVariants = cva("text-sm shadow-none flex gap-2 items-center", {
   variants: {
     size: {
-      xs: "h-6 gap-1 px-2 rounded-[calc(var(--radius)-5px)] [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
-      sm: "h-8 px-2.5 gap-1.5 rounded-md has-[>svg]:px-2.5",
-      "icon-xs": "size-6 rounded-[calc(var(--radius)-5px)] p-0 has-[>svg]:p-0",
-      "icon-sm": "size-8 p-0 has-[>svg]:p-0",
+      xs: "h-(--control-icon-size) gap-1 px-2 rounded-sm [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
+      sm: "h-control-sm px-2.5 gap-1.5 rounded-md has-[>svg]:px-2.5",
+      "icon-xs": "size-(--control-icon-size) rounded-sm p-0 has-[>svg]:p-0",
+      "icon-sm": "size-control-sm p-0 has-[>svg]:p-0",
     },
   },
   defaultVariants: {

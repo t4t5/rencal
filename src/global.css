@@ -159,6 +159,8 @@
   --control-active-border: transparent;
 
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
+  --destructive-hover: color-mix(in srgb, white var(--hover-mix), var(--destructive));
+  --brand-hover: color-mix(in srgb, white var(--hover-mix), var(--brand));
   --primary-foreground: var(--background);
 
   --popover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
@@ -243,12 +245,14 @@
 
   --color-ring: var(--ring);
   --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
   --color-brand-foreground: var(--brand-foreground);
 
   /* Attendee status */
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);
 

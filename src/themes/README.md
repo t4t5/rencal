@@ -88,6 +88,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
 | `--brand-foreground`           | Text colour on `--brand` fills (e.g. the invites badge); defaults to `white`.                                                                              |
+| `--<fill>-hover`               | Hover fill for `primary`, `destructive`, and `brand`; defaults to the fill lightened by one `--hover-mix` step of white.                                   |
 | `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
 | `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |
 | `--event-color`                | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
