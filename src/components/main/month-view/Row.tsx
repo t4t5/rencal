@@ -19,7 +19,6 @@ import { TopLeftDate } from "./TopLeftDate"
 import { reservedAllDayHeight } from "./lane-geometry"
 
 const MAX_ALL_DAY_LANES = 3
-const MONTH_BOUNDARY_COLOR = "color-mix(in srgb, var(--foreground) 28%, var(--background))"
 
 function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizontal?: boolean }) {
   if (col < 0 || (col === 0 && !showHorizontal)) return null
@@ -27,16 +26,19 @@ function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizo
   if (col === 0) {
     return (
       <div
+        data-slot="month-boundary"
+        data-orientation="horizontal"
         className="pointer-events-none absolute -top-px left-0 right-0 z-20 h-[3px]"
-        style={{ backgroundColor: MONTH_BOUNDARY_COLOR }}
       />
     )
   }
 
   return (
     <div
+      data-slot="month-boundary"
+      data-orientation="vertical"
       className="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 -translate-x-px"
-      style={{ left: `${(col / 7) * 100}%`, backgroundColor: MONTH_BOUNDARY_COLOR }}
+      style={{ left: `${(col / 7) * 100}%` }}
     />
   )
 }

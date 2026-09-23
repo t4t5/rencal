@@ -30,11 +30,7 @@ export function getCalendarEventStyle({
   }
 }
 
-/** Flat tint used while drawing a new event range. */
-export function getCreateSelectionStyle(calendarColor: string | null): CSSProperties {
-  const accent = calendarColor ?? withThemeEventColor(DEFAULT_CALENDAR_COLOR)
-  const boostedAccent = `oklch(from ${accent} l calc(c * 1.4) h)`
-  return {
-    backgroundColor: `color-mix(in srgb, ${boostedAccent} 20%, transparent)`,
-  }
+/** Create selections carry only their source colour; global.css paints the tint. */
+export function getCreateSelectionStyle(calendarColor: string | null): CalendarEventStyle {
+  return getCalendarEventStyle({ calendarColor, eventColor: null })
 }

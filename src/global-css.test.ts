@@ -115,6 +115,13 @@ describe("global CSS contract", () => {
     )
   })
 
+  it("paints create selections and month boundaries through their slots", () => {
+    expect(source).toMatch(
+      /:where\(\[data-slot="month-create-selection"\], \[data-slot="week-create-selection"\]\)\s*\{[^}]*background:[^}]*var\(--calendar-event-color\)/,
+    )
+    expect(source).toMatch(/:where\(\[data-slot="month-boundary"\]\)\s*\{[^}]*background:/)
+  })
+
   it("keeps scale utilities runtime-themeable and roles in the components layer", () => {
     const css = build(["text-sm"])
 

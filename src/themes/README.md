@@ -357,7 +357,10 @@ Calendar chrome exposes these slots for scoped theme rules:
   `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`; today's
   `agenda-date` exposes `data-today`;
 - `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`, `month-date`,
-  `month-day`, `month-day-number`, `month-create-selection`;
+  `month-day`, `month-day-number`, `month-create-selection`, and
+  `month-boundary` (the line where a new month starts, with
+  `data-orientation="horizontal"` or `"vertical"`);
+- `week-create-selection` for the range drawn while creating a timed event;
 - `board-column` and `board-column-header`; today's header exposes
   `data-today`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
@@ -410,7 +413,9 @@ them without `!important`. Hover uses `--hover`. On unfilled blocks,
 `--calendar-event-selected-fill`. The derived `--calendar-event-fill`,
 `--calendar-event-selected-fill`, `--calendar-event-foreground`, and
 `--calendar-event-tinted-foreground` custom properties are also available on
-each event. Inline `top`, `left`, `width`, `height`, and grid placement are
+each event. Create selections (`month-create-selection`,
+`week-create-selection`) likewise set only `--calendar-event-color` inline and
+paint their tint in CSS. Inline `top`, `left`, `width`, `height`, and grid placement are
 layout geometry and must be preserved.
 
 The `agenda` slot is the fixed outer frame: apply backgrounds, borders, shadows,

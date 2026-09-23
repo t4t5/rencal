@@ -599,4 +599,16 @@
   [data-slot="calendar-event"][data-selected] [data-slot="calendar-event-time"] {
     color: inherit;
   }
+
+  :where([data-slot="month-create-selection"], [data-slot="week-create-selection"]) {
+    background: color-mix(
+      in srgb,
+      oklch(from var(--calendar-event-color) l calc(c * 1.4) h) 20%,
+      transparent
+    );
+  }
+
+  :where([data-slot="month-boundary"]) {
+    background: color-mix(in srgb, var(--foreground) 28%, var(--background));
+  }
 }

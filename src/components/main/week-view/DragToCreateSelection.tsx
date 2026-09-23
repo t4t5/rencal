@@ -11,6 +11,7 @@ export function DragToCreateSelection({
 }) {
   return (
     <div
+      data-slot="week-create-selection"
       className="absolute left-0 right-0 z-10 rounded-sm pointer-events-none"
       style={{
         top: `${(selection.startMinutes / DAY_MINUTES) * 100}%`,
