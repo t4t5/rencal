@@ -26,14 +26,14 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --primary: #7c3aed;
 --primary-foreground: #ffffff;
 --brand: #7c3aed;
---hover-tint: #ffffff;
+--surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
+Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--surface-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
-Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block. Each derived surface is computed from `--background`, `--hover-tint`, and `--hover-mix` alone, so overriding one leaves the others unchanged. `--hover-tint` defaults to `--foreground`, so hover and weekend tints stay visible on light and dark palettes alike.
+Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block. Each derived surface is computed from `--background`, `--surface-tint`, and `--surface-tint-step` alone, so overriding one leaves the others unchanged. `--surface-tint` defaults to `--foreground`, so hover and weekend tints stay visible on light and dark palettes alike.
 
 renCal adds `--selected` and `--selected-foreground` for persistent selection;
 `--selected` defaults to one tint step heavier than `--accent`, and

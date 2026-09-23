@@ -39,25 +39,37 @@
   --warning: #fd8742;
   --destructive: #e25252;
 
-  --hover-tint: var(--foreground);
-  --hover-mix: 5%;
+  --surface-tint: var(--foreground);
+  --surface-tint-step: 5%;
 
   /* Derived tokens — same formulas as the app's global.css `[data-theme]` block */
-  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
+  --hover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
   --secondary: var(--hover);
-  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+  --secondary-hover: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary)
+  );
   --secondary-foreground: var(--foreground);
-  --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --accent: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary-hover)
+  );
   --accent-foreground: var(--foreground);
-  --selected: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--accent));
+  --selected: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--accent));
   --selected-foreground: var(--foreground);
   --muted: var(--secondary);
   --weekend: var(--hover);
-  --border: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
-  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
+  --border: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary-hover)
+  );
+  --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --card-foreground: var(--foreground);
-  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--border));
-  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
+  --input: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--border));
+  --primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
   --primary-foreground: var(--background);
   --today-foreground: var(--primary-foreground);
   --popover: var(--card);

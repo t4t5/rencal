@@ -14,8 +14,8 @@
 --tab-gap: 6px;
 --tab-list-shadow: none;
 
---hover-tint: #979bc8;
---hover-mix: 10%;
+--surface-tint: #979bc8;
+--surface-tint-step: 10%;
 
 --radius: 9.6px;
 --radius-circle: calc(infinity * 1px);

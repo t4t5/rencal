@@ -7,8 +7,8 @@
 --primary: var(--minimal-brand-color);
 --brand: #ff2f00;
 --today: #ff2f00;
---hover-tint: var(--minimal-brand-color);
---hover-mix: 4%;
+--surface-tint: var(--minimal-brand-color);
+--surface-tint-step: 4%;
 --button-border: var(--border);
 --radius: 8px;
 --text-heading--transform: normal;

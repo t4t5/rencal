@@ -38,8 +38,8 @@ const REN_CORE: Record<string, string> = {
   "--primary": "#f56313",
   "--brand": "#ff610b",
   "--today": "#3a93ff",
-  "--hover-tint": "white",
-  "--hover-mix": "5%",
+  "--surface-tint": "white",
+  "--surface-tint-step": "5%",
 }
 
 // Omarchy (appearance: null) has no static palette to preview.
@@ -88,7 +88,7 @@ const colorControls = [
   { var: "--primary", label: "Primary" },
   { var: "--brand", label: "Brand" },
   { var: "--today", label: "Today" },
-  { var: "--hover-tint", label: "Hover tint" },
+  { var: "--surface-tint", label: "Surface tint" },
 ]
 
 const segControls = [
@@ -229,8 +229,8 @@ const segControls = [
 
           <div class="flex flex-col gap-1">
             <div class="flex justify-between text-xs">
-              <label class="tracking-wide text-muted uppercase">Hover strength</label>
-              <span class="text-muted" data-range-out="--hover-mix"></span>
+              <label class="tracking-wide text-muted uppercase">Tint step</label>
+              <span class="text-muted" data-range-out="--surface-tint-step"></span>
             </div>
             <input
               type="range"
@@ -238,7 +238,7 @@ const segControls = [
               min="0"
               max="25"
               step="1"
-              data-range-for="--hover-mix"
+              data-range-for="--surface-tint-step"
             />
           </div>
 
@@ -421,7 +421,7 @@ const segControls = [
       const value = Number.parseFloat(effective(name)) || 0
       input.value = String(value)
       const out = document.querySelector(`[data-range-out="${name}"]`)
-      if (out) out.textContent = name === "--hover-mix" ? `${value}%` : `${value}px`
+      if (out) out.textContent = name === "--surface-tint-step" ? `${value}%` : `${value}px`
     }
 
     const segState: Record<string, string> = {
@@ -498,7 +498,7 @@ const segControls = [
   for (const input of document.querySelectorAll<HTMLInputElement>("[data-range-for]")) {
     input.addEventListener("input", () => {
       const name = input.dataset.rangeFor!
-      setVars({ [name]: name === "--hover-mix" ? `${input.value}%` : `${input.value}px` })
+      setVars({ [name]: name === "--surface-tint-step" ? `${input.value}%` : `${input.value}px` })
     })
   }
 

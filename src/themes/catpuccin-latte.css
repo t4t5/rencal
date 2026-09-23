@@ -11,10 +11,10 @@
 --muted-foreground: var(--theme-subtext-0);
 --border: var(--theme-surface-0);
 
---hover-tint: #484f7f;
---hover-mix: 10%;
+--surface-tint: #484f7f;
+--surface-tint-step: 10%;
 /* Lighter than the 4-step default, which is too heavy on this light base */
---selected: color-mix(in srgb, var(--hover-tint) 18%, transparent);
+--selected: color-mix(in srgb, var(--surface-tint) 18%, transparent);
 
 --primary: var(--theme-lavender);
 --today: var(--theme-blue);

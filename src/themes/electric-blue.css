@@ -10,8 +10,8 @@
 --event-color: var(--electric-blue);
 --event-background: var(--electric-blue);
 --event-foreground: white;
---hover-tint: var(--electric-blue);
---hover-mix: 6%;
+--surface-tint: var(--electric-blue);
+--surface-tint-step: 6%;
 --radius: 0px;
 --font-heading: var(--font-mono);
 --font-button: var(--font-mono);

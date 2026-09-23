@@ -90,8 +90,8 @@
   --warning: #fd8742;
   --destructive: #e25252;
 
-  --hover-tint: var(--foreground);
-  --hover-mix: 5%;
+  --surface-tint: var(--foreground);
+  --surface-tint-step: 5%;
 
   --tab-gap: 0;
 
@@ -131,42 +131,50 @@
 
   /* Each surface mixes N tint steps into a base, never into another surface,
      so overriding one shadcn token leaves the others alone. */
-  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
-  --secondary: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
-  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+  --hover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+  --secondary: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+  --secondary-hover: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary)
+  );
   --secondary-foreground: var(--foreground);
 
-  --accent: color-mix(in srgb, var(--hover-tint) calc(var(--hover-mix) * 3), transparent);
+  --accent: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
   --accent-foreground: var(--foreground);
-  --selected: color-mix(in srgb, var(--hover-tint) calc(var(--hover-mix) * 4), transparent);
+  --selected: color-mix(
+    in srgb,
+    var(--surface-tint) calc(var(--surface-tint-step) * 4),
+    transparent
+  );
   --selected-foreground: var(--foreground);
   --today-foreground: var(--primary-foreground);
   --brand-foreground: white;
-  --muted: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
+  --muted: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
   --weekend: var(--hover);
 
-  --border: color-mix(in srgb, var(--hover-tint) calc(var(--hover-mix) * 3), transparent);
+  --border: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
 
   /* same as hover, but solid color: */
-  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
+  --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --card-foreground: var(--foreground);
 
   /* same as border, but stronger tint */
-  --input: color-mix(in srgb, var(--hover-tint) calc(var(--hover-mix) * 4), transparent);
+  --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
 
   /* Interactive controls use one uninterrupted surface while active. */
   --control-active-background: var(--secondary);
   --control-active-border: transparent;
 
-  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
-  --destructive-hover: color-mix(in srgb, white var(--hover-mix), var(--destructive));
-  --brand-hover: color-mix(in srgb, white var(--hover-mix), var(--brand));
+  --primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
+  --destructive-hover: color-mix(in srgb, white var(--surface-tint-step), var(--destructive));
+  --brand-hover: color-mix(in srgb, white var(--surface-tint-step), var(--brand));
   --primary-foreground: var(--background);
 
-  --popover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
+  --popover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --popover-foreground: var(--foreground);
 
-  --tooltip: color-mix(in srgb, var(--hover-tint) 15%, var(--background));
+  --tooltip: color-mix(in srgb, var(--surface-tint) 15%, var(--background));
   --tooltip-foreground: var(--foreground);
 
   /* Muted text on each surface that sets its own foreground. The

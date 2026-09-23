@@ -5,7 +5,7 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 ```css
 --background: #0f0f0f;
 --foreground: #eaeaea;
---hover-tint: #ffffff;
+--surface-tint: #ffffff;
 --primary: #7c3aed;
 --primary-foreground: #ffffff; /* defaults to --background; set it when that lacks contrast on --primary */
 --brand: #7c3aed;
@@ -18,7 +18,7 @@ The `[data-theme="<id>"]` selector is added **for you**:
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets. Installing or updating an inactive theme therefore does not enable its full CSS.
 
-The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
+The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
 
 ## Theme scopes
 
@@ -88,7 +88,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
 | `--brand-foreground`           | Text colour on `--brand` fills (e.g. the invites badge); defaults to `white`.                                                                              |
-| `--<fill>-hover`               | Hover fill for `primary`, `destructive`, and `brand`; defaults to the fill lightened by one `--hover-mix` step of white.                                   |
+| `--<fill>-hover`               | Hover fill for `primary`, `destructive`, and `brand`; defaults to the fill lightened by one `--surface-tint-step` of white.                                |
 | `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
 | `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |
 | `--event-color`                | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
@@ -99,16 +99,16 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
 
-### Hover / tint system
+### Surface tint system
 
-The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are each built by mixing a fixed number of `--hover-tint` steps into `transparent` (or `--background` for the solid `--card` / `--popover`), never from another surface, so overriding one token leaves the rest unchanged. `--secondary-hover` is the exception: it is one step over `--secondary`, so it follows a custom `--secondary`. Tuning these two primitives is usually enough to match a theme's palette.
+The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are each built by mixing a fixed number of `--surface-tint` steps into `transparent` (or `--background` for the solid `--card` / `--popover`), never from another surface, so overriding one token leaves the rest unchanged. `--secondary-hover` is the exception: it is one step over `--secondary`, so it follows a custom `--secondary`. Tuning these two primitives is usually enough to match a theme's palette.
 
-| Variable       | Purpose                                                                                       |
-| -------------- | --------------------------------------------------------------------------------------------- |
-| `--hover-tint` | Color mixed over the background to produce hover / surface layers; defaults to `--foreground` |
-| `--hover-mix`  | Percentage of tint per step (hover/secondary/muted/card 1, border/accent 3, input/selected 4) |
+| Variable              | Purpose                                                                                                  |
+| --------------------- | -------------------------------------------------------------------------------------------------------- |
+| `--surface-tint`      | Color mixed over the background to produce surface, border, and hover layers; defaults to `--foreground` |
+| `--surface-tint-step` | Percentage of tint per step (hover/secondary/muted/card 1, border/accent 3, input/selected 4)            |
 
-Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
+Tooltips use a solid `--tooltip` surface derived from 15% `--surface-tint` mixed into `--background`, with a matching arrow.
 
 Interactive state has three tiers. `accent` / `accent-foreground` is the
 transient highlight for menu items, keyboard focus, ghost buttons, and neutral
@@ -232,7 +232,7 @@ There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are
 
 ### Pasting a shadcn theme
 
-shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--hover-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
+shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--surface-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
 
 ## Omarchy auto-sync
 
@@ -240,7 +240,7 @@ The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 
-**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--brand` / `--hover-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
+**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--brand` / `--surface-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
 
 If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 
