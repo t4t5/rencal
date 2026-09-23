@@ -84,7 +84,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 | Variable                       | Purpose                                                                                                                                                    |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--selected`                   | Persistent selection surface; defaults to one tint step beyond `--accent`.                                                                                 |
+| `--selected`                   | Persistent selection surface; defaults to one tint step heavier than `--accent`.                                                                           |
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
 | `--highlight-foreground`       | Text colour on `--highlight` fills (e.g. the invites badge); defaults to `white`.                                                                          |
@@ -106,12 +106,12 @@ Event text is derived from each event's accent colour. With these unset (the dar
 
 ### Hover / tint system
 
-The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
+The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are each built by mixing a fixed number of `--hover-tint` steps into `transparent` (or `--background` for the solid `--card` / `--popover`), never from another surface, so overriding one token leaves the rest unchanged. `--secondary-hover` is the exception: it is one step over `--secondary`, so it follows a custom `--secondary`. Tuning these two primitives is usually enough to match a theme's palette.
 
 | Variable       | Purpose                                                                                       |
 | -------------- | --------------------------------------------------------------------------------------------- |
 | `--hover-tint` | Color mixed over the background to produce hover / surface layers; defaults to `--foreground` |
-| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)                               |
+| `--hover-mix`  | Percentage of tint per step (hover/secondary/muted/card 1, border/accent 3, input/selected 4) |
 
 Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
 

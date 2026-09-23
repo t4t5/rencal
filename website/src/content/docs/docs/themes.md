@@ -33,10 +33,11 @@ Most themes only need to set `--background`, `--foreground`, `--primary`, `--hig
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
-Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block `--hover-tint` defaults to `--foreground`, so hover and weekend tints stay visible on light and dark palettes alike.
+Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block. Each derived surface is computed from `--background`, `--hover-tint`, and `--hover-mix` alone, so overriding one leaves the others unchanged. `--hover-tint` defaults to `--foreground`, so hover and weekend tints stay visible on light and dark palettes alike.
 
 renCal adds `--selected` and `--selected-foreground` for persistent selection;
-they derive one tint step beyond `--accent` unless the theme sets them directly.
+`--selected` defaults to one tint step heavier than `--accent`, and
+`--selected-foreground` to `--foreground`, unless the theme sets them directly.
 Filled "today" markers use `--today-foreground`, tooltips use `--tooltip-foreground`,
 and `--highlight` fills use `--highlight-foreground`.
 
