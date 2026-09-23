@@ -1,7 +1,7 @@
 import { useId } from "react"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { ControlContent, ControlLeading, ControlRow } from "@/components/ui/control-row"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Label } from "@/components/ui/label"
 
 import { cn } from "@/lib/utils"
@@ -18,35 +18,33 @@ export const AllDayCheckbox = ({
   const id = useId()
 
   return (
-    <ControlRow asChild>
-      <Label
-        htmlFor={id}
-        className={cn(
-          "h-control w-fit gap-[var(--control-content-gap)] rounded-md border border-transparent font-normal",
-          readOnly && "pointer-events-none",
-        )}
-      >
-        <ControlLeading>
-          <Checkbox
-            id={id}
-            checked={checked}
-            disabled={readOnly}
-            className="disabled:cursor-default disabled:opacity-100"
-            onCheckedChange={() => {
-              onCheckedChange(!checked)
-            }}
-            defaultChecked={false}
-          />
-        </ControlLeading>
+    <Label
+      htmlFor={id}
+      className={cn(
+        "control-row h-control w-fit gap-[var(--control-content-gap)] rounded-md border border-transparent font-normal",
+        readOnly && "pointer-events-none",
+      )}
+    >
+      <ItemMedia>
+        <Checkbox
+          id={id}
+          checked={checked}
+          disabled={readOnly}
+          className="disabled:cursor-default disabled:opacity-100"
+          onCheckedChange={() => {
+            onCheckedChange(!checked)
+          }}
+          defaultChecked={false}
+        />
+      </ItemMedia>
 
-        <ControlContent
-          className={cn("text-muted-foreground", {
-            "text-sidebar-primary-foreground": checked,
-          })}
-        >
-          All-day
-        </ControlContent>
-      </Label>
-    </ControlRow>
+      <ItemContent
+        className={cn("text-muted-foreground", {
+          "text-sidebar-primary-foreground": checked,
+        })}
+      >
+        All-day
+      </ItemContent>
+    </Label>
   )
 }

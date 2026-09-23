@@ -46,7 +46,6 @@ function InputGroupAddon({
     <div
       data-slot="input-group-addon"
       data-align={align}
-      data-control-part={start ? "leading" : "trailing"}
       className={cn(
         start ? "control-leading order-first" : "control-trailing order-last",
         "h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
@@ -91,7 +90,6 @@ function InputGroupButton({
     <Button
       type={type}
       data-size={size}
-      data-control-part="trailing"
       variant={variant}
       className={cn(inputGroupButtonVariants({ size }), className)}
       {...props}
@@ -102,7 +100,6 @@ function InputGroupButton({
 function InputGroupText({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <span
-      data-control-part="content"
       className={cn(
         "text-muted-foreground flex items-center gap-2 text-sm [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
         className,
@@ -116,7 +113,6 @@ function InputGroupInput({ className, ...props }: React.ComponentProps<"input">)
   return (
     <InputInner
       data-slot="input-group-control"
-      data-control-part="content"
       className={cn("h-auto min-h-0 flex-1 border-0 px-0 shadow-none", className)}
       {...props}
     />
@@ -131,7 +127,6 @@ function InputGroupTextarea({
   return (
     <TextareaInner
       data-slot="input-group-control"
-      data-control-part="content"
       autosize={autosize}
       className={className}
       {...props}

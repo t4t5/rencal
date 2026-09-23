@@ -70,7 +70,7 @@ For component-specific custom CSS, target stable slot attributes. Select on `dat
 | `data-slot`                                                                                                     | Component or component-part identity. Always a single value; names follow shadcn where one exists.                                                |
 | `data-variant`, `data-size`                                                                                     | Public presentation choices, such as a button or input variant.                                                                                   |
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
-| `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
+| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 | `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
@@ -84,7 +84,7 @@ The control spacing variables adjust the event composer and editor as a unit. `-
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
-Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows expose `control-leading`, `control-content`, and `control-trailing`; existing primitives keep their original slots and identify the same roles with `data-control-part="leading"`, `"content"`, or `"trailing"`. Input-group add-ons also keep shadcn's `data-align`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
+Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows use shadcn's Item parts: `item-media`, `item-content`, and `item-actions`, inside an `item` root for standalone list rows. Input-group add-ons keep their `input-group-addon` slot and shadcn's `data-align`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
 
 ```css
 [data-slot="event-form-footer"] {
@@ -92,7 +92,7 @@ Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` sl
 }
 ```
 
-Removable list rows, such as reminders and conference links, add `data-variant="item"` to the row root and use `accent` / `accent-foreground` while hovered or focused within. The `select-icon` slot owns the dropdown arrow's colour and visibility; its glyph draws with `currentColor`.
+Removable list rows, such as reminders and conference links, are `item` slots with `data-variant="accent"` and use `accent` / `accent-foreground` while hovered or focused within. The `select-icon` slot owns the dropdown arrow's colour and visibility; its glyph draws with `currentColor`.
 
 Elements expose their typography role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `button`, and actions embedded in event fields use `field`. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
 

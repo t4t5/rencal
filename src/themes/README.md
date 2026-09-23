@@ -275,13 +275,13 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | `data-slot`                                                                                                     | Component or component-part identity. Always a single value; names follow shadcn where one exists.                                                |
 | `data-variant`, `data-size`                                                                                     | Public presentation choices, such as a button or input variant.                                                                                   |
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
-| `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
+| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 | `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
 Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline`, `secondary`, `ghost`, or `link`, and `data-size` is `xs`, `sm`, `default`, `lg`, `icon-xs`, `icon-sm`, `icon`, or `icon-lg`. Sizes follow the control tokens: `xs`/`icon-xs` use `--control-icon-size`, `sm`/`icon-sm` use `--control-height-sm`, `default`/`icon` use `--control-height`, and `lg`/`icon-lg` use `--control-height-lg`.
 
-The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; input-group add-ons also keep shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
+The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Field rows use shadcn's Item parts: `item-media` (the leading icon or checkbox), `item-content`, and `item-actions`. Standalone list rows put them in an `item` root; select triggers, labels, and buttons keep their own slot as the root. Input-group add-ons keep their `input-group-addon` slot and shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
 Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
 interactive counterpart to a select or combobox's `select-icon`; themes can give both the
@@ -303,7 +303,7 @@ draws with `currentColor`. A theme can recolour the arrow through the slot's
 `color`, or set it to `transparent` and draw its own glyph with a pseudo-element.
 
 Removable list rows in the event form, such as reminders and conference links,
-expose `data-variant="item"` on their `control-row` root. They use
+are `item` slots with `data-variant="accent"`. They use
 the `accent` / `accent-foreground` pair while hovered or focused within.
 
 Themes that intentionally retain an inset event action can scope that exception to the footer:

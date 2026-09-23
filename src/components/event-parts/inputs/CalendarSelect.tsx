@@ -1,6 +1,6 @@
 import { ReactNode } from "react"
 
-import { ControlContent, ControlLeading } from "@/components/ui/control-row"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -31,17 +31,17 @@ export const CalendarSelect = ({
           readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
         )}
       >
-        <ControlLeading>
+        <ItemMedia>
           {calendar && (
             <div
               className="size-3 shrink-0 rounded-xs"
               style={{ backgroundColor: getCalendarColor(calendar) }}
             />
           )}
-        </ControlLeading>
-        <ControlContent className="truncate text-left text-foreground">
+        </ItemMedia>
+        <ItemContent className="truncate text-left text-foreground">
           {calendar ? calendar.name || calendar.slug : "Select Calendar"}
-        </ControlContent>
+        </ItemContent>
       </SelectTrigger>
 
       <SelectContent>

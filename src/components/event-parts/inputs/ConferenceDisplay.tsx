@@ -1,12 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 
 import { Button } from "@/components/ui/button"
-import {
-  ControlContent,
-  ControlLeading,
-  ControlRow,
-  ControlTrailing,
-} from "@/components/ui/control-row"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 
 import type { Calendar } from "@/lib/api"
 import {
@@ -102,17 +97,17 @@ function ConferenceItem({
   const Icon = conferenceIcon[provider]
 
   return (
-    <ControlRow variant="item">
-      <ControlLeading>
+    <Item variant="accent">
+      <ItemMedia>
         <Icon />
-      </ControlLeading>
-      <ControlContent className="truncate">{conferenceLabel[provider]}</ControlContent>
+      </ItemMedia>
+      <ItemContent className="truncate">{conferenceLabel[provider]}</ItemContent>
       {!readonly && onRemove && (
-        <ControlTrailing>
+        <ItemActions>
           <RemoveItemButton onClick={onRemove} />
-        </ControlTrailing>
+        </ItemActions>
       )}
-    </ControlRow>
+    </Item>
   )
 }
 
@@ -124,19 +119,17 @@ function ConferenceRequestButton({
   onClick: () => void
 }) {
   return (
-    <ControlRow asChild>
-      <Button
-        type="button"
-        variant="ghost"
-        typography="field"
-        className="w-full justify-start gap-[var(--control-content-gap)] px-[var(--control-padding-inline)] text-muted-foreground"
-        onClick={onClick}
-      >
-        <ControlLeading>
-          <VideoIcon />
-        </ControlLeading>
-        <ControlContent className="text-left">Add {conferenceLabel[provider]}</ControlContent>
-      </Button>
-    </ControlRow>
+    <Button
+      type="button"
+      variant="ghost"
+      typography="field"
+      className="control-row w-full justify-start gap-[var(--control-content-gap)] px-[var(--control-padding-inline)] text-muted-foreground"
+      onClick={onClick}
+    >
+      <ItemMedia>
+        <VideoIcon />
+      </ItemMedia>
+      <ItemContent className="text-left">Add {conferenceLabel[provider]}</ItemContent>
+    </Button>
   )
 }

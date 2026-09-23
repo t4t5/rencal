@@ -2,13 +2,8 @@ import { useMemo, useState } from "react"
 import type { KeyboardEvent } from "react"
 
 import { Command, CommandItem, CommandList } from "@/components/ui/command"
-import {
-  ControlContent,
-  ControlLeading,
-  ControlRow,
-  ControlTrailing,
-} from "@/components/ui/control-row"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { StatusDot } from "@/components/ui/status-dot"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -246,22 +241,22 @@ function AttendeeRow({
   const showEmailTooltip = !!attendee.name && attendee.name !== attendee.email
 
   const row = (
-    <ControlRow className="group min-h-control border border-transparent py-1 text-sm">
-      <ControlLeading>
+    <Item className="group min-h-control border border-transparent py-1 text-sm">
+      <ItemMedia>
         <StatusDot status={attendee.response_status} />
-      </ControlLeading>
+      </ItemMedia>
 
-      <ControlContent className="flex items-center gap-2">
+      <ItemContent className="flex items-center gap-2">
         <span className="truncate">{displayName}</span>
         {label && <span className="text-muted-foreground shrink-0">{label}</span>}
-      </ControlContent>
+      </ItemContent>
 
       {onRemove && (
-        <ControlTrailing>
+        <ItemActions>
           <RemoveItemButton onClick={onRemove} />
-        </ControlTrailing>
+        </ItemActions>
       )}
-    </ControlRow>
+    </Item>
   )
 
   if (!showEmailTooltip) return row

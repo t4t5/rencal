@@ -1,12 +1,12 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 
-import { ControlContent } from "@/components/ui/control-row"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
+import { ItemContent } from "@/components/ui/item"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { detectedUrlSourceLabel, toOpenableUrl, type DetectedUrl } from "@/lib/event-url"
@@ -87,7 +87,7 @@ function UrlLink({ url, hint }: { url: string; hint?: string }) {
         <LinkIcon />
       </InputGroupAddon>
 
-      <ControlContent className="flex">
+      <ItemContent className="flex">
         <button
           type="button"
           className="min-w-0 cursor-pointer truncate rounded-xs py-1 text-sm outline-none hover:underline focus-visible:ring-ring/50 focus-visible:ring-[3px]"
@@ -95,13 +95,12 @@ function UrlLink({ url, hint }: { url: string; hint?: string }) {
         >
           {url}
         </button>
-      </ControlContent>
+      </ItemContent>
 
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild tabIndex={-1}>
             <span
-              data-control-part="trailing"
               className="flex size-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
               aria-label={hint}
             >

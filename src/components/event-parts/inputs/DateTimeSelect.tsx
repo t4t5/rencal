@@ -2,8 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
-import { ControlLeading } from "@/components/ui/control-row"
 import { DatePicker } from "@/components/ui/date-picker"
+import { ItemMedia } from "@/components/ui/item"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
@@ -205,9 +205,9 @@ const TimeSelect = ({
         <TimeInput
           value={start}
           addon={
-            <ControlLeading>
+            <ItemMedia>
               <ClockIcon />
-            </ControlLeading>
+            </ItemMedia>
           }
           readOnly={readOnly}
           disabled={allDay}
@@ -252,7 +252,7 @@ const DateSelect = ({
         }}
       >
         <span className="flex w-[calc(var(--control-padding-inline)+var(--control-icon-size))] shrink-0 justify-end">
-          <ControlLeading>{icon}</ControlLeading>
+          <ItemMedia>{icon}</ItemMedia>
         </span>
         <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
       </div>

@@ -8,8 +8,8 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { ControlContent, ControlLeading } from "@/components/ui/control-row"
 import { controlSurfaceActive } from "@/components/ui/control-surface"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SelectIcon } from "@/components/ui/select"
 
@@ -118,12 +118,12 @@ export const TimeZoneSelect = ({
             readOnly && "pointer-events-none disabled:cursor-default",
           )}
         >
-          <ControlLeading>
+          <ItemMedia>
             <GlobeIcon />
-          </ControlLeading>
-          <ControlContent>
+          </ItemMedia>
+          <ItemContent>
             <TimeZoneLabel offset={timeZoneOffsetLabel(tzid, value)} city={timeZoneCity(tzid)} />
-          </ControlContent>
+          </ItemContent>
           {!readOnly && <SelectIcon trailing forceVisible={open} />}
         </button>
       </PopoverTrigger>

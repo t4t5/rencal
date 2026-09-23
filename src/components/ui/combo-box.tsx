@@ -77,7 +77,6 @@ export function Combobox({
           {addon}
           <InputInner
             data-slot="combobox-input"
-            data-control-part="content"
             className="h-full flex-1 cursor-default"
             value={query}
             onChange={(e) => setQuery(e.target.value)}

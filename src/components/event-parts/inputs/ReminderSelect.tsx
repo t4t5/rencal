@@ -2,12 +2,7 @@ import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
-import {
-  ControlContent,
-  ControlLeading,
-  ControlRow,
-  ControlTrailing,
-} from "@/components/ui/control-row"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 
 import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -112,9 +107,9 @@ export function ReminderSelect({
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
   const resolvedAddon =
     addon === undefined ? (
-      <ControlLeading>
+      <ItemMedia>
         <BellIcon />
-      </ControlLeading>
+      </ItemMedia>
     ) : (
       addon
     )
@@ -176,19 +171,19 @@ const ReminderRow = ({
   indented?: boolean
 }) => {
   return (
-    <ControlRow
+    <Item
       key={mins}
-      variant="item"
+      variant="accent"
       className={cn("cursor-default", !indented && "gap-0", className)}
     >
-      {indented && <ControlLeading aria-hidden="true" />}
-      <ControlContent>
+      {indented && <ItemMedia aria-hidden="true" />}
+      <ItemContent>
         <HumanDuration mins={mins} />
-      </ControlContent>
-      <ControlTrailing>
+      </ItemContent>
+      <ItemActions>
         <RemoveItemButton onClick={onRemove} />
-      </ControlTrailing>
-    </ControlRow>
+      </ItemActions>
+    </Item>
   )
 }
 

@@ -1,6 +1,6 @@
 import { RRule, RRuleSet } from "rrule"
 
-import { ControlContent, ControlLeading } from "@/components/ui/control-row"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { cn } from "@/lib/utils"
@@ -59,16 +59,16 @@ export const RepeatSelect = ({
           readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
         )}
       >
-        <ControlLeading>
+        <ItemMedia>
           <RepeatIcon />
-        </ControlLeading>
-        <ControlContent className="overflow-hidden text-left">
+        </ItemMedia>
+        <ItemContent className="overflow-hidden text-left">
           {value ? (
             <span className="block truncate">{getHumanInterval(value)}</span>
           ) : (
             <span className="text-placeholder-foreground">Repeat</span>
           )}
-        </ControlContent>
+        </ItemContent>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="none">No repeat</SelectItem>

@@ -1,7 +1,6 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import * as React from "react"
 
-import { ControlTrailing } from "@/components/ui/control-row"
 import { controlSurfaceActive } from "@/components/ui/control-surface"
 
 import { cn } from "@/lib/utils"
@@ -18,21 +17,19 @@ function SelectIcon({
   className,
   ...props
 }: React.ComponentProps<"span"> & { forceVisible?: boolean; trailing?: boolean }) {
-  const Comp = trailing ? ControlTrailing : "span"
-
   return (
-    <Comp
+    <span
       data-slot="select-icon"
       aria-hidden="true"
       className={cn(
         "text-muted-foreground opacity-0 group-hover:opacity-100",
-        { "opacity-100": forceVisible },
+        { "control-trailing": trailing, "opacity-100": forceVisible },
         className,
       )}
       {...props}
     >
       <ChevronDownIcon className="size-3 text-current" />
-    </Comp>
+    </span>
   )
 }
 
