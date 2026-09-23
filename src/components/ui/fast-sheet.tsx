@@ -30,6 +30,7 @@ function Sheet({
       {/* Overlay */}
       <div
         data-slot="sheet-overlay"
+        data-state={open ? "open" : "closed"}
         className={cn(
           sheetSharedStyles.overlay,
           "transition-opacity duration-150",
@@ -72,6 +73,7 @@ function SheetContent({
   return (
     <div
       data-slot="sheet-content"
+      data-state={open ? "open" : "closed"}
       ref={ref}
       className={cn(
         sheetSharedStyles.content,
