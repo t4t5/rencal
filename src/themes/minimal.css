@@ -9,6 +9,7 @@
 --today: #ff2f00;
 --hover-tint: var(--minimal-brand-color);
 --hover-mix: 4%;
+--border-button: var(--border);
 --radius: 8px;
 --font-heading-transform: normal;
 --font-button-transform: normal;

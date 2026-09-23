@@ -41,8 +41,6 @@
 
   --hover-tint: white;
   --hover-mix: 5%;
-  --popover-tint: black;
-  --popover-mix: 4%;
 
   /* Derived tokens — same formulas as the app's global.css `[data-theme]` block */
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
@@ -61,7 +59,7 @@
   --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--border));
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
-  --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
+  --popover: var(--card);
 
   --month-boundary: color-mix(in srgb, var(--foreground) 28%, var(--background));
 

@@ -88,12 +88,10 @@ Event text is derived from each event's accent colour. With these unset (the dar
 
 The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
 
-| Variable         | Purpose                                                           |
-| ---------------- | ----------------------------------------------------------------- |
-| `--hover-tint`   | Color mixed over the background to produce hover / surface layers |
-| `--hover-mix`    | Percentage of tint per layer (each derived token adds one more)   |
-| `--popover-tint` | Popover depth tint (`black` for dark themes, `white` for light)   |
-| `--popover-mix`  | Percentage of popover tint mixed into the background              |
+| Variable       | Purpose                                                           |
+| -------------- | ----------------------------------------------------------------- |
+| `--hover-tint` | Color mixed over the background to produce hover / surface layers |
+| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)   |
 
 Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
 

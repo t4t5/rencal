@@ -18,7 +18,6 @@ const CSS_VARS = [
   "--highlight",
   "--hover-tint",
   "--muted-foreground",
-  "--popover-tint",
   "--success",
   "--warning",
   "--error",
@@ -55,7 +54,6 @@ function isMonochrome(c: OmarchyColors): boolean {
 
 function varsFromColors(c: OmarchyColors): OmarchyVars {
   const fg = pickForeground(c)
-  const popoverTint = c.mode === "light" ? "white" : "black"
   const vars: OmarchyVars = {
     "--background": c.background,
     "--foreground": fg,
@@ -64,7 +62,6 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
     "--highlight": c.red,
     "--hover-tint": fg,
     "--muted-foreground": `color-mix(in srgb, ${fg} 55%, transparent)`,
-    "--popover-tint": popoverTint,
     "--success": c.green,
     "--warning": c.yellow,
     "--error": c.red,
