@@ -35,6 +35,10 @@ export const EventDotsProvider = EventDotsContext.Provider
 // Weekday short names indexed by day number (0=Sun … 6=Sat)
 const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
 
+// Selected-week highlight as a background-image so it layers over the weekend color
+const SELECTED_WEEK_OVERLAY =
+  "in-data-selected-week:bg-[linear-gradient(var(--color-hover),var(--color-hover))]"
+
 function Calendar({
   className,
   classNames,
@@ -51,7 +55,7 @@ function Calendar({
   const { firstDayOfWeek, showWeekNumbers } = useSettings()
   const showWeekNumber = props.showWeekNumber ?? showWeekNumbers
 
-  // Subscribe to timezone changes: the current-week/weekday highlights and the
+  // Subscribe to timezone changes: the current-weekday highlight and the
   // `today` prop below all derive from the viewer's zone.
   useViewerTzid()
 
@@ -159,13 +163,13 @@ function Calendar({
           const { week } = weekProps
           const { isSelected } = useDayPicker()
 
-          const isCurrentWeek = week.days.some((d) => jsDateToPlainDate(d.date).equals(today()))
           const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
           return (
             <Week
-              className={cn(className, { "bg-hover": isCurrentWeek || isSelectedWeek })}
               {...weekProps}
+              data-selected-week={isSelectedWeek || undefined}
+              className={className}
             />
           )
         },
@@ -174,7 +178,7 @@ function Calendar({
         WeekNumber: ({ children, week, ...props }) => {
           const firstRowDay = week.days[0]
           return (
-            <td {...props}>
+            <td {...props} className={cn(props.className, SELECTED_WEEK_OVERLAY)}>
               <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-2xs text-muted-foreground">
                 {firstRowDay
                   ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
@@ -211,9 +215,12 @@ function Calendar({
             <Day
               {...dayProps}
               data-weekend={isWeekend || undefined}
-              className={cn(className, "flex justify-center bg-transparent", {
-                "bg-weekend": isWeekend,
-              })}
+              className={cn(
+                className,
+                "flex justify-center bg-transparent",
+                SELECTED_WEEK_OVERLAY,
+                { "bg-weekend": isWeekend },
+              )}
             />
           )
         },
