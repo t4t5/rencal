@@ -28,10 +28,8 @@ it("pairs navigation tab surfaces with their secondary foreground", () => {
     .className as string
 
   expect(navigationTab).toContain("data-[state=active]:bg-secondary")
-  expect(navigationTab).toContain(
-    "group-data-[variant=navigation]/tabs-list:data-[state=active]:text-secondary-foreground",
-  )
+  expect(navigationTab).toContain("data-[state=active]:text-secondary-foreground")
   expect(navigationTab).not.toContain(
-    "group-data-[variant=navigation]/tabs-list:data-[state=active]:text-accent-foreground",
+    "group-data-[variant=navigation]/tabs-list:data-[state=active]:text-",
   )
 })
