@@ -70,7 +70,7 @@ For component-specific custom CSS, target stable slot attributes. Select on `dat
 | `data-slot`                                                                                                     | Component or component-part identity. Always a single value; names follow shadcn where one exists.                                                |
 | `data-variant`, `data-size`                                                                                     | Public presentation choices, such as a button or input variant.                                                                                   |
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
-| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition.                                                                                              |
+| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition. An element carries one, never both.                                                          |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 | `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
@@ -145,6 +145,12 @@ toolbar dropdowns, and the searchable timezone button. Composed
 controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
+Field-like triggers, including the toolbar dropdowns, are controls rather than
+buttons: they never carry `data-button`, so the two markers never overlap.
+
+`data-selected` marks persistent selection. The one exception is
+`command-item`: the command palette's cmdk library marks its keyboard highlight
+with `data-selected="true"`, so style it like `data-highlighted`.
 
 ## Migrating themes from renCal 0.7
 

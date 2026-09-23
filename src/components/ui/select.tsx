@@ -1,6 +1,7 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import * as React from "react"
 
+import { buttonVariants } from "@/components/ui/button"
 import { controlSurfaceActive } from "@/components/ui/control-surface"
 
 import { cn } from "@/lib/utils"
@@ -78,6 +79,27 @@ function SelectTrigger({
         <SelectIcon forceVisible={variant === "default"} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
+  )
+}
+
+// A menu trigger that looks like a secondary button but is themed as a select field.
+function SelectButton({ className, children, ...props }: React.ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      data-slot="select-button"
+      data-control="select"
+      data-typography="button"
+      className={cn(
+        buttonVariants({ variant: "secondary" }),
+        "min-w-24 justify-between",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      <SelectIcon forceVisible />
+    </button>
   )
 }
 
@@ -197,6 +219,7 @@ function SelectScrollDownButton({
 
 export {
   Select,
+  SelectButton,
   SelectContent,
   SelectGroup,
   SelectIcon,

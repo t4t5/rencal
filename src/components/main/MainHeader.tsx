@@ -12,7 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SelectIcon } from "@/components/ui/select"
+import { SelectButton } from "@/components/ui/select"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
@@ -81,15 +81,7 @@ const CalendarViewDropdown = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          data-control="select"
-          tabIndex={-1}
-          variant="secondary"
-          className="min-w-24 justify-between"
-        >
-          {currentView?.name ?? "View"}
-          <SelectIcon forceVisible />
-        </Button>
+        <SelectButton tabIndex={-1}>{currentView?.name ?? "View"}</SelectButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {CALENDAR_VIEW_OPTIONS.map((option) => (
@@ -122,15 +114,7 @@ const GroupSwitcher = () => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          data-control="select"
-          tabIndex={-1}
-          variant="secondary"
-          className="min-w-24 justify-between"
-        >
-          {formatGroupName(activeGroup)}
-          <SelectIcon forceVisible />
-        </Button>
+        <SelectButton tabIndex={-1}>{formatGroupName(activeGroup)}</SelectButton>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-48">

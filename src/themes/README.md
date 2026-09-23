@@ -277,7 +277,7 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | `data-slot`                                                                                                     | Component or component-part identity. Always a single value; names follow shadcn where one exists.                                                |
 | `data-variant`, `data-size`                                                                                     | Public presentation choices, such as a button or input variant.                                                                                   |
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
-| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition.                                                                                              |
+| `data-button`, `data-control`                                                                                   | Additional identities preserved through composition. An element carries one, never both.                                                          |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 | `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
@@ -297,6 +297,9 @@ selector reaches them all. The value names the kind of field:
   group/view dropdowns, and the searchable timezone button.
 
 Inner inputs and textareas inside a composite surface do not carry the marker.
+Field-like triggers, including the toolbar dropdowns, are controls rather than
+buttons: they never carry `data-button`, so `[data-button]` and
+`[data-control]` never overlap.
 Use `data-control="select"` for shared dropdown-field styling; the
 `select-trigger` slot identifies only the real Select component.
 
@@ -370,8 +373,8 @@ Calendar chrome exposes these slots for scoped theme rules:
   `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
 
-Toolbar group/view dropdowns retain their button slot and, like every
-select-like trigger, expose `data-control="select"`. The searchable timezone
+Toolbar group/view dropdowns keep their `dropdown-menu-trigger` slot and, like
+every select-like trigger, expose `data-control="select"`. The searchable timezone
 dropdown exposes that control marker and `select-icon` on its trailing arrow. Its button intentionally keeps
 the `popover-trigger` slot: composed triggers retain their primitive slot and
 use control markers for cross-primitive styling. Mini-calendar navigation
@@ -392,7 +395,9 @@ are date buckets rather than days, so they keep `board-column` and
 renCal's own state attributes are present when true and omitted when false;
 match them with `[data-selected]`, not `[data-selected="true"]`. Selection is
 always `data-selected`, painted with `--selected`. `data-highlighted` keeps its
-Radix meaning: the keyboard or pointer highlight inside menus.
+Radix meaning: the keyboard or pointer highlight inside menus. The one exception
+is `command-item`: the command palette's cmdk library marks its keyboard
+highlight with `data-selected="true"`, so style it like `data-highlighted`.
 
 ### Calendar event styling hooks
 
