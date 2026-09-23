@@ -1,6 +1,7 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import * as React from "react"
 
+import { ControlTrailing } from "@/components/ui/control-row"
 import { controlSurfaceActive } from "@/components/ui/control-surface"
 
 import { cn } from "@/lib/utils"
@@ -9,13 +10,29 @@ import { CheckIcon } from "@/icons/check"
 import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronUpIcon } from "@/icons/chevron-up"
 
-function DropdownArrow({ forceVisible }: { forceVisible?: boolean }) {
+// The slot owns the arrow's colour and visibility, so themes can restyle or
+// replace the glyph without selecting the SVG inside it.
+function SelectIcon({
+  forceVisible,
+  trailing,
+  className,
+  ...props
+}: React.ComponentProps<"span"> & { forceVisible?: boolean; trailing?: boolean }) {
+  const Comp = trailing ? ControlTrailing : "span"
+
   return (
-    <ChevronDownIcon
-      className={cn("size-3 opacity-0 group-hover:opacity-100 text-muted-foreground", {
-        "opacity-100": forceVisible,
-      })}
-    />
+    <Comp
+      data-slot="select-icon"
+      aria-hidden="true"
+      className={cn(
+        "text-muted-foreground opacity-0 group-hover:opacity-100",
+        { "opacity-100": forceVisible },
+        className,
+      )}
+      {...props}
+    >
+      <ChevronDownIcon className="size-3 text-current" />
+    </Comp>
   )
 }
 
@@ -62,9 +79,7 @@ function SelectTrigger({
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <span data-slot="select-icon" aria-hidden="true">
-          <DropdownArrow forceVisible={variant === "default"} />
-        </span>
+        <SelectIcon forceVisible={variant === "default"} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
   )
@@ -188,6 +203,7 @@ export {
   Select,
   SelectContent,
   SelectGroup,
+  SelectIcon,
   SelectItem,
   SelectLabel,
   SelectScrollDownButton,
@@ -195,5 +211,4 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  DropdownArrow,
 }

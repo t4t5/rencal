@@ -82,6 +82,8 @@ Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` sl
 }
 ```
 
+Removable list rows, such as reminders and conference links, add `data-variant="item"` to the row root and use `accent` / `accent-foreground` while hovered or focused within. The `select-icon` slot owns the dropdown arrow's colour and visibility; its glyph draws with `currentColor`.
+
 Elements expose their typography role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `action`, and actions embedded in event fields use `field`. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
 
 ### Calendar events

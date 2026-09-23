@@ -1,14 +1,13 @@
 import { KeyboardEventHandler, ReactNode, useRef } from "react"
 
 import { Command, CommandList } from "@/components/ui/command"
-import { ControlTrailing } from "@/components/ui/control-row"
 import { controlSurfaceActive } from "@/components/ui/control-surface"
 import { InputInner } from "@/components/ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
-import { DropdownArrow } from "./select"
+import { SelectIcon } from "./select"
 
 export function Combobox({
   addon,
@@ -90,11 +89,7 @@ export function Combobox({
             disabled={disabled}
           />
 
-          {interactive && (
-            <ControlTrailing data-slot="select-icon" aria-hidden="true">
-              <DropdownArrow forceVisible={open || variant === "default"} />
-            </ControlTrailing>
-          )}
+          {interactive && <SelectIcon trailing forceVisible={open || variant === "default"} />}
         </div>
       </PopoverAnchor>
       <PopoverContent

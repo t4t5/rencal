@@ -52,6 +52,7 @@ export function SettingsWindow() {
 
       <ShortcutTooltip text="Close" shortcut="escape">
         <button
+          data-slot="settings-close"
           onClick={() =>
             getCurrentWindow()
               .close()

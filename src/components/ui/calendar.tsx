@@ -117,6 +117,7 @@ function Calendar({
         NextMonthButton: ({ className, ...buttonProps }) => {
           return <Button variant={buttonVariant} className={className} {...buttonProps} />
         },
+        Weekday: (props) => <th data-slot="calendar-weekday" {...props} />,
         DayButton: CalendarDayButton,
         // RDP's own numbering follows US week-counting rules; render ISO week
         // numbers computed from the row's days instead (`children` is unused).

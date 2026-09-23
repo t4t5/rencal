@@ -12,6 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { SelectIcon } from "@/components/ui/select"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
@@ -22,7 +23,6 @@ import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
 
 import { CheckIcon } from "@/icons/check"
-import { ChevronDownIcon } from "@/icons/chevron-down"
 
 export function MainHeader({
   calendarView,
@@ -88,9 +88,7 @@ const CalendarViewDropdown = ({
           className="min-w-24 justify-between"
         >
           {currentView?.name ?? "View"}
-          <span data-slot="select-icon" aria-hidden="true">
-            <ChevronDownIcon className="size-3 text-muted-foreground" />
-          </span>
+          <SelectIcon forceVisible />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
@@ -131,9 +129,7 @@ const GroupSwitcher = () => {
           className="min-w-24 justify-between"
         >
           {formatGroupName(activeGroup)}
-          <span data-slot="select-icon" aria-hidden="true">
-            <ChevronDownIcon className="size-3 text-muted-foreground" />
-          </span>
+          <SelectIcon forceVisible />
         </Button>
       </DropdownMenuTrigger>
 

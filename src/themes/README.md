@@ -273,6 +273,14 @@ editable comboboxes, the toolbar's group/view dropdowns, and the searchable
 timezone button. Use that marker for shared dropdown-field styling; the
 `select-trigger` slot identifies only the real Select component.
 
+The `select-icon` slot owns its arrow's colour and visibility; the glyph inside
+draws with `currentColor`. A theme can recolour the arrow through the slot's
+`color`, or set it to `transparent` and draw its own glyph with a pseudo-element.
+
+Removable list rows in the event form, such as reminders and conference links,
+expose `data-variant="item"` on their `data-control-layout="row"` root. They use
+the `accent` / `accent-foreground` pair while hovered or focused within.
+
 Themes that intentionally retain an inset event action can scope that exception to the footer:
 
 ```css
@@ -299,6 +307,15 @@ Calendar groups use the same vertical navigation tabs as the settings sidebar,
 including the standard `tabs-list` / `tabs-trigger` slots and selection states.
 Group menu actions remain separate from their tab triggers.
 
+Each settings page's scrolling pane exposes `settings-content`. On Linux and
+Windows, the settings window's own close button exposes `settings-close`; macOS
+uses the native title bar instead. The calendar colour dialog's hue slider is a
+native range input exposing `hue-slider`, so its WebKit slider pseudo-elements
+can be styled.
+
+Toasts are rendered by Sonner. Style them through its `data-sonner-toast`
+attribute and `data-type` (`success`, `info`, `warning`, `error`).
+
 ### Calendar shell styling hooks
 
 The main view fills the space below its toolbar using flex sizing; toolbar padding
@@ -308,11 +325,13 @@ Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `calendar-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
-  `calendar-day`, `calendar-event-dots`;
+  `calendar-weekday`, `calendar-day`, `calendar-event-dots`;
 - `agenda`, `agenda-scroll`, `agenda-day`, `agenda-date`, `agenda-day-label`,
   `agenda-date-label`, `agenda-empty`, `agenda-all-day-events`;
 - `month-scroll`, `month-weekdays`, `month-weekday`, `month-week`, `month-date`,
   `month-day`, `month-day-number`, `month-create-selection`;
+- `board-column` and `board-column-header`; today's header exposes
+  `data-today="true"`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
   `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers and the toolbar's group/view dropdowns.
