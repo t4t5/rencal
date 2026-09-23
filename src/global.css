@@ -39,32 +39,45 @@
 
 @custom-variant dark (&:where([data-appearance="dark"], [data-appearance="dark"] *));
 
-/* Default theme (ren). Applied to :root so other themes inherit any primitives
-   they don't override, and to [data-theme="ren"] so a scoped subtree (e.g.
-   the theme preview tile) resolves to ren even when body uses a different
-   theme. */
+/* Theme baseline (ren). Every [data-theme] scope resolves from this complete
+   set, so a nested scope (a preview tile, a plugin subtree) never inherits
+   primitives, optional overrides, or derived values from its enclosing theme.
+   Theme rules load later with equal specificity and override only what they
+   declare. :root carries the same defaults for content outside any scope. */
 :root,
-[data-theme="ren"] {
+[data-theme] {
   --font-heading-transform: uppercase;
   --font-button-transform: uppercase;
   --font-numerical-transform: uppercase;
 
-  --radius: 0px;
   --radius-circle: 0;
   --control-height: 34px;
   --control-height-sm: 32px;
   --control-height-lg: 40px;
   --control-padding-inline: 8px;
-  /* Root fallback; recomputed from the local height on each theme scope below. */
-  --control-icon-size: calc(var(--control-height) - 10px);
   --control-content-gap: 8px;
   --control-row-gap: 4px;
   --agenda-padding-inline: calc(var(--spacing) * 3);
 
+  /* Keep in sync with @theme above; checked by global-css.test.ts. */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
+
   --background: #131313;
   --foreground: white;
   --muted-foreground: rgba(255, 255, 255, 0.5);
-  --placeholder-foreground: var(--muted-foreground);
 
   --primary: #f56313;
 
@@ -81,14 +94,27 @@
   --hover-mix: 5%;
 
   --tab-gap: 0;
-  --tab-list-shadow: none;
-}
 
-/* Variables computed from theme primitives. Keeping these on the themed node
-   makes scoped previews and plugin-owned subtrees derive their own surfaces. */
-[data-theme] {
-  /* Recompute font roles where theme primitives are applied. Resetting the
-     legacy names also prevents a nested theme from inheriting an old alias. */
+  /* Optional overrides stay unset so their var() fallbacks apply. */
+  --border-button: initial;
+  --scrollbar-width: initial;
+  --font-heading-size: initial;
+  --font-heading-line-height: initial;
+  --font-button-size: initial;
+  --font-button-line-height: initial;
+  --font-numerical-size: initial;
+  --font-numerical-line-height: initial;
+  --event-color: initial;
+  --event-background: initial;
+  --event-foreground: initial;
+  --event-tint-surface: initial;
+  --event-text-max-lightness: initial;
+  --event-text-chroma: initial;
+  --event-text-foreground-mix: initial;
+  --week-grid-background: initial;
+
+  /* Font roles. Resetting the legacy names prevents a nested theme from
+     inheriting an old alias. */
   --mono: initial;
   --sans: initial;
   --font-mono: var(--mono, "Geist Mono", ui-monospace, monospace);
@@ -106,12 +132,14 @@
   --font-button: var(--font-mono);
   --font-numerical: var(--font-mono);
 
+  /* Derived from the primitives above, on the same scope. */
   --control-icon-size: calc(var(--control-height) - 10px);
   --placeholder-foreground: var(--muted-foreground);
 
   /* One-release fallbacks for the pre-contract names. */
   --radius-base: initial;
   --radius: var(--radius-base, 0px);
+
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
   --secondary: var(--hover);
   --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));

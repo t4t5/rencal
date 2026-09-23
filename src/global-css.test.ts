@@ -2,6 +2,8 @@ import { readFile } from "node:fs/promises"
 import { compile } from "tailwindcss"
 import { beforeAll, describe, expect, it } from "vitest"
 
+const BASELINE = ":root,\\s*\\[data-theme\\]"
+
 let build: Awaited<ReturnType<typeof compile>>["build"]
 let source: string
 
@@ -27,19 +29,29 @@ beforeAll(async () => {
 })
 
 describe("global CSS contract", () => {
-  it("redeclares direct token aliases on every theme scope", () => {
-    const defaults = declarationsFor(':root,\\s*\\[data-theme="ren"\\]')
-    const themed = declarationsFor("\\[data-theme\\]")
+  it("resolves every documented token on each theme scope", async () => {
+    const readme = await readFile(new URL("./themes/README.md", import.meta.url), "utf8")
+    const documented = [...readme.matchAll(/^\| `(--[\w-]+)`/gm)].map((match) => match[1])
+    const baseline = declarationsFor(BASELINE)
 
-    for (const [name, value] of defaults) {
-      if (value.startsWith("var(--")) {
-        expect(themed.has(name), `${name} depends on another theme token`).toBe(true)
-      }
+    expect(documented.length).toBeGreaterThan(40)
+    for (const name of documented) {
+      expect(baseline.has(name), `${name} is missing from the theme baseline`).toBe(true)
+    }
+  })
+
+  it("resets the type scale on each theme scope", () => {
+    const scale = [...declarationsFor("@theme")].filter(([name]) => name.startsWith("--text-"))
+    const baseline = declarationsFor(BASELINE)
+
+    expect(scale.length).toBeGreaterThan(0)
+    for (const [name, value] of scale) {
+      expect(baseline.get(name), name).toBe(value)
     }
   })
 
   it("derives font roles and font primitives on every theme scope", () => {
-    const themed = declarationsFor("\\[data-theme\\]")
+    const themed = declarationsFor(BASELINE)
 
     expect(themed.get("--font-body")).toBe("var(--font-sans)")
     expect(themed.get("--font-heading")).toBe("var(--font-mono)")

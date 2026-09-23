@@ -8,7 +8,7 @@ import { cn, isMacOS } from "@/lib/utils"
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
-import type { ThemeDescriptor } from "@/themes/manifest"
+import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
 
 export function ThemesPage() {
   const { theme, setTheme } = useTheme()
@@ -71,13 +71,14 @@ function ThemeGrid({
 }
 
 const Palette = ({ themeId }: { themeId: string }) => {
-  const { externalThemes } = useThemeRegistry()
+  const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
     <div
       data-theme={themeId}
+      data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
       style={style}
       className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3 w-full"
     >

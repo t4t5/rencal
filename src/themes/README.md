@@ -17,7 +17,18 @@ The `[data-theme="<id>"]` selector is added **for you**:
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets. Installing or updating an inactive theme therefore does not enable its full CSS.
 
-The defaults (the "ren" look) live in a `:root, [data-theme="ren"]` block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` on `[data-theme]`. In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, and the other surfaces follow automatically. See `tokyonight.css` for a minimal example.
+The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--hover-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, and the other surfaces follow automatically. See `tokyonight.css` for a minimal example.
+
+## Theme scopes
+
+Every element with `data-theme` resolves from the complete ren baseline, not from its enclosing theme. The baseline declares every documented token on each scope: primitives, the type scale, derived surfaces, and optional overrides (reset to unset so their fallbacks apply). A theme nested inside another, such as a settings preview tile, therefore looks the same as it does on `<body>`. Give a nested scope its own `data-appearance` too, or it gets the dark event-text defaults.
+
+The promise covers custom properties only. It has these limits:
+
+- **Portals.** Popovers, menus, dialogs, and tooltips portal to `document.body`, so their content takes the body's theme, not the scope that opened them. The app theme is applied on `<body>`, so global theming is unaffected. An independently themed subtree (for example, a future plugin view) would need its portals to target a container inside that scope.
+- **Custom selectors.** An enclosing theme's escape-hatch rules (`[data-theme="a"] [data-slot="button"]`) match descendants inside a nested scope too.
+- **`dark:` variants** match any descendant of a `[data-appearance="dark"]` element, including one inside a nested light scope.
+- **Undocumented properties.** Tokens outside this README (other Tailwind `@theme` values, a theme's private helpers) are not reset.
 
 ## Adding a built-in theme
 
