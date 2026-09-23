@@ -37,17 +37,22 @@ export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]
 
 export function SettingsSidebar() {
   return (
-    <TabsList
-      variant="navigation"
-      aria-label="Settings"
-      className="w-[200px] shrink-0 self-stretch justify-start rounded-none border-r border-border px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
+    <nav
+      data-slot="settings-sidebar"
+      className="flex w-[200px] shrink-0 self-stretch border-r border-border"
     >
-      {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
-        <TabsTrigger key={tab} value={tab}>
-          <Icon className="size-4" />
-          {label}
-        </TabsTrigger>
-      ))}
-    </TabsList>
+      <TabsList
+        variant="navigation"
+        aria-label="Settings"
+        className="w-full justify-start rounded-none px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
+      >
+        {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
+          <TabsTrigger key={tab} value={tab} data-page={tab}>
+            <Icon className="size-4" />
+            {label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </nav>
   )
 }

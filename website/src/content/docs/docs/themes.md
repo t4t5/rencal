@@ -71,6 +71,7 @@ For component-specific custom CSS, target stable slot attributes. Select on `dat
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
 | `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
+| `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
 ```css
 [data-slot="button"] {
@@ -116,6 +117,24 @@ values are event geometry.
 Event hover uses `--hover`. On unfilled blocks, `data-selected` uses
 `--selected` / `--selected-foreground`; filled blocks use the derived
 `--calendar-event-selected-fill`.
+
+### Settings window
+
+The settings window exposes `settings-window`, `settings-sidebar`, and
+`settings-page` slots around its vertical tabs, which keep their standard
+`tabs-list`, `tabs-trigger`, and `tabs-content` slots. `data-page` names the page
+(`general`, `accounts`, `calendars`, `reminders`, `themes`, or `plugins`): on
+`settings-window` it is the active page, and each `settings-page` and sidebar
+trigger carries its own. For example, to restyle only the settings sidebar:
+
+```css
+[data-slot="settings-sidebar"] {
+  background: var(--muted);
+}
+```
+
+Each page's scrolling pane exposes `settings-content`, and the Linux and
+Windows close button exposes `settings-close`.
 
 Every painted field surface exposes `data-control`, so themes can style all
 fields with one `[data-control]` selector. Its value is `input` (inputs, input

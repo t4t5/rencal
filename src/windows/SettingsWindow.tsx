@@ -43,7 +43,11 @@ export function SettingsWindow() {
   }, [])
 
   return (
-    <div className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}>
+    <div
+      data-slot="settings-window"
+      data-page={activeTab}
+      className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}
+    >
       <DragRegion
         className={cn("absolute top-0 left-0 right-0 h-7 border-b border-border", {
           hidden: !isMacOS,
@@ -81,7 +85,9 @@ export function SettingsWindow() {
 
         {NAV_ITEMS.map(({ tab, page: Page }) => (
           <TabsContent key={tab} value={tab} className="min-h-0 min-w-0 data-[state=active]:flex">
-            <Page />
+            <div data-slot="settings-page" data-page={tab} className="flex min-h-0 min-w-0 flex-1">
+              <Page />
+            </div>
           </TabsContent>
         ))}
       </Tabs>

@@ -269,6 +269,7 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
 | `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
+| `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
 Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline`, `secondary`, `ghost`, or `link`, and `data-size` is `xs`, `sm`, `default`, `lg`, `icon-xs`, `icon-sm`, `icon`, or `icon-lg`. Sizes follow the control tokens: `xs`/`icon-xs` use `--control-icon-size`, `sm`/`icon-sm` use `--control-height-sm`, `default`/`icon` use `--control-height`, and `lg`/`icon-lg` use `--control-height-lg`.
 
@@ -322,6 +323,14 @@ keyboard navigation and tab/panel accessibility.
 Calendar groups use the same vertical navigation tabs as the settings sidebar,
 including the standard `tabs-list` / `tabs-trigger` slots and selection states.
 Group menu actions remain separate from their tab triggers.
+
+The settings window root exposes `settings-window`, its navigation column
+`settings-sidebar`, and each page's panel `settings-page`. These wrap the Tabs
+primitives, which keep their own slots, so a theme can tell the settings
+sidebar apart from the calendar-group tabs without relying on layout. Like
+`data-view` on events, `data-page` names the page (`general`, `accounts`,
+`calendars`, `reminders`, `themes`, `plugins`): on `settings-window` it is the
+active page, and each `settings-page` and sidebar `tabs-trigger` carries its own.
 
 Each settings page's scrolling pane exposes `settings-content`. On Linux and
 Windows, the settings window's own close button exposes `settings-close`; macOS

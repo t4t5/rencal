@@ -91,3 +91,15 @@ it("navigates settings vertically with the arrow keys", async () => {
   expect(tabs[1].getAttribute("aria-selected")).toBe("true")
   expect(tabs[0].getAttribute("aria-selected")).toBe("false")
 })
+
+it("exposes settings slots with the active page", async () => {
+  await renderAt("?appWindow=settings&tab=plugins")
+  const settingsWindow = document.querySelector('[data-slot="settings-window"]')!
+  expect(settingsWindow.getAttribute("data-page")).toBe("plugins")
+  const sidebar = document.querySelector('[data-slot="settings-sidebar"]')!
+  expect(sidebar.querySelector('[data-slot="tabs-list"]')).not.toBeNull()
+  const trigger = sidebar.querySelector('[data-slot="tabs-trigger"][data-page="plugins"]')!
+  expect(trigger.getAttribute("data-state")).toBe("active")
+  const page = document.querySelector('[data-slot="settings-page"][data-page="plugins"]')!
+  expect(page.textContent).toContain("Plugin settings")
+})
