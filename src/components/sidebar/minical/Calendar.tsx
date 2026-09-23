@@ -164,10 +164,7 @@ function Calendar({
 
           return (
             <Week
-              className={cn(className, {
-                "bg-bgTertiary": isCurrentWeek && !isSelectedWeek,
-                "bg-hover": isSelectedWeek,
-              })}
+              className={cn(className, { "bg-hover": isCurrentWeek || isSelectedWeek })}
               {...weekProps}
             />
           )
