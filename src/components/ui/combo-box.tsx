@@ -57,6 +57,8 @@ export function Combobox({
           data-control-layout="row"
           data-state={open ? "open" : "closed"}
           data-variant={variant}
+          data-disabled={disabled || undefined}
+          data-readonly={readOnly || undefined}
           className={cn(
             "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
             interactive && [

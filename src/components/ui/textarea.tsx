@@ -8,11 +8,13 @@ import { cn } from "@/lib/utils"
 export function Textarea({
   className,
   readOnly,
+  disabled,
   ...props
 }: React.ComponentProps<typeof TextareaInner>) {
   return (
     <div
       data-slot="textarea-wrapper"
+      data-disabled={disabled || undefined}
       data-readonly={readOnly || undefined}
       role="group"
       className={cn(
@@ -21,7 +23,12 @@ export function Textarea({
         readOnly && "focus-within:border-transparent focus-within:bg-transparent",
       )}
     >
-      <TextareaInner {...props} readOnly={readOnly} className={cn("h-full", className)} />
+      <TextareaInner
+        {...props}
+        readOnly={readOnly}
+        disabled={disabled}
+        className={cn("h-full", className)}
+      />
     </div>
   )
 }

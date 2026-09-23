@@ -54,7 +54,15 @@ You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `
 --text-xs--line-height: 14px;
 ```
 
-For component-specific custom CSS, target stable slot attributes. Select on `data-slot` for identity and on the documented state attributes for state; other `data-*` attributes such as `data-drop-zone`, `data-drag-scroll`, `data-date-key`, and `data-event-clickable` are internal interaction hooks and may change without notice. Prefer a child slot over a descendant element selector.
+For component-specific custom CSS, target stable slot attributes. Select on `data-slot` for identity and on the other attributes documented on this page, summarized in the table below; any other `data-*` attributes, such as `data-drop-zone`, `data-drag-scroll`, `data-date-key`, and `data-event-clickable`, are internal interaction hooks and may change without notice. Prefer a child slot over a descendant element selector.
+
+| Attribute                                                                                                       | Meaning                                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `data-slot`                                                                                                     | Component or component-part identity. Always a single value; names follow shadcn where one exists.                                                |
+| `data-variant`, `data-size`                                                                                     | Public presentation choices, such as a button or input variant.                                                                                   |
+| Native, ARIA, and primitive state (`:disabled`, `aria-invalid`, `data-state`, `data-disabled`, `data-readonly`) | Interaction state. Composite surfaces such as `combobox` and `textarea-wrapper` mirror their inner control's `data-disabled` and `data-readonly`. |
+| `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
+| `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 
 ```css
 [data-slot="button"] {
