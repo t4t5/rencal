@@ -39,7 +39,7 @@
   --warning: #fd8742;
   --error: #e25252;
 
-  --hover-tint: white;
+  --hover-tint: var(--foreground);
   --hover-mix: 5%;
 
   /* Derived tokens — same formulas as the app's global.css `[data-theme]` block */
@@ -59,6 +59,7 @@
   --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--border));
   --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
   --primary-foreground: var(--background);
+  --today-foreground: var(--primary-foreground);
   --popover: var(--card);
 
   --month-boundary: color-mix(in srgb, var(--foreground) 28%, var(--background));

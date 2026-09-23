@@ -259,7 +259,7 @@ const CalendarDayButton = memo(function CalendarDayButton({
         "flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle text-sm",
         defaultClassNames.day,
         "data-selected:bg-selected data-selected:text-selected-foreground data-selected:font-bold data-selected:text-lg", // selected day
-        "data-today:text-today data-today:data-selected:bg-today data-today:data-selected:text-primary-foreground", // today
+        "data-today:text-today data-today:data-selected:bg-today data-today:data-selected:text-today-foreground", // today
         className,
       )}
       {...props}

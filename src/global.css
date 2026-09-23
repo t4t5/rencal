@@ -90,7 +90,7 @@
   --warning: #fd8742;
   --error: #e25252;
 
-  --hover-tint: white;
+  --hover-tint: var(--foreground);
   --hover-mix: 5%;
 
   --tab-gap: 0;
@@ -149,6 +149,8 @@
   --accent-foreground: var(--foreground);
   --selected: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--accent));
   --selected-foreground: var(--foreground);
+  --today-foreground: var(--primary-foreground);
+  --highlight-foreground: white;
   --muted: var(--secondary);
   --weekend: var(--hover);
 
@@ -172,6 +174,16 @@
   --popover-foreground: var(--foreground);
 
   --tooltip: color-mix(in srgb, var(--hover-tint) 15%, var(--background));
+  --tooltip-foreground: var(--foreground);
+
+  /* Muted text on each surface that sets its own foreground. The
+     text-*-foreground utilities below swap these into --muted-foreground. */
+  --secondary-muted-foreground: var(--muted-foreground);
+  --accent-muted-foreground: var(--muted-foreground);
+  --selected-muted-foreground: var(--muted-foreground);
+  --card-muted-foreground: var(--muted-foreground);
+  --popover-muted-foreground: var(--muted-foreground);
+  --tooltip-muted-foreground: var(--muted-foreground);
 
   --destructive: var(--error);
   --destructive-foreground: white;
@@ -221,10 +233,12 @@
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-tooltip: var(--tooltip);
+  --color-tooltip-foreground: var(--tooltip-foreground);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
   --color-today: var(--today);
+  --color-today-foreground: var(--today-foreground);
   --color-weekend: var(--weekend);
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
@@ -236,6 +250,7 @@
 
   --color-ring: var(--ring);
   --color-highlight: var(--highlight);
+  --color-highlight-foreground: var(--highlight-foreground);
 
   /* Attendee status */
   --color-success: var(--success);
@@ -253,6 +268,31 @@
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
   --spacing-tab-gap: var(--tab-gap);
+}
+
+/* Extend the generated text colour utilities so muted text follows the surface. */
+@utility text-secondary-foreground {
+  --muted-foreground: var(--secondary-muted-foreground);
+}
+
+@utility text-accent-foreground {
+  --muted-foreground: var(--accent-muted-foreground);
+}
+
+@utility text-selected-foreground {
+  --muted-foreground: var(--selected-muted-foreground);
+}
+
+@utility text-card-foreground {
+  --muted-foreground: var(--card-muted-foreground);
+}
+
+@utility text-popover-foreground {
+  --muted-foreground: var(--popover-muted-foreground);
+}
+
+@utility text-tooltip-foreground {
+  --muted-foreground: var(--tooltip-muted-foreground);
 }
 
 /* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */

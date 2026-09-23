@@ -252,7 +252,7 @@ export function WeekTimeGrid({
                     className={cn(
                       "border-r border-b border-border",
                       day.dateKey === activeDateKey
-                        ? "bg-secondary-hover"
+                        ? "bg-selected text-selected-foreground"
                         : day.isWeekend && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
@@ -313,17 +313,11 @@ export function WeekTimeGrid({
                 className={cn(
                   "relative border-r border-border cursor-default",
                   day.dateKey === activeDateKey
-                    ? "bg-secondary-hover"
+                    ? "bg-selected text-selected-foreground"
                     : day.isWeekend && "bg-weekend",
                 )}
                 style={
                   {
-                    "--day-bg":
-                      day.dateKey === activeDateKey
-                        ? "var(--secondary-hover)"
-                        : day.isWeekend
-                          ? "var(--weekend)"
-                          : "var(--background)",
                     backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
                   } as React.CSSProperties
                 }
@@ -409,7 +403,9 @@ const DayHeaders = ({
       data-weekend={day.isWeekend || undefined}
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
-        day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
+        day.dateKey === activeDateKey
+          ? "bg-selected text-selected-foreground"
+          : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
       // Headers double as an all-day drop zone so multi-day bars can land here
@@ -426,7 +422,7 @@ const DayHeaders = ({
         data-today={day.isToday || undefined}
         className={cn(
           "text-xs font-medium w-7 h-7 flex items-center justify-center rounded-circle",
-          day.isToday && "bg-today text-primary-foreground",
+          day.isToday && "bg-today text-today-foreground",
           dimmed && "opacity-50",
         )}
       >

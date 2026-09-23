@@ -33,7 +33,7 @@ export function BoardColumn({
         data-today={isToday || undefined}
         className={cn(
           "flex items-center justify-between px-3 py-2 border-b border-border shrink-0",
-          isToday && "bg-accent",
+          isToday && "bg-accent text-accent-foreground",
         )}
       >
         <span

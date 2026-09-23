@@ -74,16 +74,23 @@ These are the variables theme files normally override. Surfaces and state colors
 
 #### Optional colors
 
-The selection pair is derived by default and can be overridden as a unit. Event
+Every surface has a matching text colour. Surfaces that set their own
+foreground also swap in a matching muted colour, so de-emphasized text inside
+them stays readable. The muted variants default to `--muted-foreground`; set
+them when a surface's foreground differs from the page's. Event
 colour overrides are unset by default and opt in to their documented behaviour.
 
-| Variable                | Purpose                                                                                                                                                    |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `--selected`            | Persistent selection surface; defaults to one tint step beyond `--accent`.                                                                                 |
-| `--selected-foreground` | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
-| `--event-color`         | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
-| `--event-background`    | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
-| `--event-foreground`    | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                                   |
+| Variable                       | Purpose                                                                                                                                                    |
+| ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--selected`                   | Persistent selection surface; defaults to one tint step beyond `--accent`.                                                                                 |
+| `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
+| `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
+| `--highlight-foreground`       | Text colour on `--highlight` fills (e.g. the invites badge); defaults to `white`.                                                                          |
+| `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
+| `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |
+| `--event-color`                | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
+| `--event-background`           | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
+| `--event-foreground`           | Text colour on that fill (e.g. `white`). Bar-and-text events (agenda, board, month time labels) keep the derived colour.                                   |
 
 #### Event text
 
@@ -99,10 +106,10 @@ Event text is derived from each event's accent colour. With these unset (the dar
 
 The derived tokens (`--hover`, `--secondary`, `--accent`, `--muted`, `--card`, `--border`, `--input`, …) are built by mixing `--hover-tint` into progressively heavier layers. Tuning these two primitives is usually enough to match a theme's palette.
 
-| Variable       | Purpose                                                           |
-| -------------- | ----------------------------------------------------------------- |
-| `--hover-tint` | Color mixed over the background to produce hover / surface layers |
-| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)   |
+| Variable       | Purpose                                                                                       |
+| -------------- | --------------------------------------------------------------------------------------------- |
+| `--hover-tint` | Color mixed over the background to produce hover / surface layers; defaults to `--foreground` |
+| `--hover-mix`  | Percentage of tint per layer (each derived token adds one more)                               |
 
 Tooltips use a solid `--tooltip` surface derived from 15% `--hover-tint` mixed into `--background`, with a matching arrow.
 

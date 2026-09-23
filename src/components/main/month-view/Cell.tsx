@@ -74,7 +74,7 @@ export function MonthDayCell({
           className={cn(
             "flex flex-col gap-1 px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
             day.isWeekend && "bg-weekend",
-            isActiveDay && "bg-selected",
+            isActiveDay && "bg-selected text-selected-foreground",
           )}
           id={isActiveDay ? ACTIVE_DAY_EL_ID : undefined}
           data-drop-day={day.dateKey}

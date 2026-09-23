@@ -33,10 +33,18 @@ Most themes only need to set `--background`, `--foreground`, `--muted-foreground
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
-Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block and add `--hover-tint` if it is missing.
+Generated shadcn declarations keep their usual meanings, including `--card`, `--popover`, `--secondary`, `--muted`, `--accent`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono`. Paste them into the same bare declaration block `--hover-tint` defaults to `--foreground`, so hover and weekend tints stay visible on light and dark palettes alike.
 
 renCal adds `--selected` and `--selected-foreground` for persistent selection;
 they derive one tint step beyond `--accent` unless the theme sets them directly.
+Filled "today" markers use `--today-foreground`, tooltips use `--tooltip-foreground`,
+and `--highlight` fills use `--highlight-foreground`.
+
+Surfaces that set their own text colour also swap `--muted-foreground` for a
+matching muted colour: `--secondary-muted-foreground`, `--accent-muted-foreground`,
+`--selected-muted-foreground`, `--card-muted-foreground`,
+`--popover-muted-foreground`, and `--tooltip-muted-foreground`. They default to
+`--muted-foreground`; set them when a surface's foreground differs from the page's.
 
 You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `--text-base`, and the matching `--text-<step>--line-height` properties. Line heights must use pixels because month lanes derive their height from `--text-xs--line-height`.
 

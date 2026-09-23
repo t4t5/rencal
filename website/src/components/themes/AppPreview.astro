@@ -260,7 +260,7 @@ const barStyle = (bar: AllDayBar) =>
                         "relative flex size-8 items-center justify-center text-sm",
                         day.outside && "text-(--muted-foreground)",
                         isSelected &&
-                          "rc-circle bg-(--today) font-bold text-(--primary-foreground)",
+                          "rc-circle bg-(--today) font-bold text-(--today-foreground)",
                       ]}
                     >
                       {day.num}
@@ -412,7 +412,7 @@ const barStyle = (bar: AllDayBar) =>
                   <span
                     class:list={[
                       "flex h-5 w-5 items-center justify-center text-xs",
-                      day.today && "rc-circle bg-(--today) text-(--primary-foreground)",
+                      day.today && "rc-circle bg-(--today) text-(--today-foreground)",
                     ]}
                   >
                     {day.num}
