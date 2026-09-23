@@ -77,7 +77,7 @@
 
   --background: #131313;
   --foreground: white;
-  --muted-foreground: rgba(255, 255, 255, 0.5);
+  --muted-foreground: color-mix(in srgb, var(--foreground) 50%, transparent);
 
   --primary: #f56313;
 

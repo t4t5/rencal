@@ -23,13 +23,13 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 /* @name My Theme */
 --background: #0f0f0f;
 --foreground: #eaeaea;
---muted-foreground: rgba(234, 234, 234, 0.6);
 --primary: #7c3aed;
+--primary-foreground: #ffffff;
 --highlight: #7c3aed;
 --hover-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--muted-foreground`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values.
+Most themes only need to set `--background`, `--foreground`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 

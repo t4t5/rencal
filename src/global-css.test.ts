@@ -144,4 +144,8 @@ describe("global CSS contract", () => {
 
     expect(css).toMatch(/\.rounded-base\s*\{[^}]*border-radius:\s*var\(--radius-xs\)/s)
   })
+
+  it("derives muted text from the theme foreground", () => {
+    expect(declarationsFor(BASELINE).get("--muted-foreground")).toContain("var(--foreground)")
+  })
 })
