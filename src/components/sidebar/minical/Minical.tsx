@@ -82,7 +82,7 @@ const ArrowKeys = () => {
         data-direction="previous"
         aria-label="Previous month"
         variant="ghost"
-        size="icon-sm"
+        size="icon-xs"
         round
         tabIndex={-1}
         onClick={() => navigateToDate(activeDate.subtract({ months: 1 }))}
@@ -93,7 +93,7 @@ const ArrowKeys = () => {
         data-direction="next"
         aria-label="Next month"
         variant="ghost"
-        size="icon-sm"
+        size="icon-xs"
         round
         tabIndex={-1}
         onClick={() => navigateToDate(activeDate.add({ months: 1 }))}

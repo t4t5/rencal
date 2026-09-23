@@ -96,14 +96,13 @@
   --tab-gap: 0;
 
   /* Optional overrides stay unset so their var() fallbacks apply. */
-  --border-button: initial;
   --scrollbar-width: initial;
-  --font-heading-size: initial;
-  --font-heading-line-height: initial;
-  --font-button-size: initial;
-  --font-button-line-height: initial;
-  --font-numerical-size: initial;
-  --font-numerical-line-height: initial;
+  --text-heading: initial;
+  --text-heading--line-height: initial;
+  --text-button: initial;
+  --text-button--line-height: initial;
+  --text-numerical: initial;
+  --text-numerical--line-height: initial;
   --event-color: initial;
   --event-background: initial;
   --event-foreground: initial;
@@ -138,6 +137,8 @@
 
   /* One-release fallbacks for the pre-contract names. */
   --radius-base: initial;
+  --border-button: initial;
+  --button-border: var(--border-button, transparent);
   --radius: var(--radius-base, 0px);
 
   --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
@@ -209,11 +210,14 @@
 }
 
 @theme inline {
-  --radius-xs: max(0px, calc(var(--radius) - 8px));
-  --radius-sm: max(0px, calc(var(--radius) - 4px));
-  --radius-md: max(0px, calc(var(--radius) - 2px));
+  --radius-xs: calc(var(--radius) * 0.4);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -260,7 +264,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   --color-overlay: var(--overlay);
 
-  --shadow-button-border: inset 0 0 0 1px var(--border-button, transparent);
+  --shadow-button-border: inset 0 0 0 1px var(--button-border);
   --shadow-input-border: inset 0 0 0 1px var(--input);
   --shadow-tab-list: var(--tab-list-shadow);
 
@@ -301,7 +305,7 @@
 }
 
 @utility rounded-base {
-  border-radius: max(0px, calc(var(--radius) - 6px));
+  border-radius: var(--radius-xs);
 }
 
 @layer base {
@@ -419,15 +423,15 @@
   [data-typography="heading"] {
     font-family: var(--font-heading);
     text-transform: var(--font-heading-transform, none);
-    font-size: var(--font-heading-size, var(--text-lg));
-    line-height: var(--tw-leading, var(--font-heading-line-height, var(--text-lg--line-height)));
+    font-size: var(--text-heading, var(--text-lg));
+    line-height: var(--tw-leading, var(--text-heading--line-height, var(--text-lg--line-height)));
   }
 
-  [data-typography="action"] {
+  [data-typography="button"] {
     font-family: var(--font-button);
     text-transform: var(--font-button-transform, none);
-    font-size: var(--font-button-size, var(--text-sm));
-    line-height: var(--tw-leading, var(--font-button-line-height, var(--text-sm--line-height)));
+    font-size: var(--text-button, var(--text-sm));
+    line-height: var(--tw-leading, var(--text-button--line-height, var(--text-sm--line-height)));
   }
 
   [data-typography="field"] {
@@ -440,8 +444,8 @@
   [data-typography="numerical"] {
     font-family: var(--font-numerical);
     text-transform: var(--font-numerical-transform, none);
-    font-size: var(--font-numerical-size, var(--text-xs));
-    line-height: var(--tw-leading, var(--font-numerical-line-height, var(--text-xs--line-height)));
+    font-size: var(--text-numerical, var(--text-xs));
+    line-height: var(--tw-leading, var(--text-numerical--line-height, var(--text-xs--line-height)));
   }
 }
 

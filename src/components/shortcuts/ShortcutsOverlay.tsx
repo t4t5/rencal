@@ -43,7 +43,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
             <SheetTitle className="text-lg">Keyboard shortcuts</SheetTitle>
 
             <SheetClose asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Close keyboard shortcuts">
+              <Button variant="ghost" size="icon-xs" aria-label="Close keyboard shortcuts">
                 <CloseIcon />
               </Button>
             </SheetClose>

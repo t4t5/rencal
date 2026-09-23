@@ -65,8 +65,8 @@
   --month-boundary: color-mix(in srgb, var(--foreground) 28%, var(--background));
 
   /* Radius steps (app: Tailwind radius scale derived from --radius) */
-  --radius-md: max(0px, calc(var(--radius) - 2px));
-  --radius-ev: max(0px, calc(var(--radius) - 6px));
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-ev: calc(var(--radius) * 0.4);
 
   font-family: var(--font-body);
 }
@@ -98,7 +98,7 @@
   background: var(--secondary);
   color: var(--foreground);
   border-radius: var(--radius-md);
-  box-shadow: inset 0 0 0 1px var(--border-button, transparent);
+  box-shadow: inset 0 0 0 1px var(--button-border, var(--border-button, transparent));
 }
 
 .rc-btn--icon {

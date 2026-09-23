@@ -92,7 +92,7 @@ Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` sl
 
 Removable list rows, such as reminders and conference links, add `data-variant="item"` to the row root and use `accent` / `accent-foreground` while hovered or focused within. The `select-icon` slot owns the dropdown arrow's colour and visibility; its glyph draws with `currentColor`.
 
-Elements expose their typography role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `action`, and actions embedded in event fields use `field`. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
+Elements expose their typography role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `button`, and actions embedded in event fields use `field`. The field role uses the body font, small text scale, and normal casing independently of the button's surface variant.
 
 ### Calendar events
 
@@ -126,4 +126,4 @@ controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
 
-The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. The old `--divider` token is no longer supported; use `--border`. `--radius-base` has a temporary compatibility fallback, but new themes should use `--radius`.
+The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. The old `--divider` token is no longer supported; use `--border`. `--radius-base` and `--border-button` have temporary compatibility fallbacks, but new themes should use `--radius` and `--button-border`.

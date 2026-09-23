@@ -136,7 +136,7 @@ browser console with `document.body.dataset.theme = "contract-debug"`.
 
 | Variable                      | Purpose                                                                        |
 | ----------------------------- | ------------------------------------------------------------------------------ |
-| `--border-button`             | Button outline/shadow (often `transparent`)                                    |
+| `--button-border`             | Button outline/shadow (often `transparent`)                                    |
 | `--control-active-background` | Complete input/select surface while focused or open; defaults to `--secondary` |
 | `--control-active-border`     | Input/select border while focused or open; defaults to `transparent`           |
 
@@ -150,7 +150,7 @@ active outline can set it to `var(--border)` or another color.
 
 | Variable                   | Purpose                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------- |
-| `--radius`                 | Base border radius (shadcn-compatible)                                              |
+| `--radius`                 | Base border radius; like shadcn, `rounded-*` steps multiply it (sm ×0.6 … 4xl ×2.6) |
 | `--radius-circle`          | Pill/avatar radius (set to `0` for sharp themes)                                    |
 | `--control-height`         | Button/input height                                                                 |
 | `--control-height-sm`      | Small button height                                                                 |
@@ -191,19 +191,19 @@ file = "fonts/ms_sans_serif.woff2"
 
 These are unset by default. Setting them opts into role-specific typography without targeting elements directly. A `text-*` utility on the same element intentionally uses the global scale instead.
 
-| Variable                       | Purpose                         |
-| ------------------------------ | ------------------------------- |
-| `--font-heading-transform`     | Heading role `text-transform`   |
-| `--font-button-transform`      | Button role `text-transform`    |
-| `--font-numerical-transform`   | Numerical role `text-transform` |
-| `--font-heading-size`          | Heading role size               |
-| `--font-heading-line-height`   | Heading role line height        |
-| `--font-button-size`           | Button role size                |
-| `--font-button-line-height`    | Button role line height         |
-| `--font-numerical-size`        | Numerical role size             |
-| `--font-numerical-line-height` | Numerical role line height      |
+| Variable                        | Purpose                         |
+| ------------------------------- | ------------------------------- |
+| `--font-heading-transform`      | Heading role `text-transform`   |
+| `--font-button-transform`       | Button role `text-transform`    |
+| `--font-numerical-transform`    | Numerical role `text-transform` |
+| `--text-heading`                | Heading role size               |
+| `--text-heading--line-height`   | Heading role line height        |
+| `--text-button`                 | Button role size                |
+| `--text-button--line-height`    | Button role line height         |
+| `--text-numerical`              | Numerical role size             |
+| `--text-numerical--line-height` | Numerical role line height      |
 
-Elements expose their role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `action`, and inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
+Elements expose their role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `button`, and inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
 
 ### Type scale
 
@@ -270,6 +270,8 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 
+Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline`, `secondary`, `ghost`, or `link`, and `data-size` is `xs`, `sm`, `default`, `lg`, `icon-xs`, `icon-sm`, `icon`, or `icon-lg`. Sizes follow the control tokens: `xs`/`icon-xs` use `--control-icon-size`, `sm`/`icon-sm` use `--control-height-sm`, `default`/`icon` use `--control-height`, and `lg`/`icon-lg` use `--control-height-lg`.
+
 The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; input-group add-ons also keep shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
 Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
@@ -307,7 +309,7 @@ Older custom rules that painted `[data-slot="input-group"]` inside a combobox sh
 
 ## Compatibility
 
-The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. The old `--divider` token is no longer supported; use `--border`. `--radius-base` → `--radius` and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
+The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. The old `--divider` token is no longer supported; use `--border`. `--radius-base` → `--radius`, `--border-button` → `--button-border`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
 
 ### Settings styling hooks
 

@@ -119,14 +119,14 @@ describe("global CSS contract", () => {
     const css = build(["text-sm"])
 
     expect(css).toMatch(/\.text-sm[^{]*\{[^}]*font-size:\s*var\(--text-sm\)/s)
-    expect(css).toMatch(/@layer components\s*\{[\s\S]*?\[data-typography="action"\]\s*\{/)
+    expect(css).toMatch(/@layer components\s*\{[\s\S]*?\[data-typography="button"\]\s*\{/)
     expect(css).toContain("@layer theme, base, components, utilities")
   })
 
   it("uses explicit typography roles instead of generic global classes", () => {
     expect(source).not.toMatch(/^\s*\.(?:button|heading|numerical|field-action)\s*\{/m)
 
-    for (const role of ["action", "field", "heading", "numerical"]) {
+    for (const role of ["button", "field", "heading", "numerical"]) {
       expect(source).toContain(`[data-typography="${role}"]`)
     }
   })
@@ -142,8 +142,6 @@ describe("global CSS contract", () => {
   it("keeps the legacy base radius step themeable", () => {
     const css = build(["rounded-base"])
 
-    expect(css).toMatch(
-      /\.rounded-base\s*\{[^}]*border-radius:\s*max\(0px, calc\(var\(--radius\) - 6px\)\)/s,
-    )
+    expect(css).toMatch(/\.rounded-base\s*\{[^}]*border-radius:\s*var\(--radius-xs\)/s)
   })
 })

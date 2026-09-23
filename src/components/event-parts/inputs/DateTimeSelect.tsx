@@ -167,7 +167,7 @@ const ZoneSwitchButton = ({
         <Button
           type="button"
           variant="secondary"
-          size="icon-sm"
+          size="icon-xs"
           className="text-muted-foreground"
           aria-label={label}
           onClick={onClick}

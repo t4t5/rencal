@@ -71,7 +71,7 @@ export function GroupsColumn({
           Groups
         </span>
 
-        <Button size="icon-sm" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
+        <Button size="icon-xs" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
           <PlusIcon className="size-4" />
         </Button>
       </div>

@@ -14,31 +14,33 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground hover:bg-secondary-hover shadow-button-border",
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90 focus-visible:ring-destructive/20",
+        outline: "bg-background shadow-input-border hover:bg-accent hover:text-accent-foreground",
         ghost: "hover:bg-accent hover:text-accent-foreground",
+        link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-control px-3 has-[>svg]:px-3",
-        sm: "h-control-sm rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
-        lg: "h-control-lg rounded-md px-6 has-[>svg]:px-4",
+        xs: "h-(--control-icon-size) gap-1 px-2 has-[>svg]:px-1.5",
+        sm: "h-control-sm gap-1.5 px-3 has-[>svg]:px-2.5",
+        lg: "h-control-lg px-6 has-[>svg]:px-4",
         icon: "size-control p-0",
-        "icon-xs": "size-6 p-0",
-        "icon-sm": "size-(--control-icon-size) p-0",
-        "icon-md": "size-8 p-0",
-        "icon-lg": "size-9 p-0",
+        "icon-xs": "size-(--control-icon-size) p-0",
+        "icon-sm": "size-control-sm p-0",
+        "icon-lg": "size-control-lg p-0",
       },
       round: {
         true: "rounded-circle",
         false: "rounded-md",
       },
       typography: {
-        action: "font-medium",
+        button: "font-medium",
         field: "font-normal",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
-      typography: "action",
+      typography: "button",
     },
   },
 )
@@ -63,7 +65,7 @@ function Button({
       data-button=""
       data-variant={variant ?? "default"}
       data-size={size ?? "default"}
-      data-typography={typography ?? "action"}
+      data-typography={typography ?? "button"}
       className={cn(buttonVariants({ variant, size, round, typography, className }))}
       {...props}
     />
