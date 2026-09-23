@@ -191,19 +191,25 @@ file = "fonts/ms_sans_serif.woff2"
 
 ### Typography identity (optional)
 
-These are unset by default. Setting them opts into role-specific typography without targeting elements directly. A `text-*` utility on the same element intentionally uses the global scale instead.
+These follow Tailwind's `--text-<step>--<property>` naming; the role font-family stays `--font-<role>`. Apart from the ren default of uppercase transforms, they are unset by default. Setting them opts into role-specific typography without targeting elements directly. A `text-*` utility on the same element intentionally uses the global scale instead.
 
-| Variable                        | Purpose                         |
-| ------------------------------- | ------------------------------- |
-| `--font-heading-transform`      | Heading role `text-transform`   |
-| `--font-button-transform`       | Button role `text-transform`    |
-| `--font-numerical-transform`    | Numerical role `text-transform` |
-| `--text-heading`                | Heading role size               |
-| `--text-heading--line-height`   | Heading role line height        |
-| `--text-button`                 | Button role size                |
-| `--text-button--line-height`    | Button role line height         |
-| `--text-numerical`              | Numerical role size             |
-| `--text-numerical--line-height` | Numerical role line height      |
+| Variable                           | Purpose                         |
+| ---------------------------------- | ------------------------------- |
+| `--text-heading`                   | Heading role size               |
+| `--text-heading--line-height`      | Heading role line height        |
+| `--text-heading--letter-spacing`   | Heading role letter spacing     |
+| `--text-heading--font-weight`      | Heading role font weight        |
+| `--text-heading--transform`        | Heading role `text-transform`   |
+| `--text-button`                    | Button role size                |
+| `--text-button--line-height`       | Button role line height         |
+| `--text-button--letter-spacing`    | Button role letter spacing      |
+| `--text-button--font-weight`       | Button role font weight         |
+| `--text-button--transform`         | Button role `text-transform`    |
+| `--text-numerical`                 | Numerical role size             |
+| `--text-numerical--line-height`    | Numerical role line height      |
+| `--text-numerical--letter-spacing` | Numerical role letter spacing   |
+| `--text-numerical--font-weight`    | Numerical role font weight      |
+| `--text-numerical--transform`      | Numerical role `text-transform` |
 
 Elements expose their role through `data-typography`: headings use `heading`, numeric labels use `numerical`, ordinary button actions use `button`, and inline event-field actions use `field`. Field actions deliberately use the body family, the small text scale, and normal casing; surface variants such as `ghost` do not change that role.
 

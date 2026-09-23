@@ -67,9 +67,9 @@ const REN_DEFAULTS: Record<string, string> = {
   "--font-heading": "var(--font-mono)",
   "--font-button": "var(--font-mono)",
   "--font-numerical": "var(--font-mono)",
-  "--font-heading-transform": "uppercase",
-  "--font-button-transform": "uppercase",
-  "--font-numerical-transform": "uppercase",
+  "--text-heading--transform": "uppercase",
+  "--text-button--transform": "uppercase",
+  "--text-numerical--transform": "uppercase",
 }
 
 const payload = { themes, defaults: REN_DEFAULTS }
@@ -426,7 +426,7 @@ const segControls = [
 
     const segState: Record<string, string> = {
       font: effective("--font-heading").includes("mono") ? "mono" : "sans",
-      caps: effective("--font-heading-transform") === "uppercase" ? "uppercase" : "normal",
+      caps: effective("--text-heading--transform") === "uppercase" ? "uppercase" : "normal",
       circle: Number.parseFloat(effective("--radius-circle")) === 0 ? "sharp" : "pill",
     }
     for (const seg of document.querySelectorAll<HTMLElement>("[data-seg]")) {
@@ -514,9 +514,9 @@ const segControls = [
       } else if (seg.dataset.seg === "caps") {
         const transform = value === "uppercase" ? "uppercase" : "none"
         setVars({
-          "--font-heading-transform": transform,
-          "--font-button-transform": transform,
-          "--font-numerical-transform": transform,
+          "--text-heading--transform": transform,
+          "--text-button--transform": transform,
+          "--text-numerical--transform": transform,
         })
       } else if (seg.dataset.seg === "circle") {
         setVars({ "--radius-circle": value === "pill" ? "calc(infinity * 1px)" : "0px" })

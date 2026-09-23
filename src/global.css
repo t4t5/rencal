@@ -46,9 +46,9 @@
    declare. :root carries the same defaults for content outside any scope. */
 :root,
 [data-theme] {
-  --font-heading-transform: uppercase;
-  --font-button-transform: uppercase;
-  --font-numerical-transform: uppercase;
+  --text-heading--transform: uppercase;
+  --text-button--transform: uppercase;
+  --text-numerical--transform: uppercase;
 
   --radius-circle: 0;
   --control-height: 34px;
@@ -99,10 +99,16 @@
   --scrollbar-width: initial;
   --text-heading: initial;
   --text-heading--line-height: initial;
+  --text-heading--letter-spacing: initial;
+  --text-heading--font-weight: initial;
   --text-button: initial;
   --text-button--line-height: initial;
+  --text-button--letter-spacing: initial;
+  --text-button--font-weight: initial;
   --text-numerical: initial;
   --text-numerical--line-height: initial;
+  --text-numerical--letter-spacing: initial;
+  --text-numerical--font-weight: initial;
   --event-color: initial;
   --event-background: initial;
   --event-foreground: initial;
@@ -407,16 +413,20 @@
 
   [data-typography="heading"] {
     font-family: var(--font-heading);
-    text-transform: var(--font-heading-transform, none);
+    text-transform: var(--text-heading--transform, none);
     font-size: var(--text-heading, var(--text-lg));
     line-height: var(--tw-leading, var(--text-heading--line-height, var(--text-lg--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-heading--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-heading--font-weight));
   }
 
   [data-typography="button"] {
     font-family: var(--font-button);
-    text-transform: var(--font-button-transform, none);
+    text-transform: var(--text-button--transform, none);
     font-size: var(--text-button, var(--text-sm));
     line-height: var(--tw-leading, var(--text-button--line-height, var(--text-sm--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-button--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-button--font-weight));
   }
 
   [data-typography="field"] {
@@ -428,9 +438,11 @@
 
   [data-typography="numerical"] {
     font-family: var(--font-numerical);
-    text-transform: var(--font-numerical-transform, none);
+    text-transform: var(--text-numerical--transform, none);
     font-size: var(--text-numerical, var(--text-xs));
     line-height: var(--tw-leading, var(--text-numerical--line-height, var(--text-xs--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-numerical--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-numerical--font-weight));
   }
 }
 

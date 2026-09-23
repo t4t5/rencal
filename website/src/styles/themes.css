@@ -17,9 +17,9 @@
   --font-button: var(--font-mono);
   --font-numerical: var(--font-mono);
 
-  --font-heading-transform: uppercase;
-  --font-button-transform: uppercase;
-  --font-numerical-transform: uppercase;
+  --text-heading--transform: uppercase;
+  --text-button--transform: uppercase;
+  --text-numerical--transform: uppercase;
 
   --radius: 0px;
   --radius-circle: 0px;
@@ -74,12 +74,12 @@
 /* App typography utilities (see the @utility blocks in the app's global.css) */
 .rc-heading {
   font-family: var(--font-heading);
-  text-transform: var(--font-heading-transform, none);
+  text-transform: var(--text-heading--transform, none);
 }
 
 .rc-numerical {
   font-family: var(--font-numerical);
-  text-transform: var(--font-numerical-transform, none);
+  text-transform: var(--text-numerical--transform, none);
 }
 
 /* Simplified static version of the app's Button (secondary variant) */
@@ -94,7 +94,7 @@
   font-weight: 500;
   white-space: nowrap;
   font-family: var(--font-button);
-  text-transform: var(--font-button-transform, none);
+  text-transform: var(--text-button--transform, none);
   background: var(--secondary);
   color: var(--foreground);
   border-radius: var(--radius-md);

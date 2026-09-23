@@ -3,8 +3,8 @@
 --font-button: var(--font-sans);
 --font-numerical: var(--font-sans);
 
---font-heading-transform: normal;
---font-button-transform: normal;
+--text-heading--transform: normal;
+--text-button--transform: normal;
 
 --border: #40404f;
 --button-border: #363643;

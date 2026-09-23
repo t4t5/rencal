@@ -16,7 +16,7 @@
 --font-heading: var(--font-mono);
 --font-button: var(--font-mono);
 --font-numerical: var(--font-mono);
---font-heading-transform: uppercase;
---font-button-transform: uppercase;
---font-numerical-transform: uppercase;
+--text-heading--transform: uppercase;
+--text-button--transform: uppercase;
+--text-numerical--transform: uppercase;
 --radius-circle: 0px;

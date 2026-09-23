@@ -1,9 +1,11 @@
+// @vitest-environment happy-dom
+import { renderToStaticMarkup } from "react-dom/server"
 import { expect, it } from "vitest"
 
 import { buttonVariants } from "./button"
 import { CommandItem } from "./command"
 import { SelectItem } from "./select"
-import { TabsTrigger } from "./tabs"
+import { Tabs, TabsList, TabsTrigger } from "./tabs"
 
 it("pairs accent highlights with accent foregrounds in shared primitives", () => {
   const ghostButton = buttonVariants({ variant: "ghost" })
@@ -24,8 +26,15 @@ it("pairs accent highlights with accent foregrounds in shared primitives", () =>
 })
 
 it("pairs navigation tab surfaces with their secondary foreground", () => {
-  const navigationTab = TabsTrigger({ value: "settings", children: "Settings" }).props
-    .className as string
+  const container = document.createElement("div")
+  container.innerHTML = renderToStaticMarkup(
+    <Tabs defaultValue="settings">
+      <TabsList variant="navigation">
+        <TabsTrigger value="settings">Settings</TabsTrigger>
+      </TabsList>
+    </Tabs>,
+  )
+  const navigationTab = container.querySelector("[data-slot=tabs-trigger]")!.className
 
   expect(navigationTab).toContain("data-[state=active]:bg-secondary")
   expect(navigationTab).toContain("data-[state=active]:text-secondary-foreground")
