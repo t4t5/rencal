@@ -115,7 +115,7 @@ A theme is a bare block of CSS variables — no selector needed:
     --foreground: #e6e6e6;
     --hover-tint: #ffffff;
     --primary: #7c8cff;
-    --highlight: #7c8cff;
+    --brand: #7c8cff;
 
 Setting --background, --foreground, --hover-tint and --primary gets you most
 of a theme; hover/card/divider/etc. are derived automatically. Edits apply

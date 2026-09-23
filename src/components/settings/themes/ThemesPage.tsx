@@ -83,7 +83,7 @@ const Palette = ({ themeId }: { themeId: string }) => {
       className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3 w-full"
     >
       <div className="flex justify-between items-center gap-3">
-        <div className="grow h-[5px] rounded-base bg-foreground" />
+        <div className="grow h-[5px] rounded-xs bg-foreground" />
         <div className="size-4 rounded-circle bg-primary" />
       </div>
 

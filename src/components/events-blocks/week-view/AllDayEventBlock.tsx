@@ -65,7 +65,7 @@ export function WeekAllDayBar({
         data-dimmed={(!isStatic && dimmed) || undefined}
         data-drag-state={dragRole ?? undefined}
         data-event-clickable={!isStatic || undefined}
-        className={cn("flex items-center px-1 py-px leading-4 rounded-base text-xs cursor-default")}
+        className={cn("flex items-center px-1 py-px leading-4 rounded-xs text-xs cursor-default")}
         style={getCalendarEventStyle({
           calendarColor: item.calendarColor,
           eventColor: item.event.color,

@@ -72,13 +72,12 @@ function DragFloatCard({ drag }: { drag: ActiveEventDrag }) {
     <div
       ref={ref}
       data-slot="calendar-event"
-      data-view="drag-overlay"
       data-kind={isAllDay(range.start) ? "all-day" : "timed"}
       data-selected="true"
       data-rsvp={getUserResponseStatus(event, calendars) ?? undefined}
       data-drag-state="overlay"
       className={cn(
-        "absolute overflow-hidden rounded-base text-xs shadow-xl",
+        "absolute overflow-hidden rounded-xs text-xs shadow-xl",
         float.kind === "block" ? "px-1.5 py-1" : "px-1.5 py-0.5 whitespace-nowrap",
       )}
       style={{

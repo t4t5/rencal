@@ -409,7 +409,7 @@ function PluginRow({
 function PluginPreview({ url, name }: { url: string | null; name: string }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-base border border-border bg-muted">
+    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-xs border border-border bg-muted">
       {url && !failed ? (
         <img
           src={url}

@@ -71,7 +71,7 @@ function WeekTimedEventImpl({
       data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        "absolute overflow-hidden rounded-base px-1 text-xs cursor-default",
+        "absolute overflow-hidden rounded-xs px-1 text-xs cursor-default",
         hasStripe && "pl-1.5",
       )}
       style={{

@@ -8,7 +8,7 @@ const twMerge = extendTailwindMerge({
       spacing: ["control", "control-sm", "control-lg"],
     },
     classGroups: {
-      rounded: ["rounded-circle", "rounded-base"],
+      rounded: ["rounded-circle"],
     },
   },
 })

@@ -25,11 +25,11 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --foreground: #eaeaea;
 --primary: #7c3aed;
 --primary-foreground: #ffffff;
---highlight: #7c3aed;
+--brand: #7c3aed;
 --hover-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
+Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--hover-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
@@ -39,7 +39,7 @@ renCal adds `--selected` and `--selected-foreground` for persistent selection;
 `--selected` defaults to one tint step heavier than `--accent`, and
 `--selected-foreground` to `--foreground`, unless the theme sets them directly.
 Filled "today" markers use `--today-foreground`, tooltips use `--tooltip-foreground`,
-and `--highlight` fills use `--highlight-foreground`.
+and `--brand` fills use `--brand-foreground`.
 
 Surfaces that set their own text colour also swap `--muted-foreground` for a
 matching muted colour: `--secondary-muted-foreground`, `--accent-muted-foreground`,

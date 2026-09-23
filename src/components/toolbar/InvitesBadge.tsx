@@ -70,7 +70,7 @@ export function InvitesBadge() {
             onFocus={(event) => {
               if (restoringFocusRef.current) event.preventDefault()
             }}
-            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-highlight-foreground hover:bg-highlight/90 transition-colors outline-none"
+            className="flex size-6 items-center justify-center rounded-full bg-brand text-xs font-medium text-brand-foreground hover:bg-brand/90 transition-colors outline-none"
           >
             {invites.length}
           </button>

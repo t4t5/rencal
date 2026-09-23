@@ -5,7 +5,7 @@
 --foreground: var(--electric-blue);
 --muted-foreground: color-mix(in srgb, var(--electric-blue) 90%, transparent);
 --primary: var(--electric-blue);
---highlight: var(--electric-blue);
+--brand: var(--electric-blue);
 --today: var(--electric-blue);
 --event-color: var(--electric-blue);
 --event-background: var(--electric-blue);

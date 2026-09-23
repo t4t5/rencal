@@ -28,7 +28,7 @@ export const AgendaTimedEventBlock = memo(function EventRow({
 
   return (
     <>
-      <div data-slot="calendar-event-color-marker" className="w-[3px] shrink-0 rounded-base" />
+      <div data-slot="calendar-event-color-marker" className="w-[3px] shrink-0 rounded-xs" />
       <div className="relative flex-1 min-w-0 text-sm">
         <div
           data-slot="calendar-event-time"

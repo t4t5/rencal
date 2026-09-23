@@ -144,12 +144,6 @@ describe("global CSS contract", () => {
     expect(css).toContain("width: var(--control-height)")
   })
 
-  it("keeps the legacy base radius step themeable", () => {
-    const css = build(["rounded-base"])
-
-    expect(css).toMatch(/\.rounded-base\s*\{[^}]*border-radius:\s*var\(--radius-xs\)/s)
-  })
-
   it("derives muted text from the theme foreground", () => {
     expect(declarationsFor(BASELINE).get("--muted-foreground")).toContain("var(--foreground)")
   })

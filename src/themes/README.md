@@ -8,7 +8,7 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 --hover-tint: #ffffff;
 --primary: #7c3aed;
 --primary-foreground: #ffffff; /* defaults to --background; set it when that lacks contrast on --primary */
---highlight: #7c3aed;
+--brand: #7c3aed;
 ```
 
 The `[data-theme="<id>"]` selector is added **for you**:
@@ -68,7 +68,7 @@ These are the variables theme files normally override. Surfaces and state colors
 | `--primary`                | Primary action color                               |
 | `--primary-foreground`     | Text on `--primary`; defaults to `--background`    |
 | `--today`                  | "Today" indicator color                            |
-| `--highlight`              | Brand accent (year badge, etc.)                    |
+| `--brand`                  | Brand accent (year badge, etc.)                    |
 | `--ring`                   | Focus rings                                        |
 | `--success`                | Success / accepted state                           |
 | `--warning`                | Warning / tentative state                          |
@@ -87,7 +87,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 | `--selected`                   | Persistent selection surface; defaults to one tint step heavier than `--accent`.                                                                           |
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
-| `--highlight-foreground`       | Text colour on `--highlight` fills (e.g. the invites badge); defaults to `white`.                                                                          |
+| `--brand-foreground`           | Text colour on `--brand` fills (e.g. the invites badge); defaults to `white`.                                                                              |
 | `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
 | `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |
 | `--event-color`                | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
@@ -245,7 +245,7 @@ The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 
-**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--highlight` / `--hover-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
+**Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--brand` / `--hover-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
 
 If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 
@@ -395,7 +395,8 @@ Radix meaning: the keyboard or pointer highlight inside menus.
 ### Calendar event styling hooks
 
 Every rendered event uses `data-slot="calendar-event"`. The `data-view` values
-are `week`, `month`, `agenda`, `board`, `search`, and `drag-overlay`; the
+are `week`, `month`, `agenda`, `board`, and `search` (the drag overlay has none;
+match it with `data-drag-state="overlay"`); the
 `data-kind` values are `timed` and `all-day`. The stable child slots are
 `calendar-event-title`, `calendar-event-time`, and
 `calendar-event-color-marker`; a part is omitted when that rendering does not

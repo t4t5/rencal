@@ -66,7 +66,7 @@ const CurrentMonth = () => {
       className="text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis"
     >
       {formatMonth(activeDate, "long")}{" "}
-      <span data-slot="minical-year" className="text-highlight font-normal">
+      <span data-slot="minical-year" className="text-brand font-normal">
         {activeDate.year}
       </span>
     </h2>
