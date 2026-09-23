@@ -14,13 +14,17 @@ const CSS_VARS = [
   "--background",
   "--foreground",
   "--primary",
+  "--primary-foreground",
   "--today",
+  "--today-foreground",
   "--brand",
+  "--brand-foreground",
   "--surface-tint",
   "--muted-foreground",
   "--success",
   "--warning",
   "--destructive",
+  "--destructive-foreground",
   "--event-color",
   "--event-background",
   "--event-foreground",
@@ -48,6 +52,16 @@ function pickForeground(c: OmarchyColors): string {
   return brightFgContrast > fgContrast ? c.bright_foreground : c.foreground
 }
 
+// Omarchy palettes can be light or dark, so pick each fill's text colour
+// from the palette instead of relying on renCal's dark-theme defaults.
+function readableOn(fill: string, c: OmarchyColors, fg: string): string {
+  const fillLuminance = luminance(fill)
+  return Math.abs(luminance(c.background) - fillLuminance) >=
+    Math.abs(luminance(fg) - fillLuminance)
+    ? c.background
+    : fg
+}
+
 function isMonochrome(c: OmarchyColors): boolean {
   return c.name !== null && MONOCHROME_THEMES.has(c.name)
 }
@@ -58,20 +72,26 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
     "--background": c.background,
     "--foreground": fg,
     "--primary": c.accent,
+    "--primary-foreground": readableOn(c.accent, c, fg),
     "--today": c.blue,
+    "--today-foreground": readableOn(c.blue, c, fg),
     "--brand": c.red,
+    "--brand-foreground": readableOn(c.red, c, fg),
     "--surface-tint": fg,
     "--muted-foreground": `color-mix(in srgb, ${fg} 55%, transparent)`,
     "--success": c.green,
     "--warning": c.yellow,
     "--destructive": c.red,
+    "--destructive-foreground": readableOn(c.red, c, fg),
   }
   if (!isMonochrome(c)) return vars
   // Mirrors electric-blue.css: accent for every emphasis, events as a solid accent fill.
   return {
     ...vars,
     "--today": c.accent,
+    "--today-foreground": readableOn(c.accent, c, fg),
     "--brand": c.accent,
+    "--brand-foreground": readableOn(c.accent, c, fg),
     "--surface-tint": c.accent,
     "--event-color": c.accent,
     "--event-background": c.accent,

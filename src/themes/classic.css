@@ -10,6 +10,7 @@
 --button-border: #363643;
 
 --brand: #ff2f00; /* year */
+--today-foreground: var(--background);
 
 --tab-gap: 6px;
 --tab-list-shadow: none;

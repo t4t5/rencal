@@ -196,6 +196,7 @@ function Calendar({
           return (
             <Weekday
               {...weekdayProps}
+              data-slot="calendar-weekday"
               data-weekend={isWeekend || undefined}
               className={cn(className, "rounded-none", {
                 "text-today": isCurrentWeekday,

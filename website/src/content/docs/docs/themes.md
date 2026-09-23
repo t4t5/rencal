@@ -29,7 +29,7 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--surface-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast, as in the example above.
+Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--surface-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` and `--brand` defaults to `--background`, and text on `--destructive` to white. Those defaults suit dark themes; on a light theme or a mid-tone accent, set `--primary-foreground`, `--today-foreground`, `--brand-foreground`, and `--destructive-foreground` explicitly, as in the example above.
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
@@ -145,3 +145,23 @@ toolbar dropdowns, and the searchable timezone button. Composed
 controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
+
+## Migrating themes from renCal 0.7
+
+renCal 0.8 renames several theme tokens to match shadcn. Old names are no longer read, so update custom themes and plugin themes:
+
+| renCal 0.7                                                  | renCal 0.8                                                                |
+| ----------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `--muted` (de-emphasized text)                              | `--muted-foreground`. `--muted` is now a surface colour.                  |
+| `--highlight`                                               | `--brand`                                                                 |
+| `--error`                                                   | `--destructive`                                                           |
+| `--divider`                                                 | `--border`                                                                |
+| `--hover-tint`, `--hover-mix`                               | `--surface-tint`, `--surface-tint-step`                                   |
+| `--popover-tint`, `--popover-mix`                           | Set `--popover` directly                                                  |
+| `--border-button`                                           | `--button-border`                                                         |
+| `--radius-base`                                             | `--radius`                                                                |
+| `--sans`, `--mono`                                          | `--font-sans`, `--font-mono`                                              |
+| `--font-heading-transform` (and `-button-`, `-numerical-`)  | `--text-heading--transform` (and `--text-button--`, `--text-numerical--`) |
+| `--event-text-max-lightness`, `--event-text-foreground-mix` | Removed. Style `[data-slot="calendar-event"]` directly.                   |
+
+`--brand-foreground` now defaults to `--background` instead of white. Set it explicitly if your theme relied on white text on `--brand`.

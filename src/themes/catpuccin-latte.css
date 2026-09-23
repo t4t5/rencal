@@ -5,6 +5,10 @@
 --theme-subtext-0: #6c6f85;
 --theme-lavender: #7287fd;
 --theme-blue: #1e66f5;
+--theme-mauve: #8839ef;
+--theme-red: #d20f39;
+--theme-peach: #fe640b;
+--theme-green: #40a02b;
 
 --background: var(--theme-base);
 --foreground: var(--theme-text);
@@ -17,4 +21,12 @@
 --selected: color-mix(in srgb, var(--surface-tint) 18%, transparent);
 
 --primary: var(--theme-lavender);
+--primary-foreground: white;
 --today: var(--theme-blue);
+--today-foreground: white;
+--brand: var(--theme-mauve);
+--brand-foreground: white;
+
+--success: var(--theme-green);
+--warning: var(--theme-peach);
+--destructive: var(--theme-red);

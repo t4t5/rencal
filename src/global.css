@@ -149,7 +149,7 @@
   );
   --selected-foreground: var(--foreground);
   --today-foreground: var(--primary-foreground);
-  --brand-foreground: white;
+  --brand-foreground: var(--background);
   --muted: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
   --weekend: var(--hover);
 

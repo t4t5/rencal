@@ -74,6 +74,12 @@ These are the variables theme files normally override. Surfaces and state colors
 | `--warning`                | Warning / tentative state                          |
 | `--destructive`            | Destructive actions, error / declined state        |
 
+The fill foregrounds (`--primary-foreground`, `--today-foreground`,
+`--brand-foreground`, `--destructive-foreground`) default to pairings that suit
+a dark background. Light themes and themes with mid-tone accents should set
+each one explicitly and check it, and `--success`, `--warning`, and
+`--destructive` as text, against WCAG contrast.
+
 #### Optional colors
 
 Every surface has a matching text colour. Surfaces that set their own
@@ -87,7 +93,8 @@ colour overrides are unset by default and opt in to their documented behaviour.
 | `--selected`                   | Persistent selection surface; defaults to one tint step heavier than `--accent`.                                                                           |
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
-| `--brand-foreground`           | Text colour on `--brand` fills (e.g. the invites badge); defaults to `white`.                                                                              |
+| `--brand-foreground`           | Text colour on `--brand` fills (e.g. the invites badge); defaults to `--background`.                                                                       |
+| `--destructive-foreground`     | Text colour on `--destructive` fills; defaults to `white`.                                                                                                 |
 | `--<fill>-hover`               | Hover fill for `primary`, `destructive`, and `brand`; defaults to the fill lightened by one `--surface-tint-step` of white.                                |
 | `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
 | `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |

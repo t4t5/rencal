@@ -7,6 +7,9 @@
 --primary: var(--minimal-brand-color);
 --brand: #ff2f00;
 --today: #ff2f00;
+--brand-foreground: white;
+--warning: #b45309;
+--destructive: #d32f2f;
 --surface-tint: var(--minimal-brand-color);
 --surface-tint-step: 4%;
 --button-border: var(--border);
