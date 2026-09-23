@@ -308,12 +308,6 @@ Themes that intentionally retain an inset event action can scope that exception 
 }
 ```
 
-Older custom rules that painted `[data-slot="input-group"]` inside a combobox should move that surface styling to `[data-slot="combobox"]`.
-
-## Compatibility
-
-The first release with this contract renames the old text token `--muted` to `--muted-foreground`; `--muted` now has shadcn's surface meaning. External themes using only the old name are reported in Settings. The old `--divider` token is no longer supported; use `--border`. `--radius-base` → `--radius`, `--border-button` → `--button-border`, and `--mono`/`--sans` → `--font-mono`/`--font-sans` retain one-release fallbacks.
-
 ### Settings styling hooks
 
 Settings sections use vertical Tabs. Their `tabs-list` exposes

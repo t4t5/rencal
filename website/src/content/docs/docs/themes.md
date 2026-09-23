@@ -144,5 +144,3 @@ toolbar dropdowns, and the searchable timezone button. Composed
 controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
-
-The old text token `--muted` is now `--muted-foreground`; `--muted` has shadcn's surface meaning. The old `--divider` token is no longer supported; use `--border`. `--radius-base` and `--border-button` have temporary compatibility fallbacks, but new themes should use `--radius` and `--button-border`.

@@ -57,10 +57,8 @@ describe("global CSS contract", () => {
     expect(themed.get("--font-heading")).toBe("var(--font-mono)")
     expect(themed.get("--font-button")).toBe("var(--font-mono)")
     expect(themed.get("--font-numerical")).toBe("var(--font-mono)")
-    expect(themed.get("--font-sans")).toContain("var(\n    --sans,")
-    expect(themed.get("--font-mono")).toBe('var(--mono, "Geist Mono", ui-monospace, monospace)')
-    expect(themed.get("--sans")).toBe("initial")
-    expect(themed.get("--mono")).toBe("initial")
+    expect(themed.get("--font-sans")).toContain("system-ui")
+    expect(themed.get("--font-mono")).toBe('"Geist Mono", ui-monospace, monospace')
   })
 
   it("compiles every shadcn color utility used by shared UI", () => {

@@ -153,41 +153,6 @@ fn parse_name(css: &str, fallback: &str) -> String {
     fallback.to_string()
 }
 
-fn declares_custom_property(css: &str, property: &str) -> bool {
-    let bytes = css.as_bytes();
-    let property = property.as_bytes();
-    let mut index = 0;
-    let mut in_comment = false;
-
-    while index < bytes.len() {
-        if in_comment {
-            if bytes[index..].starts_with(b"*/") {
-                in_comment = false;
-                index += 2;
-            } else {
-                index += 1;
-            }
-            continue;
-        }
-        if bytes[index..].starts_with(b"/*") {
-            in_comment = true;
-            index += 2;
-            continue;
-        }
-        if bytes[index..].starts_with(property) {
-            let mut end = index + property.len();
-            while end < bytes.len() && bytes[end].is_ascii_whitespace() {
-                end += 1;
-            }
-            if bytes.get(end) == Some(&b':') {
-                return true;
-            }
-        }
-        index += 1;
-    }
-    false
-}
-
 fn ensure_plugins_dir() -> Option<PathBuf> {
     let dir = plugins::plugins_dir().ok()?;
     std::fs::create_dir_all(&dir).ok()?;
@@ -264,23 +229,6 @@ fn scan_from(
     snapshot
         .themes
         .sort_by_key(|theme| theme.name.to_lowercase());
-    for theme in &snapshot.themes {
-        if declares_custom_property(&theme.css, "--muted")
-            && !declares_custom_property(&theme.css, "--muted-foreground")
-        {
-            let package = match &theme.source {
-                ExternalThemeSource::Loose => theme.id.clone(),
-                ExternalThemeSource::Plugin { id, .. } => id.clone(),
-            };
-            snapshot.errors.push(ExternalThemeError {
-                package,
-                message: format!(
-                    "Theme {:?} uses the removed --muted text token; rename it to --muted-foreground",
-                    theme.name
-                ),
-            });
-        }
-    }
     snapshot
 }
 
@@ -457,7 +405,7 @@ pub async fn run_watcher(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::{
-        ExternalThemeFontErrorKind, ExternalThemeSource, declares_custom_property, load_fonts_from,
+        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from,
         parse_name, scan_from, slugify,
     };
     use base64::Engine;
@@ -514,30 +462,6 @@ appearance = "dark"
         assert_eq!(parse_name("--background: #000;", "file"), "file");
         // Trailing comment close is stripped, surrounding whitespace trimmed.
         assert_eq!(parse_name("/*@name   Solar  */", "file"), "Solar");
-    }
-
-    #[test]
-    fn custom_property_detection_ignores_comments_and_accepts_whitespace() {
-        assert!(declares_custom_property("--muted : silver;", "--muted"));
-        assert!(!declares_custom_property(
-            "/* --muted: silver; */ --muted-foreground: gray;",
-            "--muted"
-        ));
-    }
-
-    #[test]
-    fn reports_the_legacy_muted_text_token() {
-        let temp = tempfile::tempdir().unwrap();
-        let themes = temp.path().join("themes");
-        std::fs::create_dir_all(&themes).unwrap();
-        std::fs::write(themes.join("legacy.css"), "--muted: silver;").unwrap();
-
-        let snapshot = scan_from(Some(&themes), None);
-
-        assert_eq!(snapshot.themes.len(), 1);
-        assert_eq!(snapshot.errors.len(), 1);
-        assert_eq!(snapshot.errors[0].package, "user:legacy");
-        assert!(snapshot.errors[0].message.contains("--muted-foreground"));
     }
 
     #[test]
