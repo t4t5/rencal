@@ -16,7 +16,11 @@ export const LocationInput = ({
   readOnly?: boolean
 }) => {
   return (
-    <InputGroup data-readonly={readOnly} className={cn(readOnly && "pointer-events-none")}>
+    <InputGroup
+      data-control="textarea"
+      data-readonly={readOnly}
+      className={cn(readOnly && "pointer-events-none")}
+    >
       <InputGroupAddon>
         <PushpinIcon />
       </InputGroupAddon>

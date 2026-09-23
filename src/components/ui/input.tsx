@@ -17,6 +17,7 @@ function Input({
   return (
     <InputInner
       type={type}
+      data-control="input"
       data-variant={variant}
       className={cn(
         "h-control w-full rounded-md border px-2 ring-transparent border-transparent",

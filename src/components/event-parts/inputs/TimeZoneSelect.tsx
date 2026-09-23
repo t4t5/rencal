@@ -111,7 +111,6 @@ export const TimeZoneSelect = ({
           type="button"
           disabled={readOnly}
           data-control="select"
-          data-control-layout="row"
           className={cn(
             "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input",
             controlSurfaceActive.focusVisible,

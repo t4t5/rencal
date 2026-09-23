@@ -1,8 +1,8 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useState } from "react"
 
-import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { formatShortDate } from "@/lib/event-time"
@@ -27,18 +27,20 @@ export const DatePicker = ({
   return (
     <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button
-          variant="input"
-          typography="field"
+        <button
+          type="button"
+          data-control="select"
           disabled={readOnly}
           className={cn(
-            "group cursor-default justify-start px-[var(--control-padding-inline)] transition-none",
-            readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
+            "flex h-control shrink-0 cursor-default items-center rounded-md border border-transparent bg-transparent px-[var(--control-padding-inline)] text-sm whitespace-nowrap outline-none select-none hover:border-input",
+            controlSurfaceActive.focusVisible,
+            controlSurfaceActive.open,
+            readOnly && "pointer-events-none",
             className,
           )}
         >
           <span>{date ? formattedDate : "Select date"}</span>
-        </Button>
+        </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar

@@ -270,14 +270,21 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | `data-button`, `data-control`, `data-control-part`                                                              | Additional identities preserved through composition.                                                                                              |
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 
-The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; row roots similarly expose `data-control-layout="row"`. Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
+The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Its shared row parts expose `control-leading`, `control-content`, and `control-trailing`. Existing primitives such as input-group add-ons keep their original slot and expose the same role through `data-control-part="leading"`, `"content"`, or `"trailing"`; input-group add-ons also keep shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
 Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
 interactive counterpart to a select or combobox's `select-icon`; themes can give both the
 same trailing-well treatment while leaving their positioning to the controls.
-Every select-like trigger exposes `data-control="select"`: the Select trigger,
-editable comboboxes, the toolbar's group/view dropdowns, and the searchable
-timezone button. Use that marker for shared dropdown-field styling; the
+Every painted field surface exposes `data-control`, so one `[data-control]`
+selector reaches them all. The value names the kind of field:
+
+- `input`: plain inputs and input groups;
+- `textarea`: the textarea wrapper and textarea input groups;
+- `select`: the Select trigger, comboboxes, date pickers, the toolbar's
+  group/view dropdowns, and the searchable timezone button.
+
+Inner inputs and textareas inside a composite surface do not carry the marker.
+Use `data-control="select"` for shared dropdown-field styling; the
 `select-trigger` slot identifies only the real Select component.
 
 The `select-icon` slot owns its arrow's colour and visibility; the glyph inside
@@ -285,7 +292,7 @@ draws with `currentColor`. A theme can recolour the arrow through the slot's
 `color`, or set it to `transparent` and draw its own glyph with a pseudo-element.
 
 Removable list rows in the event form, such as reminders and conference links,
-expose `data-variant="item"` on their `data-control-layout="row"` root. They use
+expose `data-variant="item"` on their `control-row` root. They use
 the `accent` / `accent-foreground` pair while hovered or focused within.
 
 Themes that intentionally retain an inset event action can scope that exception to the footer:

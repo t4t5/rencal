@@ -12,7 +12,7 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="input-group"
-      data-control-layout="row"
+      data-control="input"
       role="group"
       className={cn(
         "control-row group/input-group border-transparent [&:not(:focus-within):not([data-readonly=true]):hover]:border-input relative flex w-full items-center rounded-md border transition-[color,box-shadow] outline-none",
@@ -35,13 +35,21 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
   )
 }
 
-function InputGroupAddon({ className, ...props }: React.ComponentProps<"div">) {
+function InputGroupAddon({
+  className,
+  align = "inline-start",
+  ...props
+}: React.ComponentProps<"div"> & { align?: "inline-start" | "inline-end" }) {
+  const start = align === "inline-start"
+
   return (
     <div
       data-slot="input-group-addon"
-      data-control-part="leading"
+      data-align={align}
+      data-control-part={start ? "leading" : "trailing"}
       className={cn(
-        "control-leading h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
+        start ? "control-leading order-first" : "control-trailing order-last",
+        "h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-[calc(var(--radius)-5px)] group-data-[disabled=true]/input-group:opacity-50",
         className,
       )}
       onClick={(e) => {

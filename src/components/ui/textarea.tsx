@@ -14,6 +14,7 @@ export function Textarea({
   return (
     <div
       data-slot="textarea-wrapper"
+      data-control="textarea"
       data-disabled={disabled || undefined}
       data-readonly={readOnly || undefined}
       role="group"

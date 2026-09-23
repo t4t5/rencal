@@ -15,7 +15,7 @@ function ControlRow({
 
   return (
     <Comp
-      data-control-layout="row"
+      data-slot="control-row"
       data-variant={variant}
       className={cn(
         "control-row",

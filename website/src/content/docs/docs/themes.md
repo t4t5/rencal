@@ -82,7 +82,7 @@ The control spacing variables adjust the event composer and editor as a unit. `-
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
-Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows expose `control-leading`, `control-content`, and `control-trailing`; existing primitives keep their original slots and identify the same roles with `data-control-part="leading"`, `"content"`, or `"trailing"`. Row roots use `data-control-layout="row"`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
+Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows expose `control-leading`, `control-content`, and `control-trailing`; existing primitives keep their original slots and identify the same roles with `data-control-part="leading"`, `"content"`, or `"trailing"`. Input-group add-ons also keep shadcn's `data-align`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
 
 ```css
 [data-slot="event-form-footer"] {
@@ -117,8 +117,11 @@ Event hover uses `--hover`. On unfilled blocks, `data-selected` uses
 `--selected` / `--selected-foreground`; filled blocks use the derived
 `--calendar-event-selected-fill`.
 
-Every select-like trigger exposes `data-control="select"`: the Select trigger,
-comboboxes, toolbar dropdowns, and the searchable timezone button. Composed
+Every painted field surface exposes `data-control`, so themes can style all
+fields with one `[data-control]` selector. Its value is `input` (inputs, input
+groups), `textarea` (textarea surfaces), or `select`. Every select-like trigger
+exposes `data-control="select"`: the Select trigger, comboboxes, date pickers,
+toolbar dropdowns, and the searchable timezone button. Composed
 controls retain their primitive slot, so the timezone button remains a
 `popover-trigger` with a `select-icon` child; shared dropdown-field rules should
 target the control marker, and `select-trigger` identifies only the real Select.
