@@ -545,6 +545,11 @@
     color: var(--calendar-event-tinted-foreground);
   }
 
+  /* Secondary line: a faded title colour, so it keeps the event's tint. */
+  [data-slot="calendar-event"][data-view="week"] [data-slot="calendar-event-time"] {
+    color: color-mix(in srgb, currentColor 70%, transparent);
+  }
+
   [data-slot="calendar-event"][data-rsvp="declined"] {
     text-decoration: line-through;
   }

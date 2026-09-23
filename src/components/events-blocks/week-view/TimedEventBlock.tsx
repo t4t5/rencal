@@ -113,10 +113,7 @@ function WeekTimedEventImpl({
           >
             {summary}
           </span>
-          <span
-            data-slot="calendar-event-time"
-            className="text-2xs text-muted-foreground shrink-0 leading-tight"
-          >
+          <span data-slot="calendar-event-time" className="text-2xs shrink-0 leading-tight">
             {startTime}
           </span>
         </div>
@@ -126,10 +123,7 @@ function WeekTimedEventImpl({
           <div data-slot="calendar-event-title" className="truncate font-medium leading-tight">
             {summary}
           </div>
-          <div
-            data-slot="calendar-event-time"
-            className="truncate text-muted-foreground leading-tight"
-          >
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} - {endTime}
           </div>
         </div>
@@ -139,10 +133,7 @@ function WeekTimedEventImpl({
           <div data-slot="calendar-event-title" className="font-medium leading-tight">
             {summary}
           </div>
-          <div
-            data-slot="calendar-event-time"
-            className="truncate text-muted-foreground leading-tight"
-          >
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} – {endTime}
           </div>
         </div>
@@ -152,10 +143,7 @@ function WeekTimedEventImpl({
           <div data-slot="calendar-event-title" className="font-medium leading-tight line-clamp-2">
             {summary}
           </div>
-          <div
-            data-slot="calendar-event-time"
-            className="truncate text-muted-foreground leading-tight"
-          >
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} – {endTime}
           </div>
         </div>
