@@ -177,7 +177,19 @@ function CalendarDropdown({
   return (
     <Select value={String(value)} onValueChange={handleValueChange} disabled={disabled}>
       <SelectTrigger variant="default" aria-label={ariaLabel}>
-        <SelectValue />
+        {/* Stacking every label in one cell sizes the trigger to the widest,
+            so paging through months doesn't resize the popover. */}
+        <span className="grid">
+          {options?.map((option) => (
+            <span key={option.value} className="invisible col-start-1 row-start-1">
+              {option.label}
+            </span>
+          ))}
+          {/* Radix drops SelectValue's className, so a wrapper places it. */}
+          <span className="col-start-1 row-start-1">
+            <SelectValue />
+          </span>
+        </span>
       </SelectTrigger>
       <SelectContent>
         {options?.map((option) => (
