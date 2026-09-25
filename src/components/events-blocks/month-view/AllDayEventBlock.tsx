@@ -61,8 +61,8 @@ export function MonthAllDayEvent({
       data-event-clickable={!isStatic || undefined}
       className={cn(
         "absolute truncate px-1 py-px text-xs cursor-default",
-        item.isStart && "rounded-l",
-        item.isEnd && "rounded-r",
+        item.isStart && "rounded-l-xs",
+        item.isEnd && "rounded-r-xs",
       )}
       style={{
         ...allDayBarStyle(item, item.lane),

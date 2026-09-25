@@ -543,7 +543,7 @@
     background: var(--calendar-event-color);
   }
 
-  [data-slot="calendar-event"][data-view="month"][data-kind="timed"]
+  :where([data-slot="calendar-event"][data-view="month"][data-kind="timed"])
     [data-slot="calendar-event-time"] {
     color: var(--calendar-event-tinted-foreground);
   }
