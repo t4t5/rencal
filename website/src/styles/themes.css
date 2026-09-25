@@ -51,24 +51,20 @@
     var(--secondary)
   );
   --secondary-foreground: var(--foreground);
-  --accent: color-mix(
-    in srgb,
-    var(--surface-tint) var(--surface-tint-step),
-    var(--secondary-hover)
-  );
+  --accent: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
   --accent-foreground: var(--foreground);
-  --selected: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--accent));
+  --selected: color-mix(
+    in srgb,
+    var(--surface-tint) calc(var(--surface-tint-step) * 4),
+    transparent
+  );
   --selected-foreground: var(--foreground);
   --muted: var(--secondary);
   --weekend: var(--hover);
-  --border: color-mix(
-    in srgb,
-    var(--surface-tint) var(--surface-tint-step),
-    var(--secondary-hover)
-  );
+  --border: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
   --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --card-foreground: var(--foreground);
-  --input: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--border));
+  --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
   --primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
   --primary-foreground: var(--background);
   --today-foreground: var(--primary-foreground);
@@ -78,7 +74,7 @@
 
   /* Radius steps (app: Tailwind radius scale derived from --radius) */
   --radius-md: calc(var(--radius) * 0.8);
-  --radius-ev: calc(var(--radius) * 0.4);
+  --radius-xs: calc(var(--radius) * 0.4);
 
   font-family: var(--font-body);
 }
@@ -142,7 +138,7 @@
 .rc-allday {
   background: var(--event-background, color-mix(in srgb, var(--ev-boost) 20%, var(--background)));
   color: var(--event-foreground, color-mix(in srgb, var(--ev-boost) 40%, var(--foreground)));
-  border-radius: var(--radius-ev);
+  border-radius: var(--radius-xs);
 }
 
 /* ---------------------------------------------------------------------------
@@ -153,21 +149,44 @@
 .tp-tile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  font-family: inherit;
   text-align: left;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 6px;
-  background: transparent;
   text-transform: none;
-}
-
-.tp-tile:hover {
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .tp-tile.is-active {
   border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.tp-check {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  color: var(--background);
+}
+
+.tp-check svg {
+  visibility: hidden;
+}
+
+.tp-tile.is-active .tp-check {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.tp-tile.is-active .tp-check svg {
+  visibility: visible;
 }
 
 .tp-swatch {

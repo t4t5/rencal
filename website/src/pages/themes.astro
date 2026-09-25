@@ -4,6 +4,7 @@ import "../styles/themes.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
 import AppPreview from "../components/themes/AppPreview.astro"
+import ThemeTile from "../components/themes/ThemeTile.astro"
 import CheckIcon from "../icons/check.astro"
 import CopyIcon from "../icons/copy.astro"
 import DownloadIcon from "../icons/download.astro"
@@ -73,13 +74,6 @@ const REN_DEFAULTS: Record<string, string> = {
 
 const payload = { themes, defaults: REN_DEFAULTS }
 
-const styleAttr = (vars: Record<string, string>) =>
-  Object.entries(vars)
-    .map(([name, value]) => `${name}: ${value}`)
-    .join("; ")
-
-const renVars = renTheme.vars
-
 const colorControls = [
   { var: "--background", label: "Background" },
   { var: "--foreground", label: "Text" },
@@ -140,58 +134,14 @@ const segControls = [
       <!-- Controls -->
       <aside class="order-2 flex flex-col gap-10 lg:order-1">
         <div class="flex flex-col gap-3">
-          <div class="grid grid-cols-2 gap-2">
-            {
-              themes.map((theme) => (
-                <button type="button" class="tp-tile" data-theme-tile={theme.id}>
-                  <div class="rc-scope w-full" style={styleAttr(theme.vars)}>
-                    <div class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-white/10 bg-(--background) p-2">
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="h-[4px] grow rounded bg-(--foreground)" />
-                        <div class="rc-circle size-3 bg-(--primary)" />
-                      </div>
-                      <div class="relative grow">
-                        <div class="absolute inset-0 flex justify-between gap-1.5">
-                          <div class="grow bg-(--card)" />
-                          <div class="grow bg-(--card)" />
-                          <div class="grow bg-(--accent)" />
-                        </div>
-                        <div class="absolute inset-0 flex flex-col">
-                          <div class="grow" />
-                          <div class="grow bg-(--card)" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="text-xs text-muted">{theme.name}</span>
-                </button>
-              ))
-            }
-
-            <button type="button" class="tp-tile" data-theme-tile="custom">
-              <div id="tp-custom-palette" class="rc-scope w-full" style={styleAttr(renVars)}>
-                <div
-                  class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-dashed border-white/20 bg-(--background) p-2"
-                >
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="h-[4px] grow rounded bg-(--foreground)"></div>
-                    <div class="rc-circle size-3 bg-(--primary)"></div>
-                  </div>
-                  <div class="relative grow">
-                    <div class="absolute inset-0 flex justify-between gap-1.5">
-                      <div class="grow bg-(--card)"></div>
-                      <div class="grow bg-(--card)"></div>
-                      <div class="grow bg-(--accent)"></div>
-                    </div>
-                    <div class="absolute inset-0 flex flex-col">
-                      <div class="grow"></div>
-                      <div class="grow bg-(--card)"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <span class="text-xs text-muted">Custom</span>
-            </button>
+          <div class="grid grid-cols-2 gap-3">
+            {themes.map((theme) => <ThemeTile id={theme.id} name={theme.name} vars={theme.vars} />)}
+            <ThemeTile
+              id="custom"
+              name="Custom"
+              vars={renTheme.vars}
+              paletteId="tp-custom-palette"
+            />
           </div>
         </div>
 
