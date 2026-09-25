@@ -62,7 +62,7 @@ export const ProviderList = ({
           <Button
             key={name}
             variant="secondary"
-            className="gap-3 h-12 border-input"
+            className="gap-3"
             disabled={isConnecting}
             onClick={() => handleProviderClick(name)}
           >
