@@ -360,8 +360,10 @@ Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `main-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
-  `minical-event-dots`, plus the shared date-grid slots `calendar-weekday` and
-  `calendar-day` (also used by the date picker);
+  `minical-event-dots`, plus the date-grid slots `calendar-grid` (the day
+  table), `calendar-weekday`, and `calendar-day`, which the date picker shares.
+  The date picker's `calendar-header` is its minical-header counterpart: one row
+  holding the navigation arrows and the month and year dropdowns;
 - `agenda`, `agenda-scroll`, `agenda-day`, `agenda-day-header`, `agenda-weekday`,
   `agenda-day-number`, `agenda-empty`, `agenda-all-day-events`; today's
   `agenda-day-header` exposes `data-today`;
@@ -381,8 +383,9 @@ Toolbar group/view dropdowns keep their `dropdown-menu-trigger` slot and, like
 every select-like trigger, expose `data-control="select"`. The searchable timezone
 dropdown exposes that control marker and `select-icon` on its trailing arrow. Its button intentionally keeps
 the `popover-trigger` slot: composed triggers retain their primitive slot and
-use control markers for cross-primitive styling. Mini-calendar navigation
-buttons expose `data-direction="previous"` / `"next"`. Month day headers and day
+use control markers for cross-primitive styling. Mini-calendar and date-picker
+navigation buttons expose `data-direction="previous"` / `"next"`; the date
+picker's month and year dropdowns are Select triggers. Month day headers and day
 bodies expose `data-selected` for the selected date; day numbers expose
 `data-today`. Weekend weekday labels, month day headers, day bodies, and
 mini-calendar days expose `data-weekend`.

@@ -1,8 +1,23 @@
 import * as React from "react"
-import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker"
+import {
+  DayButton,
+  DayPicker,
+  type DropdownProps,
+  getDefaultClassNames,
+  MonthCaption,
+  type MonthCaptionProps,
+  useDayPicker,
+} from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
-import { calendarSharedStyles } from "@/components/ui/calendar-styles"
+import { calendarSharedStyles, WEEKDAY_SHORT } from "@/components/ui/calendar-styles"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -10,7 +25,6 @@ import { isoWeekNumber } from "@/lib/event-time"
 import { jsDateToPlainDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
-import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronLeftIcon } from "@/icons/chevron-left"
 import { ChevronRightIcon } from "@/icons/chevron-right"
 
@@ -19,13 +33,10 @@ function Calendar({
   classNames,
   showOutsideDays = true,
   captionLayout = "label",
-  buttonVariant = "ghost",
   formatters,
   components,
   ...props
-}: React.ComponentProps<typeof DayPicker> & {
-  buttonVariant?: React.ComponentProps<typeof Button>["variant"]
-}) {
+}: React.ComponentProps<typeof DayPicker>) {
   const defaultClassNames = getDefaultClassNames()
   const { firstDayOfWeek, showWeekNumbers } = useSettings()
   const showWeekNumber = props.showWeekNumber ?? showWeekNumbers
@@ -35,6 +46,8 @@ function Calendar({
       showOutsideDays={showOutsideDays}
       weekStartsOn={firstDayOfWeek === "sunday" ? 0 : 1}
       showWeekNumber={showWeekNumber}
+      // CalendarHeader renders the arrows in the caption row instead.
+      hideNavigation
       className={cn(
         calendarSharedStyles.root,
         "[[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -45,40 +58,27 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
+        formatWeekdayName: (date) => WEEKDAY_SHORT[date.getDay()],
         ...formatters,
       }}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn(calendarSharedStyles.months, defaultClassNames.months),
-        month: cn("flex flex-col w-full gap-4", defaultClassNames.month),
-        nav: cn(calendarSharedStyles.nav, defaultClassNames.nav),
-        button_previous: cn(calendarSharedStyles.navButton, defaultClassNames.button_previous),
-        button_next: cn(calendarSharedStyles.navButton, defaultClassNames.button_next),
+        month: cn("flex flex-col w-full", defaultClassNames.month),
         month_caption: cn(calendarSharedStyles.monthCaption, defaultClassNames.month_caption),
         dropdowns: cn(calendarSharedStyles.dropdowns, defaultClassNames.dropdowns),
-        dropdown_root: cn(calendarSharedStyles.dropdownRoot, defaultClassNames.dropdown_root),
-        dropdown: cn(calendarSharedStyles.dropdown, defaultClassNames.dropdown),
-        caption_label: cn(
-          "select-none font-medium",
-          captionLayout === "label"
-            ? "text-sm"
-            : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm h-8 [&>svg]:text-muted-foreground [&>svg]:size-3.5",
-          defaultClassNames.caption_label,
-        ),
+        caption_label: cn("select-none font-medium text-sm", defaultClassNames.caption_label),
         table: calendarSharedStyles.table,
         weekdays: cn(calendarSharedStyles.weekdays, defaultClassNames.weekdays),
-        weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal text-xs select-none",
-          defaultClassNames.weekday,
-        ),
-        week: cn("flex w-full mt-2", defaultClassNames.week),
+        weekday: cn(calendarSharedStyles.weekday, defaultClassNames.weekday),
+        week: cn("flex w-full", defaultClassNames.week),
         week_number_header: cn(
           calendarSharedStyles.weekNumberHeader,
           defaultClassNames.week_number_header,
         ),
         week_number: cn(calendarSharedStyles.weekNumber, defaultClassNames.week_number),
         day: cn(
-          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day aspect-square select-none",
+          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
           showWeekNumber
             ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
             : "[&:first-child[data-selected=true]_button]:rounded-l-md",
@@ -87,10 +87,7 @@ function Calendar({
         range_start: cn("rounded-l-md bg-accent", defaultClassNames.range_start),
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn("rounded-r-md bg-accent", defaultClassNames.range_end),
-        today: cn(
-          "bg-accent text-accent-foreground rounded-md data-[selected=true]:rounded-none",
-          defaultClassNames.today,
-        ),
+        today: defaultClassNames.today,
         outside: cn(calendarSharedStyles.outside, defaultClassNames.outside),
         disabled: cn(calendarSharedStyles.disabled, defaultClassNames.disabled),
         hidden: cn("invisible", defaultClassNames.hidden),
@@ -100,23 +97,9 @@ function Calendar({
         Root: ({ className, rootRef, ...props }) => {
           return <div data-slot="calendar" ref={rootRef} className={cn(className)} {...props} />
         },
-        Chevron: ({ className, orientation, ...props }) => {
-          if (orientation === "left") {
-            return <ChevronLeftIcon className={cn("size-4", className)} {...props} />
-          }
-
-          if (orientation === "right") {
-            return <ChevronRightIcon className={cn("size-4", className)} {...props} />
-          }
-
-          return <ChevronDownIcon className={cn("size-4", className)} {...props} />
-        },
-        PreviousMonthButton: ({ className, ...buttonProps }) => {
-          return <Button variant={buttonVariant} className={className} {...buttonProps} />
-        },
-        NextMonthButton: ({ className, ...buttonProps }) => {
-          return <Button variant={buttonVariant} className={className} {...buttonProps} />
-        },
+        MonthCaption: CalendarHeader,
+        Dropdown: CalendarDropdown,
+        MonthGrid: (props) => <table data-slot="calendar-grid" {...props} />,
         Weekday: (props) => <th data-slot="calendar-weekday" {...props} />,
         DayButton: CalendarDayButton,
         // RDP's own numbering follows US week-counting rules; render ISO week
@@ -137,6 +120,73 @@ function Calendar({
       }}
       {...props}
     />
+  )
+}
+
+// One row like the minical header: arrows either side of the month and year.
+function CalendarHeader({ children, ...captionProps }: MonthCaptionProps) {
+  return (
+    <MonthCaption data-slot="calendar-header" {...captionProps}>
+      <CalendarNavButton direction="previous" />
+      {children}
+      <CalendarNavButton direction="next" />
+    </MonthCaption>
+  )
+}
+
+function CalendarNavButton({ direction }: { direction: "previous" | "next" }) {
+  const defaultClassNames = getDefaultClassNames()
+  const { previousMonth, nextMonth, goToMonth, labels } = useDayPicker()
+  const previous = direction === "previous"
+  const month = previous ? previousMonth : nextMonth
+  const Icon = previous ? ChevronLeftIcon : ChevronRightIcon
+
+  return (
+    <Button
+      type="button"
+      data-direction={direction}
+      variant="ghost"
+      size="icon"
+      aria-label={previous ? labels.labelPrevious(month) : labels.labelNext(month)}
+      aria-disabled={month ? undefined : true}
+      tabIndex={month ? undefined : -1}
+      className={cn(
+        calendarSharedStyles.navButton,
+        previous ? defaultClassNames.button_previous : defaultClassNames.button_next,
+      )}
+      onClick={() => month && goToMonth(month)}
+    >
+      <Icon className="size-4" />
+    </Button>
+  )
+}
+
+// Our Select replaces RDP's native <select>, so the month and year pickers are
+// themed like every other select control.
+function CalendarDropdown({
+  options,
+  value,
+  onChange,
+  disabled,
+  "aria-label": ariaLabel,
+}: DropdownProps) {
+  // RDP only reads `target.value` from the change event.
+  const handleValueChange = (nextValue: string) =>
+    onChange?.({ target: { value: nextValue } } as React.ChangeEvent<HTMLSelectElement>)
+
+  return (
+    <Select value={String(value)} onValueChange={handleValueChange} disabled={disabled}>
+      <SelectTrigger variant="default" aria-label={ariaLabel}>
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {options?.map((option) => (
+          <SelectItem key={option.value} value={String(option.value)} disabled={option.disabled}>
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -172,7 +222,7 @@ function CalendarDayButton({
       data-range-end={modifiers.range_end}
       data-range-middle={modifiers.range_middle}
       className={cn(
-        "data-selected:bg-primary data-selected:text-primary-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70",
+        "data-selected:bg-selected data-selected:text-selected-foreground data-today:text-today data-today:data-selected:bg-today data-today:data-selected:text-today-foreground data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-ring/50 flex aspect-square size-auto w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:ring-[3px] data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70",
         defaultClassNames.day,
         className,
       )}

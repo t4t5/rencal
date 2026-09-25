@@ -13,7 +13,7 @@ import {
 } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
-import { calendarSharedStyles } from "@/components/ui/calendar-styles"
+import { calendarSharedStyles, WEEKDAY_SHORT } from "@/components/ui/calendar-styles"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -29,11 +29,6 @@ import { ChevronRightIcon } from "@/icons/chevron-right"
 /** Maps date strings ("yyyy-MM-dd") to arrays of calendar CSS colors for that date. */
 const EventDotsContext = createContext<Map<string, string[]>>(new Map())
 export const EventDotsProvider = EventDotsContext.Provider
-
-// Map weekday abbreviations to day numbers (0=Sunday, 1=Monday, etc.)
-// Adjust based on your formatWeekdayName formatter
-// Weekday short names indexed by day number (0=Sun … 6=Sat)
-const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
 
 // Selected-week highlight as a background-image so it layers over the weekend color
 const SELECTED_WEEK_OVERLAY =
@@ -88,8 +83,6 @@ function Calendar({
         button_next: cn(calendarSharedStyles.navButton, defaultClassNames.button_next),
         month_caption: cn(calendarSharedStyles.monthCaption, defaultClassNames.month_caption),
         dropdowns: cn(calendarSharedStyles.dropdowns, defaultClassNames.dropdowns),
-        dropdown_root: cn(calendarSharedStyles.dropdownRoot, defaultClassNames.dropdown_root),
-        dropdown: cn(calendarSharedStyles.dropdown, defaultClassNames.dropdown),
         caption_label: cn(
           "select-none font-medium",
           captionLayout === "label"
@@ -99,10 +92,7 @@ function Calendar({
         ),
         table: calendarSharedStyles.table,
         weekdays: cn(calendarSharedStyles.weekdays, defaultClassNames.weekdays),
-        weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal select-none text-2xs",
-          defaultClassNames.weekday,
-        ),
+        weekday: cn(calendarSharedStyles.weekday, defaultClassNames.weekday),
         week: cn("flex w-full", defaultClassNames.week),
         week_number_header: cn(
           calendarSharedStyles.weekNumberHeader,
@@ -159,6 +149,7 @@ function Calendar({
         NextMonthButton: ({ className, ...props }) => {
           return <Button variant={buttonVariant} className={className} {...props} />
         },
+        MonthGrid: (props) => <table data-slot="calendar-grid" {...props} />,
         Week: ({ className, ...weekProps }) => {
           const { week } = weekProps
           const { isSelected } = useDayPicker()

@@ -7,7 +7,7 @@ import { ItemContent } from "@/components/ui/item"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { SelectIcon } from "@/components/ui/select"
 
-import { formatShortDate } from "@/lib/event-time"
+import { formatShortDate, today } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
@@ -55,6 +55,9 @@ export const DatePicker = ({
           selected={date ? plainDateToJsDate(date) : undefined}
           defaultMonth={date ? plainDateToJsDate(date) : undefined}
           captionLayout="dropdown"
+          fixedWeeks
+          // With year dropdowns, RDP otherwise ends navigation at the current year.
+          endMonth={plainDateToJsDate(today().add({ years: 100 }))}
           onSelect={(date) => {
             setDate(date ? jsDateToPlainDate(date) : null)
             setOpen(false)
