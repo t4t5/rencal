@@ -5,6 +5,8 @@ description: How to navigate renCal as a power user
 
 Press <kbd>?</kbd> in the app to see all shortcuts.
 
+While an event is open, the calendar behind it stays put: only duplicating, syncing, settings, theme cycling and <kbd>?</kbd> keep working.
+
 ## Navigation
 
 | Action         | Shortcut                       |

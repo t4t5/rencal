@@ -14,6 +14,8 @@ export interface ShortcutDef {
   group: ShortcutGroup
   label: string
   bindings: readonly ShortcutBinding[]
+  // An open event locks the view behind it; only shortcuts that leave it alone opt out.
+  allowWhileEventOpen?: boolean
 }
 
 export const SHORTCUT_GROUPS = ["Navigation", "View", "General"] as const
@@ -149,6 +151,7 @@ export const SHORTCUTS = [
     group: "General",
     label: "Duplicate selected event",
     bindings: [{ keys: "d", type: "char" }],
+    allowWhileEventOpen: true,
   },
   {
     id: "toggle-invites",
@@ -161,24 +164,28 @@ export const SHORTCUTS = [
     group: "General",
     label: "Sync now",
     bindings: [{ keys: "s", type: "char" }],
+    allowWhileEventOpen: true,
   },
   {
     id: "settings",
     group: "General",
     label: "Go to settings",
     bindings: [{ keys: "mod+comma", type: "hotkey" }],
+    allowWhileEventOpen: true,
   },
   {
     id: "toggle-theme",
     group: "General",
     label: "Toggle theme",
     bindings: [{ keys: "mod+shift+t", type: "hotkey" }],
+    allowWhileEventOpen: true,
   },
   {
     id: "shortcuts",
     group: "General",
     label: "Show keyboard shortcuts",
     bindings: [{ keys: "?", type: "char", allowShift: true }],
+    allowWhileEventOpen: true,
   },
   {
     id: "command-palette",
