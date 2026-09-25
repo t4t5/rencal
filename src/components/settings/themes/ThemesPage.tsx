@@ -60,11 +60,11 @@ function ThemeGrid({
               <span className="truncate text-sm">{t.name}</span>
               <span
                 className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-full border",
-                  isActive ? "border-primary text-primary" : "border-input",
+                  "flex size-4 shrink-0 items-center justify-center rounded-circle",
+                  isActive ? "bg-primary" : "border border-input",
                 )}
               >
-                {isActive && <CheckIcon className="w-3" />}
+                {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
               </span>
             </div>
           </button>
