@@ -3,6 +3,8 @@ import { useMemo } from "react"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 
 import { useTheme } from "@/hooks/useTheme"
+import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -55,7 +57,7 @@ function ThemeGrid({
                 : "border-transparent hover:bg-accent hover:text-accent-foreground",
             )}
           >
-            <Palette themeId={t.id} />
+            <ThemePreview themeId={t.id} />
             <span className="text-sm">{t.name}</span>
 
             {isActive && (
@@ -70,7 +72,15 @@ function ThemeGrid({
   )
 }
 
-const Palette = ({ themeId }: { themeId: string }) => {
+// Three calendars' worth of colour, so event tints and `--event-color` overrides show.
+const PREVIEW_EVENTS = [
+  { top: 0, height: 45, color: DEFAULT_CALENDAR_COLOR },
+  { top: 35, height: 65, color: "#f97316" },
+  { top: 15, height: 40, color: "#10b981" },
+]
+
+/** A miniature sidebar + week view painted from the theme's tokens, so it looks the same active or not. */
+const ThemePreview = ({ themeId }: { themeId: string }) => {
   const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
@@ -80,24 +90,33 @@ const Palette = ({ themeId }: { themeId: string }) => {
       data-theme={themeId}
       data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
       style={style}
-      className="h-24 rounded-sm border border-border bg-background p-3 flex flex-col gap-3 w-full"
+      aria-hidden
+      className="h-24 w-full flex overflow-hidden rounded-sm border border-border bg-background"
     >
-      <div className="flex justify-between items-center gap-3">
-        <div className="grow h-[5px] rounded-xs bg-foreground" />
-        <div className="size-4 rounded-circle bg-primary" />
+      <div className="w-[35%] shrink-0 flex flex-col gap-3 p-2.5 border-r border-border">
+        <div className="h-3 w-5 rounded-xs bg-primary" />
+        <div className="flex flex-col gap-1.5">
+          <div className="h-1.5 rounded-xs bg-muted-foreground/40" />
+          <div className="h-1.5 w-2/3 rounded-xs bg-muted-foreground/40" />
+        </div>
       </div>
 
-      <div className="grow relative">
-        <div className="absolute inset-0 gap-2 flex justify-between">
-          <div className="bg-card grow"></div>
-          <div className="bg-card grow"></div>
-          <div className="bg-accent grow"></div>
-        </div>
-
-        <div className="absolute inset-0 flex flex-col">
-          <div className="grow"></div>
-          <div className="bg-card grow"></div>
-        </div>
+      <div className="grow flex gap-1 p-2.5">
+        {PREVIEW_EVENTS.map((event) => (
+          <div key={event.color} className="relative flex-1">
+            <div
+              data-slot="theme-preview-event"
+              className="absolute inset-x-0 overflow-hidden rounded-xs"
+              style={{
+                top: `${event.top}%`,
+                height: `${event.height}%`,
+                ...getCalendarEventStyle({ calendarColor: event.color, eventColor: null }),
+              }}
+            >
+              <div className="absolute left-0 inset-y-0 w-[2px] bg-(--calendar-event-color)" />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

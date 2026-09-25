@@ -469,7 +469,8 @@
     padding-inline: var(--agenda-padding-inline);
   }
 
-  [data-slot="calendar-event"] {
+  /* Theme tiles paint events from tokens only, under a slot theme selectors don't target. */
+  :is([data-slot="calendar-event"], [data-slot="theme-preview-event"]) {
     --calendar-event-boosted-color: oklch(from var(--calendar-event-color) l calc(c * 1.4) h);
     --calendar-event-tinted-color: oklch(
       from var(--calendar-event-color) min(l, var(--calendar-event-text-max-lightness, 1))
@@ -500,7 +501,8 @@
     [data-slot="calendar-event"][data-view="week"],
     [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
-    [data-slot="calendar-event"][data-drag-state="overlay"]
+    [data-slot="calendar-event"][data-drag-state="overlay"],
+    [data-slot="theme-preview-event"]
   ) {
     background: var(--calendar-event-fill);
     color: var(--calendar-event-foreground);
