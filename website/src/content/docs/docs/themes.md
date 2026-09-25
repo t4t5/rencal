@@ -81,6 +81,8 @@ The control spacing variables adjust the event composer and editor as a unit. `-
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
+`--month-padding-inline` sets the inset between month day columns and their events, so all-day bars and timed events share the same edges.
+
 Event forms expose `event-form`, `event-form-fields`, and `event-form-footer` slots. Field rows use shadcn's Item parts: `item-media`, `item-content`, and `item-actions`, inside an `item` root for standalone list rows. Input-group add-ons keep their `input-group-addon` slot and shadcn's `data-align`. Complete composite surfaces use `combobox` and `textarea-wrapper`. Apply borders, backgrounds, radii, hover states, and focus styles to those complete surface slots. For example, a theme can retain an inset submit action with:
 
 ```css

@@ -165,6 +165,7 @@ active outline can set it to `var(--border)` or another color.
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
 | `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)             |
+| `--month-padding-inline`   | Shared horizontal inset for month day cells and their events (`4px` by default)     |
 
 ### Typography (fonts)
 

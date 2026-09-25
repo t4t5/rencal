@@ -128,6 +128,9 @@ export const MonthWeekRow = memo(function MonthWeekRow({
       </div>
 
       <div className="grid grid-cols-7 grow min-h-0 relative">
+        {/* Before the cells, so the last day cell stays :last-child */}
+        <MonthBoundary col={monthStartCol} showHorizontal={false} />
+
         {/* All-day events */}
         {allDayEvents.map((item) => {
           const key = eventKey(item.event)
@@ -179,7 +182,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             />
           )
         })}
-        <MonthBoundary col={monthStartCol} showHorizontal={false} />
       </div>
     </>
   )
