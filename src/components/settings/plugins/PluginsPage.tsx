@@ -200,6 +200,7 @@ export function PluginsPage() {
     <SettingsContent className="w-full min-w-0 mt-3">
       <Input
         variant="default"
+        className="shrink-0"
         aria-label="Search plugins"
         placeholder="Search plugins…"
         value={search}
