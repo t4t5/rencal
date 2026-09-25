@@ -457,7 +457,10 @@ style their typography and surfaces, but should not reposition them.
 Buttons also expose `data-button=""`. Use this attribute for button surface rules:
 Radix `asChild` composition may replace `data-slot` with `tooltip-trigger`,
 `dropdown-menu-trigger`, or another trigger slot. `data-button` survives that
-composition while each trigger keeps its own slot. The collapsible sidebar draft
+composition while each trigger keeps its own slot. The sidebar's compose button is
+an input that expands in place: collapsed, it carries `data-button` with the
+`secondary` variant and `icon` size; expanded, it becomes `data-control="input"`.
+The collapsible sidebar draft
 exposes `sidebar-draft` for adjusting the space above its content.
 
 ### Week view styling hooks

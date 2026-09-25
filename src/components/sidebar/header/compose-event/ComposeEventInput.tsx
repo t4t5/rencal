@@ -40,6 +40,11 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         ref={inputRef}
         data-compose-event-input
         variant="default"
+        // Collapsed, it poses as a button, so themes must paint it as one
+        data-control={showText ? "input" : undefined}
+        data-button={showText ? undefined : ""}
+        data-variant={showText ? "default" : "secondary"}
+        data-size={showText ? undefined : "icon"}
         value={showText ? displayText : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}
