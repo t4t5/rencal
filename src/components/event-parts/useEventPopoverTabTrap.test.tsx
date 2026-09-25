@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { act, useRef } from "react"
+import { act, type ReactNode, useRef } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
@@ -23,20 +23,26 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-const Form = () => {
+const Popover = ({ children }: { children: ReactNode }) => {
   const contentRef = useRef<HTMLDivElement>(null)
   useEventPopoverTabTrap({ enabled: true, contentRef })
 
   return (
     <div ref={contentRef} tabIndex={-1}>
-      <button id="more">…</button>
-      <textarea id="title" />
-      <textarea id="location" />
-      <input id="locked-time" readOnly tabIndex={-1} />
-      <button id="zone-switch" />
+      {children}
     </div>
   )
 }
+
+const editableFields = (
+  <>
+    <button id="more">…</button>
+    <textarea id="title" data-popover-entry />
+    <textarea id="location" />
+    <input id="locked-time" readOnly tabIndex={-1} />
+    <button id="zone-switch" />
+  </>
+)
 
 const el = (id: string) => document.getElementById(id)!
 
@@ -46,13 +52,28 @@ const tab = (shiftKey = false) => {
   return event
 }
 
-const render = () => act(async () => root.render(<Form />))
+const render = (fields = editableFields) =>
+  act(async () => root.render(<Popover>{fields}</Popover>))
 
 it("enters at the title", async () => {
   await render()
 
   expect(tab().defaultPrevented).toBe(true)
   expect(document.activeElement).toBe(el("title"))
+})
+
+it("enters a read-only event at its primary action", async () => {
+  await render(
+    <>
+      <button id="zone-switch" />
+      <textarea id="title" readOnly tabIndex={-1} data-popover-entry />
+      <button id="join" data-popover-entry />
+      <input id="reminders" />
+    </>,
+  )
+  tab()
+
+  expect(document.activeElement).toBe(el("join"))
 })
 
 it("lets the browser move between stops", async () => {

@@ -76,7 +76,7 @@ export function ConferenceDisplay({
 function ConferenceLink({ url, label }: { url: string; label: string }) {
   return (
     <div className="flex flex-col gap-1 py-1">
-      <Button className="w-full cursor-pointer" onClick={() => openUrl(url)}>
+      <Button data-popover-entry className="w-full cursor-pointer" onClick={() => openUrl(url)}>
         <VideoIcon />
         Join {label}
       </Button>

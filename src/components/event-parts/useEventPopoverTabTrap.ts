@@ -25,11 +25,16 @@ function getTabbableElements(content: HTMLElement): HTMLElement[] {
   })
 }
 
-// Entering the popover lands on the title (the first text field), not on
-// header buttons like "…" that precede it in DOM order.
+// Entering the popover lands on the first marked entry point (the title, or
+// "Join" when the title is read-only), not on header buttons like "…" that
+// precede it in DOM order.
 function entryField(tabbables: HTMLElement[], reverse: boolean) {
   if (reverse) return tabbables[tabbables.length - 1]
-  return tabbables.find((el) => el.matches("textarea, input")) ?? tabbables[0]
+  return (
+    tabbables.find((el) => el.matches("[data-popover-entry]")) ??
+    tabbables.find((el) => el.matches("textarea, input")) ??
+    tabbables[0]
+  )
 }
 
 // Found by DOM position, so focus on a non-stop (e.g. a clicked read-only

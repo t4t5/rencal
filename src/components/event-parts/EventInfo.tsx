@@ -196,6 +196,7 @@ export function EventInfo({
         <EventInfoSection flushTop>
           <div className="flex min-h-control items-center">
             <Textarea
+              data-popover-entry
               ref={summaryRef}
               placeholder="Event Title"
               value={summary ?? ""}
