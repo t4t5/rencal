@@ -14,17 +14,16 @@ import { ChevronUpIcon } from "@/icons/chevron-up"
 // replace the glyph without selecting the SVG inside it.
 function SelectIcon({
   forceVisible,
-  trailing,
   className,
   ...props
-}: React.ComponentProps<"span"> & { forceVisible?: boolean; trailing?: boolean }) {
+}: React.ComponentProps<"span"> & { forceVisible?: boolean }) {
   return (
     <span
       data-slot="select-icon"
       aria-hidden="true"
       className={cn(
         "text-muted-foreground opacity-0 group-hover:opacity-100",
-        { "control-trailing": trailing, "opacity-100": forceVisible },
+        { "opacity-100": forceVisible },
         className,
       )}
       {...props}

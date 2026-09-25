@@ -105,7 +105,7 @@ export function Combobox({
               disabled={disabled}
             />
 
-            {interactive && <SelectIcon trailing forceVisible={open || variant === "default"} />}
+            {interactive && <SelectIcon forceVisible={open || variant === "default"} />}
           </div>
         </PopoverAnchor>
         <PopoverContent

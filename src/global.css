@@ -126,6 +126,8 @@
 
   /* Derived from the primitives above, on the same scope. */
   --control-height-xs: calc(var(--control-height) - 10px);
+  /* Trailing slot's end gap; matches its vertical gap in a 1px-bordered field. */
+  --control-trailing-inset: calc((var(--control-height) - var(--control-height-xs)) / 2 - 1px);
   --placeholder-foreground: var(--muted-foreground);
 
   --button-border: transparent;
@@ -408,6 +410,11 @@
     flex: none;
     align-items: center;
     justify-content: center;
+  }
+
+  /* Inset the slot evenly; a centred 16px glyph then lands on the row padding. */
+  .control-row:has(> .control-trailing) {
+    padding-inline-end: var(--control-trailing-inset);
   }
 
   /* Hugs its glyph like .control-leading, so both ends share the row padding. */

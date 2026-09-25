@@ -88,6 +88,7 @@ function InputGroupButton({
   VariantProps<typeof inputGroupButtonVariants>) {
   return (
     <Button
+      data-slot="input-action"
       type={type}
       data-size={size}
       variant={variant}

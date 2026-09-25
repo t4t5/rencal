@@ -124,7 +124,7 @@ export const TimeZoneSelect = ({
           <ItemContent>
             <TimeZoneLabel offset={timeZoneOffsetLabel(tzid, value)} city={timeZoneCity(tzid)} />
           </ItemContent>
-          {!readOnly && <SelectIcon trailing forceVisible={open} />}
+          {!readOnly && <SelectIcon forceVisible={open} />}
         </button>
       </PopoverTrigger>
 

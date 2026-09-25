@@ -160,6 +160,7 @@ active outline can set it to `var(--border)` or another color.
 | `--control-height-lg`      | Large button height                                                                 |
 | `--control-height-xs`      | Extra-small button height; defaults to `calc(var(--control-height) - 10px)`         |
 | `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                       |
+| `--control-trailing-inset` | End padding of field rows with a trailing slot; defaults to its vertical gap        |
 | `--control-leading-size`   | Event-field leading icon/checkbox column width (`16px` by default)                  |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
@@ -285,7 +286,7 @@ Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline
 
 The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Field rows use shadcn's Item parts: `item-media` (the leading icon or checkbox), `item-content`, and `item-actions`. Standalone list rows put them in an `item` root; select triggers, labels, and buttons keep their own slot as the root. Input-group add-ons keep their `input-group-addon` slot and shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 
-Buttons inset into plain inputs expose `data-slot="input-action"`. This is the
+Buttons inset into plain inputs and input groups expose `data-slot="input-action"`. This is the
 interactive counterpart to a select or combobox's `select-icon`; themes can give both the
 same trailing-well treatment while leaving their positioning to the controls.
 Every painted field surface exposes `data-control`, so one `[data-control]`

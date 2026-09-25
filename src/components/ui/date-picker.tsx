@@ -46,7 +46,7 @@ export const DatePicker = ({
           {addon}
           <ItemContent>{date ? formattedDate : "Select date"}</ItemContent>
           {/* Hidden by default to fit narrow forms; combo-box themes can show it. */}
-          {!readOnly && <SelectIcon trailing forceVisible={open} className="hidden" />}
+          {!readOnly && <SelectIcon forceVisible={open} className="hidden" />}
         </button>
       </PopoverTrigger>
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">

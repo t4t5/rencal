@@ -79,7 +79,7 @@ For component-specific custom CSS, target stable slot attributes. Select on `dat
 }
 ```
 
-The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-leading-size` sizes the leading icon or checkbox column, `--control-height-xs` sizes icon buttons and the trailing slot, and `--control-content-gap` separates the leading, content, and trailing parts. The leading column hugs its icon, so icons line up with the text of fields that have none. By default, `--control-height-xs` is derived as `calc(var(--control-height) - 10px)`, so compact themes only need to change the control height.
+The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-leading-size` sizes the leading icon or checkbox column, `--control-height-xs` sizes icon buttons and the trailing slot, and `--control-content-gap` separates the leading, content, and trailing parts. The leading column hugs its icon, so icons line up with the text of fields that have none. Rows that end in a trailing slot, such as an inset button or a remove button, replace their end padding with `--control-trailing-inset`, so the slot sits as far from the field's end as from its top and bottom. By default, `--control-height-xs` is derived as `calc(var(--control-height) - 10px)` and `--control-trailing-inset` from both heights and a 1px field border, so compact themes only need to change the control height. Themes whose fields have no border set `--control-trailing-inset` to half the height difference.
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 

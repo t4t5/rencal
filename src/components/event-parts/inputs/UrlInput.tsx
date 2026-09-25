@@ -6,7 +6,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { ItemContent } from "@/components/ui/item"
+import { ItemActions, ItemContent } from "@/components/ui/item"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { detectedUrlSourceLabel, toOpenableUrl, type DetectedUrl } from "@/lib/event-url"
@@ -61,14 +61,16 @@ export const UrlInput = ({
             }}
           />
           {url && (
-            <InputGroupButton
-              size="icon-xs"
-              aria-label="Open link"
-              className="shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={() => openUrl(toOpenableUrl(url))}
-            >
-              <ArrowUpRightIcon />
-            </InputGroupButton>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                size="icon-xs"
+                aria-label="Open link"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => openUrl(toOpenableUrl(url))}
+              >
+                <ArrowUpRightIcon />
+              </InputGroupButton>
+            </InputGroupAddon>
           )}
         </InputGroup>
       )}
@@ -100,12 +102,12 @@ function UrlLink({ url, hint }: { url: string; hint?: string }) {
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild tabIndex={-1}>
-            <span
-              className="flex size-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
+            <ItemActions
+              className="text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
               aria-label={hint}
             >
               <QuestionMarkCircleIcon className="size-4" />
-            </span>
+            </ItemActions>
           </TooltipTrigger>
           <TooltipContent>{hint}</TooltipContent>
         </Tooltip>
