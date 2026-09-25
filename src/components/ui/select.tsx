@@ -45,6 +45,25 @@ function SelectValue({ ...props }: React.ComponentProps<typeof SelectPrimitive.V
   return <SelectPrimitive.Value data-slot="select-value" {...props} />
 }
 
+type SelectTriggerStyle = {
+  size?: "sm" | "default"
+  variant?: "ghost" | "default"
+  controlLayout?: boolean
+}
+
+function selectTriggerClassName({
+  variant = "ghost",
+  controlLayout = false,
+}: Omit<SelectTriggerStyle, "size">) {
+  return cn(
+    "border border-transparent hover:border-input data-[placeholder]:text-placeholder-foreground [&_svg:not([class*='text-'])]:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex h-control w-fit items-center justify-between rounded-md bg-transparent text-sm whitespace-nowrap transition-[color] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 group",
+    controlSurfaceActive.focusVisible,
+    controlSurfaceActive.open,
+    controlLayout ? "control-row" : "gap-2 px-3",
+    { "border-border": variant === "default" },
+  )
+}
+
 function SelectTrigger({
   className,
   size = "default",
@@ -52,25 +71,14 @@ function SelectTrigger({
   variant = "ghost",
   controlLayout = false,
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
-  size?: "sm" | "default"
-  variant?: "ghost" | "default"
-  controlLayout?: boolean
-}) {
+}: React.ComponentProps<typeof SelectPrimitive.Trigger> & SelectTriggerStyle) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
       data-control="select"
       data-variant={variant}
       data-size={size}
-      className={cn(
-        "border border-transparent hover:border-input data-[placeholder]:text-placeholder-foreground [&_svg:not([class*='text-'])]:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex h-control w-fit items-center justify-between rounded-md bg-transparent text-sm whitespace-nowrap transition-[color] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 group",
-        controlSurfaceActive.focusVisible,
-        controlSurfaceActive.open,
-        controlLayout ? "control-row" : "gap-2 px-3",
-        { "border-border": variant === "default" },
-        className,
-      )}
+      className={cn(selectTriggerClassName({ variant, controlLayout }), className)}
       {...props}
     >
       {children}
@@ -78,6 +86,33 @@ function SelectTrigger({
         <SelectIcon forceVisible={variant === "default"} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
+  )
+}
+
+// A dropdown-menu trigger that looks exactly like SelectTrigger. Radix Select is
+// always modal: opening it locks body scroll and aria-hides the rest of the app,
+// which restyles the whole document. Pair this with a non-modal DropdownMenu for
+// field dropdowns that should open instantly.
+function SelectMenuTrigger({
+  className,
+  size = "default",
+  children,
+  variant = "ghost",
+  controlLayout = false,
+  ...props
+}: React.ComponentProps<"button"> & SelectTriggerStyle) {
+  return (
+    <button
+      type="button"
+      data-control="select"
+      data-variant={variant}
+      data-size={size}
+      className={cn(selectTriggerClassName({ variant, controlLayout }), className)}
+      {...props}
+    >
+      {children}
+      <SelectIcon forceVisible={variant === "default"} />
+    </button>
   )
 }
 
@@ -225,6 +260,7 @@ export {
   SelectIcon,
   SelectItem,
   SelectLabel,
+  SelectMenuTrigger,
   SelectScrollDownButton,
   SelectScrollUpButton,
   SelectSeparator,

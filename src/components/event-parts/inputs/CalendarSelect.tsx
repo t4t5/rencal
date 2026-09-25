@@ -1,13 +1,21 @@
 import { ReactNode } from "react"
 
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { ItemContent, ItemMedia } from "@/components/ui/item"
-import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
+import { SelectMenuTrigger } from "@/components/ui/select"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import type { Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { cn } from "@/lib/utils"
+
+import { CheckIcon } from "@/icons/check"
 
 export const CalendarSelect = ({
   calendar,
@@ -23,35 +31,44 @@ export const CalendarSelect = ({
   const editableCalendars = calendars.filter((cal) => !cal.read_only)
 
   return (
-    <Select value={calendar?.slug} onValueChange={onChange} disabled={readOnly}>
-      <SelectTrigger
-        controlLayout
-        className={cn(
-          "w-full",
-          readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
-        )}
-      >
-        <ItemMedia>
-          {calendar && (
-            <div
-              className="size-3 shrink-0 rounded-xs"
-              style={{ backgroundColor: getCalendarColor(calendar) }}
-            />
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild disabled={readOnly}>
+        <SelectMenuTrigger
+          controlLayout
+          className={cn(
+            "w-full",
+            readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
           )}
-        </ItemMedia>
-        <ItemContent className="truncate text-left text-foreground">
-          {calendar ? calendar.name || calendar.slug : "Select Calendar"}
-        </ItemContent>
-      </SelectTrigger>
+        >
+          <ItemMedia>
+            {calendar && (
+              <div
+                className="size-3 shrink-0 rounded-xs"
+                style={{ backgroundColor: getCalendarColor(calendar) }}
+              />
+            )}
+          </ItemMedia>
+          <ItemContent className="truncate text-left text-foreground">
+            {calendar ? calendar.name || calendar.slug : "Select Calendar"}
+          </ItemContent>
+        </SelectMenuTrigger>
+      </DropdownMenuTrigger>
 
-      <SelectContent>
+      <DropdownMenuContent align="start" className="min-w-(--radix-dropdown-menu-trigger-width)">
         {editableCalendars.map((cal) => (
-          <SelectItem key={cal.slug} value={cal.slug}>
-            <CalendarItem calendar={cal} />
-          </SelectItem>
+          <DropdownMenuItem
+            key={cal.slug}
+            onSelect={() => onChange(cal.slug)}
+            className="gap-(--control-content-gap)"
+          >
+            <ItemContent>
+              <CalendarItem calendar={cal} />
+            </ItemContent>
+            <CheckIcon className={cn(calendar?.slug !== cal.slug && "invisible")} />
+          </DropdownMenuItem>
         ))}
-      </SelectContent>
-    </Select>
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 

@@ -294,7 +294,8 @@ selector reaches them all. The value names the kind of field:
 - `input`: plain inputs and input groups;
 - `textarea`: the textarea wrapper and textarea input groups;
 - `select`: the Select trigger, comboboxes, date pickers, the toolbar's
-  group/view dropdowns, and the searchable timezone button.
+  group/view dropdowns, the event form's repeat and calendar dropdowns, and
+  the searchable timezone button.
 
 Inner inputs and textareas inside a composite surface do not carry the marker.
 Field-like triggers, including the toolbar dropdowns, are controls rather than
