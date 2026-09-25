@@ -13,6 +13,18 @@ import { getCalendarEventStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
+/**
+ * Block edges shared with the create selection: the top covers the start hour's grid
+ * line, the bottom stops short of the end hour's, and a right gap keeps the column clickable.
+ */
+export function weekEventBox(topPercent: number, heightPercent: number) {
+  return {
+    top: `calc(${topPercent}% - 1px)`,
+    height: `max(calc(${heightPercent}% - 3px), 1rem)`,
+    right: 12,
+  }
+}
+
 function WeekTimedEventImpl({
   layout,
   highlighted: highlightedByParent,
@@ -43,10 +55,9 @@ function WeekTimedEventImpl({
   })
 
   // Cascade layout: each overlap depth indents from the left by a fixed percentage and
-  // extends to the right edge, so the earlier/outer event remains fully visible beneath.
+  // extends to the right gap, so the earlier/outer event remains fully visible beneath.
   const CASCADE_OFFSET_PCT = 15
   const leftPercent = layout.column * CASCADE_OFFSET_PCT
-  const widthPercent = 100 - leftPercent
 
   const highlighted = highlightedByParent || contextOpen
 
@@ -71,14 +82,12 @@ function WeekTimedEventImpl({
       data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        "absolute overflow-hidden rounded-xs px-(--event-padding-inline) text-xs cursor-default",
-        hasStripe && "pl-[calc(var(--event-padding-inline)+2px)]",
+        "absolute overflow-hidden rounded-sm px-(--event-padding-inline) text-xs cursor-default",
+        hasStripe && "pl-[calc(var(--event-padding-inline)+4px)]",
       )}
       style={{
-        top: `${layout.top}%`,
-        height: `max(${layout.height}%, 1rem)`,
+        ...weekEventBox(layout.top, layout.height),
         left: `${leftPercent}%`,
-        width: `${widthPercent}%`,
         // Lift the preview above overlapping neighbours so its ring stays visible.
         zIndex: isDragPreview ? 10 : layout.column,
         ...getCalendarEventStyle({
@@ -100,12 +109,12 @@ function WeekTimedEventImpl({
       {hasStripe && (
         <div
           data-slot="calendar-event-color-marker"
-          className="absolute left-0 top-0 bottom-0 w-[2px]"
+          className="absolute left-0 top-0 bottom-0 w-1"
         />
       )}
 
       {mode === "xs" ? (
-        <div className="flex items-baseline gap-1">
+        <div className="flex items-baseline gap-1 pt-px">
           {/* Title + time on one line */}
           <span
             data-slot="calendar-event-title"
@@ -118,8 +127,8 @@ function WeekTimedEventImpl({
           </span>
         </div>
       ) : mode === "sm" ? (
-        <div>
-          {/* Title + time on separate lines, no padding */}
+        <div className="pt-0.5">
+          {/* Title + time on separate lines, minimal padding */}
           <div data-slot="calendar-event-title" className="truncate font-medium leading-tight">
             {summary}
           </div>
@@ -128,7 +137,7 @@ function WeekTimedEventImpl({
           </div>
         </div>
       ) : mode === "md" ? (
-        <div className="py-0.5">
+        <div className="py-1">
           {/* Title + time on separate lines, with padding */}
           <div data-slot="calendar-event-title" className="font-medium leading-tight">
             {summary}
@@ -138,7 +147,7 @@ function WeekTimedEventImpl({
           </div>
         </div>
       ) : (
-        <div className="py-0.5">
+        <div className="py-1">
           {/* Title = 2 lines, time = 1 line, with padding */}
           <div data-slot="calendar-event-title" className="font-medium leading-tight line-clamp-2">
             {summary}

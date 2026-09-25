@@ -48,10 +48,11 @@ function computeTimedPosition(
   return { top, height, durationMinutes }
 }
 
+// Thresholds are the shortest durations whose block fits each mode's lines at 48px per hour.
 function displayModeFor(durationMinutes: number): WeekEventDisplayMode {
-  if (durationMinutes < 30) return "xs"
-  if (durationMinutes < 45) return "sm"
-  if (durationMinutes < 60) return "md"
+  if (durationMinutes < 45) return "xs"
+  if (durationMinutes < 60) return "sm"
+  if (durationMinutes < 75) return "md"
   return "lg"
 }
 

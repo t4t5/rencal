@@ -508,8 +508,9 @@
     color: var(--calendar-event-foreground);
   }
 
+  /* A ring rather than a border keeps the fill flush with the grid lines. */
   :where([data-slot="calendar-event"][data-view="week"][data-kind="timed"]) {
-    border: 1px solid var(--background);
+    box-shadow: 0 0 0 1px var(--background);
   }
 
   :where(

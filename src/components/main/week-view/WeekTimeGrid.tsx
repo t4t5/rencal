@@ -33,7 +33,7 @@ import { DragToCreateSelection } from "./DragToCreateSelection"
 import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
 import { useDragToCreate } from "./useDragToCreate"
 
-const HOUR_HEIGHT = 56
+const HOUR_HEIGHT = 48
 const GRID_HEIGHT = 24 * HOUR_HEIGHT
 export const GUTTER_WIDTH = 48
 const DAY_WIDTH_MIN = 100
