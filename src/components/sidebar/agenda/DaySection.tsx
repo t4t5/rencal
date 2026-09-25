@@ -272,6 +272,9 @@ const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
   )
 }
 
+// Between the xs and sm steps, so it follows a theme's type scale.
+const DATE_BAR_TEXT = "text-[length:calc((var(--text-xs)+var(--text-sm))/2)]"
+
 const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
   const isToday = date.equals(today())
 
@@ -286,14 +289,14 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
       <span
         data-slot="agenda-weekday"
         data-typography="numerical"
-        className="text-[13px] font-bold uppercase"
+        className={cn(DATE_BAR_TEXT, "font-bold uppercase")}
       >
         {getRelativeDayLabel(date)}
       </span>
       <span
         data-slot="agenda-day-number"
         data-typography="numerical"
-        className={cn("text-[13px] text-muted-foreground", { "text-today": isToday })}
+        className={cn(DATE_BAR_TEXT, "text-muted-foreground", { "text-today": isToday })}
       >
         {formatDayMonth(date)}
       </span>

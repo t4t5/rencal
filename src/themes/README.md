@@ -234,7 +234,7 @@ This compact theme changes density and typography only through top-level tokens.
 
 The four control-spacing properties apply to the event composer and editor. Override them together or independently to change field density without repairing individual rows. A larger text scale should also use control heights that leave enough room for the resulting line height.
 
-There are no arbitrary font sizes in the app. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's default `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
+Every font size in the app comes from the scale or role tokens, never a literal. The one derived size is the agenda day header, which uses the midpoint of `--text-xs` and `--text-sm`. Remaining arbitrary dimensions are layout constraints rather than theme tokens: the minical's default `38px` day target, portal viewport limits and trigger dimensions, dialog widths, and fixed calendar/grid geometry such as hour height and gutter width.
 
 ### Pasting a shadcn theme
 
