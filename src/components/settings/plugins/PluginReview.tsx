@@ -48,7 +48,7 @@ export function PluginReview({
       }}
     >
       <DialogHeader>
-        <DialogTitle className="break-words pr-4">
+        <DialogTitle className="break-words px-4">
           {updating ? "Update" : "Install"} {plugin.name}
         </DialogTitle>
         <DialogDescription className="break-words max-h-24 overflow-auto">
