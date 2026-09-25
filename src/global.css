@@ -57,6 +57,7 @@
   --control-padding-inline: 8px;
   --control-content-gap: 8px;
   --control-row-gap: 4px;
+  --control-leading-size: 16px;
   --agenda-padding-inline: calc(var(--spacing) * 3);
 
   /* Keep in sync with @theme above; checked by global-css.test.ts. */
@@ -124,7 +125,7 @@
   --font-numerical: var(--font-mono);
 
   /* Derived from the primitives above, on the same scope. */
-  --control-icon-size: calc(var(--control-height) - 10px);
+  --control-height-xs: calc(var(--control-height) - 10px);
   --placeholder-foreground: var(--muted-foreground);
 
   --button-border: transparent;
@@ -270,6 +271,7 @@
   --shadow-tab-list: var(--tab-list-shadow);
 
   --spacing-control: var(--control-height);
+  --spacing-control-xs: var(--control-height-xs);
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
   --spacing-tab-gap: var(--tab-gap);
@@ -380,9 +382,10 @@
     padding-inline: var(--control-padding-inline);
   }
 
+  /* Hugs its glyph so icons start on the same edge as unadorned field text. */
   .control-leading {
     display: flex;
-    width: var(--control-icon-size);
+    width: var(--control-leading-size);
     flex: none;
     align-items: center;
     justify-content: center;
@@ -390,8 +393,8 @@
   }
 
   .control-leading > svg:not([class*="size-"]) {
-    width: 1rem;
-    height: 1rem;
+    width: var(--control-leading-size);
+    height: var(--control-leading-size);
   }
 
   .control-content {
@@ -401,7 +404,7 @@
 
   .control-trailing {
     display: flex;
-    min-width: var(--control-icon-size);
+    min-width: var(--control-height-xs);
     flex: none;
     align-items: center;
     justify-content: center;
@@ -409,8 +412,8 @@
 
   [data-slot="select-icon"] {
     display: flex;
-    width: var(--control-icon-size);
-    min-width: var(--control-icon-size);
+    width: var(--control-height-xs);
+    min-width: var(--control-height-xs);
     aspect-ratio: 1;
     flex: none;
     align-items: center;

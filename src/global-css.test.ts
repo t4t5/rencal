@@ -151,6 +151,13 @@ describe("global CSS contract", () => {
     expect(css).toContain("width: var(--control-height)")
   })
 
+  it("exposes the extra-small control height to button sizing utilities", () => {
+    const css = build(["h-control-xs", "size-control-xs"])
+
+    expect(css).toContain("height: var(--control-height-xs)")
+    expect(css).toContain("width: var(--control-height-xs)")
+  })
+
   it("derives muted text from the theme foreground", () => {
     expect(declarationsFor(BASELINE).get("--muted-foreground")).toContain("var(--foreground)")
   })

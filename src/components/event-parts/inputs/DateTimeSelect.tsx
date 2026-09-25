@@ -247,7 +247,7 @@ const DateSelect = ({
       <div
         className={cn(
           "justify-self-start",
-          !icon && "pl-[calc(var(--control-icon-size)+var(--control-content-gap))]",
+          !icon && "pl-[calc(var(--control-leading-size)+var(--control-content-gap))]",
         )}
       >
         <DatePicker

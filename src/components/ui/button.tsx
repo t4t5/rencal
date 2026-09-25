@@ -20,11 +20,11 @@ const buttonVariants = cva(
       },
       size: {
         default: "h-control px-3 has-[>svg]:px-3",
-        xs: "h-(--control-icon-size) gap-1 px-2 has-[>svg]:px-1.5",
+        xs: "h-control-xs gap-1 px-2 has-[>svg]:px-1.5",
         sm: "h-control-sm gap-1.5 px-3 has-[>svg]:px-2.5",
         lg: "h-control-lg px-6 has-[>svg]:px-4",
         icon: "size-control p-0",
-        "icon-xs": "size-(--control-icon-size) p-0",
+        "icon-xs": "size-control-xs p-0",
         "icon-sm": "size-control-sm p-0",
         "icon-lg": "size-control-lg p-0",
       },

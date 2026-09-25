@@ -158,8 +158,9 @@ active outline can set it to `var(--border)` or another color.
 | `--control-height`         | Button/input height                                                                 |
 | `--control-height-sm`      | Small button height                                                                 |
 | `--control-height-lg`      | Large button height                                                                 |
+| `--control-height-xs`      | Extra-small button height; defaults to `calc(var(--control-height) - 10px)`         |
 | `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                       |
-| `--control-icon-size`      | Event-field icon slot size; defaults to `calc(var(--control-height) - 10px)`        |
+| `--control-leading-size`   | Event-field leading icon/checkbox column width (`16px` by default)                  |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
 | `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)             |
@@ -280,7 +281,7 @@ Custom rules may select on `data-slot` for identity and on the other attributes 
 | `data-view`, `data-kind`, and event state attributes                                                            | Calendar-specific context.                                                                                                                        |
 | `data-page`                                                                                                     | Settings page context on the settings window, pages, and sidebar triggers.                                                                        |
 
-Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline`, `secondary`, `ghost`, or `link`, and `data-size` is `xs`, `sm`, `default`, `lg`, `icon-xs`, `icon-sm`, `icon`, or `icon-lg`. Sizes follow the control tokens: `xs`/`icon-xs` use `--control-icon-size`, `sm`/`icon-sm` use `--control-height-sm`, `default`/`icon` use `--control-height`, and `lg`/`icon-lg` use `--control-height-lg`.
+Buttons use shadcn's names: `data-variant` is `default`, `destructive`, `outline`, `secondary`, `ghost`, or `link`, and `data-size` is `xs`, `sm`, `default`, `lg`, `icon-xs`, `icon-sm`, `icon`, or `icon-lg`. Sizes follow the control tokens: `xs`/`icon-xs` use `--control-height-xs`, `sm`/`icon-sm` use `--control-height-sm`, `default`/`icon` use `--control-height`, and `lg`/`icon-lg` use `--control-height-lg`.
 
 The event form exposes `event-form`, `event-form-fields`, and `event-form-footer`. Field rows use shadcn's Item parts: `item-media` (the leading icon or checkbox), `item-content`, and `item-actions`. Standalone list rows put them in an `item` root; select triggers, labels, and buttons keep their own slot as the root. Input-group add-ons keep their `input-group-addon` slot and shadcn's `data-align` (`inline-start` or `inline-end`). Composite controls expose their complete painted surfaces as `combobox` and `textarea-wrapper`; the inner combobox input and textarea keep their own slots for text-specific rules. Put borders, backgrounds, radii, hover states, and focus treatment on the complete surface rather than its inner input.
 

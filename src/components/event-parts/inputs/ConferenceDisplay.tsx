@@ -123,7 +123,7 @@ function ConferenceRequestButton({
       type="button"
       variant="ghost"
       typography="field"
-      className="control-row w-full justify-start gap-[var(--control-content-gap)] px-[var(--control-padding-inline)] text-muted-foreground"
+      className="control-row w-full justify-start gap-[var(--control-content-gap)] border border-transparent px-[var(--control-padding-inline)] text-muted-foreground"
       onClick={onClick}
     >
       <ItemMedia>

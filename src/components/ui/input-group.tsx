@@ -67,9 +67,9 @@ function InputGroupAddon({
 const inputGroupButtonVariants = cva("text-sm shadow-none flex gap-2 items-center", {
   variants: {
     size: {
-      xs: "h-(--control-icon-size) gap-1 px-2 rounded-sm [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
+      xs: "h-control-xs gap-1 px-2 rounded-sm [&>svg:not([class*='size-'])]:size-3.5 has-[>svg]:px-2",
       sm: "h-control-sm px-2.5 gap-1.5 rounded-md has-[>svg]:px-2.5",
-      "icon-xs": "size-(--control-icon-size) rounded-sm p-0 has-[>svg]:p-0",
+      "icon-xs": "size-control-xs rounded-sm p-0 has-[>svg]:p-0",
       "icon-sm": "size-control-sm p-0 has-[>svg]:p-0",
     },
   },
