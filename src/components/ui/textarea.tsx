@@ -42,6 +42,9 @@ export function TextareaInner({
   autosize = true,
   style,
   className,
+  readOnly,
+  // Read-only text renders as static text, so it isn't a Tab stop either.
+  tabIndex = readOnly ? -1 : undefined,
   ...props
 }: React.ComponentProps<"textarea"> & { autosize?: boolean }) {
   if (autosize) {
@@ -49,12 +52,21 @@ export function TextareaInner({
       <TextareaAutosizeComponent
         data-slot="textarea"
         className={cn(innerCss, "overflow-hidden", className)}
+        readOnly={readOnly}
+        tabIndex={tabIndex}
         {...props}
       />
     )
   } else {
     return (
-      <textarea data-slot="textarea" style={style} className={cn(innerCss, className)} {...props} />
+      <textarea
+        data-slot="textarea"
+        style={style}
+        className={cn(innerCss, className)}
+        readOnly={readOnly}
+        tabIndex={tabIndex}
+        {...props}
+      />
     )
   }
 }

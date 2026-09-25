@@ -103,6 +103,8 @@ export function Combobox({
               onKeyDown={handleInputKeyDown}
               readOnly={readOnly}
               disabled={disabled}
+              // Like a disabled picker, a locked field isn't a Tab stop.
+              tabIndex={interactive ? undefined : -1}
             />
 
             {interactive && <SelectIcon forceVisible={open || variant === "default"} />}
