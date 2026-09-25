@@ -329,6 +329,7 @@ export function MonthGrid({
     <div
       ref={scrollRef}
       data-drag-scroll
+      data-slot="month-scroll"
       style={{ overflowAnchor: "none" }}
       className={cn(
         "grow overflow-y-auto overflow-x-hidden relative",
@@ -360,6 +361,7 @@ export function MonthGrid({
 
           return (
             <div
+              data-slot="month-week"
               key={weekDays[0].dateKey}
               style={{
                 position: "absolute",
@@ -369,7 +371,7 @@ export function MonthGrid({
                 height: `${virtualRow.size}px`,
                 transform: `translateY(${virtualRow.start}px)`,
               }}
-              className="flex flex-col border-b border-divider"
+              className="flex flex-col border-b border-border"
             >
               <MonthWeekRow
                 weekDays={weekDays}

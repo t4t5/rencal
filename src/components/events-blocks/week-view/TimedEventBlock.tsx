@@ -7,25 +7,23 @@ import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContex
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
-import { eventKey } from "@/lib/cal-events"
+import { eventKey, type ResponseStatus } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockClasses, getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 function WeekTimedEventImpl({
   layout,
   highlighted: highlightedByParent,
-  isPending,
-  isDeclined,
+  rsvp,
   isDraft,
   dimmed,
   onEventClick,
 }: {
   layout: WeekTimedEventLayout
   highlighted: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
   isDraft: boolean
   dimmed: boolean
   onEventClick: (eventKey: string) => void
@@ -50,18 +48,10 @@ function WeekTimedEventImpl({
   const leftPercent = layout.column * CASCADE_OFFSET_PCT
   const widthPercent = 100 - leftPercent
 
-  const isDashed = isPending || isDeclined
   const highlighted = highlightedByParent || contextOpen
 
-  const colors = getEventBlockColors({
-    calendarColor: layout.calendarColor,
-    eventColor: layout.event.color,
-    highlighted,
-    isDraft,
-    isDashed,
-  })
-
   const mode = layout.displayMode
+  const isDashed = rsvp === "needs-action" || rsvp === "declined"
   const hasStripe = !isDashed && !isDraft
 
   const summary = layout.event.summary || <UntitledEventText />
@@ -71,15 +61,18 @@ function WeekTimedEventImpl({
   const inner = (
     <div
       ref={ref}
+      data-slot="calendar-event"
+      data-view="week"
+      data-kind="timed"
+      data-selected={highlighted || undefined}
+      data-rsvp={rsvp ?? undefined}
+      data-draft={isDraft || undefined}
+      data-dimmed={(!isStatic && dimmed) || undefined}
+      data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        getEventBlockClasses(highlighted, isDeclined),
-        "absolute overflow-hidden rounded px-1",
-        hasStripe && "pl-1.5",
-        !isStatic && dimmed && "opacity-50",
-        isDraft && "font-medium",
-        dragRole === "source" && "opacity-40",
-        isDragPreview && "pointer-events-none",
+        "absolute overflow-hidden rounded-xs px-(--event-padding-inline) text-xs cursor-default",
+        hasStripe && "pl-[calc(var(--event-padding-inline)+2px)]",
       )}
       style={{
         top: `${layout.top}%`,
@@ -88,14 +81,9 @@ function WeekTimedEventImpl({
         width: `${widthPercent}%`,
         // Lift the preview above overlapping neighbours so its ring stays visible.
         zIndex: isDragPreview ? 10 : layout.column,
-        border: "1px solid var(--background)",
-        ...getEventBlockStyle({
+        ...getCalendarEventStyle({
           calendarColor: layout.calendarColor,
           eventColor: layout.event.color,
-          highlighted,
-          isDashed,
-          isDraft,
-          isDragPreview,
         }),
       }}
       onPointerDown={onDragPointerDown}
@@ -111,38 +99,51 @@ function WeekTimedEventImpl({
     >
       {hasStripe && (
         <div
-          className={cn("absolute left-0 top-0 bottom-0 w-[2px]")}
-          style={{ backgroundColor: colors.borderColor }}
+          data-slot="calendar-event-color-marker"
+          className="absolute left-0 top-0 bottom-0 w-[2px]"
         />
       )}
 
       {mode === "xs" ? (
         <div className="flex items-baseline gap-1">
           {/* Title + time on one line */}
-          <span className="truncate font-medium leading-tight min-w-0 flex-1">{summary}</span>
-          <span className="text-[10px] opacity-70 shrink-0 leading-tight">{startTime}</span>
+          <span
+            data-slot="calendar-event-title"
+            className="truncate font-medium leading-tight min-w-0 flex-1"
+          >
+            {summary}
+          </span>
+          <span data-slot="calendar-event-time" className="text-2xs shrink-0 leading-tight">
+            {startTime}
+          </span>
         </div>
       ) : mode === "sm" ? (
         <div>
           {/* Title + time on separate lines, no padding */}
-          <div className="truncate font-medium leading-tight">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div data-slot="calendar-event-title" className="truncate font-medium leading-tight">
+            {summary}
+          </div>
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} - {endTime}
           </div>
         </div>
       ) : mode === "md" ? (
         <div className="py-0.5">
           {/* Title + time on separate lines, with padding */}
-          <div className="font-medium leading-tight">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div data-slot="calendar-event-title" className="font-medium leading-tight">
+            {summary}
+          </div>
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} – {endTime}
           </div>
         </div>
       ) : (
         <div className="py-0.5">
           {/* Title = 2 lines, time = 1 line, with padding */}
-          <div className="font-medium leading-tight line-clamp-2">{summary}</div>
-          <div className="truncate opacity-80 leading-tight">
+          <div data-slot="calendar-event-title" className="font-medium leading-tight line-clamp-2">
+            {summary}
+          </div>
+          <div data-slot="calendar-event-time" className="truncate leading-tight">
             {startTime} – {endTime}
           </div>
         </div>

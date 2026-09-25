@@ -1,7 +1,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 
 import { Button } from "@/components/ui/button"
-import { InputGroupAddon } from "@/components/ui/input-group"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 
 import type { Calendar } from "@/lib/api"
 import {
@@ -75,12 +75,12 @@ export function ConferenceDisplay({
 
 function ConferenceLink({ url, label }: { url: string; label: string }) {
   return (
-    <div className="flex flex-col gap-1 px-3 py-1">
-      <Button className="w-full cursor-pointer" onClick={() => openUrl(url)}>
+    <div className="flex flex-col gap-1 py-1">
+      <Button data-popover-entry className="w-full cursor-pointer" onClick={() => openUrl(url)}>
         <VideoIcon />
         Join {label}
       </Button>
-      <span className="text-xs text-muted-foreground truncate px-1">{url}</span>
+      <span className="text-xs text-muted-foreground truncate">{url}</span>
     </div>
   )
 }
@@ -97,16 +97,17 @@ function ConferenceItem({
   const Icon = conferenceIcon[provider]
 
   return (
-    <div className="group flex h-control-height items-center justify-between rounded-md p-2 pr-3 pl-0 text-sm hover:bg-secondary focus-within:bg-secondary">
-      <div className="flex min-w-0 items-center gap-2">
-        <InputGroupAddon>
-          <Icon />
-        </InputGroupAddon>
-        <span>{conferenceLabel[provider]}</span>
-      </div>
-
-      {!readonly && onRemove && <RemoveItemButton onClick={onRemove} />}
-    </div>
+    <Item variant="accent">
+      <ItemMedia>
+        <Icon />
+      </ItemMedia>
+      <ItemContent className="truncate">{conferenceLabel[provider]}</ItemContent>
+      {!readonly && onRemove && (
+        <ItemActions>
+          <RemoveItemButton onClick={onRemove} />
+        </ItemActions>
+      )}
+    </Item>
   )
 }
 
@@ -121,13 +122,14 @@ function ConferenceRequestButton({
     <Button
       type="button"
       variant="ghost"
-      className="w-full justify-start px-0 text-muted-foreground bodytext!"
+      typography="field"
+      className="control-row w-full justify-start gap-[var(--control-content-gap)] border border-transparent px-[var(--control-padding-inline)] text-muted-foreground"
       onClick={onClick}
     >
-      <InputGroupAddon>
+      <ItemMedia>
         <VideoIcon />
-      </InputGroupAddon>
-      Add {conferenceLabel[provider]}
+      </ItemMedia>
+      <ItemContent className="text-left">Add {conferenceLabel[provider]}</ItemContent>
     </Button>
   )
 }

@@ -1,24 +1,28 @@
 --background: #1a1b26;
---font-heading: var(--sans);
---font-button: var(--sans);
---font-numerical: var(--sans);
+--font-heading: var(--font-sans);
+--font-button: var(--font-sans);
+--font-numerical: var(--font-sans);
 
---font-heading-transform: normal;
---font-button-transform: normal;
+--text-heading--transform: normal;
+--text-button--transform: normal;
+--text-numerical--transform: normal;
 
---divider: #40404f;
---border-button: #363643;
+--border: #40404f;
+--button-border: #363643;
 
---highlight: #ff2f00; /* year */
+--brand: #ff2f00; /* year */
+--today: #3a93ff;
+--today-foreground: white;
 
---tab-gap: 6px;
---tab-list-shadow: none;
+--surface-tint: #979bc8;
+--surface-tint-step: 10%;
 
---hover-tint: #979bc8;
---hover-mix: 10%;
-
---radius-base: 0.6rem;
---radius-circle: calc(infinity * 1px);
+--radius: 9.6px;
 
 --primary: #0094c6;
 --primary-foreground: white;
+
+[data-slot="tabs-list"][data-variant="default"] {
+  gap: 6px;
+  box-shadow: none;
+}

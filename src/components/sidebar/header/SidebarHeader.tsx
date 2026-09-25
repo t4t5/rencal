@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 
 import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
 import { Card } from "@/components/ui/card"
@@ -29,30 +29,38 @@ function SidebarHeaderContent() {
   // Stay true briefly after showDraft flips false, so the card
   // remains mounted while the collapse animation plays.
   const [renderDraft, setRenderDraft] = useState(showDraft)
+  const collapseRef = useRef<HTMLDivElement>(null)
+
+  const finishCollapse = () => {
+    setRenderDraft(false)
+    onCollapsed()
+  }
 
   useEffect(() => {
     if (showDraft) {
       setRenderDraft(true)
+      return
     }
+    // Themes may disable transitions, in which case transitionend never fires.
+    const el = collapseRef.current
+    if (renderDraft && el && !hasTransition(el)) finishCollapse()
   }, [showDraft])
 
   return (
-    <div className="flex flex-col p-4 pb-0">
+    <div data-slot="sidebar-header" className="flex flex-col p-4 pb-0">
       <SidebarToolbar />
 
       <div
+        ref={collapseRef}
         className={cn(
           "grid transition-[grid-template-rows] duration-200 ease-out",
           showDraft ? "grid-rows-[1fr]" : "grid-rows-[0fr]",
         )}
         onTransitionEnd={() => {
-          if (!showDraft) {
-            setRenderDraft(false)
-            onCollapsed()
-          }
+          if (!showDraft) finishCollapse()
         }}
       >
-        <div className="overflow-hidden pt-4">
+        <div data-slot="sidebar-draft" className="overflow-hidden pt-4">
           {renderDraft && (
             <Card ref={cardRef} className={cn("p-0 flex flex-col gap-0", hideCard && "opacity-0")}>
               <ComposeEventInner
@@ -70,4 +78,10 @@ function SidebarHeaderContent() {
       <FlyToMinical ref={flyRef} />
     </div>
   )
+}
+
+function hasTransition(el: HTMLElement) {
+  return getComputedStyle(el)
+    .transitionDuration.split(",")
+    .some((duration) => parseFloat(duration) > 0)
 }

@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react"
 
 import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Input, InputAction } from "@/components/ui/input"
 
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 import { useCreateEventGate } from "@/contexts/CreateEventGateContext"
@@ -40,7 +39,12 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
       <Input
         ref={inputRef}
         data-compose-event-input
-        ghost={false}
+        variant="default"
+        // Collapsed, it poses as a button, so themes must paint it as one
+        data-control={showText ? "input" : undefined}
+        data-button={showText ? undefined : ""}
+        data-variant={showText ? "default" : "secondary"}
+        data-size={showText ? undefined : "icon"}
         value={showText ? displayText : ""}
         placeholder={isDrafting ? "Meeting at 3pm" : ""}
         readOnly={!isDrafting}
@@ -83,10 +87,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
       />
 
       {isDrafting && text && (
-        <Button
-          variant="ghost"
-          size="icon-xs"
-          round
+        <InputAction
           aria-label="Clear"
           tabIndex={-1}
           onMouseDown={(e) => e.preventDefault()}
@@ -94,10 +95,9 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
             setText("")
             inputRef.current?.focus()
           }}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
         >
           <CloseIcon className="size-3.5" />
-        </Button>
+        </InputAction>
       )}
     </div>
   )

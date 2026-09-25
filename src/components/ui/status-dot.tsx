@@ -7,7 +7,7 @@ import { QuestionMarkIcon } from "@/icons/question-mark"
 
 const statusColors: Record<string, string> = {
   accepted: "bg-success",
-  declined: "bg-error",
+  declined: "bg-destructive",
   tentative: "bg-warning",
 }
 

@@ -7,24 +7,23 @@ import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContex
 import { useSettings } from "@/contexts/SettingsContext"
 
 import type { TimedEventItem } from "@/hooks/cal-events/useMonthEventLayout"
+import type { ResponseStatus } from "@/lib/cal-events"
 import { setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockColors, getEventBlockStyle } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { formatTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 export function MonthTimedEvent({
   item,
   highlighted: highlightedByParent,
-  isPending,
-  isDeclined,
+  rsvp,
   isDraft,
   dimmed,
   onClick,
 }: {
   item: TimedEventItem
   highlighted: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
   isDraft: boolean
   dimmed: boolean
   onClick: () => void
@@ -41,42 +40,25 @@ export function MonthTimedEvent({
 
   const highlighted = highlightedByParent || contextOpen
 
-  const colors = getEventBlockColors({
-    calendarColor: item.color,
-    eventColor: item.eventColor,
-    highlighted,
-    isDraft,
-  })
-
   const inner = (
     <div
       ref={ref}
+      data-slot="calendar-event"
+      data-view="month"
+      data-kind="timed"
+      data-selected={highlighted || undefined}
+      data-rsvp={rsvp ?? undefined}
+      data-draft={isDraft || undefined}
+      data-dimmed={(!isStatic && dimmed) || undefined}
+      data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        "flex items-center gap-1 text-xs truncate cursor-default hover:bg-hover rounded shrink-0",
-        highlighted && "bg-accent!",
-        (isPending || isDeclined) && "opacity-50",
-        !isStatic && dimmed && "opacity-50",
-        isDraft && "font-medium border border-dashed",
-        isDeclined && "line-through",
-        dragRole === "source" && "opacity-40",
-        isDragPreview && "pointer-events-none",
+        "flex items-center gap-(--event-padding-inline) pr-(--event-padding-inline) text-xs truncate cursor-default rounded-xs shrink-0",
       )}
-      style={
-        isDraft
-          ? {
-              backgroundColor: colors.backgroundColor,
-              borderColor: colors.borderColor,
-              color: colors.textColor,
-            }
-          : isDragPreview
-            ? getEventBlockStyle({
-                calendarColor: item.color,
-                eventColor: item.eventColor,
-                isDragPreview: true,
-              })
-            : undefined
-      }
+      style={getCalendarEventStyle({
+        calendarColor: item.color,
+        eventColor: item.eventColor,
+      })}
       onPointerDown={onDragPointerDown}
       onClick={
         isStatic
@@ -88,17 +70,12 @@ export function MonthTimedEvent({
             }
       }
     >
-      <div className="w-0.5 h-full shrink-0" style={{ backgroundColor: colors.borderColor }} />
+      <div data-slot="calendar-event-color-marker" className="w-0.5 h-full shrink-0" />
       <span className="truncate">
-        <span
-          className="text-[10px] numerical"
-          style={{
-            color: colors.tintedTextColor,
-          }}
-        >
+        <span data-slot="calendar-event-time" data-typography="numerical" className="text-2xs">
           {formatTime(item.event.start, timeFormat)}
         </span>{" "}
-        {item.event.summary || <UntitledEventText />}
+        <span data-slot="calendar-event-title">{item.event.summary || <UntitledEventText />}</span>
       </span>
     </div>
   )

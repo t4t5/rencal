@@ -33,7 +33,15 @@ export function InvitesBadge() {
     const slugs = calendars.filter((c) => c.provider !== null).map((c) => c.slug)
     if (slugs.length === 0) return
 
-    api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
+    const load = () =>
+      api.events.listInvites({ calendar_slugs: slugs }).then(setPendingInvites).catch(console.error)
+
+    load()
+    // Synced or externally pulled .ics changes fire this; refetch so the badge stays current.
+    const unlisten = api.notifications.listen("events-changed", load)
+    return () => {
+      unlisten.unlisten()
+    }
   }, [calendars])
 
   const isMd = useBreakpoint("md")
@@ -62,7 +70,7 @@ export function InvitesBadge() {
             onFocus={(event) => {
               if (restoringFocusRef.current) event.preventDefault()
             }}
-            className="flex size-6 items-center justify-center rounded-full bg-highlight text-xs font-medium text-white hover:bg-highlight/90 transition-colors outline-none"
+            className="flex size-6 items-center justify-center rounded-full bg-brand text-xs font-medium text-brand-foreground hover:bg-brand-hover transition-colors outline-none"
           >
             {invites.length}
           </button>
@@ -121,7 +129,7 @@ function InviteCard({
       <div className="flex gap-3 p-3">
         <span
           className={cn(
-            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-white bg-muted-foreground",
+            "flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-medium text-background bg-muted-foreground",
           )}
         >
           {initial}
@@ -135,7 +143,7 @@ function InviteCard({
         </div>
       </div>
 
-      <div className="pt-0">
+      <div className="p-3">
         <RsvpBar onRsvp={(response) => onRsvp(invite, response)} />
       </div>
     </div>

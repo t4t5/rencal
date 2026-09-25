@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from "react"
 
+import { Tabs, TabsContent } from "@/components/ui/tabs"
+
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { CalendarsColumn } from "./CalendarsColumn"
@@ -27,9 +29,16 @@ export function CalendarsPage() {
   }, [groupNames, selectedGroup])
 
   return (
-    <div className="flex grow">
+    <Tabs
+      orientation="vertical"
+      value={selectedGroup}
+      onValueChange={setSelectedGroup}
+      className="min-h-0 min-w-0 flex-1"
+    >
       <GroupsColumn groups={groupNames} selectedGroup={selectedGroup} onSelect={setSelectedGroup} />
-      <CalendarsColumn selectedGroup={selectedGroup} />
-    </div>
+      <TabsContent value={selectedGroup} className="min-h-0 min-w-0 data-[state=active]:flex">
+        <CalendarsColumn selectedGroup={selectedGroup} />
+      </TabsContent>
+    </Tabs>
   )
 }

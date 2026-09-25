@@ -16,4 +16,8 @@ describe("getDeclaredAppearance", () => {
     expect(getDeclaredAppearance(plugin.id, registry)).toBe("dark")
     expect(getDeclaredAppearance("missing", registry)).toBeNull()
   })
+
+  it("keeps the contract debug palette out of user-facing theme lists", () => {
+    expect(BUILTIN_DESCRIPTORS.some((theme) => theme.id === "contract-debug")).toBe(false)
+  })
 })

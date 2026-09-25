@@ -48,34 +48,32 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex flex-col gap-6">
-        <DialogHeader className="flex flex-col gap-4 mt-2">
-          <DialogTitle className="text-center">Add subscription</DialogTitle>
-          <DialogDescription className="text-center">
-            Paste a public .ics calendar feed URL (webcal or http)
-          </DialogDescription>
-        </DialogHeader>
+      <DialogHeader>
+        <DialogTitle>Add subscription</DialogTitle>
+        <DialogDescription>
+          Paste a public .ics calendar feed URL (webcal or http)
+        </DialogDescription>
+      </DialogHeader>
 
-        <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3 w-full">
-          <Input
-            ghost={false}
-            type="url"
-            placeholder="https://example.com/calendar.ics"
-            autoFocus
-            value={url}
-            disabled={isConnecting}
-            onChange={(e) => setUrl(e.target.value)}
-          />
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3 w-full">
+        <Input
+          variant="default"
+          type="url"
+          placeholder="https://example.com/calendar.ics"
+          autoFocus
+          value={url}
+          disabled={isConnecting}
+          onChange={(e) => setUrl(e.target.value)}
+        />
 
-          {error && <p className="text-sm text-destructive">{error}</p>}
+        {error && <p className="text-sm text-destructive">{error}</p>}
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={isConnecting || !url.trim()} className="mt-3">
-              {isConnecting ? "Adding..." : "Add subscription"}
-            </Button>
-          </div>
-        </form>
-      </div>
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isConnecting || !url.trim()} className="mt-3">
+            {isConnecting ? "Adding..." : "Add subscription"}
+          </Button>
+        </div>
+      </form>
     </Modal>
   )
 }

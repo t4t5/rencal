@@ -36,11 +36,3 @@ export function isEventReadonly(event: CalendarEvent, calendars: Calendar[]): bo
   if (calendar?.read_only) return true
   return !isUserOrganizer(event, calendars)
 }
-
-export function isPendingEvent(event: CalendarEvent, calendars: Calendar[]): boolean {
-  return getUserResponseStatus(event, calendars) === "needs-action"
-}
-
-export function isDeclinedEvent(event: CalendarEvent, calendars: Calendar[]): boolean {
-  return getUserResponseStatus(event, calendars) === "declined"
-}

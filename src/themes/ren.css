@@ -1,2 +1,5 @@
-/* Ren is the default theme. Its primitives live in the `:root, [data-theme="ren"]`
-   block in src/global.css so :root carries them as fallback defaults too. */
+/* Ren is the default theme. Its primitives are the `:root, [data-theme]`
+   baseline in src/global.css, which every theme scope starts from. The
+   baseline derives these accents from --primary, so ren sets its own. */
+--today: #3a93ff;
+--brand: #ff610b; /* year */

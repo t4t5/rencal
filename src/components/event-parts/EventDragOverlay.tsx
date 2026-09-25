@@ -7,8 +7,9 @@ import { useEventDrag, type ActiveEventDrag, type DragFloat } from "@/contexts/E
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { getEventBlockStyle } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { formatTime, isAllDay } from "@/lib/event-time"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 /**
@@ -63,28 +64,38 @@ function DragFloatCard({ drag }: { drag: ActiveEventDrag }) {
   const { event, float } = drag
   const range = drag.target ?? { start: event.start, end: event.end }
   const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+  const calendarColor = getCalendarColor(calendar)
   const summary = event.summary || <UntitledEventText />
   const showTime = float.kind === "block" && !isAllDay(range.start)
 
   return (
     <div
       ref={ref}
+      data-slot="calendar-event"
+      data-kind={isAllDay(range.start) ? "all-day" : "timed"}
+      data-selected="true"
+      data-rsvp={getUserResponseStatus(event, calendars) ?? undefined}
+      data-drag-state="overlay"
       className={cn(
-        "absolute overflow-hidden rounded text-xs shadow-xl",
+        "absolute overflow-hidden rounded-xs text-xs shadow-xl",
         float.kind === "block" ? "px-1.5 py-1" : "px-1.5 py-0.5 whitespace-nowrap",
       )}
       style={{
         ...floatPosition(float, posRef.current.x, posRef.current.y),
-        ...getEventBlockStyle({
-          calendarColor: getCalendarColor(calendar),
+        ...getCalendarEventStyle({
+          calendarColor,
           eventColor: event.color,
-          highlighted: true,
         }),
       }}
     >
-      <div className="font-medium leading-tight truncate">{summary}</div>
+      <div data-slot="calendar-event-title" className="font-medium leading-tight truncate">
+        {summary}
+      </div>
       {showTime && (
-        <div className="opacity-80 leading-tight truncate">
+        <div
+          data-slot="calendar-event-time"
+          className="text-muted-foreground leading-tight truncate"
+        >
           {formatTime(range.start, timeFormat)} – {formatTime(range.end, timeFormat)}
         </div>
       )}

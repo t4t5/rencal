@@ -6,9 +6,9 @@ import { GeneralPage } from "@/components/settings/general/GeneralPage"
 import { PluginsPage } from "@/components/settings/plugins/PluginsPage"
 import { RemindersPage } from "@/components/settings/reminders/RemindersPage"
 import { ThemesPage } from "@/components/settings/themes/ThemesPage"
+import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { IconType } from "@/lib/types"
-import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons/bell"
 import { CalendarIcon } from "@/icons/calendar"
@@ -35,50 +35,24 @@ export const NAV_ITEMS = [
 
 export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]
 
-export function SettingsSidebar({
-  activeTab,
-  onTabChange,
-}: {
-  activeTab: SettingsTab
-  onTabChange: (tab: SettingsTab) => void
-}) {
+export function SettingsSidebar() {
   return (
-    <nav className="flex flex-col gap-1 w-[200px] shrink-0 py-3 px-2 border-r border-r-divider">
-      {NAV_ITEMS.map((item) => (
-        <SidebarItem
-          key={item.tab}
-          item={item}
-          isActive={activeTab === item.tab}
-          onClick={() => onTabChange(item.tab)}
-        />
-      ))}
-    </nav>
-  )
-}
-
-function SidebarItem({
-  item,
-  isActive,
-  onClick,
-}: {
-  item: (typeof NAV_ITEMS)[number]
-  isActive: boolean
-  onClick: () => void
-}) {
-  const { label, icon: Icon } = item
-
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        "flex items-center gap-2 p-2 text-sm rounded-md w-full text-left text-muted-foreground transition-colors focus-visible:outline-none",
-        {
-          "bg-secondary text-accent-foreground": isActive,
-        },
-      )}
+    <nav
+      data-slot="settings-sidebar"
+      className="flex w-[200px] shrink-0 self-stretch border-r border-border"
     >
-      <Icon className="size-4" />
-      {label}
-    </button>
+      <TabsList
+        variant="navigation"
+        aria-label="Settings"
+        className="w-full justify-start rounded-none px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
+      >
+        {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
+          <TabsTrigger key={tab} value={tab} data-page={tab}>
+            <Icon className="size-4" />
+            {label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </nav>
   )
 }

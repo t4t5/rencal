@@ -15,105 +15,217 @@
   font-display: swap;
 }
 
-:root {
-  --mono: "Geist Mono", ui-monospace, monospace;
-  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-}
-
 @theme {
   --breakpoint-xs: 380px;
+
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
 }
 
-/* Default theme (ren). Applied to :root so other themes inherit any primitives
-   they don't override, and to [data-theme="ren"] so a scoped subtree (e.g.
-   the theme preview tile) resolves to ren even when body uses a different
-   theme. */
+@custom-variant dark (&:where([data-appearance="dark"], [data-appearance="dark"] *));
+
+/* Theme baseline (ren). Every [data-theme] scope resolves from this complete
+   set, so a nested scope (a preview tile, a plugin subtree) never inherits
+   primitives, optional overrides, or derived values from its enclosing theme.
+   Theme rules load later with equal specificity and override only what they
+   declare. :root carries the same defaults for content outside any scope. */
 :root,
-[data-theme="ren"] {
-  --font-heading: var(--mono);
-  --font-button: var(--mono);
-  --font-numerical: var(--mono);
+[data-theme] {
+  --text-heading--transform: uppercase;
+  --text-button--transform: uppercase;
+  --text-numerical--transform: uppercase;
 
-  --font-heading-transform: uppercase;
-  --font-button-transform: uppercase;
-  --font-numerical-transform: uppercase;
-
-  --radius-base: 0;
-  --radius-circle: 0;
+  --radius: 0px;
   --control-height: 34px;
+  --control-padding-inline: 8px;
+  --control-content-gap: 8px;
+  --control-row-gap: 4px;
+  --control-leading-size: 16px;
+  --agenda-padding-inline: calc(var(--spacing) * 3);
+  --month-padding-inline: var(--spacing);
+  --event-padding-inline: var(--spacing);
+
+  /* Keep in sync with @theme above; checked by global-css.test.ts. */
+  --text-2xs: 11px;
+  --text-2xs--line-height: 14px;
+  --text-xs: 12px;
+  --text-xs--line-height: 16px;
+  --text-sm: 14px;
+  --text-sm--line-height: 20px;
+  --text-base: 16px;
+  --text-base--line-height: 24px;
+  --text-lg: 18px;
+  --text-lg--line-height: 28px;
+  --text-xl: 20px;
+  --text-xl--line-height: 28px;
+  --text-2xl: 24px;
+  --text-2xl--line-height: 32px;
 
   --background: #131313;
   --foreground: white;
-  --muted: rgba(255, 255, 255, 0.5);
+  --muted-foreground: color-mix(in srgb, var(--foreground) 50%, transparent);
 
   --primary: #f56313;
 
-  --today: #3a93ff;
-  --highlight: #ff610b; /* year */
+  /* Follow --primary so shadcn themes, which lack these, stay on-palette. */
+  --today: var(--primary);
+  --brand: var(--primary);
 
   --ring: oklch(0.552 0.016 285.938);
 
   --success: #4caf50;
   --warning: #fd8742;
-  --error: #e25252;
+  --destructive: #e25252;
 
-  --hover-tint: white;
-  --hover-mix: 5%;
-  --popover-tint: black;
-  --popover-mix: 4%;
+  --surface-tint: var(--foreground);
+  --surface-tint-step: 5%;
 
-  --tab-gap: 0;
-  --tab-list-shadow: none;
-}
+  /* Optional overrides stay unset so their var() fallbacks apply. */
+  --scrollbar-width: initial;
+  --text-heading: initial;
+  --text-heading--line-height: initial;
+  --text-heading--letter-spacing: initial;
+  --text-heading--font-weight: initial;
+  --text-button: initial;
+  --text-button--line-height: initial;
+  --text-button--letter-spacing: initial;
+  --text-button--font-weight: initial;
+  --text-numerical: initial;
+  --text-numerical--line-height: initial;
+  --text-numerical--letter-spacing: initial;
+  --text-numerical--font-weight: initial;
+  --event-color: initial;
+  --event-background: initial;
+  --event-foreground: initial;
+  --event-tint-surface: initial;
+  --week-grid-background: initial;
 
-/* variables computed from other variables */
-body {
-  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
-  --secondary: var(--hover);
-  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-mono);
+  --font-button: var(--font-mono);
+  --font-numerical: var(--font-mono);
 
-  --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  /* Derived from the primitives above, on the same scope. */
+  --radius-circle: calc(var(--radius) * 1000); /* Square when --radius is 0, a pill otherwise. */
+  --control-height-xs: calc(var(--control-height) - 10px);
+  --control-height-sm: calc(var(--control-height) - 2px);
+  --control-height-lg: calc(var(--control-height) + 6px);
+  /* Trailing slot's end gap; matches its vertical gap in a 1px-bordered field. */
+  --control-trailing-inset: calc((var(--control-height) - var(--control-height-xs)) / 2 - 1px);
+  --placeholder-foreground: var(--muted-foreground);
+
+  --button-border: transparent;
+
+  /* Each surface mixes N tint steps into a base, never into another surface,
+     so overriding one shadcn token leaves the others alone. */
+  --hover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+  --secondary: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+  --secondary-hover: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary)
+  );
+  --secondary-foreground: var(--foreground);
+
+  --accent: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
+  --accent-foreground: var(--foreground);
+  --selected: color-mix(
+    in srgb,
+    var(--surface-tint) calc(var(--surface-tint-step) * 4),
+    transparent
+  );
+  --selected-foreground: var(--foreground);
+  --today-foreground: var(--primary-foreground);
+  --brand-foreground: var(--background);
+  --muted: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
   --weekend: var(--hover);
 
-  --divider: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --border: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
 
   /* same as hover, but solid color: */
-  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
+  --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
+  --card-foreground: var(--foreground);
 
-  /* same as divider, but stronger tint */
-  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--divider));
+  /* same as border, but stronger tint */
+  --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
 
-  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
+  /* Interactive controls use one uninterrupted surface while active. */
+  --control-active-background: var(--secondary);
+  --control-active-border: transparent;
+
+  --primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
+  --destructive-hover: color-mix(in srgb, white var(--surface-tint-step), var(--destructive));
+  --brand-hover: color-mix(in srgb, white var(--surface-tint-step), var(--brand));
   --primary-foreground: var(--background);
 
-  --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
+  --popover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --popover-foreground: var(--foreground);
 
-  --tooltip: color-mix(in srgb, var(--hover-tint) 15%, var(--background));
+  --tooltip: color-mix(in srgb, var(--surface-tint) 15%, var(--background));
+  --tooltip-foreground: var(--foreground);
 
-  --destructive: var(--error);
+  /* Muted text on each surface that sets its own foreground. The
+     text-*-foreground utilities below swap these into --muted-foreground. */
+  --secondary-muted-foreground: var(--muted-foreground);
+  --accent-muted-foreground: var(--muted-foreground);
+  --selected-muted-foreground: var(--muted-foreground);
+  --card-muted-foreground: var(--muted-foreground);
+  --popover-muted-foreground: var(--muted-foreground);
+  --tooltip-muted-foreground: var(--muted-foreground);
 
-  --tab-list-shadow: inset 0 0 0 1px var(--secondary);
+  --destructive-foreground: white;
+  --overlay: rgb(0 0 0 / 0.5);
+
+  --lane-height: calc(var(--text-xs--line-height) + 4px);
 }
 
-/* Event text on light themes (see tintText in src/lib/event-styles.ts):
-   keep the accent's hue and cap its lightness instead of mixing in --foreground. */
+[data-appearance="dark"] {
+  color-scheme: dark;
+}
+
 [data-appearance="light"] {
-  --event-text-max-lightness: 0.45;
-  --event-text-foreground-mix: 0%;
+  color-scheme: light;
+}
+
+/* Event text on light themes: keep the accent's hue and cap its lightness
+   instead of mixing in --foreground. Internal knobs, not part of the theme contract. */
+[data-appearance="light"] {
+  --calendar-event-text-max-lightness: 0.45;
+  --calendar-event-text-foreground-mix: 0%;
 }
 
 @theme inline {
-  --radius: calc(var(--radius-base) - 6px);
-  --radius-xs: calc(var(--radius-base) - 8px);
-  --radius-sm: calc(var(--radius-base) - 4px);
-  --radius-md: calc(var(--radius-base) - 2px);
-  --radius-lg: var(--radius-base);
-  --radius-xl: calc(var(--radius-base) + 4px);
+  --radius-xs: calc(var(--radius) * 0.4);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-placeholder-foreground: var(--placeholder-foreground);
 
   --color-hover: var(--hover);
   --color-primary: var(--primary);
@@ -122,56 +234,106 @@ body {
 
   --color-secondary: var(--secondary);
   --color-secondary-hover: var(--secondary-hover);
+  --color-secondary-foreground: var(--secondary-foreground);
 
   --color-popover: var(--popover);
   --color-popover-foreground: var(--popover-foreground);
   --color-tooltip: var(--tooltip);
+  --color-tooltip-foreground: var(--tooltip-foreground);
 
   --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
   --color-today: var(--today);
+  --color-today-foreground: var(--today-foreground);
   --color-weekend: var(--weekend);
   --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-selected: var(--selected);
+  --color-selected-foreground: var(--selected-foreground);
 
-  --color-divider: var(--divider);
+  --color-border: var(--border);
   --color-input: var(--input);
 
   --color-ring: var(--ring);
-  --color-highlight: var(--highlight);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-foreground: var(--brand-foreground);
 
   /* Attendee status */
   --color-success: var(--success);
   --color-warning: var(--warning);
-  --color-error: var(--error);
   --color-destructive: var(--destructive);
+  --color-destructive-hover: var(--destructive-hover);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-overlay: var(--overlay);
 
-  --shadow-button-border: inset 0 0 0 1px var(--border-button, transparent);
+  --shadow-button-border: inset 0 0 0 1px var(--button-border);
   --shadow-input-border: inset 0 0 0 1px var(--input);
-  --shadow-tab-list: var(--tab-list-shadow);
+  --shadow-tab-list: inset 0 0 0 1px var(--secondary);
 
-  --size-control-height: var(--control-height);
-  --height-control-height: var(--control-height);
-  --min-height-control-height: var(--control-height);
-  --width-control-height: var(--control-height);
-  --spacing-tab-gap: var(--tab-gap);
+  --spacing-control: var(--control-height);
+  --spacing-control-xs: var(--control-height-xs);
+  --spacing-control-sm: var(--control-height-sm);
+  --spacing-control-lg: var(--control-height-lg);
 }
 
-/* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
+/* Extend the generated text colour utilities so muted text follows the surface. */
+@utility text-secondary-foreground {
+  --muted-foreground: var(--secondary-muted-foreground);
+}
+
+@utility text-accent-foreground {
+  --muted-foreground: var(--accent-muted-foreground);
+}
+
+@utility text-selected-foreground {
+  --muted-foreground: var(--selected-muted-foreground);
+}
+
+@utility text-card-foreground {
+  --muted-foreground: var(--card-muted-foreground);
+}
+
+@utility text-popover-foreground {
+  --muted-foreground: var(--popover-muted-foreground);
+}
+
+@utility text-tooltip-foreground {
+  --muted-foreground: var(--tooltip-muted-foreground);
+}
+
+/* Pill radius that squares off on sharp themes; see --radius-circle. */
 @utility rounded-circle {
-  border-radius: var(--radius-circle, calc(infinity* 1px));
+  border-radius: var(--radius-circle);
 }
 
 @layer base {
   * {
-    @apply border-divider outline-ring/50;
-    scrollbar-width: none;
+    @apply border-border outline-ring/50;
+    scrollbar-width: var(--scrollbar-width, none);
   }
+
+  /* Autosizing must settle synchronously, both in the hidden measuring textarea
+   * and in the visible field. Even a tiny theme transition on height leaves a
+   * popover measuring the old height and then jumping when the field shrinks. */
+  textarea[aria-hidden="true"],
+  textarea[data-slot="textarea"] {
+    transition: none !important;
+  }
+
+  /* Radix moves this wrapper from its off-screen measuring position into place.
+   * Theme-wide transitions must not animate that positioning transform. */
+  [data-radix-popper-content-wrapper] {
+    transition: none !important;
+  }
+
   html,
   body {
     @apply bg-background text-foreground;
 
-    font-family: var(--font-body, var(--sans));
-    font-size: 16px;
-    line-height: 24px;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
     font-weight: 400;
 
     font-synthesis: none;
@@ -207,43 +369,263 @@ body {
   }
 }
 
-@utility heading {
-  font-family: var(--font-heading);
-  text-transform: var(--font-heading-transform, none);
+@layer components {
+  .event-form {
+    padding-inline: 8px;
+  }
+
+  .control-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    column-gap: var(--control-content-gap);
+    padding-inline: var(--control-padding-inline);
+  }
+
+  /* Hugs its glyph so icons start on the same edge as unadorned field text. */
+  .control-leading {
+    display: flex;
+    width: var(--control-leading-size);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+  }
+
+  .control-leading > svg:not([class*="size-"]) {
+    width: var(--control-leading-size);
+    height: var(--control-leading-size);
+  }
+
+  .control-content {
+    min-width: 0;
+    flex: 1 1 0%;
+  }
+
+  .control-trailing {
+    display: flex;
+    min-width: var(--control-height-xs);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* Inset the slot evenly; a centred 16px glyph then lands on the row padding. */
+  .control-row:has(> .control-trailing) {
+    padding-inline-end: var(--control-trailing-inset);
+  }
+
+  /* Hugs its glyph like .control-leading, so both ends share the row padding. */
+  [data-slot="select-icon"] {
+    display: flex;
+    min-width: 0;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  [data-typography="heading"] {
+    font-family: var(--font-heading);
+    text-transform: var(--text-heading--transform, none);
+    font-size: var(--text-heading, var(--text-lg));
+    line-height: var(--tw-leading, var(--text-heading--line-height, var(--text-lg--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-heading--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-heading--font-weight));
+  }
+
+  [data-typography="button"] {
+    font-family: var(--font-button);
+    text-transform: var(--text-button--transform, none);
+    font-size: var(--text-button, var(--text-sm));
+    line-height: var(--tw-leading, var(--text-button--line-height, var(--text-sm--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-button--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-button--font-weight));
+  }
+
+  [data-typography="field"] {
+    font-family: var(--font-body);
+    text-transform: none;
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+  }
+
+  [data-typography="numerical"] {
+    font-family: var(--font-numerical);
+    text-transform: var(--text-numerical--transform, none);
+    font-size: var(--text-numerical, var(--text-xs));
+    line-height: var(--tw-leading, var(--text-numerical--line-height, var(--text-xs--line-height)));
+    letter-spacing: var(--tw-tracking, var(--text-numerical--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-numerical--font-weight));
+  }
 }
 
-@utility bodytext {
-  font-family: var(--font-body);
-  text-transform: var(--font-body-transform, none);
-}
+@layer components {
+  :where(
+    [data-slot="agenda-day-header"],
+    [data-slot="agenda-empty"],
+    [data-slot="agenda-all-day-events"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
+  ) {
+    padding-inline: var(--agenda-padding-inline);
+  }
 
-@utility button {
-  font-family: var(--font-button);
-  text-transform: var(--font-button-transform, none);
-}
+  /* Theme tiles paint events from tokens only, under a slot theme selectors don't target. */
+  :is([data-slot="calendar-event"], [data-slot="theme-preview-event"]) {
+    --calendar-event-boosted-color: oklch(from var(--calendar-event-color) l calc(c * 1.4) h);
+    --calendar-event-tinted-color: oklch(
+      from var(--calendar-event-color) min(l, var(--calendar-event-text-max-lightness, 1))
+        calc(c * 1.4) h
+    );
+    --calendar-event-tinted-foreground: color-mix(
+      in srgb,
+      var(--foreground) var(--calendar-event-text-foreground-mix, 60%),
+      var(--calendar-event-tinted-color)
+    );
+    --calendar-event-fill: var(
+      --event-background,
+      color-mix(
+        in srgb,
+        var(--calendar-event-boosted-color) 20%,
+        var(--event-tint-surface, var(--background))
+      )
+    );
+    --calendar-event-selected-fill: color-mix(
+      in srgb,
+      var(--calendar-event-fill) 80%,
+      var(--event-foreground, var(--foreground))
+    );
+    --calendar-event-foreground: var(--event-foreground, var(--calendar-event-tinted-foreground));
+  }
 
-@utility numerical {
-  font-family: var(--font-numerical);
-  text-transform: var(--font-numerical-transform, none);
-}
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-drag-state="overlay"],
+    [data-slot="theme-preview-event"]
+  ) {
+    background: var(--calendar-event-fill);
+    color: var(--calendar-event-foreground);
+  }
 
-/* For reference: */
-/* shadcn color tokens */
-/* --color-background: var(--background); */
-/* --color-foreground: var(--foreground); */
-/* --color-card: var(--card); */
-/* --color-card-foreground: var(--card-foreground); */
-/* --color-popover: var(--popover); */
-/* --color-popover-foreground: var(--popover-foreground); */
-/* --color-primary: var(--primary); */
-/* --color-primary-foreground: var(--primary-foreground); */
-/* --color-secondary: var(--secondary); */
-/* --color-secondary-foreground: var(--secondary-foreground); */
-/* --color-muted: var(--muted); */
-/* --color-muted-foreground: var(--muted-foreground); */
-/* --color-accent: var(--accent); */
-/* --color-accent-foreground: var(--accent-foreground); */
-/* --color-destructive: var(--destructive); */
-/* --color-border: var(--border); */
-/* --color-input: var(--input); */
-/* --color-ring: var(--ring); */
+  :where([data-slot="calendar-event"][data-view="week"][data-kind="timed"]) {
+    border: 1px solid var(--background);
+  }
+
+  :where(
+      [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
+      [data-slot="calendar-event"][data-view="board"]
+    ):not([data-selected]):hover {
+    background: var(--hover);
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
+    [data-slot="calendar-event"][data-view="board"]
+  )[data-selected] {
+    background: var(--selected);
+    color: var(--selected-foreground);
+  }
+
+  :where(
+      [data-slot="calendar-event"][data-view="week"],
+      [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
+    ):not([data-selected], [data-draft], [data-drag-state="preview"]):hover {
+    filter: brightness(1.05);
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-drag-state="overlay"]
+  )[data-selected] {
+    background: var(--calendar-event-selected-fill);
+  }
+
+  [data-slot="calendar-event"] [data-slot="calendar-event-color-marker"] {
+    background: var(--calendar-event-color);
+  }
+
+  :where([data-slot="calendar-event"][data-view="month"][data-kind="timed"])
+    [data-slot="calendar-event-time"] {
+    color: var(--calendar-event-tinted-foreground);
+  }
+
+  /* Secondary line: a faded title colour, so it keeps the event's tint. */
+  [data-slot="calendar-event"][data-view="week"] [data-slot="calendar-event-time"] {
+    color: color-mix(in srgb, currentColor 70%, transparent);
+  }
+
+  [data-slot="calendar-event"][data-rsvp="declined"] {
+    text-decoration: line-through;
+  }
+
+  [data-slot="calendar-event"]:is([data-rsvp="declined"], [data-rsvp="needs-action"]) {
+    opacity: 0.5;
+  }
+
+  :where(
+    [data-slot="calendar-event"][data-view="week"],
+    [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
+  ):is([data-rsvp="declined"], [data-rsvp="needs-action"]) {
+    border: 1px dashed var(--calendar-event-color);
+    background: transparent;
+    color: color-mix(
+      in srgb,
+      var(--foreground) var(--calendar-event-text-foreground-mix, 50%),
+      var(--calendar-event-tinted-color)
+    );
+  }
+
+  [data-slot="calendar-event"][data-draft] {
+    border: 1px dashed var(--calendar-event-color);
+    background: color-mix(
+      in srgb,
+      var(--calendar-event-boosted-color) 15%,
+      var(--event-tint-surface, var(--background))
+    );
+    color: color-mix(
+      in srgb,
+      var(--foreground) var(--calendar-event-text-foreground-mix, 40%),
+      var(--calendar-event-tinted-color)
+    );
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--calendar-event-color) 25%, transparent);
+    font-weight: var(--font-weight-medium);
+  }
+
+  [data-slot="calendar-event"][data-dimmed] {
+    opacity: 0.5;
+  }
+
+  [data-slot="calendar-event"][data-drag-state="source"] {
+    opacity: 0.4;
+  }
+
+  [data-slot="calendar-event"][data-drag-state="preview"] {
+    pointer-events: none;
+    background: var(--calendar-event-fill);
+    color: var(--calendar-event-foreground);
+    box-shadow: 0 0 0 1.5px var(--calendar-event-color);
+  }
+
+  [data-slot="calendar-event"][data-selected] [data-slot="calendar-event-time"] {
+    color: inherit;
+  }
+
+  :where([data-slot="month-create-selection"], [data-slot="week-create-selection"]) {
+    background: color-mix(
+      in srgb,
+      oklch(from var(--calendar-event-color) l calc(c * 1.4) h) 20%,
+      transparent
+    );
+  }
+
+  :where([data-slot="month-boundary"]) {
+    background: color-mix(in srgb, var(--foreground) 28%, var(--background));
+  }
+}

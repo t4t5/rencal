@@ -47,8 +47,8 @@ const DefaultRemindersSection = () => {
         onSelect={(mins) => setDefaultReminders([...defaultReminders, mins])}
         onRemove={(mins) => setDefaultReminders(defaultReminders.filter((m) => m !== mins))}
         placeholder="Add reminder"
-        ghost={false}
-        withInputGroupAddon={false}
+        variant="default"
+        indentRows={false}
         addon={null}
       />
     </div>

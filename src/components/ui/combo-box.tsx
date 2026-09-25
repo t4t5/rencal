@@ -1,22 +1,24 @@
-import { KeyboardEventHandler, ReactNode, useRef } from "react"
+import { KeyboardEvent, KeyboardEventHandler, ReactNode, useRef } from "react"
 
 import { Command, CommandList } from "@/components/ui/command"
-import { InputGroup, InputGroupInput } from "@/components/ui/input-group"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+import { InputInner } from "@/components/ui/input"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 
 import { cn } from "@/lib/utils"
 
-import { DropdownArrow } from "./select"
+import { SelectIcon } from "./select"
 
 export function Combobox({
   addon,
+  inputClassName,
   children,
   placeholder,
   query,
   setQuery,
   open,
   setOpen,
-  ghost = true,
+  variant = "ghost",
   readOnly = false,
   disabled = false,
   onInputKeyDown,
@@ -24,13 +26,14 @@ export function Combobox({
   onHighlightChange,
 }: {
   addon: ReactNode
+  inputClassName?: string
   children: ReactNode
   placeholder?: string
   query: string
   setQuery: (query: string) => void
   open: boolean
   setOpen: (open: boolean) => void
-  ghost?: boolean
+  variant?: "ghost" | "default"
   readOnly?: boolean
   disabled?: boolean
   onInputKeyDown?: KeyboardEventHandler<HTMLInputElement>
@@ -45,53 +48,81 @@ export function Combobox({
   const anchorRef = useRef<HTMLDivElement>(null)
   const interactive = !readOnly && !disabled
 
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    onInputKeyDown?.(e)
+    if (e.defaultPrevented) return
+
+    // Reopen after Escape or a pick; preventDefault keeps cmdk from also moving.
+    if (!open && interactive && (e.key === "ArrowDown" || e.key === "ArrowUp")) {
+      e.preventDefault()
+      setOpen(true)
+    }
+
+    // Home/End move the caret, as in any text field, rather than jumping the list.
+    if (e.key === "Home" || e.key === "End") e.stopPropagation()
+  }
+
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverAnchor asChild>
-        <div
-          ref={anchorRef}
-          className={cn(
-            "flex items-center rounded-md pr-3 group",
-            interactive &&
-              "hover:shadow-input-border focus-within:bg-secondary focus-within:shadow-none! cursor-text",
-            {
-              "bg-secondary shadow-none!": open,
-              "shadow-input-border": !ghost && interactive,
-            },
-          )}
-          onClick={() => interactive && setOpen(true)}
-        >
-          <InputGroup className="border-none! bg-transparent!">
+    // Wraps the input too so its keys bubble (through the portal) to cmdk's handler.
+    <Command className="contents" value={highlightedValue} onValueChange={onHighlightChange}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverAnchor asChild>
+          <div
+            ref={anchorRef}
+            data-slot="combobox"
+            data-control="select"
+            data-state={open ? "open" : "closed"}
+            data-variant={variant}
+            data-disabled={disabled || undefined}
+            data-readonly={readOnly || undefined}
+            className={cn(
+              "control-row group flex min-h-control w-full min-w-0 items-center rounded-md border border-transparent",
+              interactive && [
+                "cursor-default [&:not(:focus-within):hover]:border-input",
+                controlSurfaceActive.focusWithin,
+                controlSurfaceActive.open,
+              ],
+              {
+                "border-input": variant === "default" && interactive,
+              },
+            )}
+            onClick={() => {
+              if (!interactive) return
+              setOpen(true)
+              anchorRef.current?.querySelector("input")?.focus()
+            }}
+          >
             {addon}
-            <InputGroupInput
-              className="pl-2"
+            <InputInner
+              data-slot="combobox-input"
+              className={cn("h-full flex-1 cursor-default", inputClassName)}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={placeholder}
               onFocus={() => interactive && setOpen(true)}
-              onKeyDown={onInputKeyDown}
+              onKeyDown={handleInputKeyDown}
               readOnly={readOnly}
               disabled={disabled}
+              // Like a disabled picker, a locked field isn't a Tab stop.
+              tabIndex={interactive ? undefined : -1}
             />
-          </InputGroup>
 
-          {interactive && <DropdownArrow forceVisible={open || !ghost} />}
-        </div>
-      </PopoverAnchor>
-      <PopoverContent
-        className="p-0 w-(--radix-popover-trigger-width)"
-        align="start"
-        onOpenAutoFocus={(e) => e.preventDefault()}
-        onInteractOutside={(e) => {
-          if (anchorRef.current?.contains(e.target as Node)) {
-            e.preventDefault()
-          }
-        }}
-      >
-        <Command value={highlightedValue} onValueChange={onHighlightChange}>
+            {interactive && <SelectIcon forceVisible={open || variant === "default"} />}
+          </div>
+        </PopoverAnchor>
+        <PopoverContent
+          className="overflow-hidden p-0 w-(--radix-popover-trigger-width)"
+          align="start"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+          onInteractOutside={(e) => {
+            if (anchorRef.current?.contains(e.target as Node)) {
+              e.preventDefault()
+            }
+          }}
+        >
           <CommandList>{children}</CommandList>
-        </Command>
-      </PopoverContent>
-    </Popover>
+        </PopoverContent>
+      </Popover>
+    </Command>
   )
 }

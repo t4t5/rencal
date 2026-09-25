@@ -46,6 +46,10 @@ const NAV_THROTTLE_MS = 80
 
 type ShortcutHandler = (e?: KeyboardEvent) => void
 
+const LOCKED_WHILE_EVENT_OPEN = SHORTCUTS.filter(
+  (shortcut) => !("allowWhileEventOpen" in shortcut && shortcut.allowWhileEventOpen),
+).map((shortcut) => shortcut.id)
+
 // Isolated so context updates in the shortcut handlers don't re-render <App />.
 export function GlobalShortcuts({
   onChangeCalendarView,
@@ -188,12 +192,12 @@ function useShortcutHandlers({
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)
+  const eventOpen = !!activeEvent || draftPopoverOpen
 
   // Tab / Shift-Tab drive event navigation.
   // Defer to the browser's native Tab handling ONLY when focus
   // is genuinely inside a tabbable control
   const shouldDeferEventNav = (): boolean => {
-    if (activeEvent || draftPopoverOpen) return true
     const active = document.activeElement as HTMLElement | null
     if (!isInteractiveElementFocused(active)) return false
     // tabIndex >= 0 → a real tab stop; leave it to the browser.
@@ -274,7 +278,7 @@ function useShortcutHandlers({
     triggerDuplicate(target)
   }
 
-  return {
+  const handlers: Record<ShortcutId, ShortcutHandler> = {
     today: () => {
       clearAgendaFocus()
       void navigateToDate(today())
@@ -333,6 +337,17 @@ function useShortcutHandlers({
       toggleCommandPalette()
     },
   }
+
+  return eventOpen ? lockBackground(handlers) : handlers
+}
+
+// Unhandled keys keep their native behavior (Tab moves within the popover, arrows scroll it).
+function lockBackground(
+  handlers: Record<ShortcutId, ShortcutHandler>,
+): Record<ShortcutId, ShortcutHandler> {
+  const locked = { ...handlers }
+  for (const id of LOCKED_WHILE_EVENT_OPEN) locked[id] = () => {}
+  return locked
 }
 
 // The agenda row under keyboard focus, if any, resolved to its event.

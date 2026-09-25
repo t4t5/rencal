@@ -1,6 +1,6 @@
 import { ReactNode } from "react"
 
-import { InputGroupAddon } from "@/components/ui/input-group"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -23,9 +23,25 @@ export const CalendarSelect = ({
   const editableCalendars = calendars.filter((cal) => !cal.read_only)
 
   return (
-    <Select value={calendar?.slug} onValueChange={onChange}>
-      <SelectTrigger className={cn("w-full pl-0", readOnly && "pointer-events-none")}>
-        {calendar ? <CalendarItem calendar={calendar} /> : <span>Select Calendar</span>}
+    <Select value={calendar?.slug} onValueChange={onChange} disabled={readOnly}>
+      <SelectTrigger
+        controlLayout
+        className={cn(
+          "w-full",
+          readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
+        )}
+      >
+        <ItemMedia>
+          {calendar && (
+            <div
+              className="size-3 shrink-0 rounded-xs"
+              style={{ backgroundColor: getCalendarColor(calendar) }}
+            />
+          )}
+        </ItemMedia>
+        <ItemContent className="truncate text-left text-foreground">
+          {calendar ? calendar.name || calendar.slug : "Select Calendar"}
+        </ItemContent>
       </SelectTrigger>
 
       <SelectContent>
@@ -43,15 +59,13 @@ export function CalendarItem({ calendar, children }: { calendar: Calendar; child
   const { name, slug } = calendar
 
   return (
-    <div className="flex items-center justify-between group max-w-full min-w-0">
-      <div className="flex items-center gap-2 min-w-0">
-        <InputGroupAddon>
-          <div
-            className="size-3 rounded-xs shrink-0"
-            style={{ backgroundColor: getCalendarColor(calendar) }}
-          />
-        </InputGroupAddon>
-        <span className="text-sm text-foreground truncate">{name || slug}</span>
+    <div className="group flex max-w-full min-w-0 items-center justify-between">
+      <div className="flex min-w-0 items-center gap-2">
+        <div
+          className="size-3 shrink-0 rounded-xs"
+          style={{ backgroundColor: getCalendarColor(calendar) }}
+        />
+        <span className="truncate text-sm">{name || slug}</span>
       </div>
 
       {children}

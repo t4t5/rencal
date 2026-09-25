@@ -20,10 +20,15 @@ export function TopLeftDate({
 }) {
   return (
     <div
+      data-slot="month-day-header"
+      data-typography="numerical"
+      data-selected={isActive || undefined}
+      data-weekend={day.isWeekend || undefined}
       className={cn(
-        "numerical flex items-center justify-end gap-1 p-1 cursor-default border-r border-divider last:border-r-0",
+        // Date alignment belongs to the calendar layout, not the active theme.
+        "flex items-center justify-end gap-1 p-1 cursor-default border-r border-border last:border-r-0",
         day.isWeekend && "bg-weekend",
-        isActive && "bg-accent",
+        isActive && "bg-selected text-selected-foreground",
       )}
       data-drop-day={day.dateKey}
       data-drop-zone="day"
@@ -36,10 +41,12 @@ export function TopLeftDate({
         </span>
       )}
       <span
+        data-slot="month-day-number"
+        data-today={day.isToday || undefined}
         className={cn(
           "pointer-events-none text-xs w-5 h-5 flex items-center justify-center",
-          day.isToday && "bg-today text-primary-foreground rounded-circle",
-          isActive && !day.isToday && "bg-accent rounded-circle",
+          day.isToday && "bg-today text-today-foreground rounded-circle",
+          isActive && !day.isToday && "bg-selected text-selected-foreground rounded-circle",
           dimmed && "opacity-50",
         )}
       >

@@ -56,8 +56,8 @@ export const ComposeEventInner = ({
   const calendar = calendars.find((cal) => cal.slug === calendarId)
 
   return (
-    <>
-      <div className="p-2">
+    <div data-slot="event-form" className="event-form flex flex-col pt-2">
+      <div>
         <EventInfo
           onClose={onCreate}
           summaryRef={summaryRef}
@@ -124,7 +124,7 @@ export const ComposeEventInner = ({
         />
       </div>
 
-      <div className="p-4 pt-0">
+      <div data-slot="event-form-footer" className="py-2">
         <Button
           onClick={onCreate}
           onKeyDown={(e) => {
@@ -137,6 +137,6 @@ export const ComposeEventInner = ({
           Add Event
         </Button>
       </div>
-    </>
+    </div>
   )
 }

@@ -7,8 +7,9 @@ import { UntitledEventText } from "@/components/ui/untitled-event-text"
 import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 
 import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
+import type { ResponseStatus } from "@/lib/cal-events"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
-import { getEventBlockClasses, getEventBlockStyle } from "@/lib/event-styles"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn } from "@/lib/utils"
 
 export function WeekAllDayBar({
@@ -16,8 +17,7 @@ export function WeekAllDayBar({
   colOffset,
   rowOffset,
   highlighted: highlightedByParent,
-  isPending,
-  isDeclined,
+  rsvp,
   isDraft,
   dimmed,
   onClick,
@@ -28,8 +28,7 @@ export function WeekAllDayBar({
   // Added to item.lane so bar lands on the right row in the parent grid:
   rowOffset: number
   highlighted: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
   isDraft: boolean
   dimmed: boolean
   onClick: () => void
@@ -43,12 +42,12 @@ export function WeekAllDayBar({
   const isStatic = isDraft || isDragPreview
   const onDragPointerDown = useEventDragHandle(item.event, { disabled: isStatic })
 
-  const isDashed = isPending || isDeclined
   const highlighted = highlightedByParent || contextOpen
   const fillsRow = item.endCol - item.startCol >= 7
 
   const inner = (
     <div
+      data-slot="week-all-day-lane"
       className={cn("p-0.5 py-px pr-[3px]", isDragPreview && "pointer-events-none")}
       style={{
         gridColumn: `${item.startCol + colOffset} / ${item.endCol + colOffset}`,
@@ -57,21 +56,21 @@ export function WeekAllDayBar({
     >
       <div
         ref={ref}
+        data-slot="calendar-event"
+        data-view="week"
+        data-kind="all-day"
+        data-selected={highlighted || undefined}
+        data-rsvp={rsvp ?? undefined}
+        data-draft={isDraft || undefined}
+        data-dimmed={(!isStatic && dimmed) || undefined}
+        data-drag-state={dragRole ?? undefined}
         data-event-clickable={!isStatic || undefined}
         className={cn(
-          getEventBlockClasses(highlighted, isDeclined),
-          "flex items-center px-1 py-px leading-4 rounded",
-          !isStatic && dimmed && "opacity-50",
-          isDraft && "font-medium",
-          dragRole === "source" && "opacity-40",
+          "flex items-center px-(--event-padding-inline) py-px leading-4 rounded-xs text-xs cursor-default",
         )}
-        style={getEventBlockStyle({
+        style={getCalendarEventStyle({
           calendarColor: item.calendarColor,
           eventColor: item.event.color,
-          highlighted,
-          isDashed,
-          isDraft,
-          isDragPreview,
         })}
         onPointerDown={onDragPointerDown}
         onClick={
@@ -85,7 +84,11 @@ export function WeekAllDayBar({
         }
       >
         {/* Make title in multi-day event sticky so it stays visible when user scrolls: */}
-        <span className="sticky truncate min-w-0" style={{ left: GUTTER_WIDTH + 4 }}>
+        <span
+          data-slot="calendar-event-title"
+          className="sticky truncate min-w-0"
+          style={{ left: GUTTER_WIDTH + 4 }}
+        >
           {item.event.summary || <UntitledEventText />}
         </span>
       </div>

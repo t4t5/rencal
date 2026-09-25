@@ -1,9 +1,8 @@
-import { ReactNode, useEffect, useRef, useState } from "react"
+import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
 
 import { EventInfo } from "@/components/event-parts/EventInfo"
-import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +10,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { MoreButton } from "@/components/ui/more-button"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -33,8 +33,6 @@ import {
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "@/lib/rrule-utils"
 
-import { MoreHorizIcon } from "@/icons/more-horiz"
-
 export const EditEvent = ({
   event,
   onRequestSave,
@@ -48,13 +46,14 @@ export const EditEvent = ({
   const { setActiveEventKey } = useCalEvents()
   const { requestSync } = useSync()
 
-  const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(null)
-  const originalEventRef = useRef<CalendarEvent | null>(null)
+  const [dirtyEvent, setDirtyEvent] = useState<CalendarEvent | null>(event)
+  const originalEventRef = useRef<CalendarEvent | null>(event)
 
   const { triggerDelete } = useDeleteEvent()
   const { triggerDuplicate } = useDuplicateEvent()
 
-  useEffect(() => {
+  // Populate the form before the popover measures it, including when switching events.
+  useLayoutEffect(() => {
     if (event) {
       setDirtyEvent(event)
       originalEventRef.current = event
@@ -163,8 +162,8 @@ export const EditEvent = ({
   }
 
   return (
-    <div className="px-2 pt-2 pb-2 flex flex-col grow">
-      <div className="flex justify-end px-1 pb-1">
+    <div data-slot="event-form" className="event-form pt-2 pb-2 flex flex-col grow">
+      <div className="flex justify-end pb-1">
         {children}
 
         {!isReadonly && (
@@ -257,9 +256,7 @@ const OverflowMenu = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7">
-          <MoreHorizIcon className="size-4" />
-        </Button>
+        <MoreButton />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onDuplicate}>

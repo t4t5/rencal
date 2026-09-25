@@ -12,14 +12,13 @@ import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { isoWeekNumber } from "@/lib/event-time"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { MonthDragToCreateSelection } from "./DragToCreateSelection"
 import { TopLeftDate } from "./TopLeftDate"
-import { LANE_GAP, LANE_HEIGHT } from "./lane-geometry"
+import { reservedAllDayHeight } from "./lane-geometry"
 
 const MAX_ALL_DAY_LANES = 3
-const MONTH_BOUNDARY_COLOR = "color-mix(in srgb, var(--foreground) 28%, var(--background))"
 
 function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizontal?: boolean }) {
   if (col < 0 || (col === 0 && !showHorizontal)) return null
@@ -27,16 +26,19 @@ function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizo
   if (col === 0) {
     return (
       <div
+        data-slot="month-boundary"
+        data-orientation="horizontal"
         className="pointer-events-none absolute -top-px left-0 right-0 z-20 h-[3px]"
-        style={{ backgroundColor: MONTH_BOUNDARY_COLOR }}
       />
     )
   }
 
   return (
     <div
+      data-slot="month-boundary"
+      data-orientation="vertical"
       className="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 -translate-x-px"
-      style={{ left: `${(col / 7) * 100}%`, backgroundColor: MONTH_BOUNDARY_COLOR }}
+      style={{ left: `${(col / 7) * 100}%` }}
     />
   )
 }
@@ -104,6 +106,17 @@ export const MonthWeekRow = memo(function MonthWeekRow({
     <>
       {/* Day numbers */}
       <div className="grid grid-cols-7 relative">
+        {/* Before the cells, so the last day header stays :last-child */}
+        {showWeekNumbers && weekDays[0] && (
+          <span
+            data-typography="numerical"
+            className="pointer-events-none absolute left-1 top-1 z-10 text-2xs leading-[18px] text-muted-foreground select-none"
+          >
+            {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
+          </span>
+        )}
+        <MonthBoundary col={monthStartCol} />
+
         {weekDays.map((day) => (
           <TopLeftDate
             key={day.dateKey}
@@ -114,15 +127,12 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             startCreateDrag={startCreateDrag}
           />
         ))}
-        {showWeekNumbers && weekDays[0] && (
-          <span className="pointer-events-none absolute left-1 top-1 z-10 text-[10px] leading-[18px] text-muted-foreground numerical select-none">
-            {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
-          </span>
-        )}
-        <MonthBoundary col={monthStartCol} />
       </div>
 
       <div className="grid grid-cols-7 grow min-h-0 relative">
+        {/* Before the cells, so the last day cell stays :last-child */}
+        <MonthBoundary col={monthStartCol} showHorizontal={false} />
+
         {/* All-day events */}
         {allDayEvents.map((item) => {
           const key = eventKey(item.event)
@@ -132,8 +142,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               key={key}
               item={item}
               highlighted={key === activeEventKey || key === selectedEventKey}
-              isPending={isPendingEvent(item.event, calendars)}
-              isDeclined={isDeclinedEvent(item.event, calendars)}
+              rsvp={getUserResponseStatus(item.event, calendars)}
               isDraft={item.event === draftEvent}
               dimmed={dimmed}
               onClick={() => onEventClick(key)}
@@ -163,9 +172,7 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               day={day}
               timedEvents={layout.timedByCol[colIndex]}
               hiddenAllDayCount={hiddenAllDay}
-              reservedAllDayHeight={
-                reservedLanes[colIndex] > 0 ? reservedLanes[colIndex] * LANE_HEIGHT - LANE_GAP : 0
-              }
+              reservedAllDayHeight={reservedAllDayHeight(reservedLanes[colIndex])}
               activeEventKey={activeEventKey}
               selectedEventKey={selectedEventKey}
               isActiveDay={day.dateKey === activeDateKey}
@@ -177,7 +184,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             />
           )
         })}
-        <MonthBoundary col={monthStartCol} showHorizontal={false} />
       </div>
     </>
   )

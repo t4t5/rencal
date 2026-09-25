@@ -17,7 +17,9 @@ export const LocationInput = ({
 }) => {
   return (
     <InputGroup
-      className={cn(readOnly && "hover:border-transparent! focus-within:bg-transparent!")}
+      data-control="textarea"
+      data-readonly={readOnly}
+      className={cn(readOnly && "pointer-events-none")}
     >
       <InputGroupAddon>
         <PushpinIcon />
@@ -26,7 +28,6 @@ export const LocationInput = ({
         placeholder="Location"
         value={value ?? ""}
         readOnly={readOnly}
-        className={"hover:border-transparent! focus:bg-transparent! pl-2"}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={(e) => {
           if (e.key === "Enter") {

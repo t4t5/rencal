@@ -199,7 +199,8 @@ export function PluginsPage() {
   return (
     <SettingsContent className="w-full min-w-0 mt-3">
       <Input
-        ghost={false}
+        variant="default"
+        className="shrink-0"
         aria-label="Search plugins"
         placeholder="Search plugins…"
         value={search}
@@ -392,7 +393,9 @@ function PluginRow({
       <PluginPreview key={previewUrl} url={previewUrl} name={name} />
       <div className="flex flex-1 flex-col gap-3 min-w-0">
         <div className="flex flex-col gap-1 min-w-0">
-          <h3 className="heading text-sm break-words">{name}</h3>
+          <h3 data-typography="heading" className="text-sm break-words">
+            {name}
+          </h3>
           <p className="text-xs text-muted-foreground break-words">
             {owner}
             {version && ` · ${version}`}
@@ -407,7 +410,7 @@ function PluginRow({
 function PluginPreview({ url, name }: { url: string | null; name: string }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded border border-border bg-muted/10">
+    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-xs border border-border bg-muted">
       {url && !failed ? (
         <img
           src={url}

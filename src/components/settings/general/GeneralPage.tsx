@@ -42,7 +42,7 @@ const TimeFormatSection = () => {
     <div className="flex flex-col gap-2 w-[150px]">
       <label className="text-sm">Time format</label>
       <Select value={timeFormat} onValueChange={(v) => setTimeFormat(v as TimeFormat)}>
-        <SelectTrigger className="w-full" ghost={false}>
+        <SelectTrigger className="w-full" variant="default">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -61,7 +61,7 @@ const FirstDayOfWeekSection = () => {
     <div className="flex flex-col gap-2 w-[150px]">
       <label className="text-sm">Start week on</label>
       <Select value={firstDayOfWeek} onValueChange={(v) => setFirstDayOfWeek(v as FirstDayOfWeek)}>
-        <SelectTrigger className="w-full" ghost={false}>
+        <SelectTrigger className="w-full" variant="default">
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -127,7 +127,7 @@ const DataDirectorySection = () => {
     <div className="flex flex-col gap-2 w-[400px]">
       <label className="text-sm">Data directory</label>
       <div className="flex gap-2">
-        <Input value={calendarDir} readOnly ghost={false} className="flex-1" />
+        <Input value={calendarDir} readOnly variant="default" className="flex-1" />
         <Button variant="secondary" onClick={onChange}>
           Change
         </Button>

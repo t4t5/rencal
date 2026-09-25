@@ -43,7 +43,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
             <SheetTitle className="text-lg">Keyboard shortcuts</SheetTitle>
 
             <SheetClose asChild>
-              <Button variant="ghost" size="icon-sm" aria-label="Close keyboard shortcuts">
+              <Button variant="ghost" size="icon-xs" aria-label="Close keyboard shortcuts">
                 <CloseIcon />
               </Button>
             </SheetClose>
@@ -58,7 +58,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
               onChange={(event) => setQuery(event.target.value)}
               placeholder="Find keyboard shortcuts"
               aria-label="Find keyboard shortcuts"
-              ghost={false}
+              variant="default"
               className="h-10 pr-3 pl-9"
             />
           </div>

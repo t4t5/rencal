@@ -12,6 +12,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { SelectButton } from "@/components/ui/select"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
@@ -22,7 +23,6 @@ import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
 
 import { CheckIcon } from "@/icons/check"
-import { ChevronDownIcon } from "@/icons/chevron-down"
 
 export function MainHeader({
   calendarView,
@@ -34,7 +34,7 @@ export function MainHeader({
   const { navigateToDate } = useCalendarNavigation()
 
   return (
-    <div className="shrink-0 flex gap-2 p-4">
+    <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-4">
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 
@@ -81,10 +81,7 @@ const CalendarViewDropdown = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
-          {currentView?.name ?? "View"}
-          <ChevronDownIcon className="size-3 text-muted-foreground" />
-        </Button>
+        <SelectButton tabIndex={-1}>{currentView?.name ?? "View"}</SelectButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {CALENDAR_VIEW_OPTIONS.map((option) => (
@@ -117,10 +114,7 @@ const GroupSwitcher = () => {
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button tabIndex={-1} variant="secondary" className="min-w-24 justify-between">
-          {formatGroupName(activeGroup)}
-          <ChevronDownIcon className="size-3 text-muted-foreground" />
-        </Button>
+        <SelectButton tabIndex={-1}>{formatGroupName(activeGroup)}</SelectButton>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-48">

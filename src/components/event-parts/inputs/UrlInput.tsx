@@ -6,6 +6,7 @@ import {
   InputGroupButton,
   InputGroupInput,
 } from "@/components/ui/input-group"
+import { ItemActions, ItemContent } from "@/components/ui/item"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 
 import { detectedUrlSourceLabel, toOpenableUrl, type DetectedUrl } from "@/lib/event-url"
@@ -50,7 +51,7 @@ export const UrlInput = ({
             autoCapitalize="off"
             autoCorrect="off"
             spellCheck={false}
-            className="min-w-0 pl-2"
+            className="min-w-0"
             onChange={(e) => onChange(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
@@ -60,14 +61,16 @@ export const UrlInput = ({
             }}
           />
           {url && (
-            <InputGroupButton
-              size="icon-xs"
-              aria-label="Open link"
-              className="mr-1 h-6! shrink-0 text-muted-foreground hover:text-foreground"
-              onClick={() => openUrl(toOpenableUrl(url))}
-            >
-              <ArrowUpRightIcon />
-            </InputGroupButton>
+            <InputGroupAddon align="inline-end">
+              <InputGroupButton
+                size="icon-xs"
+                aria-label="Open link"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => openUrl(toOpenableUrl(url))}
+              >
+                <ArrowUpRightIcon />
+              </InputGroupButton>
+            </InputGroupAddon>
           )}
         </InputGroup>
       )}
@@ -81,30 +84,30 @@ export const UrlInput = ({
  */
 function UrlLink({ url, hint }: { url: string; hint?: string }) {
   return (
-    <InputGroup className="pr-1">
+    <InputGroup>
       <InputGroupAddon>
         <LinkIcon />
       </InputGroupAddon>
 
-      <div className="flex min-w-0 flex-1">
+      <ItemContent className="flex">
         <button
           type="button"
-          className="min-w-0 cursor-pointer truncate rounded-xs px-2 py-1 text-sm outline-none hover:underline focus-visible:ring-ring/50 focus-visible:ring-[3px]"
+          className="min-w-0 cursor-pointer truncate rounded-xs py-1 text-sm outline-none hover:underline focus-visible:ring-ring/50 focus-visible:ring-[3px]"
           onClick={() => openUrl(toOpenableUrl(url))}
         >
           {url}
         </button>
-      </div>
+      </ItemContent>
 
       {hint && (
         <Tooltip>
           <TooltipTrigger asChild tabIndex={-1}>
-            <span
-              className="flex size-6 shrink-0 items-center justify-center text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
+            <ItemActions
+              className="text-muted-foreground opacity-0 group-hover/input-group:opacity-100 group-focus-within/input-group:opacity-100"
               aria-label={hint}
             >
               <QuestionMarkCircleIcon className="size-4" />
-            </span>
+            </ItemActions>
           </TooltipTrigger>
           <TooltipContent>{hint}</TooltipContent>
         </Tooltip>

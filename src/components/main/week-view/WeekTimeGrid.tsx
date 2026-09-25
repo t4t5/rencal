@@ -24,7 +24,7 @@ import {
   startOfWeek,
   type FirstDayOfWeek,
 } from "@/lib/event-time"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import { AllDayContextMenu } from "./AllDayContextMenu"
@@ -128,6 +128,18 @@ export function WeekTimeGrid({
   // alignment depends on firstDayOfWeek): scrollTop to current time / 08:00,
   // scrollLeft to the first day of activeDate's week.
   const didInitialScrollRef = useRef(false)
+  const previousDayWidthRef = useRef(dayWidth)
+  useLayoutEffect(() => {
+    const previousWidth = previousDayWidthRef.current
+    previousDayWidthRef.current = dayWidth
+    const el = scrollContainerRef.current
+    // Theme padding, font loading, or a window resize can change the tracks.
+    // Preserve the visible day offset after the new track widths reach the DOM.
+    if (el && didInitialScrollRef.current && previousWidth !== dayWidth) {
+      el.scrollLeft = (el.scrollLeft / previousWidth) * dayWidth
+    }
+  }, [dayWidth, scrollContainerRef])
+
   useLayoutEffect(() => {
     if (!dayWidthReady || !settingsLoaded || didInitialScrollRef.current) return
     const el = scrollContainerRef.current
@@ -197,12 +209,15 @@ export function WeekTimeGrid({
     <div
       ref={scrollContainerRef}
       data-drag-scroll
+      data-slot="week-scroll"
+      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as React.CSSProperties}
       className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
     >
       <div style={{ width: totalContentWidth, minHeight: "100%" }}>
         {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
             line up exactly with the time grid below. */}
         <div
+          data-slot="week-header"
           className="sticky top-0 z-20 bg-background grid"
           style={{
             gridTemplateColumns: dayGridCols,
@@ -213,7 +228,8 @@ export function WeekTimeGrid({
         >
           {/* Gutter spacer — sticky left, spans all rows */}
           <div
-            className="sticky left-0 z-30 bg-background border-r border-b border-divider"
+            data-slot="week-header-gutter"
+            className="sticky left-0 z-30 bg-background border-r border-b border-border"
             style={{ gridColumn: 1, gridRow: "1 / -1" }}
           />
           <DayHeaders
@@ -234,12 +250,15 @@ export function WeekTimeGrid({
                 >
                   <div
                     className={cn(
-                      "border-r border-b border-divider",
+                      "border-r border-b border-border",
                       day.dateKey === activeDateKey
-                        ? "bg-secondary-hover"
+                        ? "bg-selected text-selected-foreground"
                         : day.isWeekend && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
+                    data-slot="week-all-day"
+                    data-selected={day.dateKey === activeDateKey || undefined}
+                    data-weekend={day.isWeekend || undefined}
                     data-drop-day={day.dateKey}
                     data-drop-zone="all-day"
                     onContextMenu={(e) => {
@@ -258,8 +277,7 @@ export function WeekTimeGrid({
                     colOffset={1}
                     rowOffset={1}
                     highlighted={key === activeEventKey || key === selectedEventKey}
-                    isPending={isPendingEvent(item.event, calendars)}
-                    isDeclined={isDeclinedEvent(item.event, calendars)}
+                    rsvp={getUserResponseStatus(item.event, calendars)}
                     isDraft={item.event === draftEvent}
                     dimmed={dimmed}
                     onClick={() => onEventClick(key)}
@@ -272,10 +290,14 @@ export function WeekTimeGrid({
 
         {/* Zone 3: Time grid (horizontally and vertically scrollable) */}
         <div
+          data-slot="week-time-grid"
           className="grid relative"
           style={{ gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
         >
-          <div className="sticky left-0 z-10 bg-background border-r border-divider">
+          <div
+            data-slot="week-time-gutter"
+            className="sticky left-0 z-10 bg-background border-r border-border"
+          >
             <TimeGutter timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
@@ -289,25 +311,22 @@ export function WeekTimeGrid({
             >
               <div
                 className={cn(
-                  "relative border-r border-divider cursor-default",
+                  "relative border-r border-border cursor-default",
                   day.dateKey === activeDateKey
-                    ? "bg-secondary-hover"
+                    ? "bg-selected text-selected-foreground"
                     : day.isWeekend && "bg-weekend",
                 )}
                 style={
                   {
-                    "--day-bg":
-                      day.dateKey === activeDateKey
-                        ? "var(--secondary-hover)"
-                        : day.isWeekend
-                          ? "var(--weekend)"
-                          : "var(--background)",
-                    backgroundImage: `repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT - 1}px, var(--divider) ${HOUR_HEIGHT}px)`,
+                    backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
                   } as React.CSSProperties
                 }
                 id={day.dateKey === activeDateKey ? ACTIVE_DAY_EL_ID : undefined}
                 data-drop-day={day.dateKey}
                 data-drop-zone="timed"
+                data-slot="week-day"
+                data-selected={day.dateKey === activeDateKey || undefined}
+                data-weekend={day.isWeekend || undefined}
                 onPointerDown={(event) => startCreateDrag(day.date, event)}
                 onClick={() => onDayClick(day.date)}
               >
@@ -319,8 +338,7 @@ export function WeekTimeGrid({
                       key={key}
                       layout={layout}
                       highlighted={key === activeEventKey || key === selectedEventKey}
-                      isPending={isPendingEvent(layout.event, calendars)}
-                      isDeclined={isDeclinedEvent(layout.event, calendars)}
+                      rsvp={getUserResponseStatus(layout.event, calendars)}
                       isDraft={layout.event === draftEvent}
                       dimmed={dimmed}
                       onEventClick={onEventClick}
@@ -352,7 +370,9 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
         return (
           <span
             key={h}
-            className="absolute right-1.5 text-[11px] text-muted-foreground numerical leading-none -translate-y-1/2 select-none"
+            data-slot="week-hour-label"
+            data-typography="numerical"
+            className="absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none"
             style={{ top: h * HOUR_HEIGHT }}
           >
             {formatWallclockTime(h, 0, timeFormat)}
@@ -377,9 +397,15 @@ const DayHeaders = ({
   return days.map((day) => (
     <div
       key={day.dateKey}
+      data-slot="week-day-header"
+      data-typography="numerical"
+      data-selected={day.dateKey === activeDateKey || undefined}
+      data-weekend={day.isWeekend || undefined}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-divider p-0.5 pb-px cursor-default numerical",
-        day.dateKey === activeDateKey ? "bg-secondary-hover" : day.isWeekend && "bg-weekend",
+        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
+        day.dateKey === activeDateKey
+          ? "bg-selected text-selected-foreground"
+          : day.isWeekend && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
       // Headers double as an all-day drop zone so multi-day bars can land here
@@ -388,13 +414,15 @@ const DayHeaders = ({
       data-drop-zone="all-day"
       onClick={() => onDayClick(day.date)}
     >
-      <span className="text-[11px] text-muted-foreground uppercase">
+      <span data-slot="week-weekday" className="text-2xs text-muted-foreground uppercase">
         {formatWeekday(day.date, "short")}
       </span>
       <span
+        data-slot="week-day-number"
+        data-today={day.isToday || undefined}
         className={cn(
-          "text-[13px] font-medium w-7 h-7 flex items-center justify-center rounded-circle",
-          day.isToday && "bg-today text-primary-foreground",
+          "text-xs font-medium w-7 h-7 flex items-center justify-center rounded-circle",
+          day.isToday && "bg-today text-today-foreground",
           dimmed && "opacity-50",
         )}
       >

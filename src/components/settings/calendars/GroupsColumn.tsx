@@ -17,13 +17,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
+import { MoreButton } from "@/components/ui/more-button"
+import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { cn } from "@/lib/utils"
-
-import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
 const DEFAULT_GROUP = "default"
@@ -66,46 +65,38 @@ export function GroupsColumn({
   }
 
   return (
-    <SettingsContent className="w-[220px] border-r border-r-divider gap-2 py-[15px] grow-0 px-2">
+    <SettingsContent className="w-[220px] border-r border-border gap-2 py-[15px] grow-0 px-2">
       <div className="flex justify-between items-center w-full">
-        <span className="text-sm text-muted-foreground pl-1 heading">Groups</span>
+        <span data-typography="heading" className="text-sm text-muted-foreground pl-1">
+          Groups
+        </span>
 
-        <Button size="icon-sm" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
+        <Button size="icon-xs" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
           <PlusIcon className="size-4" />
         </Button>
       </div>
 
-      <div className="flex flex-col gap-2">
+      <TabsList variant="navigation" aria-label="Calendar groups" className="w-full">
         {groups.map((group) => {
           const isDefault = group === DEFAULT_GROUP
 
           return (
-            <div
-              key={group}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelect(group)}
-              onKeyDown={(event) => {
-                if (event.key === "Enter" || event.key === " ") onSelect(group)
-              }}
-              className={cn(
-                "text-sm flex items-center justify-between gap-2 rounded-md text-muted-foreground px-2 py-2 group text-left",
-                {
-                  "bg-secondary text-accent-foreground": selectedGroup === group,
-                },
-              )}
-            >
-              <span className="overflow-hidden text-ellipsis">{formatGroupName(group)}</span>
+            <div key={group} className="group relative w-full">
+              <TabsTrigger value={group} className={isDefault ? undefined : "pr-10"}>
+                <span className="overflow-hidden text-ellipsis">{formatGroupName(group)}</span>
+              </TabsTrigger>
               {!isDefault && (
-                <MoreMenu
-                  onEdit={() => setModalState({ mode: "edit", group })}
-                  onDelete={() => void deleteGroup(group)}
-                />
+                <div className="absolute inset-y-0 right-0 flex aspect-square items-center justify-center">
+                  <MoreMenu
+                    onEdit={() => setModalState({ mode: "edit", group })}
+                    onDelete={() => void deleteGroup(group)}
+                  />
+                </div>
               )}
             </div>
           )
         })}
-      </div>
+      </TabsList>
 
       {modalState && (
         <GroupModal
@@ -214,14 +205,10 @@ const MoreMenu = ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon-xs"
+        <MoreButton
           className="invisible group-hover:visible"
           onClick={(event) => event.stopPropagation()}
-        >
-          <MoreHorizIcon className="size-4" />
-        </Button>
+        />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>

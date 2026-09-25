@@ -1,6 +1,6 @@
 import { RRule, RRuleSet } from "rrule"
 
-import { InputGroupAddon } from "@/components/ui/input-group"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 
 import { cn } from "@/lib/utils"
@@ -51,18 +51,24 @@ export const RepeatSelect = ({
   }
 
   return (
-    <Select value={value?.toString() ?? "none"} onValueChange={handleChange}>
-      <SelectTrigger className={cn("w-full justify-start pl-0", readOnly && "pointer-events-none")}>
-        <InputGroupAddon>
+    <Select value={value?.toString() ?? "none"} onValueChange={handleChange} disabled={readOnly}>
+      <SelectTrigger
+        controlLayout
+        className={cn(
+          "w-full justify-start",
+          readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
+        )}
+      >
+        <ItemMedia>
           <RepeatIcon />
-        </InputGroupAddon>
-        <div className="grow text-left overflow-hidden">
+        </ItemMedia>
+        <ItemContent className="overflow-hidden text-left">
           {value ? (
-            <div className="overflow-hidden text-ellipsis">{getHumanInterval(value)}</div>
+            <span className="block truncate">{getHumanInterval(value)}</span>
           ) : (
-            <span className="text-muted-foreground">Repeat</span>
+            <span className="text-placeholder-foreground">Repeat</span>
           )}
-        </div>
+        </ItemContent>
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="none">No repeat</SelectItem>

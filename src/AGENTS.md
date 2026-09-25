@@ -3,6 +3,7 @@
 - Icons must be React components in `src/icons`.
 - Use `cn` for conditional classes.
 - Prefer padding and flex gaps over margins.
+- Put `DialogHeader` first in `DialogContent`, with no margins or centering wrappers around it: themes style it as a title bar (see `src/themes/README.md`).
 - Backend access goes through the app API in `src/lib/api/` (see "App API boundary" below), never the raw `rpc` proxy.
 - Debugging complex behaviour (e.g. scroll): add targeted `console.debug` logs gated by `isDebugMode` from `@/lib/debug`, then test with `just debug [flags]`.
 

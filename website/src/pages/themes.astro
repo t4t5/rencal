@@ -4,6 +4,7 @@ import "../styles/themes.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
 import AppPreview from "../components/themes/AppPreview.astro"
+import ThemeTile from "../components/themes/ThemeTile.astro"
 import CheckIcon from "../icons/check.astro"
 import CopyIcon from "../icons/copy.astro"
 import DownloadIcon from "../icons/download.astro"
@@ -28,18 +29,16 @@ function parseThemeCss(css: string): Record<string, string> {
   return vars
 }
 
-// Ren's color primitives live in the app's global.css `:root` block (ren.css
-// itself is comment-only), so they're spelled out here. Keep in sync with the
-// app's global.css.
+// Most of ren's color primitives live in the app's global.css `:root` block
+// (ren.css only sets its accents), so they're spelled out here. Keep in sync
+// with the app's global.css.
 const REN_CORE: Record<string, string> = {
   "--background": "#131313",
   "--foreground": "white",
-  "--muted": "rgba(255, 255, 255, 0.5)",
+  "--muted-foreground": "rgba(255, 255, 255, 0.5)",
   "--primary": "#f56313",
-  "--highlight": "#ff610b",
-  "--today": "#3a93ff",
-  "--hover-tint": "white",
-  "--hover-mix": "5%",
+  "--surface-tint": "white",
+  "--surface-tint-step": "5%",
 }
 
 // Omarchy (appearance: null) has no static palette to preview.
@@ -62,33 +61,27 @@ if (renTheme === undefined) throw new Error('Missing "ren" theme in manifest')
 // fill editor fields for primitives a theme doesn't override.
 const REN_DEFAULTS: Record<string, string> = {
   ...REN_CORE,
-  "--radius-base": "0px",
-  "--radius-circle": "0px",
-  "--font-heading": "var(--mono)",
-  "--font-button": "var(--mono)",
-  "--font-numerical": "var(--mono)",
-  "--font-heading-transform": "uppercase",
-  "--font-button-transform": "uppercase",
-  "--font-numerical-transform": "uppercase",
+  "--brand": "var(--primary)",
+  "--today": "var(--primary)",
+  "--radius": "0px",
+  "--font-heading": "var(--font-mono)",
+  "--font-button": "var(--font-mono)",
+  "--font-numerical": "var(--font-mono)",
+  "--text-heading--transform": "uppercase",
+  "--text-button--transform": "uppercase",
+  "--text-numerical--transform": "uppercase",
 }
 
 const payload = { themes, defaults: REN_DEFAULTS }
 
-const styleAttr = (vars: Record<string, string>) =>
-  Object.entries(vars)
-    .map(([name, value]) => `${name}: ${value}`)
-    .join("; ")
-
-const renVars = renTheme.vars
-
 const colorControls = [
   { var: "--background", label: "Background" },
   { var: "--foreground", label: "Text" },
-  { var: "--muted", label: "Muted text" },
+  { var: "--muted-foreground", label: "Muted text" },
   { var: "--primary", label: "Primary" },
-  { var: "--highlight", label: "Highlight" },
+  { var: "--brand", label: "Brand" },
   { var: "--today", label: "Today" },
-  { var: "--hover-tint", label: "Hover tint" },
+  { var: "--surface-tint", label: "Surface tint" },
 ]
 
 const segControls = [
@@ -127,7 +120,8 @@ const segControls = [
     <div class="flex flex-col gap-3">
       <h1 class="text-3xl hidden">renCal Themes</h1>
       <p>
-        Build your own renCal theme by adjusting the colors and styles below. Place the generated CSS file in <code class="text-sm">~/.config/rencal/themes/</code> to use it.
+        Build your own renCal theme by adjusting the colors and styles below. Place the generated
+        CSS file in <code class="text-sm">~/.config/rencal/themes/</code> to use it.
       </p>
     </div>
 
@@ -140,58 +134,14 @@ const segControls = [
       <!-- Controls -->
       <aside class="order-2 flex flex-col gap-10 lg:order-1">
         <div class="flex flex-col gap-3">
-          <div class="grid grid-cols-2 gap-2">
-            {
-              themes.map((theme) => (
-                <button type="button" class="tp-tile" data-theme-tile={theme.id}>
-                  <div class="rc-scope w-full" style={styleAttr(theme.vars)}>
-                    <div class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-white/10 bg-(--background) p-2">
-                      <div class="flex items-center justify-between gap-2">
-                        <div class="h-[4px] grow rounded bg-(--foreground)" />
-                        <div class="rc-circle size-3 bg-(--primary)" />
-                      </div>
-                      <div class="relative grow">
-                        <div class="absolute inset-0 flex justify-between gap-1.5">
-                          <div class="grow bg-(--hover-tint) opacity-5" />
-                          <div class="grow bg-(--hover-tint) opacity-5" />
-                          <div class="grow bg-(--hover-tint) opacity-10" />
-                        </div>
-                        <div class="absolute inset-0 flex flex-col">
-                          <div class="grow" />
-                          <div class="grow bg-(--hover-tint) opacity-5" />
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  <span class="text-xs text-muted">{theme.name}</span>
-                </button>
-              ))
-            }
-
-            <button type="button" class="tp-tile" data-theme-tile="custom">
-              <div id="tp-custom-palette" class="rc-scope w-full" style={styleAttr(renVars)}>
-                <div
-                  class="flex h-16 w-full flex-col gap-2 rounded-[4px] border border-dashed border-white/20 bg-(--background) p-2"
-                >
-                  <div class="flex items-center justify-between gap-2">
-                    <div class="h-[4px] grow rounded bg-(--foreground)"></div>
-                    <div class="rc-circle size-3 bg-(--primary)"></div>
-                  </div>
-                  <div class="relative grow">
-                    <div class="absolute inset-0 flex justify-between gap-1.5">
-                      <div class="grow bg-(--hover-tint) opacity-5"></div>
-                      <div class="grow bg-(--hover-tint) opacity-5"></div>
-                      <div class="grow bg-(--hover-tint) opacity-10"></div>
-                    </div>
-                    <div class="absolute inset-0 flex flex-col">
-                      <div class="grow"></div>
-                      <div class="grow bg-(--hover-tint) opacity-5"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <span class="text-xs text-muted">Custom</span>
-            </button>
+          <div class="grid grid-cols-2 gap-3">
+            {themes.map((theme) => <ThemeTile id={theme.id} name={theme.name} vars={theme.vars} />)}
+            <ThemeTile
+              id="custom"
+              name="Custom"
+              vars={renTheme.vars}
+              paletteId="tp-custom-palette"
+            />
           </div>
         </div>
 
@@ -228,8 +178,8 @@ const segControls = [
 
           <div class="flex flex-col gap-1">
             <div class="flex justify-between text-xs">
-              <label class="tracking-wide text-muted uppercase">Hover strength</label>
-              <span class="text-muted" data-range-out="--hover-mix"></span>
+              <label class="tracking-wide text-muted uppercase">Tint step</label>
+              <span class="text-muted" data-range-out="--surface-tint-step"></span>
             </div>
             <input
               type="range"
@@ -237,22 +187,22 @@ const segControls = [
               min="0"
               max="25"
               step="1"
-              data-range-for="--hover-mix"
+              data-range-for="--surface-tint-step"
             />
           </div>
 
           <div class="flex flex-col gap-1">
             <div class="flex justify-between text-xs">
               <label class="tracking-wide text-muted uppercase">Button radius</label>
-              <span class="text-muted" data-range-out="--radius-base"></span>
+              <span class="text-muted" data-range-out="--radius"></span>
             </div>
             <input
               type="range"
               class="tp-range"
               min="0"
-              max="1"
-              step="0.05"
-              data-range-for="--radius-base"
+              max="16"
+              step="1"
+              data-range-for="--radius"
             />
           </div>
 
@@ -301,7 +251,9 @@ const segControls = [
           </div>
           <p class="text-sm opacity-80">
             If you want to share your theme with others, you can
-            <a href="https://github.com/t4t5/rencal/pulls" class="text-primary hover:underline">open a PR</a>.
+            <a href="https://github.com/t4t5/rencal/pulls" class="text-primary hover:underline"
+              >open a PR</a
+            >.
           </p>
         </div>
       </aside>
@@ -418,13 +370,17 @@ const segControls = [
       const value = Number.parseFloat(effective(name)) || 0
       input.value = String(value)
       const out = document.querySelector(`[data-range-out="${name}"]`)
-      if (out) out.textContent = name === "--hover-mix" ? `${value}%` : `${value}rem`
+      if (out) out.textContent = name === "--surface-tint-step" ? `${value}%` : `${value}px`
     }
 
     const segState: Record<string, string> = {
       font: effective("--font-heading").includes("mono") ? "mono" : "sans",
-      caps: effective("--font-heading-transform") === "uppercase" ? "uppercase" : "normal",
-      circle: Number.parseFloat(effective("--radius-circle")) === 0 ? "sharp" : "pill",
+      caps: effective("--text-heading--transform") === "uppercase" ? "uppercase" : "normal",
+      // Unset --radius-circle follows --radius: square at 0, a pill otherwise.
+      circle:
+        Number.parseFloat(effective("--radius-circle") || effective("--radius")) === 0
+          ? "sharp"
+          : "pill",
     }
     for (const seg of document.querySelectorAll<HTMLElement>("[data-seg]")) {
       for (const button of seg.querySelectorAll("button")) {
@@ -495,7 +451,7 @@ const segControls = [
   for (const input of document.querySelectorAll<HTMLInputElement>("[data-range-for]")) {
     input.addEventListener("input", () => {
       const name = input.dataset.rangeFor!
-      setVars({ [name]: name === "--hover-mix" ? `${input.value}%` : `${input.value}rem` })
+      setVars({ [name]: name === "--surface-tint-step" ? `${input.value}%` : `${input.value}px` })
     })
   }
 
@@ -506,14 +462,14 @@ const segControls = [
       const value = button.dataset.segValue!
 
       if (seg.dataset.seg === "font") {
-        const font = value === "mono" ? "var(--mono)" : "var(--sans)"
+        const font = value === "mono" ? "var(--font-mono)" : "var(--font-sans)"
         setVars({ "--font-heading": font, "--font-button": font, "--font-numerical": font })
       } else if (seg.dataset.seg === "caps") {
         const transform = value === "uppercase" ? "uppercase" : "none"
         setVars({
-          "--font-heading-transform": transform,
-          "--font-button-transform": transform,
-          "--font-numerical-transform": transform,
+          "--text-heading--transform": transform,
+          "--text-button--transform": transform,
+          "--text-numerical--transform": transform,
         })
       } else if (seg.dataset.seg === "circle") {
         setVars({ "--radius-circle": value === "pill" ? "calc(infinity * 1px)" : "0px" })

@@ -1,78 +1,93 @@
 /* Styles for the /themes playground page.
  *
  * The `.rc-scope` block mirrors renCal's theme system: the ren defaults from
- * the app's src/global.css `:root` block, plus the derived-token chain from
- * its `body` block. Theme primitives are applied as inline styles on top of
+ * the app's src/global.css `:root` block, plus its `[data-theme]` derivation.
+ * Theme primitives are applied as inline styles on top of
  * this scope (the website equivalent of the app's `[data-theme]` wrapping),
  * so the derivations react to them exactly like in the app.
  * Keep the values in sync with src/global.css.
  */
 
 .rc-scope {
-  --mono: "Geist Mono", ui-monospace, monospace;
-  --sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+  --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 
-  --font-heading: var(--mono);
-  --font-button: var(--mono);
-  --font-numerical: var(--mono);
+  --font-body: var(--font-sans);
+  --font-heading: var(--font-mono);
+  --font-button: var(--font-mono);
+  --font-numerical: var(--font-mono);
 
-  --font-heading-transform: uppercase;
-  --font-button-transform: uppercase;
-  --font-numerical-transform: uppercase;
+  --text-heading--transform: uppercase;
+  --text-button--transform: uppercase;
+  --text-numerical--transform: uppercase;
 
-  --radius-base: 0px;
-  --radius-circle: 0px;
+  --radius: 0px;
+  --radius-circle: calc(var(--radius) * 1000);
   --control-height: 34px;
 
   --background: #131313;
   --foreground: white;
-  --muted: rgba(255, 255, 255, 0.5);
+  --muted-foreground: rgba(255, 255, 255, 0.5);
+  --placeholder-foreground: var(--muted-foreground);
 
   --primary: #f56313;
 
-  --today: #3a93ff;
-  --highlight: #ff610b;
+  --today: var(--primary);
+  --brand: var(--primary);
 
   --success: #4caf50;
   --warning: #fd8742;
-  --error: #e25252;
+  --destructive: #e25252;
 
-  --hover-tint: white;
-  --hover-mix: 5%;
-  --popover-tint: black;
-  --popover-mix: 4%;
+  --surface-tint: var(--foreground);
+  --surface-tint-step: 5%;
 
-  /* Derived tokens — same formulas as the app's global.css `body` block */
-  --hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), transparent);
+  /* Derived tokens — same formulas as the app's global.css `[data-theme]` block */
+  --hover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
   --secondary: var(--hover);
-  --secondary-hover: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary));
-  --accent: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
+  --secondary-hover: color-mix(
+    in srgb,
+    var(--surface-tint) var(--surface-tint-step),
+    var(--secondary)
+  );
+  --secondary-foreground: var(--foreground);
+  --accent: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
+  --accent-foreground: var(--foreground);
+  --selected: color-mix(
+    in srgb,
+    var(--surface-tint) calc(var(--surface-tint-step) * 4),
+    transparent
+  );
+  --selected-foreground: var(--foreground);
+  --muted: var(--secondary);
   --weekend: var(--hover);
-  --divider: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--secondary-hover));
-  --card: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--background));
-  --input: color-mix(in srgb, var(--hover-tint) var(--hover-mix), var(--divider));
-  --primary-hover: color-mix(in srgb, white var(--hover-mix), var(--primary));
+  --border: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
+  --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
+  --card-foreground: var(--foreground);
+  --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
+  --primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
   --primary-foreground: var(--background);
-  --popover: color-mix(in srgb, var(--popover-tint) var(--popover-mix), var(--background));
+  --today-foreground: var(--primary-foreground);
+  --popover: var(--card);
 
   --month-boundary: color-mix(in srgb, var(--foreground) 28%, var(--background));
 
-  /* Radius steps (app: Tailwind radius scale derived from --radius-base) */
-  --radius-md: max(0px, calc(var(--radius-base) - 2px));
-  --radius-ev: max(0px, calc(var(--radius-base) - 6px));
+  /* Radius steps (app: Tailwind radius scale derived from --radius) */
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-xs: calc(var(--radius) * 0.4);
 
-  font-family: var(--sans);
+  font-family: var(--font-body);
 }
 
 /* App typography utilities (see the @utility blocks in the app's global.css) */
 .rc-heading {
   font-family: var(--font-heading);
-  text-transform: var(--font-heading-transform, none);
+  text-transform: var(--text-heading--transform, none);
 }
 
 .rc-numerical {
   font-family: var(--font-numerical);
-  text-transform: var(--font-numerical-transform, none);
+  text-transform: var(--text-numerical--transform, none);
 }
 
 /* Simplified static version of the app's Button (secondary variant) */
@@ -87,11 +102,11 @@
   font-weight: 500;
   white-space: nowrap;
   font-family: var(--font-button);
-  text-transform: var(--font-button-transform, none);
+  text-transform: var(--text-button--transform, none);
   background: var(--secondary);
   color: var(--foreground);
   border-radius: var(--radius-md);
-  box-shadow: inset 0 0 0 1px var(--border-button, transparent);
+  box-shadow: inset 0 0 0 1px var(--button-border, transparent);
 }
 
 .rc-btn--icon {
@@ -105,7 +120,7 @@
 }
 
 .rc-circle {
-  border-radius: var(--radius-circle, calc(infinity * 1px));
+  border-radius: var(--radius-circle);
 }
 
 /* Event colors — same formulas as the app's getEventBlockColors() */
@@ -123,7 +138,7 @@
 .rc-allday {
   background: var(--event-background, color-mix(in srgb, var(--ev-boost) 20%, var(--background)));
   color: var(--event-foreground, color-mix(in srgb, var(--ev-boost) 40%, var(--foreground)));
-  border-radius: var(--radius-ev);
+  border-radius: var(--radius-xs);
 }
 
 /* ---------------------------------------------------------------------------
@@ -134,21 +149,44 @@
 .tp-tile {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0;
+  overflow: hidden;
+  padding: 0;
+  font-family: inherit;
   text-align: left;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 6px;
-  background: transparent;
   text-transform: none;
-}
-
-.tp-tile:hover {
-  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 .tp-tile.is-active {
   border-color: var(--primary);
+  box-shadow: 0 0 0 1px var(--primary);
+}
+
+.tp-check {
+  display: flex;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  color: var(--background);
+}
+
+.tp-check svg {
+  visibility: hidden;
+}
+
+.tp-tile.is-active .tp-check {
+  border-color: var(--primary);
+  background: var(--primary);
+}
+
+.tp-tile.is-active .tp-check svg {
+  visibility: visible;
 }
 
 .tp-swatch {

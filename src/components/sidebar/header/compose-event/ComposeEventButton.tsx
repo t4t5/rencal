@@ -115,7 +115,8 @@ const PlusButtonOverlay = ({ show }: { show: boolean }) => {
   return (
     <div
       className={cn(
-        "absolute left-0 top-0 size-control-height flex items-center justify-center pointer-events-none transition-opacity duration-150",
+        // Spans the container's width, since themes may widen icon buttons
+        "absolute inset-x-0 top-0 h-control flex items-center justify-center pointer-events-none transition-opacity duration-150",
         show ? "opacity-100" : "opacity-0",
       )}
     >

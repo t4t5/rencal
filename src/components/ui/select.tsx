@@ -1,19 +1,35 @@
 import * as SelectPrimitive from "@radix-ui/react-select"
 import * as React from "react"
 
+import { buttonVariants } from "@/components/ui/button"
+import { controlSurfaceActive } from "@/components/ui/control-surface"
+
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import { ChevronDownIcon } from "@/icons/chevron-down"
 import { ChevronUpIcon } from "@/icons/chevron-up"
 
-function DropdownArrow({ forceVisible }: { forceVisible?: boolean }) {
+// The slot owns the arrow's colour and visibility, so themes can restyle or
+// replace the glyph without selecting the SVG inside it.
+function SelectIcon({
+  forceVisible,
+  className,
+  ...props
+}: React.ComponentProps<"span"> & { forceVisible?: boolean }) {
   return (
-    <ChevronDownIcon
-      className={cn("size-3 opacity-0 group-hover:opacity-100 text-muted-foreground", {
-        "opacity-100": forceVisible,
-      })}
-    />
+    <span
+      data-slot="select-icon"
+      aria-hidden="true"
+      className={cn(
+        "text-muted-foreground opacity-0 group-hover:opacity-100",
+        { "opacity-100": forceVisible },
+        className,
+      )}
+      {...props}
+    >
+      <ChevronDownIcon className="size-3 text-current" />
+    </span>
   )
 }
 
@@ -33,28 +49,56 @@ function SelectTrigger({
   className,
   size = "default",
   children,
-  ghost = true,
+  variant = "ghost",
+  controlLayout = false,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Trigger> & {
   size?: "sm" | "default"
-  ghost?: boolean
+  variant?: "ghost" | "default"
+  controlLayout?: boolean
 }) {
   return (
     <SelectPrimitive.Trigger
       data-slot="select-trigger"
+      data-control="select"
+      data-variant={variant}
       data-size={size}
       className={cn(
-        "border border-transparent hover:border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:bg-secondary aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive flex w-fit items-center justify-between gap-2 rounded-md bg-transparent px-3 py-2 text-sm whitespace-nowrap transition-[color] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 data-[state=open]:bg-secondary group h-control-height",
-        { "border-divider": !ghost },
+        "border border-transparent hover:border-input data-[placeholder]:text-placeholder-foreground [&_svg:not([class*='text-'])]:text-muted-foreground aria-invalid:ring-destructive/20 aria-invalid:border-destructive flex h-control w-fit items-center justify-between rounded-md bg-transparent text-sm whitespace-nowrap transition-[color] outline-none disabled:cursor-not-allowed disabled:opacity-50 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 group",
+        controlSurfaceActive.focusVisible,
+        controlSurfaceActive.open,
+        controlLayout ? "control-row" : "gap-2 px-3",
+        { "border-border": variant === "default" },
         className,
       )}
       {...props}
     >
       {children}
       <SelectPrimitive.Icon asChild>
-        <DropdownArrow forceVisible={!ghost} />
+        <SelectIcon forceVisible={variant === "default"} />
       </SelectPrimitive.Icon>
     </SelectPrimitive.Trigger>
+  )
+}
+
+// A menu trigger that looks like a secondary button but is themed as a select field.
+function SelectButton({ className, children, ...props }: React.ComponentProps<"button">) {
+  return (
+    <button
+      type="button"
+      data-slot="select-button"
+      data-control="select"
+      data-typography="button"
+      className={cn(
+        buttonVariants({ variant: "secondary" }),
+        "min-w-24 justify-between",
+        className,
+      )}
+      {...props}
+    >
+      {children}
+      <SelectIcon forceVisible />
+    </button>
   )
 }
 
@@ -114,7 +158,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "focus:bg-hover focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
+        "focus:bg-accent focus:text-accent-foreground [&_svg:not([class*='text-'])]:text-muted-foreground relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none data-disabled:pointer-events-none data-disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 *:[span]:last:flex *:[span]:last:items-center *:[span]:last:gap-2",
         className,
       )}
       {...props}
@@ -174,8 +218,10 @@ function SelectScrollDownButton({
 
 export {
   Select,
+  SelectButton,
   SelectContent,
   SelectGroup,
+  SelectIcon,
   SelectItem,
   SelectLabel,
   SelectScrollDownButton,
@@ -183,5 +229,4 @@ export {
   SelectSeparator,
   SelectTrigger,
   SelectValue,
-  DropdownArrow,
 }

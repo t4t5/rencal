@@ -17,7 +17,7 @@ import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { isDeclinedEvent, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 const MAX_TIMED_VISIBLE = 4
@@ -26,7 +26,7 @@ type MonthDayCellProps = {
   day: MonthDay
   timedEvents: TimedEventItem[]
   hiddenAllDayCount: number
-  reservedAllDayHeight: number
+  reservedAllDayHeight: string | null
   activeEventKey: string | null
   selectedEventKey: string | null
   isActiveDay: boolean
@@ -68,10 +68,14 @@ export function MonthDayCell({
     <ContextMenu modal={false}>
       <ContextMenuTrigger asChild>
         <div
+          data-slot="month-day"
+          data-selected={isActiveDay || undefined}
+          data-weekend={day.isWeekend || undefined}
           className={cn(
-            "flex flex-col gap-1 px-1 pb-1 min-h-0 overflow-hidden cursor-default border-r border-divider last:border-r-0",
+            // The divider is an inset shadow so it takes no width; all-day bars assume none.
+            "flex flex-col gap-1 px-(--month-padding-inline) pb-1 min-h-0 overflow-hidden cursor-default shadow-[inset_-1px_0_var(--border)] last:shadow-none",
             day.isWeekend && "bg-weekend",
-            isActiveDay && "bg-accent",
+            isActiveDay && "bg-selected text-selected-foreground",
           )}
           id={isActiveDay ? ACTIVE_DAY_EL_ID : undefined}
           data-drop-day={day.dateKey}
@@ -86,10 +90,10 @@ export function MonthDayCell({
             handleCreateEvent(e.currentTarget)
           }}
         >
-          {reservedAllDayHeight > 0 && (
+          {reservedAllDayHeight && (
             <div
               className="pointer-events-none"
-              style={{ height: `${reservedAllDayHeight}px`, flexShrink: 0 }}
+              style={{ height: reservedAllDayHeight, flexShrink: 0 }}
             />
           )}
           {visibleTimed.map((item) => {
@@ -100,8 +104,7 @@ export function MonthDayCell({
                 key={key}
                 item={item}
                 highlighted={key === activeEventKey || key === selectedEventKey}
-                isPending={isPendingEvent(item.event, calendars)}
-                isDeclined={isDeclinedEvent(item.event, calendars)}
+                rsvp={getUserResponseStatus(item.event, calendars)}
                 isDraft={item.event === draftEvent}
                 dimmed={dimmed}
                 onClick={() => onEventClick(key)}

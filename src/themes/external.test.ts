@@ -100,4 +100,28 @@ describe("external themes", () => {
     expect(getComputedStyle(button).display).toBe(originalDisplay)
     expect(document.body.style.getPropertyValue("--background")).toBe("")
   })
+
+  it("preserves a token-only compact theme for previews", () => {
+    const compact = [
+      "--control-height: 24px;",
+      "--control-height-sm: 24px;",
+      "--control-height-lg: 28px;",
+      "--text-base: 14px;",
+      "--text-base--line-height: 20px;",
+      "--text-xs: 11px;",
+      "--text-xs--line-height: 14px;",
+      "--radius: 2px;",
+    ].join(" ")
+
+    expect(externalThemePalette(compact)).toEqual({
+      "--control-height": "24px",
+      "--control-height-sm": "24px",
+      "--control-height-lg": "28px",
+      "--text-base": "14px",
+      "--text-base--line-height": "20px",
+      "--text-xs": "11px",
+      "--text-xs--line-height": "14px",
+      "--radius": "2px",
+    })
+  })
 })

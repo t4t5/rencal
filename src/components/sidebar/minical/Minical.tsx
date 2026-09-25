@@ -32,7 +32,7 @@ export function Minical() {
 
   return (
     <div data-slot="minical" className="pt-4 select-none">
-      <div className="flex items-center justify-between px-4 pb-4 h-12">
+      <div data-slot="minical-header" className="flex items-center justify-between px-4 pb-4 h-12">
         <CurrentMonth />
         <ArrowKeys />
       </div>
@@ -60,9 +60,15 @@ const CurrentMonth = () => {
   const { activeDate } = useCalendarNavigation()
 
   return (
-    <h2 className="text-2xl font-bold heading">
+    <h2
+      data-slot="minical-title"
+      data-typography="heading"
+      className="text-2xl font-bold whitespace-nowrap overflow-hidden text-ellipsis"
+    >
       {formatMonth(activeDate, "long")}{" "}
-      <span className="text-highlight font-normal">{activeDate.year}</span>
+      <span data-slot="minical-year" className="text-brand font-normal">
+        {activeDate.year}
+      </span>
     </h2>
   )
 }
@@ -71,10 +77,12 @@ const ArrowKeys = () => {
   const { activeDate, navigateToDate } = useCalendarNavigation()
 
   return (
-    <div className="flex items-center gap-1">
+    <div data-slot="minical-navigation" className="flex items-center gap-1">
       <Button
+        data-direction="previous"
+        aria-label="Previous month"
         variant="ghost"
-        size="icon-sm"
+        size="icon-xs"
         round
         tabIndex={-1}
         onClick={() => navigateToDate(activeDate.subtract({ months: 1 }))}
@@ -82,8 +90,10 @@ const ArrowKeys = () => {
         <ChevronUpIcon className="size-4" />
       </Button>
       <Button
+        data-direction="next"
+        aria-label="Next month"
         variant="ghost"
-        size="icon-sm"
+        size="icon-xs"
         round
         tabIndex={-1}
         onClick={() => navigateToDate(activeDate.add({ months: 1 }))}

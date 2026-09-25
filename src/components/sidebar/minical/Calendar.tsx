@@ -12,7 +12,8 @@ import {
   Weekday,
 } from "react-day-picker"
 
-import { Button, buttonVariants } from "@/components/ui/button"
+import { Button } from "@/components/ui/button"
+import { calendarSharedStyles, WEEKDAY_SHORT } from "@/components/ui/calendar-styles"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -29,10 +30,9 @@ import { ChevronRightIcon } from "@/icons/chevron-right"
 const EventDotsContext = createContext<Map<string, string[]>>(new Map())
 export const EventDotsProvider = EventDotsContext.Provider
 
-// Map weekday abbreviations to day numbers (0=Sunday, 1=Monday, etc.)
-// Adjust based on your formatWeekdayName formatter
-// Weekday short names indexed by day number (0=Sun … 6=Sat)
-const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
+// Selected-week highlight as a background-image so it layers over the weekend color
+const SELECTED_WEEK_OVERLAY =
+  "in-data-selected-week:bg-[linear-gradient(var(--color-hover),var(--color-hover))]"
 
 function Calendar({
   className,
@@ -50,7 +50,7 @@ function Calendar({
   const { firstDayOfWeek, showWeekNumbers } = useSettings()
   const showWeekNumber = props.showWeekNumber ?? showWeekNumbers
 
-  // Subscribe to timezone changes: the current-week/weekday highlights and the
+  // Subscribe to timezone changes: the current-weekday highlight and the
   // `today` prop below all derive from the viewer's zone.
   useViewerTzid()
 
@@ -60,7 +60,8 @@ function Calendar({
       fixedWeeks
       today={plainDateToJsDate(today())}
       className={cn(
-        "bg-background group/calendar p-3 [--cell-size:--spacing(8)] in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
+        calendarSharedStyles.root,
+        "in-data-[slot=card-content]:bg-transparent in-data-[slot=popover-content]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
         String.raw`rtl:**:[.rdp-button\_previous>svg]:rotate-180`,
         className,
@@ -75,35 +76,13 @@ function Calendar({
       }}
       classNames={{
         root: cn("w-full"),
-        months: cn("flex gap-4 flex-col md:flex-row relative", defaultClassNames.months),
-        month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden!"),
-        nav: cn(
-          "flex items-center gap-1 w-full absolute top-0 inset-x-0 justify-between",
-          defaultClassNames.nav,
-        ),
-        button_previous: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
-          defaultClassNames.button_previous,
-        ),
-        button_next: cn(
-          buttonVariants({ variant: buttonVariant }),
-          "size-(--cell-size) aria-disabled:opacity-50 p-0 select-none",
-          defaultClassNames.button_next,
-        ),
-        month_caption: cn(
-          "flex items-center justify-center h-(--cell-size) w-full px-(--cell-size)",
-          defaultClassNames.month_caption,
-        ),
-        dropdowns: cn(
-          "w-full flex items-center text-sm font-medium justify-center h-(--cell-size) gap-1.5",
-          defaultClassNames.dropdowns,
-        ),
-        dropdown_root: cn(
-          "relative has-focus:border-ring border border-input shadow-xs has-focus:ring-ring/50 has-focus:ring-[3px] rounded-md",
-          defaultClassNames.dropdown_root,
-        ),
-        dropdown: cn("absolute bg-popover inset-0 opacity-0", defaultClassNames.dropdown),
+        months: cn(calendarSharedStyles.months, defaultClassNames.months),
+        month: cn("flex flex-col w-full gap-4 h-auto overflow-hidden"),
+        nav: cn(calendarSharedStyles.nav, defaultClassNames.nav),
+        button_previous: cn(calendarSharedStyles.navButton, defaultClassNames.button_previous),
+        button_next: cn(calendarSharedStyles.navButton, defaultClassNames.button_next),
+        month_caption: cn(calendarSharedStyles.monthCaption, defaultClassNames.month_caption),
+        dropdowns: cn(calendarSharedStyles.dropdowns, defaultClassNames.dropdowns),
         caption_label: cn(
           "select-none font-medium",
           captionLayout === "label"
@@ -111,34 +90,25 @@ function Calendar({
             : "rounded-md pl-2 pr-1 flex items-center gap-1 text-sm [&>svg]:text-muted-foreground [&>svg]:size-3.5",
           defaultClassNames.caption_label,
         ),
-        table: "w-full border-collapse",
-        weekdays: cn("flex", defaultClassNames.weekdays),
-        weekday: cn(
-          "text-muted-foreground rounded-md flex-1 font-normal select-none text-[11px]",
-          defaultClassNames.weekday,
-        ),
+        table: calendarSharedStyles.table,
+        weekdays: cn(calendarSharedStyles.weekdays, defaultClassNames.weekdays),
+        weekday: cn(calendarSharedStyles.weekday, defaultClassNames.weekday),
         week: cn("flex w-full", defaultClassNames.week),
-        week_number_header: cn("select-none w-(--cell-size)", defaultClassNames.week_number_header),
-        week_number: cn(
-          "text-[0.8rem] select-none text-muted-foreground",
-          defaultClassNames.week_number,
+        week_number_header: cn(
+          calendarSharedStyles.weekNumberHeader,
+          defaultClassNames.week_number_header,
         ),
+        week_number: cn(calendarSharedStyles.weekNumber, defaultClassNames.week_number),
         day: cn(
-          "relative w-full h-full p-0 text-center [&:last-child[data-selected=true]_button]:rounded-r-md group/day select-none",
-          showWeekNumber
-            ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md"
-            : "[&:first-child[data-selected=true]_button]:rounded-l-md",
+          "relative w-full h-full p-0 text-center group/day select-none",
           defaultClassNames.day,
         ),
         range_start: cn("rounded-l-md bg-accent", defaultClassNames.range_start),
         range_middle: cn("rounded-none", defaultClassNames.range_middle),
         range_end: cn("rounded-r-md bg-accent", defaultClassNames.range_end),
         // today: cn("text-active", defaultClassNames.today),
-        outside: cn(
-          "text-muted-foreground aria-selected:text-muted-foreground",
-          defaultClassNames.outside,
-        ),
-        disabled: cn("text-muted-foreground opacity-50", defaultClassNames.disabled),
+        outside: cn(calendarSharedStyles.outside, defaultClassNames.outside),
+        disabled: cn(calendarSharedStyles.disabled, defaultClassNames.disabled),
         hidden: cn("invisible"),
         ...classNames,
       }}
@@ -174,25 +144,23 @@ function Calendar({
           return <Nav className={cn(className, "w-auto left-auto right-0 pr-4")} {...props} />
         },
         PreviousMonthButton: ({ className, ...props }) => {
-          return <Button variant="secondary" className={className} {...props} />
+          return <Button variant={buttonVariant} className={className} {...props} />
         },
         NextMonthButton: ({ className, ...props }) => {
-          return <Button variant="secondary" className={className} {...props} />
+          return <Button variant={buttonVariant} className={className} {...props} />
         },
+        MonthGrid: (props) => <table data-slot="calendar-grid" {...props} />,
         Week: ({ className, ...weekProps }) => {
           const { week } = weekProps
           const { isSelected } = useDayPicker()
 
-          const isCurrentWeek = week.days.some((d) => jsDateToPlainDate(d.date).equals(today()))
           const isSelectedWeek = isSelected ? week.days.some((d) => isSelected(d.date)) : false
 
           return (
             <Week
-              className={cn(className, {
-                "bg-bgTertiary": isCurrentWeek && !isSelectedWeek,
-                "bg-hover": isSelectedWeek,
-              })}
               {...weekProps}
+              data-selected-week={isSelectedWeek || undefined}
+              className={className}
             />
           )
         },
@@ -201,8 +169,8 @@ function Calendar({
         WeekNumber: ({ children, week, ...props }) => {
           const firstRowDay = week.days[0]
           return (
-            <td {...props}>
-              <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-[10px] text-muted-foreground">
+            <td {...props} className={cn(props.className, SELECTED_WEEK_OVERLAY)}>
+              <div className="flex size-(--cell-size) translate-y-[2px] items-center justify-center text-center text-2xs text-muted-foreground">
                 {firstRowDay
                   ? isoWeekNumber(jsDateToPlainDate(firstRowDay.date), firstDayOfWeek)
                   : null}
@@ -219,6 +187,8 @@ function Calendar({
           return (
             <Weekday
               {...weekdayProps}
+              data-slot="calendar-weekday"
+              data-weekend={isWeekend || undefined}
               className={cn(className, "rounded-none", {
                 "text-today": isCurrentWeekday,
                 "bg-weekend": isWeekend,
@@ -236,9 +206,13 @@ function Calendar({
           return (
             <Day
               {...dayProps}
-              className={cn(className, "flex justify-center bg-transparent!", {
-                "bg-weekend!": isWeekend,
-              })}
+              data-weekend={isWeekend || undefined}
+              className={cn(
+                className,
+                "flex justify-center bg-transparent",
+                SELECTED_WEEK_OVERLAY,
+                { "bg-weekend": isWeekend },
+              )}
             />
           )
         },
@@ -273,22 +247,15 @@ const CalendarDayButton = memo(function CalendarDayButton({
       ref={ref}
       variant="ghost"
       size="icon-lg"
+      data-slot="calendar-day"
       data-date-key={dateKey}
-      data-selected-single={
-        modifiers.selected &&
-        !modifiers.range_start &&
-        !modifiers.range_end &&
-        !modifiers.range_middle
-      }
-      data-range-start={modifiers.range_start}
-      data-range-end={modifiers.range_end}
-      data-range-middle={modifiers.range_middle}
-      data-today={modifiers.today}
+      data-selected={modifiers.selected || undefined}
+      data-today={modifiers.today || undefined}
       className={cn(
-        "data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-middle=true]:rounded-none data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle! text-sm",
+        "flex w-full min-w-(--cell-size) flex-col gap-1 leading-none font-normal group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 [&>span]:text-xs [&>span]:opacity-70 p-2 size-[38px] rounded-circle text-sm",
         defaultClassNames.day,
-        "data-[selected-single=true]:bg-accent! data-[selected-single=true]:font-bold! data-[selected-single=true]:text-lg!", // selected day
-        "data-[today=true]:text-today data-[today=true]:data-[selected-single=true]:bg-today! data-[today=true]:data-[selected-single=true]:text-primary-foreground", // today
+        "data-selected:bg-selected data-selected:text-selected-foreground data-selected:font-bold data-selected:text-lg", // selected day
+        "data-today:text-today data-today:data-selected:bg-today data-today:data-selected:text-today-foreground", // today
         className,
       )}
       {...props}
@@ -296,7 +263,10 @@ const CalendarDayButton = memo(function CalendarDayButton({
     >
       {children}
       {dotColors && dotColors.length > 0 && (
-        <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]">
+        <div
+          data-slot="minical-event-dots"
+          className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-[3px]"
+        >
           {dotColors.map((color, i) => (
             <div key={i} className="size-1 rounded-circle" style={{ backgroundColor: color }} />
           ))}

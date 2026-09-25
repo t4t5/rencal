@@ -10,9 +10,10 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation } from "@/contexts/CalendarStateContext"
 
 import type { Calendar } from "@/lib/api"
-import { eventKey, type CalendarEvent } from "@/lib/cal-events"
+import { eventKey, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
+import { getCalendarEventStyle } from "@/lib/event-styles"
 import {
   coversFullDay,
   epochDay,
@@ -21,7 +22,7 @@ import {
   getRelativeDayLabel,
   today,
 } from "@/lib/event-time"
-import { isDeclinedEvent, isEventReadonly, isPendingEvent } from "@/lib/event-utils"
+import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import { cn } from "@/lib/utils"
 
 import {
@@ -57,8 +58,7 @@ export const DaySection = forwardRef<
       isDraft,
       isActive: !isDraft && !!activeEvent && key === eventKey(activeEvent),
       isSelected: key === selectedEventKey,
-      isPending: isPendingEvent(event, calendars),
-      isDeclined: isDeclinedEvent(event, calendars),
+      rsvp: getUserResponseStatus(event, calendars),
     }
   }
 
@@ -124,14 +124,23 @@ export const DaySection = forwardRef<
   }
 
   return (
-    <div ref={ref} data-date={dateKey} className="relative border-b border-b-divider">
+    <div
+      ref={ref}
+      data-slot="agenda-day"
+      data-date={dateKey}
+      className="relative border-b border-border"
+    >
       <DateBar date={date} />
 
       <div className="flex flex-col gap-1 pb-2">
-        {!events.length && <div className="px-3 py-1 text-sm text-muted-foreground">No events</div>}
+        {!events.length && (
+          <div data-slot="agenda-empty" className="py-1 text-sm text-muted-foreground">
+            No events
+          </div>
+        )}
 
         {allDayEvents.length > 0 && (
-          <div className="px-3 py-1 flex flex-wrap gap-1">
+          <div data-slot="agenda-all-day-events" className="pb-1 flex flex-wrap gap-1">
             {allDayEvents.map((event) => (
               <AllDayRow
                 key={eventKey(event)}
@@ -170,8 +179,7 @@ type RowState = {
   isActive: boolean
   isSelected: boolean
   isDraft: boolean
-  isPending: boolean
-  isDeclined: boolean
+  rsvp: ResponseStatus | null
 }
 
 type RowHandlers = {
@@ -210,7 +218,13 @@ const AgendaEventRowShell = ({
 }: AgendaEventRowShellProps) => (
   <div
     tabIndex={-1}
+    data-slot="calendar-event"
+    data-view="agenda"
+    data-kind={allDay ? "all-day" : "timed"}
     data-event-clickable={!state.isDraft || undefined}
+    data-selected={state.isActive || state.isSelected || undefined}
+    data-rsvp={state.rsvp ?? undefined}
+    data-draft={state.isDraft || undefined}
     data-agenda-item
     data-event-key={state.key}
     data-date-key={dateKey}
@@ -220,66 +234,70 @@ const AgendaEventRowShell = ({
     onKeyDown={(e) => onKeyDown(event, e)}
     onClick={state.isDraft ? undefined : (e) => onSelect(event, e.currentTarget)}
     className={className}
+    style={getCalendarEventStyle({
+      calendarColor: state.calendarColor,
+      eventColor: event.color,
+    })}
   >
     {children}
   </div>
 )
 
 const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
-  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
   return (
     <AgendaEventRowShell
       event={event}
       dateKey={dateKey}
       state={state}
       allDay
-      className="rounded outline-none"
+      className="rounded-xs outline-none px-(--event-padding-inline) py-px leading-4 inline-flex text-xs cursor-default"
       {...handlers}
     >
-      <AgendaAllDayEventBlock
-        event={event}
-        calendarColor={calendarColor}
-        highlighted={isActive || isSelected}
-        isDashed={isPending || isDeclined}
-        isDeclined={isDeclined}
-        isDraft={isDraft}
-      />
+      <AgendaAllDayEventBlock event={event} />
     </AgendaEventRowShell>
   )
 }
 
 const TimedRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
-  const { calendarColor, isActive, isSelected, isDraft, isPending, isDeclined } = state
-
   return (
     <AgendaEventRowShell
       event={event}
       dateKey={dateKey}
       state={state}
-      className={cn("cursor-default hover:bg-secondary py-1 outline-none", {
-        "bg-accent!": isActive || isSelected,
-        "opacity-50": isPending || isDeclined || isDraft,
-        "line-through": isDeclined,
-      })}
+      className="flex gap-3 cursor-default py-1 outline-none"
       {...handlers}
     >
-      <AgendaTimedEventBlock event={event} calendarColor={calendarColor} dateKey={dateKey} />
+      <AgendaTimedEventBlock event={event} dateKey={dateKey} />
     </AgendaEventRowShell>
   )
 }
+
+// Between the xs and sm steps, so it follows a theme's type scale.
+const DATE_BAR_TEXT = "text-[length:calc((var(--text-xs)+var(--text-sm))/2)]"
 
 const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
   const isToday = date.equals(today())
 
   return (
     <div
-      className={cn(
-        "sticky top-0 z-10 text-sm bg-background px-3 py-1.5 flex gap-2 h-8 items-center",
-        { "text-today": isToday },
-      )}
+      data-slot="agenda-day-header"
+      data-today={isToday || undefined}
+      className={cn("sticky top-0 z-10 bg-background py-1.5 flex gap-2 h-8 items-center", {
+        "text-today": isToday,
+      })}
     >
-      <span className="font-bold uppercase numerical">{getRelativeDayLabel(date)}</span>
-      <span className={cn("text-muted-foreground numerical", { "text-today": isToday })}>
+      <span
+        data-slot="agenda-weekday"
+        data-typography="numerical"
+        className={cn(DATE_BAR_TEXT, "font-bold uppercase")}
+      >
+        {getRelativeDayLabel(date)}
+      </span>
+      <span
+        data-slot="agenda-day-number"
+        data-typography="numerical"
+        className={cn(DATE_BAR_TEXT, "text-muted-foreground", { "text-today": isToday })}
+      >
         {formatDayMonth(date)}
       </span>
     </div>

@@ -16,16 +16,35 @@ import type { EventAttendee, ResponseStatus } from "@/lib/cal-events"
 import type { EventConference } from "@/lib/conference"
 import type { EventTime } from "@/lib/event-time"
 import { detectEventUrl } from "@/lib/event-url"
+import { cn } from "@/lib/utils"
 
 import { NotesInput } from "./inputs/NotesInput"
 import { RsvpBar } from "./inputs/RsvpBar"
 import { RsvpSelect } from "./inputs/RsvpSelect"
 
-const Divider = () => (
-  <div className="my-2 opacity-75">
-    <hr />
-  </div>
-)
+const Separator = () => <hr className="opacity-75" />
+
+function EventInfoSection({
+  children,
+  flushTop,
+  flushBottom,
+}: {
+  children: React.ReactNode
+  flushTop?: boolean
+  flushBottom?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        "flex flex-col gap-[var(--control-row-gap)] py-2",
+        flushTop && "pt-0",
+        flushBottom && "pb-0",
+      )}
+    >
+      {children}
+    </div>
+  )
+}
 
 export function EventInfo({
   readonly,
@@ -93,6 +112,8 @@ export function EventInfo({
   isPendingInvite?: boolean
 }) {
   const canEdit = !readonly
+  const showSummary = canEdit || !!summary?.trim()
+  const hasAttendees = !!attendees?.length
 
   // Links in the location/notes double as a "virtual" URL field, so a
   // description like "Details: https://…" is one click away.
@@ -103,104 +124,126 @@ export function EventInfo({
     conference: conference ?? null,
   })
 
-  return (
-    <div className="flex flex-col gap-1 grow">
-      {(canEdit || !!summary?.trim()) && (
-        <div className="flex min-h-control-height items-center">
-          <Textarea
-            ref={summaryRef}
-            placeholder="Event Title"
-            value={summary ?? ""}
-            className="text-base font-medium"
-            readOnly={readonly}
-            onChange={(e) => onChangeSummary(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault()
-                onClose?.()
-              }
-            }}
-          />
-        </div>
+  const fieldsBeforeAttendees = (
+    <>
+      {(canEdit || !!location?.trim()) && (
+        <LocationInput
+          value={location}
+          onChange={onLocationChange}
+          onClose={onClose}
+          readOnly={readonly}
+        />
       )}
 
-      <div className="flex flex-col gap-1">
-        {(canEdit || !!location?.trim()) && (
-          <LocationInput
-            value={location}
-            onChange={onLocationChange}
-            onClose={onClose}
-            readOnly={readonly}
-          />
-        )}
+      <DateTimeSelect start={start} end={end} readOnly={readonly} onChange={onChangeDateTime} />
 
-        <DateTimeSelect start={start} end={end} readOnly={readonly} onChange={onChangeDateTime} />
+      {(canEdit || allDay) && (
+        <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
+      )}
 
-        {(canEdit || allDay) && (
-          <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
-        )}
+      {(canEdit || recurrence) && (
+        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
+      )}
 
-        {(canEdit || recurrence) && (
-          <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
-        )}
+      <ConferenceDisplay
+        conference={conference}
+        location={location}
+        calendar={calendar}
+        readonly={readonly}
+        onConferenceChange={onConferenceChange}
+      />
+    </>
+  )
 
-        <ConferenceDisplay
-          conference={conference}
-          location={location}
-          calendar={calendar}
-          readonly={readonly}
-          onConferenceChange={onConferenceChange}
+  const attendeesField = (hasAttendees || canEdit) && (
+    <AttendeesDisplay
+      organizer={organizer}
+      attendees={attendees}
+      readOnly={readonly}
+      onAttendeesChange={onAttendeesChange}
+    />
+  )
+
+  const fieldsAfterAttendees = (
+    <>
+      {(canEdit || !!url?.trim() || detectedUrl) && (
+        <UrlInput
+          value={url}
+          onChange={onUrlChange}
+          onClose={onClose}
+          readOnly={readonly}
+          detected={detectedUrl}
         />
+      )}
 
-        {(!!attendees?.length || canEdit) && (
-          <>
-            {!!attendees?.length && <Divider />}
+      <ReminderSelect
+        reminders={reminders ?? []}
+        onSelect={onReminderAdd}
+        onRemove={onReminderRemove}
+      />
 
-            <AttendeesDisplay
-              organizer={organizer}
-              attendees={attendees}
+      <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
+
+      {(canEdit || !!description?.trim()) && (
+        <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
+      )}
+    </>
+  )
+
+  return (
+    <div data-slot="event-form-fields" className="flex flex-col grow">
+      {showSummary && (
+        <EventInfoSection flushTop>
+          <div className="flex min-h-control items-center">
+            <Textarea
+              data-popover-entry
+              ref={summaryRef}
+              placeholder="Event Title"
+              value={summary ?? ""}
+              className="text-base font-medium"
               readOnly={readonly}
-              onAttendeesChange={onAttendeesChange}
+              onChange={(e) => onChangeSummary(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault()
+                  onClose?.()
+                }
+              }}
             />
+          </div>
+        </EventInfoSection>
+      )}
 
-            {!!attendees?.length && <Divider />}
-          </>
-        )}
+      {showSummary && <Separator />}
 
-        {(canEdit || !!url?.trim() || detectedUrl) && (
-          <UrlInput
-            value={url}
-            onChange={onUrlChange}
-            onClose={onClose}
-            readOnly={readonly}
-            detected={detectedUrl}
-          />
-        )}
+      {hasAttendees ? (
+        <>
+          <EventInfoSection flushTop={!showSummary}>{fieldsBeforeAttendees}</EventInfoSection>
+          <Separator />
+          <EventInfoSection>{attendeesField}</EventInfoSection>
+          <Separator />
+          <EventInfoSection flushBottom={!onRsvp}>{fieldsAfterAttendees}</EventInfoSection>
+        </>
+      ) : (
+        <EventInfoSection flushTop={!showSummary} flushBottom={!onRsvp}>
+          {fieldsBeforeAttendees}
+          {attendeesField}
+          {fieldsAfterAttendees}
+        </EventInfoSection>
+      )}
 
-        <ReminderSelect
-          reminders={reminders ?? []}
-          onSelect={onReminderAdd}
-          onRemove={onReminderRemove}
-        />
-
-        <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
-
-        {(canEdit || !!description?.trim()) && (
-          <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
-        )}
-
-        {onRsvp && (
-          <>
-            <Divider />
-
+      {onRsvp && (
+        <>
+          <Separator />
+          <EventInfoSection flushBottom>
             {isPendingInvite ? (
               <RsvpBar onRsvp={onRsvp} />
             ) : (
               <RsvpSelect status={userResponseStatus} onRsvp={onRsvp} />
             )}
-          </>
-        )}
-      </div>
+          </EventInfoSection>
+        </>
+      )}
     </div>
   )
 }

@@ -33,7 +33,7 @@ export function CurrentTimeIndicator() {
       className="absolute -left-3.5 -right-1 z-10 pointer-events-none flex items-center"
       style={{ top: `${timeIndicatorTopPercent}%`, transform: "translateY(-50%)" }}
     >
-      <span className="text-[11px] font-medium text-today shrink-0 leading-none">
+      <span className="text-2xs font-medium text-today shrink-0 leading-none">
         {hour}
         <span style={{ animation: "colon-blink 1s steps(2, end) infinite" }}>:</span>
         {minutes}

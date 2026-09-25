@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
+import { Tabs, TabsContent } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
@@ -41,20 +42,21 @@ export function SettingsWindow() {
     return () => document.removeEventListener("keydown", onKeyDown)
   }, [])
 
-  const activeItem = NAV_ITEMS.find((item) => item.tab === activeTab)
-  if (!activeItem) return null
-  const { page: ActivePage } = activeItem
-
   return (
-    <div className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}>
+    <div
+      data-slot="settings-window"
+      data-page={activeTab}
+      className={cn("flex flex-col h-screen", { "pt-7": isMacOS })}
+    >
       <DragRegion
-        className={cn("absolute top-0 left-0 right-0 h-7! border-b border-b-divider", {
+        className={cn("absolute top-0 left-0 right-0 h-7 border-b border-border", {
           hidden: !isMacOS,
         })}
       />
 
       <ShortcutTooltip text="Close" shortcut="escape">
         <button
+          data-slot="settings-close"
           onClick={() =>
             getCurrentWindow()
               .close()
@@ -70,11 +72,25 @@ export function SettingsWindow() {
         </button>
       </ShortcutTooltip>
 
-      <div className="flex h-screen">
-        <SettingsSidebar activeTab={activeTab} onTabChange={setActiveTab} />
+      <Tabs
+        orientation="vertical"
+        value={activeTab}
+        onValueChange={(value) => {
+          const item = NAV_ITEMS.find((item) => item.tab === value)
+          if (item) setActiveTab(item.tab)
+        }}
+        className="min-h-0 flex-1"
+      >
+        <SettingsSidebar />
 
-        <ActivePage />
-      </div>
+        {NAV_ITEMS.map(({ tab, page: Page }) => (
+          <TabsContent key={tab} value={tab} className="min-h-0 min-w-0 data-[state=active]:flex">
+            <div data-slot="settings-page" data-page={tab} className="flex min-h-0 min-w-0 flex-1">
+              <Page />
+            </div>
+          </TabsContent>
+        ))}
+      </Tabs>
     </div>
   )
 }

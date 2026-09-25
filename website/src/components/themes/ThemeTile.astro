@@ -1,0 +1,146 @@
+---
+// Mirrors the app's settings theme tile (src/components/settings/themes/ThemesPage.tsx):
+// a cropped window of the theme's minical and week view, painted from its tokens.
+import CheckIcon from "../../icons/check.astro"
+
+interface Props {
+  id: string
+  name: string
+  vars: Record<string, string>
+  /** Lets the page script repaint the preview (the custom tile). */
+  paletteId?: string
+}
+
+const { id, name, vars, paletteId } = Astro.props
+
+const style = Object.entries(vars)
+  .map(([property, value]) => `${property}: ${value}`)
+  .join("; ")
+
+// A shortened month whose last two columns are the weekend; today is selected, as on launch.
+const MINICAL_WEEKS = 4
+const MINICAL_DAYS = 5
+const TODAY = { week: 1, day: 1 }
+const isOutsideDay = (week: number, day: number) =>
+  (week === 0 && day < 1) || (week === MINICAL_WEEKS - 1 && day > 2)
+const isMinicalWeekend = (day: number) => day >= MINICAL_DAYS - 2
+const isWeekend = (day: number) => day >= 5
+
+// Events in the theme's default calendar colour, so `--primary` and `--event-*` overrides show.
+const PREVIEW_EVENTS = [
+  { day: 0, top: 20, height: 30 },
+  { day: 1, top: 40, height: 35 },
+  { day: 2, top: 10, height: 25 },
+  { day: 2, top: 50, height: 30 },
+]
+
+const range = (length: number) => Array.from({ length }, (_, i) => i)
+---
+
+<button type="button" class="tp-tile" data-theme-tile={id}>
+  <div aria-hidden="true" class="h-28 overflow-hidden pt-4 pl-4">
+    <div
+      id={paletteId}
+      class="rc-scope flex h-[140px] w-[260px] overflow-hidden rounded-tl-(--radius) bg-(--background) shadow-lg"
+      style={style}
+    >
+      <!-- Minical -->
+      <div class="flex w-[76px] shrink-0 flex-col gap-2.5 border-r border-(--border) pt-2.5">
+        <div class="flex gap-1 px-2">
+          <div class="h-1.5 w-6 rounded-(--radius-xs) bg-(--foreground)"></div>
+          <div class="h-1.5 w-3.5 rounded-(--radius-xs) bg-(--brand)"></div>
+        </div>
+
+        <div class="flex flex-col px-1">
+          {
+            range(MINICAL_WEEKS).map((week) => (
+              <div class:list={["flex", week === TODAY.week && "bg-(--hover)"]}>
+                {range(MINICAL_DAYS).map((day) => (
+                  <div
+                    class:list={[
+                      "flex h-3 flex-1 items-center justify-center",
+                      isMinicalWeekend(day) && "bg-(--weekend)",
+                    ]}
+                  >
+                    {week === TODAY.week && day === TODAY.day ? (
+                      <div class="rc-circle flex size-3 items-center justify-center bg-(--today)">
+                        <div class="size-1 bg-(--today-foreground)" />
+                      </div>
+                    ) : (
+                      <div
+                        class:list={[
+                          "size-1",
+                          isOutsideDay(week, day)
+                            ? "bg-(--muted-foreground)/40"
+                            : "bg-(--muted-foreground)",
+                        ]}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+
+      <!-- Week view -->
+      <div class="flex grow flex-col">
+        <div class="flex h-4 shrink-0 border-b border-(--border)">
+          {
+            range(7).map((day) => (
+              <div
+                class:list={[
+                  "flex flex-1 items-center justify-end border-r border-(--border) px-1",
+                  day === TODAY.day && "bg-(--selected)",
+                  day !== TODAY.day && isWeekend(day) && "bg-(--weekend)",
+                ]}
+              >
+                {day === TODAY.day ? (
+                  <div class="rc-circle flex h-2.5 w-3 items-center justify-center bg-(--today)">
+                    <div class="h-0.5 w-1.5 bg-(--today-foreground)" />
+                  </div>
+                ) : (
+                  <div class="h-0.5 w-1.5 bg-(--muted-foreground)" />
+                )}
+              </div>
+            ))
+          }
+        </div>
+
+        <div class="flex grow">
+          {
+            range(7).map((day) => (
+              <div
+                class:list={[
+                  "relative flex-1 border-r border-(--border)",
+                  isWeekend(day) && "bg-(--weekend)",
+                ]}
+              >
+                {PREVIEW_EVENTS.filter((event) => event.day === day).map((event) => (
+                  <div
+                    class="rc-ev rc-allday absolute inset-x-px overflow-hidden"
+                    style={`top: ${event.top}%; height: ${event.height}%`}
+                  >
+                    <div class="absolute inset-y-0 left-0 w-[2px] bg-(--ev-paint)" />
+                  </div>
+                ))}
+
+                {day === TODAY.day && (
+                  <div class="absolute inset-x-0 top-[30%] border-t border-dashed border-(--today)" />
+                )}
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flex items-center justify-between gap-2 border-t border-white/10 px-3 py-2">
+    <span class="truncate text-sm text-foreground">{name}</span>
+    <span class="tp-check">
+      <CheckIcon class="size-3" />
+    </span>
+  </div>
+</button>

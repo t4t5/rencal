@@ -1,11 +1,5 @@
-import { InputGroup } from "@/components/ui/input-group"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+import { ItemContent, ItemMedia } from "@/components/ui/item"
+import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { StatusDot } from "@/components/ui/status-dot"
 
 import type { ResponseStatus } from "@/lib/cal-events"
@@ -23,21 +17,30 @@ export function RsvpSelect({
   status?: ResponseStatus | null
   onRsvp: (response: ResponseStatus) => void
 }) {
+  const selected = statusOptions.find((opt) => opt.value === status)
+
   return (
-    <InputGroup>
-      <Select value={status ?? undefined} onValueChange={(v) => onRsvp(v as ResponseStatus)}>
-        <SelectTrigger className="w-full border-0 shadow-none">
-          <SelectValue placeholder="My status" />
-        </SelectTrigger>
-        <SelectContent>
-          {statusOptions.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              <StatusDot status={opt.value} />
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </InputGroup>
+    <Select value={status ?? undefined} onValueChange={(v) => onRsvp(v as ResponseStatus)}>
+      <SelectTrigger controlLayout className="w-full">
+        <ItemMedia>
+          <StatusDot status={status} />
+        </ItemMedia>
+        <ItemContent className="truncate text-left">
+          {selected ? (
+            selected.label
+          ) : (
+            <span className="text-placeholder-foreground">My status</span>
+          )}
+        </ItemContent>
+      </SelectTrigger>
+      <SelectContent>
+        {statusOptions.map((opt) => (
+          <SelectItem key={opt.value} value={opt.value}>
+            <StatusDot status={opt.value} />
+            {opt.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }

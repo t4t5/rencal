@@ -15,11 +15,12 @@ export function MonthDragToCreateSelection({
 }) {
   return (
     <div
+      data-slot="month-create-selection"
       data-create-selection={span.endCol - span.startCol === 7 ? "full" : "partial"}
       className={cn(
         "absolute z-10 pointer-events-none",
-        span.isStart && "rounded-l",
-        span.isEnd && "rounded-r",
+        span.isStart && "rounded-l-xs",
+        span.isEnd && "rounded-r-xs",
       )}
       style={{ ...allDayBarStyle(span, lane), ...getCreateSelectionStyle(calendarColor) }}
     />

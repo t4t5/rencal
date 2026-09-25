@@ -2,7 +2,7 @@ import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
-import { InputGroupAddon } from "@/components/ui/input-group"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 
 import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -90,26 +90,35 @@ export function ReminderSelect({
   onRemove,
   placeholder = "Reminders",
   addon,
-  ghost,
-  withInputGroupAddon = true,
+  variant,
+  indentRows = true,
 }: {
   reminders: number[]
   onSelect: (mins: number) => void
   onRemove: (mins: number) => void
   placeholder?: string
   addon?: ReactNode
-  ghost?: boolean
-  withInputGroupAddon?: boolean
+  variant?: "ghost" | "default"
+  indentRows?: boolean
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [highlighted, setHighlighted] = useState(String(DEFAULT_REMINDER_VALUES[0]))
 
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
+
+  // cmdk drops the highlight when its row disappears; re-pin it to the first
+  // option so Enter always has something to pick.
+  const handleQueryChange = (next: string) => {
+    setQuery(next)
+    const [first] = next ? getQueryValues(next) : DEFAULT_REMINDER_VALUES
+    if (first !== undefined) setHighlighted(String(first))
+  }
   const resolvedAddon =
     addon === undefined ? (
-      <InputGroupAddon>
+      <ItemMedia>
         <BellIcon />
-      </InputGroupAddon>
+      </ItemMedia>
     ) : (
       addon
     )
@@ -119,21 +128,24 @@ export function ReminderSelect({
       <Combobox
         placeholder={placeholder}
         query={query}
-        setQuery={setQuery}
+        setQuery={handleQueryChange}
         open={open}
         setOpen={setOpen}
         addon={resolvedAddon}
-        ghost={ghost}
+        variant={variant}
+        highlightedValue={highlighted}
+        onHighlightChange={setHighlighted}
       >
         {values.length ? (
           <CommandGroup>
             {values.map((mins) => (
               <CommandItem
                 key={mins}
+                value={String(mins)}
                 onSelect={() => {
                   if (!reminders.includes(mins)) onSelect(mins)
                   setOpen(false)
-                  setQuery("")
+                  handleQueryChange("")
                 }}
               >
                 <HumanDuration mins={mins} />
@@ -152,7 +164,7 @@ export function ReminderSelect({
             key={mins}
             mins={mins}
             onRemove={() => onRemove(mins)}
-            withInputGroupAddon={withInputGroupAddon}
+            indented={indentRows}
           />
         ))}
     </div>
@@ -163,39 +175,35 @@ const ReminderRow = ({
   mins,
   className,
   onRemove,
-  withInputGroupAddon,
+  indented,
 }: {
   mins: number
   className?: string
   onRemove: () => void
-  withInputGroupAddon?: boolean
+  indented?: boolean
 }) => {
   return (
-    <div
+    <Item
       key={mins}
-      className={cn(
-        "flex items-center justify-between text-sm hover:bg-secondary focus-within:bg-secondary rounded-md p-2 pr-3 group cursor-default h-control-height",
-        withInputGroupAddon && "pl-0",
-        className,
-      )}
+      variant="accent"
+      className={cn("cursor-default", !indented && "gap-0", className)}
     >
-      <div className="flex gap-2">
-        {withInputGroupAddon && <InputGroupAddon />}
-        <span>
-          <HumanDuration mins={mins} />
-        </span>
-      </div>
-
-      <RemoveItemButton onClick={onRemove} />
-    </div>
+      {indented && <ItemMedia aria-hidden="true" />}
+      <ItemContent>
+        <HumanDuration mins={mins} />
+      </ItemContent>
+      <ItemActions>
+        <RemoveItemButton onClick={onRemove} />
+      </ItemActions>
+    </Item>
   )
 }
 
 const HumanDuration = ({ mins }: { mins: number }) => {
   return (
-    <div className="flex gap-1.5 items-baseline">
+    <span className="flex gap-1.5 items-baseline">
       <span>{humanDuration(mins)}</span>
       {mins > 0 && <span className="text-muted-foreground">before</span>}
-    </div>
+    </span>
   )
 }

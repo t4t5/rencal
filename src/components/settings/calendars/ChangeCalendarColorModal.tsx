@@ -61,6 +61,7 @@ export function ChangeCalendarColorModal({
           <div className="flex items-center gap-4">
             <div className="size-8 shrink-0 rounded-full" style={{ backgroundColor: color }} />
             <input
+              data-slot="hue-slider"
               type="range"
               min="0"
               max="359"

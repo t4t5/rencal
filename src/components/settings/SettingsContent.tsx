@@ -10,6 +10,11 @@ export function SettingsContent({
   className?: string
 }) {
   return (
-    <div className={cn("p-4 flex flex-col gap-6 grow overflow-auto", className)}>{children}</div>
+    <div
+      data-slot="settings-content"
+      className={cn("p-4 flex flex-col gap-6 grow overflow-auto", className)}
+    >
+      {children}
+    </div>
   )
 }

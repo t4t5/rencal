@@ -25,6 +25,7 @@ import { useJumpToEvent } from "@/hooks/useJumpToEvent"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
+import { getUserResponseStatus } from "@/lib/event-utils"
 import { prepareSearchResults } from "@/lib/search-results"
 
 export function SearchPalette({
@@ -124,7 +125,7 @@ export function SearchPalette({
 
         <Command
           shouldFilter={false}
-          className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]>svg]:size-5 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-input]]:text-base"
+          className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:[--control-leading-size:20px] [&_[data-slot=command-input]]:text-base"
         >
           <CommandInput
             placeholder="Search your events..."
@@ -150,12 +151,13 @@ export function SearchPalette({
                   key={eventKey(event)}
                   value={eventKey(event)}
                   onSelect={() => selectEvent(event)}
-                  className="flex items-center gap-2 px-3 py-1.5"
+                  className="flex items-center gap-2 rounded-none px-3 py-1.5"
                 >
                   <SearchResultEventBlock
                     event={event}
                     color={getCalendarColor(calendarBySlug.get(event.calendar_slug))}
                     timeFormat={timeFormat}
+                    rsvp={getUserResponseStatus(event, calendars)}
                   />
                 </CommandItem>
               ))}

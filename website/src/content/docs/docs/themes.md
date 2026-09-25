@@ -23,10 +23,9 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 /* @name My Theme */
 --background: #0f0f0f;
 --foreground: #eaeaea;
---muted: rgba(234, 234, 234, 0.6);
 --primary: #7c3aed;
---highlight: #7c3aed;
---hover-tint: #ffffff;
+--primary-foreground: #ffffff;
+--surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--muted`, `--primary`, `--highlight`, and `--hover-tint`. renCal derives surfaces, dividers, hover states, and other colors from those values.
+Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. renCal derives surfaces, borders, hover states, and other colors from those values. Set `--primary-foreground` when the default text colour on `--primary` lacks contrast.

@@ -129,28 +129,20 @@ export const TimeInput = ({
     setQuery("")
   }
 
+  // Enter otherwise falls through to cmdk, which commits the highlighted row.
+  // Untouched, just close so an off-grid time (09:07) isn't snapped to 09:00.
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key !== "Enter") return
+    if (e.key !== "Enter" || query.trim() || highlighted !== currentSlotKey) return
 
     e.preventDefault()
-
-    const trimmed = query.trim()
-
-    if (trimmed) {
-      const [best] = getTimeOptions(trimmed, timeFormat)
-
-      if (!best) return // unparseable — keep editing
-
-      onChange(best.hour, best.minute)
-    }
-
     setOpen(false)
-    setQuery("")
   }
 
   return (
     <Combobox
       addon={addon}
+      // Sized to the widest label so the field has a stable intrinsic width.
+      inputClassName={timeFormat === "12h" ? "w-[8ch]" : "w-[5ch]"}
       placeholder={currentLabel}
       query={open ? query : currentLabel}
       setQuery={handleQueryChange}

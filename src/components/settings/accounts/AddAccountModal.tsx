@@ -29,66 +29,66 @@ export function AddAccountModal({
 
   return (
     <Modal onClose={onClose}>
-      <div className="flex flex-col items-center gap-6">
-        {step.kind === "select-provider" && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Connect calendar</DialogTitle>
-            </DialogHeader>
+      {step.kind === "select-provider" && (
+        <>
+          <DialogHeader>
+            <DialogTitle>Connect calendar</DialogTitle>
+          </DialogHeader>
 
+          <div className="flex flex-col items-center gap-3">
             <ProviderList onClose={onClose} onSetStep={setStep} />
 
             {showLocalOnlyOption && (
-              <div className="w-60 flex flex-col -mt-3">
+              <div className="w-60 flex flex-col">
                 <Button variant="ghost" onClick={() => setStep({ kind: "local-calendar" })}>
                   Local-only calendar
                 </Button>
               </div>
             )}
-          </>
-        )}
+          </div>
+        </>
+      )}
 
-        {step.kind === "setup" && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
-              <DialogDescription>{step.instructions}</DialogDescription>
-            </DialogHeader>
+      {step.kind === "setup" && (
+        <>
+          <DialogHeader>
+            <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+            <DialogDescription>{step.instructions}</DialogDescription>
+          </DialogHeader>
 
-            <Button
-              onClick={() =>
-                setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
-              }
-            >
-              Continue
-            </Button>
-          </>
-        )}
+          <Button
+            className="justify-self-center"
+            onClick={() =>
+              setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
+            }
+          >
+            Continue
+          </Button>
+        </>
+      )}
 
-        {step.kind === "credentials" && (
-          <>
-            <DialogHeader>
-              <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
-            </DialogHeader>
+      {step.kind === "credentials" && (
+        <>
+          <DialogHeader>
+            <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+          </DialogHeader>
 
-            <CredentialsForm step={step} onClose={onClose} />
-          </>
-        )}
+          <CredentialsForm step={step} onClose={onClose} />
+        </>
+      )}
 
-        {step.kind === "local-calendar" && (
-          <>
-            <DialogHeader>
-              <DialogTitle className="text-center">New local-only calendar</DialogTitle>
-              <DialogDescription className="mt-2">
-                This calendar will live on your computer only, and never be connected to the
-                internet.
-              </DialogDescription>
-            </DialogHeader>
+      {step.kind === "local-calendar" && (
+        <>
+          <DialogHeader>
+            <DialogTitle>New local-only calendar</DialogTitle>
+            <DialogDescription>
+              This calendar will live on your computer only, and never be connected to the internet.
+            </DialogDescription>
+          </DialogHeader>
 
-            <LocalCalendarForm onClose={onClose} />
-          </>
-        )}
-      </div>
+          <LocalCalendarForm onClose={onClose} />
+        </>
+      )}
     </Modal>
   )
 }

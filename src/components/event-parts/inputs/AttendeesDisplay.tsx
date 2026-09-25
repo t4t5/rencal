@@ -3,6 +3,7 @@ import type { KeyboardEvent } from "react"
 
 import { Command, CommandItem, CommandList } from "@/components/ui/command"
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@/components/ui/input-group"
+import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { StatusDot } from "@/components/ui/status-dot"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
@@ -161,16 +162,13 @@ export function AttendeesDisplay({
                 "mt-1": !!attendees?.length,
               })}
             >
-              {!attendees?.length && (
-                <InputGroupAddon>
-                  <UserIcon />
-                </InputGroupAddon>
-              )}
+              <InputGroupAddon>{!attendees?.length && <UserIcon />}</InputGroupAddon>
 
               <InputGroupInput
+                data-typography="field"
                 value={inputValue}
                 placeholder={"Add participant"}
-                className="min-w-0 px-2 text-sm"
+                className="min-w-0"
                 aria-invalid={hasInvalidEmail}
                 onChange={(e) => {
                   setInputValue(e.target.value)
@@ -243,16 +241,22 @@ function AttendeeRow({
   const showEmailTooltip = !!attendee.name && attendee.name !== attendee.email
 
   const row = (
-    <div className="group flex items-center gap-2 py-1 px-3 text-sm">
-      <StatusDot status={attendee.response_status} />
+    <Item className="group min-h-control border border-transparent py-1 text-sm">
+      <ItemMedia>
+        <StatusDot status={attendee.response_status} />
+      </ItemMedia>
 
-      <div className="grow gap-2 items-center flex">
+      <ItemContent className="flex items-center gap-2">
         <span className="truncate">{displayName}</span>
         {label && <span className="text-muted-foreground shrink-0">{label}</span>}
-      </div>
+      </ItemContent>
 
-      {onRemove && <RemoveItemButton onClick={onRemove} />}
-    </div>
+      {onRemove && (
+        <ItemActions>
+          <RemoveItemButton onClick={onRemove} />
+        </ItemActions>
+      )}
+    </Item>
   )
 
   if (!showEmailTooltip) return row

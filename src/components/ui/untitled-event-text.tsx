@@ -1,1 +1,1 @@
-export const UntitledEventText = () => <span className="opacity-50">Untitled event</span>
+export const UntitledEventText = () => <span className="text-muted-foreground">Untitled event</span>
