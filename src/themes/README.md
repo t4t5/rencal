@@ -164,7 +164,8 @@ active outline can set it to `var(--border)` or another color.
 | `--control-leading-size`   | Event-field leading icon/checkbox column width (`16px` by default)                        |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default)       |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                                  |
-| `--layout-padding`         | Edge inset for toolbars, the minical header and agenda rows (`12px` by default)           |
+| `--layout-padding`         | Edge inset for toolbars, agenda rows and settings navigation (`12px` by default)          |
+| `--nav-padding-inline`     | Settings nav highlight inset (with unit); defaults to leaving 8px padding inside rows     |
 | `--month-padding-inline`   | Shared horizontal inset for month day cells and their events (`4px` by default)           |
 | `--event-padding-inline`   | Horizontal padding inside month, week, and agenda all-day event blocks (`4px` by default) |
 

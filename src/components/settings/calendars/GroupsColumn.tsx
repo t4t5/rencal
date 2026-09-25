@@ -65,9 +65,9 @@ export function GroupsColumn({
   }
 
   return (
-    <SettingsContent className="w-[220px] border-r border-border gap-2 py-[15px] grow-0 px-2">
-      <div className="flex justify-between items-center w-full">
-        <span data-typography="heading" className="text-sm text-muted-foreground pl-1">
+    <SettingsContent className="w-[220px] border-r border-border gap-2 py-[15px] grow-0 px-0">
+      <div className="flex justify-between items-center w-full px-(--layout-padding)">
+        <span data-typography="heading" className="text-sm text-muted-foreground">
           Groups
         </span>
 

@@ -44,7 +44,7 @@ export function SettingsSidebar() {
       <TabsList
         variant="navigation"
         aria-label="Settings"
-        className="w-full justify-start rounded-none px-2 py-3 group-data-[orientation=vertical]/tabs:h-full"
+        className="w-full justify-start rounded-none py-(--layout-padding) group-data-[orientation=vertical]/tabs:h-full"
       >
         {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
           <TabsTrigger key={tab} value={tab} data-page={tab}>

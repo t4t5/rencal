@@ -57,6 +57,8 @@
   --control-row-gap: 4px;
   --control-leading-size: 16px;
   --layout-padding: calc(var(--spacing) * 3);
+  /* Rows keep 8px inside the highlight so their text lands on --layout-padding. */
+  --nav-padding-inline: max(0px, var(--layout-padding) - var(--spacing) * 2);
   --month-padding-inline: var(--spacing);
   --event-padding-inline: var(--spacing);
 
