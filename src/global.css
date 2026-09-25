@@ -81,8 +81,9 @@
 
   --primary: #f56313;
 
-  --today: #3a93ff;
-  --brand: #ff610b; /* year */
+  /* Follow --primary so shadcn themes, which lack these, stay on-palette. */
+  --today: var(--primary);
+  --brand: var(--primary);
 
   --ring: oklch(0.552 0.016 285.938);
 

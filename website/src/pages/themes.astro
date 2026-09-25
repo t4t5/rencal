@@ -28,16 +28,14 @@ function parseThemeCss(css: string): Record<string, string> {
   return vars
 }
 
-// Ren's color primitives live in the app's global.css `:root` block (ren.css
-// itself is comment-only), so they're spelled out here. Keep in sync with the
-// app's global.css.
+// Most of ren's color primitives live in the app's global.css `:root` block
+// (ren.css only sets its accents), so they're spelled out here. Keep in sync
+// with the app's global.css.
 const REN_CORE: Record<string, string> = {
   "--background": "#131313",
   "--foreground": "white",
   "--muted-foreground": "rgba(255, 255, 255, 0.5)",
   "--primary": "#f56313",
-  "--brand": "#ff610b",
-  "--today": "#3a93ff",
   "--surface-tint": "white",
   "--surface-tint-step": "5%",
 }
@@ -62,6 +60,8 @@ if (renTheme === undefined) throw new Error('Missing "ren" theme in manifest')
 // fill editor fields for primitives a theme doesn't override.
 const REN_DEFAULTS: Record<string, string> = {
   ...REN_CORE,
+  "--brand": "var(--primary)",
+  "--today": "var(--primary)",
   "--radius": "0px",
   "--radius-circle": "0px",
   "--font-heading": "var(--font-mono)",

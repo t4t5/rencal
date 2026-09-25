@@ -32,8 +32,8 @@
 
   --primary: #f56313;
 
-  --today: #3a93ff;
-  --brand: #ff610b;
+  --today: var(--primary);
+  --brand: var(--primary);
 
   --success: #4caf50;
   --warning: #fd8742;

@@ -8,7 +8,6 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 --surface-tint: #ffffff;
 --primary: #7c3aed;
 --primary-foreground: #ffffff; /* defaults to --background; set it when that lacks contrast on --primary */
---brand: #7c3aed;
 ```
 
 The `[data-theme="<id>"]` selector is added **for you**:
@@ -18,7 +17,7 @@ The `[data-theme="<id>"]` selector is added **for you**:
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets. Installing or updating an inactive theme therefore does not enable its full CSS.
 
-The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
+The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. `--today` and `--brand` default to `--primary`, so a pasted shadcn theme stays on-palette; set them for distinct accents. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
 
 ## Theme scopes
 
@@ -59,20 +58,20 @@ These are the variables theme files normally override. Surfaces and state colors
 
 ### Colors
 
-| Variable                   | Purpose                                            |
-| -------------------------- | -------------------------------------------------- |
-| `--background`             | App background                                     |
-| `--foreground`             | Primary text                                       |
-| `--muted-foreground`       | De-emphasized text; defaults to 50% `--foreground` |
-| `--placeholder-foreground` | Placeholder text; defaults to `--muted-foreground` |
-| `--primary`                | Primary action color                               |
-| `--primary-foreground`     | Text on `--primary`; defaults to `--background`    |
-| `--today`                  | "Today" indicator color                            |
-| `--brand`                  | Brand accent (year badge, etc.)                    |
-| `--ring`                   | Focus rings                                        |
-| `--success`                | Success / accepted state                           |
-| `--warning`                | Warning / tentative state                          |
-| `--destructive`            | Destructive actions, error / declined state        |
+| Variable                   | Purpose                                                  |
+| -------------------------- | -------------------------------------------------------- |
+| `--background`             | App background                                           |
+| `--foreground`             | Primary text                                             |
+| `--muted-foreground`       | De-emphasized text; defaults to 50% `--foreground`       |
+| `--placeholder-foreground` | Placeholder text; defaults to `--muted-foreground`       |
+| `--primary`                | Primary action color                                     |
+| `--primary-foreground`     | Text on `--primary`; defaults to `--background`          |
+| `--today`                  | "Today" indicator color; defaults to `--primary`         |
+| `--brand`                  | Brand accent (year badge, etc.); defaults to `--primary` |
+| `--ring`                   | Focus rings                                              |
+| `--success`                | Success / accepted state                                 |
+| `--warning`                | Warning / tentative state                                |
+| `--destructive`            | Destructive actions, error / declined state              |
 
 The fill foregrounds (`--primary-foreground`, `--today-foreground`,
 `--brand-foreground`, `--destructive-foreground`) default to pairings that suit

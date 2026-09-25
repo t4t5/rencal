@@ -61,6 +61,13 @@ describe("global CSS contract", () => {
     expect(themed.get("--font-mono")).toBe('"Geist Mono", ui-monospace, monospace')
   })
 
+  it("derives renCal's accent fills from --primary", () => {
+    const themed = declarationsFor(BASELINE)
+
+    expect(themed.get("--today")).toBe("var(--primary)")
+    expect(themed.get("--brand")).toBe("var(--primary)")
+  })
+
   it("compiles every shadcn color utility used by shared UI", () => {
     const candidates = [
       "text-accent-foreground",

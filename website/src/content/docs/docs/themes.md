@@ -25,11 +25,10 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --foreground: #eaeaea;
 --primary: #7c3aed;
 --primary-foreground: #ffffff;
---brand: #7c3aed;
 --surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, `--brand`, and `--surface-tint`. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` and `--brand` defaults to `--background`, and text on `--destructive` to white. Those defaults suit dark themes; on a light theme or a mid-tone accent, set `--primary-foreground`, `--today-foreground`, `--brand-foreground`, and `--destructive-foreground` explicitly, as in the example above.
+Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. The "today" marker (`--today`) and brand accent (`--brand`) default to `--primary`; set them for distinct accents. renCal derives shadcn-compatible surfaces, borders, hover states, and foreground colors from those values. De-emphasized text (`--muted-foreground`) defaults to 50% `--foreground`. Text on `--primary` and `--brand` defaults to `--background`, and text on `--destructive` to white. Those defaults suit dark themes; on a light theme or a mid-tone accent, set `--primary-foreground`, `--today-foreground`, `--brand-foreground`, and `--destructive-foreground` explicitly, as in the example above.
 
 Placeholder text uses `--placeholder-foreground`, which defaults to `--muted-foreground`. Set it only when a theme needs placeholders to differ from other de-emphasized text.
 
@@ -171,3 +170,5 @@ renCal 0.8 renames several theme tokens to match shadcn. Old names are no longer
 | `--event-text-max-lightness`, `--event-text-foreground-mix` | Removed. Style `[data-slot="calendar-event"]` directly.                   |
 
 `--brand-foreground` now defaults to `--background` instead of white. Set it explicitly if your theme relied on white text on `--brand`.
+
+`--today` and `--brand` now default to `--primary` instead of fixed blue and orange. Set them explicitly if your theme relied on those colours.
