@@ -125,7 +125,7 @@ export function SearchPalette({
 
         <Command
           shouldFilter={false}
-          className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]>svg]:size-5 [&_[data-slot=command-input]]:h-12 [&_[data-slot=command-input]]:text-base"
+          className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:[--control-leading-size:20px] [&_[data-slot=command-input]]:text-base"
         >
           <CommandInput
             placeholder="Search your events..."
