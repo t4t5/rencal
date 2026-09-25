@@ -34,7 +34,7 @@ export function MainHeader({
   const { navigateToDate } = useCalendarNavigation()
 
   return (
-    <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-4">
+    <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-(--layout-padding)">
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 

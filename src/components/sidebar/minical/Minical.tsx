@@ -32,7 +32,10 @@ export function Minical() {
 
   return (
     <div data-slot="minical" className="pt-4 select-none">
-      <div data-slot="minical-header" className="flex items-center justify-between px-4 pb-4 h-12">
+      <div
+        data-slot="minical-header"
+        className="flex items-center justify-between px-(--layout-padding) pb-4 h-12"
+      >
         <CurrentMonth />
         <ArrowKeys />
       </div>

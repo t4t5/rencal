@@ -56,7 +56,7 @@
   --control-content-gap: 8px;
   --control-row-gap: 4px;
   --control-leading-size: 16px;
-  --agenda-padding-inline: calc(var(--spacing) * 3);
+  --layout-padding: calc(var(--spacing) * 3);
   --month-padding-inline: var(--spacing);
   --event-padding-inline: var(--spacing);
 
@@ -466,7 +466,7 @@
     [data-slot="agenda-all-day-events"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
   ) {
-    padding-inline: var(--agenda-padding-inline);
+    padding-inline: var(--layout-padding);
   }
 
   /* Theme tiles paint events from tokens only, under a slot theme selectors don't target. */
