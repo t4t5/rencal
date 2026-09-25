@@ -3,7 +3,6 @@ import { useMemo } from "react"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 
 import { useTheme } from "@/hooks/useTheme"
-import { DEFAULT_CALENDAR_COLOR } from "@/lib/calendar-styles"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
@@ -51,20 +50,23 @@ function ThemeGrid({
             key={t.id}
             onClick={() => onSelect(t.id)}
             className={cn(
-              "relative flex flex-col gap-2 p-3 rounded-md border-2 text-left transition-colors",
-              isActive
-                ? "border-primary"
-                : "border-transparent hover:bg-accent hover:text-accent-foreground",
+              "flex flex-col overflow-hidden rounded-lg border bg-secondary text-left transition-colors hover:bg-secondary-hover",
+              isActive ? "border-primary ring-1 ring-primary" : "border-border",
             )}
           >
             <ThemePreview themeId={t.id} />
-            <span className="text-sm">{t.name}</span>
 
-            {isActive && (
-              <div className="absolute top-1 right-1 size-5 rounded-full text-primary-foreground flex justify-center items-center bg-primary">
-                <CheckIcon className="w-4" />
-              </div>
-            )}
+            <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
+              <span className="truncate text-sm">{t.name}</span>
+              <span
+                className={cn(
+                  "flex size-4 shrink-0 items-center justify-center rounded-full border",
+                  isActive ? "border-primary text-primary" : "border-input",
+                )}
+              >
+                {isActive && <CheckIcon className="w-3" />}
+              </span>
+            </div>
           </button>
         )
       })}
@@ -72,52 +74,135 @@ function ThemeGrid({
   )
 }
 
-// Three calendars' worth of colour, so event tints and `--event-color` overrides show.
-const PREVIEW_EVENTS = [
-  { top: 0, height: 45, color: DEFAULT_CALENDAR_COLOR },
-  { top: 35, height: 65, color: "#f97316" },
-  { top: 15, height: 40, color: "#10b981" },
-]
-
-/** A miniature sidebar + week view painted from the theme's tokens, so it looks the same active or not. */
+/** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
 const ThemePreview = ({ themeId }: { themeId: string }) => {
   const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
-    <div
-      data-theme={themeId}
-      data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
-      style={style}
-      aria-hidden
-      className="h-24 w-full flex overflow-hidden rounded-sm border border-border bg-background"
-    >
-      <div className="w-[35%] shrink-0 flex flex-col gap-3 p-2.5 border-r border-border">
-        <div className="h-3 w-5 rounded-xs bg-primary" />
-        <div className="flex flex-col gap-1.5">
-          <div className="h-1.5 rounded-xs bg-muted-foreground/40" />
-          <div className="h-1.5 w-2/3 rounded-xs bg-muted-foreground/40" />
-        </div>
-      </div>
-
-      <div className="grow flex gap-1 p-2.5">
-        {PREVIEW_EVENTS.map((event) => (
-          <div key={event.color} className="relative flex-1">
-            <div
-              data-slot="theme-preview-event"
-              className="absolute inset-x-0 overflow-hidden rounded-xs"
-              style={{
-                top: `${event.top}%`,
-                height: `${event.height}%`,
-                ...getCalendarEventStyle({ calendarColor: event.color, eventColor: null }),
-              }}
-            >
-              <div className="absolute left-0 inset-y-0 w-[2px] bg-(--calendar-event-color)" />
-            </div>
-          </div>
-        ))}
+    <div aria-hidden className="h-28 overflow-hidden pt-4 pl-4">
+      <div
+        data-theme={themeId}
+        data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
+        style={style}
+        className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg"
+      >
+        <MinicalPreview />
+        <WeekPreview />
       </div>
     </div>
   )
 }
+
+// A shortened month whose last two columns are the weekend; today is selected, as on launch.
+const MINICAL_WEEKS = 4
+const MINICAL_DAYS = 5
+const TODAY = { week: 1, day: 1 }
+const isOutsideDay = (week: number, day: number) =>
+  (week === 0 && day < 1) || (week === MINICAL_WEEKS - 1 && day > 2)
+const isMinicalWeekend = (day: number) => day >= MINICAL_DAYS - 2
+const isWeekend = (day: number) => day >= 5
+
+const MinicalPreview = () => (
+  <div className="flex w-[76px] shrink-0 flex-col gap-2.5 border-r border-border pt-2.5">
+    <div className="flex gap-1 px-2">
+      <div className="h-1.5 w-6 rounded-xs bg-foreground" />
+      <div className="h-1.5 w-3.5 rounded-xs bg-brand" />
+    </div>
+
+    <div className="flex flex-col px-1">
+      {Array.from({ length: MINICAL_WEEKS }, (_, week) => (
+        <div key={week} className={cn("flex", { "bg-hover": week === TODAY.week })}>
+          {Array.from({ length: MINICAL_DAYS }, (_, day) => {
+            const isToday = week === TODAY.week && day === TODAY.day
+
+            return (
+              <div
+                key={day}
+                className={cn("flex h-3 flex-1 items-center justify-center", {
+                  "bg-weekend": isMinicalWeekend(day),
+                })}
+              >
+                {isToday ? (
+                  <div className="flex size-3 items-center justify-center rounded-circle bg-today">
+                    <div className="size-1 bg-today-foreground" />
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "size-1",
+                      isOutsideDay(week, day) ? "bg-muted-foreground/40" : "bg-muted-foreground",
+                    )}
+                  />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      ))}
+    </div>
+  </div>
+)
+
+// Events in the theme's default calendar colour, so `--primary` and `--event-*` overrides show.
+const PREVIEW_EVENTS = [
+  { day: 0, top: 20, height: 30 },
+  { day: 1, top: 40, height: 35 },
+  { day: 2, top: 10, height: 25 },
+  { day: 2, top: 50, height: 30 },
+]
+
+const WeekPreview = () => (
+  <div className="flex grow flex-col">
+    <div className="flex h-4 shrink-0 border-b border-border">
+      {Array.from({ length: 7 }, (_, day) => (
+        <div
+          key={day}
+          className={cn("flex flex-1 items-center justify-end border-r border-border px-1", {
+            "bg-selected": day === TODAY.day,
+            "bg-weekend": day !== TODAY.day && isWeekend(day),
+          })}
+        >
+          {day === TODAY.day ? (
+            <div className="flex h-2.5 w-3 items-center justify-center rounded-circle bg-today">
+              <div className="h-0.5 w-1.5 bg-today-foreground" />
+            </div>
+          ) : (
+            <div className="h-0.5 w-1.5 bg-muted-foreground" />
+          )}
+        </div>
+      ))}
+    </div>
+
+    <div className="flex grow">
+      {Array.from({ length: 7 }, (_, day) => (
+        <div
+          key={day}
+          className={cn("relative flex-1 border-r border-border", {
+            "bg-weekend": isWeekend(day),
+          })}
+        >
+          {PREVIEW_EVENTS.filter((event) => event.day === day).map((event) => (
+            <div
+              key={event.top}
+              data-slot="theme-preview-event"
+              className="absolute inset-x-px overflow-hidden rounded-xs"
+              style={{
+                top: `${event.top}%`,
+                height: `${event.height}%`,
+                ...getCalendarEventStyle({ calendarColor: null, eventColor: null }),
+              }}
+            >
+              <div className="absolute inset-y-0 left-0 w-[2px] bg-(--calendar-event-color)" />
+            </div>
+          ))}
+
+          {day === TODAY.day && (
+            <div className="absolute inset-x-0 top-[30%] border-t border-dashed border-today" />
+          )}
+        </div>
+      ))}
+    </div>
+  </div>
+)
