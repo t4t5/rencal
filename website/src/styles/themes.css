@@ -22,7 +22,7 @@
   --text-numerical--transform: uppercase;
 
   --radius: 0px;
-  --radius-circle: 0px;
+  --radius-circle: calc(var(--radius) * 1000);
   --control-height: 34px;
 
   --background: #131313;
@@ -124,7 +124,7 @@
 }
 
 .rc-circle {
-  border-radius: var(--radius-circle, calc(infinity * 1px));
+  border-radius: var(--radius-circle);
 }
 
 /* Event colors — same formulas as the app's getEventBlockColors() */

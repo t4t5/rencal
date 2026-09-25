@@ -50,10 +50,8 @@
   --text-button--transform: uppercase;
   --text-numerical--transform: uppercase;
 
-  --radius-circle: 0;
+  --radius: 0px;
   --control-height: 34px;
-  --control-height-sm: 32px;
-  --control-height-lg: 40px;
   --control-padding-inline: 8px;
   --control-content-gap: 8px;
   --control-row-gap: 4px;
@@ -95,8 +93,6 @@
   --surface-tint: var(--foreground);
   --surface-tint-step: 5%;
 
-  --tab-gap: 0;
-
   /* Optional overrides stay unset so their var() fallbacks apply. */
   --scrollbar-width: initial;
   --text-heading: initial;
@@ -125,13 +121,15 @@
   --font-numerical: var(--font-mono);
 
   /* Derived from the primitives above, on the same scope. */
+  --radius-circle: calc(var(--radius) * 1000); /* Square when --radius is 0, a pill otherwise. */
   --control-height-xs: calc(var(--control-height) - 10px);
+  --control-height-sm: calc(var(--control-height) - 2px);
+  --control-height-lg: calc(var(--control-height) + 6px);
   /* Trailing slot's end gap; matches its vertical gap in a 1px-bordered field. */
   --control-trailing-inset: calc((var(--control-height) - var(--control-height-xs)) / 2 - 1px);
   --placeholder-foreground: var(--muted-foreground);
 
   --button-border: transparent;
-  --radius: 0px;
 
   /* Each surface mixes N tint steps into a base, never into another surface,
      so overriding one shadcn token leaves the others alone. */
@@ -193,7 +191,6 @@
   --destructive-foreground: white;
   --overlay: rgb(0 0 0 / 0.5);
 
-  --tab-list-shadow: inset 0 0 0 1px var(--secondary);
   --lane-height: calc(var(--text-xs--line-height) + 4px);
 }
 
@@ -270,13 +267,12 @@
 
   --shadow-button-border: inset 0 0 0 1px var(--button-border);
   --shadow-input-border: inset 0 0 0 1px var(--input);
-  --shadow-tab-list: var(--tab-list-shadow);
+  --shadow-tab-list: inset 0 0 0 1px var(--secondary);
 
   --spacing-control: var(--control-height);
   --spacing-control-xs: var(--control-height-xs);
   --spacing-control-sm: var(--control-height-sm);
   --spacing-control-lg: var(--control-height-lg);
-  --spacing-tab-gap: var(--tab-gap);
 }
 
 /* Extend the generated text colour utilities so muted text follows the surface. */
@@ -304,9 +300,9 @@
   --muted-foreground: var(--tooltip-muted-foreground);
 }
 
-/* Custom pill-radius utility. Themes can override via --radius-circle (ren sets it to 0). */
+/* Pill radius that squares off on sharp themes; see --radius-circle. */
 @utility rounded-circle {
-  border-radius: var(--radius-circle, calc(infinity* 1px));
+  border-radius: var(--radius-circle);
 }
 
 @layer base {

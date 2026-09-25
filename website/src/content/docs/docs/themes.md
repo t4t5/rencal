@@ -51,8 +51,6 @@ You can change the Tailwind type scale directly with `--text-xs`, `--text-sm`, `
 ```css
 /* Compact example; 24px is the supported minimum control height. */
 --control-height: 24px;
---control-height-sm: 24px;
---control-height-lg: 28px;
 --control-padding-inline: 6px;
 --control-content-gap: 6px;
 --agenda-padding-inline: 6px;
@@ -79,7 +77,7 @@ For component-specific custom CSS, target stable slot attributes. Select on `dat
 }
 ```
 
-The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-leading-size` sizes the leading icon or checkbox column, `--control-height-xs` sizes icon buttons and the trailing slot, and `--control-content-gap` separates the leading, content, and trailing parts. The leading column hugs its icon, so icons line up with the text of fields that have none. Rows that end in a trailing slot, such as an inset button or a remove button, replace their end padding with `--control-trailing-inset`, so the slot sits as far from the field's end as from its top and bottom. By default, `--control-height-xs` is derived as `calc(var(--control-height) - 10px)` and `--control-trailing-inset` from both heights and a 1px field border, so compact themes only need to change the control height. Themes whose fields have no border set `--control-trailing-inset` to half the height difference.
+The control spacing variables adjust the event composer and editor as a unit. `--control-padding-inline` controls the inside edges, `--control-leading-size` sizes the leading icon or checkbox column, `--control-height-xs` sizes icon buttons and the trailing slot, and `--control-content-gap` separates the leading, content, and trailing parts. The leading column hugs its icon, so icons line up with the text of fields that have none. Rows that end in a trailing slot, such as an inset button or a remove button, replace their end padding with `--control-trailing-inset`, so the slot sits as far from the field's end as from its top and bottom. By default, the `xs`, `sm`, and `lg` heights are derived from `--control-height`, and `--control-trailing-inset` from the heights and a 1px field border, so compact themes only need to change the control height. Themes whose fields have no border set `--control-trailing-inset` to half the height difference.
 
 `--agenda-padding-inline` keeps agenda date headers, empty states, all-day groups, and timed rows on the same horizontal inset.
 
@@ -168,6 +166,7 @@ renCal 0.8 renames several theme tokens to match shadcn. Old names are no longer
 | `--sans`, `--mono`                                          | `--font-sans`, `--font-mono`                                              |
 | `--font-heading-transform` (and `-button-`, `-numerical-`)  | `--text-heading--transform` (and `--text-button--`, `--text-numerical--`) |
 | `--event-text-max-lightness`, `--event-text-foreground-mix` | Removed. Style `[data-slot="calendar-event"]` directly.                   |
+| `--tab-gap`, `--tab-list-shadow`                            | Removed. Style `[data-slot="tabs-list"]` directly.                        |
 
 `--brand-foreground` now defaults to `--background` instead of white. Set it explicitly if your theme relied on white text on `--brand`.
 

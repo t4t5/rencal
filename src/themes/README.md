@@ -154,10 +154,10 @@ active outline can set it to `var(--border)` or another color.
 | Variable                   | Purpose                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------- |
 | `--radius`                 | Base border radius; like shadcn, `rounded-*` steps multiply it (sm ×0.6 … 4xl ×2.6) |
-| `--radius-circle`          | Pill/avatar radius (set to `0` for sharp themes)                                    |
+| `--radius-circle`          | Pill/avatar radius; defaults to square when `--radius` is `0`, a pill otherwise     |
 | `--control-height`         | Button/input height                                                                 |
-| `--control-height-sm`      | Small button height                                                                 |
-| `--control-height-lg`      | Large button height                                                                 |
+| `--control-height-sm`      | Small button height; defaults to `calc(var(--control-height) - 2px)`                |
+| `--control-height-lg`      | Large button height; defaults to `calc(var(--control-height) + 6px)`                |
 | `--control-height-xs`      | Extra-small button height; defaults to `calc(var(--control-height) - 10px)`         |
 | `--control-padding-inline` | Horizontal padding inside event field rows (`8px` by default)                       |
 | `--control-trailing-inset` | End padding of field rows with a trailing slot; defaults to its vertical gap        |
@@ -165,8 +165,6 @@ active outline can set it to `var(--border)` or another color.
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default) |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                            |
 | `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)             |
-| `--tab-gap`                | Tab spacing                                                                         |
-| `--tab-list-shadow`        | Tab list outline                                                                    |
 
 ### Typography (fonts)
 
@@ -224,8 +222,6 @@ This compact theme changes density and typography only through top-level tokens.
 
 ```css
 --control-height: 24px;
---control-height-sm: 24px;
---control-height-lg: 28px;
 --text-base: 14px;
 --text-base--line-height: 20px;
 --text-sm: 12px;

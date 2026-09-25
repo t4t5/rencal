@@ -13,14 +13,15 @@
 --today: #3a93ff;
 --today-foreground: var(--background);
 
---tab-gap: 6px;
---tab-list-shadow: none;
-
 --surface-tint: #979bc8;
 --surface-tint-step: 10%;
 
 --radius: 9.6px;
---radius-circle: calc(infinity * 1px);
 
 --primary: #0094c6;
 --primary-foreground: white;
+
+[data-slot="tabs-list"][data-variant="default"] {
+  gap: 6px;
+  box-shadow: none;
+}
