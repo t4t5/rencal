@@ -136,7 +136,8 @@ function GroupModal({
       groups.map((group) => group.toLowerCase()).filter((group) => group !== normalizedInitialName),
     [groups, normalizedInitialName],
   )
-  const error = getGroupNameError(trimmedName, normalizedName, existingNames)
+  const error = getGroupNameError(normalizedName, existingNames)
+  const canSubmit = !!trimmedName && !error && !isSaving
 
   useEffect(() => {
     setName(initialName)
@@ -144,7 +145,7 @@ function GroupModal({
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    if (error || isSaving) return
+    if (!canSubmit) return
 
     setIsSaving(true)
     try {
@@ -179,7 +180,7 @@ function GroupModal({
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
               Cancel
             </Button>
-            <Button type="submit" disabled={!!error || isSaving}>
+            <Button type="submit" disabled={!canSubmit}>
               Save
             </Button>
           </DialogFooter>
@@ -189,8 +190,7 @@ function GroupModal({
   )
 }
 
-function getGroupNameError(name: string, normalizedName: string, existingNames: string[]) {
-  if (!name) return "Enter a group name."
+function getGroupNameError(normalizedName: string, existingNames: string[]) {
   if (normalizedName === DEFAULT_GROUP) return "Default is reserved."
   if (existingNames.includes(normalizedName)) return "A group with this name already exists."
   return null
