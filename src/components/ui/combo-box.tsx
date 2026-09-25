@@ -11,6 +11,7 @@ import { SelectIcon } from "./select"
 
 export function Combobox({
   addon,
+  inputClassName,
   children,
   placeholder,
   query,
@@ -25,6 +26,7 @@ export function Combobox({
   onHighlightChange,
 }: {
   addon: ReactNode
+  inputClassName?: string
   children: ReactNode
   placeholder?: string
   query: string
@@ -77,7 +79,7 @@ export function Combobox({
           {addon}
           <InputInner
             data-slot="combobox-input"
-            className="h-full flex-1 cursor-default"
+            className={cn("h-full flex-1 cursor-default", inputClassName)}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={placeholder}

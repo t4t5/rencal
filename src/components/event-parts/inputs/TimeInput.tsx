@@ -151,6 +151,8 @@ export const TimeInput = ({
   return (
     <Combobox
       addon={addon}
+      // Sized to the widest label so the field has a stable intrinsic width.
+      inputClassName={timeFormat === "12h" ? "w-[8ch]" : "w-[5ch]"}
       placeholder={currentLabel}
       query={open ? query : currentLabel}
       setQuery={handleQueryChange}

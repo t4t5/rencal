@@ -305,6 +305,9 @@ Use `data-control="select"` for shared dropdown-field styling; the
 The `select-icon` slot owns its arrow's colour and visibility; the glyph inside
 draws with `currentColor`. A theme can recolour the arrow through the slot's
 `color`, or set it to `transparent` and draw its own glyph with a pseudo-element.
+Date pickers render the slot with `display: none` so they fit the narrow
+sidebar form; a theme that draws every select as a combo box can show it with
+`display: flex`.
 
 Removable list rows in the event form, such as reminders and conference links,
 are `item` slots with `data-variant="accent"`. They use
@@ -370,7 +373,8 @@ Calendar chrome exposes these slots for scoped theme rules:
   `data-today`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
   `calendar-event-color-marker` for events in every view;
-- `select-icon` on select triggers and the toolbar's group/view dropdowns.
+- `select-icon` on select triggers, comboboxes, date pickers, and the toolbar's
+  group/view dropdowns.
 
 Toolbar group/view dropdowns keep their `dropdown-menu-trigger` slot and, like
 every select-like trigger, expose `data-control="select"`. The searchable timezone

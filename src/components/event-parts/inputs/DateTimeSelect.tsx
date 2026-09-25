@@ -34,9 +34,6 @@ import { TimeZoneSelect } from "./TimeZoneSelect"
 
 export type DateTimeRange = EventTimeRange
 
-// To make sure time + dates are aligned
-const FIRST_INPUT_WIDTH = 140
-
 export const DateTimeSelect = ({
   start,
   end,
@@ -93,38 +90,41 @@ export const DateTimeSelect = ({
 
   return (
     <div className="flex flex-col gap-[var(--control-row-gap)]">
-      {timeRowVisible && (
-        <TimeSelect
-          start={visibleTimeRange.start}
-          end={visibleTimeRange.end}
-          allDay={allDay}
+      {/* Shared columns keep the end fields aligned across rows. */}
+      <div className="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-y-[var(--control-row-gap)]">
+        {timeRowVisible && (
+          <TimeSelect
+            start={visibleTimeRange.start}
+            end={visibleTimeRange.end}
+            allDay={allDay}
+            readOnly={inputsReadOnly}
+            onChangeStartTime={handleStartTime}
+            onChangeEndTime={handleEndTime}
+          />
+        )}
+        <DateSelect
+          startDate={dateInEventZone(shown.start)}
+          endDate={displayEndDate(shown)}
+          showEndDate={shouldShowDisplayEndDate(shown)}
+          icon={timeRowVisible ? null : <ClockIcon />}
           readOnly={inputsReadOnly}
-          onChangeStartTime={handleStartTime}
-          onChangeEndTime={handleEndTime}
+          onChangeStart={handleStartDate}
+          onChangeEnd={handleEndDate}
+          trailing={
+            canAddTimeZone && (
+              <Button
+                type="button"
+                variant="ghost"
+                typography="field"
+                className="px-[var(--control-padding-inline)] text-muted-foreground"
+                onClick={() => setTimeZoneRequested(true)}
+              >
+                Add timezone
+              </Button>
+            )
+          }
         />
-      )}
-      <DateSelect
-        startDate={dateInEventZone(shown.start)}
-        endDate={displayEndDate(shown)}
-        showEndDate={shouldShowDisplayEndDate(shown)}
-        icon={timeRowVisible ? null : <ClockIcon />}
-        readOnly={inputsReadOnly}
-        onChangeStart={handleStartDate}
-        onChangeEnd={handleEndDate}
-        trailing={
-          canAddTimeZone && (
-            <Button
-              type="button"
-              variant="ghost"
-              typography="field"
-              className="px-[var(--control-padding-inline)] text-muted-foreground"
-              onClick={() => setTimeZoneRequested(true)}
-            >
-              Add timezone
-            </Button>
-          )
-        }
-      />
+      </div>
       {showTimeZone && (
         <div className="flex items-center gap-1">
           <TimeZoneSelect
@@ -197,27 +197,25 @@ const TimeSelect = ({
 }) => {
   return (
     <div
-      className={cn("flex items-center", {
+      className={cn("col-span-3 grid grid-cols-subgrid items-center", {
         "opacity-50": allDay,
       })}
     >
-      <div className="flex items-center shrink-0" style={{ width: FIRST_INPUT_WIDTH }}>
-        <TimeInput
-          value={start}
-          addon={
-            <ItemMedia>
-              <ClockIcon />
-            </ItemMedia>
-          }
-          readOnly={readOnly}
-          disabled={allDay}
-          onChange={onChangeStartTime}
-        />
+      <TimeInput
+        value={start}
+        addon={
+          <ItemMedia>
+            <ClockIcon />
+          </ItemMedia>
+        }
+        readOnly={readOnly}
+        disabled={allDay}
+        onChange={onChangeStartTime}
+      />
 
-        <ArrowRightIcon className="size-4 shrink-0 text-muted-foreground" />
-      </div>
+      <ArrowRightIcon className="size-4 text-muted-foreground" />
 
-      <div className="w-[111px] shrink-0">
+      <div className="justify-self-start">
         <TimeInput value={end} readOnly={readOnly} disabled={allDay} onChange={onChangeEndTime} />
       </div>
     </div>
@@ -244,22 +242,26 @@ const DateSelect = ({
   trailing?: React.ReactNode
 }) => {
   return (
-    <div className="flex flex-wrap gap-y-1">
+    <div className="col-span-3 grid grid-cols-subgrid items-center">
+      {/* Without an icon, indent past the time's icon slot so the texts line up. */}
       <div
-        className="flex shrink-0 items-center"
-        style={{
-          width: FIRST_INPUT_WIDTH,
-        }}
+        className={cn(
+          "justify-self-start",
+          !icon && "pl-[calc(var(--control-icon-size)+var(--control-content-gap))]",
+        )}
       >
-        <span className="flex w-[calc(var(--control-padding-inline)+var(--control-icon-size))] shrink-0 justify-end">
-          <ItemMedia>{icon}</ItemMedia>
-        </span>
-        <DatePicker date={startDate} setDate={onChangeStart} readOnly={readOnly} />
+        <DatePicker
+          date={startDate}
+          setDate={onChangeStart}
+          addon={icon && <ItemMedia>{icon}</ItemMedia>}
+          readOnly={readOnly}
+        />
       </div>
 
-      {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
-
-      {trailing}
+      <div className="col-start-3 flex flex-wrap items-center gap-y-1">
+        {showEndDate && <DatePicker date={endDate} setDate={onChangeEnd} readOnly={readOnly} />}
+        {trailing}
+      </div>
     </div>
   )
 }
