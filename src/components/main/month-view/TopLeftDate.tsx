@@ -35,7 +35,7 @@ export function TopLeftDate({
       onClick={onClick}
       onPointerDown={(event) => startCreateDrag(day.date, event)}
     >
-      {day.date.day === 1 && (
+      {(day.date.day === 1 || isActive) && (
         <span className="pointer-events-none text-xs text-muted-foreground">
           {formatMonth(day.date, "long")}
         </span>
