@@ -410,11 +410,10 @@
     justify-content: center;
   }
 
+  /* Hugs its glyph like .control-leading, so both ends share the row padding. */
   [data-slot="select-icon"] {
     display: flex;
-    width: var(--control-height-xs);
-    min-width: var(--control-height-xs);
-    aspect-ratio: 1;
+    min-width: 0;
     flex: none;
     align-items: center;
     justify-content: center;
