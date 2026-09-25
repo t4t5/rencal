@@ -11,7 +11,7 @@
 
 --brand: #ff2f00; /* year */
 --today: #3a93ff;
---today-foreground: var(--background);
+--today-foreground: white;
 
 --surface-tint: #979bc8;
 --surface-tint-step: 10%;
