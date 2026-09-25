@@ -321,6 +321,21 @@ Themes that intentionally retain an inset event action can scope that exception 
 }
 ```
 
+### Dialog styling hooks
+
+A dialog's `dialog-header` comes first in `dialog-content` and spans its full
+width. It may sit inside a full-width wrapper such as a `<form>`, but dialogs
+never add margins, padding, or centering wrappers around it. A theme can
+therefore treat the header, or the `dialog-title` inside it, as window chrome:
+set the `dialog-content` padding, then pull the title bar into that padding
+with matching negative margins. `dialog-close` is positioned against
+`dialog-content`, so a title bar can reserve room for it.
+
+The search and command palettes keep their header for screen readers only, and
+their `command` slot is a direct child of `dialog-content`. Match
+`[data-slot="dialog-content"]:has(> [data-slot="command"])` to give them an even
+frame instead of a title bar.
+
 ### Settings styling hooks
 
 Settings sections use vertical Tabs. Their `tabs-list` exposes
