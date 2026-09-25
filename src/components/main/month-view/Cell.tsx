@@ -72,7 +72,8 @@ export function MonthDayCell({
           data-selected={isActiveDay || undefined}
           data-weekend={day.isWeekend || undefined}
           className={cn(
-            "flex flex-col gap-1 px-(--month-padding-inline) pb-1 min-h-0 overflow-hidden cursor-default border-r border-border last:border-r-0",
+            // The divider is an inset shadow so it takes no width; all-day bars assume none.
+            "flex flex-col gap-1 px-(--month-padding-inline) pb-1 min-h-0 overflow-hidden cursor-default shadow-[inset_-1px_0_var(--border)] last:shadow-none",
             day.isWeekend && "bg-weekend",
             isActiveDay && "bg-selected text-selected-foreground",
           )}

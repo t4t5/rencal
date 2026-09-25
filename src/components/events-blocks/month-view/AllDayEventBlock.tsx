@@ -60,7 +60,7 @@ export function MonthAllDayEvent({
       data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
       className={cn(
-        "absolute truncate px-1 py-px text-xs cursor-default",
+        "absolute truncate px-(--event-padding-inline) py-px text-xs cursor-default",
         item.isStart && "rounded-l-xs",
         item.isEnd && "rounded-r-xs",
       )}

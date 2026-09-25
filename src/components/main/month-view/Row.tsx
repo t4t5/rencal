@@ -106,6 +106,17 @@ export const MonthWeekRow = memo(function MonthWeekRow({
     <>
       {/* Day numbers */}
       <div className="grid grid-cols-7 relative">
+        {/* Before the cells, so the last day header stays :last-child */}
+        {showWeekNumbers && weekDays[0] && (
+          <span
+            data-typography="numerical"
+            className="pointer-events-none absolute left-1 top-1 z-10 text-2xs leading-[18px] text-muted-foreground select-none"
+          >
+            {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
+          </span>
+        )}
+        <MonthBoundary col={monthStartCol} />
+
         {weekDays.map((day) => (
           <TopLeftDate
             key={day.dateKey}
@@ -116,15 +127,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             startCreateDrag={startCreateDrag}
           />
         ))}
-        {showWeekNumbers && weekDays[0] && (
-          <span
-            data-typography="numerical"
-            className="pointer-events-none absolute left-1 top-1 z-10 text-2xs leading-[18px] text-muted-foreground select-none"
-          >
-            {isoWeekNumber(weekDays[0].date, firstDayOfWeek)}
-          </span>
-        )}
-        <MonthBoundary col={monthStartCol} />
       </div>
 
       <div className="grid grid-cols-7 grow min-h-0 relative">

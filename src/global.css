@@ -58,6 +58,7 @@
   --control-leading-size: 16px;
   --agenda-padding-inline: calc(var(--spacing) * 3);
   --month-padding-inline: var(--spacing);
+  --event-padding-inline: var(--spacing);
 
   /* Keep in sync with @theme above; checked by global-css.test.ts. */
   --text-2xs: 11px;

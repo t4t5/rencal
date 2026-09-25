@@ -52,7 +52,9 @@ export function MonthTimedEvent({
       data-dimmed={(!isStatic && dimmed) || undefined}
       data-drag-state={dragRole ?? undefined}
       data-event-clickable={!isStatic || undefined}
-      className={cn("flex items-center gap-1 text-xs truncate cursor-default rounded-xs shrink-0")}
+      className={cn(
+        "flex items-center gap-(--event-padding-inline) pr-(--event-padding-inline) text-xs truncate cursor-default rounded-xs shrink-0",
+      )}
       style={getCalendarEventStyle({
         calendarColor: item.color,
         eventColor: item.eventColor,

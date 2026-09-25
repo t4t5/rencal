@@ -140,7 +140,7 @@ export const DaySection = forwardRef<
         )}
 
         {allDayEvents.length > 0 && (
-          <div data-slot="agenda-all-day-events" className="py-1 flex flex-wrap gap-1">
+          <div data-slot="agenda-all-day-events" className="pb-1 flex flex-wrap gap-1">
             {allDayEvents.map((event) => (
               <AllDayRow
                 key={eventKey(event)}
@@ -250,7 +250,7 @@ const AllDayRow = ({ event, dateKey, state, ...handlers }: RowProps) => {
       dateKey={dateKey}
       state={state}
       allDay
-      className="rounded-xs outline-none px-1 py-px leading-4 inline-flex text-xs cursor-default"
+      className="rounded-xs outline-none px-(--event-padding-inline) py-px leading-4 inline-flex text-xs cursor-default"
       {...handlers}
     >
       <AgendaAllDayEventBlock event={event} />
