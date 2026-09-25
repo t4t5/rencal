@@ -103,8 +103,17 @@ export function ReminderSelect({
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
+  const [highlighted, setHighlighted] = useState(String(DEFAULT_REMINDER_VALUES[0]))
 
   const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
+
+  // cmdk drops the highlight when its row disappears; re-pin it to the first
+  // option so Enter always has something to pick.
+  const handleQueryChange = (next: string) => {
+    setQuery(next)
+    const [first] = next ? getQueryValues(next) : DEFAULT_REMINDER_VALUES
+    if (first !== undefined) setHighlighted(String(first))
+  }
   const resolvedAddon =
     addon === undefined ? (
       <ItemMedia>
@@ -119,21 +128,24 @@ export function ReminderSelect({
       <Combobox
         placeholder={placeholder}
         query={query}
-        setQuery={setQuery}
+        setQuery={handleQueryChange}
         open={open}
         setOpen={setOpen}
         addon={resolvedAddon}
         variant={variant}
+        highlightedValue={highlighted}
+        onHighlightChange={setHighlighted}
       >
         {values.length ? (
           <CommandGroup>
             {values.map((mins) => (
               <CommandItem
                 key={mins}
+                value={String(mins)}
                 onSelect={() => {
                   if (!reminders.includes(mins)) onSelect(mins)
                   setOpen(false)
-                  setQuery("")
+                  handleQueryChange("")
                 }}
               >
                 <HumanDuration mins={mins} />
