@@ -37,10 +37,21 @@ function DialogOverlay({
   )
 }
 
+const AUTO_FOCUS_SELECTOR = [
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "[tabindex]:not([tabindex='-1'])",
+]
+  .map((s) => `${s}:not(:disabled):not([data-slot='dialog-close'])`)
+  .join(",")
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
@@ -51,6 +62,15 @@ function DialogContent({
       <div className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none">
         <DialogPrimitive.Content
           data-slot="dialog-content"
+          onOpenAutoFocus={(e) => {
+            onOpenAutoFocus?.(e)
+            if (e.defaultPrevented) return
+            // Never auto-focus the close button; fall back to the dialog itself
+            e.preventDefault()
+            const content = e.currentTarget as HTMLElement
+            const first = content.querySelector<HTMLElement>(AUTO_FOCUS_SELECTOR)
+            ;(first ?? content).focus()
+          }}
           className={cn(
             "bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 pointer-events-auto grid w-full max-w-[calc(100%-2rem)] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg relative",
             className,
