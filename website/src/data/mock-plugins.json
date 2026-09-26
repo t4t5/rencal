@@ -1,0 +1,61 @@
+[
+  {
+    "id": "t4t5.gruvbox",
+    "name": "Gruvbox Theme",
+    "repo": "t4t5/rencal-theme-gruvbox",
+    "description": "The retro groove Gruvbox color scheme, with dark and light variants.",
+    "version": "1.0.0",
+    "tag": "a699ef676ea7a03e393bd7762c4f19c85850531c",
+    "released_at": "2026-09-23T12:18:08Z",
+    "stars": 0,
+    "contributions": ["theme"],
+    "preview_url": "https://rencal.org/plugin-previews/8718437514d6df9e6b9bb3ffc96508cb56f4fa81fee6b029c937946adf8a13a8.png"
+  },
+  {
+    "id": "catppuccin.catppuccin-theme",
+    "name": "Catppuccin Theme",
+    "repo": "catppuccin/rencal-catppuccin-theme",
+    "description": "Soothing pastel theme for renCal in four flavours: Latte, Frappé, Macchiato and Mocha, with matching accents for every calendar and a long description that should clamp.",
+    "version": "1.0.0",
+    "tag": "a699ef676ea7a03e393bd7762c4f19c85850531c",
+    "released_at": "2026-09-23T12:18:08Z",
+    "stars": 4,
+    "contributions": ["theme"],
+    "preview_url": "https://rencal.org/plugin-previews/8718437514d6df9e6b9bb3ffc96508cb56f4fa81fee6b029c937946adf8a13a8.png"
+  },
+  {
+    "id": "folke.tokyo-night",
+    "name": "Tokyo Night",
+    "repo": "folke/rencal-tokyo-night",
+    "description": "A clean dark theme that celebrates the lights of downtown Tokyo at night.",
+    "version": "1.0.0",
+    "tag": "a699ef676ea7a03e393bd7762c4f19c85850531c",
+    "released_at": "2026-09-23T12:18:08Z",
+    "stars": 2,
+    "contributions": ["theme"],
+    "preview_url": "https://rencal.org/plugin-previews/8718437514d6df9e6b9bb3ffc96508cb56f4fa81fee6b029c937946adf8a13a8.png"
+  },
+  {
+    "id": "octocat.no-preview-plugin",
+    "name": "No Preview Plugin",
+    "repo": "octocat/rencal-no-preview-plugin",
+    "description": "Plugin without a preview image to check the fallback.",
+    "version": "1.0.0",
+    "tag": "a699ef676ea7a03e393bd7762c4f19c85850531c",
+    "released_at": "2026-09-23T12:18:08Z",
+    "stars": 0,
+    "contributions": ["theme"]
+  },
+  {
+    "id": "torvalds.broken-preview",
+    "name": "Broken Preview",
+    "repo": "torvalds/rencal-broken-preview",
+    "description": "Preview URL that 404s.",
+    "version": "1.0.0",
+    "tag": "a699ef676ea7a03e393bd7762c4f19c85850531c",
+    "released_at": "2026-09-23T12:18:08Z",
+    "stars": 0,
+    "contributions": ["theme"],
+    "preview_url": "https://rencal.org/plugin-previews/0000000000000000000000000000000000000000000000000000000000000000.png"
+  }
+]
