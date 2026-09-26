@@ -282,7 +282,7 @@ const DateBar = ({ date }: { date: Temporal.PlainDate }) => {
     <div
       data-slot="agenda-day-header"
       data-today={isToday || undefined}
-      className={cn("sticky top-0 z-10 bg-background py-1.5 flex gap-2 h-8 items-center", {
+      className={cn("sticky top-0 z-10 bg-sidebar py-1.5 flex gap-2 h-8 items-center", {
         "text-today": isToday,
       })}
     >

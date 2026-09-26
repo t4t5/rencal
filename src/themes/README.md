@@ -89,6 +89,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 | Variable                       | Purpose                                                                                                                                                    |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--sidebar`                    | Background of the calendar sidebar and the settings navigation column; defaults to `--background`.                                                         |
 | `--selected`                   | Persistent selection surface; defaults to one tint step heavier than `--accent`.                                                                           |
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
@@ -164,7 +165,8 @@ active outline can set it to `var(--border)` or another color.
 | `--control-leading-size`   | Event-field leading icon/checkbox column width (`16px` by default)                        |
 | `--control-content-gap`    | Gap between leading, content, and trailing parts of event fields (`8px` by default)       |
 | `--control-row-gap`        | Vertical gap between event field rows (`4px` by default)                                  |
-| `--agenda-padding-inline`  | Shared horizontal inset for agenda headers and rows (`12px` by default)                   |
+| `--layout-padding`         | Edge inset for toolbars, agenda rows and settings navigation (`12px` by default)          |
+| `--nav-padding-inline`     | Settings nav highlight inset (with unit); defaults to leaving 8px padding inside rows     |
 | `--month-padding-inline`   | Shared horizontal inset for month day cells and their events (`4px` by default)           |
 | `--event-padding-inline`   | Horizontal padding inside month, week, and agenda all-day event blocks (`4px` by default) |
 
@@ -238,7 +240,7 @@ Every font size in the app comes from the scale or role tokens, never a literal.
 
 ### Pasting a shadcn theme
 
-shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--surface-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
+shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--sidebar`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--surface-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
 
 ## Omarchy auto-sync
 
@@ -293,7 +295,8 @@ selector reaches them all. The value names the kind of field:
 - `input`: plain inputs and input groups;
 - `textarea`: the textarea wrapper and textarea input groups;
 - `select`: the Select trigger, comboboxes, date pickers, the toolbar's
-  group/view dropdowns, and the searchable timezone button.
+  group/view dropdowns, the event form's repeat and calendar dropdowns, and
+  the searchable timezone button.
 
 Inner inputs and textareas inside a composite surface do not carry the marker.
 Field-like triggers, including the toolbar dropdowns, are controls rather than

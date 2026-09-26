@@ -56,7 +56,9 @@
   --control-content-gap: 8px;
   --control-row-gap: 4px;
   --control-leading-size: 16px;
-  --agenda-padding-inline: calc(var(--spacing) * 3);
+  --layout-padding: calc(var(--spacing) * 3);
+  /* Rows keep 8px inside the highlight so their text lands on --layout-padding. */
+  --nav-padding-inline: max(0px, var(--layout-padding) - var(--spacing) * 2);
   --month-padding-inline: var(--spacing);
   --event-padding-inline: var(--spacing);
 
@@ -163,6 +165,9 @@
   --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --card-foreground: var(--foreground);
 
+  /* Sidebar columns (calendar and settings); the page background unless set. */
+  --sidebar: var(--background);
+
   /* same as border, but stronger tint */
   --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
 
@@ -243,6 +248,7 @@
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-sidebar: var(--sidebar);
   --color-today: var(--today);
   --color-today-foreground: var(--today-foreground);
   --color-weekend: var(--weekend);
@@ -466,7 +472,7 @@
     [data-slot="agenda-all-day-events"],
     [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
   ) {
-    padding-inline: var(--agenda-padding-inline);
+    padding-inline: var(--layout-padding);
   }
 
   /* Theme tiles paint events from tokens only, under a slot theme selectors don't target. */

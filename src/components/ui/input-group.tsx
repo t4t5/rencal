@@ -49,6 +49,8 @@ function InputGroupAddon({
       className={cn(
         start ? "control-leading order-first" : "control-trailing order-last",
         "h-auto cursor-text gap-2 text-sm font-medium select-none [&>svg:not([class*='size-'])]:size-4 [&>kbd]:rounded-sm group-data-[disabled=true]/input-group:opacity-50",
+        // Multi-line textareas: stay on the first row (one control height minus the border).
+        "group-data-[control=textarea]/input-group:h-[calc(var(--control-height)-2px)] group-data-[control=textarea]/input-group:self-start",
         className,
       )}
       onClick={(e) => {

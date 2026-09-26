@@ -146,7 +146,7 @@ export function Agenda() {
     <div
       data-slot="agenda"
       className={cn(
-        "grow min-h-0 flex flex-col overflow-hidden select-none bg-background scroll-pt-8 scroll-pb-2",
+        "grow min-h-0 flex flex-col overflow-hidden select-none bg-sidebar scroll-pt-8 scroll-pb-2",
         !hasInitiallyScrolled && "invisible",
       )}
     >

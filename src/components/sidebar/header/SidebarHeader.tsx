@@ -47,7 +47,7 @@ function SidebarHeaderContent() {
   }, [showDraft])
 
   return (
-    <div data-slot="sidebar-header" className="flex flex-col p-4 pb-0">
+    <div data-slot="sidebar-header" className="flex flex-col p-(--layout-padding) pb-0">
       <SidebarToolbar />
 
       <div

@@ -222,7 +222,8 @@ export function WeekTimeGrid({
           style={{
             gridTemplateColumns: dayGridCols,
             gridTemplateRows: hasAllDay
-              ? `auto repeat(${maxAllDayLane + 1}, minmax(18px, auto))`
+              ? // Edge tracks pad the lanes to match the 2px gap between them (bottom loses 1px to the border):
+                `auto 1px repeat(${maxAllDayLane + 1}, minmax(18px, auto)) 2px`
               : "auto",
           }}
         >
@@ -275,7 +276,7 @@ export function WeekTimeGrid({
                     key={key}
                     item={item}
                     colOffset={1}
-                    rowOffset={1}
+                    rowOffset={2}
                     highlighted={key === activeEventKey || key === selectedEventKey}
                     rsvp={getUserResponseStatus(item.event, calendars)}
                     isDraft={item.event === draftEvent}
