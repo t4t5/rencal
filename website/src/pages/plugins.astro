@@ -5,18 +5,14 @@ import "../styles/plugins.css"
 import fs from "node:fs/promises"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
-import CopyButton from "../components/CopyButton.astro"
+import ArrowUpRightIcon from "../icons/arrow-up-right.astro"
 
 interface PluginIndexEntry {
   id: string
   name: string
   repo: string
   description: string
-  version: string
-  tag: string
-  released_at: string
   stars: number
-  contributions: string[]
   preview_url?: string
 }
 
@@ -31,18 +27,15 @@ function isPluginIndexEntry(value: unknown): value is PluginIndexEntry {
     typeof entry.name === "string" &&
     typeof entry.repo === "string" &&
     typeof entry.description === "string" &&
-    typeof entry.version === "string" &&
-    typeof entry.tag === "string" &&
-    typeof entry.released_at === "string" &&
-    typeof entry.stars === "number" &&
-    Array.isArray(entry.contributions) &&
-    entry.contributions.every((contribution) => typeof contribution === "string")
+    typeof entry.stars === "number"
   )
 }
 
-const rawIndex: unknown = JSON.parse(await fs.readFile("public/plugins.json", "utf8"))
+// `just web` renders mock plugins so the grid can be previewed locally.
+const indexPath = import.meta.env.DEV ? "src/data/mock-plugins.json" : "public/plugins.json"
+const rawIndex: unknown = JSON.parse(await fs.readFile(indexPath, "utf8"))
 if (!Array.isArray(rawIndex) || !rawIndex.every(isPluginIndexEntry)) {
-  throw new Error("public/plugins.json is not a valid plugin index")
+  throw new Error(`${indexPath} is not a valid plugin index`)
 }
 
 const plugins = rawIndex.sort(
@@ -50,181 +43,78 @@ const plugins = rawIndex.sort(
     right.stars - left.stars ||
     left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
 )
-const themeCount = plugins.filter((plugin) => plugin.contributions.includes("theme")).length
-const dateFormat = new Intl.DateTimeFormat("en-GB", {
-  year: "numeric",
-  month: "short",
-  day: "numeric",
-})
 const authorOf = (repo: string) => repo.split("/", 1)[0]
-const labelOf = (contribution: string) =>
-  contribution.charAt(0).toUpperCase() + contribution.slice(1)
-const installUrlOf = (repo: string) => {
-  const url = new URL("rencal://plugin/install")
-  url.searchParams.set("repo", repo)
-  return url.toString()
-}
 ---
 
 <BaseLayout
   title="renCal Plugins: community themes for renCal"
-  description="Browse community-built plugins and themes for renCal and install them by GitHub repository."
+  description="Browse community-built plugins and themes for renCal."
 >
-  <section class="mx-auto flex w-full max-w-5xl flex-col gap-8 px-6 pt-6 md:px-10">
+  <section class="mx-auto flex w-full max-w-6xl flex-col gap-8 px-6 pt-6 md:px-10">
     <header class="flex max-w-3xl flex-col gap-3">
       <h1 class="text-3xl">Plugins</h1>
       <p class="text-pretty">Browse community-built plugins for renCal.</p>
     </header>
 
-    <div class="plugin-toolbar" aria-label="Plugin list controls">
-      <label class="plugin-control">
-        <span>Type</span>
-        <select data-plugin-filter>
-          <option value="all">All plugins ({plugins.length})</option>
-          <option value="theme">Themes ({themeCount})</option>
-        </select>
-      </label>
-
-      <label class="plugin-control">
-        <span>Sort by</span>
-        <select data-plugin-sort>
-          <option value="stars">Most starred</option>
-          <option value="updated">Recently updated</option>
-          <option value="name">Name</option>
-        </select>
-      </label>
-    </div>
-
-    <p class="plugin-install-note">
-      Install links need renCal 0.8.0 or newer. Older versions ignore them. Don’t have renCal yet? <a
-        href="/download">Download it.</a
-      >
-    </p>
-
-    <div class="plugin-grid" data-plugin-grid>
-      {
-        plugins.map((plugin) => (
-          <article
-            class="plugin-card"
-            data-plugin-card
-            data-name={plugin.name}
-            data-stars={plugin.stars}
-            data-updated={plugin.released_at}
-            data-contributions={plugin.contributions.join(" ")}
-          >
-            <div class="plugin-preview">
-              <span class="plugin-preview-fallback">No preview available</span>
-              {plugin.preview_url && (
+    {
+      plugins.length > 0 ? (
+        <div class="plugin-grid">
+          {plugins.map((plugin) => (
+            <a
+              class="plugin-card"
+              href={`https://github.com/${plugin.repo}`}
+              target="_blank"
+              rel="noreferrer"
+            >
+              <div class="plugin-card-header">
                 <img
-                  src={plugin.preview_url}
-                  alt={`${plugin.name} preview`}
-                  width="960"
-                  height="540"
+                  class="plugin-avatar"
+                  src={`https://github.com/${authorOf(plugin.repo)}.png?size=72`}
+                  alt=""
+                  width="36"
+                  height="36"
                   loading="lazy"
                   decoding="async"
-                  data-plugin-preview
                 />
-              )}
-            </div>
-            <div class="plugin-card-header">
-              <div class="flex min-w-0 flex-col gap-1">
-                <h2>
-                  <a
-                    href={`https://github.com/${plugin.repo}`}
-                    class="hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {plugin.name}
-                  </a>
-                </h2>
-                <span class="text-xs">by {authorOf(plugin.repo)}</span>
+                <div class="plugin-heading">
+                  <h2 class="plugin-title">{plugin.name}</h2>
+                  <span class="plugin-author">{authorOf(plugin.repo)}</span>
+                </div>
+                <ArrowUpRightIcon class="plugin-arrow" />
               </div>
-              <span class="shrink-0 text-xs" title={`${plugin.stars} GitHub stars`}>
-                ★ {plugin.stars}
-              </span>
-            </div>
 
-            <p class="grow text-sm text-pretty">{plugin.description}</p>
+              <div class="plugin-preview">
+                <span class="plugin-preview-fallback">No preview</span>
+                {plugin.preview_url && (
+                  <img
+                    src={plugin.preview_url}
+                    alt={`${plugin.name} preview`}
+                    width="960"
+                    height="540"
+                    loading="lazy"
+                    decoding="async"
+                    data-plugin-preview
+                  />
+                )}
+              </div>
 
-            <div class="plugin-badges">
-              {plugin.contributions.map((contribution) => (
-                <span class="plugin-badge">{labelOf(contribution)}</span>
-              ))}
-            </div>
-
-            <div class="plugin-meta">
-              <span>v{plugin.version}</span>
-              <time datetime={plugin.released_at}>
-                Updated {dateFormat.format(new Date(plugin.released_at))}
-              </time>
-            </div>
-
-            <div class="plugin-install">
-              <a class="plugin-install-button" href={installUrlOf(plugin.repo)}>
-                Install in renCal
-              </a>
-              <span>Terminal or dotfiles (Linux):</span>
-              <CopyButton
-                command={`rencal plugin install ${plugin.repo}`}
-                label={`Copy installation command for ${plugin.repo}`}
-                showCommand
-              />
-            </div>
-          </article>
-        ))
-      }
-    </div>
-
-    <p class="plugin-empty" data-plugin-empty hidden={plugins.length > 0}>
-      No plugins match this filter yet.
-    </p>
+              <p class="plugin-description">{plugin.description}</p>
+            </a>
+          ))}
+        </div>
+      ) : (
+        <p class="plugin-empty">No plugins yet.</p>
+      )
+    }
   </section>
 
   <script>
     for (const image of document.querySelectorAll<HTMLImageElement>("[data-plugin-preview]")) {
-      const updatePreview = () => {
-        const loaded = image.complete && image.naturalWidth > 0
-        image.style.visibility = loaded ? "visible" : "hidden"
-        image.parentElement?.classList.toggle("has-preview", loaded)
+      const hideIfBroken = () => {
+        if (image.complete && image.naturalWidth === 0) image.hidden = true
       }
-      image.addEventListener("load", updatePreview)
-      image.addEventListener("error", updatePreview)
-      updatePreview()
+      image.addEventListener("error", hideIfBroken)
+      hideIfBroken()
     }
-
-    const grid = document.querySelector<HTMLElement>("[data-plugin-grid]")
-    const filter = document.querySelector<HTMLSelectElement>("[data-plugin-filter]")
-    const sort = document.querySelector<HTMLSelectElement>("[data-plugin-sort]")
-    const empty = document.querySelector<HTMLElement>("[data-plugin-empty]")
-    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-plugin-card]"))
-
-    function updatePlugins() {
-      const type = filter?.value ?? "all"
-      const order = sort?.value ?? "stars"
-      cards.sort((left, right) => {
-        if (order === "updated") {
-          return Date.parse(right.dataset.updated ?? "") - Date.parse(left.dataset.updated ?? "")
-        }
-        if (order === "name") {
-          return (left.dataset.name ?? "").localeCompare(right.dataset.name ?? "", undefined, {
-            sensitivity: "base",
-          })
-        }
-        return Number(right.dataset.stars ?? 0) - Number(left.dataset.stars ?? 0)
-      })
-
-      let visible = 0
-      for (const card of cards) {
-        const contributions = (card.dataset.contributions ?? "").split(" ")
-        card.hidden = type !== "all" && !contributions.includes(type)
-        if (!card.hidden) visible += 1
-        grid?.append(card)
-      }
-      if (empty) empty.hidden = visible > 0
-    }
-
-    filter?.addEventListener("change", updatePlugins)
-    sort?.addEventListener("change", updatePlugins)
   </script>
 </BaseLayout>
