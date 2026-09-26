@@ -222,7 +222,8 @@ export function WeekTimeGrid({
           style={{
             gridTemplateColumns: dayGridCols,
             gridTemplateRows: hasAllDay
-              ? `auto repeat(${maxAllDayLane + 1}, minmax(18px, auto))`
+              ? // Trailing track keeps the last lane off the bottom border:
+                `auto repeat(${maxAllDayLane + 1}, minmax(18px, auto)) 2px`
               : "auto",
           }}
         >
