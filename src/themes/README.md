@@ -89,6 +89,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 | Variable                       | Purpose                                                                                                                                                    |
 | ------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--sidebar`                    | Background of the calendar sidebar and the settings navigation column; defaults to `--background`.                                                         |
 | `--selected`                   | Persistent selection surface; defaults to one tint step heavier than `--accent`.                                                                           |
 | `--selected-foreground`        | Text colour on the persistent selection surface; defaults to `--foreground`.                                                                               |
 | `--today-foreground`           | Text colour on the filled "today" marker; defaults to `--primary-foreground`.                                                                              |
@@ -239,7 +240,7 @@ Every font size in the app comes from the scale or role tokens, never a literal.
 
 ### Pasting a shadcn theme
 
-shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--surface-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
+shadcn names keep their standard meaning, so generated declarations such as `--background`, `--foreground`, `--card`, `--card-foreground`, `--popover`, `--primary`, `--secondary`, `--sidebar`, `--muted`, `--muted-foreground`, `--accent`, `--destructive`, `--border`, `--input`, `--ring`, `--radius`, `--font-sans`, and `--font-mono` can be pasted directly. Add `--surface-tint` if the generated theme does not provide it; renCal then derives any omitted surface tokens.
 
 ## Omarchy auto-sync
 

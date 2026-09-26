@@ -76,6 +76,7 @@ describe("global CSS contract", () => {
       "bg-border",
       "border-border",
       "text-card-foreground",
+      "bg-sidebar",
       "text-secondary-foreground",
       "bg-muted",
       "text-destructive-foreground",

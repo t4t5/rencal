@@ -69,7 +69,7 @@ const SidebarOverlay = ({ expanded, children }: { expanded: boolean; children: R
       {
         "pl-[70px]": isMacOS,
         "bg-transparent right-auto w-[105px] md:w-full": !expanded,
-        "bg-background md:bg-transparent right-0": expanded,
+        "bg-sidebar md:bg-transparent right-0": expanded,
       },
     )}
   >

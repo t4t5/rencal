@@ -165,6 +165,9 @@
   --card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
   --card-foreground: var(--foreground);
 
+  /* Sidebar columns (calendar and settings); the page background unless set. */
+  --sidebar: var(--background);
+
   /* same as border, but stronger tint */
   --input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
 
@@ -245,6 +248,7 @@
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
+  --color-sidebar: var(--sidebar);
   --color-today: var(--today);
   --color-today-foreground: var(--today-foreground);
   --color-weekend: var(--weekend);

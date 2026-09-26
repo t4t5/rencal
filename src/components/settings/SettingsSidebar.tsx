@@ -39,7 +39,7 @@ export function SettingsSidebar() {
   return (
     <nav
       data-slot="settings-sidebar"
-      className="flex w-[200px] shrink-0 self-stretch border-r border-border"
+      className="flex w-[200px] shrink-0 self-stretch border-r border-border bg-sidebar"
     >
       <TabsList
         variant="navigation"
