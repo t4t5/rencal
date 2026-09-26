@@ -112,3 +112,89 @@
   border: 1px solid var(--separator);
   text-align: center;
 }
+
+.plugin-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+}
+
+.plugin-search {
+  display: flex;
+  min-width: min(100%, 16rem);
+  flex: 1;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0 1rem;
+  border: 1px solid var(--separator);
+  background: color-mix(in srgb, var(--muted) 5%, var(--background));
+  transition: border-color 150ms;
+}
+
+.plugin-search:focus-within {
+  border-color: var(--primary);
+}
+
+.plugin-search-slash {
+  color: var(--primary);
+  font-family: "Geist Mono", ui-monospace, monospace;
+}
+
+.plugin-search input,
+.plugin-sort select {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.875rem;
+  color: var(--foreground);
+}
+
+.plugin-search input {
+  width: 100%;
+  min-width: 0;
+  padding: 0.75rem 0;
+  background: transparent;
+  outline: none;
+}
+
+.plugin-search input::placeholder {
+  color: var(--muted);
+}
+
+.plugin-sort {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.plugin-sort-label {
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.plugin-sort select {
+  padding: 0.75rem 2.5rem 0.75rem 1rem;
+  border: 1px solid var(--separator);
+  appearance: none;
+  background: color-mix(in srgb, var(--muted) 5%, var(--background))
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M0 0h10L5 6z' fill='%23fff'/%3E%3C/svg%3E")
+    no-repeat right 1rem center / 0.6rem;
+  cursor: pointer;
+}
+
+.plugin-sort select:focus-visible {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.plugin-meta {
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--separator);
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 0.8rem;
+}
+
+.plugin-card[hidden] {
+  display: none;
+}
