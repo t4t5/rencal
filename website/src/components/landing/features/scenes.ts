@@ -54,17 +54,45 @@ const terminal: Scene = {
   },
 }
 
-// What the app's parser makes of each pause in typing the event.
-const COMPOSE_STEPS: { text: string; parsed: Partial<Draft> }[] = [
-  { text: "Lunch with Sarah ", parsed: { summary: "Lunch with Sarah" } },
-  {
-    text: "tomorrow",
-    parsed: { date: addDays(TODAY, 1), allDay: true, phrase: "tomorrow" },
-  },
-  {
-    text: " at 1",
-    parsed: { start: "13:00", end: "14:00", allDay: false, phrase: "tomorrow at 1" },
-  },
+// Events typed into the compose box one after another. Each step is what the
+// app's parser (src/lib/magic-parser.ts) makes of the text at that pause.
+const COMPOSE_EXAMPLES: { text: string; parsed: Partial<Draft> }[][] = [
+  [
+    { text: "Lunch with Sarah ", parsed: { summary: "Lunch with Sarah" } },
+    {
+      text: "tomorrow",
+      parsed: { date: addDays(TODAY, 1), allDay: true, phrases: ["tomorrow"] },
+    },
+    {
+      text: " at 1pm",
+      parsed: { start: "13:00", end: "14:00", allDay: false, phrases: ["tomorrow at 1pm"] },
+    },
+  ],
+  [
+    { text: "Drinks with Tom ", parsed: { summary: "Drinks with Tom" } },
+    {
+      text: "on Saturday at 7pm",
+      parsed: {
+        date: addDays(TODAY, 2),
+        start: "19:00",
+        end: "20:00",
+        allDay: false,
+        phrases: ["on Saturday at 7pm"],
+      },
+    },
+    {
+      text: " at The Crown",
+      parsed: { location: "The Crown", phrases: ["on Saturday at 7pm", "The Crown"] },
+    },
+  ],
+  [
+    { text: "Standup ", parsed: { summary: "Standup" } },
+    { text: "every weekday", parsed: { repeat: "every weekday", phrases: ["every weekday"] } },
+    {
+      text: " at 9:30am",
+      parsed: { start: "09:30", end: "10:30", phrases: ["every weekday", "at 9:30am"] },
+    },
+  ],
 ]
 const COMPOSE_DEFAULT: Draft = {
   summary: "",
@@ -74,42 +102,81 @@ const COMPOSE_DEFAULT: Draft = {
   allDay: false,
 }
 
+// The app parses 300ms after the last keystroke.
+const PARSE_DELAY_MS = 300
+// FlyAnimation.tsx: the card shrinks into the minical, below the compose box.
+const FLIGHT_MS = 650
+const COLLAPSE_MS = 200
+
 function renderCompose(root: HTMLElement, text: string, draft: Draft) {
   const scope = $(root, "[data-closeup]")
-  renderComposeInput(scope, text, draft.phrase)
+  renderComposeInput(scope, text, draft.phrases)
   scope.toggleAttribute("data-typing", text.length > 0)
   $(scope, "[data-compose-drawer]").toggleAttribute("data-open", text.length > 0)
   fillForm($(scope, "[data-compose-card]"), draft, DEFAULT_CALENDAR)
 }
 
+const cancelFlight = (root: HTMLElement) =>
+  $(root, "[data-compose-card]")
+    .getAnimations()
+    .forEach((animation) => animation.cancel())
+
 const compose: Scene = {
   rest(root) {
-    const text = COMPOSE_STEPS.map((step) => step.text).join("")
-    const draft = Object.assign({ ...COMPOSE_DEFAULT }, ...COMPOSE_STEPS.map((step) => step.parsed))
+    cancelFlight(root)
+    const [example] = COMPOSE_EXAMPLES
+    const text = example.map((step) => step.text).join("")
+    const draft = Object.assign({ ...COMPOSE_DEFAULT }, ...example.map((step) => step.parsed))
     renderCompose(root, text, draft)
   },
 
   async play(root, wait) {
-    let text = ""
-    let draft = { ...COMPOSE_DEFAULT }
-    renderCompose(root, text, draft)
+    cancelFlight(root)
+    renderCompose(root, "", COMPOSE_DEFAULT)
     await wait(800)
 
-    // Until a date is parsed, the title is the text as typed (as in the app).
-    let hasParsedDate = false
-    for (const step of COMPOSE_STEPS) {
-      for (const key of step.text) {
-        text += key
-        if (!hasParsedDate) draft.summary = text
-        renderCompose(root, text, draft)
-        await wait(110)
+    for (;;) {
+      for (const example of COMPOSE_EXAMPLES) {
+        let text = ""
+        let draft = { ...COMPOSE_DEFAULT }
+        // Until the first parse, the title is the text as typed; after that it
+        // only changes when the parser runs (as in the app).
+        let parsed = false
+        for (const step of example) {
+          for (const key of step.text) {
+            text += key
+            if (!parsed) draft.summary = text
+            renderCompose(root, text, draft)
+            await wait(60 + Math.random() * 40)
+          }
+          await wait(PARSE_DELAY_MS)
+          draft = { ...draft, ...step.parsed }
+          parsed = true
+          renderCompose(root, text, draft)
+          await wait(400)
+        }
+        await wait(900)
+
+        // Enter: the card flies off while the input keeps the text, minus its clear button.
+        const card = $(root, "[data-compose-card]")
+        card.animate(
+          [
+            { transform: "none", opacity: 1 },
+            { transform: "translateY(160px) scale(0.05)", opacity: 0 },
+          ],
+          {
+            duration: FLIGHT_MS,
+            easing: "cubic-bezier(0.4, 0, 0.2, 1)",
+            fill: "forwards",
+          },
+        )
+        $(root, "[data-closeup]").removeAttribute("data-typing")
+        await wait(FLIGHT_MS)
+        renderCompose(root, "", COMPOSE_DEFAULT)
+        await wait(COLLAPSE_MS)
+        cancelFlight(root)
+        await wait(250)
       }
-      // The app parses 300ms after the last keystroke.
-      await wait(300)
-      draft = { ...draft, ...step.parsed }
-      hasParsedDate ||= step.parsed.date !== undefined
-      renderCompose(root, text, draft)
-      await wait(500)
     }
   },
 }

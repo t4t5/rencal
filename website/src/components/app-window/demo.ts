@@ -23,7 +23,7 @@ const TYPING: { at: number; text: string; parsed: Partial<Draft> }[] = [
   {
     at: 8300,
     text: "Saturday a",
-    parsed: { summary: "Dinner a", date: "2026-06-27", allDay: true, phrase: "on Saturday" },
+    parsed: { summary: "Dinner a", date: "2026-06-27", allDay: true, phrases: ["on Saturday"] },
   },
   {
     at: 10600,
@@ -34,7 +34,7 @@ const TYPING: { at: number; text: string; parsed: Partial<Draft> }[] = [
       start: "20:00",
       end: "21:00",
       allDay: false,
-      phrase: "on Saturday at 8pm",
+      phrases: ["on Saturday at 8pm"],
     },
   },
 ]
@@ -112,9 +112,9 @@ export function playDemo(root: HTMLElement) {
         start: data.start ?? "",
         end: data.end ?? "",
         allDay: false,
+        location: data.location,
       },
       data.calendar as CalendarId,
-      data.location,
     )
     popover.hidden = false
     popover.dataset.state = "open"
@@ -132,7 +132,7 @@ export function playDemo(root: HTMLElement) {
 
   function renderCompose() {
     const typing = text.length > 0
-    renderComposeInput(root, text, draft.phrase)
+    renderComposeInput(root, text, draft.phrases)
     toggle(root, "data-typing", typing)
     toggle(root, "data-drafting", typing)
     toggle(drawer, "data-open", typing)

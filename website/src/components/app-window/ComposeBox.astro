@@ -8,9 +8,11 @@ import Icon from "./Icon.astro"
 interface Props {
   /** Render with the form drawer already open. */
   open?: boolean
+  /** Show "Meeting at 3pm" in the empty input. */
+  placeholder?: boolean
 }
 
-const { open = false } = Astro.props
+const { open = false, placeholder = true } = Astro.props
 ---
 
 <div data-slot="sidebar-header" class="flex flex-col p-(--layout-padding) pb-0">
@@ -29,12 +31,16 @@ const { open = false } = Astro.props
             aria-hidden="true"
             class="pointer-events-none absolute inset-0 overflow-hidden rounded-(--radius-md)"
           >
-            <div
-              data-compose-highlight
-              hidden
-              class="absolute inset-y-1.5 rounded-(--radius-sm) outline-1 outline-offset-2 outline-(--muted-foreground)/40 outline-dashed"
-            >
-            </div>
+            {
+              /* One per phrase the parser can recognise: repeat, time, location. */
+              [0, 1, 2].map(() => (
+                <div
+                  data-compose-highlight
+                  hidden
+                  class="absolute inset-y-1.5 rounded-(--radius-sm) outline-1 outline-offset-2 outline-(--muted-foreground)/40 outline-dashed"
+                />
+              ))
+            }
           </div>
           <span
             data-compose-measure
@@ -46,9 +52,13 @@ const { open = false } = Astro.props
             <span data-compose-text></span><span
               data-compose-caret
               class="rc-caret -mr-px hidden h-[1lh] w-px bg-(--foreground) in-data-composing:inline-block"
-            ></span><span data-compose-placeholder hidden class="text-(--placeholder-foreground)"
-              >Meeting at 3pm</span
-            >
+            ></span>{
+              placeholder && (
+                <span data-compose-placeholder hidden class="text-(--placeholder-foreground)">
+                  Meeting at 3pm
+                </span>
+              )
+            }
           </div>
           <span
             class="absolute top-1/2 right-2 hidden size-(--control-height-xs) -translate-y-1/2 items-center justify-center rounded-(--radius-circle) text-(--muted-foreground) in-data-typing:flex"

@@ -33,8 +33,9 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
           title="Natural input"
           description="Type events the way you say them: “lunch with Sarah tomorrow at 1” or “team sync every Monday”."
         >
-          <div data-scene-stage class="relative h-72 sm:h-80">
-            <div class="feature-fade absolute inset-0">
+          <div data-scene-stage class="relative h-96">
+            <!-- Fades late so the form's Repeat row stays visible. -->
+            <div class="absolute inset-0 mask-b-from-85%">
               <div
                 class="feature-ui absolute top-9 left-6 w-[600px] sm:left-1/2 sm:-translate-x-1/2"
               >
