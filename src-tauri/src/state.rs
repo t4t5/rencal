@@ -521,7 +521,6 @@ mod tests {
                 format!(
                     r#"id = "alice.{slug}"
 name = "{slug}"
-version = "1.0.0"
 description = "A provider"
 min_rencal_version = "0.8.0"
 

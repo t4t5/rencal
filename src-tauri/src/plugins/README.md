@@ -7,7 +7,6 @@ A plugin is a GitHub repository with a `rencal-plugin.toml` manifest and its con
 ```toml
 id = "alice.dusk"
 name = "Dusk"
-version = "1.0.0"
 description = "A quiet dark theme for renCal"
 min_rencal_version = "0.8.0"
 
@@ -29,7 +28,7 @@ appearance = "dark"
 
 Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 
-For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. A stable GitHub release is optional for theme plugins. If one exists, its tag must match the manifest version (`1.0.0` or `v1.0.0`); otherwise renCal uses the head of the default branch. Bump the manifest version to publish an update.
+For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. Manifests have no version: a plugin is versioned by where renCal installs it from. A stable GitHub release is optional for theme plugins. If one exists, renCal installs the latest release and shows its tag; otherwise it installs the head of the default branch and shows the short commit. Publish a release, or push to the default branch of an unreleased theme, to ship an update.
 
 ## Calendar providers
 
@@ -38,7 +37,6 @@ A provider plugin lives in the provider's own repository, so one release tag cov
 ```toml
 id = "t4t5.tuta"
 name = "Tuta"
-version = "0.2.0"
 description = "Sync your Tuta calendars with renCal"
 min_rencal_version = "0.8.0"
 
@@ -62,7 +60,7 @@ caldir_core = "0.16.0"
 
 - `caldir_core` is the `caldir-core` version the binary was built with. caldir has no protocol handshake, so renCal refuses providers built with a `caldir-core` older than it can talk to (currently `0.14.0`, when events moved to ICS on the wire). A provider that falls behind after a renCal update stays installed but is not run until the plugin is updated.
 
-Provider plugins must be published as a stable GitHub release whose tag matches the manifest version; the default-branch fallback does not apply. The manifest and icon come from the release commit, and the binary from the release's assets. Every asset needs GitHub's `sha256` digest: renCal verifies the download against it and records it in `plugins.lock`, so a restore installs the same bytes or fails. A release without an asset for the user's platform installs the plugin's themes only, or nothing if it has none.
+Provider plugins must be published as a stable GitHub release; the default-branch fallback does not apply. The release tag is the plugin version, so a Rust provider keeps its only copy in `Cargo.toml`. The manifest and icon come from the release commit, and the binary from the release's assets. Every asset needs GitHub's `sha256` digest: renCal verifies the download against it and records it in `plugins.lock`, so a restore installs the same bytes or fails. A release without an asset for the user's platform installs the plugin's themes only, or nothing if it has none.
 
 Installed provider plugins look like this:
 
@@ -99,7 +97,7 @@ theme edits reload immediately. When a local checkout has the same plugin ID as 
 the checkout takes precedence; removing its path restores the repository at its locked commit.
 Relative paths are rejected because a symlinked `plugins.toml` has no unambiguous working directory.
 
-renCal resolves the selected release or branch head to a commit SHA before downloading files. Resolved IDs, versions, and commits are kept in the internal data file `plugins.lock`, alongside the installed `plugins/` directory, so missing package files can be restored from the same source revision without exposing generated metadata in user configuration.
+renCal resolves the selected release or branch head to a commit SHA before downloading files. Resolved IDs, release tags, and commits are kept in the internal data file `plugins.lock`, alongside the installed `plugins/` directory, so missing package files can be restored from the same source revision without exposing generated metadata in user configuration.
 
 Users normally install a plugin with the **Install in renCal** button on the [plugin directory](https://rencal.org/plugins), which opens the package in **Settings → Plugins** for review before anything is installed.
 

@@ -191,6 +191,7 @@ export function PluginsPage() {
         .filter((plugin) => !installedIds.has(plugin.id))
         .map((plugin) => ({
           ...plugin,
+          version: catalogVersion(plugin.tag),
           preview_url: plugin.preview_url ?? null,
           provider: plugin.contributions?.includes("provider") ?? false,
           installed: null,
@@ -255,7 +256,7 @@ export function PluginsPage() {
             name={plugin.name}
             previewUrl={plugin.preview_url}
             owner={plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]}
-            version={plugin.installed?.version ?? plugin.version}
+            version={plugin.version}
             provider={plugin.provider}
           >
             {plugin.description && (
@@ -305,11 +306,17 @@ export function PluginsPage() {
 }
 
 type PluginListItem = (InstalledPlugin | PluginCatalogEntry) & {
+  version: string | null
   description: string | null
   preview_url: string | null
   /** From the catalog: the plugin ships a calendar provider binary. */
   provider: boolean
   installed: InstalledPlugin | null
+}
+
+/** Releases show their tag; unreleased themes show a short commit. */
+function catalogVersion(tag: string): string {
+  return /^[0-9a-f]{40}$/.test(tag) ? tag.slice(0, 7) : tag
 }
 
 function PluginActions({

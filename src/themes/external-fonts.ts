@@ -6,7 +6,7 @@ type CachedPackage = {
 
 function packageKey(theme: ExternalTheme): string | null {
   if (theme.source.kind !== "plugin") return null
-  return `${theme.source.id}\u0000${theme.source.version}`
+  return theme.source.id
 }
 
 function decodeFont(font: ExternalThemeFont): Uint8Array<ArrayBuffer> {

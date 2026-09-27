@@ -12,7 +12,7 @@ pub use rencal_plugin_contract::{
     Appearance, ContributionKind, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
     MIN_PROVIDER_CALDIR_CORE, PluginError, PluginManifest, ProviderContribution, ThemeContribution,
     is_sha256_hex, provider_is_compatible, release_asset_sha256, validate_manifest,
-    validate_manifest_owner, validate_package_id, validate_release_tag,
+    validate_manifest_owner, validate_package_id,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -84,7 +84,6 @@ pub struct PluginLockFile {
 pub struct PluginLockEntry {
     pub id: String,
     pub repo: String,
-    pub version: String,
     pub commit: String,
     /// The release the package came from; `None` for a default-branch head.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -92,6 +91,13 @@ pub struct PluginLockEntry {
     /// Provider binaries installed from `tag`'s release assets.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub providers: Vec<LockedProviderAsset>,
+}
+
+impl PluginLockEntry {
+    /// What the package was installed from: its release tag, or the commit.
+    pub fn reference(&self) -> &str {
+        self.tag.as_deref().unwrap_or(&self.commit)
+    }
 }
 
 /// Pins a provider binary the way `commit` pins package files.
@@ -284,12 +290,6 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
         validate_package_id(&entry.id)?;
         let owner = validate_repository(&entry.repo)?;
         validate_manifest_owner_for_id(&entry.id, owner)?;
-        Version::parse(&entry.version).map_err(|error| {
-            PluginError::new(format!(
-                "plugin version {:?} is not semantic: {error}",
-                entry.version
-            ))
-        })?;
         if entry.commit.len() != 40
             || !entry
                 .commit
@@ -299,14 +299,6 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
             return Err(PluginError::new(format!(
                 "plugin commit {:?} must be a lowercase 40-character SHA",
                 entry.commit
-            )));
-        }
-        if let Some(tag) = &entry.tag
-            && tag.strip_prefix('v').unwrap_or(tag) != entry.version
-        {
-            return Err(PluginError::new(format!(
-                "plugin tag {tag:?} does not match locked version {:?}",
-                entry.version
             )));
         }
         if !entry.providers.is_empty() && entry.tag.is_none() {
@@ -511,7 +503,6 @@ pub struct ScannedProvider {
 pub struct ScannedPackage {
     pub id: String,
     pub name: String,
-    pub version: String,
     pub themes: Vec<ScannedTheme>,
     pub providers: Vec<ScannedProvider>,
 }
@@ -622,7 +613,6 @@ fn scan_package(
     Ok(ScannedPackage {
         id: manifest.id,
         name: manifest.name,
-        version: manifest.version,
         themes,
         providers,
     })
@@ -688,7 +678,6 @@ mod tests {
     const MANIFEST: &str = r#"
 id = "alice.dusk"
 name = "Dusk"
-version = "1.2.3"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
@@ -705,8 +694,6 @@ appearance = "dark"
         assert_eq!(manifest.id, "alice.dusk");
         assert!(validate_manifest_owner(&manifest, "Alice").is_ok());
         assert!(validate_manifest_owner(&manifest, "bob").is_err());
-        assert!(validate_release_tag(&manifest, "v1.2.3").is_ok());
-        assert!(validate_release_tag(&manifest, "1.2.4").is_err());
 
         for (from, to) in [
             ("alice.dusk", "Alice.dusk"),
@@ -715,7 +702,6 @@ appearance = "dark"
             ("themes/dark.css", "../dark.css"),
             ("themes/dark.css", "/dark.css"),
             ("themes/dark.css", "themes\\dark.css"),
-            ("version = \"1.2.3\"", "version = \"latest\""),
         ] {
             assert!(
                 validate_manifest(&MANIFEST.replacen(from, to, 1), None).is_err(),
@@ -921,7 +907,6 @@ machine = 'laptop' # Future top-level metadata
             plugins: vec![PluginLockEntry {
                 id: "alice.dusk".into(),
                 repo: "Alice/rencal-dusk".into(),
-                version: "1.2.3".into(),
                 commit: "1111111111111111111111111111111111111111".into(),
                 tag: Some("v1.2.3".into()),
                 providers: vec![LockedProviderAsset {
@@ -946,9 +931,8 @@ machine = 'laptop' # Future top-level metadata
         duplicate.local.push(expected.local[0].clone());
         assert!(save_plugin_lock_file(&path, &duplicate).is_err());
 
-        let invalid_providers: [fn(&mut PluginLockEntry); 6] = [
+        let invalid_providers: [fn(&mut PluginLockEntry); 5] = [
             |entry| entry.tag = None,
-            |entry| entry.tag = Some("v1.2.4".into()),
             |entry| entry.providers[0].sha256 = "A".repeat(64),
             |entry| entry.providers[0].asset = "../caldir-provider-tuta.tar.gz".into(),
             |entry| entry.providers[0].target = "x86_64/../linux".into(),
@@ -971,7 +955,6 @@ machine = 'laptop' # Future top-level metadata
         let contents = r#"[[plugins]]
 id = "alice.dusk"
 repo = "Alice/rencal-dusk"
-version = "1.2.3"
 commit = "1111111111111111111111111111111111111111"
 "#;
         std::fs::write(&path, contents).unwrap();
@@ -1043,7 +1026,6 @@ commit = "1111111111111111111111111111111111111111"
     const PROVIDER_MANIFEST: &str = r#"
 id = "alice.tuta"
 name = "Tuta"
-version = "1.0.0"
 description = "Sync Tuta calendars"
 min_rencal_version = "0.8.0"
 
@@ -1102,7 +1084,7 @@ caldir_core = "0.16.0"
         let package = root.join(id);
         std::fs::create_dir_all(package.join("bin")).unwrap();
         let mut manifest = format!(
-            "id = \"{id}\"\nname = \"{id}\"\nversion = \"1.0.0\"\ndescription = \"Providers\"\n\
+            "id = \"{id}\"\nname = \"{id}\"\ndescription = \"Providers\"\n\
              min_rencal_version = \"0.8.0\"\n"
         );
         for (slug, caldir_core, shipped) in providers {

@@ -31,7 +31,7 @@ const malicious: ExternalTheme = {
   id: "alice.dusk/dark",
   name: "Dusk",
   css: "--background: navy; } button { display:none!important } /*",
-  source: { kind: "plugin", id: "alice.dusk", version: "1.0.0" },
+  source: { kind: "plugin", id: "alice.dusk" },
   appearance: "dark",
 }
 

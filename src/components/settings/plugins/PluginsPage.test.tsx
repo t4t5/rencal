@@ -3,7 +3,12 @@ import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
-import { api, type InstalledPlugin, type PluginInspection } from "@/lib/api"
+import {
+  api,
+  type InstalledPlugin,
+  type PluginCatalogEntry,
+  type PluginInspection,
+} from "@/lib/api"
 
 import { PluginsPage } from "./PluginsPage"
 
@@ -28,7 +33,7 @@ const plugin: PluginInspection = {
   id: "alice.dusk",
   name: "Dusk",
   repo: "alice/dusk",
-  version: "1.10.0",
+  version: "v1.10.0",
   description: "A quiet theme",
   min_rencal_version: "0.7.0",
   compatible: true,
@@ -42,13 +47,14 @@ const plugin: PluginInspection = {
     },
   ],
 }
+const entry: PluginCatalogEntry = { ...plugin, tag: "v1.10.0" }
 const installed: InstalledPlugin = {
   id: plugin.id,
   name: plugin.name,
   repo: plugin.repo,
   local_dir: null,
-  version: "1.2.0",
-  update_version: "1.10.0",
+  version: "v1.2.0",
+  update_version: "v1.10.0",
   error: null,
 }
 let root: Root
@@ -60,7 +66,7 @@ beforeEach(() => {
   document.body.append(container)
   root = createRoot(container)
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
-  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [plugin], error: null })
+  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
   vi.mocked(api.plugins.inspect).mockResolvedValue(plugin)
   vi.mocked(api.plugins.install).mockResolvedValue(plugin)
@@ -118,7 +124,7 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   await click("Install")
   expect(api.plugins.install).toHaveBeenCalledWith("alice/dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
-  expect(document.body.textContent).toContain("1.10.0")
+  expect(document.body.textContent).toContain("v1.10.0")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
@@ -156,7 +162,7 @@ it("blocks incompatible installs and lets the user cancel", async () => {
 it("keeps a failed update review open, then updates and uninstalls without changing selection", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   await render()
-  await click("Update to 1.10.0")
+  await click("Update to v1.10.0")
   vi.mocked(api.plugins.install).mockRejectedValueOnce(new Error("GitHub rate limit exceeded"))
   await click("Update")
   expect(document.querySelector('[role="dialog"]')!.textContent).toContain(
@@ -179,8 +185,8 @@ it("keeps a failed update review open, then updates and uninstalls without chang
 })
 
 it("shows installed plugins first and filters the unified list", async () => {
-  const anotherPlugin: PluginInspection = {
-    ...plugin,
+  const anotherPlugin: PluginCatalogEntry = {
+    ...entry,
     id: "bob.dawn",
     name: "Dawn",
     repo: "bob/dawn",
@@ -188,7 +194,7 @@ it("shows installed plugins first and filters the unified list", async () => {
   }
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({
-    plugins: [anotherPlugin, plugin],
+    plugins: [anotherPlugin, entry],
     error: null,
   })
   await render()
@@ -207,13 +213,13 @@ it("shows installed plugins first and filters the unified list", async () => {
 it("marks calendar provider plugins from the catalog", async () => {
   vi.mocked(api.plugins.catalog).mockResolvedValue({
     plugins: [
-      plugin,
+      entry,
       {
         id: "alice.tuta",
         name: "Tuta",
         repo: "alice/caldir-provider-tuta",
         description: "Sync your Tuta calendars",
-        version: "0.2.0",
+        tag: "v0.2.0",
         contributions: ["provider"],
       },
     ],
@@ -221,7 +227,7 @@ it("marks calendar provider plugins from the catalog", async () => {
   })
   await render()
   const meta = [...document.querySelectorAll("h3 + p")].map((element) => element.textContent)
-  expect(meta).toEqual(["alice · 1.10.0", "alice · 0.2.0 · Calendar provider"])
+  expect(meta).toEqual(["alice · v1.10.0", "alice · v0.2.0 · Calendar provider"])
 
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")
@@ -234,7 +240,7 @@ it("shows local checkout details and only an uninstall action", async () => {
       {
         ...installed,
         local_dir: "/home/alice/dev/rencal-dusk",
-        update_version: "9.0.0",
+        update_version: "v9.0.0",
         error: "Package files are missing",
       },
     ],
@@ -257,7 +263,7 @@ it("retries the catalog when it is unavailable", async () => {
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [], error: "Catalog unavailable" })
   await render()
   expect(document.body.textContent).toContain("Catalog unavailable")
-  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [plugin], error: null })
+  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
   await click("Retry")
   expect(document.body.textContent).toContain("A quiet theme")
 })

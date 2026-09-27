@@ -19,7 +19,7 @@ use crate::plugins::{self, Appearance, FontStyle, MANIFEST_FILE};
 #[serde(tag = "kind", rename_all = "snake_case")]
 pub enum ExternalThemeSource {
     Loose,
-    Plugin { id: String, version: String },
+    Plugin { id: String },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
@@ -211,7 +211,6 @@ fn scan_from(
                     css: theme.css,
                     source: ExternalThemeSource::Plugin {
                         id: package.id.clone(),
-                        version: package.version.clone(),
                     },
                     appearance: Some(theme.appearance),
                 });
@@ -405,15 +404,14 @@ pub async fn run_watcher(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::{
-        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from,
-        parse_name, scan_from, slugify,
+        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from, parse_name, scan_from,
+        slugify,
     };
     use base64::Engine;
 
     const MANIFEST: &str = r#"
 id = "alice.dusk"
 name = "Dusk"
-version = "1.0.0"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
@@ -427,7 +425,6 @@ appearance = "dark"
     const FONT_MANIFEST: &str = r#"
 id = "alice.dusk"
 name = "Dusk"
-version = "1.0.0"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 

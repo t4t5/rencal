@@ -31,7 +31,6 @@ use super::{
     plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
     release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
     scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
-    validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
@@ -84,7 +83,8 @@ pub struct PluginCatalogEntry {
     pub name: String,
     pub repo: String,
     pub description: String,
-    pub version: String,
+    // The release tag, or the default-branch commit for unreleased themes.
+    pub tag: String,
     #[serde(default, deserialize_with = "deserialize_contributions")]
     pub contributions: Vec<ContributionKind>,
     #[serde(default, deserialize_with = "deserialize_preview_url")]
@@ -194,6 +194,7 @@ pub struct PluginInspection {
     pub name: String,
     pub description: String,
     pub repo: String,
+    // The release tag, or the short commit for default-branch installs.
     pub version: String,
     pub min_rencal_version: String,
     pub compatible: bool,
@@ -285,7 +286,6 @@ impl ResolvedPackage {
         PluginLockEntry {
             id: self.manifest.id.clone(),
             repo: repository.display.clone(),
-            version: self.manifest.version.clone(),
             commit: self.commit.clone(),
             tag: self.tag.clone(),
             providers: self
@@ -441,11 +441,11 @@ impl PluginManager {
             })
             .cloned()
             .map(|entry| InstalledPlugin {
+                version: Some(display_version(entry.reference())),
                 name: entry.id.clone(),
                 id: entry.id,
                 repo: Some(entry.repo),
                 local_dir: None,
-                version: Some(entry.version),
                 update_version: None,
                 error: Some(
                     "Package files are missing. Install the repository again to restore it.".into(),
@@ -465,7 +465,6 @@ impl PluginManager {
                 });
             if let Some(row) = plugins.iter_mut().find(|row| row.id == package.id) {
                 row.name = package.name;
-                row.version = Some(package.version);
                 row.error = error;
             } else {
                 plugins.push(InstalledPlugin {
@@ -473,7 +472,7 @@ impl PluginManager {
                     name: package.name,
                     repo: None,
                     local_dir: None,
-                    version: Some(package.version),
+                    version: None,
                     update_version: None,
                     error,
                 });
@@ -525,24 +524,23 @@ impl PluginManager {
             if row.local_dir.is_some() {
                 continue;
             }
+            let Some(installed) = locks.plugins.iter().find(|entry| {
+                entry.id == row.id
+                    && row
+                        .repo
+                        .as_ref()
+                        .is_some_and(|repo| repo.eq_ignore_ascii_case(&entry.repo))
+            }) else {
+                continue;
+            };
             row.update_version = catalog
                 .iter()
                 .find(|entry| {
-                    row.id == entry.id
-                        && row
-                            .repo
-                            .as_ref()
-                            .is_some_and(|repo| repo.eq_ignore_ascii_case(&entry.repo))
-                        && row.version.as_ref().is_some_and(|version| {
-                            match (Version::parse(&entry.version), Version::parse(version)) {
-                                (Ok(latest), Ok(current)) => {
-                                    latest.cmp_precedence(&current).is_gt()
-                                }
-                                _ => false,
-                            }
-                        })
+                    entry.id == installed.id
+                        && entry.repo.eq_ignore_ascii_case(&installed.repo)
+                        && is_update(&entry.tag, installed.reference())
                 })
-                .map(|entry| entry.version.clone());
+                .map(|entry| display_version(&entry.tag));
         }
         plugins.sort_by_key(|row| row.name.to_lowercase());
         InstalledPlugins { plugins, errors }
@@ -621,9 +619,8 @@ impl PluginManager {
             let repo = Repository::parse(&entry.repo)?;
             super::validate_manifest_owner_for_id(&entry.id, &repo.owner)
                 .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
-            Version::parse(&entry.version)
-                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
-            if entry.name.trim().is_empty() || !ids.insert(&entry.id) {
+            if entry.name.trim().is_empty() || entry.tag.trim().is_empty() || !ids.insert(&entry.id)
+            {
                 return Err(PluginInstallError::invalid_package(
                     "Invalid or duplicate catalog entry",
                 ));
@@ -1280,10 +1277,6 @@ impl PluginManager {
             .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
         validate_manifest_owner(&manifest, &repository.owner)
             .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
-        if let Some(tag) = release_tag {
-            validate_release_tag(&manifest, tag)
-                .map_err(|error| PluginInstallError::invalid_package(error.to_string()))?;
-        }
 
         let minimum = Version::parse(&manifest.min_rencal_version)
             .expect("validated manifest minimum version");
@@ -1293,7 +1286,7 @@ impl PluginManager {
             name: manifest.name.clone(),
             description: manifest.description.clone(),
             repo: repository.display.clone(),
-            version: manifest.version.clone(),
+            version: display_version(release_tag.unwrap_or(&commit)),
             min_rencal_version: manifest.min_rencal_version.clone(),
             compatible,
             themes: manifest
@@ -1958,6 +1951,26 @@ fn valid_segment(value: &str, allow_dot: bool) -> bool {
         })
 }
 
+/// Releases are shown by tag, default-branch installs by short commit.
+fn display_version(reference: &str) -> String {
+    if validate_commit_sha(reference).is_ok() {
+        reference[..7].to_owned()
+    } else {
+        reference.to_owned()
+    }
+}
+
+/// Semantic release tags only update forwards, so a catalog that lags behind
+/// a fresh install does not offer a downgrade. Other references update
+/// whenever they differ.
+fn is_update(latest: &str, installed: &str) -> bool {
+    let semantic = |tag: &str| Version::parse(tag.strip_prefix('v').unwrap_or(tag)).ok();
+    match (semantic(latest), semantic(installed)) {
+        (Some(latest), Some(installed)) => latest.cmp_precedence(&installed).is_gt(),
+        _ => latest != installed,
+    }
+}
+
 fn validate_commit_sha(value: &str) -> Result<(), String> {
     if value.len() == 40
         && value
@@ -2150,7 +2163,6 @@ mod tests {
 
     const MANIFEST_V1: &str = r#"id = "alice.dusk"
 name = "Dusk"
-version = "1.0.0"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
@@ -2163,7 +2175,6 @@ appearance = "dark"
 
     const MANIFEST_WITH_FONTS: &str = r#"id = "alice.dusk"
 name = "Dusk"
-version = "1.0.0"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
@@ -2414,48 +2425,42 @@ appearance = "dark"
     }
 
     #[tokio::test]
-    async fn catalog_uses_semantic_versions_and_preserves_last_good_entries() {
+    async fn catalog_offers_newer_tags_and_preserves_last_good_entries() {
         let downloader = Arc::new(FixtureDownloader::new());
         serve_v1(&downloader);
         let temp = tempfile::tempdir().unwrap();
         let manager = manager(&temp, downloader.clone());
         manager.install("Alice/rencal-dusk").await.unwrap();
 
-        for (version, update) in [("1.0.0+build.2", false), ("0.9.0", false), ("1.10.0", true)] {
+        for (tag, update) in [
+            ("v1.0.0+build.2", None),
+            ("v0.9.0", None),
+            (COMMIT_V2, Some(&COMMIT_V2[..7])),
+            ("v1.10.0", Some("v1.10.0")),
+        ] {
             downloader.set(
                 "/plugins.json",
                 200,
                 serde_json::to_vec(&serde_json::json!([{
                     "id": "alice.dusk", "name": "Dusk", "repo": "Alice/rencal-dusk",
-                    "description": "A quiet theme", "version": version,
-                    "tag": format!("v{version}"), "stars": 42
+                    "description": "A quiet theme", "tag": tag, "stars": 42
                 }]))
                 .unwrap(),
             );
             assert!(manager.catalog().await.error.is_none());
             let installed = manager.list().await;
-            assert_eq!(
-                installed.plugins[0].update_version.as_deref(),
-                update.then_some(version)
-            );
+            assert_eq!(installed.plugins[0].version.as_deref(), Some("v1.0.0"));
+            assert_eq!(installed.plugins[0].update_version.as_deref(), update);
         }
 
         downloader.set("/plugins.json", 503, Vec::new());
         let catalog = manager.catalog().await;
         assert!(catalog.error.unwrap().contains("503"));
-        assert_eq!(catalog.plugins[0].version, "1.10.0");
+        assert_eq!(catalog.plugins[0].tag, "v1.10.0");
         downloader.set("/plugins.json", 200, b"not json".to_vec());
         let catalog = manager.catalog().await;
         assert!(catalog.error.is_some());
-        assert_eq!(catalog.plugins[0].version, "1.10.0");
-
-        std::fs::write(
-            temp.path()
-                .join("data/plugins/alice.dusk/rencal-plugin.toml"),
-            MANIFEST_V1.replace("1.0.0", "2.0.0"),
-        )
-        .unwrap();
-        assert!(manager.list().await.plugins[0].update_version.is_none());
+        assert_eq!(catalog.plugins[0].tag, "v1.10.0");
 
         manager.uninstall("alice.dusk").await.unwrap();
         assert!(manager.list().await.plugins.is_empty());
@@ -2471,7 +2476,7 @@ appearance = "dark"
             200,
             br#"[{
             "id":"alice.dusk", "name":"Dusk", "repo":"bob/dusk",
-            "description":"Theme", "version":"1.0.0"
+            "description":"Theme", "tag":"v1.0.0"
         }]"#
             .to_vec(),
         );
@@ -2490,11 +2495,11 @@ appearance = "dark"
             200,
             br#"[
             {"id":"alice.dusk", "name":"Dusk", "repo":"alice/dusk", "description":"Theme",
-             "version":"1.0.0", "contributions":["theme", "widget", 7, "provider"]},
+             "tag":"v1.0.0", "contributions":["theme", "widget", 7, "provider"]},
             {"id":"alice.tuta", "name":"Tuta", "repo":"alice/tuta", "description":"Provider",
-             "version":"1.0.0", "contributions":"provider"},
+             "tag":"v1.0.0", "contributions":"provider"},
             {"id":"alice.old", "name":"Old", "repo":"alice/old", "description":"Theme",
-             "version":"1.0.0"}
+             "tag":"v1.0.0"}
         ]"#
             .to_vec(),
         );
@@ -2536,7 +2541,6 @@ appearance = "dark"
         let declarations = load_plugins_file(&temp.path().join("config/plugins.toml")).unwrap();
         assert_eq!(declarations.plugins, ["Alice/rencal-dusk"]);
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
-        assert_eq!(locks.plugins[0].version, "1.0.0");
         assert_eq!(locks.plugins[0].commit, COMMIT_V1);
 
         manager.uninstall("alice.dusk").await.unwrap();
@@ -2615,8 +2619,8 @@ appearance = "dark"
                 load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
                     .unwrap()
                     .plugins[0]
-                    .version,
-                "1.0.0"
+                    .commit,
+                COMMIT_V1
             );
         }
     }
@@ -2717,7 +2721,7 @@ appearance = "dark"
 
         let inspection = manager.install("Alice/rencal-dusk").await.unwrap();
 
-        assert_eq!(inspection.version, "1.0.0");
+        assert_eq!(inspection.version, &COMMIT_V1[..7]);
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
         assert_eq!(locks.plugins[0].commit, COMMIT_V1);
     }
@@ -2754,7 +2758,7 @@ appearance = "dark"
 
         let inspection = manager.inspect("Alice/rencal-dusk").await.unwrap();
 
-        assert_eq!(inspection.version, "1.0.0");
+        assert_eq!(inspection.version, "v1.0.0");
     }
 
     #[tokio::test]
@@ -2789,7 +2793,7 @@ appearance = "dark"
             "--background: #111;"
         );
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
-        assert_eq!(locks.plugins[0].version, "1.0.0");
+        assert_eq!(locks.plugins[0].commit, COMMIT_V1);
     }
 
     #[tokio::test]
@@ -2811,7 +2815,6 @@ appearance = "dark"
                 plugins: vec![PluginLockEntry {
                     id: "alice.dusk".into(),
                     repo: "Alice/rencal-dusk".into(),
-                    version: "1.0.0".into(),
                     commit: COMMIT_V1.into(),
                     tag: None,
                     providers: Vec::new(),
@@ -2851,7 +2854,6 @@ appearance = "dark"
         assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
         assert_eq!(locks.plugins[0].id, "alice.dusk");
-        assert_eq!(locks.plugins[0].version, "1.0.0");
         assert_eq!(locks.plugins[0].commit, COMMIT_V1);
     }
 
@@ -2988,7 +2990,7 @@ appearance = "dark"
             name: "Dusk".into(),
             repo: "Alice/rencal-dusk".into(),
             description: "A newer Dusk".into(),
-            version: "9.0.0".into(),
+            tag: "v9.0.0".into(),
             contributions: vec![ContributionKind::Theme],
             preview_url: None,
         }];
@@ -3274,7 +3276,6 @@ appearance = "dark"
             plugins: vec![PluginLockEntry {
                 id: "alice.dusk".into(),
                 repo: "alice/rencal-dusk".into(),
-                version: "1.0.0".into(),
                 commit: COMMIT_V1.into(),
                 tag: None,
                 providers: Vec::new(),
@@ -3355,7 +3356,6 @@ appearance = "dark"
 
     const PROVIDER_MANIFEST: &str = r#"id = "alice.tuta"
 name = "Tuta"
-version = "1.0.0"
 description = "Sync Tuta calendars"
 min_rencal_version = "0.8.0"
 
@@ -3427,11 +3427,10 @@ appearance = "dark"
         downloader: &FixtureDownloader,
         repo: &str,
         commit: &str,
+        tag: &str,
         manifest: &str,
         assets: &[(&str, &[u8])],
     ) {
-        let version = validate_manifest(manifest, None).unwrap().version;
-        let tag = format!("v{version}");
         let release_assets: Vec<_> = assets
             .iter()
             .map(|(target, bytes)| {
@@ -3494,6 +3493,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &archive)],
         );
@@ -3555,6 +3555,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[
                 (GNU, &tuta_archive(GNU, b"tuta-gnu")),
@@ -3579,6 +3580,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &tuta_archive(GNU, b"tuta-v1"))],
         );
@@ -3590,7 +3592,8 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V2,
-            &PROVIDER_MANIFEST.replacen("1.0.0", "2.0.0", 1),
+            "v2.0.0",
+            PROVIDER_MANIFEST,
             &[(GNU, &tuta_archive(GNU, b"tuta-v2"))],
         );
         downloader.set(
@@ -3603,7 +3606,7 @@ appearance = "dark"
         assert_eq!(error.kind, PluginInstallErrorKind::InvalidPackage);
         assert!(error.to_string().contains("sha256 digest"), "{error}");
         assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-v1");
-        assert_eq!(locked_plugins(&temp)[0].version, "1.0.0");
+        assert_eq!(locked_plugins(&temp)[0].tag.as_deref(), Some("v1.0.0"));
     }
 
     #[tokio::test]
@@ -3613,6 +3616,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &tuta_archive(GNU, b"tuta"))],
         );
@@ -3647,6 +3651,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(darwin, &archive)],
         );
@@ -3668,6 +3673,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             &mixed,
             &[(darwin, &archive)],
         );
@@ -3720,6 +3726,7 @@ appearance = "dark"
                 &downloader,
                 TUTA_REPO,
                 COMMIT_V1,
+                "v1.0.0",
                 PROVIDER_MANIFEST,
                 &[(GNU, &bytes)],
             );
@@ -3745,6 +3752,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &bytes)],
         );
@@ -3763,6 +3771,7 @@ appearance = "dark"
                 &downloader,
                 TUTA_REPO,
                 COMMIT_V1,
+                "v1.0.0",
                 PROVIDER_MANIFEST,
                 &[(GNU, &tuta_archive(GNU, b"tuta"))],
             );
@@ -3821,6 +3830,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             &old,
             &[(GNU, &tuta_archive(GNU, b"tuta"))],
         );
@@ -3848,6 +3858,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &tuta_archive(GNU, b"tuta"))],
         );
@@ -3880,6 +3891,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &archive_v1)],
         );
@@ -3894,7 +3906,8 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V2,
-            &PROVIDER_MANIFEST.replacen("1.0.0", "2.0.0", 1),
+            "v2.0.0",
+            PROVIDER_MANIFEST,
             &[(MUSL, &tuta_archive(MUSL, b"tuta-v2"))],
         );
         std::fs::remove_dir_all(tuta_package(&temp)).unwrap();
@@ -3916,7 +3929,7 @@ appearance = "dark"
         assert_eq!(errors.len(), 1);
         assert!(errors[0].message.contains("sha256 digest"), "{errors:?}");
         assert!(!tuta_package(&temp).exists());
-        assert_eq!(locked_plugins(&temp)[0].version, "1.0.0");
+        assert_eq!(locked_plugins(&temp)[0].tag.as_deref(), Some("v1.0.0"));
     }
 
     #[tokio::test]
@@ -3927,6 +3940,7 @@ appearance = "dark"
             &downloader,
             TUTA_REPO,
             COMMIT_V1,
+            "v1.0.0",
             PROVIDER_MANIFEST,
             &[(GNU, &archive)],
         );
@@ -3935,6 +3949,7 @@ appearance = "dark"
             &downloader,
             mirror,
             COMMIT_V2,
+            "v1.0.0",
             &PROVIDER_MANIFEST.replacen("alice.tuta", "bob.tuta-mirror", 1),
             &[(GNU, &archive)],
         );

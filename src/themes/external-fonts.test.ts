@@ -16,12 +16,12 @@ const regular: ExternalThemeFont = {
   data: btoa("wOF2font"),
 }
 
-function pluginTheme(id: string, packageId = "alice.dusk", version = "1.0.0"): ExternalTheme {
+function pluginTheme(id: string, packageId = "alice.dusk"): ExternalTheme {
   return {
     id,
     name: id,
     css: "--font-body: Pixel;",
-    source: { kind: "plugin", id: packageId, version },
+    source: { kind: "plugin", id: packageId },
     appearance: "dark",
   }
 }
@@ -137,7 +137,7 @@ describe("ExternalFontManager", () => {
     expect(added[0]?.family).toBe("Pixel")
   })
 
-  it("invalidates active faces on declaration and version snapshots", async () => {
+  it("invalidates active faces on every new snapshot", async () => {
     vi.mocked(api.themes.loadFonts).mockResolvedValue({ fonts: [regular] })
     const manager = new ExternalFontManager()
     const first = pluginTheme("alice.dusk/dark")
@@ -146,8 +146,7 @@ describe("ExternalFontManager", () => {
     await vi.waitFor(() => expect(added).toHaveLength(1))
     manager.update(first.id, [{ ...first }])
     await vi.waitFor(() => expect(added).toHaveLength(2))
-    const updated = pluginTheme(first.id, "alice.dusk", "2.0.0")
-    manager.update(updated.id, [updated])
+    manager.update(first.id, [{ ...first }])
 
     await vi.waitFor(() => expect(added).toHaveLength(3))
     expect(deleted).toEqual([added[0], added[1]])

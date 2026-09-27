@@ -8,7 +8,6 @@ use anyhow::{Context, Result, anyhow, bail};
 use rencal_plugin_contract::{
     ContributionKind, MANIFEST_FILE, MIN_PROVIDER_CALDIR_CORE, PluginManifest,
     provider_is_compatible, release_asset_sha256, validate_manifest, validate_manifest_owner,
-    validate_release_tag,
 };
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -130,7 +129,7 @@ struct PluginIndexEntry {
     name: String,
     repo: String,
     description: String,
-    version: String,
+    /// The release tag, or the default-branch commit for unreleased themes.
     tag: String,
     released_at: String,
     stars: u64,
@@ -370,9 +369,6 @@ async fn build_index(
 
         let manifest = match validate_manifest(&manifest_text, None).and_then(|manifest| {
             validate_manifest_owner(&manifest, &repository.owner.login)?;
-            if let Some(tag) = &source.release_tag {
-                validate_release_tag(&manifest, tag)?;
-            }
             Ok(manifest)
         }) {
             Ok(manifest) => manifest,
@@ -430,7 +426,6 @@ async fn build_index(
             name: manifest.name,
             repo,
             description: manifest.description,
-            version: manifest.version,
             tag: source.release_tag.unwrap_or(source.reference),
             released_at: source.released_at,
             stars: repository.stargazers_count,
@@ -701,11 +696,10 @@ mod tests {
         }))
     }
 
-    fn manifest(owner: &str, version: &str) -> String {
+    fn manifest(owner: &str) -> String {
         format!(
             r#"id = "{owner}.dusk"
 name = "Dusk"
-version = "{version}"
 description = "A quiet dark theme"
 min_rencal_version = "0.8.0"
 
@@ -730,7 +724,6 @@ caldir_core = "0.16.0"
         format!(
             r#"id = "{owner}.tuta"
 name = "Tuta"
-version = "1.0.0"
 description = "Sync your Tuta calendars"
 min_rencal_version = "0.8.0"
 {}"#,
@@ -746,7 +739,7 @@ min_rencal_version = "0.8.0"
     }
 
     #[tokio::test]
-    async fn indexes_valid_latest_release_with_matching_v_tag() {
+    async fn indexes_the_latest_release_by_tag() {
         let client = MockClient::new(vec![
             json(serde_json::json!({
                 "total_count": 1,
@@ -754,7 +747,7 @@ min_rencal_version = "0.8.0"
             })),
             release("v1.2.3"),
             commit(),
-            text(&manifest("alice", "1.2.3")),
+            text(&manifest("alice")),
             MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
         ]);
         let (api, raw) = bases();
@@ -764,7 +757,7 @@ min_rencal_version = "0.8.0"
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries.len(), 1);
         assert_eq!(index.entries[0].repo, "Alice/rencal-dusk");
-        assert_eq!(index.entries[0].version, "1.2.3");
+        assert_eq!(index.entries[0].tag, "v1.2.3");
         assert_eq!(index.entries[0].stars, 42);
         assert_eq!(index.entries[0].contributions, [ContributionKind::Theme]);
         assert!(index.entries[0].preview_url.is_none());
@@ -789,7 +782,7 @@ min_rencal_version = "0.8.0"
 
     #[tokio::test]
     async fn indexes_a_theme_plugin_with_font_contributions() {
-        let manifest = manifest("alice", "1.2.3").replacen(
+        let manifest = manifest("alice").replacen(
             "[[contributes.themes]]",
             "[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/pixel.woff2\"\n\n[[contributes.themes]]",
             1,
@@ -826,7 +819,7 @@ min_rencal_version = "0.8.0"
                 "sha": commit,
                 "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
             }])),
-            text(&manifest("alice", "1.2.3")),
+            text(&manifest("alice")),
             MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
         ]);
         let (api, raw) = bases();
@@ -836,7 +829,10 @@ min_rencal_version = "0.8.0"
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries[0].tag, commit);
         assert_eq!(index.entries[0].released_at, "2026-09-19T12:00:00Z");
-        assert_eq!(index.entries[0].version, "1.2.3");
+        assert_eq!(
+            index.entries[0].tag,
+            "1111111111111111111111111111111111111111"
+        );
         let commit_request = client
             .requests()
             .into_iter()
@@ -906,7 +902,7 @@ min_rencal_version = "0.8.0"
     #[tokio::test]
     async fn drops_providers_rencal_cannot_install() {
         let digest = format!("sha256:{}", "a".repeat(64));
-        let mixed = format!("{}{PROVIDER}", manifest("carol", "1.0.0")).replace("0.16.0", "0.11.2");
+        let mixed = format!("{}{PROVIDER}", manifest("carol")).replace("0.16.0", "0.11.2");
         let client = MockClient::new(vec![
             json(serde_json::json!({
                 "total_count": 3,
@@ -953,7 +949,7 @@ min_rencal_version = "0.8.0"
 
     #[tokio::test]
     async fn skips_mismatched_unsupported_and_malformed_manifests() {
-        let unsupported = format!("{}\n[app]\nmain = \"main.js\"\n", manifest("bob", "1.0.0"));
+        let unsupported = format!("{}\n[app]\nmain = \"main.js\"\n", manifest("bob"));
         let client = MockClient::new(vec![
             json(serde_json::json!({
                 "total_count": 3,
@@ -965,7 +961,7 @@ min_rencal_version = "0.8.0"
             })),
             release("1.0.0"),
             commit(),
-            text(&manifest("someone-else", "1.0.0")),
+            text(&manifest("someone-else")),
             release("1.0.0"),
             commit(),
             text(&unsupported),

@@ -21,7 +21,7 @@ const plugin: ExternalTheme = {
   id: "alice.dusk/dark",
   name: "Dusk Dark",
   css: "--background: black;",
-  source: { kind: "plugin", id: "alice.dusk", version: "1.0.0" },
+  source: { kind: "plugin", id: "alice.dusk" },
   appearance: "dark",
 }
 

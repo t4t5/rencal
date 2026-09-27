@@ -62,7 +62,7 @@ export type ExternalThemeFont = { family: string; weight: number; style: FontSty
 
 export type ExternalThemeFonts = { fonts: ExternalThemeFont[] }
 
-export type ExternalThemeSource = { kind: "loose" } | { kind: "plugin"; id: string; version: string }
+export type ExternalThemeSource = { kind: "loose" } | { kind: "plugin"; id: string }
 
 export type ExternalThemesSnapshot = { themes: ExternalTheme[]; errors: ExternalThemeError[] }
 
@@ -91,7 +91,7 @@ export type PluginCatalog = { plugins: PluginCatalogEntry[]; error: string | nul
 /**
  * The catalog is a JSON array. Extra indexer metadata is ignored by the app.
  */
-export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; version: string; contributions?: ContributionKind[]; preview_url?: string | null }
+export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; tag: string; contributions?: ContributionKind[]; preview_url?: string | null }
 
 export type PluginFontInspection = { family: string; file: string; weight: number; style: FontStyle }
 

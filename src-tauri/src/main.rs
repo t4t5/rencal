@@ -51,7 +51,7 @@ fn main() -> ExitCode {
         Ok(Command::InstallPlugin(repository)) => match install_plugin(&repository) {
             Ok(plugin) => {
                 println!(
-                    "Installed {} ({}) v{}",
+                    "Installed {} ({}) {}",
                     plugin.name, plugin.id, plugin.version
                 );
                 ExitCode::SUCCESS

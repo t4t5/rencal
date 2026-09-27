@@ -134,7 +134,6 @@ pub struct Contributions {
 pub struct PluginManifest {
     pub id: String,
     pub name: String,
-    pub version: String,
     pub description: String,
     pub min_rencal_version: String,
     #[serde(default)]
@@ -183,12 +182,6 @@ pub fn validate_manifest(
         MAX_DESCRIPTION_LENGTH,
     )?;
 
-    Version::parse(&manifest.version).map_err(|error| {
-        PluginError::new(format!(
-            "plugin version {:?} is not semantic: {error}",
-            manifest.version
-        ))
-    })?;
     if manifest.contributes.themes.is_empty() && manifest.contributes.providers.is_empty() {
         return Err(PluginError::new(
             "unsupported package: at least one theme or provider contribution is required",
@@ -326,17 +319,6 @@ pub fn validate_manifest_owner(
     if !owner.eq_ignore_ascii_case(repository_owner) {
         return Err(PluginError::new(format!(
             "plugin id owner {owner:?} does not match repository owner {repository_owner:?}"
-        )));
-    }
-    Ok(())
-}
-
-/// Releases may prefix the semantic version with `v`, but must otherwise match.
-pub fn validate_release_tag(manifest: &PluginManifest, tag: &str) -> Result<(), PluginError> {
-    if tag.strip_prefix('v').unwrap_or(tag) != manifest.version {
-        return Err(PluginError::new(format!(
-            "release tag {tag:?} does not match manifest version {:?}",
-            manifest.version
         )));
     }
     Ok(())
@@ -480,7 +462,6 @@ mod tests {
     const MANIFEST: &str = r#"
 id = "alice.dusk"
 name = "Dusk"
-version = "1.2.3"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
