@@ -28,7 +28,7 @@ use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::plugins::{PluginsApi, PluginsApiImpl};
 use routes::themes::{ThemesApi, ThemesApiImpl};
-use state::AppState;
+use state::{AppState, ProviderDirs};
 use std::path::PathBuf;
 use std::sync::Arc;
 use tasks::spawn_task;
@@ -233,7 +233,11 @@ pub async fn run() {
     let instance_listener = instance_guard.take_listener();
 
     let context = tauri::generate_context!();
-    let state = match AppState::load(Some(bundled_providers_dir(&context))) {
+    let provider_dirs = ProviderDirs {
+        bundled: Some(bundled_providers_dir(&context)),
+        plugins: plugins::plugins_dir().ok(),
+    };
+    let state = match AppState::load(provider_dirs) {
         Ok(state) => Arc::new(state),
         Err(err) => {
             run_fatal_dialog(

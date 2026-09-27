@@ -639,6 +639,25 @@ pub(crate) fn provider_binary_path(package: &Path, slug: &str) -> PathBuf {
     package.join("bin").join(format!("caldir-provider-{slug}"))
 }
 
+/// The `bin/` directories under `root` that renCal may register as providers.
+/// The registry takes whole directories, so one incompatible binary keeps the
+/// package's other providers out too.
+pub fn provider_dirs(root: &Path) -> Vec<PathBuf> {
+    scan_packages(root, running_app_version().as_ref())
+        .packages
+        .iter()
+        .filter(|package| {
+            let mut shipped = package
+                .providers
+                .iter()
+                .filter(|provider| provider.binary.is_some())
+                .peekable();
+            shipped.peek().is_some() && shipped.all(|provider| provider.compatible)
+        })
+        .map(|package| root.join(&package.id).join("bin"))
+        .collect()
+}
+
 /// Release builds replace the repository's placeholder Cargo version. During
 /// local development, skip the compatibility gate so current package fixtures
 /// can be exercised before the next release number is written by CI.
@@ -1062,6 +1081,52 @@ caldir_core = "0.16.0"
         let provider = &scan.packages[0].providers[0];
         assert!(!provider.compatible);
         assert!(provider.binary.is_some());
+    }
+
+    fn write_provider_package(root: &Path, id: &str, providers: &[(&str, &str, bool)]) {
+        let package = root.join(id);
+        std::fs::create_dir_all(package.join("bin")).unwrap();
+        let mut manifest = format!(
+            "id = \"{id}\"\nname = \"{id}\"\nversion = \"1.0.0\"\ndescription = \"Providers\"\n\
+             min_rencal_version = \"0.8.0\"\n"
+        );
+        for (slug, caldir_core, shipped) in providers {
+            manifest.push_str(&format!(
+                "[[contributes.providers]]\nid = \"{slug}\"\nname = \"{slug}\"\n\
+                 asset = \"caldir-provider-{slug}-{{target}}.tar.gz\"\ncaldir_core = \"{caldir_core}\"\n"
+            ));
+            if *shipped {
+                std::fs::write(provider_binary_path(&package, slug), "").unwrap();
+            }
+        }
+        std::fs::write(package.join(MANIFEST_FILE), manifest).unwrap();
+    }
+
+    #[test]
+    fn provider_dirs_lists_packages_whose_binaries_are_all_compatible() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path();
+        write_provider_package(root, "alice.tuta", &[("tuta", "0.16.0", true)]);
+        // Only declared, not shipped: the binary comes from PATH.
+        write_provider_package(root, "bob.local", &[("local", "0.16.0", false)]);
+        write_provider_package(
+            root,
+            "carol.mixed",
+            &[("fresh", "0.16.0", true), ("stale", "0.11.2", true)],
+        );
+        // An incompatible contribution without a binary does not matter.
+        write_provider_package(
+            root,
+            "dave.partial",
+            &[("partial", "0.16.0", true), ("old", "0.11.2", false)],
+        );
+        write_provider_package(root, "erin.old", &[("old", "0.11.2", true)]);
+
+        assert_eq!(
+            provider_dirs(root),
+            [root.join("alice.tuta/bin"), root.join("dave.partial/bin")]
+        );
+        assert!(provider_dirs(&root.join("missing")).is_empty());
     }
 
     #[cfg(unix)]

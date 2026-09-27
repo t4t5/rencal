@@ -36,7 +36,7 @@ pub fn spawn_all(
     );
     spawn_task(
         "plugin declarations watcher",
-        plugins::run_watcher(app.clone(), plugin_manager.clone()),
+        plugins::run_watcher(app.clone(), plugin_manager.clone(), state.clone()),
     );
     spawn_task("timezone watcher", tz::run_watcher(app.clone()));
 }

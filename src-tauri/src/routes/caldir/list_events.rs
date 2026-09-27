@@ -62,11 +62,13 @@ pub(super) fn handler(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::state::ProviderDirs;
 
     #[test]
     fn invalid_ranges_return_input_errors() {
         let dir = tempfile::tempdir().unwrap();
-        let state = AppState::load_from(dir.path().join("config.toml"), None).unwrap();
+        let state =
+            AppState::load_from(dir.path().join("config.toml"), ProviderDirs::default()).unwrap();
         for (start, end) in [
             ("invalid", "2026-09-19T00:00:00Z"),
             ("2026-09-18T00:00:00Z", "invalid"),

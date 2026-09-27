@@ -4,13 +4,13 @@
 use std::sync::Arc;
 
 use rencal_lib::create_router;
-use rencal_lib::state::AppState;
+use rencal_lib::state::{AppState, ProviderDirs};
 
 #[tokio::main]
 async fn main() {
     // A throwaway caldir config, so codegen never reads the developer's own.
     let tmp = tempfile::tempdir().expect("failed to create a temp dir");
-    let state = AppState::load_from(tmp.path().join("config.toml"), None)
+    let state = AppState::load_from(tmp.path().join("config.toml"), ProviderDirs::default())
         .expect("failed to build app state");
 
     // Creating the router and calling into_handler triggers taurpc type generation

@@ -27,14 +27,28 @@ export const ProviderList = ({
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    api.providers
-      .list()
-      .then((all) => {
-        setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
-      })
-      .catch((error: unknown) => {
-        setError(getErrorMessage(error, "Failed to load providers"))
-      })
+    let latest = 0
+    function load() {
+      const request = ++latest
+      api.providers
+        .list()
+        .then((all) => {
+          if (request !== latest) return
+          setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
+        })
+        .catch((error: unknown) => {
+          if (request !== latest) return
+          setError(getErrorMessage(error, "Failed to load providers"))
+        })
+    }
+
+    load()
+    // Installing or uninstalling a provider plugin changes the list.
+    const subscription = api.notifications.listen("providers-changed", load)
+    return () => {
+      latest++
+      subscription.unlisten()
+    }
   }, [])
 
   async function handleProviderClick(name: string) {

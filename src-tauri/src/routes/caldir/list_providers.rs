@@ -3,7 +3,7 @@ use crate::state::AppState;
 
 /// The one deliberate `PATH` rescan: a provider installed while the app runs
 /// shows up the moment Settings › Accounts opens. Every other handler reads
-/// the registry loaded at startup.
+/// the registry as of startup or the last plugin reconcile.
 pub(super) fn handler(state: &AppState) -> TauResult<Vec<String>> {
     state.rescan_providers();
 
