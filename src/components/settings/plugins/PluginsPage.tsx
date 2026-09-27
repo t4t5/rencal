@@ -16,6 +16,8 @@ import {
   type PluginInstallLink,
 } from "@/lib/api"
 
+import { RencalLogomarkIcon } from "@/icons/rencal-logomark"
+
 import { PluginReview } from "./PluginReview"
 
 export function PluginsPage() {
@@ -425,7 +427,7 @@ function PluginRow({
 function PluginPreview({ url, name }: { url: string | null; name: string }) {
   const [failed, setFailed] = useState(false)
   return (
-    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-xs border border-border bg-muted">
+    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-xs bg-muted">
       {url && !failed ? (
         <img
           src={url}
@@ -438,7 +440,7 @@ function PluginPreview({ url, name }: { url: string | null; name: string }) {
           onError={() => setFailed(true)}
         />
       ) : (
-        <span className="px-2 text-center text-xs text-muted-foreground">No preview available</span>
+        <RencalLogomarkIcon className="w-8 opacity-15 grayscale" />
       )}
     </div>
   )
