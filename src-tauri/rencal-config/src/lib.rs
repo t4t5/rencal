@@ -52,10 +52,24 @@ pub enum FirstDayOfWeek {
     Sunday,
 }
 
+/// Which variant to show for themes that ship both a light and a dark one.
+/// `Auto` follows the OS appearance. Single-appearance themes ignore it.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeAppearance {
+    #[default]
+    Auto,
+    Light,
+    Dark,
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_theme")]
     pub theme: String,
+
+    #[serde(default)]
+    pub theme_appearance: ThemeAppearance,
 
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
@@ -78,6 +92,7 @@ impl Default for RencalConfig {
     fn default() -> Self {
         Self {
             theme: default_theme(),
+            theme_appearance: ThemeAppearance::default(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
@@ -187,6 +202,21 @@ mod tests {
         assert!(toml_str.contains("first_day_of_week = \"sunday\""));
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
         assert_eq!(reparsed.first_day_of_week, FirstDayOfWeek::Sunday);
+    }
+
+    #[test]
+    fn theme_appearance_defaults_to_auto_and_round_trips() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert_eq!(config.theme_appearance, ThemeAppearance::Auto);
+
+        let config = RencalConfig {
+            theme_appearance: ThemeAppearance::Light,
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("theme_appearance = \"light\""));
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert_eq!(reparsed.theme_appearance, ThemeAppearance::Light);
     }
 
     #[test]

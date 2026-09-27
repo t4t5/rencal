@@ -11,7 +11,7 @@ use std::path::{Path, PathBuf};
 pub use rencal_plugin_contract::{
     Appearance, ContributionKind, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
     MIN_PROVIDER_CALDIR_CORE, PluginError, PluginManifest, ProviderContribution, ThemeContribution,
-    is_sha256_hex, provider_is_compatible, release_asset_sha256, validate_manifest,
+    ThemeVariants, is_sha256_hex, provider_is_compatible, release_asset_sha256, validate_manifest,
     validate_manifest_owner, validate_package_id,
 };
 use semver::Version;
@@ -482,8 +482,14 @@ pub fn plugins_lock_path() -> Result<PathBuf, PluginError> {
 pub struct ScannedTheme {
     pub id: String,
     pub name: String,
-    pub css: String,
-    pub appearance: Appearance,
+    pub css: ScannedThemeCss,
+}
+
+/// A theme's CSS contents, mirroring the manifest's `ThemeVariants`.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum ScannedThemeCss {
+    Single { css: String, appearance: Appearance },
+    Both { light: String, dark: String },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -582,15 +588,26 @@ fn scan_package(
 
     let mut themes = Vec::with_capacity(manifest.contributes.themes.len());
     for theme in manifest.contributes.themes {
-        let css_path = directory.join(&theme.css);
-        let css = std::fs::read_to_string(&css_path).map_err(|error| {
-            PluginError::new(format!("could not read {}: {error}", css_path.display()))
-        })?;
+        let read = |path: &str| {
+            let css_path = directory.join(path);
+            std::fs::read_to_string(&css_path).map_err(|error| {
+                PluginError::new(format!("could not read {}: {error}", css_path.display()))
+            })
+        };
+        let css = match &theme.variants {
+            ThemeVariants::Single { css, appearance } => ScannedThemeCss::Single {
+                css: read(css)?,
+                appearance: *appearance,
+            },
+            ThemeVariants::Both { light, dark } => ScannedThemeCss::Both {
+                light: read(light)?,
+                dark: read(dark)?,
+            },
+        };
         themes.push(ScannedTheme {
             id: format!("{}/{}", manifest.id, theme.id),
             name: theme.name,
             css,
-            appearance: theme.appearance,
         });
     }
 
@@ -1018,9 +1035,44 @@ commit = "1111111111111111111111111111111111111111"
         let scan = scan_packages(temp.path(), Some(&Version::new(0, 9, 0)));
         assert_eq!(scan.packages.len(), 1);
         assert_eq!(scan.packages[0].themes[0].id, "alice.dusk/dark");
-        assert_eq!(scan.packages[0].themes[0].appearance, Appearance::Dark);
+        assert_eq!(
+            scan.packages[0].themes[0].css,
+            ScannedThemeCss::Single {
+                css: "--background: #111;".into(),
+                appearance: Appearance::Dark,
+            }
+        );
         assert_eq!(scan.errors.len(), 1);
         assert_eq!(scan.errors[0].package, "bob.broken");
+    }
+
+    #[test]
+    fn scan_reads_both_theme_variants() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.dusk");
+        std::fs::create_dir_all(package.join("themes")).unwrap();
+        let manifest = MANIFEST.replacen(
+            "css = \"themes/dark.css\"\nappearance = \"dark\"",
+            "light = \"themes/light.css\"\ndark = \"themes/dark.css\"",
+            1,
+        );
+        std::fs::write(package.join(MANIFEST_FILE), &manifest).unwrap();
+        std::fs::write(package.join("themes/light.css"), "--background: #eee;").unwrap();
+        std::fs::write(package.join("themes/dark.css"), "--background: #111;").unwrap();
+
+        let scan = scan_packages(temp.path(), None);
+        assert_eq!(
+            scan.packages[0].themes[0].css,
+            ScannedThemeCss::Both {
+                light: "--background: #eee;".into(),
+                dark: "--background: #111;".into(),
+            }
+        );
+
+        std::fs::remove_file(package.join("themes/light.css")).unwrap();
+        let scan = scan_packages(temp.path(), None);
+        assert!(scan.packages.is_empty());
+        assert!(scan.errors[0].message.contains("light.css"));
     }
 
     const PROVIDER_MANIFEST: &str = r#"

@@ -177,7 +177,8 @@ impl std::error::Error for PluginInstallError {}
 pub struct PluginThemeInspection {
     pub id: String,
     pub name: String,
-    pub appearance: Appearance,
+    /// One entry for a single-appearance theme, light then dark for a theme with both.
+    pub appearances: Vec<Appearance>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
@@ -1296,7 +1297,7 @@ impl PluginManager {
                 .map(|theme| PluginThemeInspection {
                     id: theme.id.clone(),
                     name: theme.name.clone(),
-                    appearance: theme.appearance,
+                    appearances: theme.variants.appearances(),
                 })
                 .collect(),
             fonts: manifest
@@ -1577,8 +1578,10 @@ impl PluginManager {
         let mut files = Vec::new();
         let mut seen = HashSet::new();
         for theme in &package.manifest.contributes.themes {
-            if seen.insert(theme.css.as_str()) {
-                files.push((theme.css.as_str(), PackageFile::Css));
+            for css in theme.variants.css_paths() {
+                if seen.insert(css) {
+                    files.push((css, PackageFile::Css));
+                }
             }
         }
         for font in &package.manifest.contributes.fonts {

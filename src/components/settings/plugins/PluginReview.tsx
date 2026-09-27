@@ -72,7 +72,7 @@ export function PluginReview({
           <ul className="flex flex-col gap-1">
             {plugin.themes.map((theme) => (
               <li key={theme.id} className="break-words">
-                {theme.name} · {theme.appearance}
+                {theme.name} · {theme.appearances.join(" and ")}
               </li>
             ))}
           </ul>

@@ -35,6 +35,37 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
     }
 }
 
+/// RPC mirror of `rencal_config::ThemeAppearance`.
+#[derive(Clone, Copy, Serialize, Deserialize, Type)]
+pub enum ThemeAppearance {
+    #[serde(rename = "auto")]
+    Auto,
+    #[serde(rename = "light")]
+    Light,
+    #[serde(rename = "dark")]
+    Dark,
+}
+
+impl From<rencal_config::ThemeAppearance> for ThemeAppearance {
+    fn from(value: rencal_config::ThemeAppearance) -> Self {
+        match value {
+            rencal_config::ThemeAppearance::Auto => Self::Auto,
+            rencal_config::ThemeAppearance::Light => Self::Light,
+            rencal_config::ThemeAppearance::Dark => Self::Dark,
+        }
+    }
+}
+
+impl From<ThemeAppearance> for rencal_config::ThemeAppearance {
+    fn from(value: ThemeAppearance) -> Self {
+        match value {
+            ThemeAppearance::Auto => Self::Auto,
+            ThemeAppearance::Light => Self::Light,
+            ThemeAppearance::Dark => Self::Dark,
+        }
+    }
+}
+
 // `get_theme` returns `Some(theme)` if the config file exists, `None` if it
 // has never been written. The frontend uses the `None` case to migrate a
 // pre-existing `localStorage["theme"]` value up to TOML on first run.
@@ -42,6 +73,8 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
 pub trait ConfigApi {
     async fn get_theme() -> TauResult<Option<String>>;
     async fn set_theme(theme: String) -> TauResult<()>;
+    async fn get_theme_appearance() -> TauResult<ThemeAppearance>;
+    async fn set_theme_appearance(appearance: ThemeAppearance) -> TauResult<()>;
     async fn get_notifications_enabled() -> TauResult<bool>;
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
     async fn get_auto_sync_enabled() -> TauResult<bool>;
@@ -69,6 +102,16 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_theme(self, theme: String) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.theme = theme;
+        config.save().map_err(RpcError::from)
+    }
+
+    async fn get_theme_appearance(self) -> TauResult<ThemeAppearance> {
+        Ok(RencalConfig::load()?.theme_appearance.into())
+    }
+
+    async fn set_theme_appearance(self, appearance: ThemeAppearance) -> TauResult<()> {
+        let mut config = RencalConfig::load()?;
+        config.theme_appearance = appearance.into();
         config.save().map_err(RpcError::from)
     }
 

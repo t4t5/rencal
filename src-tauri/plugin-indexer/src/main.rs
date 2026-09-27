@@ -807,6 +807,32 @@ min_rencal_version = "0.8.0"
     }
 
     #[tokio::test]
+    async fn indexes_a_theme_plugin_with_light_and_dark_variants() {
+        let manifest = manifest("alice").replacen(
+            "css = \"theme.css\"\nappearance = \"dark\"",
+            "light = \"themes/light.css\"\ndark = \"themes/dark.css\"",
+            1,
+        );
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 1,
+                "items": [repository("Alice", "rencal-dusk", 42)],
+            })),
+            release("v1.2.3"),
+            commit(),
+            text(&manifest),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert!(index.warnings.is_empty());
+        assert_eq!(index.entries.len(), 1);
+        assert_eq!(index.entries[0].contributions, [ContributionKind::Theme]);
+    }
+
+    #[tokio::test]
     async fn indexes_default_branch_head_without_a_release() {
         let commit = "1111111111111111111111111111111111111111";
         let client = MockClient::new(vec![

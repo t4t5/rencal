@@ -131,6 +131,7 @@ function applyOmarchyColors(c: OmarchyColors) {
     // Keep index.html's flash-prevention cache in step with the live OS theme.
     try {
       localStorage.setItem("themeBackground", c.background)
+      localStorage.setItem("themeAppearanceResolved", c.mode)
     } catch {}
   }
 }

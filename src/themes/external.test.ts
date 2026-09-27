@@ -5,6 +5,7 @@ import type { ExternalTheme } from "@/lib/api"
 
 import {
   applyExternalThemes,
+  externalThemeCss,
   externalThemeDescriptor,
   externalThemePalette,
 } from "@/themes/external"
@@ -12,22 +13,32 @@ import {
 const loose: ExternalTheme = {
   id: "user:local",
   name: "Local",
-  css: "--background: white;",
+  variants: { kind: "single", css: "--background: white;", appearance: null },
   source: { kind: "loose" },
-  appearance: null,
 }
 
 const plugin: ExternalTheme = {
   id: "alice.dusk/dark",
   name: "Dusk Dark",
-  css: "--background: black;",
+  variants: { kind: "single", css: "--background: black;", appearance: "dark" },
   source: { kind: "plugin", id: "alice.dusk" },
-  appearance: "dark",
+}
+
+const both: ExternalTheme = {
+  id: "alice.gruvbox/gruvbox",
+  name: "Gruvbox",
+  variants: { kind: "both", light: "--background: #fbf1c7;", dark: "--background: #282828;" },
+  source: { kind: "plugin", id: "alice.gruvbox" },
+}
+
+function withCss(theme: ExternalTheme, css: string): ExternalTheme {
+  return { ...theme, variants: { kind: "single", css, appearance: null } }
 }
 
 afterEach(() => {
   document.body.replaceChildren()
   delete document.body.dataset.theme
+  delete document.body.dataset.appearance
   document.head
     .querySelectorAll("style[data-external-theme]")
     .forEach((element) => element.remove())
@@ -42,6 +53,37 @@ describe("external themes", () => {
       source: "plugin",
     })
     expect(externalThemeDescriptor(loose).appearance).toBeNull()
+    expect(externalThemeDescriptor(both).appearance).toBe("both")
+  })
+
+  it("writes one rule per variant for a theme with both", () => {
+    applyExternalThemes([both], both.id)
+    const rules = document.head.querySelector(
+      'style[data-external-theme="alice.gruvbox/gruvbox"]',
+    )?.textContent
+
+    expect(rules).toBe(
+      [
+        '[data-theme="alice\\.gruvbox\\/gruvbox"][data-appearance="light"] {\n--background: #fbf1c7;\n}',
+        '[data-theme="alice\\.gruvbox\\/gruvbox"][data-appearance="dark"] {\n--background: #282828;\n}',
+      ].join("\n\n"),
+    )
+  })
+
+  it("applies the variant matching the body appearance", () => {
+    document.body.dataset.theme = both.id
+    document.body.dataset.appearance = "light"
+    applyExternalThemes([both], both.id)
+    expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("#fbf1c7")
+
+    document.body.dataset.appearance = "dark"
+    expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("#282828")
+  })
+
+  it("picks per-variant CSS for previews", () => {
+    expect(externalThemeCss(both, "light")).toBe("--background: #fbf1c7;")
+    expect(externalThemeCss(both, "dark")).toBe("--background: #282828;")
+    expect(externalThemeCss(plugin, "light")).toBe("--background: black;")
   })
 
   it("updates styles and removes themes missing from the next snapshot", () => {
@@ -49,7 +91,7 @@ describe("external themes", () => {
     expect(document.head.querySelectorAll("style[data-external-theme]")).toHaveLength(1)
 
     applyExternalThemes([loose, plugin], plugin.id)
-    applyExternalThemes([{ ...plugin, css: "--background: navy;" }], plugin.id)
+    applyExternalThemes([withCss(plugin, "--background: navy;")], plugin.id)
 
     expect(document.head.querySelector('style[data-external-theme="user:local"]')).toBeNull()
     expect(
@@ -61,7 +103,7 @@ describe("external themes", () => {
   })
 
   it.each([loose, plugin])("loads escaped rules only while $id is selected", (theme) => {
-    const malicious = { ...theme, css: "} button { display:none!important } /*" }
+    const malicious = withCss(theme, "} button { display:none!important } /*")
     const button = document.createElement("button")
     document.body.append(button)
     document.body.dataset.theme = "ren"

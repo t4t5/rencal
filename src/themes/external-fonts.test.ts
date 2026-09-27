@@ -20,18 +20,16 @@ function pluginTheme(id: string, packageId = "alice.dusk"): ExternalTheme {
   return {
     id,
     name: id,
-    css: "--font-body: Pixel;",
+    variants: { kind: "single", css: "--font-body: Pixel;", appearance: "dark" },
     source: { kind: "plugin", id: packageId },
-    appearance: "dark",
   }
 }
 
 const looseTheme: ExternalTheme = {
   id: "user:local",
   name: "Local",
-  css: "--background: black;",
+  variants: { kind: "single", css: "--background: black;", appearance: null },
   source: { kind: "loose" },
-  appearance: null,
 }
 
 class MockFontFace {

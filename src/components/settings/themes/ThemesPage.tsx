@@ -1,6 +1,7 @@
 import { useMemo } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
 import { getCalendarEventStyle } from "@/lib/event-styles"
@@ -8,16 +9,29 @@ import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
-import { externalThemePalette } from "@/themes/external"
-import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import { externalThemeCss, externalThemePalette } from "@/themes/external"
+import {
+  type Appearance,
+  type AppearancePreference,
+  getThemeAppearance,
+  type ThemeDescriptor,
+} from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { theme, setTheme } = useTheme()
+  const { theme, setTheme, appearancePreference, setAppearancePreference, systemAppearance } =
+    useTheme()
   const { descriptors, errors } = useThemeRegistry()
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
+      {getThemeAppearance(theme, descriptors) === "both" && (
+        <AppearanceControl
+          value={appearancePreference}
+          onChange={setAppearancePreference}
+          system={systemAppearance}
+        />
+      )}
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -54,7 +68,7 @@ function ThemeGrid({
               isActive ? "border-primary ring-1 ring-primary" : "border-border",
             )}
           >
-            <ThemePreview themeId={t.id} />
+            <ThemePreview theme={t} />
 
             <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
               <span className="truncate text-sm">{t.name}</span>
@@ -74,17 +88,69 @@ function ThemeGrid({
   )
 }
 
+const APPEARANCE_LABELS: Record<Appearance, string> = { light: "Light", dark: "Dark" }
+
+// Only shown for themes with both variants; Auto follows the OS.
+function AppearanceControl({
+  value,
+  onChange,
+  system,
+}: {
+  value: AppearancePreference
+  onChange: (value: AppearancePreference) => void
+  system: Appearance
+}) {
+  return (
+    <div className="flex flex-col gap-2">
+      <span className="text-sm">Appearance</span>
+      <Tabs value={value} onValueChange={(v) => onChange(v as AppearancePreference)}>
+        <TabsList aria-label="Appearance">
+          <TabsTrigger value="auto">
+            {value === "auto" ? `Auto (${APPEARANCE_LABELS[system]})` : "Auto"}
+          </TabsTrigger>
+          <TabsTrigger value="light">{APPEARANCE_LABELS.light}</TabsTrigger>
+          <TabsTrigger value="dark">{APPEARANCE_LABELS.dark}</TabsTrigger>
+        </TabsList>
+      </Tabs>
+    </div>
+  )
+}
+
+/** A theme with both variants is split diagonally: light top-left, dark bottom-right. */
+const ThemePreview = ({ theme }: { theme: ThemeDescriptor }) => {
+  if (theme.appearance !== "both") {
+    return <ThemePreviewWindow themeId={theme.id} appearance={theme.appearance} />
+  }
+
+  return (
+    <div className="relative">
+      <ThemePreviewWindow themeId={theme.id} appearance="light" />
+      <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
+        <ThemePreviewWindow themeId={theme.id} appearance="dark" />
+      </div>
+    </div>
+  )
+}
+
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const ThemePreview = ({ themeId }: { themeId: string }) => {
-  const { descriptors, externalThemes } = useThemeRegistry()
-  const css = externalThemes.find((theme) => theme.id === themeId)?.css
+const ThemePreviewWindow = ({
+  themeId,
+  appearance,
+}: {
+  themeId: string
+  appearance: Appearance | null
+}) => {
+  const { externalThemes } = useThemeRegistry()
+  const external = externalThemes.find((theme) => theme.id === themeId)
+  // Runtime-appearance themes have a single variant, so either key finds it.
+  const css = external && externalThemeCss(external, appearance ?? "dark")
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
     <div aria-hidden className="h-28 overflow-hidden pt-4 pl-4">
       <div
         data-theme={themeId}
-        data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
+        data-appearance={appearance ?? undefined}
         style={style}
         className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg"
       >

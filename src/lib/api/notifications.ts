@@ -28,7 +28,10 @@ export function listenNotification<N extends AppEventName>(
   }
 }
 
-type FrontendEvent = Extract<AppEvent, { name: "theme-changed" | "rencal-config-changed" }>
+type FrontendEvent = Extract<
+  AppEvent,
+  { name: "theme-changed" | "theme-appearance-changed" | "rencal-config-changed" }
+>
 type EmitArgs<E = FrontendEvent> = E extends { name: infer N; payload: infer P }
   ? P extends null
     ? [name: N, payload?: P]

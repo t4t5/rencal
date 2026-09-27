@@ -12,12 +12,35 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 
 The `[data-theme="<id>"]` selector is added **for you**:
 
-- **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`).
+- **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`). `<id>.light.css` and `<id>.dark.css` are the two variants of one theme (see below).
 - **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. `useTheme` injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets, and tiles avoid app `data-slot`s, so the active theme's selectors don't restyle them either: a tile looks the same whether or not its theme is selected. Installing or updating an inactive theme therefore does not enable its full CSS.
 
 The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. `--today` and `--brand` default to `--primary`, so a pasted shadcn theme stays on-palette; set them for distinct accents. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
+
+## Light and dark variants
+
+A theme can ship a light and a dark variant instead of one file. Each variant is wrapped in a selector that also matches `data-appearance`:
+
+```css
+[data-theme="gruvbox"][data-appearance="light"] {
+  /* gruvbox.light.css */
+}
+[data-theme="gruvbox"][data-appearance="dark"] {
+  /* gruvbox.dark.css */
+}
+```
+
+The theme id stays the same for both, so config, `theme-bootstrap.js` and cross-window sync store one string. Both selectors are more specific than the `:root, [data-theme]` baseline in `src/global.css`, so the baseline applies first.
+
+Descriptors in `manifest.ts` mark these themes `appearance: "both"`. `resolveAppearance` picks the variant: the user's Appearance setting (`auto | light | dark`, `theme_appearance` in `config.toml`), with `auto` following the OS. Themes with a fixed `"light"`/`"dark"` ignore the setting, and `null` themes (omarchy, loose single-file themes) derive it at runtime. `useTheme` sets `data-appearance` on `<body>` before injecting external CSS, because the variant rule depends on it.
+
+While a theme with both variants is on Auto, `useTheme` does not force the window theme: `useSystemAppearance` calls `setTheme(null)` and reads the OS value from the window's `theme()` / `onThemeChanged`. A forced window reports the forced value there and in `prefers-color-scheme`, so every other case forces the window to the resolved appearance so its chrome matches.
+
+Preview tiles render a both-variant theme as two scopes, one per `data-appearance`, clipped diagonally.
+
+Plugins declare variants with `light` / `dark` in `rencal-plugin.toml` (see `src-tauri/src/plugins/README.md`). Loose user themes pair `<name>.light.css` with `<name>.dark.css`.
 
 ## Theme scopes
 
@@ -39,6 +62,8 @@ The promise covers custom properties only. It has these limits:
    { id: "mytheme", name: "My Theme", appearance: "dark" },
    ```
 
+   For a theme with both variants, create `mytheme.light.css` and `mytheme.dark.css` instead and register it with `appearance: "both"`. `manifest.test.ts` checks that each entry has the files it needs.
+
 That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, `useTheme` picks it up, and Ctrl/Cmd+Shift+T cycles through every registered theme. The website's theme playground (`website/src/pages/themes.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: `useTheme` caches the active theme's `--background` and `index.html` repaints it on next launch.)
 
 ## User themes
@@ -47,6 +72,7 @@ End users add themes without touching the source. Drop a `.css` file into `~/.co
 
 - Same bare-declaration format as built-ins — **no selector**.
 - The filename becomes the display name; override it with a leading `/* @name My Theme */` comment.
+- `<name>.light.css` + `<name>.dark.css` become one theme with both variants. A lone variant file is a light-only or dark-only theme. A pair wins over a plain `<name>.css`, which is reported as an error.
 - Edits/additions/removals apply live (a Rust file-watcher re-emits the list).
 - Ids are namespaced `user:<slug>` so they never collide with built-ins.
 
@@ -104,7 +130,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 #### Event text
 
-Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
+Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the event-text formula. The formula and its parameters are internal and may change.
 
 ### Surface tint system
 

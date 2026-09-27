@@ -1,4 +1,4 @@
-import { type Appearance, getDeclaredAppearance, type ThemeDescriptor } from "./manifest"
+import type { Appearance } from "./manifest"
 
 function luminance(r: number, g: number, b: number): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
@@ -16,18 +16,9 @@ function resolveColor(css: string): [number, number, number] | null {
 }
 
 // Reads the rendered body background (`bg-background`). Used for themes whose
-// appearance isn't declared statically (omarchy, user themes).
+// appearance isn't declared statically (omarchy, loose single-file themes).
 export function appearanceFromComputedBackground(): Appearance {
   const rgb = resolveColor(getComputedStyle(document.body).backgroundColor)
   if (!rgb) return "dark"
   return luminance(...rgb) > 0.5 ? "light" : "dark"
-}
-
-// Built-in and plugin themes declare their appearance; loose/omarchy themes
-// derive it from the live --background once their styles are applied.
-export function getActiveAppearance(
-  id: string,
-  descriptors: readonly ThemeDescriptor[],
-): Appearance {
-  return getDeclaredAppearance(id, descriptors) ?? appearanceFromComputedBackground()
 }
