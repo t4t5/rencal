@@ -431,15 +431,16 @@ const monthWeeks = weekStarts(5).map(weekOf)
 
       <div class="relative min-h-0 grow overflow-hidden">
         {
-          monthWeeks.map((week) => {
+          monthWeeks.map((week, weekIndex) => {
             const monthStartCol = week.findIndex((key) => dayOfMonth(key) === 1)
             const allDay = week.flatMap((key, col) =>
               eventsOn(key)
                 .filter((event) => !event.start)
                 .map((event) => ({ event, col })),
             )
+            // The weekday header's border already marks a month starting on the first row.
             const boundary =
-              monthStartCol === 0 ? (
+              monthStartCol === 0 && weekIndex > 0 ? (
                 <div
                   data-slot="month-boundary"
                   class="pointer-events-none absolute -top-px right-0 left-0 z-20 h-[3px]"
