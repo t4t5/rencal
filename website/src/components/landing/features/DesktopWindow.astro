@@ -1,0 +1,29 @@
+---
+// A generic desktop window: a title bar over the slot, scaled like a close-up.
+// Deliberately no particular OS: plain dots instead of window controls.
+import Closeup from "./Closeup.astro"
+
+interface Props {
+  label: string
+  title: string
+  /** Logical size in CSS px, title bar included. */
+  width: number
+  height: number
+}
+
+const { label, title, width, height } = Astro.props
+---
+
+<Closeup label={label} width={width} height={height} class="flex flex-col bg-(--background)">
+  <div
+    class="flex h-[34px] shrink-0 items-center gap-2 border-b border-(--foreground)/10 bg-(--foreground)/4 px-3.5"
+  >
+    <span class="size-2.5 rounded-full bg-(--foreground)/15"></span>
+    <span class="size-2.5 rounded-full bg-(--foreground)/15"></span>
+    <span class="size-2.5 rounded-full bg-(--foreground)/15"></span>
+    <span class="ml-2 text-[12px] text-(--muted-foreground)">{title}</span>
+  </div>
+  <div class="min-h-0 flex-1">
+    <slot />
+  </div>
+</Closeup>

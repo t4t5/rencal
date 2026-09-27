@@ -16,7 +16,14 @@ const $ = <T extends HTMLElement = HTMLElement>(root: ParentNode, selector: stri
   root.querySelector<T>(selector)!
 const $$ = (root: ParentNode, selector: string) => [...root.querySelectorAll<HTMLElement>(selector)]
 
-// Types commands, then prints their output a line at a time.
+function selectFiles(root: HTMLElement, match: string | null) {
+  for (const file of $$(root, "[data-file]")) {
+    file.toggleAttribute("data-selected", match !== null && file.dataset.file!.includes(match))
+  }
+}
+
+// Types commands, then prints their output a line at a time, selecting the
+// files an output line lists.
 const terminal: Scene = {
   async play(root, wait) {
     const lines = $$(root, "[data-term-input], [data-term-output]")
@@ -25,6 +32,7 @@ const terminal: Scene = {
     const screen = $(root, "[data-term-screen]")
     const scroll = () => (screen.scrollTop = screen.scrollHeight)
     for (const line of [...lines, idle]) line.hidden = true
+    selectFiles(root, null)
     scroll()
 
     for (const line of lines) {
@@ -32,6 +40,7 @@ const terminal: Scene = {
       if (input === undefined) {
         await wait(Number(line.dataset.delay ?? 40))
         line.hidden = false
+        if (line.dataset.termSelect) selectFiles(root, line.dataset.termSelect)
         scroll()
         continue
       }
@@ -46,7 +55,8 @@ const terminal: Scene = {
         await wait(25 + Math.random() * 30)
       }
       await wait(300)
-      cursor.remove()
+      // Park on the hidden idle line, not detached, so an interrupted run can't lose it.
+      idle.append(cursor)
     }
     idle.append(cursor)
     idle.hidden = false

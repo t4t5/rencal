@@ -1,0 +1,44 @@
+---
+// A file browser on the caldir directory and, in front of it, a coding agent
+// answering a question from those files, overlapping on a dotted backdrop.
+// Stacked on narrow screens, zoomed in to run off the right edge, with the
+// agent's typed input wrapping before the visible edge.
+import AgentWindow from "./AgentWindow.astro"
+import FileBrowser from "./FileBrowser.astro"
+---
+
+<div
+  data-scene-stage
+  class="feature-dots -mr-6 overflow-hidden py-4 md:-mr-10 md:py-6 lg:mr-0 lg:aspect-[1200/630] lg:p-0"
+>
+  <div class="caldir-window ml-[6%] w-[110%] md:w-[80%] lg:top-[7%] lg:left-[3%] lg:w-[50%]">
+    <FileBrowser />
+  </div>
+  <div
+    class="caldir-window agent-window -mt-[37%] ml-[10%] w-[104%] [--term-wrap:440px] md:-mt-[19%] md:ml-[16%] md:w-[76%] md:[--term-wrap:none] lg:top-[21%] lg:right-[3%] lg:w-[47%]"
+  >
+    <AgentWindow />
+  </div>
+</div>
+
+<style>
+  .caldir-window {
+    position: relative;
+    box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+  }
+
+  /* Shorter on phones; the terminal scrolls its banner away. */
+  @media (width < 48rem) {
+    .agent-window :global(.rc-window-frame) {
+      --rc-window-height: 380px !important;
+      --rc-window-ratio: 560 / 380 !important;
+    }
+  }
+
+  @media (min-width: 64rem) {
+    .caldir-window {
+      position: absolute;
+      margin: 0;
+    }
+  }
+</style>
