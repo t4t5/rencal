@@ -5,8 +5,20 @@
 import Icon from "../../app-window/Icon.astro"
 
 const AGENDA = [
-  { time: "09:30", title: "Daily standup", color: "#7dcfff" },
-  { time: "18:30", title: "Climbing session", color: "#c0826b" },
+  {
+    day: "Today",
+    date: "Thu 25 Jun",
+    events: [
+      { time: "09:30", title: "Daily standup", color: "#7dcfff" },
+      { time: "12:00", title: "Lunch with Maya", color: "#9ece6a" },
+      { time: "18:30", title: "Climbing session", color: "#c0826b" },
+    ],
+  },
+  {
+    day: "Tomorrow",
+    date: "Fri 26 Jun",
+    events: [{ time: "10:00", title: "Design review", color: "#7dcfff" }],
+  },
 ]
 
 // Status icons from the right of the bar (Lucide).
@@ -20,14 +32,14 @@ const STATUS_ICONS = [
 
 <div
   role="img"
-  aria-label="The Omarchy bar showing the next meeting, Daily standup in 16 minutes, above a dropdown with a Join Meeting button"
+  aria-label="The Omarchy bar showing the next meeting, Daily standup in 16 minutes, above a dropdown listing the day's upcoming events"
   class="bar-widget feature-dots relative h-64"
 >
-  <div aria-hidden="true" class="feature-fade-corner absolute inset-0 overflow-hidden pt-9 pl-6">
+  <div aria-hidden="true" class="feature-fade-sides absolute inset-0 overflow-hidden pt-9">
     <div
-      class="feature-ui flex h-9 items-center gap-5 bg-(--bar-bg) pl-4 text-[13px] whitespace-nowrap"
+      class="feature-ui grid h-9 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-5 bg-(--bar-bg) text-[13px] whitespace-nowrap"
     >
-      <Icon name="chevronDown" class="size-3.5 rotate-90" />
+      <Icon name="chevronDown" class="size-3.5 rotate-90 justify-self-end" />
       <div class="relative flex h-full items-center">
         <span class="flex items-center gap-2 border-b-2 border-(--bar-accent) py-1.5">
           <Icon name="video" class="size-4" />
@@ -35,50 +47,42 @@ const STATUS_ICONS = [
         </span>
 
         <div
-          class="absolute top-full -left-3 mt-1.5 flex w-72 flex-col gap-3 border-2 border-(--bar-accent) bg-(--bar-bg) p-4 shadow-[0_20px_50px_rgb(0_0_0/0.55)]"
+          class="absolute top-full left-1/2 mt-1.5 -translate-x-1/2 flex w-72 flex-col gap-4 border-2 border-(--bar-accent) bg-(--bar-bg) p-4 shadow-[0_20px_50px_rgb(0_0_0/0.55)]"
         >
-          <span class="text-[11px] tracking-widest text-(--bar-muted) uppercase">Calendar</span>
-          <div class="flex flex-col gap-1.5 bg-white/[0.04] p-3">
-            <span class="text-[11px] tracking-widest text-(--bar-muted) uppercase">Next</span>
-            <span class="text-[15px] font-bold">Daily standup</span>
-            <span class="text-xs text-(--bar-muted)">Today · 09:30–09:55</span>
-            <span
-              class="mt-1.5 flex w-fit items-center gap-2 border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold"
-            >
-              <Icon name="video" class="size-3.5" />
-              Join Meeting
-            </span>
-          </div>
-          <div class="flex flex-col gap-3 border-t border-white/10 pt-3 text-[13px]">
-            <span class="text-[11px] tracking-widest uppercase">
-              Today <span class="text-(--bar-muted)">Thu 25 Jun</span>
-            </span>
-            {
-              AGENDA.map(({ time, title, color }) => (
-                <span class="flex gap-3 border-l-2 pl-3" style={`border-color: ${color}`}>
-                  <span class="text-(--bar-muted)">{time}</span>
-                  {title}
+          {
+            AGENDA.map(({ day, date, events }) => (
+              <div class="flex flex-col gap-3 text-[13px]">
+                <span class="text-[11px] tracking-widest uppercase">
+                  {day} <span class="text-(--bar-muted)">{date}</span>
                 </span>
-              ))
-            }
-          </div>
+                {events.map(({ time, title, color }) => (
+                  <span class="flex gap-3 border-l-2 pl-3" style={`border-color: ${color}`}>
+                    <span class="text-(--bar-muted)">{time}</span>
+                    {title}
+                  </span>
+                ))}
+              </div>
+            ))
+          }
         </div>
       </div>
-      {
-        STATUS_ICONS.map((body) => (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="size-4 shrink-0"
-            set:html={body}
-          />
-        ))
-      }
+      <div class="flex gap-5">
+        {
+          STATUS_ICONS.map((body) => (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="size-4 shrink-0"
+              set:html={body}
+            />
+          ))
+        }
+      </div>
     </div>
   </div>
 </div>

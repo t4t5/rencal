@@ -47,6 +47,13 @@
   mask-composite: intersect;
 }
 
+.feature-fade-sides {
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 95%),
+    linear-gradient(to right, transparent 2%, #000 20%, #000 80%, transparent 98%);
+  mask-composite: intersect;
+}
+
 /* A dot grid behind a visual, fading out toward its edges. */
 .feature-dots {
   position: relative;
