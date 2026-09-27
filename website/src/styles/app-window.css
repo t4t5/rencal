@@ -30,9 +30,12 @@
      length ratio into the unitless number scale() needs. */
   .rc-window-frame {
     container-type: inline-size;
+    aspect-ratio: var(--rc-window-ratio);
   }
 
   .rc-window {
+    width: var(--rc-window-width);
+    height: var(--rc-window-height);
     transform-origin: 0 0;
     transform: scale(tan(atan2(100cqw, var(--rc-window-width))));
   }
@@ -232,6 +235,29 @@
   .rc-text-2xs {
     font-size: 11px;
     line-height: 14px;
+  }
+
+  /* Narrow screens: just the sidebar, unscaled, like the app in a narrow window. */
+  @media (width < 80rem) {
+    .rc-window-frame[data-sidebar-when-narrow] {
+      aspect-ratio: auto;
+
+      .rc-window {
+        position: relative;
+        width: 100%;
+        transform: none;
+      }
+
+      [data-slot="sidebar"] {
+        width: 100%;
+        border-right-width: 0;
+      }
+
+      [data-slot="main"],
+      [data-event-popover] {
+        display: none;
+      }
+    }
   }
 }
 

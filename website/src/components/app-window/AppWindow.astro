@@ -37,9 +37,20 @@ interface Props {
   width?: number
   height?: number
   activeDate?: string
+  /** Below xl, show only the sidebar at its natural size instead of scaling
+   * the whole window down. */
+  sidebarWhenNarrow?: boolean
 }
 
-const { id, class: className, label, width = 1440, height = 750, activeDate = TODAY } = Astro.props
+const {
+  id,
+  class: className,
+  label,
+  width = 1440,
+  height = 750,
+  activeDate = TODAY,
+  sidebarWhenNarrow = false,
+} = Astro.props
 
 // Built-in themes are bare declaration blocks; ren only sets its accents.
 const renVars = [
@@ -91,8 +102,9 @@ const monthWeeks = weekStarts(5).map(weekOf)
 <div
   role="img"
   aria-label={label}
+  data-sidebar-when-narrow={sidebarWhenNarrow || undefined}
   class:list={["rc-window-frame relative overflow-hidden", className]}
-  style={`--rc-window-width: ${width}px; aspect-ratio: ${width} / ${height}`}
+  style={`--rc-window-width: ${width}px; --rc-window-height: ${height}px; --rc-window-ratio: ${width} / ${height}`}
 >
   <div
     id={id}
@@ -100,7 +112,7 @@ const monthWeeks = weekStarts(5).map(weekOf)
     data-active-date={activeDate}
     aria-hidden="true"
     class="rc-scope rc-window absolute top-0 left-0 flex overflow-clip bg-(--background) select-none"
-    style={`width: ${width}px; height: ${height}px; ${renVars}`}
+    style={renVars}
   >
     <!-- Sidebar -->
     <div
@@ -365,7 +377,7 @@ const monthWeeks = weekStarts(5).map(weekOf)
     </div>
 
     <!-- Main -->
-    <div class="flex min-w-0 grow flex-col">
+    <div data-slot="main" class="flex min-w-0 grow flex-col">
       <div class="flex shrink-0 gap-2 p-(--layout-padding)">
         <div class="flex items-center gap-2">
           <span
