@@ -1,4 +1,4 @@
-export type Tone = "muted" | "accent" | "success" | "bold"
+export type Tone = "muted" | "success" | "bold"
 export type Segment = string | [string, Tone]
 
 export type TerminalLine =

@@ -9,15 +9,15 @@ const ics = (line: string): TerminalLine => {
 /** The caldir directory behind the demo calendar, and one of its events. */
 export const FILES_SESSION: TerminalLine[] = [
   { input: "cd ~/caldir && tree" },
-  { output: ["."] },
-  { output: ["├── ", ["google-work", "accent"]] },
-  { output: ["│   ├── 2026-06-25T1100__backend-api-planning.ics"] },
-  { output: ["│   └── 2026-06-26T0930__product-stand-up.ics"] },
-  { output: ["└── ", ["icloud-personal", "accent"]] },
-  { output: ["    ├── 2026-06-26T1900__grocery-delivery.ics"] },
-  { output: ["    └── 2026-06-28T1030__sunday-walk-and-coffee.ics"] },
+  { output: [["├── ", "muted"], "google-work"] },
+  { output: [["│   ├── ", "muted"], "2026-06-25T1100__backend-api-planning.ics"] },
+  { output: [["│   └── ", "muted"], "2026-06-26T0930__product-stand-up.ics"] },
+  { output: [["└── ", "muted"], "icloud-personal"] },
+  { output: [["    ├── ", "muted"], "2026-06-26T1900__grocery-delivery.ics"] },
+  { output: [["    └── ", "muted"], "2026-06-28T1030__sunday-walk-and-coffee.ics"] },
   { output: [] },
   { output: ["2 directories, 4 files"] },
+  { output: [] },
   { input: "cat google-work/2026-06-25T1100__backend-api-planning.ics" },
   ...[
     "BEGIN:VCALENDAR",

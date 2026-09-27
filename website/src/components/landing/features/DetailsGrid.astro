@@ -4,28 +4,21 @@ import Icon from "../../app-window/Icon.astro"
 import type { IconName } from "../../app-window/icons"
 
 const DETAILS: { icon: IconName; title: string; description: string }[] = [
-  { icon: "cloudOff", title: "Works offline", description: "Events live on disk and sync later." },
-  {
-    icon: "repeat",
-    title: "Recurring events",
-    description: "Change one occurrence or the whole series.",
-  },
-  { icon: "calendar", title: "Three views", description: "Month, week and board: M, W and B." },
-  { icon: "search", title: "Search", description: "Find any event with /." },
-  { icon: "user", title: "Invitations", description: "Accept or decline in the app." },
-  { icon: "globe", title: "Time zones", description: "Give an event its own time zone." },
-  { icon: "eye", title: "Calendar groups", description: "Switch sets of calendars with G." },
-  { icon: "bell", title: "Reminders", description: "Desktop notifications before events." },
+  { icon: "cloudOff", title: "Works offline", description: "Keep planning on a plane. Changes sync when you land." },
+  { icon: "search", title: "Search", description: "Track down any event, even one from years ago." },
+  { icon: "user", title: "Invitations", description: "Reply to invites without opening a browser." },
+  { icon: "eye", title: "Calendar groups", description: "Hide work on weekends, or see everything at once." },
+  { icon: "bell", title: "Reminders", description: "Never miss a meeting with desktop notifications." },
+  { icon: "monitor", title: "Cross-platform", description: "One calendar for your Linux desktop and your Mac." },
 ]
 ---
 
 <section class="flex flex-col gap-12">
   <h2 class="feature-title text-center text-2xl text-balance md:text-[28px]">
-    And everything else.
-    <span class="text-muted">The details you'd expect from a calendar.</span>
+    <span class="text-muted">Plus the calendar stuff you want.</span>
   </h2>
 
-  <ul class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+  <ul class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
     {
       DETAILS.map((detail) => (
         <li class="flex items-start gap-4">

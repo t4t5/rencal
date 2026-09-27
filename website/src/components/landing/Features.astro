@@ -18,14 +18,14 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
   <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-28 md:gap-40">
     <FeatureSection
       title="Your calendar is a folder"
-      description="Every event is an .ics file on your machine. Grep it, script it, or hand it to an agent. No MCP server needed."
+      description="Every event is a plaintext .ics file on your machine. Script it, or give it to an agent. No MCP server needed."
     >
       <SplitTerminal />
     </FeatureSection>
 
     <FeatureSection
-      title="Built for speed"
-      description="Add events in plain language, and get around without touching the mouse."
+      title="Built for power users"
+      description="Navigate and get things done with just the keyboard."
     >
       <div class="feature-panes grid lg:grid-cols-6">
         <BentoCard
@@ -77,9 +77,9 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
     </FeatureSection>
 
     <FeatureSection
-      title="Matches your system"
-      description="Built for Omarchy Linux. renCal follows your system theme, or pick one of its own."
-      link={{ href: "/omarchy/", label: "Learn more" }}
+      title="Infinitely customizable"
+      description="Install any community theme or bring your own CSS."
+      link={{ href: "/themes/", label: "Learn more" }}
     >
       <ThemeShowcase />
     </FeatureSection>

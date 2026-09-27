@@ -78,6 +78,10 @@ export const ICONS = {
     viewBox: "0 0 16 16",
     body: '<path fill="none" stroke="currentColor" stroke-width="1.3333" stroke-linecap="round" stroke-linejoin="round" d="M14.667 8a6.667 6.667 0 1 1-13.334 0 6.667 6.667 0 0 1 13.334 0ZM8 1.333a9.667 9.667 0 0 0 0 13.334 9.667 9.667 0 0 0 0-13.334M1.333 8h13.334"/>',
   },
+  monitor: {
+    viewBox: "0 0 24 24",
+    body: '<path fill="currentColor" fill-rule="evenodd" d="M13 18v2h4v2H7v-2h4v-2H3a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h18a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-8ZM4 5v11h16V5H4Z"/>',
+  },
   cloudOff: {
     viewBox: "0 0 24 24",
     body: '<g fill="none" stroke="currentColor" stroke-width="2"><path d="M6.87622 6.87627C7.9301 5.15132 9.83058 4 12 4c3.3137 0 6 2.68629 6 6 2.7614 0 5 2.2386 5 5 0 2.1636 -1.3742 4.0062 -3.2974 4.7026"/><path d="M16 20H7c-3.31371 0 -6 -2.6863 -6 -6 0 -2.4215 1.43447 -4.50793 3.5 -5.45593"/><path d="M0.707031 0.707031 23.293 23.293"/></g>',

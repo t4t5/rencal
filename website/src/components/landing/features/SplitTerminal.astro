@@ -18,6 +18,7 @@ const HEIGHT = 440
         <Terminal
           label="A terminal listing the ~/caldir directory, with one .ics file per event, and printing one of them"
           lines={FILES_SESSION}
+          prompt="$"
           animate={false}
           width={WIDTH}
           height={HEIGHT}
@@ -26,7 +27,7 @@ const HEIGHT = 440
     </div>
   </div>
   <div class="flex min-w-0 flex-col">
-    <p class="pane-title">claude</p>
+    <p class="pane-title">agent</p>
     <div data-scene-stage class="overflow-hidden max-lg:aspect-[560/490]">
       <div class="max-lg:w-[140%]">
         <Terminal
