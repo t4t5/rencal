@@ -3,6 +3,13 @@
  * src/global.css, scoped to `.rc-scope`; keep them in sync. Layers match the
  * app's, so Tailwind utilities override them the same way. */
 
+/* Registered so the angle resolves before tan() reads it (see .rc-window). */
+@property --rc-window-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
 @layer base {
   .rc-window {
     color: var(--foreground);
@@ -27,17 +34,20 @@
 
 @layer components {
   /* Scale the fixed-size window to its frame's width. tan(atan2()) turns the
-     length ratio into the unitless number scale() needs. */
+     length ratio into the unitless number scale() needs. The angle goes
+     through a registered property because WebKit's tan() misreads an
+     unresolved atan2() as radians. */
   .rc-window-frame {
     container-type: inline-size;
     aspect-ratio: var(--rc-window-ratio);
   }
 
   .rc-window {
+    --rc-window-angle: atan2(100cqw, var(--rc-window-width));
     width: var(--rc-window-width);
     height: var(--rc-window-height);
     transform-origin: 0 0;
-    transform: scale(tan(atan2(100cqw, var(--rc-window-width))));
+    transform: scale(tan(var(--rc-window-angle)));
   }
 
   .rc-window .event-form {
