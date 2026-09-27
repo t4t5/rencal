@@ -1,3 +1,4 @@
+import type { ProviderInfo } from "@/lib/api"
 import { IconType } from "@/lib/types"
 
 import { AppleIcon } from "@/icons/providers/apple"
@@ -5,9 +6,8 @@ import { EtesyncIcon } from "@/icons/providers/etesync"
 import { GoogleIcon } from "@/icons/providers/google"
 import { MicrosoftIcon } from "@/icons/providers/microsoft"
 import { ProtonIcon } from "@/icons/providers/proton"
-import { TutaIcon } from "@/icons/providers/tuta"
 
-export const providerDisplayName: Record<string, string> = {
+const providerDisplayName: Record<string, string> = {
   google: "Google",
   icloud: "iCloud",
   outlook: "Outlook",
@@ -18,17 +18,20 @@ function capitalize(s: string) {
   return s.charAt(0).toUpperCase() + s.slice(1)
 }
 
-export const getProviderDisplayName = (name: string | null) => {
+export const findProvider = (providers: ProviderInfo[], slug: string | null) =>
+  providers.find((provider) => provider.slug === slug)
+
+/** A plugin's manifest name wins over renCal's built-in names. */
+export const getProviderDisplayName = (name: string | null, info?: ProviderInfo) => {
   if (!name) return "Unknown"
-  return providerDisplayName[name] || capitalize(name)
+  return info?.name ?? providerDisplayName[name] ?? capitalize(name)
 }
 
-export const providerToIcon: Record<string, IconType> = {
+const providerToIcon: Record<string, IconType> = {
   google: GoogleIcon,
   icloud: AppleIcon,
   outlook: MicrosoftIcon,
   proton: ProtonIcon,
-  tuta: TutaIcon,
   etesync: EtesyncIcon,
 }
 
@@ -36,6 +39,10 @@ export const getProviderIcon = (name: string | null): IconType | null => {
   if (!name) return null
   return providerToIcon[name] ?? null
 }
+
+/** Syncing needs renCal: the caldir CLI only finds providers on `PATH`. */
+export const syncsOnlyInRencal = (info: ProviderInfo | undefined) =>
+  info?.source.kind === "plugin" && !info.on_path
 
 const providersWithoutAccount = new Set(["webcal"])
 

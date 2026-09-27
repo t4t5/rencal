@@ -358,7 +358,7 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
 }
 
 fn validate_locked_provider(provider: &LockedProviderAsset) -> Result<(), PluginError> {
-    rencal_plugin_contract::validate_provider_id(&provider.slug)?;
+    rencal_plugin_contract::validate_provider_slug(&provider.slug)?;
     let valid_target = !provider.target.is_empty()
         && provider.target.bytes().all(|byte| {
             byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_' || byte == b'-'
@@ -615,9 +615,9 @@ fn scan_package(
         .providers
         .iter()
         .map(|provider| {
-            let binary = provider_binary_path(directory, &provider.id);
+            let binary = provider_binary_path(directory, &provider.slug);
             ScannedProvider {
-                slug: provider.id.clone(),
+                slug: provider.slug.clone(),
                 name: provider.name.clone(),
                 icon: provider.icon.as_ref().map(|icon| directory.join(icon)),
                 binary: binary.is_file().then_some(binary),
@@ -639,12 +639,14 @@ pub(crate) fn provider_binary_path(package: &Path, slug: &str) -> PathBuf {
     package.join("bin").join(format!("caldir-provider-{slug}"))
 }
 
-/// The `bin/` directories under `root` that renCal may register as providers.
-/// The registry takes whole directories, so one incompatible binary keeps the
-/// package's other providers out too.
-pub fn provider_dirs(root: &Path) -> Vec<PathBuf> {
-    scan_packages(root, running_app_version().as_ref())
-        .packages
+/// The `bin/` directories of `packages`, scanned from `root`, that renCal may
+/// register as providers. The registry takes whole directories, so one
+/// incompatible binary keeps the package's other providers out too.
+pub fn provider_dirs<'a>(
+    root: &Path,
+    packages: &'a [ScannedPackage],
+) -> Vec<(&'a ScannedPackage, PathBuf)> {
+    packages
         .iter()
         .filter(|package| {
             let mut shipped = package
@@ -654,8 +656,28 @@ pub fn provider_dirs(root: &Path) -> Vec<PathBuf> {
                 .peekable();
             shipped.peek().is_some() && shipped.all(|provider| provider.compatible)
         })
-        .map(|package| root.join(&package.id).join("bin"))
+        .map(|package| (package, root.join(&package.id).join("bin")))
         .collect()
+}
+
+/// A provider icon as a `data:` URL for an `<img>`, which keeps any script in
+/// the SVG inert. Local checkouts skip the installer, so its checks run again.
+pub fn provider_icon_data_url(path: &Path) -> Option<String> {
+    use base64::Engine;
+    use std::io::Read;
+
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)
+        .ok()?
+        .take(installer::ICON_FILE_LIMIT as u64 + 1)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    (bytes.len() <= installer::ICON_FILE_LIMIT && installer::is_svg(&bytes)).then(|| {
+        format!(
+            "data:image/svg+xml;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(bytes)
+        )
+    })
 }
 
 /// Release builds replace the repository's placeholder Cargo version. During
@@ -1033,7 +1055,7 @@ description = "Sync Tuta calendars"
 min_rencal_version = "0.8.0"
 
 [[contributes.providers]]
-id = "tuta"
+slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
 asset = "caldir-provider-tuta-{target}.tar.gz"
@@ -1092,7 +1114,7 @@ caldir_core = "0.16.0"
         );
         for (slug, caldir_core, shipped) in providers {
             manifest.push_str(&format!(
-                "[[contributes.providers]]\nid = \"{slug}\"\nname = \"{slug}\"\n\
+                "[[contributes.providers]]\nslug = \"{slug}\"\nname = \"{slug}\"\n\
                  asset = \"caldir-provider-{slug}-{{target}}.tar.gz\"\ncaldir_core = \"{caldir_core}\"\n"
             ));
             if *shipped {
@@ -1122,11 +1144,43 @@ caldir_core = "0.16.0"
         );
         write_provider_package(root, "erin.old", &[("old", "0.11.2", true)]);
 
+        let packages = scan_packages(root, None).packages;
+        let dirs: Vec<_> = provider_dirs(root, &packages)
+            .into_iter()
+            .map(|(package, dir)| (package.id.as_str(), dir))
+            .collect();
         assert_eq!(
-            provider_dirs(root),
-            [root.join("alice.tuta/bin"), root.join("dave.partial/bin")]
+            dirs,
+            [
+                ("alice.tuta", root.join("alice.tuta/bin")),
+                ("dave.partial", root.join("dave.partial/bin"))
+            ]
         );
-        assert!(provider_dirs(&root.join("missing")).is_empty());
+    }
+
+    #[test]
+    fn provider_icons_become_svg_data_urls() {
+        let temp = tempfile::tempdir().unwrap();
+        let icon = temp.path().join("tuta.svg");
+        let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#;
+
+        std::fs::write(&icon, svg).unwrap();
+        assert_eq!(
+            provider_icon_data_url(&icon).unwrap(),
+            "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4="
+        );
+
+        for contents in [
+            "<html></html>".to_owned(),
+            format!("{svg}{}", " ".repeat(64 * 1024)),
+        ] {
+            std::fs::write(&icon, contents).unwrap();
+            assert_eq!(provider_icon_data_url(&icon), None);
+        }
+        assert_eq!(
+            provider_icon_data_url(&temp.path().join("missing.svg")),
+            None
+        );
     }
 
     #[cfg(unix)]

@@ -1,21 +1,9 @@
 use crate::routes::TauResult;
-use crate::state::AppState;
+use crate::state::{AppState, ProviderInfo};
 
 /// The one deliberate `PATH` rescan: a provider installed while the app runs
 /// shows up the moment Settings › Accounts opens. Every other handler reads
 /// the registry as of startup or the last plugin reconcile.
-pub(super) fn handler(state: &AppState) -> TauResult<Vec<String>> {
-    state.rescan_providers();
-
-    let mut names: Vec<String> = state
-        .caldir()
-        .providers()
-        .slugs()
-        .into_iter()
-        .map(|s| s.to_string())
-        .collect();
-
-    names.sort();
-
-    Ok(names)
+pub(super) fn handler(state: &AppState) -> TauResult<Vec<ProviderInfo>> {
+    Ok(state.rescan_providers())
 }

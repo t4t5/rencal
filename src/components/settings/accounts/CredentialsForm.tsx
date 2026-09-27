@@ -6,15 +6,16 @@ import { PasswordInput } from "@/components/ui/password-input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { getErrorMessage } from "@/lib/api"
-import { getProviderDisplayName } from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"
 
 export const CredentialsForm = ({
   step,
+  providerName,
   onClose,
 }: {
   step: Extract<ModalStep, { kind: "credentials" }>
+  providerName: string
   onClose: () => void
 }) => {
   const [error, setError] = useState<string | null>(null)
@@ -76,7 +77,7 @@ export const CredentialsForm = ({
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isConnecting} className="mt-3">
-          {isConnecting ? "Connecting..." : `Connect ${getProviderDisplayName(step.provider)}`}
+          {isConnecting ? "Connecting..." : `Connect ${providerName}`}
         </Button>
       </div>
     </form>

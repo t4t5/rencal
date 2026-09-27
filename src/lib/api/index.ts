@@ -44,7 +44,7 @@ export type {
   PluginInstallLink,
   PluginThemeInspection,
 } from "@/lib/api/plugins"
-export type { CredentialFieldInput, ProviderField } from "@/lib/api/providers"
+export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/api/providers"
 export type { CaldirSettings } from "@/lib/api/settings"
 export type { SyncPreview } from "@/lib/api/sync"
 export type {

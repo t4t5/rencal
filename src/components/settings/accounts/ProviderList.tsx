@@ -1,17 +1,19 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react"
+import { Dispatch, SetStateAction, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage, api } from "@/lib/api"
+import { useProviders } from "@/hooks/useProviders"
+import { getErrorMessage } from "@/lib/api"
 import {
+  findProvider,
   getProviderDisplayName,
-  getProviderIcon,
   orderAccountProviders,
   providerRequiresAccount,
 } from "@/lib/providers"
 
 import { ModalStep } from "./AddAccountModal"
+import { ProviderIcon } from "./ProviderIcon"
 import { beginProviderConnection } from "./provider-connection"
 
 export const ProviderList = ({
@@ -22,34 +24,12 @@ export const ProviderList = ({
   onSetStep: Dispatch<SetStateAction<ModalStep>>
 }) => {
   const { connect, isConnecting } = useConnectProvider()
-
-  const [providers, setProviders] = useState<string[]>([])
+  const { providers, error: loadError } = useProviders()
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    let latest = 0
-    function load() {
-      const request = ++latest
-      api.providers
-        .list()
-        .then((all) => {
-          if (request !== latest) return
-          setProviders(orderAccountProviders(all.filter(providerRequiresAccount)))
-        })
-        .catch((error: unknown) => {
-          if (request !== latest) return
-          setError(getErrorMessage(error, "Failed to load providers"))
-        })
-    }
-
-    load()
-    // Installing or uninstalling a provider plugin changes the list.
-    const subscription = api.notifications.listen("providers-changed", load)
-    return () => {
-      latest++
-      subscription.unlisten()
-    }
-  }, [])
+  const slugs = orderAccountProviders(
+    providers.map((provider) => provider.slug).filter(providerRequiresAccount),
+  )
 
   async function handleProviderClick(name: string) {
     setError(null)
@@ -67,10 +47,10 @@ export const ProviderList = ({
 
   return (
     <div className="flex flex-col gap-3 w-60">
-      {providers.map((name) => {
+      {slugs.map((name) => {
         const isCaldav = name === "caldav"
-        const Icon = getProviderIcon(name)
-        const displayName = isCaldav ? "Other CalDAV server" : getProviderDisplayName(name)
+        const info = findProvider(providers, name)
+        const displayName = isCaldav ? "Other CalDAV server" : getProviderDisplayName(name, info)
 
         return (
           <Button
@@ -80,14 +60,14 @@ export const ProviderList = ({
             disabled={isConnecting}
             onClick={() => handleProviderClick(name)}
           >
-            {!isCaldav && Icon && <Icon className="size-4" />}
+            {!isCaldav && <ProviderIcon slug={name} info={info} className="size-4" />}
             {displayName}
           </Button>
         )
       })}
-      {error && (
+      {(error ?? loadError) && (
         <p role="alert" className="text-sm text-destructive">
-          {error}
+          {error ?? loadError}
         </p>
       )}
     </div>

@@ -3,8 +3,9 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { DialogDescription, DialogHeader, DialogTitle, Modal } from "@/components/ui/dialog"
 
+import { useProviders } from "@/hooks/useProviders"
 import type { ProviderField } from "@/lib/api"
-import { getProviderDisplayName } from "@/lib/providers"
+import { findProvider, getProviderDisplayName } from "@/lib/providers"
 
 import { CredentialsForm } from "./CredentialsForm"
 import { LocalCalendarForm } from "./LocalCalendarForm"
@@ -26,6 +27,9 @@ export function AddAccountModal({
   initialStep?: ModalStep
 }) {
   const [step, setStep] = useState<ModalStep>(initialStep ?? { kind: "select-provider" })
+  const { providers } = useProviders()
+  const providerName = (provider: string) =>
+    getProviderDisplayName(provider, findProvider(providers, provider))
 
   return (
     <Modal onClose={onClose}>
@@ -52,7 +56,7 @@ export function AddAccountModal({
       {step.kind === "setup" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+            <DialogTitle>Connect {providerName(step.provider)}</DialogTitle>
             <DialogDescription>{step.instructions}</DialogDescription>
           </DialogHeader>
 
@@ -70,10 +74,14 @@ export function AddAccountModal({
       {step.kind === "credentials" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect {getProviderDisplayName(step.provider)}</DialogTitle>
+            <DialogTitle>Connect {providerName(step.provider)}</DialogTitle>
           </DialogHeader>
 
-          <CredentialsForm step={step} onClose={onClose} />
+          <CredentialsForm
+            step={step}
+            providerName={providerName(step.provider)}
+            onClose={onClose}
+          />
         </>
       )}
 

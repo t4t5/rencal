@@ -99,6 +99,29 @@ export type ProviderField = { id: string; label: string; field_type: ProviderFie
 
 export type ProviderFieldType = "text" | "password" | "url"
 
+/**
+ * A provider renCal can run, and what to show for it.
+ */
+export type ProviderInfo = { slug: string; 
+/**
+ * From the manifest of a plugin contributing `slug`.
+ */
+name: string | null; 
+/**
+ * That plugin's icon as a `data:image/svg+xml;base64,...` URL.
+ */
+icon: string | null; 
+/**
+ * Where the binary renCal runs comes from.
+ */
+source: ProviderSource; 
+/**
+ * A `PATH` binary with this slug exists, so the caldir CLI can sync it too.
+ */
+on_path: boolean }
+
+export type ProviderSource = { kind: "bundled" } | { kind: "plugin"; id: string } | { kind: "path" }
+
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
 
 export type RpcError = { kind: RpcErrorKind; message: string }
@@ -187,7 +210,7 @@ list_calendars: () => Promise<Calendar[]>,
 list_contacts: () => Promise<Contact[]>, 
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
-list_providers: () => Promise<string[]>, 
+list_providers: () => Promise<ProviderInfo[]>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
 rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 

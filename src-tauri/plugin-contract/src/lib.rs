@@ -20,7 +20,7 @@ pub const MAX_FONT_FACES: usize = 8;
 pub const MIN_PROVIDER_CALDIR_CORE: Version = Version::new(0, 14, 0);
 /// Placeholder in a provider asset name, filled with the host target triple.
 pub const PROVIDER_ASSET_TARGET: &str = "{target}";
-const RESERVED_PROVIDER_IDS: [&str; 5] = ["google", "icloud", "outlook", "caldav", "webcal"];
+const RESERVED_PROVIDER_SLUGS: [&str; 5] = ["google", "icloud", "outlook", "caldav", "webcal"];
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
@@ -62,9 +62,9 @@ pub struct FontContribution {
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct ProviderContribution {
-    /// The caldir provider slug (`caldir-provider-<id>`). Accounts and provider
-    /// storage key on it, so unlike theme ids it is not namespaced.
-    pub id: String,
+    /// The caldir provider slug (`caldir-provider-<slug>`). Accounts and
+    /// provider storage key on it, so it is not namespaced like theme ids.
+    pub slug: String,
     pub name: String,
     #[serde(default)]
     pub icon: Option<String>,
@@ -178,18 +178,18 @@ pub fn validate_manifest(
         validate_css_path(&theme.css)?;
     }
 
-    let mut provider_ids = HashSet::new();
+    let mut provider_slugs = HashSet::new();
     for provider in &mut manifest.contributes.providers {
-        validate_provider_id(&provider.id)?;
-        if !provider_ids.insert(&provider.id) {
+        validate_provider_slug(&provider.slug)?;
+        if !provider_slugs.insert(&provider.slug) {
             return Err(PluginError::new(format!(
-                "duplicate provider contribution id {:?}",
-                provider.id
+                "duplicate provider contribution slug {:?}",
+                provider.slug
             )));
         }
         provider.name = validate_display_text(
             &provider.name,
-            &format!("provider {:?} name", provider.id),
+            &format!("provider {:?} name", provider.slug),
             MAX_NAME_LENGTH,
         )?;
         if let Some(icon) = &provider.icon {
@@ -199,7 +199,7 @@ pub fn validate_manifest(
         Version::parse(&provider.caldir_core).map_err(|error| {
             PluginError::new(format!(
                 "provider {:?} caldir_core {:?} is not semantic: {error}",
-                provider.id, provider.caldir_core
+                provider.slug, provider.caldir_core
             ))
         })?;
     }
@@ -368,15 +368,15 @@ fn validate_contribution_id(id: &str) -> Result<(), PluginError> {
 }
 
 #[doc(hidden)]
-pub fn validate_provider_id(id: &str) -> Result<(), PluginError> {
-    if !valid_slug(id) {
+pub fn validate_provider_slug(slug: &str) -> Result<(), PluginError> {
+    if !valid_slug(slug) {
         return Err(PluginError::new(format!(
-            "provider contribution id {id:?} must use lowercase a-z, 0-9, and hyphens"
+            "provider slug {slug:?} must use lowercase a-z, 0-9, and hyphens"
         )));
     }
-    if RESERVED_PROVIDER_IDS.contains(&id) {
+    if RESERVED_PROVIDER_SLUGS.contains(&slug) {
         return Err(PluginError::new(format!(
-            "provider contribution id {id:?} is reserved for a built-in provider"
+            "provider slug {slug:?} is reserved for a built-in provider"
         )));
     }
     Ok(())
@@ -683,7 +683,7 @@ style = "oblique"
 
     const PROVIDER: &str = r#"
 [[contributes.providers]]
-id = "tuta"
+slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
 asset = "caldir-provider-tuta-{target}.tar.gz"
@@ -703,7 +703,7 @@ caldir_core = "0.16.0"
 
     fn provider_built_with(caldir_core: &str) -> ProviderContribution {
         ProviderContribution {
-            id: "tuta".into(),
+            slug: "tuta".into(),
             name: "Tuta".into(),
             icon: None,
             asset: "caldir-provider-tuta-{target}.tar.gz".into(),
@@ -751,22 +751,22 @@ caldir_core = "0.16.0"
     }
 
     #[test]
-    fn validates_provider_ids_as_unreserved_caldir_slugs() {
-        for id in RESERVED_PROVIDER_IDS {
-            let error = provider_error("id = \"tuta\"", &format!("id = \"{id}\""));
+    fn validates_provider_slugs_as_unreserved_caldir_slugs() {
+        for slug in RESERVED_PROVIDER_SLUGS {
+            let error = provider_error("slug = \"tuta\"", &format!("slug = \"{slug}\""));
             assert!(
                 error.contains("is reserved for a built-in provider"),
                 "{error}"
             );
         }
-        for id in ["", "Tuta", "tu_ta", "t4t5.tuta"] {
-            let error = provider_error("id = \"tuta\"", &format!("id = \"{id}\""));
+        for slug in ["", "Tuta", "tu_ta", "t4t5.tuta"] {
+            let error = provider_error("slug = \"tuta\"", &format!("slug = \"{slug}\""));
             assert!(
                 error.contains("must use lowercase a-z, 0-9, and hyphens"),
                 "{error}"
             );
         }
-        let community = PROVIDER.replacen("id = \"tuta\"", "id = \"tuta-community\"", 1);
+        let community = PROVIDER.replacen("slug = \"tuta\"", "slug = \"tuta-community\"", 1);
         assert!(validate_manifest(&provider_only(&community), None).is_ok());
 
         let duplicate = provider_only(&format!(
@@ -774,7 +774,7 @@ caldir_core = "0.16.0"
             PROVIDER.replacen("name = \"Tuta\"", "name = \"Tuta Mirror\"", 1)
         ));
         let error = validate_manifest(&duplicate, None).unwrap_err().to_string();
-        assert_eq!(error, "duplicate provider contribution id \"tuta\"");
+        assert_eq!(error, "duplicate provider contribution slug \"tuta\"");
     }
 
     #[test]

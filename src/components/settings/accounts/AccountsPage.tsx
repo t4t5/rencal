@@ -14,19 +14,22 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { useCalendars } from "@/contexts/CalendarStateContext"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage, api } from "@/lib/api"
-import { getProviderDisplayName, getProviderIcon } from "@/lib/providers"
+import { useProviders } from "@/hooks/useProviders"
+import { getErrorMessage, api, type ProviderInfo } from "@/lib/api"
+import { findProvider, getProviderDisplayName, syncsOnlyInRencal } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
 import { CalendarIcon } from "@/icons/calendar"
 import { PlusIcon } from "@/icons/plus"
 
 import { AddAccountModal, type ModalStep } from "./AddAccountModal"
+import { ProviderIcon } from "./ProviderIcon"
 import { beginProviderConnection } from "./provider-connection"
 
 export function AccountsPage() {
   const { calendars } = useCalendars()
   const { connect } = useConnectProvider()
+  const { providers } = useProviders()
   const [showAddAccount, setShowAddAccount] = useState(false)
   const [reconnectStep, setReconnectStep] = useState<ModalStep | null>(null)
   const [reconnectError, setReconnectError] = useState<string | null>(null)
@@ -63,6 +66,7 @@ export function AccountsPage() {
               key={account}
               account={account}
               provider={provider}
+              info={findProvider(providers, provider)}
               onReconnect={() => reconnect(provider)}
             />
           ))}
@@ -110,10 +114,12 @@ const statusLabels: Record<AccountStatus, string> = {
 function Account({
   account,
   provider,
+  info,
   onReconnect,
 }: {
   account: string
   provider: string | null
+  info: ProviderInfo | undefined
   onReconnect: () => void
 }) {
   const [status, setStatus] = useState<AccountStatus>(provider == null ? "disconnected" : "pending")
@@ -143,8 +149,7 @@ function Account({
     }
   }, [account, provider])
 
-  const ProviderIcon = getProviderIcon(provider) ?? CalendarIcon
-  const displayName = getProviderDisplayName(provider)
+  const displayName = getProviderDisplayName(provider, info)
 
   const statusLabel = statusLabels[status]
   const statusColor = statusColors[status]
@@ -152,7 +157,7 @@ function Account({
   return (
     <div className="flex items-center gap-3">
       <div className="size-11 rounded-lg bg-secondary flex items-center justify-center shrink-0">
-        {ProviderIcon && <ProviderIcon className="size-6" />}
+        <ProviderIcon slug={provider} info={info} fallback={CalendarIcon} className="size-6" />
       </div>
 
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
@@ -177,6 +182,13 @@ function Account({
 
           <span className="text-xs text-muted-foreground truncate">{account}</span>
         </div>
+
+        {syncsOnlyInRencal(info) && (
+          <p className="text-xs text-muted-foreground">
+            Syncs only in renCal. Install <code>caldir-provider-{provider}</code> on your PATH to
+            sync with the caldir CLI.
+          </p>
+        )}
       </div>
 
       <MoreMenu onReconnect={onReconnect} />

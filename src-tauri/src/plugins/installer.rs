@@ -37,7 +37,7 @@ const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
-const ICON_FILE_LIMIT: usize = 64 * 1024;
+pub(super) const ICON_FILE_LIMIT: usize = 64 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
 /// Release archives are not part of `PACKAGE_LIMIT`; Tuta's are about 4 MB.
 const PROVIDER_ARCHIVE_LIMIT: usize = 64 * 1024 * 1024;
@@ -1190,14 +1190,14 @@ impl PluginManager {
                 let asset = entry
                     .providers
                     .iter()
-                    .find(|locked| locked.slug == contribution.id)
+                    .find(|locked| locked.slug == contribution.slug)
                     .cloned();
                 if let Some(asset) = &asset
                     && asset.asset != contribution.asset_for(&asset.target)
                 {
                     return Err(PluginInstallError::invalid_package(format!(
                         "locked asset {:?} does not match provider {:?}",
-                        asset.asset, contribution.id
+                        asset.asset, contribution.slug
                     )));
                 }
                 Ok(ResolvedProvider {
@@ -1373,13 +1373,13 @@ impl PluginManager {
                     && package
                         .providers
                         .iter()
-                        .any(|installed| installed.slug == provider.id)
+                        .any(|installed| installed.slug == provider.slug)
             }) {
                 return Err(PluginInstallError::new(
                     PluginInstallErrorKind::InvalidInput,
                     format!(
                         "the {:?} provider is already installed by {} ({}); uninstall it first",
-                        provider.id, other.name, other.id
+                        provider.slug, other.name, other.id
                     ),
                 ));
             }
@@ -1986,7 +1986,7 @@ fn release_asset(
             ))
         })?;
     Ok(Some(LockedProviderAsset {
-        slug: provider.id.clone(),
+        slug: provider.slug.clone(),
         target: target.to_owned(),
         asset: asset.name.clone(),
         sha256,
@@ -2091,7 +2091,7 @@ fn write_provider_binary(
 }
 
 /// Well-formed XML whose root element is `svg`.
-fn is_svg(bytes: &[u8]) -> bool {
+pub(super) fn is_svg(bytes: &[u8]) -> bool {
     use quick_xml::events::Event;
 
     let mut reader = quick_xml::Reader::from_reader(bytes);
@@ -3310,7 +3310,7 @@ description = "Sync Tuta calendars"
 min_rencal_version = "0.8.0"
 
 [[contributes.providers]]
-id = "tuta"
+slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
 asset = "caldir-provider-tuta-{target}.tar.gz"
