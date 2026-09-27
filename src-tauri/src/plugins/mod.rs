@@ -9,9 +9,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
-    Appearance, Contributions, FontContribution, FontStyle, MANIFEST_FILE, PluginError,
-    PluginManifest, ThemeContribution, validate_manifest, validate_manifest_owner,
-    validate_package_id, validate_release_tag,
+    Appearance, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
+    MIN_PROVIDER_CALDIR_CORE, PluginError, PluginManifest, ProviderContribution, ThemeContribution,
+    provider_is_compatible, validate_manifest, validate_manifest_owner, validate_package_id,
+    validate_release_tag,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -85,6 +86,21 @@ pub struct PluginLockEntry {
     pub repo: String,
     pub version: String,
     pub commit: String,
+    /// The release the package came from; `None` for a default-branch head.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tag: Option<String>,
+    /// Provider binaries installed from `tag`'s release assets.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub providers: Vec<LockedProviderAsset>,
+}
+
+/// Pins a provider binary the way `commit` pins package files.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct LockedProviderAsset {
+    pub slug: String,
+    pub target: String,
+    pub asset: String,
+    pub sha256: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -285,6 +301,30 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
                 entry.commit
             )));
         }
+        if let Some(tag) = &entry.tag
+            && tag.strip_prefix('v').unwrap_or(tag) != entry.version
+        {
+            return Err(PluginError::new(format!(
+                "plugin tag {tag:?} does not match locked version {:?}",
+                entry.version
+            )));
+        }
+        if !entry.providers.is_empty() && entry.tag.is_none() {
+            return Err(PluginError::new(format!(
+                "plugin {:?} locks provider binaries without a release tag",
+                entry.id
+            )));
+        }
+        let mut slugs = HashSet::new();
+        for provider in &entry.providers {
+            validate_locked_provider(provider)?;
+            if !slugs.insert(provider.slug.as_str()) {
+                return Err(PluginError::new(format!(
+                    "duplicate locked provider {:?}",
+                    provider.slug
+                )));
+            }
+        }
         if !ids.insert(entry.id.to_ascii_lowercase()) {
             return Err(PluginError::new(format!(
                 "duplicate locked plugin id {:?}",
@@ -315,6 +355,40 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
         }
     }
     Ok(())
+}
+
+fn validate_locked_provider(provider: &LockedProviderAsset) -> Result<(), PluginError> {
+    rencal_plugin_contract::validate_provider_id(&provider.slug)?;
+    let valid_target = !provider.target.is_empty()
+        && provider.target.bytes().all(|byte| {
+            byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_' || byte == b'-'
+        });
+    if !valid_target {
+        return Err(PluginError::new(format!(
+            "locked provider target {:?} is not a target triple",
+            provider.target
+        )));
+    }
+    if !provider.asset.ends_with(".tar.gz") || provider.asset.contains(['/', '\\']) {
+        return Err(PluginError::new(format!(
+            "locked provider asset {:?} must be a .tar.gz file name",
+            provider.asset
+        )));
+    }
+    if !is_sha256_hex(&provider.sha256) {
+        return Err(PluginError::new(format!(
+            "locked provider digest {:?} must be a lowercase sha256",
+            provider.sha256
+        )));
+    }
+    Ok(())
+}
+
+pub(crate) fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn update_plugins_document(document: &mut Document, file: &PluginsFile) {
@@ -428,11 +502,25 @@ pub struct ScannedTheme {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ScannedProvider {
+    pub slug: String,
+    pub name: String,
+    pub icon: Option<PathBuf>,
+    /// `bin/caldir-provider-<slug>` when the package ships one. Local
+    /// checkouts may leave it out and use the binary on `PATH`.
+    pub binary: Option<PathBuf>,
+    /// False once renCal no longer speaks the provider's wire format; the
+    /// binary must not be run.
+    pub compatible: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ScannedPackage {
     pub id: String,
     pub name: String,
     pub version: String,
     pub themes: Vec<ScannedTheme>,
+    pub providers: Vec<ScannedProvider>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -522,12 +610,33 @@ fn scan_package(
         });
     }
 
+    let providers = manifest
+        .contributes
+        .providers
+        .iter()
+        .map(|provider| {
+            let binary = provider_binary_path(directory, &provider.id);
+            ScannedProvider {
+                slug: provider.id.clone(),
+                name: provider.name.clone(),
+                icon: provider.icon.as_ref().map(|icon| directory.join(icon)),
+                binary: binary.is_file().then_some(binary),
+                compatible: provider_is_compatible(provider),
+            }
+        })
+        .collect();
+
     Ok(ScannedPackage {
         id: manifest.id,
         name: manifest.name,
         version: manifest.version,
         themes,
+        providers,
     })
+}
+
+pub(crate) fn provider_binary_path(package: &Path, slug: &str) -> PathBuf {
+    package.join("bin").join(format!("caldir-provider-{slug}"))
 }
 
 /// Release builds replace the repository's placeholder Cargo version. During
@@ -780,6 +889,13 @@ machine = 'laptop' # Future top-level metadata
                 repo: "Alice/rencal-dusk".into(),
                 version: "1.2.3".into(),
                 commit: "1111111111111111111111111111111111111111".into(),
+                tag: Some("v1.2.3".into()),
+                providers: vec![LockedProviderAsset {
+                    slug: "tuta".into(),
+                    target: "x86_64-unknown-linux-gnu".into(),
+                    asset: "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz".into(),
+                    sha256: "a".repeat(64),
+                }],
             }],
             local: vec![LocalLockEntry {
                 id: "alice.dusk".into(),
@@ -795,6 +911,46 @@ machine = 'laptop' # Future top-level metadata
         let mut duplicate = expected.clone();
         duplicate.local.push(expected.local[0].clone());
         assert!(save_plugin_lock_file(&path, &duplicate).is_err());
+
+        let invalid_providers: [fn(&mut PluginLockEntry); 6] = [
+            |entry| entry.tag = None,
+            |entry| entry.tag = Some("v1.2.4".into()),
+            |entry| entry.providers[0].sha256 = "A".repeat(64),
+            |entry| entry.providers[0].asset = "../caldir-provider-tuta.tar.gz".into(),
+            |entry| entry.providers[0].target = "x86_64/../linux".into(),
+            |entry| entry.providers.push(entry.providers[0].clone()),
+        ];
+        for invalidate in invalid_providers {
+            let mut invalid = expected.clone();
+            invalidate(&mut invalid.plugins[0]);
+            assert!(
+                save_plugin_lock_file(&path, &invalid).is_err(),
+                "{invalid:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn plugin_lock_file_reads_entries_written_before_provider_support() {
+        let temp = tempfile::tempdir().unwrap();
+        let path = temp.path().join("plugins.lock");
+        let contents = r#"[[plugins]]
+id = "alice.dusk"
+repo = "Alice/rencal-dusk"
+version = "1.2.3"
+commit = "1111111111111111111111111111111111111111"
+"#;
+        std::fs::write(&path, contents).unwrap();
+
+        let locks = load_plugin_lock_file(&path).unwrap();
+        assert_eq!(locks.plugins[0].tag, None);
+        assert!(locks.plugins[0].providers.is_empty());
+        save_plugin_lock_file(&path, &locks).unwrap();
+        let saved = std::fs::read_to_string(&path).unwrap();
+        assert!(
+            !saved.contains("tag") && !saved.contains("providers"),
+            "{saved}"
+        );
     }
 
     #[test]
@@ -848,6 +1004,64 @@ machine = 'laptop' # Future top-level metadata
         assert_eq!(scan.packages[0].themes[0].appearance, Appearance::Dark);
         assert_eq!(scan.errors.len(), 1);
         assert_eq!(scan.errors[0].package, "bob.broken");
+    }
+
+    const PROVIDER_MANIFEST: &str = r#"
+id = "alice.tuta"
+name = "Tuta"
+version = "1.0.0"
+description = "Sync Tuta calendars"
+min_rencal_version = "0.8.0"
+
+[[contributes.providers]]
+id = "tuta"
+name = "Tuta"
+icon = "icons/tuta.svg"
+asset = "caldir-provider-tuta-{target}.tar.gz"
+caldir_core = "0.16.0"
+"#;
+
+    #[test]
+    fn scan_reports_provider_binaries_without_requiring_them() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.tuta");
+        std::fs::create_dir_all(&package).unwrap();
+        std::fs::write(package.join(MANIFEST_FILE), PROVIDER_MANIFEST).unwrap();
+
+        // A local checkout without bin/ contributes the name and icon only.
+        let scan = scan_packages(temp.path(), None);
+        assert!(scan.errors.is_empty(), "{:?}", scan.errors);
+        let provider = &scan.packages[0].providers[0];
+        assert_eq!(provider.slug, "tuta");
+        assert_eq!(provider.name, "Tuta");
+        assert_eq!(provider.icon, Some(package.join("icons/tuta.svg")));
+        assert_eq!(provider.binary, None);
+        assert!(provider.compatible);
+
+        let binary = package.join("bin/caldir-provider-tuta");
+        std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
+        std::fs::write(&binary, "#!/bin/sh\n").unwrap();
+        let scan = scan_packages(temp.path(), None);
+        assert_eq!(scan.packages[0].providers[0].binary, Some(binary));
+    }
+
+    #[test]
+    fn scan_flags_providers_built_for_an_older_caldir() {
+        let temp = tempfile::tempdir().unwrap();
+        let package = temp.path().join("alice.tuta");
+        std::fs::create_dir_all(package.join("bin")).unwrap();
+        std::fs::write(
+            package.join(MANIFEST_FILE),
+            PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1),
+        )
+        .unwrap();
+        std::fs::write(package.join("bin/caldir-provider-tuta"), "").unwrap();
+
+        let scan = scan_packages(temp.path(), None);
+        assert!(scan.errors.is_empty(), "{:?}", scan.errors);
+        let provider = &scan.packages[0].providers[0];
+        assert!(!provider.compatible);
+        assert!(provider.binary.is_some());
     }
 
     #[cfg(unix)]

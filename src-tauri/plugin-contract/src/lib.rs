@@ -74,6 +74,13 @@ pub struct ProviderContribution {
     pub caldir_core: String,
 }
 
+impl ProviderContribution {
+    /// The release asset name for one target triple.
+    pub fn asset_for(&self, target: &str) -> String {
+        self.asset.replacen(PROVIDER_ASSET_TARGET, target, 1)
+    }
+}
+
 /// Whether renCal can talk to a provider built with this caldir-core.
 pub fn provider_is_compatible(provider: &ProviderContribution) -> bool {
     Version::parse(&provider.caldir_core).is_ok_and(|version| version >= MIN_PROVIDER_CALDIR_CORE)
@@ -360,7 +367,8 @@ fn validate_contribution_id(id: &str) -> Result<(), PluginError> {
     Ok(())
 }
 
-fn validate_provider_id(id: &str) -> Result<(), PluginError> {
+#[doc(hidden)]
+pub fn validate_provider_id(id: &str) -> Result<(), PluginError> {
     if !valid_slug(id) {
         return Err(PluginError::new(format!(
             "provider contribution id {id:?} must use lowercase a-z, 0-9, and hyphens"
@@ -713,6 +721,10 @@ caldir_core = "0.16.0"
                 icon: Some("icons/tuta.svg".into()),
                 ..provider_built_with("0.16.0")
             }]
+        );
+        assert_eq!(
+            manifest.contributes.providers[0].asset_for("x86_64-unknown-linux-gnu"),
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz"
         );
 
         let mixed = validate_manifest(&format!("{MANIFEST}{PROVIDER}"), None).unwrap();

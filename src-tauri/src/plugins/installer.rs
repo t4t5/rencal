@@ -1,38 +1,63 @@
-//! GitHub-backed installation for data-only theme packages.
+//! GitHub-backed installation for theme and provider packages.
 //!
+//! Package files come from a pinned commit; provider binaries come from the
+//! matching release's assets and are verified against their sha256 digest.
 //! Downloads are bounded and written to a staging directory. Package swaps,
 //! declarations, and lockfile updates are serialized so a failed install or
 //! update can put the previous state back before returning.
 
 use std::collections::HashSet;
 use std::future::Future;
-use std::path::{Path, PathBuf};
+use std::io::Read;
+use std::path::{Component, Path, PathBuf};
 use std::pin::Pin;
 use std::sync::Arc;
+use std::time::Duration;
 
 use futures_util::StreamExt;
 use reqwest::{StatusCode, Url};
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use sha2::{Digest, Sha256};
 use specta::Type;
 use tokio::sync::Mutex;
 
 #[cfg(unix)]
 use super::LocalLockEntry;
 use super::{
-    Appearance, FontStyle, MANIFEST_FILE, PluginDeclaration, PluginLockEntry, PluginLockFile,
-    PluginManifest, PluginsFile, load_plugin_lock_file, load_plugins_file, plugins_dir,
-    plugins_file_path, plugins_lock_path, running_app_version, save_plugin_lock_file,
-    save_plugins_file, scan_packages, validate_manifest, validate_manifest_owner,
-    validate_package_id, validate_release_tag,
+    Appearance, FontStyle, LockedProviderAsset, MANIFEST_FILE, MIN_PROVIDER_CALDIR_CORE,
+    PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile,
+    ProviderContribution, is_sha256_hex, load_plugin_lock_file, load_plugins_file, plugins_dir,
+    plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
+    running_app_version, save_plugin_lock_file, save_plugins_file, scan_packages,
+    validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
+const ICON_FILE_LIMIT: usize = 64 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
+/// Release archives are not part of `PACKAGE_LIMIT`; Tuta's are about 4 MB.
+const PROVIDER_ARCHIVE_LIMIT: usize = 64 * 1024 * 1024;
+const PROVIDER_BINARY_LIMIT: u64 = 256 * 1024 * 1024;
+const REQUEST_TIMEOUT: Duration = Duration::from_secs(30);
 const CATALOG_URL: &str = "https://rencal.org/plugins.json";
+
+/// Release targets this host can run, most preferred first. Static musl builds
+/// come before gnu ones because they do not depend on the system glibc.
+const HOST_TARGETS: &[&str] = if cfg!(all(target_os = "linux", target_arch = "x86_64")) {
+    &["x86_64-unknown-linux-musl", "x86_64-unknown-linux-gnu"]
+} else if cfg!(all(target_os = "linux", target_arch = "aarch64")) {
+    &["aarch64-unknown-linux-musl", "aarch64-unknown-linux-gnu"]
+} else if cfg!(all(target_os = "macos", target_arch = "aarch64")) {
+    &["aarch64-apple-darwin"]
+} else if cfg!(all(target_os = "macos", target_arch = "x86_64")) {
+    &["x86_64-apple-darwin"]
+} else {
+    &[]
+};
 
 #[derive(Clone, Debug, Serialize, Type)]
 pub struct InstalledPlugin {
@@ -173,13 +198,20 @@ pub struct PluginManager {
 
 struct PluginManagerInner {
     downloader: Arc<dyn Downloader>,
-    api_base: Url,
-    raw_base: Url,
+    urls: GithubUrls,
+    targets: &'static [&'static str],
     declarations_path: PathBuf,
     lock_path: PathBuf,
     packages_dir: PathBuf,
     mutations: Mutex<()>,
     catalog: Mutex<Vec<PluginCatalogEntry>>,
+}
+
+struct GithubUrls {
+    api: Url,
+    raw: Url,
+    /// Base for release asset downloads.
+    web: Url,
 }
 
 struct DownloadResponse {
@@ -213,6 +245,48 @@ struct ResolvedPackage {
     manifest: PluginManifest,
     manifest_text: Vec<u8>,
     commit: String,
+    tag: Option<String>,
+    providers: Vec<ResolvedProvider>,
+}
+
+struct ResolvedProvider {
+    contribution: ProviderContribution,
+    /// This host's release asset, or `None` when the release has none.
+    asset: Option<LockedProviderAsset>,
+}
+
+impl ResolvedProvider {
+    /// Incompatible providers are never downloaded: renCal could not run them.
+    fn installable(&self) -> Option<&LockedProviderAsset> {
+        self.asset
+            .as_ref()
+            .filter(|_| provider_is_compatible(&self.contribution))
+    }
+}
+
+impl ResolvedPackage {
+    fn lock_entry(&self, repository: &Repository) -> PluginLockEntry {
+        PluginLockEntry {
+            id: self.manifest.id.clone(),
+            repo: repository.display.clone(),
+            version: self.manifest.version.clone(),
+            commit: self.commit.clone(),
+            tag: self.tag.clone(),
+            providers: self
+                .providers
+                .iter()
+                .filter_map(ResolvedProvider::installable)
+                .cloned()
+                .collect(),
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+enum PackageFile {
+    Css,
+    Font,
+    Icon,
 }
 
 #[derive(Clone, Copy)]
@@ -224,6 +298,15 @@ enum DeclarationPolicy {
 #[derive(Deserialize)]
 struct GithubRelease {
     tag_name: String,
+    #[serde(default)]
+    assets: Vec<GithubAsset>,
+}
+
+#[derive(Deserialize)]
+struct GithubAsset {
+    name: String,
+    /// `sha256:<hex>`; missing on assets uploaded before GitHub added digests.
+    digest: Option<String>,
 }
 
 #[derive(Deserialize)]
@@ -235,6 +318,7 @@ enum MissingResponse {
     Release,
     Commit,
     PackageFile(String),
+    ReleaseAsset(String),
 }
 
 impl PluginManager {
@@ -248,28 +332,20 @@ impl PluginManager {
         let lock_path = plugins_lock_path().map_err(|error| {
             PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
         })?;
-        Self::new(
-            declarations_path,
-            lock_path,
-            packages_dir,
-            Url::parse("https://api.github.com/").expect("valid GitHub API URL"),
-            Url::parse("https://raw.githubusercontent.com/").expect("valid GitHub raw URL"),
-        )
+        Self::new(declarations_path, lock_path, packages_dir)
     }
 
     fn new(
         declarations_path: PathBuf,
         lock_path: PathBuf,
         packages_dir: PathBuf,
-        api_base: Url,
-        raw_base: Url,
     ) -> Result<Self, PluginInstallError> {
         // reqwest intentionally leaves provider choice to the application.
         // Installing ring is idempotent; another Tauri plugin may have done it.
         let _ = rustls::crypto::ring::default_provider().install_default();
         let client = reqwest::Client::builder()
             .user_agent(format!("renCal/{}", env!("CARGO_PKG_VERSION")))
-            .timeout(std::time::Duration::from_secs(30))
+            .timeout(REQUEST_TIMEOUT)
             .build()
             .map_err(|error| {
                 PluginInstallError::new(
@@ -277,12 +353,17 @@ impl PluginManager {
                     format!("could not create GitHub client: {error}"),
                 )
             })?;
+        let urls = GithubUrls {
+            api: Url::parse("https://api.github.com/").expect("valid GitHub API URL"),
+            raw: Url::parse("https://raw.githubusercontent.com/").expect("valid GitHub raw URL"),
+            web: Url::parse("https://github.com/").expect("valid GitHub URL"),
+        };
         Ok(Self::with_downloader(
             declarations_path,
             lock_path,
             packages_dir,
-            api_base,
-            raw_base,
+            urls,
+            HOST_TARGETS,
             Arc::new(ReqwestDownloader { client }),
         ))
     }
@@ -291,15 +372,15 @@ impl PluginManager {
         declarations_path: PathBuf,
         lock_path: PathBuf,
         packages_dir: PathBuf,
-        api_base: Url,
-        raw_base: Url,
+        urls: GithubUrls,
+        targets: &'static [&'static str],
         downloader: Arc<dyn Downloader>,
     ) -> Self {
         Self {
             inner: Arc::new(PluginManagerInner {
                 downloader,
-                api_base,
-                raw_base,
+                urls,
+                targets,
                 declarations_path,
                 lock_path,
                 packages_dir,
@@ -356,10 +437,20 @@ impl PluginManager {
             })
             .collect();
         for package in scan.packages {
+            let error = package
+                .providers
+                .iter()
+                .find(|provider| !provider.compatible)
+                .map(|provider| {
+                    format!(
+                        "{} was built for an older caldir and is disabled. Ask the plugin author to update it.",
+                        provider.name
+                    )
+                });
             if let Some(row) = plugins.iter_mut().find(|row| row.id == package.id) {
                 row.name = package.name;
                 row.version = Some(package.version);
-                row.error = None;
+                row.error = error;
             } else {
                 plugins.push(InstalledPlugin {
                     id: package.id,
@@ -368,7 +459,7 @@ impl PluginManager {
                     local_dir: None,
                     version: Some(package.version),
                     update_version: None,
-                    error: None,
+                    error,
                 });
             }
         }
@@ -539,6 +630,7 @@ impl PluginManager {
         let (declarations, locks) = self.load_state()?;
         let package = self.resolve_latest(&repository).await?;
         self.require_compatible(&package.inspection)?;
+        self.require_installable(&package)?;
         self.install_resolved(
             &repository,
             package,
@@ -966,8 +1058,8 @@ impl PluginManager {
         &self.inner.declarations_path
     }
 
-    /// Restore one declared repository. Locked commits are fetched exactly;
-    /// new declarations resolve the latest release.
+    /// Restore one declared repository. Locked commits and provider assets are
+    /// fetched exactly; new declarations resolve the latest release.
     async fn restore_entry(&self, repo: &str) -> Result<(), PluginInstallError> {
         let repository = Repository::parse(repo)?;
         let _guard = self.inner.mutations.lock().await;
@@ -988,10 +1080,7 @@ impl PluginManager {
             .find(|entry| entry.repo.eq_ignore_ascii_case(repo))
             .cloned();
         let package = match &locked {
-            Some(entry) => {
-                self.resolve_commit_ref(&repository, entry.commit.clone(), None)
-                    .await?
-            }
+            Some(entry) => self.resolve_locked(&repository, entry).await?,
             None => self.resolve_latest(&repository).await?,
         };
         if locked
@@ -1008,6 +1097,11 @@ impl PluginManager {
             )));
         }
         self.require_compatible(&package.inspection)?;
+        // Keep a locked package whose providers became unusable, as an update
+        // may fix them; a new declaration must be installable like `install`.
+        if locked.is_none() {
+            self.require_installable(&package)?;
+        }
         self.install_resolved(
             &repository,
             package,
@@ -1049,13 +1143,70 @@ impl PluginManager {
             let commit = self
                 .resolve_commit(repository, Some(&release.tag_name))
                 .await?;
-            return self
+            let mut package = self
                 .resolve_commit_ref(repository, commit, Some(&release.tag_name))
-                .await;
+                .await?;
+            package.providers = package
+                .manifest
+                .contributes
+                .providers
+                .iter()
+                .map(|contribution| {
+                    Ok(ResolvedProvider {
+                        contribution: contribution.clone(),
+                        asset: release_asset(&release, contribution, self.inner.targets)?,
+                    })
+                })
+                .collect::<Result<_, PluginInstallError>>()?;
+            return Ok(package);
         }
 
         let commit = self.resolve_commit(repository, None).await?;
-        self.resolve_commit_ref(repository, commit, None).await
+        let package = self.resolve_commit_ref(repository, commit, None).await?;
+        if !package.manifest.contributes.providers.is_empty() {
+            return Err(PluginInstallError::new(
+                PluginInstallErrorKind::MissingRelease,
+                "provider plugins must be installed from a release",
+            ));
+        }
+        Ok(package)
+    }
+
+    async fn resolve_locked(
+        &self,
+        repository: &Repository,
+        entry: &PluginLockEntry,
+    ) -> Result<ResolvedPackage, PluginInstallError> {
+        let mut package = self
+            .resolve_commit_ref(repository, entry.commit.clone(), entry.tag.as_deref())
+            .await?;
+        // Providers missing from the lock had no usable asset at install time.
+        package.providers = package
+            .manifest
+            .contributes
+            .providers
+            .iter()
+            .map(|contribution| {
+                let asset = entry
+                    .providers
+                    .iter()
+                    .find(|locked| locked.slug == contribution.id)
+                    .cloned();
+                if let Some(asset) = &asset
+                    && asset.asset != contribution.asset_for(&asset.target)
+                {
+                    return Err(PluginInstallError::invalid_package(format!(
+                        "locked asset {:?} does not match provider {:?}",
+                        asset.asset, contribution.id
+                    )));
+                }
+                Ok(ResolvedProvider {
+                    contribution: contribution.clone(),
+                    asset,
+                })
+            })
+            .collect::<Result<_, PluginInstallError>>()?;
+        Ok(package)
     }
 
     async fn resolve_commit(
@@ -1156,6 +1307,8 @@ impl PluginManager {
             manifest,
             manifest_text,
             commit,
+            tag: release_tag.map(str::to_owned),
+            providers: Vec::new(),
         })
     }
 
@@ -1172,6 +1325,68 @@ impl PluginManager {
         ))
     }
 
+    /// Providers without a compatible asset for this host are skipped, which
+    /// can leave nothing to install.
+    fn require_installable(&self, package: &ResolvedPackage) -> Result<(), PluginInstallError> {
+        if !package.manifest.contributes.themes.is_empty()
+            || package
+                .providers
+                .iter()
+                .any(|provider| provider.installable().is_some())
+        {
+            return Ok(());
+        }
+        let provider = &package
+            .providers
+            .first()
+            .expect("validated manifests contribute a theme or provider")
+            .contribution;
+        let message = if !provider_is_compatible(provider) {
+            format!(
+                "{} was built with caldir-core {}, but renCal needs {MIN_PROVIDER_CALDIR_CORE} or newer. Ask the plugin author to update it.",
+                provider.name, provider.caldir_core
+            )
+        } else if self.inner.targets.is_empty() {
+            "provider plugins are not supported on this platform".into()
+        } else {
+            format!(
+                "{} has no release asset for this platform ({})",
+                provider.name,
+                self.inner.targets.join(", ")
+            )
+        };
+        Err(PluginInstallError::new(
+            PluginInstallErrorKind::Incompatible,
+            message,
+        ))
+    }
+
+    /// Accounts and provider storage key on the slug, so it has one owner.
+    fn require_unique_providers(
+        &self,
+        manifest: &PluginManifest,
+    ) -> Result<(), PluginInstallError> {
+        let installed = scan_packages(&self.inner.packages_dir, None);
+        for provider in &manifest.contributes.providers {
+            if let Some(other) = installed.packages.iter().find(|package| {
+                package.id != manifest.id
+                    && package
+                        .providers
+                        .iter()
+                        .any(|installed| installed.slug == provider.id)
+            }) {
+                return Err(PluginInstallError::new(
+                    PluginInstallErrorKind::InvalidInput,
+                    format!(
+                        "the {:?} provider is already installed by {} ({}); uninstall it first",
+                        provider.id, other.name, other.id
+                    ),
+                ));
+            }
+        }
+        Ok(())
+    }
+
     async fn install_resolved(
         &self,
         repository: &Repository,
@@ -1186,6 +1401,7 @@ impl PluginManager {
                 "resolved package id changed while installing",
             ));
         }
+        self.require_unique_providers(&package.manifest)?;
         std::fs::create_dir_all(&self.inner.packages_dir).map_err(|error| {
             PluginInstallError::io(
                 format!("could not create {}", self.inner.packages_dir.display()),
@@ -1237,12 +1453,7 @@ impl PluginManager {
                 ));
             }
 
-            let entry = PluginLockEntry {
-                id: package.manifest.id.clone(),
-                repo: repository.display.clone(),
-                version: package.manifest.version.clone(),
-                commit: package.commit.clone(),
-            };
+            let entry = package.lock_entry(repository);
             if let Some(existing) = locks
                 .plugins
                 .iter_mut()
@@ -1287,12 +1498,7 @@ impl PluginManager {
         }
 
         let previous_locks = locks.clone();
-        let entry = PluginLockEntry {
-            id: package.manifest.id.clone(),
-            repo: repository.display.clone(),
-            version: package.manifest.version.clone(),
-            commit: package.commit.clone(),
-        };
+        let entry = package.lock_entry(repository);
         let replaced_repo = locks
             .plugins
             .iter()
@@ -1363,16 +1569,28 @@ impl PluginManager {
         let mut seen = HashSet::new();
         for theme in &package.manifest.contributes.themes {
             if seen.insert(theme.css.as_str()) {
-                files.push((theme.css.as_str(), CSS_FILE_LIMIT, false));
+                files.push((theme.css.as_str(), PackageFile::Css));
             }
         }
         for font in &package.manifest.contributes.fonts {
             if seen.insert(font.file.as_str()) {
-                files.push((font.file.as_str(), FONT_FILE_LIMIT, true));
+                files.push((font.file.as_str(), PackageFile::Font));
+            }
+        }
+        for provider in &package.manifest.contributes.providers {
+            if let Some(icon) = &provider.icon
+                && seen.insert(icon.as_str())
+            {
+                files.push((icon.as_str(), PackageFile::Icon));
             }
         }
 
-        for (file, limit, is_font) in files {
+        for (file, kind) in files {
+            let limit = match kind {
+                PackageFile::Css => CSS_FILE_LIMIT,
+                PackageFile::Font => FONT_FILE_LIMIT,
+                PackageFile::Icon => ICON_FILE_LIMIT,
+            };
             let bytes = self
                 .fetch_bounded(
                     self.raw_url(repository, &package.commit, file),
@@ -1380,10 +1598,18 @@ impl PluginManager {
                     MissingResponse::PackageFile(file.to_owned()),
                 )
                 .await?;
-            if is_font && !bytes.starts_with(b"wOF2") {
-                return Err(PluginInstallError::invalid_package(format!(
-                    "font file {file:?} does not have a valid WOFF2 signature"
-                )));
+            match kind {
+                PackageFile::Font if !bytes.starts_with(b"wOF2") => {
+                    return Err(PluginInstallError::invalid_package(format!(
+                        "font file {file:?} does not have a valid WOFF2 signature"
+                    )));
+                }
+                PackageFile::Icon if !is_svg(&bytes) => {
+                    return Err(PluginInstallError::invalid_package(format!(
+                        "provider icon {file:?} is not an SVG image"
+                    )));
+                }
+                _ => {}
             }
             package_size += bytes.len();
             if package_size > PACKAGE_LIMIT {
@@ -1402,11 +1628,52 @@ impl PluginManager {
                 PluginInstallError::io(format!("could not stage {}", path.display()), error)
             })?;
         }
+
+        for asset in package
+            .providers
+            .iter()
+            .filter_map(ResolvedProvider::installable)
+        {
+            let tag = package.tag.as_deref().ok_or_else(|| {
+                PluginInstallError::invalid_package("provider binaries require a release")
+            })?;
+            self.stage_provider_binary(directory, repository, tag, asset)
+                .await?;
+        }
         Ok(())
     }
 
+    /// Verify the archive against its digest before reading it, then extract
+    /// only the provider binary.
+    async fn stage_provider_binary(
+        &self,
+        directory: &Path,
+        repository: &Repository,
+        tag: &str,
+        asset: &LockedProviderAsset,
+    ) -> Result<(), PluginInstallError> {
+        let archive = self
+            .fetch_bounded(
+                self.release_asset_url(repository, tag, &asset.asset),
+                PROVIDER_ARCHIVE_LIMIT,
+                MissingResponse::ReleaseAsset(asset.asset.clone()),
+            )
+            .await?;
+        if sha256_hex(&archive) != asset.sha256 {
+            return Err(PluginInstallError::invalid_package(format!(
+                "release asset {:?} does not match its sha256 digest",
+                asset.asset
+            )));
+        }
+        extract_provider_binary(
+            &archive,
+            &asset.slug,
+            &provider_binary_path(directory, &asset.slug),
+        )
+    }
+
     fn api_url(&self, repository: &Repository, suffix: &[&str]) -> Url {
-        let mut url = self.inner.api_base.clone();
+        let mut url = self.inner.urls.api.clone();
         url.path_segments_mut()
             .expect("GitHub API base can be a path base")
             .extend(["repos", &repository.owner, &repository.name])
@@ -1415,11 +1682,20 @@ impl PluginManager {
     }
 
     fn raw_url(&self, repository: &Repository, reference: &str, path: &str) -> Url {
-        let mut url = self.inner.raw_base.clone();
+        let mut url = self.inner.urls.raw.clone();
         url.path_segments_mut()
             .expect("GitHub raw base can be a path base")
             .extend([&repository.owner, &repository.name, reference])
             .extend(path.split('/'));
+        url
+    }
+
+    fn release_asset_url(&self, repository: &Repository, tag: &str, asset: &str) -> Url {
+        let mut url = self.inner.urls.web.clone();
+        url.path_segments_mut()
+            .expect("GitHub base can be a path base")
+            .extend([&repository.owner, &repository.name])
+            .extend(["releases", "download", tag, asset]);
         url
     }
 
@@ -1477,6 +1753,10 @@ impl PluginManager {
                 MissingResponse::PackageFile(path) => PluginInstallError::invalid_package(format!(
                     "plugin reference does not contain {path:?}"
                 )),
+                MissingResponse::ReleaseAsset(name) => PluginInstallError::new(
+                    PluginInstallErrorKind::MissingRelease,
+                    format!("release asset {name:?} was not found"),
+                ),
             });
         }
         if !status.is_success() {
@@ -1496,13 +1776,22 @@ impl Downloader for ReqwestDownloader {
         limit: usize,
     ) -> Pin<Box<dyn Future<Output = Result<DownloadResponse, PluginInstallError>> + Send + '_>>
     {
+        // Allow large provider archives at least 256 KiB/s instead of the
+        // client's fixed timeout.
+        let timeout = REQUEST_TIMEOUT.max(Duration::from_secs((limit / (256 * 1024)) as u64));
         Box::pin(async move {
-            let response = self.client.get(url).send().await.map_err(|error| {
-                PluginInstallError::new(
-                    PluginInstallErrorKind::Network,
-                    format!("could not reach GitHub: {error}"),
-                )
-            })?;
+            let response = self
+                .client
+                .get(url)
+                .timeout(timeout)
+                .send()
+                .await
+                .map_err(|error| {
+                    PluginInstallError::new(
+                        PluginInstallErrorKind::Network,
+                        format!("could not reach GitHub: {error}"),
+                    )
+                })?;
             let status = response.status();
             let rate_limited = status == StatusCode::TOO_MANY_REQUESTS
                 || (status == StatusCode::FORBIDDEN
@@ -1667,6 +1956,158 @@ fn validate_commit_sha(value: &str) -> Result<(), String> {
     }
 }
 
+/// Pick the first host target the release has an asset for. A matching asset
+/// without a digest is a broken release, never an unverified download.
+fn release_asset(
+    release: &GithubRelease,
+    provider: &ProviderContribution,
+    targets: &[&str],
+) -> Result<Option<LockedProviderAsset>, PluginInstallError> {
+    let Some((target, asset)) = targets.iter().find_map(|target| {
+        let name = provider.asset_for(target);
+        release
+            .assets
+            .iter()
+            .find(|asset| asset.name == name)
+            .map(|asset| (*target, asset))
+    }) else {
+        return Ok(None);
+    };
+    let sha256 = asset
+        .digest
+        .as_deref()
+        .and_then(|digest| digest.strip_prefix("sha256:"))
+        .map(str::to_ascii_lowercase)
+        .filter(|digest| is_sha256_hex(digest))
+        .ok_or_else(|| {
+            PluginInstallError::invalid_package(format!(
+                "release {} asset {:?} has no sha256 digest",
+                release.tag_name, asset.name
+            ))
+        })?;
+    Ok(Some(LockedProviderAsset {
+        slug: provider.id.clone(),
+        target: target.to_owned(),
+        asset: asset.name.clone(),
+        sha256,
+    }))
+}
+
+fn sha256_hex(bytes: &[u8]) -> String {
+    Sha256::digest(bytes)
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect()
+}
+
+/// Extract `caldir-provider-<slug>` from the archive root or one directory
+/// below it. Other entries are never written, but any entry that could escape
+/// the archive, or a binary that is a link, rejects the whole archive.
+fn extract_provider_binary(
+    archive: &[u8],
+    slug: &str,
+    destination: &Path,
+) -> Result<(), PluginInstallError> {
+    let binary_name = format!("caldir-provider-{slug}");
+    let unreadable = |error: std::io::Error| {
+        PluginInstallError::invalid_package(format!("could not read provider archive: {error}"))
+    };
+    let mut archive = tar::Archive::new(flate2::read::GzDecoder::new(archive));
+    let mut found = false;
+    for entry in archive.entries().map_err(unreadable)? {
+        let mut entry = entry.map_err(unreadable)?;
+        let path = entry.path().map_err(unreadable)?.into_owned();
+        let mut depth = 0;
+        for component in path.components() {
+            match component {
+                Component::Normal(_) => depth += 1,
+                Component::CurDir => {}
+                _ => {
+                    return Err(PluginInstallError::invalid_package(format!(
+                        "provider archive entry {:?} is not a relative path inside the archive",
+                        path.display().to_string()
+                    )));
+                }
+            }
+        }
+        if depth > 2
+            || path
+                .file_name()
+                .is_none_or(|name| name != binary_name.as_str())
+        {
+            continue;
+        }
+        if !entry.header().entry_type().is_file() {
+            return Err(PluginInstallError::invalid_package(format!(
+                "{binary_name} in the provider archive is not a regular file"
+            )));
+        }
+        if found {
+            return Err(PluginInstallError::invalid_package(format!(
+                "provider archive contains {binary_name} more than once"
+            )));
+        }
+        found = true;
+        write_provider_binary(&mut entry, &binary_name, destination)?;
+    }
+    if !found {
+        return Err(PluginInstallError::invalid_package(format!(
+            "provider archive does not contain {binary_name}"
+        )));
+    }
+    Ok(())
+}
+
+fn write_provider_binary(
+    source: &mut impl Read,
+    binary_name: &str,
+    destination: &Path,
+) -> Result<(), PluginInstallError> {
+    let parent = destination.parent().expect("provider binary is in bin/");
+    std::fs::create_dir_all(parent).map_err(|error| {
+        PluginInstallError::io(format!("could not create {}", parent.display()), error)
+    })?;
+    let mut file = std::fs::File::create(destination).map_err(|error| {
+        PluginInstallError::io(format!("could not stage {}", destination.display()), error)
+    })?;
+    let written =
+        std::io::copy(&mut source.take(PROVIDER_BINARY_LIMIT + 1), &mut file).map_err(|error| {
+            PluginInstallError::io(format!("could not extract {binary_name}"), error)
+        })?;
+    if written > PROVIDER_BINARY_LIMIT {
+        return Err(PluginInstallError::invalid_package(format!(
+            "{binary_name} exceeds the {PROVIDER_BINARY_LIMIT} byte limit"
+        )));
+    }
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        file.set_permissions(std::fs::Permissions::from_mode(0o755))
+            .map_err(|error| {
+                PluginInstallError::io(format!("could not make {binary_name} executable"), error)
+            })?;
+    }
+    Ok(())
+}
+
+/// Well-formed XML whose root element is `svg`.
+fn is_svg(bytes: &[u8]) -> bool {
+    use quick_xml::events::Event;
+
+    let mut reader = quick_xml::Reader::from_reader(bytes);
+    let mut root = None;
+    loop {
+        match reader.read_event() {
+            Ok(Event::Start(element) | Event::Empty(element)) if root.is_none() => {
+                root = Some(element.local_name().as_ref() == b"svg");
+            }
+            Ok(Event::Eof) => return root == Some(true),
+            Ok(_) => {}
+            Err(_) => return false,
+        }
+    }
+}
+
 fn remove_path(path: &Path) -> std::io::Result<()> {
     match std::fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_dir() => std::fs::remove_dir_all(path),
@@ -1691,6 +2132,7 @@ mod tests {
 
     const COMMIT_V1: &str = "1111111111111111111111111111111111111111";
     const COMMIT_V2: &str = "2222222222222222222222222222222222222222";
+    const TEST_TARGETS: &[&str] = &["x86_64-unknown-linux-musl", "x86_64-unknown-linux-gnu"];
 
     const MANIFEST_V1: &str = r#"id = "alice.dusk"
 name = "Dusk"
@@ -1830,8 +2272,12 @@ appearance = "dark"
             temp.path().join("config/plugins.toml"),
             temp.path().join("data/plugins.lock"),
             temp.path().join("data/plugins"),
-            downloader.base.clone(),
-            downloader.base.clone(),
+            GithubUrls {
+                api: downloader.base.clone(),
+                raw: downloader.base.clone(),
+                web: downloader.base.clone(),
+            },
+            TEST_TARGETS,
             downloader,
         )
     }
@@ -2318,6 +2764,8 @@ appearance = "dark"
                     repo: "Alice/rencal-dusk".into(),
                     version: "1.0.0".into(),
                     commit: COMMIT_V1.into(),
+                    tag: None,
+                    providers: Vec::new(),
                 }],
                 local: Vec::new(),
             },
@@ -2778,6 +3226,8 @@ appearance = "dark"
                 repo: "alice/rencal-dusk".into(),
                 version: "1.0.0".into(),
                 commit: COMMIT_V1.into(),
+                tag: None,
+                providers: Vec::new(),
             }],
             local: vec![LocalLockEntry {
                 id: "bob.dawn".into(),
@@ -2843,6 +3293,615 @@ appearance = "dark"
         downloader.set("/repos/Alice/rencal-dusk/releases/latest", 429, Vec::new());
         let limited = manager.inspect("Alice/rencal-dusk").await.unwrap_err();
         assert_eq!(limited.kind, PluginInstallErrorKind::RateLimited);
+    }
+
+    const TUTA_REPO: &str = "Alice/caldir-provider-tuta";
+    const MUSL: &str = "x86_64-unknown-linux-musl";
+    const GNU: &str = "x86_64-unknown-linux-gnu";
+    const TUTA_ICON: &str = r##"<?xml version="1.0"?>
+<!-- Tuta -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="#850122" d="M0 0h24v24H0z"/></svg>
+"##;
+
+    const PROVIDER_MANIFEST: &str = r#"id = "alice.tuta"
+name = "Tuta"
+version = "1.0.0"
+description = "Sync Tuta calendars"
+min_rencal_version = "0.8.0"
+
+[[contributes.providers]]
+id = "tuta"
+name = "Tuta"
+icon = "icons/tuta.svg"
+asset = "caldir-provider-tuta-{target}.tar.gz"
+caldir_core = "0.16.0"
+"#;
+
+    const MIXED_THEME: &str = r#"
+[[contributes.themes]]
+id = "dark"
+name = "Tuta Dark"
+css = "themes/dark.css"
+appearance = "dark"
+"#;
+
+    fn tuta_asset(target: &str) -> String {
+        format!("caldir-provider-tuta-{target}.tar.gz")
+    }
+
+    /// Entry names are written into the header directly: `set_path` refuses
+    /// the unsafe paths these tests need.
+    fn archive(entries: &[(&str, tar::EntryType, &[u8])]) -> Vec<u8> {
+        let encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        let mut builder = tar::Builder::new(encoder);
+        for (path, kind, data) in entries {
+            let mut header = tar::Header::new_gnu();
+            header.as_old_mut().name[..path.len()].copy_from_slice(path.as_bytes());
+            header.set_entry_type(*kind);
+            header.set_mode(0o755);
+            header.set_size(data.len() as u64);
+            if matches!(kind, tar::EntryType::Symlink | tar::EntryType::Link) {
+                header.set_link_name("/usr/bin/true").unwrap();
+            }
+            header.set_cksum();
+            builder.append(&header, *data).unwrap();
+        }
+        builder.into_inner().unwrap().finish().unwrap()
+    }
+
+    /// The layout of the caldir-provider-tuta release archives.
+    fn tuta_archive(target: &str, binary: &[u8]) -> Vec<u8> {
+        let directory = format!("caldir-provider-tuta-{target}");
+        archive(&[
+            (&format!("{directory}/"), tar::EntryType::Directory, b""),
+            (
+                &format!("{directory}/README.md"),
+                tar::EntryType::Regular,
+                b"readme",
+            ),
+            (
+                &format!("{directory}/caldir-provider-tuta"),
+                tar::EntryType::Regular,
+                binary,
+            ),
+            (
+                &format!("{directory}/LICENSE"),
+                tar::EntryType::Regular,
+                b"license",
+            ),
+        ])
+    }
+
+    /// Serve a release of `repo` whose assets are `(target, archive)` pairs.
+    fn serve_provider(
+        downloader: &FixtureDownloader,
+        repo: &str,
+        commit: &str,
+        manifest: &str,
+        assets: &[(&str, &[u8])],
+    ) {
+        let version = validate_manifest(manifest, None).unwrap().version;
+        let tag = format!("v{version}");
+        let release_assets: Vec<_> = assets
+            .iter()
+            .map(|(target, bytes)| {
+                serde_json::json!({
+                    "name": tuta_asset(target),
+                    "digest": format!("sha256:{}", sha256_hex(bytes)),
+                })
+            })
+            .collect();
+        downloader.set(
+            &format!("/repos/{repo}/releases/latest"),
+            200,
+            serde_json::to_vec(&serde_json::json!({ "tag_name": tag, "assets": release_assets }))
+                .unwrap(),
+        );
+        downloader.set(
+            &format!("/repos/{repo}/commits?sha={tag}&per_page=1"),
+            200,
+            format!(r#"[{{"sha":"{commit}"}}]"#),
+        );
+        downloader.set(
+            &format!("/{repo}/{commit}/rencal-plugin.toml"),
+            200,
+            manifest,
+        );
+        downloader.set(&format!("/{repo}/{commit}/icons/tuta.svg"), 200, TUTA_ICON);
+        downloader.set(
+            &format!("/{repo}/{commit}/themes/dark.css"),
+            200,
+            "--background: #850122;",
+        );
+        for (target, bytes) in assets {
+            downloader.set(
+                &format!("/{repo}/releases/download/{tag}/{}", tuta_asset(target)),
+                200,
+                *bytes,
+            );
+        }
+    }
+
+    fn tuta_package(temp: &tempfile::TempDir) -> PathBuf {
+        temp.path().join("data/plugins/alice.tuta")
+    }
+
+    fn tuta_binary(temp: &tempfile::TempDir) -> PathBuf {
+        tuta_package(temp).join("bin/caldir-provider-tuta")
+    }
+
+    fn locked_plugins(temp: &tempfile::TempDir) -> Vec<PluginLockEntry> {
+        load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+            .unwrap()
+            .plugins
+    }
+
+    #[tokio::test]
+    async fn installs_only_the_provider_binary_from_a_release_asset() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let archive = tuta_archive(GNU, b"tuta-gnu");
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &archive)],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        manager.install(TUTA_REPO).await.unwrap();
+
+        assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-gnu");
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(tuta_binary(&temp))
+                .unwrap()
+                .permissions()
+                .mode();
+            assert_eq!(mode & 0o777, 0o755);
+        }
+        assert_eq!(
+            std::fs::read_to_string(tuta_package(&temp).join("icons/tuta.svg")).unwrap(),
+            TUTA_ICON
+        );
+        let mut files: Vec<_> = std::fs::read_dir(tuta_package(&temp).join("bin"))
+            .unwrap()
+            .chain(std::fs::read_dir(tuta_package(&temp)).unwrap())
+            .map(|entry| entry.unwrap().file_name().into_string().unwrap())
+            .collect();
+        files.sort();
+        assert_eq!(
+            files,
+            ["bin", "caldir-provider-tuta", "icons", "rencal-plugin.toml"]
+        );
+
+        let locks = locked_plugins(&temp);
+        assert_eq!(locks[0].tag.as_deref(), Some("v1.0.0"));
+        assert_eq!(
+            locks[0].providers,
+            [LockedProviderAsset {
+                slug: "tuta".into(),
+                target: GNU.into(),
+                asset: tuta_asset(GNU),
+                sha256: sha256_hex(&archive),
+            }]
+        );
+        let scan = scan_packages(&temp.path().join("data/plugins"), None);
+        assert_eq!(
+            scan.packages[0].providers[0].binary,
+            Some(tuta_binary(&temp))
+        );
+
+        manager.uninstall("alice.tuta").await.unwrap();
+        assert!(!tuta_package(&temp).exists());
+    }
+
+    #[tokio::test]
+    async fn prefers_musl_provider_assets() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[
+                (GNU, &tuta_archive(GNU, b"tuta-gnu")),
+                (MUSL, &tuta_archive(MUSL, b"tuta-musl")),
+            ],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+
+        manager.install(TUTA_REPO).await.unwrap();
+
+        assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-musl");
+        assert_eq!(locked_plugins(&temp)[0].providers[0].target, MUSL);
+        let gnu_download = format!("/{TUTA_REPO}/releases/download/v1.0.0/{}", tuta_asset(GNU));
+        assert_eq!(downloader.request_count(&gnu_download), 0);
+    }
+
+    #[tokio::test]
+    async fn digest_mismatch_keeps_the_installed_provider() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &tuta_archive(GNU, b"tuta-v1"))],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install(TUTA_REPO).await.unwrap();
+
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V2,
+            &PROVIDER_MANIFEST.replacen("1.0.0", "2.0.0", 1),
+            &[(GNU, &tuta_archive(GNU, b"tuta-v2"))],
+        );
+        downloader.set(
+            &format!("/{TUTA_REPO}/releases/download/v2.0.0/{}", tuta_asset(GNU)),
+            200,
+            tuta_archive(GNU, b"tampered"),
+        );
+
+        let error = manager.install(TUTA_REPO).await.unwrap_err();
+        assert_eq!(error.kind, PluginInstallErrorKind::InvalidPackage);
+        assert!(error.to_string().contains("sha256 digest"), "{error}");
+        assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-v1");
+        assert_eq!(locked_plugins(&temp)[0].version, "1.0.0");
+    }
+
+    #[tokio::test]
+    async fn rejects_release_assets_without_a_digest() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &tuta_archive(GNU, b"tuta"))],
+        );
+        downloader.set(
+            &format!("/repos/{TUTA_REPO}/releases/latest"),
+            200,
+            format!(
+                r#"{{"tag_name":"v1.0.0","assets":[{{"name":"{}","digest":null}}]}}"#,
+                tuta_asset(GNU)
+            ),
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        let error = manager.inspect(TUTA_REPO).await.unwrap_err();
+        assert!(
+            error.to_string().contains("has no sha256 digest"),
+            "{error}"
+        );
+        assert!(manager.install(TUTA_REPO).await.is_err());
+        assert!(!tuta_package(&temp).exists());
+    }
+
+    #[tokio::test]
+    async fn providers_without_an_asset_for_this_platform_are_skipped() {
+        let darwin = "aarch64-apple-darwin";
+        let archive = tuta_archive(darwin, b"tuta-darwin");
+        let temp = tempfile::tempdir().unwrap();
+
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(darwin, &archive)],
+        );
+        let error = manager(&temp, downloader)
+            .install(TUTA_REPO)
+            .await
+            .unwrap_err();
+        assert_eq!(error.kind, PluginInstallErrorKind::Incompatible);
+        assert_eq!(
+            error.to_string(),
+            format!("Tuta has no release asset for this platform ({MUSL}, {GNU})")
+        );
+        assert!(!tuta_package(&temp).exists());
+
+        // A mixed package still installs its themes.
+        let downloader = Arc::new(FixtureDownloader::new());
+        let mixed = format!("{PROVIDER_MANIFEST}{MIXED_THEME}");
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            &mixed,
+            &[(darwin, &archive)],
+        );
+        manager(&temp, downloader).install(TUTA_REPO).await.unwrap();
+        assert!(tuta_package(&temp).join("themes/dark.css").is_file());
+        assert!(!tuta_package(&temp).join("bin").exists());
+        assert!(locked_plugins(&temp)[0].providers.is_empty());
+    }
+
+    #[tokio::test]
+    async fn rejects_unsafe_or_incomplete_provider_archives() {
+        let binary = "caldir-provider-tuta";
+        let nested = format!("dir/{binary}");
+        let too_deep = format!("a/b/{binary}");
+        let parent = format!("../{binary}");
+        let absolute = format!("/{binary}");
+        let regular = tar::EntryType::Regular;
+        let cases: Vec<(Vec<u8>, &str)> = vec![
+            (
+                archive(&[(binary, tar::EntryType::Symlink, b"")]),
+                "not a regular file",
+            ),
+            (
+                archive(&[(&nested, tar::EntryType::Link, b"")]),
+                "not a regular file",
+            ),
+            (archive(&[(&parent, regular, b"x")]), "not a relative path"),
+            (
+                archive(&[(&absolute, regular, b"x")]),
+                "not a relative path",
+            ),
+            (
+                archive(&[(binary, regular, b"x"), ("../evil", regular, b"x")]),
+                "not a relative path",
+            ),
+            (archive(&[(&too_deep, regular, b"x")]), "does not contain"),
+            (archive(&[("README.md", regular, b"x")]), "does not contain"),
+            (
+                archive(&[(binary, regular, b"x"), (&nested, regular, b"x")]),
+                "more than once",
+            ),
+            (
+                b"not a gzip archive".to_vec(),
+                "could not read provider archive",
+            ),
+        ];
+        for (bytes, expected) in cases {
+            let downloader = Arc::new(FixtureDownloader::new());
+            serve_provider(
+                &downloader,
+                TUTA_REPO,
+                COMMIT_V1,
+                PROVIDER_MANIFEST,
+                &[(GNU, &bytes)],
+            );
+            let temp = tempfile::tempdir().unwrap();
+
+            let error = manager(&temp, downloader)
+                .install(TUTA_REPO)
+                .await
+                .unwrap_err();
+
+            assert_eq!(error.kind, PluginInstallErrorKind::InvalidPackage);
+            assert!(error.to_string().contains(expected), "{expected}: {error}");
+            assert!(!tuta_package(&temp).exists());
+            assert!(!temp.path().join("data/caldir-provider-tuta").exists());
+        }
+    }
+
+    #[tokio::test]
+    async fn installs_a_provider_binary_at_the_archive_root() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let bytes = archive(&[("./caldir-provider-tuta", tar::EntryType::Regular, b"root")]);
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &bytes)],
+        );
+        let temp = tempfile::tempdir().unwrap();
+
+        manager(&temp, downloader).install(TUTA_REPO).await.unwrap();
+
+        assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"root");
+    }
+
+    #[tokio::test]
+    async fn rejects_provider_icons_that_are_not_svg() {
+        for icon in ["<html><body>Tuta</body></html>", "Tuta", "<svg><g></svg>"] {
+            let downloader = Arc::new(FixtureDownloader::new());
+            serve_provider(
+                &downloader,
+                TUTA_REPO,
+                COMMIT_V1,
+                PROVIDER_MANIFEST,
+                &[(GNU, &tuta_archive(GNU, b"tuta"))],
+            );
+            downloader.set(
+                &format!("/{TUTA_REPO}/{COMMIT_V1}/icons/tuta.svg"),
+                200,
+                icon,
+            );
+            let temp = tempfile::tempdir().unwrap();
+
+            let error = manager(&temp, downloader)
+                .install(TUTA_REPO)
+                .await
+                .unwrap_err();
+
+            assert!(
+                error.to_string().contains("is not an SVG image"),
+                "{icon}: {error}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn provider_plugins_require_a_release() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        downloader.set(
+            &format!("/repos/{TUTA_REPO}/commits?per_page=1"),
+            200,
+            format!(r#"[{{"sha":"{COMMIT_V1}"}}]"#),
+        );
+        downloader.set(
+            &format!("/{TUTA_REPO}/{COMMIT_V1}/rencal-plugin.toml"),
+            200,
+            PROVIDER_MANIFEST,
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        for error in [
+            manager.inspect(TUTA_REPO).await.unwrap_err(),
+            manager.install(TUTA_REPO).await.unwrap_err(),
+        ] {
+            assert_eq!(error.kind, PluginInstallErrorKind::MissingRelease);
+            assert_eq!(
+                error.to_string(),
+                "provider plugins must be installed from a release"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn rejects_providers_built_for_an_older_caldir() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let old = PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1);
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            &old,
+            &[(GNU, &tuta_archive(GNU, b"tuta"))],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+
+        assert!(manager.inspect(TUTA_REPO).await.is_ok());
+        let error = manager.install(TUTA_REPO).await.unwrap_err();
+        assert_eq!(error.kind, PluginInstallErrorKind::Incompatible);
+        assert_eq!(
+            error.to_string(),
+            format!(
+                "Tuta was built with caldir-core 0.11.2, but renCal needs {MIN_PROVIDER_CALDIR_CORE} or newer. Ask the plugin author to update it."
+            )
+        );
+        assert!(!tuta_package(&temp).exists());
+        let download = format!("/{TUTA_REPO}/releases/download/v1.0.0/{}", tuta_asset(GNU));
+        assert_eq!(downloader.request_count(&download), 0);
+    }
+
+    #[tokio::test]
+    async fn lists_installed_providers_that_became_incompatible() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &tuta_archive(GNU, b"tuta"))],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install(TUTA_REPO).await.unwrap();
+        assert!(manager.list().await.plugins[0].error.is_none());
+
+        // Stands in for a renCal update that raised MIN_PROVIDER_CALDIR_CORE.
+        std::fs::write(
+            tuta_package(&temp).join(MANIFEST_FILE),
+            PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1),
+        )
+        .unwrap();
+
+        let listed = manager.list().await;
+        let error = listed.plugins[0].error.as_deref().unwrap();
+        assert!(
+            error.contains("Tuta was built for an older caldir"),
+            "{error}"
+        );
+        assert!(tuta_binary(&temp).is_file());
+    }
+
+    #[tokio::test]
+    async fn restores_provider_binaries_from_the_locked_asset_and_digest() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let archive_v1 = tuta_archive(GNU, b"tuta-v1");
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &archive_v1)],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        manager.install(TUTA_REPO).await.unwrap();
+        let latest = format!("/repos/{TUTA_REPO}/releases/latest");
+        assert_eq!(downloader.request_count(&latest), 1);
+
+        // A newer release must not leak into a restore of the locked one.
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V2,
+            &PROVIDER_MANIFEST.replacen("1.0.0", "2.0.0", 1),
+            &[(MUSL, &tuta_archive(MUSL, b"tuta-v2"))],
+        );
+        std::fs::remove_dir_all(tuta_package(&temp)).unwrap();
+        assert!(manager.reconcile().await.is_empty());
+        assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-v1");
+        assert_eq!(downloader.request_count(&latest), 1);
+        assert_eq!(
+            locked_plugins(&temp)[0].providers[0].sha256,
+            sha256_hex(&archive_v1)
+        );
+
+        std::fs::remove_dir_all(tuta_package(&temp)).unwrap();
+        downloader.set(
+            &format!("/{TUTA_REPO}/releases/download/v1.0.0/{}", tuta_asset(GNU)),
+            200,
+            tuta_archive(GNU, b"replaced"),
+        );
+        let errors = manager.reconcile().await;
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("sha256 digest"), "{errors:?}");
+        assert!(!tuta_package(&temp).exists());
+        assert_eq!(locked_plugins(&temp)[0].version, "1.0.0");
+    }
+
+    #[tokio::test]
+    async fn refuses_a_provider_slug_installed_by_another_plugin() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let archive = tuta_archive(GNU, b"tuta");
+        serve_provider(
+            &downloader,
+            TUTA_REPO,
+            COMMIT_V1,
+            PROVIDER_MANIFEST,
+            &[(GNU, &archive)],
+        );
+        let mirror = "Bob/tuta-mirror";
+        serve_provider(
+            &downloader,
+            mirror,
+            COMMIT_V2,
+            &PROVIDER_MANIFEST.replacen("alice.tuta", "bob.tuta-mirror", 1),
+            &[(GNU, &archive)],
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install(TUTA_REPO).await.unwrap();
+
+        let error = manager.install(mirror).await.unwrap_err();
+
+        assert_eq!(error.kind, PluginInstallErrorKind::InvalidInput);
+        assert_eq!(
+            error.to_string(),
+            "the \"tuta\" provider is already installed by Tuta (alice.tuta); uninstall it first"
+        );
+        assert!(!temp.path().join("data/plugins/bob.tuta-mirror").exists());
+        // Updating the plugin that owns the slug is not a conflict.
+        manager.install(TUTA_REPO).await.unwrap();
     }
 
     #[test]
