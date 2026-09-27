@@ -1,10 +1,9 @@
 //! User-supplied CSS themes loaded from the loose themes and plugin directories.
 //! The frontend wraps each one in `[data-theme="<id>"] { … }` when injecting, or
-//! in `[data-theme="<id>"][data-appearance="light|dark"]` for a theme with both variants.
+//! in `[data-theme="<id>"][data-appearance="light|dark"]` for a plugin theme with both variants.
 
 use crate::events::AppEvent;
 
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use base64::Engine;
@@ -15,7 +14,7 @@ use specta::Type;
 use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-use crate::plugins::{self, Appearance, FontStyle, MANIFEST_FILE};
+use crate::plugins::{self, ExternalThemeCss, FontStyle, MANIFEST_FILE};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -31,20 +30,6 @@ pub struct ExternalTheme {
     pub name: String,
     pub variants: ExternalThemeCss,
     pub source: ExternalThemeSource,
-}
-
-#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
-#[serde(tag = "kind", rename_all = "snake_case")]
-pub enum ExternalThemeCss {
-    /// `appearance: None` means the frontend derives it from `--background`.
-    Single {
-        css: String,
-        appearance: Option<Appearance>,
-    },
-    Both {
-        light: String,
-        dark: String,
-    },
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
@@ -123,12 +108,6 @@ fn write_readme(dir: &std::path::Path) {
 Drop a .css file in this folder and it shows up in Settings > Themes.
 The filename becomes the theme name (override with a `@name` comment).
 
-To ship a light and a dark variant, name the files `<name>.light.css` and
-`<name>.dark.css`. renCal shows them as one theme and picks the variant that
-matches your system appearance (or the Appearance setting under the theme
-grid). A lone `<name>.light.css` or `<name>.dark.css` is a light-only or
-dark-only theme. A pair wins over a plain `<name>.css` with the same name.
-
 A theme is a bare block of CSS variables — no selector needed:
 
     /* @name My Theme */
@@ -161,17 +140,17 @@ fn slugify(input: &str) -> String {
     out
 }
 
-fn find_name(css: &str) -> Option<String> {
-    let idx = css.find("@name")?;
-    let rest = &css[idx + "@name".len()..];
-    let line = rest.lines().next().unwrap_or("");
-    let name = line.replace("*/", "");
-    let name = name.trim();
-    (!name.is_empty()).then(|| name.to_string())
-}
-
 fn parse_name(css: &str, fallback: &str) -> String {
-    find_name(css).unwrap_or_else(|| fallback.to_string())
+    if let Some(idx) = css.find("@name") {
+        let rest = &css[idx + "@name".len()..];
+        let line = rest.lines().next().unwrap_or("");
+        let name = line.replace("*/", "");
+        let name = name.trim();
+        if !name.is_empty() {
+            return name.to_string();
+        }
+    }
+    fallback.to_string()
 }
 
 fn ensure_plugins_dir() -> Option<PathBuf> {
@@ -180,113 +159,40 @@ fn ensure_plugins_dir() -> Option<PathBuf> {
     Some(dir)
 }
 
-#[derive(Default)]
-struct LooseFiles {
-    plain: Option<(String, String)>,
-    light: Option<(String, String)>,
-    dark: Option<(String, String)>,
-}
-
-/// Splits `gruvbox.light` into (`gruvbox`, Some(Light)).
-fn split_variant(stem: &str) -> (&str, Option<Appearance>) {
-    if let Some(base) = stem.strip_suffix(".light") {
-        (base, Some(Appearance::Light))
-    } else if let Some(base) = stem.strip_suffix(".dark") {
-        (base, Some(Appearance::Dark))
-    } else {
-        (stem, None)
-    }
-}
-
-/// Loose `.css` files, with `<name>.light.css` + `<name>.dark.css` paired into one theme.
-fn scan_loose(dir: &std::path::Path) -> (Vec<ExternalTheme>, Vec<ExternalThemeError>) {
+fn scan_loose(dir: &std::path::Path) -> Vec<ExternalTheme> {
     let Ok(entries) = std::fs::read_dir(dir) else {
-        return (Vec::new(), Vec::new());
+        return Vec::new();
     };
-    let mut paths: Vec<_> = entries
-        .flatten()
-        .map(|entry| entry.path())
-        .filter(|path| path.extension().and_then(|e| e.to_str()) == Some("css"))
-        .collect();
-    paths.sort();
 
-    // Keyed by slug; each slot holds (file name, css).
-    let mut groups: BTreeMap<String, (String, LooseFiles)> = BTreeMap::new();
-    for path in paths {
-        let (Some(stem), Some(file_name)) = (
-            path.file_stem().and_then(|s| s.to_str()),
-            path.file_name().and_then(|s| s.to_str()),
-        ) else {
+    let mut themes = Vec::new();
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.extension().and_then(|e| e.to_str()) != Some("css") {
+            continue;
+        }
+        let Some(stem) = path.file_stem().and_then(|s| s.to_str()) else {
             continue;
         };
-        let (base, variant) = split_variant(stem);
-        let slug = slugify(base);
+        let slug = slugify(stem);
         if slug.is_empty() {
             continue;
         }
         let Ok(css) = std::fs::read_to_string(&path) else {
             continue;
         };
-        let (_, files) = groups
-            .entry(slug)
-            .or_insert_with(|| (base.to_string(), LooseFiles::default()));
-        let slot = match variant {
-            None => &mut files.plain,
-            Some(Appearance::Light) => &mut files.light,
-            Some(Appearance::Dark) => &mut files.dark,
-        };
-        slot.get_or_insert((file_name.to_string(), css));
-    }
-
-    let mut themes = Vec::new();
-    let mut errors = Vec::new();
-    for (slug, (base, files)) in groups {
-        if let Some((file_name, _)) = &files.plain
-            && (files.light.is_some() || files.dark.is_some())
-        {
-            errors.push(ExternalThemeError {
-                package: file_name.clone(),
-                message: format!(
-                    "ignored because {base}.light.css or {base}.dark.css defines the same theme"
-                ),
-            });
-        }
-        let variants = match (files.light, files.dark) {
-            (Some((_, light)), Some((_, dark))) => ExternalThemeCss::Both { light, dark },
-            (Some((_, css)), None) => ExternalThemeCss::Single {
-                css,
-                appearance: Some(Appearance::Light),
-            },
-            (None, Some((_, css))) => ExternalThemeCss::Single {
-                css,
-                appearance: Some(Appearance::Dark),
-            },
-            (None, None) => {
-                let Some((_, css)) = files.plain else {
-                    continue;
-                };
-                ExternalThemeCss::Single {
-                    css,
-                    appearance: None,
-                }
-            }
-        };
-        let name = match &variants {
-            ExternalThemeCss::Single { css, .. } => parse_name(css, &base),
-            ExternalThemeCss::Both { light, dark } => {
-                find_name(light).or_else(|| find_name(dark)).unwrap_or(base)
-            }
-        };
         themes.push(ExternalTheme {
             id: format!("user:{slug}"),
-            name,
-            variants,
+            name: parse_name(&css, stem),
+            variants: ExternalThemeCss::Single {
+                css,
+                appearance: None,
+            },
             source: ExternalThemeSource::Loose,
         });
     }
 
     themes.sort_by_key(|t| t.name.to_lowercase());
-    (themes, errors)
+    themes
 }
 
 fn scan_from(
@@ -295,7 +201,7 @@ fn scan_from(
 ) -> ExternalThemesSnapshot {
     let mut snapshot = ExternalThemesSnapshot::default();
     if let Some(themes_dir) = themes_dir {
-        (snapshot.themes, snapshot.errors) = scan_loose(themes_dir);
+        snapshot.themes = scan_loose(themes_dir);
     }
     if let Some(plugins_dir) = plugins_dir {
         let packages = plugins::scan_packages(plugins_dir, plugins::running_app_version().as_ref());
@@ -304,29 +210,21 @@ fn scan_from(
                 snapshot.themes.push(ExternalTheme {
                     id: theme.id,
                     name: theme.name,
-                    variants: match theme.css {
-                        plugins::ScannedThemeCss::Single { css, appearance } => {
-                            ExternalThemeCss::Single {
-                                css,
-                                appearance: Some(appearance),
-                            }
-                        }
-                        plugins::ScannedThemeCss::Both { light, dark } => {
-                            ExternalThemeCss::Both { light, dark }
-                        }
-                    },
+                    variants: theme.variants,
                     source: ExternalThemeSource::Plugin {
                         id: package.id.clone(),
                     },
                 });
             }
         }
-        snapshot
+        snapshot.errors = packages
             .errors
-            .extend(packages.errors.into_iter().map(|error| ExternalThemeError {
+            .into_iter()
+            .map(|error| ExternalThemeError {
                 package: error.package,
                 message: error.message,
-            }));
+            })
+            .collect();
     }
     snapshot
         .themes
@@ -507,10 +405,9 @@ pub async fn run_watcher(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::{
-        ExternalThemeCss, ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from,
-        parse_name, scan_from, scan_loose, slugify,
+        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from, parse_name, scan_from,
+        slugify,
     };
-    use crate::plugins::Appearance;
     use base64::Engine;
 
     const MANIFEST: &str = r#"
@@ -587,62 +484,6 @@ appearance = "dark"
         }));
         assert_eq!(snapshot.errors.len(), 1);
         assert_eq!(snapshot.errors[0].package, "bob.broken");
-    }
-
-    #[test]
-    fn pairs_loose_light_and_dark_files_into_one_theme() {
-        let temp = tempfile::tempdir().unwrap();
-        let dir = temp.path();
-        std::fs::write(dir.join("gruvbox.light.css"), "--background: #fbf1c7;").unwrap();
-        std::fs::write(
-            dir.join("gruvbox.dark.css"),
-            "/* @name Gruvbox */\n--background: #282828;",
-        )
-        .unwrap();
-        std::fs::write(dir.join("gruvbox.css"), "--background: red;").unwrap();
-        std::fs::write(dir.join("paper.light.css"), "--background: white;").unwrap();
-        std::fs::write(dir.join("night.dark.css"), "--background: black;").unwrap();
-        std::fs::write(dir.join("plain.css"), "--background: gray;").unwrap();
-
-        let (themes, errors) = scan_loose(dir);
-        let find = |id: &str| themes.iter().find(|theme| theme.id == id).unwrap();
-
-        assert_eq!(themes.len(), 4);
-        let gruvbox = find("user:gruvbox");
-        assert_eq!(gruvbox.name, "Gruvbox");
-        assert_eq!(
-            gruvbox.variants,
-            ExternalThemeCss::Both {
-                light: "--background: #fbf1c7;".into(),
-                dark: "/* @name Gruvbox */\n--background: #282828;".into(),
-            }
-        );
-        assert_eq!(
-            find("user:paper").variants,
-            ExternalThemeCss::Single {
-                css: "--background: white;".into(),
-                appearance: Some(Appearance::Light),
-            }
-        );
-        assert_eq!(find("user:paper").name, "paper");
-        assert!(matches!(
-            find("user:night").variants,
-            ExternalThemeCss::Single {
-                appearance: Some(Appearance::Dark),
-                ..
-            }
-        ));
-        assert!(matches!(
-            find("user:plain").variants,
-            ExternalThemeCss::Single {
-                appearance: None,
-                ..
-            }
-        ));
-
-        assert_eq!(errors.len(), 1);
-        assert_eq!(errors[0].package, "gruvbox.css");
-        assert!(errors[0].message.contains("gruvbox.light.css"));
     }
 
     #[test]

@@ -11,19 +11,12 @@ import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { appearanceFromComputedBackground } from "@/themes/appearance"
 import { applyExternalThemes } from "@/themes/external"
 import { updateExternalFonts } from "@/themes/external-fonts"
-import {
-  type AppearancePreference,
-  getThemeAppearance,
-  resolveAppearance,
-  THEME_IDS,
-} from "@/themes/manifest"
+import { getThemeAppearance, resolveAppearance, THEME_IDS } from "@/themes/manifest"
 
 // Theme id is a plain string: a built-in id or a user theme's `user:<slug>`.
 // An unknown id just renders the :root defaults, so no enum gate is needed.
 const themeSchema = z.string()
 export type Theme = string
-
-const appearancePreferenceSchema = z.enum(["auto", "light", "dark"])
 
 // index.html reads these to paint the right background and variant before the CSS bundle loads.
 const BACKGROUND_CACHE_KEY = "themeBackground"
@@ -34,38 +27,26 @@ function getDefaultTheme(): Theme {
   return document.body.dataset.defaultTheme || THEME_IDS[0]
 }
 
-// Single mutator for theme and appearance preference. localStorage is a
-// flash-prevention cache; ~/.config/rencal/config.toml (via rpc.config) is
-// canonical. To stay in sync, every set goes through `setTheme` /
-// `setAppearancePreference` below — nothing else writes either store. On mount
-// we reconcile from TOML (TOML wins on conflict).
+// Single mutator for theme. localStorage is a flash-prevention cache;
+// ~/.config/rencal/config.toml (via rpc.config) is canonical. To stay in
+// sync, every set goes through `setTheme` below — nothing else writes
+// either store. On mount we reconcile from TOML (TOML wins on conflict).
 export function useTheme() {
   const [theme, setThemeLocal] = useLocalStorage("theme", themeSchema, getDefaultTheme())
-  const [appearancePreference, setAppearancePreferenceLocal] = useLocalStorage(
-    "themeAppearance",
-    appearancePreferenceSchema,
-    "auto",
-  )
   const { descriptors, externalThemes } = useThemeRegistry()
   const themeRef = useRef(theme)
   themeRef.current = theme
-  const appearancePreferenceRef = useRef(appearancePreference)
-  appearancePreferenceRef.current = appearancePreference
 
-  // Only a theme with both variants on Auto follows the OS. Everything else
-  // forces the window chrome to match the theme.
-  const followsSystem =
-    getThemeAppearance(theme, descriptors) === "both" && appearancePreference === "auto"
+  // A theme with both variants follows the OS. Everything else forces the
+  // window chrome to match the theme.
+  const followsSystem = getThemeAppearance(theme, descriptors) === "both"
   const systemAppearance = useSystemAppearance(followsSystem)
 
   useEffect(() => {
     document.body.dataset.theme = theme
     document.body.style.removeProperty("--background")
     // Variant CSS is keyed on `data-appearance`, so set it before injecting.
-    const resolved = resolveAppearance(theme, descriptors, {
-      preference: appearancePreference,
-      system: systemAppearance,
-    })
+    const resolved = resolveAppearance(theme, descriptors, systemAppearance)
     if (resolved) document.body.dataset.appearance = resolved
     applyExternalThemes(externalThemes, theme)
     updateExternalFonts(theme, externalThemes)
@@ -79,7 +60,7 @@ export function useTheme() {
     } catch {}
     // While following the OS, useSystemAppearance keeps the window unforced.
     if (!followsSystem) void getCurrentWindow().setTheme(appearance)
-  }, [theme, descriptors, externalThemes, appearancePreference, systemAppearance, followsSystem])
+  }, [theme, descriptors, externalThemes, systemAppearance, followsSystem])
 
   // Cache the resolved --background for index.html's flash-prevention.
   // Deferred by 1 frame so any runtime-injected user/omarchy styles are applied first.
@@ -93,7 +74,7 @@ export function useTheme() {
       }
     })
     return () => cancelAnimationFrame(raf)
-  }, [theme, externalThemes, appearancePreference, systemAppearance])
+  }, [theme, externalThemes, systemAppearance])
 
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {
@@ -126,12 +107,6 @@ export function useTheme() {
         setThemeLocal(parsed.data)
       }
     })
-    // Missing from TOML means `auto`, so TOML always has an answer here.
-    void api.themes.getAppearance().then((toml) => {
-      if (!cancelled && toml !== appearancePreferenceRef.current) {
-        setAppearancePreferenceLocal(toml)
-      }
-    })
     return () => {
       cancelled = true
     }
@@ -145,15 +120,8 @@ export function useTheme() {
         setThemeLocal(parsed.data)
       }
     })
-    const unlistenAppearance = api.notifications.listen("theme-appearance-changed", (event) => {
-      const parsed = appearancePreferenceSchema.safeParse(event)
-      if (parsed.success && parsed.data !== appearancePreferenceRef.current) {
-        setAppearancePreferenceLocal(parsed.data)
-      }
-    })
     return () => {
       unlistenPromise.unlisten()
-      unlistenAppearance.unlisten()
     }
   }, [])
 
@@ -169,18 +137,6 @@ export function useTheme() {
       })
   }
 
-  const setAppearancePreference = (preference: AppearancePreference) => {
-    setAppearancePreferenceLocal(preference)
-    void api.themes
-      .setAppearance(preference)
-      .then(() => {
-        void emitAppEvent("theme-appearance-changed", preference)
-      })
-      .catch((err: unknown) => {
-        console.error("Failed to persist theme appearance:", err)
-      })
-  }
-
   // Cycle through every registered theme (built-in + user), in display order.
   const toggleTheme = () => {
     const ids = descriptors.map((d) => d.id)
@@ -190,12 +146,5 @@ export function useTheme() {
     if (next) setTheme(next)
   }
 
-  return {
-    theme,
-    setTheme,
-    toggleTheme,
-    appearancePreference,
-    setAppearancePreference,
-    systemAppearance,
-  }
+  return { theme, setTheme, toggleTheme }
 }

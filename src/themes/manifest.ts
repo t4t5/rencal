@@ -1,11 +1,8 @@
 export type Appearance = "light" | "dark"
 
-// The user's Appearance setting. Only themes with both variants read it.
-export type AppearancePreference = "auto" | Appearance
-
-// `"both"` means the theme ships `<id>.light.css` and `<id>.dark.css` and shows
-// the variant matching the Appearance setting. `null` means the appearance is
-// derived at runtime (e.g. omarchy, which inherits from the OS theme).
+// `"both"` means the theme (a plugin theme) ships a light and a dark variant and
+// shows the one matching the OS. `null` means the appearance is derived at
+// runtime (e.g. omarchy, which inherits from the OS theme).
 export type ThemeAppearance = Appearance | "both" | null
 
 export const themes = [
@@ -17,7 +14,7 @@ export const themes = [
   { id: "nord", name: "Nord", appearance: "dark" },
   { id: "electric-blue", name: "Electric Blue", appearance: "light" },
   { id: "minimal", name: "Minimal Light", appearance: "light" },
-] as const satisfies readonly { id: string; name: string; appearance: ThemeAppearance }[]
+] as const satisfies readonly { id: string; name: string; appearance: Appearance | null }[]
 
 export type ThemeId = (typeof themes)[number]["id"]
 
@@ -50,9 +47,8 @@ export function getThemeAppearance(
 export function resolveAppearance(
   id: string,
   descriptors: readonly ThemeDescriptor[],
-  { preference, system }: { preference: AppearancePreference; system: Appearance },
+  system: Appearance,
 ): Appearance | null {
   const appearance = getThemeAppearance(id, descriptors)
-  if (appearance === "both") return preference === "auto" ? system : preference
-  return appearance
+  return appearance === "both" ? system : appearance
 }

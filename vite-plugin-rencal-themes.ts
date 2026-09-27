@@ -3,19 +3,10 @@ import path from "node:path"
 import type { Plugin } from "vite"
 
 // Bundles the built-in theme files (src/themes/*.css) into a single virtual CSS
-// module, wrapping each in its [data-theme] selector. `<id>.light.css` and
-// `<id>.dark.css` are the variants of one theme, scoped by [data-appearance] too.
+// module, wrapping each in its [data-theme] selector.
 // Id ends in `.css` so Vite routes the output through its CSS pipeline.
 const VIRTUAL_ID = "virtual:rencal-themes.css"
 const RESOLVED_ID = "\0virtual:rencal-themes.css"
-
-function themeSelector(file: string): string {
-  const [, id, appearance] = /^(.+?)(?:\.(light|dark))?\.css$/.exec(file) ?? []
-  if (!id) throw new Error(`Not a theme file: ${file}`)
-  return appearance
-    ? `[data-theme="${id}"][data-appearance="${appearance}"]`
-    : `[data-theme="${id}"]`
-}
 
 export function rencalThemes(themesDir = path.resolve(__dirname, "src/themes")): Plugin {
   function bundle(): string {
@@ -24,8 +15,9 @@ export function rencalThemes(themesDir = path.resolve(__dirname, "src/themes")):
       .filter((file) => file.endsWith(".css"))
       .sort()
       .map((file) => {
+        const id = path.basename(file, ".css")
         const css = fs.readFileSync(path.join(themesDir, file), "utf8")
-        return `${themeSelector(file)} {\n${css}\n}`
+        return `[data-theme="${id}"] {\n${css}\n}`
       })
       .join("\n\n")
   }

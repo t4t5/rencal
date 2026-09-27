@@ -29,16 +29,3 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 ```
 
 Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. renCal derives surfaces, borders, hover states, and other colors from those values. Set `--primary-foreground` when the default text colour on `--primary` lacks contrast.
-
-### Light and dark variants
-
-To make a theme that switches with your system appearance, create two files named `<name>.light.css` and `<name>.dark.css`, for example `gruvbox.light.css` and `gruvbox.dark.css`. renCal shows them as one theme whose preview is split diagonally into its light and dark halves. The `@name` comment can go in either file.
-
-When you select a theme with both variants, an **Appearance** control appears under the theme grid:
-
-- **Auto** follows your system's light or dark mode.
-- **Light** and **Dark** always use that variant.
-
-The setting applies to every theme with both variants and is saved as `theme_appearance` in `~/.config/rencal/config.toml`. Themes with a single variant ignore it.
-
-A lone `<name>.light.css` or `<name>.dark.css` is a light-only or dark-only theme. If `<name>.css` also exists, the variant files win and renCal shows an error for `<name>.css` in the settings.

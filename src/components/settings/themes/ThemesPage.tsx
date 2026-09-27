@@ -1,7 +1,6 @@
 import { useMemo } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
 import { getCalendarEventStyle } from "@/lib/event-styles"
@@ -10,28 +9,15 @@ import { cn, isMacOS } from "@/lib/utils"
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemeCss, externalThemePalette } from "@/themes/external"
-import {
-  type Appearance,
-  type AppearancePreference,
-  getThemeAppearance,
-  type ThemeDescriptor,
-} from "@/themes/manifest"
+import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { theme, setTheme, appearancePreference, setAppearancePreference, systemAppearance } =
-    useTheme()
+  const { theme, setTheme } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
-      {getThemeAppearance(theme, descriptors) === "both" && (
-        <AppearanceControl
-          value={appearancePreference}
-          onChange={setAppearancePreference}
-          system={systemAppearance}
-        />
-      )}
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -84,34 +70,6 @@ function ThemeGrid({
           </button>
         )
       })}
-    </div>
-  )
-}
-
-const APPEARANCE_LABELS: Record<Appearance, string> = { light: "Light", dark: "Dark" }
-
-// Only shown for themes with both variants; Auto follows the OS.
-function AppearanceControl({
-  value,
-  onChange,
-  system,
-}: {
-  value: AppearancePreference
-  onChange: (value: AppearancePreference) => void
-  system: Appearance
-}) {
-  return (
-    <div className="flex flex-col gap-2">
-      <span className="text-sm">Appearance</span>
-      <Tabs value={value} onValueChange={(v) => onChange(v as AppearancePreference)}>
-        <TabsList aria-label="Appearance">
-          <TabsTrigger value="auto">
-            {value === "auto" ? `Auto (${APPEARANCE_LABELS[system]})` : "Auto"}
-          </TabsTrigger>
-          <TabsTrigger value="light">{APPEARANCE_LABELS.light}</TabsTrigger>
-          <TabsTrigger value="dark">{APPEARANCE_LABELS.dark}</TabsTrigger>
-        </TabsList>
-      </Tabs>
     </div>
   )
 }

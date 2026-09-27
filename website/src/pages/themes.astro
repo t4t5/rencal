@@ -41,14 +41,11 @@ const REN_CORE: Record<string, string> = {
   "--surface-tint-step": "5%",
 }
 
-// Omarchy (appearance: null) has no static palette to preview. Themes with
-// light and dark variants are previewed in their dark variant.
+// Omarchy (appearance: null) has no static palette to preview.
 const themes = appThemes
   .filter((theme) => theme.appearance !== null)
   .map((theme) => {
-    const css =
-      themeFiles[`../../../src/themes/${theme.id}.css`] ??
-      themeFiles[`../../../src/themes/${theme.id}.dark.css`]
+    const css = themeFiles[`../../../src/themes/${theme.id}.css`]
     if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
     return {
       id: theme.id,

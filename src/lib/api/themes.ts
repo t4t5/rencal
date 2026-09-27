@@ -7,7 +7,6 @@ import type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
-  ThemeAppearance,
 } from "@/rpc/bindings"
 
 export type {
@@ -44,21 +43,10 @@ export async function setConfiguredTheme(theme: string): Promise<void> {
   await rpc.config.set_theme(theme)
 }
 
-/** The Appearance setting for themes with both variants; `auto` follows the OS. */
-export function getThemeAppearance(): Promise<ThemeAppearance> {
-  return rpc.config.get_theme_appearance()
-}
-
-export async function setThemeAppearance(appearance: ThemeAppearance): Promise<void> {
-  await rpc.config.set_theme_appearance(appearance)
-}
-
 export const themes = {
   listExternal: listExternalThemes,
   loadFonts: loadExternalThemeFonts,
   getOmarchyColors,
   getConfigured: getConfiguredTheme,
   setConfigured: setConfiguredTheme,
-  getAppearance: getThemeAppearance,
-  setAppearance: setThemeAppearance,
 } as const

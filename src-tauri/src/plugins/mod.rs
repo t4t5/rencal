@@ -16,6 +16,7 @@ pub use rencal_plugin_contract::{
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
+use specta::Type;
 use toml_edit::{Array, Document, Item, Value};
 
 pub(crate) mod installer;
@@ -482,14 +483,22 @@ pub fn plugins_lock_path() -> Result<PathBuf, PluginError> {
 pub struct ScannedTheme {
     pub id: String,
     pub name: String,
-    pub css: ScannedThemeCss,
+    pub variants: ExternalThemeCss,
 }
 
-/// A theme's CSS contents, mirroring the manifest's `ThemeVariants`.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ScannedThemeCss {
-    Single { css: String, appearance: Appearance },
-    Both { light: String, dark: String },
+/// A theme's CSS contents, as sent to the frontend in `ExternalTheme`.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum ExternalThemeCss {
+    /// `appearance: None` means the frontend derives it from `--background`.
+    Single {
+        css: String,
+        appearance: Option<Appearance>,
+    },
+    Both {
+        light: String,
+        dark: String,
+    },
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -594,12 +603,12 @@ fn scan_package(
                 PluginError::new(format!("could not read {}: {error}", css_path.display()))
             })
         };
-        let css = match &theme.variants {
-            ThemeVariants::Single { css, appearance } => ScannedThemeCss::Single {
+        let variants = match &theme.variants {
+            ThemeVariants::Single { css, appearance } => ExternalThemeCss::Single {
                 css: read(css)?,
-                appearance: *appearance,
+                appearance: Some(*appearance),
             },
-            ThemeVariants::Both { light, dark } => ScannedThemeCss::Both {
+            ThemeVariants::Both { light, dark } => ExternalThemeCss::Both {
                 light: read(light)?,
                 dark: read(dark)?,
             },
@@ -607,7 +616,7 @@ fn scan_package(
         themes.push(ScannedTheme {
             id: format!("{}/{}", manifest.id, theme.id),
             name: theme.name,
-            css,
+            variants,
         });
     }
 
@@ -1036,10 +1045,10 @@ commit = "1111111111111111111111111111111111111111"
         assert_eq!(scan.packages.len(), 1);
         assert_eq!(scan.packages[0].themes[0].id, "alice.dusk/dark");
         assert_eq!(
-            scan.packages[0].themes[0].css,
-            ScannedThemeCss::Single {
+            scan.packages[0].themes[0].variants,
+            ExternalThemeCss::Single {
                 css: "--background: #111;".into(),
-                appearance: Appearance::Dark,
+                appearance: Some(Appearance::Dark),
             }
         );
         assert_eq!(scan.errors.len(), 1);
@@ -1062,8 +1071,8 @@ commit = "1111111111111111111111111111111111111111"
 
         let scan = scan_packages(temp.path(), None);
         assert_eq!(
-            scan.packages[0].themes[0].css,
-            ScannedThemeCss::Both {
+            scan.packages[0].themes[0].variants,
+            ExternalThemeCss::Both {
                 light: "--background: #eee;".into(),
                 dark: "--background: #111;".into(),
             }

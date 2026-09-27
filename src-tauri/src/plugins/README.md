@@ -36,7 +36,7 @@ light = "themes/light.css"
 dark = "themes/dark.css"
 ```
 
-renCal shows it as one theme and picks the variant that matches the system appearance, or the user's Appearance setting. Each theme sets either `css` and `appearance` or `light` and `dark`; mixing them, or setting only one of `light` and `dark`, is an error. The `light`/`dark` form needs renCal 0.8.0 or newer, so set `min_rencal_version` to at least that: older versions then report a clear version error instead of failing to parse the manifest.
+renCal shows it as one theme and picks the variant that matches the system appearance. Each theme sets either `css` and `appearance` or `light` and `dark`; mixing them, or setting only one of `light` and `dark`, is an error. The `light`/`dark` form needs renCal 0.8.0 or newer, so set `min_rencal_version` to at least that: older versions then report a clear version error instead of failing to parse the manifest.
 
 Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 

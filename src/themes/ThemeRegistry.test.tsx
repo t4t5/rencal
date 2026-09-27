@@ -23,8 +23,6 @@ vi.mock("@/lib/api", () => ({
       listExternal: vi.fn(),
       getConfigured: vi.fn(),
       setConfigured: vi.fn().mockResolvedValue(undefined),
-      getAppearance: vi.fn().mockResolvedValue("auto"),
-      setAppearance: vi.fn().mockResolvedValue(undefined),
     },
     notifications: {
       listen: vi.fn(() => ({ ready: Promise.resolve(), unlisten: vi.fn() })),
@@ -152,7 +150,7 @@ it("loads the configured theme when its snapshot arrives and removes its CSS on 
   expect(getComputedStyle(button).display).toBe(originalDisplay)
 })
 
-it("follows the system for a theme with both variants until the user pins one", async () => {
+it("previews both variants and follows the system for a theme with both", async () => {
   const both: ExternalTheme = {
     id: "alice.gruvbox/gruvbox",
     name: "Gruvbox",
@@ -161,7 +159,6 @@ it("follows the system for a theme with both variants until the user pins one", 
   }
   await render()
   await updateThemes([both])
-  expect(document.body.textContent).not.toContain("Appearance")
 
   const tile = document.querySelector('[data-theme="alice.gruvbox/gruvbox"]')!.closest("button")!
   const previews = tile.querySelectorAll<HTMLElement>('[data-theme="alice.gruvbox/gruvbox"]')
@@ -173,28 +170,13 @@ it("follows the system for a theme with both variants until the user pins one", 
   expect(appWindow.setTheme).toHaveBeenCalledWith(null)
   expect(document.body.dataset.appearance).toBe("light")
   expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("beige")
-  const auto = [...document.querySelectorAll('[role="tab"]')].find((tab) =>
-    tab.textContent?.startsWith("Auto"),
-  )
-  expect(auto?.textContent).toBe("Auto (Light)")
 
-  // The OS switches while on Auto.
+  // The OS switches.
   await act(async () => {
     const [handler] = appWindow.onThemeChanged.mock.calls.at(-1)!
     ;(handler as (event: { payload: string }) => void)({ payload: "dark" })
   })
   expect(document.body.dataset.appearance).toBe("dark")
   expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("black")
-
-  appWindow.setTheme.mockClear()
-  const light = [...document.querySelectorAll<HTMLElement>('[role="tab"]')].find(
-    (tab) => tab.textContent === "Light",
-  )!
-  await act(async () => {
-    light.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }))
-  })
-  expect(api.themes.setAppearance).toHaveBeenCalledWith("light")
-  expect(document.body.dataset.appearance).toBe("light")
-  expect(appWindow.setTheme).toHaveBeenCalledWith("light")
-  expect(localStorage.getItem("themeAppearanceResolved")).toBe("light")
+  expect(localStorage.getItem("themeAppearanceResolved")).toBe("dark")
 })

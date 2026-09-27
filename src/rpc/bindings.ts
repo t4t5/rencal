@@ -56,6 +56,9 @@ export type ExternalTheme = { id: string;
  */
 name: string; variants: ExternalThemeCss; source: ExternalThemeSource }
 
+/**
+ * A theme's CSS contents, as sent to the frontend in `ExternalTheme`.
+ */
 export type ExternalThemeCss = 
 /**
  * `appearance: None` means the frontend derives it from `--background`.
@@ -201,11 +204,6 @@ new_recurrence: RpcRecurrence | null }
 
 export type SyncPreview = { calendar_slug: string; to_push_count: number; to_push_delete_count: number; to_pull_count: number }
 
-/**
- * RPC mirror of `rencal_config::ThemeAppearance`.
- */
-export type ThemeAppearance = "auto" | "light" | "dark"
-
 export type TimeFormat = "24h" | "12h"
 
 /**
@@ -217,7 +215,7 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
  */
 new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
 
-const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"get_theme_appearance":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["theme"],"set_theme_appearance":["appearance"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"has_pending_plugin_install":[],"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"inspect":["repo"],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}' }
+const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["theme"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"has_pending_plugin_install":[],"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"inspect":["repo"],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
@@ -254,14 +252,12 @@ get_groups: () => Promise<Partial<{ [key in string]: string[] }>>,
 get_notifications_enabled: () => Promise<boolean>, 
 get_show_week_numbers: () => Promise<boolean>, 
 get_theme: () => Promise<string | null>, 
-get_theme_appearance: () => Promise<ThemeAppearance>, 
 set_auto_sync_enabled: (enabled: boolean) => Promise<null>, 
 set_first_day_of_week: (day: FirstDayOfWeek) => Promise<null>, 
 set_groups: (groups: Partial<{ [key in string]: string[] }>) => Promise<null>, 
 set_notifications_enabled: (enabled: boolean) => Promise<null>, 
 set_show_week_numbers: (show: boolean) => Promise<null>, 
-set_theme: (theme: string) => Promise<null>, 
-set_theme_appearance: (appearance: ThemeAppearance) => Promise<null>},
+set_theme: (theme: string) => Promise<null>},
 "omarchy": {get_colors: () => Promise<OmarchyColors | null>},
 "platform": {has_pending_plugin_install: () => Promise<boolean>, 
 needs_native_decorations: () => Promise<boolean>, 
