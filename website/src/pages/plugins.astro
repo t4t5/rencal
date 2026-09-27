@@ -6,6 +6,7 @@ import fs from "node:fs/promises"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
 import ArrowUpRightIcon from "../icons/arrow-up-right.astro"
+import RencalLogomark from "../icons/rencal-logomark.astro"
 
 interface PluginIndexEntry {
   id: string
@@ -135,7 +136,7 @@ const builtAt = new Date()
               </div>
 
               <div class="plugin-preview">
-                <span class="plugin-preview-fallback">No preview</span>
+                <RencalLogomark class="plugin-preview-fallback" />
                 {plugin.preview_url && (
                   <img
                     src={plugin.preview_url}

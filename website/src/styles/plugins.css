@@ -84,8 +84,9 @@
 }
 
 .plugin-preview-fallback {
-  color: var(--muted);
-  font-size: 0.75rem;
+  width: 2.5rem;
+  opacity: 0.15;
+  filter: grayscale(1);
 }
 
 .plugin-preview img {
