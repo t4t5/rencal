@@ -17,6 +17,7 @@ pub enum AppEvent {
     CaldirConfigChanged(CaldirSettings),
     CalendarsChanged(()),
     EventsChanged(()),
+    ProvidersChanged(()),
     EventDeepLinkAvailable(()),
     PluginDeepLinkAvailable(()),
     RencalConfigChanged(()),
@@ -113,6 +114,11 @@ mod tests {
                 Value::Null,
             ),
             (AppEvent::EventsChanged(()), "events-changed", Value::Null),
+            (
+                AppEvent::ProvidersChanged(()),
+                "providers-changed",
+                Value::Null,
+            ),
             (
                 AppEvent::EventDeepLinkAvailable(()),
                 "event-deep-link-available",

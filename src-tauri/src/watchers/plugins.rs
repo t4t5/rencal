@@ -2,6 +2,7 @@
 
 use std::ffi::OsStr;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 use notify::RecursiveMode;
 use tauri::AppHandle;
@@ -10,6 +11,7 @@ use crate::events::AppEvent;
 use crate::external_themes;
 use crate::fs_watch::{is_any_change, watch_debounced};
 use crate::plugins::PluginManager;
+use crate::state::AppState;
 
 fn is_plugins_file(path: &Path) -> bool {
     path.file_name() == Some(OsStr::new("plugins.toml"))
@@ -43,7 +45,7 @@ fn watch_dirs(path: &Path) -> Vec<PathBuf> {
     directories
 }
 
-async fn reconcile(app: &AppHandle, manager: &PluginManager) {
+async fn reconcile(app: &AppHandle, manager: &PluginManager, state: &AppState) {
     for error in manager.reconcile().await {
         log::error!(
             "could not reconcile plugin {}: {}",
@@ -51,12 +53,15 @@ async fn reconcile(app: &AppHandle, manager: &PluginManager) {
             error.message
         );
     }
+    // Installs and uninstalls add, shadow or remove provider binaries.
+    state.rescan_providers();
+    state.notify_providers_changed();
     // This also refreshes Settings > Plugins, including parse or network
     // errors that did not result in a package-directory change.
     let _ = AppEvent::ExternalThemesChanged(external_themes::scan()).emit(app);
 }
 
-pub async fn run_watcher(app: AppHandle, manager: PluginManager) {
+pub async fn run_watcher(app: AppHandle, manager: PluginManager, state: Arc<AppState>) {
     let Some(config_dir) = manager.declarations_path().parent() else {
         log::warn!(
             "plugin declarations path has no parent: {:?}",
@@ -66,7 +71,7 @@ pub async fn run_watcher(app: AppHandle, manager: PluginManager) {
     };
     if let Err(error) = std::fs::create_dir_all(config_dir) {
         log::warn!("plugin watcher: cannot create {config_dir:?}: {error}");
-        reconcile(&app, &manager).await;
+        reconcile(&app, &manager, &state).await;
         return;
     }
 
@@ -82,12 +87,12 @@ pub async fn run_watcher(app: AppHandle, manager: PluginManager) {
             }
         };
 
-    reconcile(&app, &manager).await;
+    reconcile(&app, &manager, &state).await;
     while let Some(watch) = &mut watch {
         if watch.changed().await.is_none() {
             return;
         }
-        reconcile(&app, &manager).await;
+        reconcile(&app, &manager, &state).await;
     }
 }
 

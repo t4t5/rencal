@@ -15,6 +15,13 @@ pub const MAX_NAME_LENGTH: usize = 100;
 pub const MAX_DESCRIPTION_LENGTH: usize = 500;
 pub const MAX_FONT_FACES: usize = 8;
 
+/// Oldest caldir-core that speaks renCal's provider wire format (0.14 moved
+/// events to ICS). Bump whenever caldir breaks that format.
+pub const MIN_PROVIDER_CALDIR_CORE: Version = Version::new(0, 14, 0);
+/// Placeholder in a provider asset name, filled with the host target triple.
+pub const PROVIDER_ASSET_TARGET: &str = "{target}";
+const RESERVED_PROVIDER_SLUGS: [&str; 5] = ["google", "icloud", "outlook", "caldav", "webcal"];
+
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum Appearance {
@@ -53,19 +60,80 @@ pub struct FontContribution {
     pub style: FontStyle,
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ProviderContribution {
+    /// The caldir provider slug (`caldir-provider-<slug>`). Accounts and
+    /// provider storage key on it, so it is not namespaced like theme ids.
+    pub slug: String,
+    pub name: String,
+    #[serde(default)]
+    pub icon: Option<String>,
+    /// Release asset name containing [`PROVIDER_ASSET_TARGET`].
+    pub asset: String,
+    /// The caldir-core version the provider binary was built with.
+    pub caldir_core: String,
+}
+
+impl ProviderContribution {
+    /// The release asset name for one target triple.
+    pub fn asset_for(&self, target: &str) -> String {
+        self.asset.replacen(PROVIDER_ASSET_TARGET, target, 1)
+    }
+
+    /// The target triple a release asset name fills in, if it is one of ours.
+    pub fn asset_target<'a>(&self, name: &'a str) -> Option<&'a str> {
+        let (prefix, suffix) = self.asset.split_once(PROVIDER_ASSET_TARGET)?;
+        name.strip_prefix(prefix)?
+            .strip_suffix(suffix)
+            .filter(|target| !target.is_empty())
+    }
+}
+
+/// Whether renCal can talk to a provider built with this caldir-core.
+pub fn provider_is_compatible(provider: &ProviderContribution) -> bool {
+    Version::parse(&provider.caldir_core).is_ok_and(|version| version >= MIN_PROVIDER_CALDIR_CORE)
+}
+
+/// The hex sha256 in a GitHub release asset digest (`sha256:<hex>`). An asset
+/// without one cannot be verified, so it is never installable.
+pub fn release_asset_sha256(digest: &str) -> Option<String> {
+    digest
+        .strip_prefix("sha256:")
+        .map(str::to_ascii_lowercase)
+        .filter(|hex| is_sha256_hex(hex))
+}
+
+pub fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+/// What a plugin adds to renCal, as the plugin catalog lists it. Fonts count
+/// as part of a theme.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum ContributionKind {
+    Theme,
+    /// Runs a provider binary on the user's computer.
+    Provider,
+}
+
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
 pub struct Contributions {
     #[serde(default)]
     pub themes: Vec<ThemeContribution>,
     #[serde(default)]
     pub fonts: Vec<FontContribution>,
+    #[serde(default)]
+    pub providers: Vec<ProviderContribution>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 pub struct PluginManifest {
     pub id: String,
     pub name: String,
-    pub version: String,
     pub description: String,
     pub min_rencal_version: String,
     #[serde(default)]
@@ -114,15 +182,9 @@ pub fn validate_manifest(
         MAX_DESCRIPTION_LENGTH,
     )?;
 
-    Version::parse(&manifest.version).map_err(|error| {
-        PluginError::new(format!(
-            "plugin version {:?} is not semantic: {error}",
-            manifest.version
-        ))
-    })?;
-    if manifest.contributes.themes.is_empty() {
+    if manifest.contributes.themes.is_empty() && manifest.contributes.providers.is_empty() {
         return Err(PluginError::new(
-            "unsupported package: at least one theme contribution is required",
+            "unsupported package: at least one theme or provider contribution is required",
         ));
     }
 
@@ -141,6 +203,32 @@ pub fn validate_manifest(
             MAX_NAME_LENGTH,
         )?;
         validate_css_path(&theme.css)?;
+    }
+
+    let mut provider_slugs = HashSet::new();
+    for provider in &mut manifest.contributes.providers {
+        validate_provider_slug(&provider.slug)?;
+        if !provider_slugs.insert(&provider.slug) {
+            return Err(PluginError::new(format!(
+                "duplicate provider contribution slug {:?}",
+                provider.slug
+            )));
+        }
+        provider.name = validate_display_text(
+            &provider.name,
+            &format!("provider {:?} name", provider.slug),
+            MAX_NAME_LENGTH,
+        )?;
+        if let Some(icon) = &provider.icon {
+            validate_icon_path(icon)?;
+        }
+        validate_provider_asset(&provider.asset)?;
+        Version::parse(&provider.caldir_core).map_err(|error| {
+            PluginError::new(format!(
+                "provider {:?} caldir_core {:?} is not semantic: {error}",
+                provider.slug, provider.caldir_core
+            ))
+        })?;
     }
 
     if manifest.contributes.fonts.len() > MAX_FONT_FACES {
@@ -236,17 +324,6 @@ pub fn validate_manifest_owner(
     Ok(())
 }
 
-/// Releases may prefix the semantic version with `v`, but must otherwise match.
-pub fn validate_release_tag(manifest: &PluginManifest, tag: &str) -> Result<(), PluginError> {
-    if tag.strip_prefix('v').unwrap_or(tag) != manifest.version {
-        return Err(PluginError::new(format!(
-            "release tag {tag:?} does not match manifest version {:?}",
-            manifest.version
-        )));
-    }
-    Ok(())
-}
-
 fn reject_unsupported_contributions(value: &toml::Value) -> Result<(), PluginError> {
     let Some(table) = value.as_table() else {
         return Err(PluginError::new(format!(
@@ -262,7 +339,7 @@ fn reject_unsupported_contributions(value: &toml::Value) -> Result<(), PluginErr
     }
     if let Some(contributes) = table.get("contributes").and_then(toml::Value::as_table) {
         for key in contributes.keys() {
-            if key != "themes" && key != "fonts" {
+            if !["themes", "fonts", "providers"].contains(&key.as_str()) {
                 return Err(PluginError::new(format!(
                     "unsupported package contribution {:?}",
                     format!("contributes.{key}")
@@ -306,6 +383,21 @@ fn validate_contribution_id(id: &str) -> Result<(), PluginError> {
     Ok(())
 }
 
+#[doc(hidden)]
+pub fn validate_provider_slug(slug: &str) -> Result<(), PluginError> {
+    if !valid_slug(slug) {
+        return Err(PluginError::new(format!(
+            "provider slug {slug:?} must use lowercase a-z, 0-9, and hyphens"
+        )));
+    }
+    if RESERVED_PROVIDER_SLUGS.contains(&slug) {
+        return Err(PluginError::new(format!(
+            "provider slug {slug:?} is reserved for a built-in provider"
+        )));
+    }
+    Ok(())
+}
+
 fn valid_slug(value: &str) -> bool {
     !value.is_empty()
         && value
@@ -333,6 +425,27 @@ fn validate_css_path(path: &str) -> Result<(), PluginError> {
     Ok(())
 }
 
+fn validate_icon_path(path: &str) -> Result<(), PluginError> {
+    if !validate_safe_relative_path(path) || !path.ends_with(".svg") {
+        return Err(PluginError::new(format!(
+            "provider icon path {path:?} must be a relative .svg path within the package"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_provider_asset(asset: &str) -> Result<(), PluginError> {
+    if asset.contains(['/', '\\'])
+        || asset.matches(PROVIDER_ASSET_TARGET).count() != 1
+        || !asset.ends_with(".tar.gz")
+    {
+        return Err(PluginError::new(format!(
+            "provider asset {asset:?} must be a file name containing {PROVIDER_ASSET_TARGET} once and ending in .tar.gz"
+        )));
+    }
+    Ok(())
+}
+
 fn validate_font_path(path: &str) -> Result<(), PluginError> {
     if !validate_safe_relative_path(path) || !path.ends_with(".woff2") {
         return Err(PluginError::new(format!(
@@ -349,7 +462,6 @@ mod tests {
     const MANIFEST: &str = r#"
 id = "alice.dusk"
 name = "Dusk"
-version = "1.2.3"
 description = "A quiet theme"
 min_rencal_version = "0.8.0"
 
@@ -582,5 +694,200 @@ style = "oblique"
                 .to_string()
                 .contains("contributes.icons")
         );
+    }
+
+    const PROVIDER: &str = r#"
+[[contributes.providers]]
+slug = "tuta"
+name = "Tuta"
+icon = "icons/tuta.svg"
+asset = "caldir-provider-tuta-{target}.tar.gz"
+caldir_core = "0.16.0"
+"#;
+
+    fn provider_only(providers: &str) -> String {
+        let header = MANIFEST.split_once("[[contributes.themes]]").unwrap().0;
+        format!("{header}{providers}")
+    }
+
+    fn provider_error(from: &str, to: &str) -> String {
+        validate_manifest(&provider_only(&PROVIDER.replacen(from, to, 1)), None)
+            .unwrap_err()
+            .to_string()
+    }
+
+    fn provider_built_with(caldir_core: &str) -> ProviderContribution {
+        ProviderContribution {
+            slug: "tuta".into(),
+            name: "Tuta".into(),
+            icon: None,
+            asset: "caldir-provider-tuta-{target}.tar.gz".into(),
+            caldir_core: caldir_core.into(),
+        }
+    }
+
+    #[test]
+    fn accepts_provider_only_and_mixed_packages() {
+        let manifest = validate_manifest(&provider_only(PROVIDER), None).unwrap();
+        assert!(manifest.contributes.themes.is_empty());
+        assert_eq!(
+            manifest.contributes.providers,
+            [ProviderContribution {
+                icon: Some("icons/tuta.svg".into()),
+                ..provider_built_with("0.16.0")
+            }]
+        );
+        assert_eq!(
+            manifest.contributes.providers[0].asset_for("x86_64-unknown-linux-gnu"),
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz"
+        );
+
+        let mixed = validate_manifest(&format!("{MANIFEST}{PROVIDER}"), None).unwrap();
+        assert_eq!(mixed.contributes.themes.len(), 1);
+        assert_eq!(mixed.contributes.providers.len(), 1);
+
+        let without_icon = PROVIDER.replacen("icon = \"icons/tuta.svg\"\n", "", 1);
+        let manifest = validate_manifest(&provider_only(&without_icon), None).unwrap();
+        assert_eq!(manifest.contributes.providers[0].icon, None);
+    }
+
+    #[test]
+    fn requires_a_theme_or_provider_contribution() {
+        let fonts_only = provider_only(
+            "[[contributes.fonts]]\nfamily = \"Pixel\"\nfile = \"fonts/pixel.woff2\"\n",
+        );
+        for contents in [provider_only(""), fonts_only] {
+            let error = validate_manifest(&contents, None).unwrap_err().to_string();
+            assert_eq!(
+                error,
+                "unsupported package: at least one theme or provider contribution is required"
+            );
+        }
+    }
+
+    #[test]
+    fn validates_provider_slugs_as_unreserved_caldir_slugs() {
+        for slug in RESERVED_PROVIDER_SLUGS {
+            let error = provider_error("slug = \"tuta\"", &format!("slug = \"{slug}\""));
+            assert!(
+                error.contains("is reserved for a built-in provider"),
+                "{error}"
+            );
+        }
+        for slug in ["", "Tuta", "tu_ta", "t4t5.tuta"] {
+            let error = provider_error("slug = \"tuta\"", &format!("slug = \"{slug}\""));
+            assert!(
+                error.contains("must use lowercase a-z, 0-9, and hyphens"),
+                "{error}"
+            );
+        }
+        let community = PROVIDER.replacen("slug = \"tuta\"", "slug = \"tuta-community\"", 1);
+        assert!(validate_manifest(&provider_only(&community), None).is_ok());
+
+        let duplicate = provider_only(&format!(
+            "{PROVIDER}{}",
+            PROVIDER.replacen("name = \"Tuta\"", "name = \"Tuta Mirror\"", 1)
+        ));
+        let error = validate_manifest(&duplicate, None).unwrap_err().to_string();
+        assert_eq!(error, "duplicate provider contribution slug \"tuta\"");
+    }
+
+    #[test]
+    fn validates_provider_names_and_icon_paths() {
+        let padded = PROVIDER.replacen("name = \"Tuta\"", "name = \"  Tuta  \"", 1);
+        let manifest = validate_manifest(&provider_only(&padded), None).unwrap();
+        assert_eq!(manifest.contributes.providers[0].name, "Tuta");
+        assert_eq!(
+            provider_error("name = \"Tuta\"", "name = \" \""),
+            "provider \"tuta\" name must not be empty"
+        );
+
+        for icon in [
+            "",
+            "../tuta.svg",
+            "/tuta.svg",
+            "icons\\\\tuta.svg",
+            "icons//tuta.svg",
+            "icons/tuta.png",
+            "icons/tuta.SVG",
+        ] {
+            let error = provider_error("icons/tuta.svg", icon);
+            assert!(
+                error.contains("must be a relative .svg path"),
+                "{icon}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn validates_provider_asset_names() {
+        for asset in [
+            "caldir-provider-tuta.tar.gz",
+            "caldir-provider-tuta-{target}-{target}.tar.gz",
+            "dist/caldir-provider-tuta-{target}.tar.gz",
+            "dist\\\\caldir-provider-tuta-{target}.tar.gz",
+            "caldir-provider-tuta-{target}.zip",
+        ] {
+            let error = provider_error("caldir-provider-tuta-{target}.tar.gz", asset);
+            assert!(
+                error.contains("must be a file name containing {target} once"),
+                "{asset}: {error}"
+            );
+        }
+    }
+
+    #[test]
+    fn requires_a_semantic_caldir_core_version() {
+        let error = provider_error("caldir_core = \"0.16.0\"\n", "");
+        assert!(error.contains("missing field `caldir_core`"), "{error}");
+        assert!(
+            provider_error("\"0.16.0\"", "\"0.16\"")
+                .contains("provider \"tuta\" caldir_core \"0.16\" is not semantic")
+        );
+    }
+
+    #[test]
+    fn matches_release_assets_to_their_target() {
+        let provider = provider_built_with("0.16.0");
+        assert_eq!(
+            provider.asset_target("caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz"),
+            Some("x86_64-unknown-linux-gnu")
+        );
+        for name in [
+            "caldir-provider-tuta-.tar.gz",
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.zip",
+            "caldir-provider-proton-x86_64-unknown-linux-gnu.tar.gz",
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz.sha256",
+        ] {
+            assert_eq!(provider.asset_target(name), None, "{name}");
+        }
+    }
+
+    #[test]
+    fn reads_sha256_release_asset_digests() {
+        let hex = "ab".repeat(32);
+        assert_eq!(
+            release_asset_sha256(&format!("sha256:{}", hex.to_uppercase())),
+            Some(hex.clone())
+        );
+        assert_eq!(release_asset_sha256(&hex), None);
+        assert_eq!(release_asset_sha256(&format!("sha512:{hex}")), None);
+        assert_eq!(release_asset_sha256("sha256:abc"), None);
+    }
+
+    #[test]
+    fn provider_compatibility_starts_at_the_minimum_caldir_core() {
+        let minimum = MIN_PROVIDER_CALDIR_CORE;
+        let next = Version::new(minimum.major, minimum.minor, minimum.patch + 1);
+        assert!(!provider_is_compatible(&provider_built_with("0.11.2")));
+        assert!(!provider_is_compatible(&provider_built_with(&format!(
+            "{minimum}-rc.1"
+        ))));
+        assert!(provider_is_compatible(&provider_built_with(
+            &minimum.to_string()
+        )));
+        assert!(provider_is_compatible(&provider_built_with(
+            &next.to_string()
+        )));
     }
 }

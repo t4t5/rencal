@@ -7,52 +7,162 @@
 //! `state_bridge` turns those into Tauri events. That keeps it constructible
 //! and testable without an app.
 
+use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use caldir_core::{Caldir, CaldirConfig, CaldirError, Event, ProviderRegistry};
 use parking_lot::{RwLock, RwLockReadGuard};
+use serde::Serialize;
+use specta::Type;
 use tokio::sync::watch;
 
 use crate::deep_links::DeepLinkInbox;
 use crate::event_cache::EventCache;
+use crate::plugins;
 use crate::signal::Signal;
+
+/// Where renCal finds provider binaries besides `PATH`.
+#[derive(Clone, Debug, Default)]
+pub struct ProviderDirs {
+    /// Shipped with this build.
+    pub bundled: Option<PathBuf>,
+    /// Installed plugin packages; each compatible one contributes its `bin/`.
+    pub plugins: Option<PathBuf>,
+}
+
+/// A provider renCal can run, and what to show for it.
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Type)]
+pub struct ProviderInfo {
+    pub slug: String,
+    /// From the manifest of a plugin contributing `slug`.
+    pub name: Option<String>,
+    /// That plugin's icon as a `data:image/svg+xml;base64,...` URL.
+    pub icon: Option<String>,
+    /// Where the binary renCal runs comes from.
+    pub source: ProviderSource,
+    /// A `PATH` binary with this slug exists, so the caldir CLI can sync it too.
+    pub on_path: bool,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq, Serialize, Type)]
+#[serde(tag = "kind", rename_all = "lowercase")]
+pub enum ProviderSource {
+    Bundled,
+    Plugin { id: String },
+    Path,
+}
+
+impl ProviderDirs {
+    fn scan(&self) -> (ProviderRegistry, Vec<ProviderInfo>) {
+        self.scan_over(ProviderRegistry::from_system_path())
+    }
+
+    /// Precedence is bundled > plugin > `PATH`: renCal runs the binaries it
+    /// shipped or pinned, so the icon shown matches the binary running.
+    fn scan_over(&self, mut providers: ProviderRegistry) -> (ProviderRegistry, Vec<ProviderInfo>) {
+        let on_path: HashSet<String> = slugs(&providers).collect();
+        let mut sources: BTreeMap<String, ProviderSource> = on_path
+            .iter()
+            .map(|slug| (slug.clone(), ProviderSource::Path))
+            .collect();
+
+        let mut packages = Vec::new();
+        if let Some(root) = &self.plugins {
+            packages =
+                plugins::scan_packages(root, plugins::running_app_version().as_ref()).packages;
+            for (package, dir) in plugins::provider_dirs(root, &packages) {
+                let source = ProviderSource::Plugin {
+                    id: package.id.clone(),
+                };
+                layer(&mut providers, &mut sources, &dir, source);
+            }
+        }
+        if let Some(dir) = &self.bundled {
+            layer(&mut providers, &mut sources, dir, ProviderSource::Bundled);
+        }
+
+        // Metadata applies whichever binary runs: a local checkout without
+        // `bin/` still names and draws the `PATH` binary.
+        let infos = sources
+            .into_iter()
+            .map(|(slug, source)| {
+                let contribution = packages
+                    .iter()
+                    .flat_map(|package| &package.providers)
+                    .find(|provider| provider.slug == slug);
+                ProviderInfo {
+                    name: contribution.map(|provider| provider.name.clone()),
+                    icon: contribution
+                        .and_then(|provider| provider.icon.as_deref())
+                        .and_then(plugins::provider_icon_data_url),
+                    source,
+                    on_path: on_path.contains(&slug),
+                    slug,
+                }
+            })
+            .collect();
+        (providers, infos)
+    }
+}
+
+fn slugs(providers: &ProviderRegistry) -> impl Iterator<Item = String> + '_ {
+    providers.slugs().into_iter().map(|slug| slug.to_string())
+}
+
+/// Adds `dir`'s providers over `providers`, recording `source` for each.
+fn layer(
+    providers: &mut ProviderRegistry,
+    sources: &mut BTreeMap<String, ProviderSource>,
+    dir: &Path,
+    source: ProviderSource,
+) {
+    let mut found = ProviderRegistry::new();
+    found.add_from_dir(dir);
+    for slug in slugs(&found) {
+        sources.insert(slug, source.clone());
+    }
+    providers.add_from_dir(dir);
+}
 
 pub struct AppState {
     caldir: RwLock<Caldir>,
     caldir_config: watch::Sender<CaldirConfig>,
     caldir_config_path: PathBuf,
-    bundled_providers: Option<PathBuf>,
+    provider_dirs: ProviderDirs,
     events: EventCache,
     calendars_changed: Signal,
     events_changed: Signal,
+    providers_changed: Signal,
     pub deep_links: DeepLinkInbox,
 }
 
 impl AppState {
-    /// Load from the system caldir config, overlaying the providers bundled
-    /// with this build (if any) on top of those found in `PATH`.
-    pub fn load(bundled_providers: Option<PathBuf>) -> Result<Self, CaldirError> {
+    /// Load from the system caldir config, overlaying `provider_dirs` on the
+    /// providers found in `PATH`.
+    pub fn load(provider_dirs: ProviderDirs) -> Result<Self, CaldirError> {
         let config_path = CaldirConfig::default_system_config_path()?;
-        Self::load_from(config_path, bundled_providers)
+        Self::load_from(config_path, provider_dirs)
     }
 
     /// Like `load`, but with an explicit config path (tests, `gen_types`).
     pub fn load_from(
         config_path: PathBuf,
-        bundled_providers: Option<PathBuf>,
+        provider_dirs: ProviderDirs,
     ) -> Result<Self, CaldirError> {
-        let caldir = open_caldir(&config_path, bundled_providers.as_deref())?;
+        let mut caldir = Caldir::load_from(&config_path)?;
+        caldir.set_providers(provider_dirs.scan().0);
         let (caldir_config, _) = watch::channel(caldir.config().clone());
 
         Ok(Self {
             caldir: RwLock::new(caldir),
             caldir_config,
             caldir_config_path: config_path,
-            bundled_providers,
+            provider_dirs,
             events: EventCache::default(),
             calendars_changed: Signal::new(),
             events_changed: Signal::new(),
+            providers_changed: Signal::new(),
             deep_links: DeepLinkInbox::default(),
         })
     }
@@ -98,13 +208,12 @@ impl AppState {
         Ok(())
     }
 
-    /// Rescan `PATH` for provider binaries. The scan runs outside the lock.
-    pub fn rescan_providers(&self) {
-        let mut providers = ProviderRegistry::from_system_path();
-        if let Some(dir) = &self.bundled_providers {
-            providers.add_from_dir(dir);
-        }
+    /// Rescan `PATH` and plugin packages for provider binaries, sorted by
+    /// slug. The scan runs outside the lock.
+    pub fn rescan_providers(&self) -> Vec<ProviderInfo> {
+        let (providers, infos) = self.provider_dirs.scan();
         self.caldir.write().set_providers(providers);
+        infos
     }
 
     /// Latest caldir config; wakes on every change. Backend tasks subscribe to
@@ -123,6 +232,16 @@ impl AppState {
 
     pub fn subscribe_events_changed(&self) -> watch::Receiver<u64> {
         self.events_changed.subscribe()
+    }
+
+    /// Not called by `rescan_providers`: `list_providers` rescans on every
+    /// call, so a listener that refetches would wake itself forever.
+    pub fn notify_providers_changed(&self) {
+        self.providers_changed.notify();
+    }
+
+    pub fn subscribe_providers_changed(&self) -> watch::Receiver<u64> {
+        self.providers_changed.subscribe()
     }
 
     /// Only the caldir watcher calls this; in-app edits already return their
@@ -166,19 +285,6 @@ impl AppState {
     }
 }
 
-/// Read config.toml and scan `PATH`, overlaying the bundled providers so they
-/// win over same-named binaries the user has installed.
-fn open_caldir(
-    config_path: &Path,
-    bundled_providers: Option<&Path>,
-) -> Result<Caldir, CaldirError> {
-    let caldir = Caldir::load_from(config_path)?;
-    Ok(match bundled_providers {
-        Some(dir) => caldir.with_bundled_providers(dir),
-        None => caldir,
-    })
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -206,7 +312,7 @@ mod tests {
         }
 
         fn state(&self) -> AppState {
-            AppState::load_from(self.config_path.clone(), None).unwrap()
+            AppState::load_from(self.config_path.clone(), ProviderDirs::default()).unwrap()
         }
 
         fn add_event(&self, state: &AppState, slug: &str, summary: &str) {
@@ -364,8 +470,241 @@ mod tests {
         std::fs::write(&caldir.config_path, "not = [valid").unwrap();
 
         assert!(matches!(
-            AppState::load_from(caldir.config_path.clone(), None),
+            AppState::load_from(caldir.config_path.clone(), ProviderDirs::default()),
             Err(CaldirError::Config(_))
         ));
+    }
+
+    /// Stands in for `PATH`, bundled and plugin directories in one temp dir.
+    #[cfg(unix)]
+    struct ProviderFixture {
+        tmp: TempDir,
+        dirs: ProviderDirs,
+    }
+
+    #[cfg(unix)]
+    impl ProviderFixture {
+        fn new() -> Self {
+            let tmp = TempDir::new().unwrap();
+            let dirs = ProviderDirs {
+                bundled: Some(tmp.path().join("bundled")),
+                plugins: Some(tmp.path().join("plugins")),
+            };
+            Self { tmp, dirs }
+        }
+
+        fn binary(dir: &Path, slug: &str) -> PathBuf {
+            use std::os::unix::fs::PermissionsExt;
+
+            std::fs::create_dir_all(dir).unwrap();
+            let binary = dir.join(format!("caldir-provider-{slug}"));
+            std::fs::write(&binary, "#!/bin/sh\n").unwrap();
+            std::fs::set_permissions(&binary, std::fs::Permissions::from_mode(0o755)).unwrap();
+            binary
+        }
+
+        fn on_path(&self, slug: &str) -> PathBuf {
+            Self::binary(&self.tmp.path().join("path"), slug)
+        }
+
+        fn bundled(&self, slug: &str) -> PathBuf {
+            Self::binary(self.dirs.bundled.as_ref().unwrap(), slug)
+        }
+
+        /// Installs a plugin package contributing `slug`, built against `caldir_core`.
+        fn plugin(&self, slug: &str, caldir_core: &str) -> PathBuf {
+            let package = self.package(slug);
+            std::fs::create_dir_all(package.join("icons")).unwrap();
+            std::fs::write(package.join("icons/icon.svg"), ICON).unwrap();
+            std::fs::write(
+                package.join(plugins::MANIFEST_FILE),
+                format!(
+                    r#"id = "alice.{slug}"
+name = "{slug}"
+description = "A provider"
+min_rencal_version = "0.8.0"
+
+[[contributes.providers]]
+slug = "{slug}"
+name = "{slug} plugin"
+icon = "icons/icon.svg"
+asset = "caldir-provider-{slug}-{{target}}.tar.gz"
+caldir_core = "{caldir_core}"
+"#
+                ),
+            )
+            .unwrap();
+            Self::binary(&package.join("bin"), slug)
+        }
+
+        fn package(&self, slug: &str) -> PathBuf {
+            self.dirs
+                .plugins
+                .as_ref()
+                .unwrap()
+                .join(format!("alice.{slug}"))
+        }
+
+        /// Layers `self.dirs` over the fake `PATH`.
+        fn scan(&self) -> (ProviderRegistry, Vec<ProviderInfo>) {
+            let mut path = ProviderRegistry::new();
+            path.add_from_dir(self.tmp.path().join("path"));
+            self.dirs.scan_over(path)
+        }
+
+        fn caldir(&self) -> Caldir {
+            let mut caldir = Caldir::load_from(self.tmp.path().join("config.toml")).unwrap();
+            caldir.set_providers(self.scan().0);
+            caldir
+        }
+
+        fn infos(&self) -> Vec<ProviderInfo> {
+            self.scan().1
+        }
+    }
+
+    #[cfg(unix)]
+    const ICON: &str = r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#;
+
+    /// The binary `slug` runs. caldir-core keeps it private; `Debug` shows it.
+    #[cfg(unix)]
+    fn resolved(caldir: &Caldir, slug: &str) -> Option<String> {
+        caldir
+            .provider(&caldir_core::ProviderSlug::from(slug))
+            .ok()
+            .map(|provider| format!("{provider:?}"))
+    }
+
+    #[cfg(unix)]
+    fn resolves_to(caldir: &Caldir, slug: &str, binary: &Path) -> bool {
+        resolved(caldir, slug).is_some_and(|debug| debug.contains(&format!("{binary:?}")))
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn providers_resolve_bundled_then_plugin_then_path() {
+        let fixture = ProviderFixture::new();
+        fixture.on_path("tuta");
+        let plugin_tuta = fixture.plugin("tuta", "0.16.0");
+        fixture.on_path("hooli");
+        fixture.plugin("hooli", "0.16.0");
+        let bundled_hooli = fixture.bundled("hooli");
+        let path_only = fixture.on_path("etesync");
+
+        let caldir = fixture.caldir();
+
+        assert!(resolves_to(&caldir, "tuta", &plugin_tuta));
+        assert!(resolves_to(&caldir, "hooli", &bundled_hooli));
+        assert!(resolves_to(&caldir, "etesync", &path_only));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn uninstalling_a_plugin_falls_back_to_path() {
+        let fixture = ProviderFixture::new();
+        let path_tuta = fixture.on_path("tuta");
+        let plugin_tuta = fixture.plugin("tuta", "0.16.0");
+        fixture.plugin("hooli", "0.16.0");
+        assert!(resolves_to(&fixture.caldir(), "tuta", &plugin_tuta));
+
+        std::fs::remove_dir_all(fixture.package("tuta")).unwrap();
+        std::fs::remove_dir_all(fixture.package("hooli")).unwrap();
+
+        let caldir = fixture.caldir();
+        assert!(resolves_to(&caldir, "tuta", &path_tuta));
+        assert_eq!(resolved(&caldir, "hooli"), None);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn incompatible_plugin_binaries_are_not_registered() {
+        let fixture = ProviderFixture::new();
+        let path_tuta = fixture.on_path("tuta");
+        fixture.plugin("tuta", "0.11.2");
+        fixture.plugin("hooli", "0.13.0");
+
+        let caldir = fixture.caldir();
+
+        assert!(resolves_to(&caldir, "tuta", &path_tuta));
+        assert_eq!(resolved(&caldir, "hooli"), None);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn provider_infos_report_source_path_and_plugin_metadata() {
+        use base64::Engine;
+
+        let fixture = ProviderFixture::new();
+        fixture.on_path("tuta");
+        fixture.plugin("tuta", "0.16.0");
+        fixture.plugin("hooli", "0.16.0");
+        fixture.bundled("caldav");
+        fixture.on_path("etesync");
+        let icon = format!(
+            "data:image/svg+xml;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(ICON)
+        );
+        let plugin = |slug: &str, on_path| ProviderInfo {
+            slug: slug.into(),
+            name: Some(format!("{slug} plugin")),
+            icon: Some(icon.clone()),
+            source: ProviderSource::Plugin {
+                id: format!("alice.{slug}"),
+            },
+            on_path,
+        };
+        let plain = |slug: &str, source, on_path| ProviderInfo {
+            slug: slug.into(),
+            name: None,
+            icon: None,
+            source,
+            on_path,
+        };
+
+        assert_eq!(
+            fixture.infos(),
+            [
+                plain("caldav", ProviderSource::Bundled, false),
+                plain("etesync", ProviderSource::Path, true),
+                plugin("hooli", false),
+                plugin("tuta", true),
+            ]
+        );
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn plugins_without_a_runnable_binary_still_describe_the_path_binary() {
+        let fixture = ProviderFixture::new();
+        fixture.on_path("tuta");
+        fixture.on_path("hooli");
+        // A local checkout without `bin/`, and a plugin built for an older caldir.
+        let local = fixture.plugin("tuta", "0.16.0");
+        std::fs::remove_file(local).unwrap();
+        fixture.plugin("hooli", "0.11.2");
+
+        let infos = fixture.infos();
+
+        for (info, slug) in infos.iter().zip(["hooli", "tuta"]) {
+            assert_eq!(info.slug, slug);
+            assert_eq!(info.source, ProviderSource::Path);
+            assert_eq!(info.name, Some(format!("{slug} plugin")));
+            assert!(info.icon.is_some());
+            assert!(info.on_path);
+        }
+        assert_eq!(infos.len(), 2);
+    }
+
+    #[test]
+    fn rescanning_providers_does_not_notify() {
+        let caldir = TestCaldir::new();
+        let state = caldir.state();
+        let subscriber = state.subscribe_providers_changed();
+
+        state.rescan_providers();
+        assert!(!subscriber.has_changed().unwrap());
+
+        state.notify_providers_changed();
+        assert!(subscriber.has_changed().unwrap());
     }
 }

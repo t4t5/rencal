@@ -36,6 +36,17 @@
     "preview_url": "https://rencal.org/plugin-previews/8718437514d6df9e6b9bb3ffc96508cb56f4fa81fee6b029c937946adf8a13a8.png"
   },
   {
+    "id": "t4t5.tuta",
+    "name": "Tuta",
+    "repo": "t4t5/caldir-provider-tuta",
+    "description": "Sync your Tuta calendars with renCal.",
+    "version": "0.2.0",
+    "tag": "v0.2.0",
+    "released_at": "2026-09-24T09:30:00Z",
+    "stars": 3,
+    "contributions": ["provider"]
+  },
+  {
     "id": "octocat.no-preview-plugin",
     "name": "No Preview Plugin",
     "repo": "octocat/rencal-no-preview-plugin",

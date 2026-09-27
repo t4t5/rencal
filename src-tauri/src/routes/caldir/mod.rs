@@ -37,7 +37,7 @@ pub use types::{
 };
 
 use crate::routes::TauResult;
-use crate::state::AppState;
+use crate::state::{AppState, ProviderInfo};
 use std::sync::Arc;
 use tauri::{AppHandle, Runtime};
 
@@ -82,7 +82,7 @@ pub trait CaldirApi {
 
     async fn discard() -> TauResult<()>;
 
-    async fn list_providers() -> TauResult<Vec<String>>;
+    async fn list_providers() -> TauResult<Vec<ProviderInfo>>;
 
     async fn get_provider_connect_info(provider_name: String) -> TauResult<ProviderConnectInfo>;
 
@@ -220,7 +220,7 @@ impl CaldirApi for CaldirApiImpl {
         discard::handler(&self.state).await
     }
 
-    async fn list_providers(self) -> TauResult<Vec<String>> {
+    async fn list_providers(self) -> TauResult<Vec<ProviderInfo>> {
         list_providers::handler(&self.state)
     }
 

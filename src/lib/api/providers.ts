@@ -1,12 +1,20 @@
 import { rpc } from "@/rpc"
-import type { CredentialFieldInput, ProviderConnectInfo, ProviderField } from "@/rpc/bindings"
+import type {
+  CredentialFieldInput,
+  ProviderConnectInfo,
+  ProviderField,
+  ProviderInfo,
+} from "@/rpc/bindings"
 
 import type { Calendar } from "@/lib/api/calendars"
 
-export type { CredentialFieldInput, ProviderField }
+export type { CredentialFieldInput, ProviderField, ProviderInfo }
 
-/** Provider slugs are open strings; the set comes from the bundled provider binaries. */
-export function listProviders(): Promise<string[]> {
+/**
+ * Rescans for provider binaries (bundled, plugins, `PATH`), sorted by slug.
+ * Slugs are open strings.
+ */
+export function listProviders(): Promise<ProviderInfo[]> {
   return rpc.caldir.list_providers()
 }
 

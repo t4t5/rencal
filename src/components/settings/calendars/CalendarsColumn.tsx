@@ -23,9 +23,10 @@ import { MoreButton } from "@/components/ui/more-button"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
+import { useProviders } from "@/hooks/useProviders"
 import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
-import { getProviderDisplayName } from "@/lib/providers"
+import { findProvider, getProviderDisplayName } from "@/lib/providers"
 
 import { RssIcon } from "@/icons/rss"
 
@@ -38,6 +39,7 @@ const DEFAULT_GROUP = "default"
 export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
   const { calendars } = useCalendars()
   const { groups, setGroups } = useSettings()
+  const { providers } = useProviders()
   const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false)
 
   const allCalendarSlugs = calendars.map((calendar) => calendar.slug)
@@ -76,7 +78,7 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
           {Object.entries(calendarsByProvider).map(([provider, cals]) => (
             <CalendarAccount
               key={provider}
-              title={getProviderDisplayName(provider)}
+              title={getProviderDisplayName(provider, findProvider(providers, provider))}
               calendars={cals ?? []}
               selectedCalendarSlugs={selectedCalendarSlugs}
               onCalendarEnabledChange={setCalendarEnabled}

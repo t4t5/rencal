@@ -26,6 +26,16 @@ export type ConferenceProvider = "google" | "outlook" | "proton"
 export type Contact = { email: string; name: string | null; count: number; last_seen: string }
 
 /**
+ * What a plugin adds to renCal, as the plugin catalog lists it. Fonts count
+ * as part of a theme.
+ */
+export type ContributionKind = "theme" | 
+/**
+ * Runs a provider binary on the user's computer.
+ */
+"provider"
+
+/**
  * Input for creating an event
  */
 export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
@@ -52,7 +62,7 @@ export type ExternalThemeFont = { family: string; weight: number; style: FontSty
 
 export type ExternalThemeFonts = { fonts: ExternalThemeFont[] }
 
-export type ExternalThemeSource = { kind: "loose" } | { kind: "plugin"; id: string; version: string }
+export type ExternalThemeSource = { kind: "loose" } | { kind: "plugin"; id: string }
 
 export type ExternalThemesSnapshot = { themes: ExternalTheme[]; errors: ExternalThemeError[] }
 
@@ -81,7 +91,7 @@ export type PluginCatalog = { plugins: PluginCatalogEntry[]; error: string | nul
 /**
  * The catalog is a JSON array. Extra indexer metadata is ignored by the app.
  */
-export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; version: string; preview_url?: string | null }
+export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; tag: string; contributions?: ContributionKind[]; preview_url?: string | null }
 
 export type PluginFontInspection = { family: string; file: string; weight: number; style: FontStyle }
 
@@ -98,6 +108,29 @@ export type ProviderConnectStepKind = "oauth_redirect" | "hosted_oauth" | "crede
 export type ProviderField = { id: string; label: string; field_type: ProviderFieldType; required: boolean; help: string | null }
 
 export type ProviderFieldType = "text" | "password" | "url"
+
+/**
+ * A provider renCal can run, and what to show for it.
+ */
+export type ProviderInfo = { slug: string; 
+/**
+ * From the manifest of a plugin contributing `slug`.
+ */
+name: string | null; 
+/**
+ * That plugin's icon as a `data:image/svg+xml;base64,...` URL.
+ */
+icon: string | null; 
+/**
+ * Where the binary renCal runs comes from.
+ */
+source: ProviderSource; 
+/**
+ * A `PATH` binary with this slug exists, so the caldir CLI can sync it too.
+ */
+on_path: boolean }
+
+export type ProviderSource = { kind: "bundled" } | { kind: "plugin"; id: string } | { kind: "path" }
 
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action"
 
@@ -187,7 +220,7 @@ list_calendars: () => Promise<Calendar[]>,
 list_contacts: () => Promise<Contact[]>, 
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
-list_providers: () => Promise<string[]>, 
+list_providers: () => Promise<ProviderInfo[]>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
 rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
