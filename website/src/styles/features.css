@@ -1,0 +1,121 @@
+/* The landing page's feature sections (components/landing/features). */
+
+.feature-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px 0 14px 20px;
+  border-left: 2px solid var(--separator);
+}
+
+.feature-tab > button {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  text-align: left;
+  text-transform: none;
+  font-family: inherit;
+  color: inherit;
+  opacity: 0.55;
+  transition: opacity 150ms;
+}
+
+.feature-tab > button:hover,
+.feature-tab > button:focus-visible,
+.feature-tab > button[aria-selected="true"] {
+  background: none;
+  opacity: 1;
+}
+
+.feature-tab > button:focus-visible {
+  outline: 1px dashed var(--primary);
+  outline-offset: 4px;
+}
+
+.feature-tab-title {
+  color: var(--foreground);
+  font-family: var(--heading-font-family);
+  font-size: 17px;
+  text-transform: uppercase;
+}
+
+.feature-tab-description {
+  font-size: 15px;
+  text-wrap: pretty;
+}
+
+.feature-tab-link {
+  width: fit-content;
+  font-size: 15px;
+  text-decoration: underline;
+}
+
+.feature-tab-link:hover {
+  color: var(--foreground);
+}
+
+/* The rail beside the selected feature fills up until the next one. */
+.feature-tab-progress {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -2px;
+  width: 2px;
+  background: var(--primary);
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.feature-tab:has([aria-selected="true"]) .feature-tab-progress {
+  transform: none;
+}
+
+.feature-tab[data-running] .feature-tab-progress {
+  animation: feature-progress 9s linear both;
+}
+
+@keyframes feature-progress {
+  from {
+    transform: scaleY(0);
+  }
+}
+
+/* Close-ups sit on a block of color, cropped by its right and bottom edges. */
+.feature-stage {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: var(--stage, var(--primary));
+  transition: background-color 400ms;
+}
+
+.feature-panel {
+  position: absolute;
+  top: 12%;
+  left: 8%;
+  width: 100%;
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 300ms,
+    transform 300ms ease-out;
+}
+
+.feature-panel[data-active] {
+  opacity: 1;
+  transform: none;
+}
+
+.feature-panel .rc-window-frame,
+.feature-panel [data-scene="themes"] {
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-panel {
+    transition: none;
+  }
+}

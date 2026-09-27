@@ -1,0 +1,32 @@
+---
+// The minical, zoomed in, moved around with Vim keys. The "keyboard" scene
+// shows each keystroke in the caption above the close-up.
+import Minical from "../../app-window/Minical.astro"
+import Closeup from "./Closeup.astro"
+---
+
+<p
+  data-keystroke
+  aria-hidden="true"
+  class="absolute bottom-full left-0 mb-3 flex items-center gap-2 font-[family-name:var(--heading-font-family)] text-sm text-background uppercase"
+>
+  <kbd
+    data-keystroke-key
+    class="inline-flex h-6 min-w-6 items-center justify-center border border-background/60 px-1.5 font-[inherit]"
+    >J</kbd
+  >
+  <span data-keystroke-label>Next week</span>
+</p>
+
+<Closeup
+  label="renCal's mini calendar, with the selected day moved by the H, J, K and L keys"
+  width={400}
+  height={400}
+  class="bg-(--background)"
+  data-scene="keyboard"
+>
+  <!-- The sidebar, widened to fill the close-up, with the main view's edge beside it. -->
+  <div class="h-full w-[340px] border-r bg-(--sidebar)">
+    <Minical activeDate="2026-07-02" />
+  </div>
+</Closeup>

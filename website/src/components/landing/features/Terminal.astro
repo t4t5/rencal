@@ -1,0 +1,60 @@
+---
+// A terminal session in the app's colors and mono font. Inputs are typed and
+// outputs revealed by the "terminal" scene; without it, the whole session shows.
+import Closeup from "./Closeup.astro"
+import type { TerminalLine, Tone } from "./terminal"
+
+interface Props {
+  label: string
+  lines: TerminalLine[]
+  prompt?: string
+  width?: number
+  height?: number
+}
+
+const { label, lines, prompt = "❯", width = 560, height = 560 } = Astro.props
+
+const TONES: Record<Tone, string> = {
+  muted: "text-(--muted-foreground)",
+  accent: "text-(--primary)",
+  success: "text-(--success)",
+  bold: "font-bold",
+}
+---
+
+<Closeup
+  label={label}
+  width={width}
+  height={height}
+  class="bg-(--background)"
+  data-scene="terminal"
+>
+  <div class="px-5 py-3 font-mono text-[13px] leading-5 whitespace-pre">
+    {
+      lines.map((line) =>
+        "input" in line ? (
+          <div data-term-input={line.input}>
+            <span class="text-(--primary)">{prompt}</span> <span data-term-text>{line.input}</span>
+          </div>
+        ) : (
+          <div data-term-output data-delay={line.delay}>
+            {line.output.length === 0
+              ? " "
+              : line.output.map((segment) =>
+                  typeof segment === "string" ? (
+                    segment
+                  ) : (
+                    <span class={TONES[segment[1]]}>{segment[0]}</span>
+                  ),
+                )}
+          </div>
+        ),
+      )
+    }
+    <div data-term-idle>
+      <span class="text-(--primary)">{prompt}</span>
+      <span data-term-cursor class="inline-block h-[1lh] w-[1ch] bg-(--foreground)/70 align-top"
+      ></span>
+    </div>
+  </div>
+</Closeup>

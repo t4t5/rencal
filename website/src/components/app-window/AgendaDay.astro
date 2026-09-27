@@ -1,0 +1,111 @@
+---
+// One day section of the sidebar agenda (src/components/sidebar/agenda in the app).
+import { CALENDARS, TODAY, eventsOn, relativeDayLabel, shortDate, type DemoEvent } from "./data"
+
+interface Props {
+  date: string
+  activeDate?: string
+}
+
+const { date, activeDate } = Astro.props
+
+const events = eventsOn(date)
+const allDay = events.filter((event) => !event.start)
+const timed = events.filter((event) => event.start)
+const isToday = date === TODAY
+
+const eventStyle = (event: DemoEvent) =>
+  `--calendar-event-color: var(--event-color, ${CALENDARS[event.calendar].color})`
+const createdAttr = (event: DemoEvent) =>
+  event.created ? { "data-created": "", hidden: true } : {}
+const formatRange = (event: DemoEvent) => `${event.start} - ${event.end}`
+---
+
+<div
+  data-slot="agenda-day"
+  data-date={date}
+  data-ghost={events.length === 0 || undefined}
+  data-active={date === activeDate || undefined}
+  data-created={(events.length > 0 && events.every((event) => event.created)) || undefined}
+  class="relative border-b data-created:hidden data-ghost:not-data-active:hidden"
+>
+  <div
+    data-slot="agenda-day-header"
+    class:list={[
+      "sticky top-0 z-10 flex h-8 items-center gap-2 bg-(--sidebar) py-1.5",
+      isToday && "text-(--today)",
+    ]}
+  >
+    <span data-typography="numerical" class="text-[13px] font-bold uppercase">
+      {relativeDayLabel(date)}
+    </span>
+    <span
+      data-typography="numerical"
+      class:list={["text-[13px]", isToday ? "text-(--today)" : "text-(--muted-foreground)"]}
+    >
+      {shortDate(date)}
+    </span>
+  </div>
+  <div class="flex flex-col gap-1 pb-2">
+    {
+      events.length === 0 && (
+        <div data-slot="agenda-empty" class="py-1 text-sm text-(--muted-foreground)">
+          No events
+        </div>
+      )
+    }
+    {
+      allDay.length > 0 && (
+        <div data-slot="agenda-all-day-events" class="flex flex-wrap gap-1 pb-1">
+          {allDay.map((event) => (
+            <div
+              data-slot="calendar-event"
+              data-view="agenda"
+              data-kind="all-day"
+              class="inline-flex rounded-(--radius-xs) px-(--event-padding-inline) py-px text-xs leading-4"
+              style={eventStyle(event)}
+            >
+              <span>{event.title}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+    {
+      timed.map((event) => (
+        <div
+          data-slot="calendar-event"
+          data-view="agenda"
+          data-kind="timed"
+          data-event-id={event.id}
+          data-title={event.title}
+          data-location={event.location}
+          data-start={event.start}
+          data-end={event.end}
+          data-date={date}
+          data-calendar={event.calendar}
+          class="flex gap-3 py-1"
+          style={eventStyle(event)}
+          {...createdAttr(event)}
+        >
+          <div
+            data-slot="calendar-event-color-marker"
+            class="w-[3px] shrink-0 rounded-(--radius-xs)"
+          />
+          <div class="relative min-w-0 flex-1 text-sm">
+            <div
+              data-slot="calendar-event-time"
+              data-typography="numerical"
+              class="flex h-4 items-center gap-1.5 text-xs text-(--muted-foreground)"
+            >
+              <span>{formatRange(event)}</span>
+            </div>
+            <div data-slot="calendar-event-title" class="font-medium">
+              {event.title}
+            </div>
+          </div>
+        </div>
+      ))
+    }
+  </div>
+</div>

@@ -2,7 +2,8 @@
 // two events, then type a new event into the compose box, as in the app.
 // Timings follow the original demo video; app behaviour (debounced parsing,
 // the fly-to-minical confirmation) follows the app's source.
-import { CALENDARS, DEFAULT_CALENDAR, TODAY, formDate, type CalendarId } from "./data"
+import { fillForm, renderComposeInput, type Draft } from "./compose"
+import { DEFAULT_CALENDAR, TODAY, type CalendarId } from "./data"
 
 const START_DATE = "2026-06-10"
 const LOOP_MS = 16700
@@ -15,16 +16,6 @@ const FLIGHT_MS = 650
 const FLY_HOLD_MS = FLIGHT_MS + 300
 const COLLAPSE_MS = 200
 const POPOVER_EXIT_MS = 150
-
-interface Draft {
-  summary: string
-  date: string
-  start: string
-  end: string
-  allDay: boolean
-  /** Text the parser recognised, outlined in the compose input. */
-  phrase?: string
-}
 
 // What the app's parser makes of each pause in typing "Dinner on Saturday at 8pm".
 const TYPING: { at: number; text: string; parsed: Partial<Draft> }[] = [
@@ -65,10 +56,7 @@ export function playDemo(root: HTMLElement) {
 
   const agenda = $("[data-agenda-scroll]")
   const popover = $("[data-event-popover]")
-  const composeText = $("[data-compose-text]")
   const composePlaceholder = $("[data-compose-placeholder]")
-  const highlight = $("[data-compose-highlight]")
-  const measure = $("[data-compose-measure]")
   const drawer = $("[data-compose-drawer]")
   const card = $("[data-compose-card]")
   const created = $$("[data-created]")
@@ -113,29 +101,6 @@ export function playDemo(root: HTMLElement) {
     for (const el of $$("[data-event-id]")) toggle(el, "data-selected", el.dataset.eventId === id)
   }
 
-  function fillForm(form: HTMLElement, draft: Draft, calendar: CalendarId, location?: string) {
-    const field = (name: string) => $(`[data-field="${name}"]`, form)
-    field("title").textContent = draft.summary
-    const locationField = field("location")
-    locationField.textContent = location ?? "Location"
-    toggle(locationField, "data-empty", !location)
-    field("start").textContent = draft.start
-    field("end").textContent = draft.end
-    // All-day drafts keep the last times, disabled (the row and its inputs both fade).
-    for (const name of ["times", "start", "end"]) {
-      field(name).style.opacity = draft.allDay ? "0.5" : ""
-    }
-    field("date-start").textContent = formDate(draft.date)
-    field("date-end").textContent = formDate(draft.date)
-    field("date-end-cell").hidden = !draft.allDay
-    field("timezone").hidden = draft.allDay
-    toggle(field("all-day"), "data-checked", draft.allDay)
-    field("all-day-label").style.color = draft.allDay ? "var(--foreground)" : ""
-    field("calendar").textContent = CALENDARS[calendar].name
-    field("calendar-color").style.backgroundColor =
-      `var(--event-color, ${CALENDARS[calendar].color})`
-  }
-
   function openPopover(id: string) {
     const item = $(`[data-slot=agenda-day] [data-event-id="${id}"]`)
     const data = item.dataset
@@ -167,23 +132,10 @@ export function playDemo(root: HTMLElement) {
 
   function renderCompose() {
     const typing = text.length > 0
-    composeText.textContent = text
-    composePlaceholder.hidden = typing
+    renderComposeInput(root, text, draft.phrase)
     toggle(root, "data-typing", typing)
     toggle(root, "data-drafting", typing)
     toggle(drawer, "data-open", typing)
-
-    if (draft.phrase && text.includes(draft.phrase)) {
-      const offset = text.indexOf(draft.phrase)
-      measure.textContent = text.slice(0, offset)
-      const left = measure.offsetWidth
-      measure.textContent = draft.phrase
-      highlight.style.left = `${8 + left}px`
-      highlight.style.width = `${measure.offsetWidth}px`
-      highlight.hidden = false
-    } else {
-      highlight.hidden = true
-    }
 
     fillForm(card, draft, DEFAULT_CALENDAR)
 

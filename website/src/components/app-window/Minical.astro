@@ -1,0 +1,123 @@
+---
+// The sidebar's month header and minical (src/components/sidebar/minical in the app).
+import Icon from "./Icon.astro"
+import {
+  CALENDARS,
+  MONTH_START,
+  TODAY,
+  addDays,
+  dayOfMonth,
+  dayRange,
+  eventsOn,
+  isWeekend,
+  monthName,
+  type DemoEvent,
+} from "./data"
+
+interface Props {
+  activeDate?: string
+}
+
+const { activeDate = TODAY } = Astro.props
+
+// Six weeks from the first Monday of the month.
+const weeks = Array.from({ length: 6 }, (_, i) => addDays(MONTH_START, i * 7)).map((start) =>
+  dayRange(start, addDays(start, 6)),
+)
+const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const todayWeekday = weekdayLabels[(new Date(`${TODAY}T00:00:00Z`).getUTCDay() + 6) % 7]
+const activeWeekStart = weeks.find((week) => week.includes(activeDate))?.[0]
+const isOutside = (key: string) => key.slice(0, 7) !== MONTH_START.slice(0, 7)
+
+// One dot per calendar with events that day.
+const dotsFor = (key: string) => {
+  const seen = new Map<string, DemoEvent>()
+  for (const event of eventsOn(key)) if (!seen.has(event.calendar)) seen.set(event.calendar, event)
+  return [...seen.values()].slice(0, 3)
+}
+const createdAttr = (event: DemoEvent) =>
+  event.created ? { "data-created": "", hidden: true } : {}
+---
+
+<div data-slot="minical" class="pt-4">
+  <div class="flex h-12 items-center justify-between px-(--layout-padding) pb-4">
+    <div
+      data-typography="heading"
+      class="overflow-hidden text-2xl font-bold text-ellipsis whitespace-nowrap"
+    >
+      {monthName(MONTH_START)}
+      <span class="font-normal text-(--brand)">{MONTH_START.slice(0, 4)}</span>
+    </div>
+    <div class="flex items-center gap-1">
+      <span
+        class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
+      >
+        <Icon name="chevronUp" class="size-4" />
+      </span>
+      <span
+        class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
+      >
+        <Icon name="chevronDown" class="size-4" />
+      </span>
+    </div>
+  </div>
+
+  <div class="flex">
+    {
+      weekdayLabels.map((label, i) => (
+        <div
+          class:list={[
+            "rc-text-2xs flex-1 text-center uppercase",
+            label === todayWeekday ? "text-(--today)" : "text-(--muted-foreground)",
+            i >= 5 && "bg-(--weekend)",
+          ]}
+        >
+          {label}
+        </div>
+      ))
+    }
+  </div>
+  {
+    weeks.map((week) => (
+      <div
+        data-minical-week={week[0]}
+        data-selected-week={week[0] === activeWeekStart || undefined}
+        class="flex w-full"
+      >
+        {week.map((key) => (
+          <div
+            class:list={[
+              "flex w-full justify-center in-data-selected-week:bg-[linear-gradient(var(--hover),var(--hover))]",
+              isWeekend(key) && "bg-(--weekend)",
+            ]}
+          >
+            <div
+              data-slot="calendar-day"
+              data-date-key={key}
+              data-today={key === TODAY || undefined}
+              data-selected={key === activeDate || undefined}
+              data-typography="button"
+              class:list={[
+                "relative flex size-[38px] min-w-8 flex-col items-center justify-center gap-1 rounded-(--radius-circle) p-2 text-sm leading-none font-normal",
+                "data-selected:bg-(--selected) data-selected:text-lg data-selected:font-bold data-selected:text-(--selected-foreground)",
+                "data-today:text-(--today) data-today:data-selected:bg-(--today) data-today:data-selected:text-(--today-foreground)",
+                isOutside(key) && "text-(--muted-foreground)",
+              ]}
+            >
+              {dayOfMonth(key)}
+              <div class="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-[3px]">
+                {dotsFor(key).map((event) => (
+                  <div
+                    class="size-1 rounded-(--radius-circle)"
+                    style={`background-color: var(--event-color, ${CALENDARS[event.calendar].color})`}
+                    {...createdAttr(event)}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    ))
+  }
+</div>

@@ -1,0 +1,42 @@
+---
+// The caldir directory behind the demo calendar, as seen from a terminal.
+import Terminal from "./Terminal.astro"
+import type { TerminalLine } from "./terminal"
+
+const ics = (line: string): TerminalLine => {
+  const split = line.search(/[:;]/)
+  return { output: [[line.slice(0, split), "muted"], line.slice(split)] }
+}
+
+const lines: TerminalLine[] = [
+  { input: "cd ~/caldir && tree" },
+  { output: ["."] },
+  { output: ["├── ", ["google-work", "accent"]] },
+  { output: ["│   ├── 2026-06-25T1100__backend-api-planning.ics"] },
+  { output: ["│   └── 2026-06-26T0930__product-stand-up.ics"] },
+  { output: ["└── ", ["icloud-personal", "accent"]] },
+  { output: ["    ├── 2026-06-26T1900__grocery-delivery.ics"] },
+  { output: ["    └── 2026-06-28T1030__sunday-walk-and-coffee.ics"] },
+  { output: [] },
+  { output: ["2 directories, 4 files"] },
+  { input: "cat google-work/2026-06-25T1100__backend-api-planning.ics" },
+  ...[
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:CALDIR",
+    "BEGIN:VEVENT",
+    "DTSTART;TZID=Europe/London:20260625T110000",
+    "DTEND;TZID=Europe/London:20260625T120000",
+    "LOCATION:Meeting Room 2",
+    "SUMMARY:Backend API planning",
+    "UID:4f1c9a2e-7b3d-4c8a-9e61-2d5f0b7a3c18@caldir",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].map(ics),
+]
+---
+
+<Terminal
+  label="A terminal listing the ~/caldir directory, with one .ics file per event, and printing one of them"
+  lines={lines}
+/>

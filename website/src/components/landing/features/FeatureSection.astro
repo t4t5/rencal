@@ -1,0 +1,198 @@
+---
+// A group of features beside one stage: selecting a feature shows its
+// close-up. Features advance on their own while the section is on screen,
+// until the visitor picks one. Each close-up is passed in a slot named after
+// its feature's id.
+import "../../../styles/features.css"
+
+export interface Feature {
+  id: string
+  title: string
+  description: string
+  link?: { href: string; label: string }
+}
+
+interface Props {
+  eyebrow: string
+  title: string
+  lead: string
+  features: Feature[]
+  /** Put the stage on the left (on wide screens). */
+  flip?: boolean
+}
+
+const { eyebrow, title, lead, features, flip = false } = Astro.props
+
+const panels = await Promise.all(features.map((feature) => Astro.slots.render(feature.id)))
+const tabId = (feature: Feature) => `feature-tab-${feature.id}`
+const panelId = (feature: Feature) => `feature-panel-${feature.id}`
+---
+
+<section data-feature-section class="px-6 md:px-10">
+  <div
+    class="mx-auto grid w-full max-w-[1200px] items-center gap-10 lg:grid-cols-[5fr_6fr] lg:gap-16 xl:gap-20"
+  >
+    <div class:list={["flex flex-col gap-8", flip && "lg:order-2"]}>
+      <header class="flex flex-col gap-4">
+        <p class="font-[family-name:var(--heading-font-family)] text-sm text-primary uppercase">
+          {eyebrow}
+        </p>
+        <h2 class="text-2xl leading-tight text-pretty md:text-3xl">{title}</h2>
+        <p class="text-[17px] text-pretty">{lead}</p>
+      </header>
+
+      <div role="tablist" aria-orientation="vertical" aria-label={title} class="flex flex-col">
+        {
+          features.map((feature, i) => (
+            <div class="feature-tab">
+              <button
+                type="button"
+                role="tab"
+                id={tabId(feature)}
+                aria-controls={panelId(feature)}
+                aria-selected={String(i === 0)}
+                tabindex={i === 0 ? 0 : -1}
+              >
+                <span class="feature-tab-title">{feature.title}</span>
+                <span class="feature-tab-description">{feature.description}</span>
+              </button>
+              {feature.link && (
+                <a href={feature.link.href} class="feature-tab-link">
+                  {feature.link.label}
+                </a>
+              )}
+              <span class="feature-tab-progress" aria-hidden="true" />
+            </div>
+          ))
+        }
+      </div>
+    </div>
+
+    <div data-feature-stage class="feature-stage">
+      {
+        features.map((feature, i) => (
+          <div
+            role="tabpanel"
+            id={panelId(feature)}
+            aria-labelledby={tabId(feature)}
+            data-active={i === 0 || undefined}
+            inert={i !== 0}
+            class="feature-panel"
+            set:html={panels[i]}
+          />
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<script>
+  import { SCENES, type Wait } from "./scenes"
+
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches
+
+  const sceneOf = (panel: HTMLElement) => {
+    const name = panel.querySelector<HTMLElement>("[data-scene]")?.dataset.scene
+    return name ? SCENES[name] : undefined
+  }
+
+  const waitFor =
+    (signal: AbortSignal): Wait =>
+    (ms) =>
+      new Promise((resolve, reject) => {
+        if (signal.aborted) return reject(signal.reason)
+        const timer = setTimeout(resolve, ms)
+        signal.addEventListener(
+          "abort",
+          () => {
+            clearTimeout(timer)
+            reject(signal.reason)
+          },
+          { once: true },
+        )
+      })
+
+  for (const section of document.querySelectorAll<HTMLElement>("[data-feature-section]")) {
+    const tabs = [...section.querySelectorAll<HTMLElement>("[role=tab]")]
+    const panels = tabs.map((tab) => document.getElementById(tab.getAttribute("aria-controls")!)!)
+    const stage = section.querySelector<HTMLElement>("[data-feature-stage]")!
+
+    let active = 0
+    let autoplay = !reducedMotion
+    let onScreen = false
+    let scene: AbortController | null = null
+
+    const rest = () => panels.forEach((panel, i) => i !== active && sceneOf(panel)?.rest?.(panel))
+    panels.forEach((panel) => sceneOf(panel)?.rest?.(panel))
+    // Resting states measure text (the compose highlight), so redo them once fonts load.
+    void document.fonts.ready.then(rest)
+
+    // Restarts the active feature: its scene, and its progress rail while autoplaying.
+    function restart() {
+      scene?.abort()
+      scene = null
+      stage.style.removeProperty("--stage")
+
+      const tab = tabs[active].parentElement!
+      tab.removeAttribute("data-running")
+      const playing = onScreen && !document.hidden
+      if (!playing) return
+
+      if (autoplay) {
+        void tab.offsetWidth // restart the rail's animation
+        tab.setAttribute("data-running", "")
+      }
+      const panel = panels[active]
+      const current = sceneOf(panel)
+      if (reducedMotion || !current) return
+      const controller = new AbortController()
+      scene = controller
+      current.play(panel, waitFor(controller.signal)).catch(() => {})
+    }
+
+    function select(index: number) {
+      active = index
+      tabs.forEach((tab, i) => {
+        tab.setAttribute("aria-selected", String(i === index))
+        tab.tabIndex = i === index ? 0 : -1
+      })
+      panels.forEach((panel, i) => {
+        panel.toggleAttribute("data-active", i === index)
+        panel.inert = i !== index
+      })
+      restart()
+    }
+
+    tabs.forEach((tab, i) => {
+      tab.addEventListener("click", () => {
+        autoplay = false
+        select(i)
+      })
+      tab.addEventListener("keydown", (event) => {
+        const step = { ArrowDown: 1, ArrowUp: -1 }[event.key]
+        if (step === undefined) return
+        event.preventDefault()
+        autoplay = false
+        const next = (active + step + tabs.length) % tabs.length
+        select(next)
+        tabs[next].focus()
+      })
+    })
+
+    section.addEventListener("animationend", (event) => {
+      const target = event.target as HTMLElement
+      if (autoplay && target.classList.contains("feature-tab-progress")) {
+        select((active + 1) % tabs.length)
+      }
+    })
+
+    new IntersectionObserver(
+      ([entry]) => {
+        onScreen = entry.isIntersecting
+        restart()
+      },
+      { threshold: 0.4 },
+    ).observe(stage)
+    document.addEventListener("visibilitychange", restart)
+  }
+</script>
