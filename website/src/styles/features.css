@@ -4,7 +4,7 @@
    right edge (and the bottom, if it's tall). */
 .feature-stage {
   position: relative;
-  aspect-ratio: 5 / 4;
+  aspect-ratio: 4 / 3;
   overflow: hidden;
   border-radius: 8px;
   background: #1a1a1a;

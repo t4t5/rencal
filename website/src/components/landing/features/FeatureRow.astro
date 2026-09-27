@@ -16,7 +16,7 @@ interface Props {
 const { title, description, link, wallpapers } = Astro.props
 ---
 
-<article class="grid items-center gap-8 lg:grid-cols-[5fr_7fr] lg:gap-16 xl:gap-20">
+<article class="grid items-center gap-8 lg:grid-cols-2 lg:gap-16 xl:gap-20">
   <div class="flex flex-col gap-4">
     <h3 class="text-xl leading-tight text-pretty md:text-2xl">{title}</h3>
     <p class="text-[17px] text-pretty">{description}</p>

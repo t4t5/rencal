@@ -2,7 +2,6 @@
 import { THEMES } from "../app-window/themes"
 import AgentCloseup from "./features/AgentCloseup.astro"
 import ComposeCloseup from "./features/ComposeCloseup.astro"
-import FeatureGroup from "./features/FeatureGroup.astro"
 import FeatureRow from "./features/FeatureRow.astro"
 import FilesCloseup from "./features/FilesCloseup.astro"
 import KeyboardCloseup from "./features/KeyboardCloseup.astro"
@@ -18,12 +17,8 @@ const themeWallpapers = THEMES.map((theme) => ({
 }))
 ---
 
-<div class="flex flex-col gap-24 py-10 md:gap-32 md:py-16">
-  <FeatureGroup
-    eyebrow="Local-first"
-    title="Your calendar is just files"
-    lead="Events live as plain .ics files on your machine, kept in sync with the calendars you already use."
-  >
+<section class="px-6 py-10 md:px-10 md:py-16">
+  <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-16 md:gap-24">
     <FeatureRow
       title="Plain files"
       description="Every event is stored as an .ics file on your machine. It works offline, is human-readable, and can easily be backed up."
@@ -45,13 +40,6 @@ const themeWallpapers = THEMES.map((theme) => ({
     >
       <AgentCloseup />
     </FeatureRow>
-  </FeatureGroup>
-
-  <FeatureGroup
-    eyebrow="Built for speed"
-    title="Made for power users"
-    lead="Type events the way you say them, get around without the mouse, and match the look of your desktop."
-  >
     <FeatureRow
       title="Natural input"
       description='Type events the way you say them: "lunch with Sarah tomorrow at 1" or "team sync every Monday".'
@@ -74,5 +62,5 @@ const themeWallpapers = THEMES.map((theme) => ({
     >
       <ThemesCloseup />
     </FeatureRow>
-  </FeatureGroup>
-</div>
+  </div>
+</section>
