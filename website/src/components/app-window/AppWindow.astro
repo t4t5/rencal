@@ -1,0 +1,623 @@
+---
+// A static recreation of the renCal window, built from the same slots, class
+// recipes and theme tokens as the app (src/components in the app). It renders
+// at a fixed logical size and scales to fit its container, so it looks like a
+// screenshot at any width. The landing page animates it with ./demo.ts.
+import "../../styles/app-scope.css"
+import "../../styles/app-window.css"
+
+import renThemeCss from "../../../../src/themes/ren.css?raw"
+import EventForm from "./EventForm.astro"
+import Icon from "./Icon.astro"
+import {
+  AGENDA_END,
+  AGENDA_START,
+  CALENDARS,
+  DEFAULT_CALENDAR,
+  EVENTS,
+  MONTH_START,
+  TODAY,
+  addDays,
+  dayOfMonth,
+  dayRange,
+  eventsOn,
+  isWeekend,
+  monthName,
+  relativeDayLabel,
+  shortDate,
+  type DemoEvent,
+} from "./data"
+
+interface Props {
+  id?: string
+  class?: string
+  /** Accessible description of the window, announced as an image. */
+  label: string
+  /** Logical window size in CSS px, before scaling. */
+  width?: number
+  height?: number
+  activeDate?: string
+  /** Below xl, show only the sidebar at its natural size instead of scaling
+   * the whole window down. */
+  sidebarWhenNarrow?: boolean
+}
+
+const {
+  id,
+  class: className,
+  label,
+  width = 1440,
+  height = 750,
+  activeDate = TODAY,
+  sidebarWhenNarrow = false,
+} = Astro.props
+
+// Built-in themes are bare declaration blocks; ren only sets its accents.
+const renVars = [
+  ...renThemeCss.replace(/\/\*[\s\S]*?\*\//g, "").matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g),
+]
+  .map(([, name, value]) => `${name}: ${value.trim()}`)
+  .join("; ")
+
+const SIDEBAR_WIDTH = 300
+// Month cells are square, like the app's Grid (row height tracks column width).
+const rowHeight = Math.round((width - SIDEBAR_WIDTH) / 7)
+
+const weekStarts = (count: number) =>
+  Array.from({ length: count }, (_, i) => addDays(MONTH_START, i * 7))
+const weekOf = (start: string) => dayRange(start, addDays(start, 6))
+const isOutside = (key: string) => key.slice(0, 7) !== MONTH_START.slice(0, 7)
+const colorOf = (event: DemoEvent) => CALENDARS[event.calendar].color
+const eventStyle = (event: DemoEvent | { calendar: keyof typeof CALENDARS }) =>
+  `--calendar-event-color: var(--event-color, ${CALENDARS[event.calendar].color})`
+const createdAttr = (event: DemoEvent) =>
+  event.created ? { "data-created": "", hidden: true } : {}
+
+// Minical: six weeks from the first Monday of the month.
+const minicalWeeks = weekStarts(6).map(weekOf)
+const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+const todayWeekday = weekdayLabels[(new Date(`${TODAY}T00:00:00Z`).getUTCDay() + 6) % 7]
+const activeWeekStart = minicalWeeks.find((week) => week.includes(activeDate))?.[0]
+
+// One dot per calendar with events that day.
+const dotsFor = (key: string) => {
+  const seen = new Map<string, DemoEvent>()
+  for (const event of eventsOn(key)) if (!seen.has(event.calendar)) seen.set(event.calendar, event)
+  return [...seen.values()].slice(0, 3)
+}
+
+// Agenda: days with events, plus ghost sections the demo lands on (empty days
+// only show while active).
+const GHOST_DAYS = ["2026-06-10", "2026-06-24"]
+const agendaDays = dayRange(AGENDA_START, AGENDA_END).filter(
+  (key) => key >= activeDate && (eventsOn(key).length > 0 || GHOST_DAYS.includes(key)),
+)
+
+const formatRange = (event: DemoEvent) => `${event.start} - ${event.end}`
+
+// Month view: five weeks; the fifth only peeks in below the fold.
+const monthWeeks = weekStarts(5).map(weekOf)
+---
+
+<div
+  role="img"
+  aria-label={label}
+  data-sidebar-when-narrow={sidebarWhenNarrow || undefined}
+  class:list={["rc-window-frame relative overflow-hidden", className]}
+  style={`--rc-window-width: ${width}px; --rc-window-height: ${height}px; --rc-window-ratio: ${width} / ${height}`}
+>
+  <div
+    id={id}
+    data-app-window
+    data-active-date={activeDate}
+    aria-hidden="true"
+    class="rc-scope rc-window absolute top-0 left-0 flex overflow-clip bg-(--background) select-none"
+    style={renVars}
+  >
+    <!-- Sidebar -->
+    <div
+      data-slot="sidebar"
+      class="flex w-[300px] shrink-0 flex-col overflow-hidden border-r bg-(--sidebar)"
+    >
+      <div data-slot="sidebar-header" class="flex flex-col p-(--layout-padding) pb-0">
+        <div data-slot="sidebar-toolbar" class="relative flex items-center justify-end">
+          <div class="flex w-full justify-end">
+            <div
+              data-compose-spacer
+              class="h-(--control-height) grow transition-[flex-grow] duration-200 ease-out in-data-composing:grow-0"
+            >
+            </div>
+            <div
+              class="relative shrink-0 grow-0 basis-(--control-height) transition-[flex-grow,flex-basis] duration-200 ease-out in-data-composing:grow in-data-composing:basis-0"
+            >
+              <div class="relative w-full">
+                <div
+                  aria-hidden="true"
+                  class="pointer-events-none absolute inset-0 overflow-hidden rounded-(--radius-md)"
+                >
+                  <div
+                    data-compose-highlight
+                    hidden
+                    class="absolute inset-y-1.5 rounded-(--radius-sm) outline-1 outline-offset-2 outline-(--muted-foreground)/40 outline-dashed"
+                  >
+                  </div>
+                </div>
+                <span
+                  data-compose-measure
+                  class="pointer-events-none invisible absolute top-0 left-0 text-sm whitespace-pre"
+                ></span>
+                <div
+                  class="flex h-(--control-height) w-full min-w-0 items-center overflow-hidden rounded-(--radius-md) bg-(--secondary) px-2 text-sm whitespace-pre shadow-[inset_0_0_0_1px_var(--button-border,transparent)] in-data-typing:pr-9"
+                >
+                  <span data-compose-text></span><span
+                    data-compose-caret
+                    class="rc-caret -mr-px hidden h-[1lh] w-px bg-(--foreground) in-data-composing:inline-block"
+                  ></span><span
+                    data-compose-placeholder
+                    hidden
+                    class="text-(--placeholder-foreground)">Meeting at 3pm</span
+                  >
+                </div>
+                <span
+                  class="absolute top-1/2 right-2 hidden size-(--control-height-xs) -translate-y-1/2 items-center justify-center rounded-(--radius-circle) text-(--muted-foreground) in-data-typing:flex"
+                >
+                  <Icon name="close" class="size-3.5" />
+                </span>
+              </div>
+              <div
+                class="pointer-events-none absolute inset-x-0 top-0 flex h-(--control-height) items-center justify-center opacity-100 transition-opacity duration-150 in-data-composing:opacity-0"
+              >
+                <Icon name="plus" class="size-4" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div
+          data-compose-drawer
+          class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out data-open:grid-rows-[1fr]"
+        >
+          <div class="overflow-hidden pt-4">
+            <div
+              data-compose-card
+              class="flex flex-col gap-0 rounded-(--radius-xl) bg-(--card) p-0 text-(--card-foreground)"
+            >
+              <EventForm variant="compose" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Minical -->
+      <div data-slot="minical" class="pt-4">
+        <div class="flex h-12 items-center justify-between px-(--layout-padding) pb-4">
+          <div
+            data-typography="heading"
+            class="overflow-hidden text-2xl font-bold text-ellipsis whitespace-nowrap"
+          >
+            {monthName(MONTH_START)}
+            <span class="font-normal text-(--brand)">{MONTH_START.slice(0, 4)}</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <span
+              class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
+            >
+              <Icon name="chevronUp" class="size-4" />
+            </span>
+            <span
+              class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
+            >
+              <Icon name="chevronDown" class="size-4" />
+            </span>
+          </div>
+        </div>
+
+        <div class="flex">
+          {
+            weekdayLabels.map((label, i) => (
+              <div
+                class:list={[
+                  "rc-text-2xs flex-1 text-center uppercase",
+                  label === todayWeekday ? "text-(--today)" : "text-(--muted-foreground)",
+                  i >= 5 && "bg-(--weekend)",
+                ]}
+              >
+                {label}
+              </div>
+            ))
+          }
+        </div>
+        {
+          minicalWeeks.map((week) => (
+            <div
+              data-minical-week={week[0]}
+              data-selected-week={week[0] === activeWeekStart || undefined}
+              class="flex w-full"
+            >
+              {week.map((key) => (
+                <div
+                  class:list={[
+                    "flex w-full justify-center in-data-selected-week:bg-[linear-gradient(var(--hover),var(--hover))]",
+                    isWeekend(key) && "bg-(--weekend)",
+                  ]}
+                >
+                  <div
+                    data-slot="calendar-day"
+                    data-date-key={key}
+                    data-today={key === TODAY || undefined}
+                    data-selected={key === activeDate || undefined}
+                    data-typography="button"
+                    class:list={[
+                      "relative flex size-[38px] min-w-8 flex-col items-center justify-center gap-1 rounded-(--radius-circle) p-2 text-sm leading-none font-normal",
+                      "data-selected:bg-(--selected) data-selected:text-lg data-selected:font-bold data-selected:text-(--selected-foreground)",
+                      "data-today:text-(--today) data-today:data-selected:bg-(--today) data-today:data-selected:text-(--today-foreground)",
+                      isOutside(key) && "text-(--muted-foreground)",
+                    ]}
+                  >
+                    {dayOfMonth(key)}
+                    <div class="absolute bottom-1 left-1/2 flex -translate-x-1/2 gap-[3px]">
+                      {dotsFor(key).map((event) => (
+                        <div
+                          class="size-1 rounded-(--radius-circle)"
+                          style={`background-color: var(--event-color, ${colorOf(event)})`}
+                          {...createdAttr(event)}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+
+      <!-- Agenda -->
+      <div class="flex min-h-0 grow flex-col overflow-hidden bg-(--sidebar)">
+        <div data-agenda-scroll class="min-h-0 grow overflow-hidden">
+          {
+            agendaDays.map((key) => {
+              const events = eventsOn(key)
+              const allDay = events.filter((event) => !event.start)
+              const timed = events.filter((event) => event.start)
+              const isToday = key === TODAY
+              return (
+                <div
+                  data-slot="agenda-day"
+                  data-date={key}
+                  data-ghost={events.length === 0 || undefined}
+                  data-active={key === activeDate || undefined}
+                  data-created={
+                    (events.length > 0 && events.every((event) => event.created)) || undefined
+                  }
+                  class="relative border-b data-created:hidden data-ghost:not-data-active:hidden"
+                >
+                  <div
+                    data-slot="agenda-day-header"
+                    class:list={[
+                      "sticky top-0 z-10 flex h-8 items-center gap-2 bg-(--sidebar) py-1.5",
+                      isToday && "text-(--today)",
+                    ]}
+                  >
+                    <span data-typography="numerical" class="text-[13px] font-bold uppercase">
+                      {relativeDayLabel(key)}
+                    </span>
+                    <span
+                      data-typography="numerical"
+                      class:list={[
+                        "text-[13px]",
+                        isToday ? "text-(--today)" : "text-(--muted-foreground)",
+                      ]}
+                    >
+                      {shortDate(key)}
+                    </span>
+                  </div>
+                  <div class="flex flex-col gap-1 pb-2">
+                    {events.length === 0 && (
+                      <div data-slot="agenda-empty" class="py-1 text-sm text-(--muted-foreground)">
+                        No events
+                      </div>
+                    )}
+                    {allDay.length > 0 && (
+                      <div data-slot="agenda-all-day-events" class="flex flex-wrap gap-1 pb-1">
+                        {allDay.map((event) => (
+                          <div
+                            data-slot="calendar-event"
+                            data-view="agenda"
+                            data-kind="all-day"
+                            class="inline-flex rounded-(--radius-xs) px-(--event-padding-inline) py-px text-xs leading-4"
+                            style={eventStyle(event)}
+                          >
+                            <span>{event.title}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {timed.map((event) => (
+                      <div
+                        data-slot="calendar-event"
+                        data-view="agenda"
+                        data-kind="timed"
+                        data-event-id={event.id}
+                        data-title={event.title}
+                        data-location={event.location}
+                        data-start={event.start}
+                        data-end={event.end}
+                        data-date={key}
+                        data-calendar={event.calendar}
+                        class="flex gap-3 py-1"
+                        style={eventStyle(event)}
+                        {...createdAttr(event)}
+                      >
+                        <div
+                          data-slot="calendar-event-color-marker"
+                          class="w-[3px] shrink-0 rounded-(--radius-xs)"
+                        />
+                        <div class="relative min-w-0 flex-1 text-sm">
+                          <div
+                            data-slot="calendar-event-time"
+                            data-typography="numerical"
+                            class="flex h-4 items-center gap-1.5 text-xs text-(--muted-foreground)"
+                          >
+                            <span>{formatRange(event)}</span>
+                          </div>
+                          <div data-slot="calendar-event-title" class="font-medium">
+                            {event.title}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )
+            })
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Main -->
+    <div data-slot="main" class="flex min-w-0 grow flex-col">
+      <div class="flex shrink-0 gap-2 p-(--layout-padding)">
+        <div class="flex items-center gap-2">
+          <span
+            data-typography="button"
+            class="inline-flex h-(--control-height) items-center justify-center rounded-(--radius-md) bg-(--secondary) px-3 font-medium text-(--secondary-foreground)"
+            >Today</span
+          >
+          <span
+            class="flex size-(--control-height) items-center justify-center rounded-(--radius-md)"
+          >
+            <Icon name="settings" class="size-4" />
+          </span>
+          <span
+            class="flex size-(--control-height) items-center justify-center rounded-(--radius-md)"
+          >
+            <Icon name="cloudCheck" class="size-5 text-(--muted-foreground)" />
+          </span>
+        </div>
+        <div class="grow"></div>
+        <span
+          data-typography="button"
+          class="inline-flex h-(--control-height) min-w-24 items-center justify-between gap-2 rounded-(--radius-md) bg-(--secondary) px-3 font-medium text-(--secondary-foreground)"
+        >
+          Month
+          <span data-slot="select-icon" class="text-(--muted-foreground)">
+            <Icon name="chevronDown" class="size-3" />
+          </span>
+        </span>
+        <span
+          class="flex size-(--control-height) items-center justify-center rounded-(--radius-md) bg-(--secondary) text-(--secondary-foreground)"
+        >
+          <Icon name="search" class="size-4" />
+        </span>
+      </div>
+
+      <div class="grid grid-cols-7 border-b">
+        {
+          weekdayLabels.map((label, i) => (
+            <div
+              data-typography="numerical"
+              class:list={[
+                "rc-text-2xs py-2 text-center font-medium text-(--muted-foreground) uppercase in-data-drafting:opacity-50",
+                i >= 5 && "bg-(--weekend)",
+              ]}
+            >
+              {label}
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="relative min-h-0 grow overflow-hidden">
+        {
+          monthWeeks.map((week, weekIndex) => {
+            const monthStartCol = week.findIndex((key) => dayOfMonth(key) === 1)
+            const allDay = week.flatMap((key, col) =>
+              eventsOn(key)
+                .filter((event) => !event.start)
+                .map((event) => ({ event, col })),
+            )
+            // The weekday header's border already marks a month starting on the first row.
+            const boundary =
+              monthStartCol === 0 && weekIndex > 0 ? (
+                <div
+                  data-slot="month-boundary"
+                  class="pointer-events-none absolute -top-px right-0 left-0 z-20 h-[3px]"
+                />
+              ) : monthStartCol > 0 ? (
+                <div
+                  data-slot="month-boundary"
+                  class="pointer-events-none absolute top-0 bottom-0 z-20 w-0.5 -translate-x-px"
+                  style={`left: ${(monthStartCol / 7) * 100}%`}
+                />
+              ) : null
+            const bodyBoundary = monthStartCol > 0 ? boundary : null
+            const inset = (col: number) => `calc(${(col / 7) * 100}% + var(--month-padding-inline))`
+            const barStyle = (col: number) =>
+              `top: 0; height: calc(var(--lane-height) - 3px); left: ${inset(col)}; right: ${inset(6 - col)}`
+            const spacer = (
+              <div class="pointer-events-none h-[calc(var(--lane-height)-3px)] shrink-0" />
+            )
+            return (
+              <div
+                data-slot="month-week"
+                class="flex flex-col border-b"
+                style={`height: ${rowHeight}px`}
+              >
+                <div class="relative grid grid-cols-7">
+                  {boundary}
+                  {week.map((key) => (
+                    <div
+                      data-slot="month-day-header"
+                      data-date-key={key}
+                      data-typography="numerical"
+                      data-selected={key === activeDate || undefined}
+                      class:list={[
+                        "flex items-center justify-end gap-1 border-r p-1 last:border-r-0",
+                        isWeekend(key) && "bg-(--weekend)",
+                        "data-selected:bg-(--selected) data-selected:text-(--selected-foreground)",
+                      ]}
+                    >
+                      <span
+                        class:list={[
+                          "text-xs text-(--muted-foreground)",
+                          dayOfMonth(key) !== 1 && "hidden in-data-selected:inline",
+                        ]}
+                      >
+                        {monthName(key)}
+                      </span>
+                      <span
+                        data-slot="month-day-number"
+                        class:list={[
+                          "flex h-5 w-5 items-center justify-center text-xs in-data-drafting:opacity-50",
+                          key === TODAY
+                            ? "rounded-(--radius-circle) bg-(--today) text-(--today-foreground)"
+                            : "in-data-selected:rounded-(--radius-circle) in-data-selected:bg-(--selected)",
+                        ]}
+                      >
+                        {dayOfMonth(key)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+
+                <div class="relative grid min-h-0 grow grid-cols-7">
+                  {bodyBoundary}
+                  {allDay.map(({ event, col }) => (
+                    <div
+                      data-slot="calendar-event"
+                      data-view="month"
+                      data-kind="all-day"
+                      class="absolute truncate rounded-(--radius-xs) px-(--event-padding-inline) py-px text-xs"
+                      style={`${barStyle(col)}; ${eventStyle(event)}`}
+                    >
+                      <span>{event.title}</span>
+                    </div>
+                  ))}
+                  {week.includes("2026-06-27") && (
+                    <div
+                      data-slot="calendar-event"
+                      data-view="month"
+                      data-kind="all-day"
+                      data-draft
+                      data-draft-bar="2026-06-27"
+                      hidden
+                      class="absolute truncate rounded-(--radius-xs) px-(--event-padding-inline) py-px text-xs"
+                      style={`${barStyle(5)}; ${eventStyle({ calendar: DEFAULT_CALENDAR })}`}
+                    >
+                      <span data-draft-title />
+                    </div>
+                  )}
+                  {week.map((key) => {
+                    const timed = eventsOn(key).filter((event) => event.start)
+                    const hasAllDay = allDay.some(({ event }) => event.date === key)
+                    return (
+                      <div
+                        data-slot="month-day"
+                        data-date-key={key}
+                        data-selected={key === activeDate || undefined}
+                        class:list={[
+                          "flex min-h-0 flex-col gap-1 overflow-hidden px-(--month-padding-inline) pb-1 shadow-[inset_-1px_0_var(--border)] last:shadow-none",
+                          isWeekend(key) && "bg-(--weekend)",
+                          "data-selected:bg-(--selected) data-selected:text-(--selected-foreground)",
+                        ]}
+                      >
+                        {hasAllDay && spacer}
+                        {key === "2026-06-27" && (
+                          <div data-draft-spacer="2026-06-27" hidden>
+                            {spacer}
+                          </div>
+                        )}
+                        {(key === "2026-06-25" || key === "2026-06-27") && (
+                          <div
+                            data-slot="calendar-event"
+                            data-view="month"
+                            data-kind="timed"
+                            data-draft
+                            data-draft-chip={key}
+                            hidden
+                            class="flex shrink-0 items-center gap-(--event-padding-inline) truncate rounded-(--radius-xs) pr-(--event-padding-inline) text-xs"
+                            style={eventStyle({ calendar: DEFAULT_CALENDAR })}
+                          >
+                            <div
+                              data-slot="calendar-event-color-marker"
+                              class="h-full w-0.5 shrink-0"
+                            />
+                            <span class="truncate">
+                              <span
+                                data-slot="calendar-event-time"
+                                data-typography="numerical"
+                                data-draft-time
+                                class="rc-text-2xs"
+                              />{" "}
+                              <span data-draft-title />
+                            </span>
+                          </div>
+                        )}
+                        {timed.map((event) => (
+                          <div
+                            data-slot="calendar-event"
+                            data-view="month"
+                            data-kind="timed"
+                            data-event-id={event.id}
+                            class="flex shrink-0 items-center gap-(--event-padding-inline) truncate rounded-(--radius-xs) pr-(--event-padding-inline) text-xs"
+                            style={eventStyle(event)}
+                            {...createdAttr(event)}
+                          >
+                            <div
+                              data-slot="calendar-event-color-marker"
+                              class="h-full w-0.5 shrink-0"
+                            />
+                            <span class="truncate">
+                              <span
+                                data-slot="calendar-event-time"
+                                data-typography="numerical"
+                                class="rc-text-2xs"
+                                set:text={event.start}
+                              />{" "}
+                              <span data-slot="calendar-event-title">{event.title}</span>
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            )
+          })
+        }
+      </div>
+    </div>
+
+    <!-- Event popover (positioned like the app's, beside the agenda) -->
+    <div
+      data-event-popover
+      hidden
+      class="rc-popover absolute top-[122px] left-[307px] z-50 max-h-[80%] w-[350px] origin-left overflow-hidden rounded-(--radius-md) border bg-(--popover) text-(--popover-foreground) shadow-2xl"
+    >
+      <EventForm variant="popover" />
+    </div>
+  </div>
+</div>

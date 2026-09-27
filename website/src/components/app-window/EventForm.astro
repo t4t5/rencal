@@ -1,0 +1,207 @@
+---
+// Mirrors the app's event form (src/components/event-parts/EventInfo.tsx), shared
+// by the event popover and the sidebar compose card. Values are filled in by the
+// demo script through the `data-field` hooks.
+import Icon from "./Icon.astro"
+import { DEFAULT_REMINDERS } from "./data"
+
+interface Props {
+  variant: "popover" | "compose"
+}
+
+const { variant } = Astro.props
+const isPopover = variant === "popover"
+
+const row =
+  "control-row flex min-h-(--control-height) w-full min-w-0 items-center rounded-(--radius-md) border border-transparent text-sm"
+// Textareas are sized so one line of text fills the control height.
+const textareaPadding = "py-[calc((var(--control-height)-1lh)/2-1px)]"
+---
+
+<div
+  data-slot="event-form"
+  class:list={["event-form flex grow flex-col pt-2", isPopover && "pb-2"]}
+>
+  {
+    isPopover && (
+      <div class="flex justify-end pb-1">
+        <span class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-md)">
+          <Icon name="more" class="size-4" />
+        </span>
+      </div>
+    )
+  }
+
+  <div class="flex grow flex-col">
+    <div class="flex flex-col gap-(--control-row-gap) py-2 pt-0">
+      <div class="flex min-h-(--control-height) items-center">
+        <div
+          class="flex min-h-(--control-height) w-full items-center rounded-(--radius-md) border border-transparent px-(--control-padding-inline)"
+        >
+          <span
+            data-field="title"
+            class:list={[
+              "min-w-0 flex-1 text-base font-medium whitespace-pre-wrap",
+              textareaPadding,
+            ]}></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t opacity-75"></div>
+
+    <div class="flex flex-col gap-(--control-row-gap) py-2 pb-0">
+      <div class={row}>
+        <span class="control-leading h-[calc(var(--control-height)-2px)] self-start">
+          <Icon name="pushpin" />
+        </span>
+        <span
+          data-field="location"
+          class:list={[
+            "min-w-0 flex-1 data-empty:text-(--placeholder-foreground)",
+            textareaPadding,
+          ]}
+          data-empty>Location</span
+        >
+      </div>
+
+      <div class="grid grid-cols-[auto_auto_minmax(0,1fr)] items-center gap-y-(--control-row-gap)">
+        <div data-field="times" class="col-span-3 grid grid-cols-subgrid items-center">
+          <div class={row}>
+            <span class="control-leading"><Icon name="clock" /></span>
+            <span data-field="start" class="w-[5ch] min-w-0 flex-1"></span>
+            <span data-slot="select-icon" class="opacity-0">
+              <Icon name="chevronDown" class="size-3" />
+            </span>
+          </div>
+          <Icon name="arrowRight" class="size-4 text-(--muted-foreground)" />
+          <div class="justify-self-start">
+            <div class={row}>
+              <span data-field="end" class="w-[5ch] min-w-0 flex-1"></span>
+              <span data-slot="select-icon" class="opacity-0">
+                <Icon name="chevronDown" class="size-3" />
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-span-3 grid grid-cols-subgrid items-center">
+          <div
+            class="justify-self-start pl-[calc(var(--control-leading-size)+var(--control-content-gap))]"
+          >
+            <div class={row}>
+              <span data-field="date-start" class="control-content"></span>
+            </div>
+          </div>
+          <div data-field="date-end-cell" class="col-start-3 justify-self-start" hidden>
+            <div class={row}>
+              <span data-field="date-end" class="control-content"></span>
+            </div>
+          </div>
+          <div data-field="timezone" class="col-start-3 flex flex-wrap items-center gap-y-1">
+            <span
+              data-typography="field"
+              class="inline-flex h-(--control-height) items-center justify-center rounded-(--radius-md) px-(--control-padding-inline) text-(--muted-foreground)"
+              >Add timezone</span
+            >
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="control-row flex h-(--control-height) w-fit items-center gap-(--control-content-gap) rounded-(--radius-md) border border-transparent text-sm leading-none"
+      >
+        <span class="control-leading">
+          <span
+            data-field="all-day"
+            class="grid size-4 shrink-0 place-content-center rounded-(--radius-xs) border border-(--input) text-(--primary-foreground) data-checked:border-(--primary) data-checked:bg-(--primary)"
+          >
+            <Icon name="check" class="hidden size-3.5 in-data-checked:block" />
+          </span>
+        </span>
+        <span data-field="all-day-label" class="control-content text-(--muted-foreground)"
+          >All-day</span
+        >
+      </div>
+
+      <div class={row}>
+        <span class="control-leading"><Icon name="repeat" /></span>
+        <span class="control-content overflow-hidden text-(--placeholder-foreground)">Repeat</span>
+        <span data-slot="select-icon" class="opacity-0">
+          <Icon name="chevronDown" class="size-3" />
+        </span>
+      </div>
+
+      <div class:list={[row, "text-(--muted-foreground)"]}>
+        <span class="control-leading"><Icon name="video" /></span>
+        <span class="control-content">Add Google Meet</span>
+      </div>
+
+      <div class={row}>
+        <span class="control-leading"><Icon name="user" /></span>
+        <span class="min-w-0 flex-1 text-(--placeholder-foreground)">Add participant</span>
+      </div>
+
+      <div class={row}>
+        <span class="control-leading"><Icon name="link" /></span>
+        <span class="min-w-0 flex-1 text-(--placeholder-foreground)">Add link</span>
+      </div>
+
+      <div class="flex flex-col gap-1">
+        <div class={row}>
+          <span class="control-leading"><Icon name="bell" /></span>
+          <span class="min-w-0 flex-1 text-(--placeholder-foreground)">Reminders</span>
+          <span data-slot="select-icon" class="opacity-0">
+            <Icon name="chevronDown" class="size-3" />
+          </span>
+        </div>
+        {
+          DEFAULT_REMINDERS.map((reminder) => (
+            <div class={row}>
+              <span class="control-leading" />
+              <span class="control-content">
+                <span class="flex items-baseline gap-1.5">
+                  <span>{reminder}</span>
+                  <span class="text-(--muted-foreground)">before</span>
+                </span>
+              </span>
+              <span class="control-trailing" />
+            </div>
+          ))
+        }
+      </div>
+
+      <div class={row}>
+        <span class="control-leading">
+          <span data-field="calendar-color" class="size-3 rounded-(--radius-xs)"></span>
+        </span>
+        <span data-field="calendar" class="control-content truncate"></span>
+        <span data-slot="select-icon" class="opacity-0">
+          <Icon name="chevronDown" class="size-3" />
+        </span>
+      </div>
+
+      <div
+        class="flex min-h-(--control-height) w-full items-center rounded-(--radius-md) border border-transparent px-(--control-padding-inline)"
+      >
+        <span
+          class:list={["min-w-0 flex-1 text-sm text-(--placeholder-foreground)", textareaPadding]}
+          >Notes</span
+        >
+      </div>
+    </div>
+  </div>
+
+  {
+    !isPopover && (
+      <div class="py-2">
+        <span
+          data-typography="button"
+          class="inline-flex h-(--control-height) w-full items-center justify-center rounded-(--radius-md) bg-(--primary) px-3 font-medium text-(--primary-foreground)"
+        >
+          Add Event
+        </span>
+      </div>
+    )
+  }
+</div>

@@ -3,7 +3,7 @@ import "../styles/index.css"
 import "../styles/themes.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
-import AppPreview from "../components/themes/AppPreview.astro"
+import AppWindow from "../components/app-window/AppWindow.astro"
 import ThemeTile from "../components/themes/ThemeTile.astro"
 import CheckIcon from "../icons/check.astro"
 import CopyIcon from "../icons/copy.astro"
@@ -57,7 +57,7 @@ const themes = appThemes
 const renTheme = themes.find((theme) => theme.id === "ren")
 if (renTheme === undefined) throw new Error('Missing "ren" theme in manifest')
 
-// The full ren defaults (also declared on `.rc-scope` in themes.css). Used to
+// The full ren defaults (also declared on `.rc-scope` in app-scope.css). Used to
 // fill editor fields for primitives a theme doesn't override.
 const REN_DEFAULTS: Record<string, string> = {
   ...REN_CORE,
@@ -125,10 +125,19 @@ const segControls = [
       </p>
     </div>
 
-    <div class="grid items-start gap-10 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <div
+      class="grid grid-cols-[minmax(0,1fr)] items-start gap-10 lg:grid-cols-[320px_minmax(0,1fr)]"
+    >
       <!-- Preview (first on mobile, right column on desktop) -->
       <div class="order-1 flex flex-col gap-3 lg:sticky lg:top-6 lg:order-2">
-        <AppPreview />
+        <AppWindow
+          id="rc-preview"
+          label="Preview of renCal in the selected theme"
+          width={1100}
+          height={620}
+          sidebarWhenNarrow
+          class="rounded-xl border border-white/10"
+        />
       </div>
 
       <!-- Controls -->
