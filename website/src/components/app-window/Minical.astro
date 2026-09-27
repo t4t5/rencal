@@ -18,12 +18,14 @@ interface Props {
   activeDate?: string
   /** The month name and arrows above the grid. */
   header?: boolean
+  /** How many weeks to show. */
+  weekCount?: number
 }
 
-const { activeDate = TODAY, header = true } = Astro.props
+const { activeDate = TODAY, header = true, weekCount = 6 } = Astro.props
 
-// Six weeks from the first Monday of the month.
-const weeks = Array.from({ length: 6 }, (_, i) => addDays(MONTH_START, i * 7)).map((start) =>
+// Weeks from the first Monday of the month.
+const weeks = Array.from({ length: weekCount }, (_, i) => addDays(MONTH_START, i * 7)).map((start) =>
   dayRange(start, addDays(start, 6)),
 )
 const weekdayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
@@ -69,7 +71,7 @@ const createdAttr = (event: DemoEvent) =>
       weekdayLabels.map((label, i) => (
         <div
           class:list={[
-            "rc-text-2xs flex-1 text-center uppercase",
+            "rc-text-2xs flex-1 py-2 text-center uppercase",
             label === todayWeekday ? "text-(--today)" : "text-(--muted-foreground)",
             i >= 5 && "bg-(--weekend)",
           ]}

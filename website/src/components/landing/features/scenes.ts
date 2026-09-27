@@ -114,18 +114,11 @@ const compose: Scene = {
   },
 }
 
-// Vim keys move the minical's selected day around a loop back to today, so
+// Vim keys move the minical's selected day in quick bursts, pausing between
+// them. The bursts stay within the card's five weeks and loop back to today, so
 // the scene can repeat without a jump.
-const KEYSTROKES: { key: string; days: number }[] = [
-  { key: "k", days: -7 },
-  { key: "k", days: -7 },
-  { key: "l", days: 1 },
-  { key: "l", days: 1 },
-  { key: "j", days: 7 },
-  { key: "h", days: -1 },
-  { key: "j", days: 7 },
-  { key: "h", days: -1 },
-]
+const KEY_DAYS: Record<string, number> = { h: -1, j: 7, k: -7, l: 1 }
+const BURSTS = ["klkl", "jhjhj", "lkl", "jhkh"]
 
 function selectDay(root: HTMLElement, date: string) {
   for (const day of $$(root, "[data-slot=calendar-day]")) {
@@ -148,14 +141,17 @@ const keyboard: Scene = {
     await wait(600)
 
     for (;;) {
-      for (const stroke of KEYSTROKES) {
-        const keycap = $(root, `[data-keycap="${stroke.key}"]`)
-        keycap.toggleAttribute("data-pressed", true)
-        date = addDays(date, stroke.days)
-        selectDay(root, date)
-        await wait(160)
-        keycap.removeAttribute("data-pressed")
-        await wait(640)
+      for (const burst of BURSTS) {
+        for (const key of burst) {
+          const keycap = $(root, `[data-keycap="${key}"]`)
+          keycap.toggleAttribute("data-pressed", true)
+          date = addDays(date, KEY_DAYS[key])
+          selectDay(root, date)
+          await wait(55 + Math.random() * 20)
+          keycap.removeAttribute("data-pressed")
+          await wait(45 + Math.random() * 40)
+        }
+        await wait(900 + Math.random() * 500)
       }
     }
   },

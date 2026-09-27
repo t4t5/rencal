@@ -24,7 +24,7 @@ const KEYS = [
     }
   </div>
 
-  <div class="feature-fade absolute inset-x-0 top-[104px] bottom-0 px-6">
+  <div class="feature-fade absolute inset-x-0 top-[103px] bottom-0 px-6 pt-px">
     <div class="feature-ui mx-auto max-w-[280px]">
       <Closeup
         label="renCal's mini calendar, with the selected day moved by the H, J, K and L keys"
@@ -33,7 +33,7 @@ const KEYS = [
         class="bg-(--sidebar)"
         data-scene="keyboard"
       >
-        <Minical header={false} />
+        <Minical header={false} weekCount={5} />
       </Closeup>
     </div>
   </div>
