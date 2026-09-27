@@ -1,7 +1,7 @@
 ---
 // A terminal session in the app's colors and mono font. Inputs are typed and
 // outputs revealed by the "terminal" scene, which scrolls like a real terminal;
-// without it, the whole session shows.
+// without it (or with `animate` off), the whole session shows.
 import Closeup from "./Closeup.astro"
 import type { TerminalLine, Tone } from "./terminal"
 
@@ -11,9 +11,11 @@ interface Props {
   prompt?: string
   width?: number
   height?: number
+  /** Play the "terminal" scene; off renders the finished session, without a prompt after it. */
+  animate?: boolean
 }
 
-const { label, lines, prompt = "❯", width = 560, height = 340 } = Astro.props
+const { label, lines, prompt = "❯", width = 560, height = 340, animate = true } = Astro.props
 
 const TONES: Record<Tone, string> = {
   muted: "text-(--muted-foreground)",
@@ -28,7 +30,7 @@ const TONES: Record<Tone, string> = {
   width={width}
   height={height}
   class="bg-(--background)"
-  data-scene="terminal"
+  data-scene={animate ? "terminal" : undefined}
 >
   <div
     data-term-screen
@@ -55,10 +57,16 @@ const TONES: Record<Tone, string> = {
         ),
       )
     }
-    <div data-term-idle>
-      <span class="text-(--primary)">{prompt}</span>
-      <span data-term-cursor class="inline-block h-[1lh] w-[1ch] bg-(--foreground)/70 align-top"
-      ></span>
-    </div>
+    {
+      animate && (
+        <div data-term-idle>
+          <span class="text-(--primary)">{prompt}</span>
+          <span
+            data-term-cursor
+            class="inline-block h-[1lh] w-[1ch] bg-(--foreground)/70 align-top"
+          />
+        </div>
+      )
+    }
   </div>
 </Closeup>

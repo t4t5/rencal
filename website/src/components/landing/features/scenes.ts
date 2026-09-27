@@ -54,35 +54,6 @@ const terminal: Scene = {
   },
 }
 
-// The provider buttons come in, then the pointer runs down the list.
-const providers: Scene = {
-  async play(root, wait) {
-    const buttons = $$(root, "[data-provider]")
-    for (const button of buttons) {
-      button.removeAttribute("data-hover")
-      button.style.opacity = "0"
-    }
-    await wait(300)
-    for (const button of buttons) {
-      button.animate(
-        [
-          { opacity: 0, transform: "translateY(6px)" },
-          { opacity: 1, transform: "none" },
-        ],
-        { duration: 250, easing: "ease-out" },
-      )
-      button.style.opacity = ""
-      await wait(90)
-    }
-    await wait(900)
-    for (const button of buttons) {
-      button.toggleAttribute("data-hover", true)
-      await wait(800)
-      button.removeAttribute("data-hover")
-    }
-  },
-}
-
 // What the app's parser makes of each pause in typing the event.
 const COMPOSE_STEPS: { text: string; parsed: Partial<Draft> }[] = [
   { text: "Lunch with Sarah ", parsed: { summary: "Lunch with Sarah" } },
@@ -144,13 +115,12 @@ const compose: Scene = {
 }
 
 // Vim keys move the minical's selected day. Ends where the markup starts.
-const KEYSTROKES: { key: string; label: string; days: number | null }[] = [
-  { key: "l", label: "Next day", days: 1 },
-  { key: "j", label: "Next week", days: 7 },
-  { key: "h", label: "Previous day", days: -1 },
-  { key: "k", label: "Previous week", days: -7 },
-  { key: "t", label: "Go to today", days: null },
-  { key: "j", label: "Next week", days: 7 },
+const KEYSTROKES: { key: string; days: number }[] = [
+  { key: "l", days: 1 },
+  { key: "j", days: 7 },
+  { key: "h", days: -1 },
+  { key: "k", days: -7 },
+  { key: "j", days: 7 },
 ]
 
 function selectDay(root: HTMLElement, date: string) {
@@ -163,69 +133,29 @@ function selectDay(root: HTMLElement, date: string) {
 }
 
 const keyboard: Scene = {
+  rest(root) {
+    for (const keycap of $$(root, "[data-keycap]")) keycap.removeAttribute("data-pressed")
+    selectDay(
+      root,
+      KEYSTROKES.reduce((date, stroke) => addDays(date, stroke.days), TODAY),
+    )
+  },
+
   async play(root, wait) {
-    const caption = $(root, "[data-keystroke]")
-    const key = $(root, "[data-keystroke-key]")
-    const label = $(root, "[data-keystroke-label]")
     let date = TODAY
     selectDay(root, date)
-    caption.style.opacity = "0"
     await wait(900)
 
     for (const stroke of KEYSTROKES) {
-      key.textContent = stroke.key.toUpperCase()
-      label.textContent = stroke.label
-      caption.style.opacity = ""
-      key.animate([{ transform: "translateY(2px)" }, { transform: "none" }], { duration: 150 })
-      date = stroke.days === null ? TODAY : addDays(date, stroke.days)
+      const keycap = $(root, `[data-keycap="${stroke.key}"]`)
+      keycap.toggleAttribute("data-pressed", true)
+      date = addDays(date, stroke.days)
       selectDay(root, date)
-      await wait(1000)
+      await wait(160)
+      keycap.removeAttribute("data-pressed")
+      await wait(840)
     }
   },
 }
 
-// Cycles the app window through the built-in themes, back round to ren. The
-// desktop follows along, as Omarchy's themes do: each has its own wallpaper,
-// and the window border takes the theme's primary color.
-interface Theme {
-  id: string
-  name: string
-  vars: Record<string, string>
-}
-
-const themesOf = (root: HTMLElement) =>
-  JSON.parse($(root, "[data-themes]").dataset.themes!) as Theme[]
-
-function showTheme(root: HTMLElement, theme: Theme) {
-  const scope = $(root, "[data-app-window]")
-  applyVars(scope, theme.vars)
-  $(root, "[data-theme-name]").textContent = theme.name
-  for (const wallpaper of $$(root, "[data-wallpaper]")) {
-    wallpaper.toggleAttribute("data-active", wallpaper.dataset.wallpaper === theme.id)
-  }
-  const primary = getComputedStyle(scope).getPropertyValue("--primary").trim()
-  root.style.setProperty("--window-border", primary)
-}
-
-const themes: Scene = {
-  rest(root) {
-    showTheme(root, themesOf(root)[0])
-  },
-
-  async play(root, wait) {
-    const [first, ...rest] = themesOf(root)
-    showTheme(root, first)
-    await wait(600)
-    for (const theme of [...rest, first]) {
-      showTheme(root, theme)
-      await wait(1400)
-    }
-  },
-}
-
-function applyVars(el: HTMLElement, vars: Record<string, string>) {
-  for (const prop of [...el.style]) if (prop.startsWith("--")) el.style.removeProperty(prop)
-  for (const [prop, value] of Object.entries(vars)) el.style.setProperty(prop, value)
-}
-
-export const SCENES: Record<string, Scene> = { terminal, providers, compose, keyboard, themes }
+export const SCENES: Record<string, Scene> = { terminal, compose, keyboard }

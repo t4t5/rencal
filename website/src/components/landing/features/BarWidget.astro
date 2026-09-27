@@ -1,0 +1,96 @@
+---
+// The caldir widget in the Omarchy bar (github.com/t4t5/omarchy-caldir-widget),
+// with the top of its dropdown, recreated from public/docs/omarchy-widget.png
+// in Omarchy's default Tokyo Night colors.
+import Icon from "../../app-window/Icon.astro"
+
+const AGENDA = [
+  { time: "09:30", title: "Daily standup", color: "#7dcfff" },
+  { time: "18:30", title: "Climbing session", color: "#c0826b" },
+]
+
+// Status icons from the right of the bar (Lucide).
+const STATUS_ICONS = [
+  '<path d="m7 7 10 10-5 5V2l5 5L7 17"/>',
+  '<path d="M12 20h.01M2 8.82a15 15 0 0 1 20 0M5 12.86a10 10 0 0 1 14 0M8.5 16.43a5 5 0 0 1 7 0"/>',
+  '<path d="M11 4.7a.7.7 0 0 0-1.2-.5L6.4 7.6A1.4 1.4 0 0 1 5.4 8H3a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h2.4a1.4 1.4 0 0 1 1 .4l3.4 3.4a.7.7 0 0 0 1.2-.5ZM16 9a5 5 0 0 1 0 6"/>',
+  '<rect width="16" height="10" x="2" y="7" rx="2"/><path d="M22 11v2M6 11v2M10 11v2"/>',
+]
+---
+
+<div
+  role="img"
+  aria-label="The Omarchy bar showing the next meeting, Daily standup in 16 minutes, above a dropdown with a Join Meeting button"
+  class="bar-widget feature-glow relative h-64"
+>
+  <div aria-hidden="true" class="feature-fade-corner absolute inset-0 overflow-hidden pt-9 pl-6">
+    <div
+      class="feature-ui flex h-9 items-center gap-5 rounded-l-lg bg-(--bar-bg) pl-4 text-[13px] whitespace-nowrap"
+    >
+      <Icon name="chevronDown" class="size-3.5 rotate-90" />
+      <div class="relative flex h-full items-center">
+        <span class="flex items-center gap-2 border-b-2 border-(--bar-accent) py-1.5">
+          <Icon name="video" class="size-4" />
+          Daily standup · in 16 min
+        </span>
+
+        <div
+          class="absolute top-full -left-3 mt-1.5 flex w-72 flex-col gap-3 border-2 border-(--bar-accent) bg-(--bar-bg) p-4 shadow-[0_20px_50px_rgb(0_0_0/0.55)]"
+        >
+          <span class="text-[11px] tracking-widest text-(--bar-muted) uppercase">Calendar</span>
+          <div class="flex flex-col gap-1.5 bg-white/[0.04] p-3">
+            <span class="text-[11px] tracking-widest text-(--bar-muted) uppercase">Next</span>
+            <span class="text-[15px] font-bold">Daily standup</span>
+            <span class="text-xs text-(--bar-muted)">Today · 09:30–09:55</span>
+            <span
+              class="mt-1.5 flex w-fit items-center gap-2 border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold"
+            >
+              <Icon name="video" class="size-3.5" />
+              Join Meeting
+            </span>
+          </div>
+          <div class="flex flex-col gap-3 border-t border-white/10 pt-3 text-[13px]">
+            <span class="text-[11px] tracking-widest uppercase">
+              Today <span class="text-(--bar-muted)">Thu 25 Jun</span>
+            </span>
+            {
+              AGENDA.map(({ time, title, color }) => (
+                <span class="flex gap-3 border-l-2 pl-3" style={`border-color: ${color}`}>
+                  <span class="text-(--bar-muted)">{time}</span>
+                  {title}
+                </span>
+              ))
+            }
+          </div>
+        </div>
+      </div>
+      {
+        STATUS_ICONS.map((body) => (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="size-4 shrink-0"
+            set:html={body}
+          />
+        ))
+      }
+    </div>
+  </div>
+</div>
+
+<style>
+  .bar-widget {
+    --glow: var(--bar-accent);
+    --bar-bg: #1a1b26;
+    --bar-fg: #a9b1d6;
+    --bar-muted: #565f89;
+    --bar-accent: #7aa2f7;
+    color: var(--bar-fg);
+    font-family: var(--heading-font-family);
+  }
+</style>

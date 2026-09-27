@@ -59,7 +59,7 @@ export default defineConfig({
           tag: "link",
           attrs: {
             rel: "stylesheet",
-            href: site.geistMonoStylesheet,
+            href: site.fontStylesheet,
           },
         },
         {

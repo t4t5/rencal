@@ -1,27 +1,17 @@
 ---
-// A crop of the app window's month view (Thursday to the weekend, below the
-// toolbar), cycled through the built-in themes by the "themes" scene.
+// A crop of the app window: the sidebar and the start of the month view.
+// ThemeShowcase swaps its theme.
 import AppWindow from "../../app-window/AppWindow.astro"
-import { THEMES } from "../../app-window/themes"
 
 const WINDOW_WIDTH = 1440
 // Crop origin and width, in the window's logical px.
-const CROP = { x: 300 + 3 * ((WINDOW_WIDTH - 300) / 7), y: 58, width: 520 }
-
-const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
+const CROP = { x: 0, y: 0, width: 300 + 5 * ((WINDOW_WIDTH - 300) / 7) }
 ---
 
-<p aria-hidden="true" class="feature-overlay">
-  Theme: <span data-theme-name>{themes[0].name}</span>
-</p>
-
-<div class="overflow-hidden" data-scene="themes" data-themes={JSON.stringify(themes)}>
+<div class="overflow-hidden">
   <div
     style={`width: calc(100% * ${WINDOW_WIDTH} / ${CROP.width}); margin-left: calc(-100% * ${CROP.x} / ${CROP.width}); margin-top: calc(-100% * ${CROP.y} / ${CROP.width})`}
   >
-    <AppWindow
-      label="renCal's month view, switching between its built-in themes"
-      width={WINDOW_WIDTH}
-    />
+    <AppWindow label="renCal's month view in the selected theme" width={WINDOW_WIDTH} />
   </div>
 </div>

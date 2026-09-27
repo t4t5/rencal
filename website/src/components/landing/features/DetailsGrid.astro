@@ -1,0 +1,42 @@
+---
+// The smaller features, one line each.
+import Icon from "../../app-window/Icon.astro"
+import type { IconName } from "../../app-window/icons"
+
+const DETAILS: { icon: IconName; title: string; description: string }[] = [
+  { icon: "cloudOff", title: "Works offline", description: "Events live on disk and sync later." },
+  {
+    icon: "repeat",
+    title: "Recurring events",
+    description: "Change one occurrence or the whole series.",
+  },
+  { icon: "calendar", title: "Three views", description: "Month, week and board: M, W and B." },
+  { icon: "search", title: "Search", description: "Find any event with /." },
+  { icon: "user", title: "Invitations", description: "Accept or decline in the app." },
+  { icon: "globe", title: "Time zones", description: "Give an event its own time zone." },
+  { icon: "eye", title: "Calendar groups", description: "Switch sets of calendars with G." },
+  { icon: "bell", title: "Reminders", description: "Desktop notifications before events." },
+]
+---
+
+<section class="flex flex-col gap-12">
+  <h2 class="feature-title text-center text-2xl text-balance md:text-[28px]">
+    And everything else.
+    <span class="text-muted">The details you'd expect from a calendar.</span>
+  </h2>
+
+  <ul class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
+    {
+      DETAILS.map((detail) => (
+        <li class="flex items-start gap-4">
+          <span class="feature-tile size-10 shrink-0 rounded-[10px]">
+            <Icon name={detail.icon} class="size-[18px]" />
+          </span>
+          <p class="text-[15px] leading-snug text-pretty">
+            <span class="font-medium text-foreground">{detail.title}.</span> {detail.description}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

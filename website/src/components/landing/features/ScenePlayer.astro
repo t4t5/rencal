@@ -1,53 +1,7 @@
 ---
-// One feature beside its close-up, shown as a window on an Omarchy desktop.
-// The close-up's scene plays each time it scrolls into view.
-import "../../../styles/features.css"
-
-import type { Wallpaper } from "./wallpapers"
-
-interface Props {
-  title: string
-  description: string
-  link?: { href: string; label: string }
-  /** Swapped between by the close-up's scene; the first shows initially. */
-  wallpapers: (Wallpaper & { key?: string })[]
-}
-
-const { title, description, link, wallpapers } = Astro.props
+// Plays the scene inside each `[data-scene-stage]` whenever the stage scrolls
+// into view. Include once per page.
 ---
-
-<article class="grid items-center gap-8 lg:grid-cols-2 lg:gap-16 xl:gap-20">
-  <div class="flex flex-col gap-4">
-    <h3 class="text-xl leading-tight text-pretty md:text-2xl">{title}</h3>
-    <p class="text-[17px] text-pretty">{description}</p>
-    {
-      link && (
-        <a href={link.href} class="w-fit text-[15px] underline hover:text-foreground">
-          {link.label}
-        </a>
-      )
-    }
-  </div>
-
-  <div data-feature-stage class="feature-stage" style={`--window-border: ${wallpapers[0].border}`}>
-    {
-      wallpapers.map((wallpaper, i) => (
-        <img
-          src={wallpaper.src}
-          alt=""
-          loading="lazy"
-          decoding="async"
-          data-wallpaper={wallpaper.key}
-          data-active={i === 0 || undefined}
-          class="feature-wallpaper"
-        />
-      ))
-    }
-    <div class="feature-window">
-      <slot />
-    </div>
-  </div>
-</article>
 
 <script>
   import { SCENES, type Wait } from "./scenes"
@@ -59,7 +13,7 @@ const { title, description, link, wallpapers } = Astro.props
     return name ? SCENES[name] : undefined
   }
 
-  const stages = [...document.querySelectorAll<HTMLElement>("[data-feature-stage]")]
+  const stages = [...document.querySelectorAll<HTMLElement>("[data-scene-stage]")]
   const rest = () => stages.forEach((stage) => sceneOf(stage)?.rest?.(stage))
   rest()
   // Resting states measure text (the compose highlight), so redo them once fonts load.

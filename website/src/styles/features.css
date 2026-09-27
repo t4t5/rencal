@@ -1,13 +1,202 @@
-/* The landing page's feature rows (components/landing/features). */
+/* The landing page's features (components/landing/features). */
 
-/* A crop of a desktop: the close-up's window on a wallpaper, running off the
-   right edge (and the bottom, if it's tall). */
+/* Type: sentence-case sans, with mono kept for the small eyebrows. These are
+   classes because the page's unlayered h2/h3 rules beat Tailwind utilities. */
+.feature-title {
+  color: var(--foreground);
+  font-family: inherit;
+  font-weight: 500;
+  letter-spacing: -0.025em;
+  text-transform: none;
+}
+
+.feature-eyebrow {
+  color: var(--primary);
+  font-family: var(--heading-font-family);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* A lit surface: faint top-down gradient, hairline border brighter on top. */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  border-radius: 16px;
+  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.015) 60%);
+  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.7);
+}
+
+.feature-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgb(255 255 255 / 0.07);
+  border-top-color: rgb(255 255 255 / 0.13);
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* A piece of app UI floating on a card. */
+.feature-ui {
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.1),
+    0 20px 50px rgb(0 0 0 / 0.55);
+}
+
+/* Visuals fade out instead of being cut off. */
+.feature-fade {
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 95%);
+}
+
+.feature-fade-corner {
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 95%),
+    linear-gradient(to right, #000 65%, transparent 98%);
+  mask-composite: intersect;
+}
+
+/* Ambient light behind a visual, in `--glow` (the brand orange by default). */
+.feature-glow {
+  position: relative;
+  isolation: isolate;
+}
+
+.feature-glow::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: -10% 10% auto;
+  height: 70%;
+  background: radial-gradient(
+    closest-side,
+    color-mix(in srgb, var(--glow, var(--primary)) 22%, transparent),
+    transparent
+  );
+  filter: blur(40px);
+  pointer-events: none;
+}
+
+/* A small raised tile holding an icon. */
+.feature-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2a2a2a, #1b1b1b);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.1),
+    0 0 0 1px rgb(0 0 0 / 0.5),
+    0 6px 16px rgb(0 0 0 / 0.45);
+  color: var(--foreground);
+}
+
+/* A physical key; the "keyboard" scene presses it. */
+.keycap {
+  display: flex;
+  width: 64px;
+  height: 64px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 7px 10px 8px;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #2c2c2c, #1c1c1c);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 -3px 0 rgb(0 0 0 / 0.35),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 4px 0 #0c0c0c,
+    0 10px 20px rgb(0 0 0 / 0.45);
+  color: var(--foreground);
+  font-family: var(--heading-font-family);
+  transition:
+    transform 90ms,
+    box-shadow 90ms,
+    color 90ms;
+}
+
+.keycap-hint {
+  align-self: flex-end;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+}
+
+.keycap-letter {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.keycap[data-pressed] {
+  transform: translateY(4px);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.12),
+    inset 0 0 0 1px color-mix(in srgb, var(--primary) 70%, transparent),
+    0 0 0 1px rgb(0 0 0 / 0.6),
+    0 0 0 #0c0c0c,
+    0 0 28px color-mix(in srgb, var(--primary) 45%, transparent);
+  color: var(--primary);
+}
+
+/* Theme picker: a segmented control above the showcase. */
+/* One row; scrolls sideways on phones. */
+.theme-chips {
+  display: inline-flex;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  gap: 2px;
+  padding: 4px;
+  border-radius: 20px;
+  background: rgb(255 255 255 / 0.04);
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+}
+
+.theme-chip {
+  display: inline-flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  background: transparent;
+  color: var(--muted);
+  font-family: inherit;
+  font-size: 13px;
+  text-transform: none;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.theme-chip:hover {
+  background: rgb(255 255 255 / 0.05);
+  color: var(--foreground);
+}
+
+.theme-chip[aria-pressed="true"] {
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
+  color: var(--foreground);
+}
+
+.theme-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* A crop of a desktop: the app window on a wallpaper, running off the right
+   edge and the bottom (ThemeShowcase). */
 .feature-stage {
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: 16px;
   background: #1a1a1a;
+  box-shadow:
+    0 0 0 1px rgb(255 255 255 / 0.08),
+    0 40px 80px -30px rgb(0 0 0 / 0.8);
 }
 
 .feature-wallpaper {
@@ -24,57 +213,43 @@
   opacity: 1;
 }
 
+/* Zoomed in on narrow screens, down to the sidebar on phones. */
 .feature-window {
   position: absolute;
-  top: 12%;
-  left: 10%;
-  width: 100%;
+  top: 10%;
+  left: 6%;
+  width: 250%;
+}
+
+@media (min-width: 40rem) {
+  .feature-window {
+    width: 150%;
+  }
+}
+
+@media (min-width: 64rem) {
+  .feature-stage {
+    aspect-ratio: 16 / 7;
+  }
+
+  .feature-window {
+    width: 100%;
+  }
 }
 
 /* Hyprland's border around the focused window, in the theme's accent. */
-.feature-window > .rc-window-frame,
-.feature-window > [data-scene="themes"] {
+.feature-window > * {
   box-shadow:
     0 0 0 2px var(--window-border),
-    0 24px 60px rgb(0 0 0 / 0.35);
+    0 24px 60px rgb(0 0 0 / 0.45);
   transition: box-shadow 500ms;
-}
-
-/* An on-screen label above the window, like a screencast's key display. */
-.feature-overlay {
-  position: absolute;
-  bottom: 100%;
-  left: 0;
-  margin-bottom: 6px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 8px;
-  border-radius: 6px;
-  background: rgb(0 0 0 / 0.6);
-  backdrop-filter: blur(8px);
-  color: #fff;
-  font-family: var(--heading-font-family);
-  font-size: 12px;
-  text-transform: uppercase;
-  transition: opacity 200ms;
-}
-
-.feature-overlay kbd {
-  display: inline-flex;
-  height: 18px;
-  min-width: 18px;
-  align-items: center;
-  justify-content: center;
-  padding-inline: 4px;
-  border: 1px solid rgb(255 255 255 / 0.5);
-  border-radius: 3px;
-  font-family: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .feature-wallpaper,
-  .feature-window > * {
+  .feature-window > *,
+  .keycap,
+  .theme-chip {
     transition: none;
   }
 }

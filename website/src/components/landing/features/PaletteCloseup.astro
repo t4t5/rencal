@@ -1,0 +1,77 @@
+---
+// The command palette, cropped (src/components/shortcuts/CommandPalette.tsx in
+// the app), with its first root commands and their shortcuts.
+import Icon from "../../app-window/Icon.astro"
+import Closeup from "./Closeup.astro"
+
+const GROUPS = [
+  {
+    heading: "Calendar",
+    items: [
+      { label: "Add event to selected day", keys: ["A"] },
+      { label: "Duplicate selected event", keys: ["D"] },
+      { label: "Search events…", keys: ["/"] },
+    ],
+  },
+  {
+    heading: "View",
+    items: [
+      { label: "Display month view", keys: ["M"] },
+      { label: "Display week view", keys: ["W"] },
+      { label: "Display board view", keys: ["B"] },
+    ],
+  },
+]
+
+const kbd =
+  "inline-flex h-5 min-w-5 items-center justify-center rounded-(--radius-sm) bg-(--hover) px-1 text-xs font-medium text-(--muted-foreground)"
+---
+
+<div class="relative h-64">
+  <div class="feature-fade-corner absolute inset-0 pt-8 pl-6">
+    <div class="feature-ui w-[420px]">
+      <Closeup
+        label="renCal's command palette, listing commands such as Add event to selected day and Display month view with their shortcuts"
+        width={420}
+        height={330}
+      >
+        <div class="h-full overflow-hidden rounded-(--radius-md) border bg-(--popover)">
+          <div class="control-row h-(--control-height) border-b">
+            <span class="control-leading"><Icon name="search" /></span>
+            <span class="control-content text-sm text-(--placeholder-foreground)"
+              >Type a command…</span
+            >
+            <span class="flex gap-1">
+              <kbd class={kbd}>Ctrl</kbd>
+              <kbd class={kbd}>K</kbd>
+            </span>
+          </div>
+          {
+            GROUPS.map((group, g) => (
+              <div class="p-1">
+                <div class="px-2 py-1.5 text-xs font-medium text-(--muted-foreground)">
+                  {group.heading}
+                </div>
+                {group.items.map((item, i) => (
+                  <div
+                    class:list={[
+                      "flex items-center gap-2 rounded-(--radius-sm) px-2 py-1.5 text-sm",
+                      g === 0 && i === 0 && "bg-(--accent)",
+                    ]}
+                  >
+                    <span>{item.label}</span>
+                    <span class="ml-auto flex gap-1">
+                      {item.keys.map((key) => (
+                        <kbd class={kbd}>{key}</kbd>
+                      ))}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            ))
+          }
+        </div>
+      </Closeup>
+    </div>
+  </div>
+</div>
