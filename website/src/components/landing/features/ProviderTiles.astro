@@ -1,0 +1,65 @@
+---
+// renCal connected to the calendar providers, in the order the app's
+// "Connect calendar" dialog lists them (Proton is a provider plugin).
+import RencalLogomark from "../../../icons/rencal-logomark.astro"
+import Icon from "../../app-window/Icon.astro"
+import type { IconName } from "../../app-window/icons"
+
+// Positions around renCal, in % of the visual.
+const CENTER = { x: 50, y: 50 }
+const PROVIDERS: { icon: IconName; x: number; y: number; plugin?: boolean }[] = [
+  { icon: "google", x: 20, y: 20 },
+  { icon: "apple", x: 11, y: 50 },
+  { icon: "microsoft", x: 20, y: 80 },
+  { icon: "proton", x: 80, y: 20 },
+  { icon: "globe", x: 89, y: 50 },
+  { icon: "plus", x: 80, y: 80, plugin: true },
+]
+const at = ({ x, y }: { x: number; y: number }) => `left: ${x}%; top: ${y}%`
+---
+
+<div
+  role="img"
+  aria-label="renCal connected to Google, iCloud, Outlook, Proton, CalDAV and provider plugins"
+  class="feature-dots relative h-64"
+>
+  <svg
+    aria-hidden="true"
+    class="absolute inset-0 size-full"
+    viewBox="0 0 100 100"
+    preserveAspectRatio="none"
+  >
+    {
+      PROVIDERS.map((provider) => (
+        <line
+          x1={CENTER.x}
+          y1={CENTER.y}
+          x2={provider.x}
+          y2={provider.y}
+          stroke="rgb(255 255 255 / 0.18)"
+          vector-effect="non-scaling-stroke"
+        />
+      ))
+    }
+  </svg>
+
+  <div aria-hidden="true" class="feature-tile absolute size-16 -translate-1/2" style={at(CENTER)}>
+    <RencalLogomark class="size-9" />
+  </div>
+  {
+    PROVIDERS.map((provider) => (
+      <div
+        aria-hidden="true"
+        class:list={[
+          "absolute flex size-12 -translate-1/2 items-center justify-center",
+          provider.plugin
+            ? "border border-dashed border-white/20 bg-background text-muted"
+            : "feature-tile",
+        ]}
+        style={at(provider)}
+      >
+        <Icon name={provider.icon} class="size-5" />
+      </div>
+    ))
+  }
+</div>

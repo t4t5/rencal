@@ -1,0 +1,35 @@
+---
+// The smaller features, one line each.
+import Icon from "../../app-window/Icon.astro"
+import type { IconName } from "../../app-window/icons"
+
+const DETAILS: { icon: IconName; title: string; description: string }[] = [
+  { icon: "cloudOff", title: "Works offline", description: "Keep planning on a plane. Changes sync when you land." },
+  { icon: "search", title: "Search", description: "Track down any event, even one from years ago." },
+  { icon: "user", title: "Invitations", description: "Reply to invites without opening a browser." },
+  { icon: "eye", title: "Calendar groups", description: "Hide work on weekends, or see everything at once." },
+  { icon: "bell", title: "Reminders", description: "Never miss a meeting with desktop notifications." },
+  { icon: "monitor", title: "Cross-platform", description: "One calendar for your Linux desktop and your Mac." },
+]
+---
+
+<section class="flex flex-col gap-12">
+  <h2 class="feature-title text-center text-2xl text-balance md:text-[28px]">
+    <span class="text-muted">Plus the calendar stuff you want.</span>
+  </h2>
+
+  <ul class="grid grid-cols-1 gap-x-8 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      DETAILS.map((detail) => (
+        <li class="flex items-start gap-4">
+          <span class="feature-tile size-10 shrink-0">
+            <Icon name={detail.icon} class="size-[18px]" />
+          </span>
+          <p class="text-[15px] leading-snug text-pretty">
+            <span class="font-medium text-foreground">{detail.title}.</span> {detail.description}
+          </p>
+        </li>
+      ))
+    }
+  </ul>
+</section>

@@ -1,0 +1,75 @@
+---
+// A terminal session in the app's colors and mono font. Inputs are typed and
+// outputs revealed by the "terminal" scene, which scrolls like a real terminal;
+// without it (or with `animate` off), the whole session shows. Inputs wrap
+// with a hanging indent, at `--term-wrap` when it's set.
+import Closeup from "./Closeup.astro"
+import type { TerminalLine, Tone } from "./terminal"
+
+interface Props {
+  label: string
+  lines: TerminalLine[]
+  prompt?: string
+  width?: number
+  height?: number
+  /** Play the "terminal" scene; off renders the finished session, without a prompt after it. */
+  animate?: boolean
+}
+
+const { label, lines, prompt = "❯", width = 560, height = 340, animate = true } = Astro.props
+
+const TONES: Record<Tone, string> = {
+  muted: "text-(--muted-foreground)",
+  success: "text-(--success)",
+  bold: "font-bold",
+}
+---
+
+<Closeup
+  label={label}
+  width={width}
+  height={height}
+  class="bg-(--background)"
+  data-scene={animate ? "terminal" : undefined}
+>
+  <div
+    data-term-screen
+    class="h-full overflow-hidden px-5 pt-5 pb-3 font-mono text-[13px] leading-5 whitespace-pre"
+  >
+    {
+      lines.map((line) =>
+        "input" in line ? (
+          <div
+            data-term-input={line.input}
+            class="max-w-(--term-wrap) -indent-[3ch] pl-[3ch] whitespace-pre-wrap"
+          >
+            <span class="text-(--primary)">{prompt}</span> <span data-term-text>{line.input}</span>
+          </div>
+        ) : (
+          <div data-term-output data-delay={line.delay}>
+            {line.output.length === 0
+              ? " "
+              : line.output.map((segment) =>
+                  typeof segment === "string" ? (
+                    segment
+                  ) : (
+                    <span class={TONES[segment[1]]}>{segment[0]}</span>
+                  ),
+                )}
+          </div>
+        ),
+      )
+    }
+    {
+      animate && (
+        <div data-term-idle>
+          <span class="text-(--primary)">{prompt}</span>
+          <span
+            data-term-cursor
+            class="inline-block h-[1lh] w-[1ch] bg-(--foreground)/70 align-top"
+          />
+        </div>
+      )
+    }
+  </div>
+</Closeup>

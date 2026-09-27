@@ -126,7 +126,11 @@ const textareaPadding = "py-[calc((var(--control-height)-1lh)/2-1px)]"
 
       <div class={row}>
         <span class="control-leading"><Icon name="repeat" /></span>
-        <span class="control-content overflow-hidden text-(--placeholder-foreground)">Repeat</span>
+        <span
+          data-field="repeat"
+          class="control-content truncate data-empty:text-(--placeholder-foreground)"
+          data-empty>Repeat</span
+        >
         <span data-slot="select-icon" class="opacity-0">
           <Icon name="chevronDown" class="size-3" />
         </span>

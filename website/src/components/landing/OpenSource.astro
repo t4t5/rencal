@@ -1,12 +1,18 @@
 ---
+import "../../styles/features.css"
+
 import GitHubLogo from "../../icons/github.astro"
 import { site } from "../../site"
 ---
 
 <div class="px-8 flex flex-col items-center gap-5 md:gap-8 text-center">
-  <h2 class="uppercase text-2xl md:text-3xl text-pretty">Free and open-source</h2>
+  <h2 class="feature-title text-[28px] leading-[1.15] text-pretty md:text-[36px]">
+    Free and open-source
+  </h2>
 
-  <p class="text-balance">No subscriptions. No enshittification. Built in the open.</p>
+  <p class="text-balance text-[17px] md:text-lg">
+    No subscriptions. No enshittification. Built in the open.
+  </p>
 
   <div class="flex gap-5">
     <a href="/download/">

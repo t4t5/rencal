@@ -13,8 +13,8 @@ export const site = {
   ogImageWidth: 1200,
   ogImageHeight: 630,
   favicon: "/favicon.svg?v=2",
-  geistMonoStylesheet:
-    "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&display=swap",
+  fontStylesheet:
+    "https://fonts.googleapis.com/css2?family=Geist+Mono:wght@100..900&family=Inter:wght@400..600&display=swap",
   analyticsDomain: "rencal.org",
   analyticsScript: "https://analytics.t4t5.xyz/js/script.js",
 }
