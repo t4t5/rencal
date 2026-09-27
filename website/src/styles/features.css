@@ -1,121 +1,80 @@
-/* The landing page's feature sections (components/landing/features). */
+/* The landing page's feature rows (components/landing/features). */
 
-.feature-tab {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 0 14px 20px;
-  border-left: 2px solid var(--separator);
-}
-
-.feature-tab > button {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 0;
-  background: none;
-  text-align: left;
-  text-transform: none;
-  font-family: inherit;
-  color: inherit;
-  opacity: 0.55;
-  transition: opacity 150ms;
-}
-
-.feature-tab > button:hover,
-.feature-tab > button:focus-visible,
-.feature-tab > button[aria-selected="true"] {
-  background: none;
-  opacity: 1;
-}
-
-.feature-tab > button:focus-visible {
-  outline: 1px dashed var(--primary);
-  outline-offset: 4px;
-}
-
-.feature-tab-title {
-  color: var(--foreground);
-  font-family: var(--heading-font-family);
-  font-size: 17px;
-  text-transform: uppercase;
-}
-
-.feature-tab-description {
-  font-size: 15px;
-  text-wrap: pretty;
-}
-
-.feature-tab-link {
-  width: fit-content;
-  font-size: 15px;
-  text-decoration: underline;
-}
-
-.feature-tab-link:hover {
-  color: var(--foreground);
-}
-
-/* The rail beside the selected feature fills up until the next one. */
-.feature-tab-progress {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: -2px;
-  width: 2px;
-  background: var(--primary);
-  transform: scaleY(0);
-  transform-origin: top;
-}
-
-.feature-tab:has([aria-selected="true"]) .feature-tab-progress {
-  transform: none;
-}
-
-.feature-tab[data-running] .feature-tab-progress {
-  animation: feature-progress 9s linear both;
-}
-
-@keyframes feature-progress {
-  from {
-    transform: scaleY(0);
-  }
-}
-
-/* Close-ups sit on a block of color, cropped by its right and bottom edges. */
+/* A crop of a desktop: the close-up's window on a wallpaper, running off the
+   right edge (and the bottom, if it's tall). */
 .feature-stage {
   position: relative;
-  aspect-ratio: 1;
+  aspect-ratio: 5 / 4;
   overflow: hidden;
-  background: var(--stage, var(--primary));
-  transition: background-color 400ms;
+  border-radius: 8px;
+  background: #1a1a1a;
 }
 
-.feature-panel {
+.feature-wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 500ms;
+}
+
+.feature-wallpaper[data-active] {
+  opacity: 1;
+}
+
+.feature-window {
   position: absolute;
   top: 12%;
-  left: 8%;
+  left: 10%;
   width: 100%;
-  opacity: 0;
-  transform: translateY(12px);
-  transition:
-    opacity 300ms,
-    transform 300ms ease-out;
 }
 
-.feature-panel[data-active] {
-  opacity: 1;
-  transform: none;
+/* Hyprland's border around the focused window, in the theme's accent. */
+.feature-window > .rc-window-frame,
+.feature-window > [data-scene="themes"] {
+  box-shadow:
+    0 0 0 2px var(--window-border),
+    0 24px 60px rgb(0 0 0 / 0.35);
+  transition: box-shadow 500ms;
 }
 
-.feature-panel .rc-window-frame,
-.feature-panel [data-scene="themes"] {
-  box-shadow: 0 24px 60px rgb(0 0 0 / 0.35);
+/* An on-screen label above the window, like a screencast's key display. */
+.feature-overlay {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgb(0 0 0 / 0.6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-family: var(--heading-font-family);
+  font-size: 12px;
+  text-transform: uppercase;
+  transition: opacity 200ms;
+}
+
+.feature-overlay kbd {
+  display: inline-flex;
+  height: 18px;
+  min-width: 18px;
+  align-items: center;
+  justify-content: center;
+  padding-inline: 4px;
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 3px;
+  font-family: inherit;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .feature-panel {
+  .feature-wallpaper,
+  .feature-window > * {
     transition: none;
   }
 }

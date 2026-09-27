@@ -5,16 +5,8 @@ import Minical from "../../app-window/Minical.astro"
 import Closeup from "./Closeup.astro"
 ---
 
-<p
-  data-keystroke
-  aria-hidden="true"
-  class="absolute bottom-full left-0 mb-3 flex items-center gap-2 font-[family-name:var(--heading-font-family)] text-sm text-background uppercase"
->
-  <kbd
-    data-keystroke-key
-    class="inline-flex h-6 min-w-6 items-center justify-center border border-background/60 px-1.5 font-[inherit]"
-    >J</kbd
-  >
+<p data-keystroke aria-hidden="true" class="feature-overlay">
+  <kbd data-keystroke-key>J</kbd>
   <span data-keystroke-label>Next week</span>
 </p>
 

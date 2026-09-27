@@ -22,19 +22,24 @@ const terminal: Scene = {
     const lines = $$(root, "[data-term-input], [data-term-output]")
     const idle = $(root, "[data-term-idle]")
     const cursor = $(root, "[data-term-cursor]")
+    const screen = $(root, "[data-term-screen]")
+    const scroll = () => (screen.scrollTop = screen.scrollHeight)
     for (const line of [...lines, idle]) line.hidden = true
+    scroll()
 
     for (const line of lines) {
       const input = line.dataset.termInput
       if (input === undefined) {
         await wait(Number(line.dataset.delay ?? 40))
         line.hidden = false
+        scroll()
         continue
       }
       const text = $(line, "[data-term-text]")
       text.textContent = ""
       line.append(cursor)
       line.hidden = false
+      scroll()
       await wait(500)
       for (const char of input) {
         text.textContent += char
@@ -45,6 +50,7 @@ const terminal: Scene = {
     }
     idle.append(cursor)
     idle.hidden = false
+    scroll()
   },
 }
 
@@ -178,9 +184,11 @@ const keyboard: Scene = {
   },
 }
 
-// Cycles the app window through the built-in themes, back round to ren, and
-// tints the stage with each theme's primary color.
+// Cycles the app window through the built-in themes, back round to ren. The
+// desktop follows along, as Omarchy's themes do: each has its own wallpaper,
+// and the window border takes the theme's primary color.
 interface Theme {
+  id: string
   name: string
   vars: Record<string, string>
 }
@@ -192,7 +200,11 @@ function showTheme(root: HTMLElement, theme: Theme) {
   const scope = $(root, "[data-app-window]")
   applyVars(scope, theme.vars)
   $(root, "[data-theme-name]").textContent = theme.name
-  return getComputedStyle(scope).getPropertyValue("--primary").trim()
+  for (const wallpaper of $$(root, "[data-wallpaper]")) {
+    wallpaper.toggleAttribute("data-active", wallpaper.dataset.wallpaper === theme.id)
+  }
+  const primary = getComputedStyle(scope).getPropertyValue("--primary").trim()
+  root.style.setProperty("--window-border", primary)
 }
 
 const themes: Scene = {
@@ -202,14 +214,12 @@ const themes: Scene = {
 
   async play(root, wait) {
     const [first, ...rest] = themesOf(root)
-    const stage = root.closest<HTMLElement>("[data-feature-stage]")
     showTheme(root, first)
     await wait(600)
     for (const theme of [...rest, first]) {
-      stage?.style.setProperty("--stage", showTheme(root, theme))
-      await wait(1100)
+      showTheme(root, theme)
+      await wait(1400)
     }
-    stage?.style.removeProperty("--stage")
   },
 }
 

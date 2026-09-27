@@ -1,0 +1,122 @@
+---
+// One feature beside its close-up, shown as a window on an Omarchy desktop.
+// The close-up's scene plays each time it scrolls into view.
+import "../../../styles/features.css"
+
+import type { Wallpaper } from "./wallpapers"
+
+interface Props {
+  title: string
+  description: string
+  link?: { href: string; label: string }
+  /** Swapped between by the close-up's scene; the first shows initially. */
+  wallpapers: (Wallpaper & { key?: string })[]
+}
+
+const { title, description, link, wallpapers } = Astro.props
+---
+
+<article class="grid items-center gap-8 lg:grid-cols-[5fr_7fr] lg:gap-16 xl:gap-20">
+  <div class="flex flex-col gap-4">
+    <h3 class="text-xl leading-tight text-pretty md:text-2xl">{title}</h3>
+    <p class="text-[17px] text-pretty">{description}</p>
+    {
+      link && (
+        <a href={link.href} class="w-fit text-[15px] underline hover:text-foreground">
+          {link.label}
+        </a>
+      )
+    }
+  </div>
+
+  <div data-feature-stage class="feature-stage" style={`--window-border: ${wallpapers[0].border}`}>
+    {
+      wallpapers.map((wallpaper, i) => (
+        <img
+          src={wallpaper.src}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          data-wallpaper={wallpaper.key}
+          data-active={i === 0 || undefined}
+          class="feature-wallpaper"
+        />
+      ))
+    }
+    <div class="feature-window">
+      <slot />
+    </div>
+  </div>
+</article>
+
+<script>
+  import { SCENES, type Wait } from "./scenes"
+
+  const reducedMotion = matchMedia("(prefers-reduced-motion: reduce)").matches
+
+  const sceneOf = (stage: HTMLElement) => {
+    const name = stage.querySelector<HTMLElement>("[data-scene]")?.dataset.scene
+    return name ? SCENES[name] : undefined
+  }
+
+  const stages = [...document.querySelectorAll<HTMLElement>("[data-feature-stage]")]
+  const rest = () => stages.forEach((stage) => sceneOf(stage)?.rest?.(stage))
+  rest()
+  // Resting states measure text (the compose highlight), so redo them once fonts load.
+  void document.fonts.ready.then(rest)
+
+  // A scene is reset as its stage nears the viewport, so the visitor never sees
+  // it jump back, and its timeline starts once the stage is in view.
+  const NEAR = "50% 0px"
+  const IN_VIEW = 0.4
+
+  for (const stage of stages) {
+    const scene = sceneOf(stage)
+    if (reducedMotion || !scene) continue
+
+    let run: AbortController | null = null
+    let showStart = () => {}
+
+    new IntersectionObserver(
+      ([entry]) => {
+        run?.abort()
+        run = null
+        if (!entry.isIntersecting) {
+          scene.rest?.(stage)
+          return
+        }
+        const controller = new AbortController()
+        run = controller
+        const shown = new Promise<void>((resolve) => (showStart = resolve))
+        const wait: Wait = async (ms) => {
+          await shown
+          await delay(ms, controller.signal)
+        }
+        scene.play(stage, wait).catch(() => {})
+      },
+      { rootMargin: NEAR },
+    ).observe(stage)
+
+    new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) showStart()
+      },
+      { threshold: IN_VIEW },
+    ).observe(stage)
+  }
+
+  function delay(ms: number, signal: AbortSignal) {
+    return new Promise<void>((resolve, reject) => {
+      if (signal.aborted) return reject(signal.reason)
+      const timer = setTimeout(resolve, ms)
+      signal.addEventListener(
+        "abort",
+        () => {
+          clearTimeout(timer)
+          reject(signal.reason)
+        },
+        { once: true },
+      )
+    })
+  }
+</script>

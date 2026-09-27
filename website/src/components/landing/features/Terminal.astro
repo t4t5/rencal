@@ -1,6 +1,7 @@
 ---
 // A terminal session in the app's colors and mono font. Inputs are typed and
-// outputs revealed by the "terminal" scene; without it, the whole session shows.
+// outputs revealed by the "terminal" scene, which scrolls like a real terminal;
+// without it, the whole session shows.
 import Closeup from "./Closeup.astro"
 import type { TerminalLine, Tone } from "./terminal"
 
@@ -12,7 +13,7 @@ interface Props {
   height?: number
 }
 
-const { label, lines, prompt = "❯", width = 560, height = 560 } = Astro.props
+const { label, lines, prompt = "❯", width = 560, height = 340 } = Astro.props
 
 const TONES: Record<Tone, string> = {
   muted: "text-(--muted-foreground)",
@@ -29,7 +30,10 @@ const TONES: Record<Tone, string> = {
   class="bg-(--background)"
   data-scene="terminal"
 >
-  <div class="px-5 py-3 font-mono text-[13px] leading-5 whitespace-pre">
+  <div
+    data-term-screen
+    class="h-full overflow-hidden px-5 py-3 font-mono text-[13px] leading-5 whitespace-pre"
+  >
     {
       lines.map((line) =>
         "input" in line ? (
