@@ -1,0 +1,256 @@
+/* Rules for the website's recreation of the app window
+ * (src/components/app-window). The component rules mirror the app's
+ * src/global.css, scoped to `.rc-scope`; keep them in sync. Layers match the
+ * app's, so Tailwind utilities override them the same way. */
+
+@layer base {
+  .rc-window {
+    color: var(--foreground);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 24px;
+    font-weight: 400;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-transform: none;
+    text-align: left;
+  }
+
+  .rc-window *,
+  .rc-window ::before,
+  .rc-window ::after {
+    border-color: var(--border);
+  }
+}
+
+@layer components {
+  /* Scale the fixed-size window to its frame's width. tan(atan2()) turns the
+     length ratio into the unitless number scale() needs. */
+  .rc-window-frame {
+    container-type: inline-size;
+  }
+
+  .rc-window {
+    transform-origin: 0 0;
+    transform: scale(tan(atan2(100cqw, var(--rc-window-width))));
+  }
+
+  .rc-window .event-form {
+    padding-inline: 8px;
+  }
+
+  .rc-window .control-row {
+    display: flex;
+    min-width: 0;
+    align-items: center;
+    column-gap: var(--control-content-gap);
+    padding-inline: var(--control-padding-inline);
+  }
+
+  .rc-window .control-leading {
+    display: flex;
+    width: var(--control-leading-size);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+  }
+
+  .rc-window .control-leading > svg:not([class*="size-"]) {
+    width: var(--control-leading-size);
+    height: var(--control-leading-size);
+  }
+
+  .rc-window .control-content {
+    min-width: 0;
+    flex: 1 1 0%;
+  }
+
+  .rc-window .control-trailing {
+    display: flex;
+    min-width: var(--control-height-xs);
+    flex: none;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .rc-window .control-row:has(> .control-trailing) {
+    padding-inline-end: calc((var(--control-height) - var(--control-height-xs)) / 2 - 1px);
+  }
+
+  .rc-window [data-slot="select-icon"] {
+    display: flex;
+    min-width: 0;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    color: var(--muted-foreground);
+  }
+
+  .rc-window [data-typography="heading"] {
+    font-family: var(--font-heading);
+    text-transform: var(--text-heading--transform, none);
+    font-size: var(--text-heading, 18px);
+    line-height: var(--tw-leading, var(--text-heading--line-height, 28px));
+    letter-spacing: var(--tw-tracking, var(--text-heading--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-heading--font-weight));
+  }
+
+  .rc-window [data-typography="button"] {
+    font-family: var(--font-button);
+    text-transform: var(--text-button--transform, none);
+    font-size: var(--text-button, 14px);
+    line-height: var(--tw-leading, var(--text-button--line-height, 20px));
+    letter-spacing: var(--tw-tracking, var(--text-button--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-button--font-weight));
+  }
+
+  .rc-window [data-typography="field"] {
+    font-family: var(--font-body);
+    text-transform: none;
+    font-size: 14px;
+    line-height: var(--tw-leading, 20px);
+  }
+
+  .rc-window [data-typography="numerical"] {
+    font-family: var(--font-numerical);
+    text-transform: var(--text-numerical--transform, none);
+    font-size: var(--text-numerical, 12px);
+    line-height: var(--tw-leading, var(--text-numerical--line-height, 16px));
+    letter-spacing: var(--tw-tracking, var(--text-numerical--letter-spacing));
+    font-weight: var(--tw-font-weight, var(--text-numerical--font-weight));
+  }
+
+  .rc-window [data-slot="month-boundary"] {
+    background: color-mix(in srgb, var(--foreground) 28%, var(--background));
+  }
+
+  .rc-window
+    :where(
+      [data-slot="agenda-day-header"],
+      [data-slot="agenda-empty"],
+      [data-slot="agenda-all-day-events"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
+    ) {
+    padding-inline: var(--layout-padding);
+  }
+
+  .rc-window [data-slot="calendar-event"] {
+    --calendar-event-boosted-color: oklch(from var(--calendar-event-color) l calc(c * 1.4) h);
+    --calendar-event-tinted-color: oklch(
+      from var(--calendar-event-color) min(l, var(--calendar-event-text-max-lightness, 1))
+        calc(c * 1.4) h
+    );
+    --calendar-event-tinted-foreground: color-mix(
+      in srgb,
+      var(--foreground) var(--calendar-event-text-foreground-mix, 60%),
+      var(--calendar-event-tinted-color)
+    );
+    --calendar-event-fill: var(
+      --event-background,
+      color-mix(
+        in srgb,
+        var(--calendar-event-boosted-color) 20%,
+        var(--event-tint-surface, var(--background))
+      )
+    );
+    --calendar-event-foreground: var(--event-foreground, var(--calendar-event-tinted-foreground));
+  }
+
+  .rc-window
+    :where(
+      [data-slot="calendar-event"][data-view="month"][data-kind="all-day"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="all-day"]
+    ) {
+    background: var(--calendar-event-fill);
+    color: var(--calendar-event-foreground);
+  }
+
+  .rc-window
+    :where(
+      [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
+    )[data-selected] {
+    background: var(--selected);
+    color: var(--selected-foreground);
+  }
+
+  .rc-window [data-slot="calendar-event"] [data-slot="calendar-event-color-marker"] {
+    background: var(--calendar-event-color);
+  }
+
+  .rc-window
+    :where([data-slot="calendar-event"][data-view="month"][data-kind="timed"])
+    [data-slot="calendar-event-time"] {
+    color: var(--calendar-event-tinted-foreground);
+  }
+
+  .rc-window [data-slot="calendar-event"][data-draft] {
+    border: 1px dashed var(--calendar-event-color);
+    background: color-mix(
+      in srgb,
+      var(--calendar-event-boosted-color) 15%,
+      var(--event-tint-surface, var(--background))
+    );
+    color: color-mix(
+      in srgb,
+      var(--foreground) var(--calendar-event-text-foreground-mix, 40%),
+      var(--calendar-event-tinted-color)
+    );
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--calendar-event-color) 25%, transparent);
+    font-weight: 500;
+  }
+
+  /* While a draft is open, the app dims every other event in the month view. */
+  .rc-window[data-drafting] [data-view="month"][data-slot="calendar-event"]:not([data-draft]) {
+    opacity: 0.5;
+  }
+
+  .rc-window [data-slot="calendar-event"][data-selected] [data-slot="calendar-event-time"] {
+    color: inherit;
+  }
+
+  /* The compose input's caret. */
+  .rc-window .rc-caret {
+    vertical-align: top;
+    animation: rc-caret-blink 1s steps(1) infinite;
+  }
+
+  /* Radix popover enter/exit (tw-animate-css fade + zoom-95 + slide-in-from-left-2). */
+  .rc-window .rc-popover[data-state="open"] {
+    animation: rc-popover-in 150ms ease;
+  }
+
+  .rc-window .rc-popover[data-state="closed"] {
+    animation: rc-popover-out 150ms ease forwards;
+  }
+}
+
+@layer utilities {
+  .rc-text-2xs {
+    font-size: 11px;
+    line-height: 14px;
+  }
+}
+
+@keyframes rc-caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes rc-popover-in {
+  from {
+    opacity: 0;
+    transform: translateX(-8px) scale(0.95);
+  }
+}
+
+@keyframes rc-popover-out {
+  to {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+}

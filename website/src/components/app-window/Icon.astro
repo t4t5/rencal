@@ -1,0 +1,18 @@
+---
+import { ICONS, type IconName } from "./icons"
+
+interface Props {
+  name: IconName
+  class?: string
+}
+
+const { name, class: className } = Astro.props
+const icon = ICONS[name]
+---
+
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox={icon.viewBox}
+  class:list={["shrink-0", className]}
+  set:html={icon.body}
+/>
