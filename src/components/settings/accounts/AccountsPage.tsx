@@ -16,7 +16,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useConnectProvider } from "@/hooks/useConnectProvider"
 import { useProviders } from "@/hooks/useProviders"
 import { getErrorMessage, api, type ProviderInfo } from "@/lib/api"
-import { findProvider, getProviderDisplayName, syncsOnlyInRencal } from "@/lib/providers"
+import { findProvider, getProviderDisplayName } from "@/lib/providers"
 import { cn } from "@/lib/utils"
 
 import { CalendarIcon } from "@/icons/calendar"
@@ -182,13 +182,6 @@ function Account({
 
           <span className="text-xs text-muted-foreground truncate">{account}</span>
         </div>
-
-        {syncsOnlyInRencal(info) && (
-          <p className="text-xs text-muted-foreground">
-            Syncs only in renCal. Install <code>caldir-provider-{provider}</code> on your PATH to
-            sync with the caldir CLI.
-          </p>
-        )}
       </div>
 
       <MoreMenu onReconnect={onReconnect} />

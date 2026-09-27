@@ -40,10 +40,6 @@ export const getProviderIcon = (name: string | null): IconType | null => {
   return providerToIcon[name] ?? null
 }
 
-/** Syncing needs renCal: the caldir CLI only finds providers on `PATH`. */
-export const syncsOnlyInRencal = (info: ProviderInfo | undefined) =>
-  info?.source.kind === "plugin" && !info.on_path
-
 const providersWithoutAccount = new Set(["webcal"])
 
 export const providerRequiresAccount = (name: string) => !providersWithoutAccount.has(name)

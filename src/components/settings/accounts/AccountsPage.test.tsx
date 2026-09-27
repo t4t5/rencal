@@ -36,9 +36,9 @@ function account(provider: string): Calendar {
   }
 }
 
-function plugin(slug: string, on_path: boolean): ProviderInfo {
+function plugin(slug: string): ProviderInfo {
   const source = { kind: "plugin" as const, id: `alice.${slug}` }
-  return { slug, name: `${slug} Mail`, icon: null, source, on_path }
+  return { slug, name: `${slug} Mail`, icon: null, source, on_path: false }
 }
 
 beforeEach(() => {
@@ -54,12 +54,12 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-it("hints at PATH only for plugin providers the caldir CLI cannot find", async () => {
+it("shows provider display names", async () => {
   calendars.splice(0, calendars.length, account("tuta"), account("hooli"), account("etesync"))
   vi.mocked(api.providers.list).mockResolvedValue([
     { slug: "etesync", name: null, icon: null, source: { kind: "path" }, on_path: true },
-    plugin("hooli", true),
-    plugin("tuta", false),
+    plugin("hooli"),
+    plugin("tuta"),
   ])
 
   await act(async () => root.render(<AccountsPage />))
@@ -68,7 +68,4 @@ it("hints at PATH only for plugin providers the caldir CLI cannot find", async (
   expect(text).toContain("tuta Mail")
   expect(text).toContain("hooli Mail")
   expect(text).toContain("Etesync")
-  const hints = text.match(/Syncs only in renCal/g) ?? []
-  expect(hints).toHaveLength(1)
-  expect(text).toContain("Install caldir-provider-tuta on your PATH")
 })
