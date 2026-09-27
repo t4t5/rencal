@@ -14,6 +14,7 @@ interface PluginIndexEntry {
   description: string
   stars: number
   released_at: string
+  contributions: string[]
   preview_url?: string
 }
 
@@ -29,7 +30,9 @@ function isPluginIndexEntry(value: unknown): value is PluginIndexEntry {
     typeof entry.repo === "string" &&
     typeof entry.description === "string" &&
     typeof entry.stars === "number" &&
-    typeof entry.released_at === "string"
+    typeof entry.released_at === "string" &&
+    Array.isArray(entry.contributions) &&
+    entry.contributions.every((kind) => typeof kind === "string")
   )
 }
 
@@ -46,6 +49,9 @@ const plugins = rawIndex.sort(
     left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
 )
 const authorOf = (repo: string) => repo.split("/", 1)[0]
+// Providers run a program on the user's computer, so they are labelled apart from themes.
+const kindOf = (plugin: PluginIndexEntry) =>
+  plugin.contributions.includes("provider") ? "Calendar provider" : null
 // The site is redeployed whenever the index changes, so build time is when the list was refreshed.
 const builtAt = new Date()
 ---
@@ -101,7 +107,9 @@ const builtAt = new Date()
               class="plugin-card"
               data-stars={plugin.stars}
               data-released={plugin.released_at}
-              data-search={[plugin.name, plugin.repo, plugin.description].join(" ").toLowerCase()}
+              data-search={[plugin.name, plugin.repo, plugin.description, kindOf(plugin) ?? ""]
+                .join(" ")
+                .toLowerCase()}
               href={`https://github.com/${plugin.repo}`}
               target="_blank"
               rel="noreferrer"
@@ -118,7 +126,10 @@ const builtAt = new Date()
                 />
                 <div class="plugin-heading">
                   <h2 class="plugin-title">{plugin.name}</h2>
-                  <span class="plugin-author">{authorOf(plugin.repo)}</span>
+                  <span class="plugin-author">
+                    {authorOf(plugin.repo)}
+                    {kindOf(plugin) && ` · ${kindOf(plugin)}`}
+                  </span>
                 </div>
                 <ArrowUpRightIcon class="plugin-arrow" />
               </div>

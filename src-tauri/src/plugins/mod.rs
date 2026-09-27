@@ -9,10 +9,10 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
-    Appearance, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
+    Appearance, ContributionKind, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
     MIN_PROVIDER_CALDIR_CORE, PluginError, PluginManifest, ProviderContribution, ThemeContribution,
-    provider_is_compatible, validate_manifest, validate_manifest_owner, validate_package_id,
-    validate_release_tag,
+    is_sha256_hex, provider_is_compatible, release_asset_sha256, validate_manifest,
+    validate_manifest_owner, validate_package_id, validate_release_tag,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -382,13 +382,6 @@ fn validate_locked_provider(provider: &LockedProviderAsset) -> Result<(), Plugin
         )));
     }
     Ok(())
-}
-
-pub(crate) fn is_sha256_hex(value: &str) -> bool {
-    value.len() == 64
-        && value
-            .bytes()
-            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
 }
 
 fn update_plugins_document(document: &mut Document, file: &PluginsFile) {

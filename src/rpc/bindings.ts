@@ -26,6 +26,16 @@ export type ConferenceProvider = "google" | "outlook" | "proton"
 export type Contact = { email: string; name: string | null; count: number; last_seen: string }
 
 /**
+ * What a plugin adds to renCal, as the plugin catalog lists it. Fonts count
+ * as part of a theme.
+ */
+export type ContributionKind = "theme" | 
+/**
+ * Runs a provider binary on the user's computer.
+ */
+"provider"
+
+/**
  * Input for creating an event
  */
 export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
@@ -81,7 +91,7 @@ export type PluginCatalog = { plugins: PluginCatalogEntry[]; error: string | nul
 /**
  * The catalog is a JSON array. Extra indexer metadata is ignored by the app.
  */
-export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; version: string; preview_url?: string | null }
+export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; version: string; contributions?: ContributionKind[]; preview_url?: string | null }
 
 export type PluginFontInspection = { family: string; file: string; weight: number; style: FontStyle }
 

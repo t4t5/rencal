@@ -204,6 +204,30 @@ it("shows installed plugins first and filters the unified list", async () => {
   expect(document.body.textContent).toContain("No plugins match your search.")
 })
 
+it("marks calendar provider plugins from the catalog", async () => {
+  vi.mocked(api.plugins.catalog).mockResolvedValue({
+    plugins: [
+      plugin,
+      {
+        id: "alice.tuta",
+        name: "Tuta",
+        repo: "alice/caldir-provider-tuta",
+        description: "Sync your Tuta calendars",
+        version: "0.2.0",
+        contributions: ["provider"],
+      },
+    ],
+    error: null,
+  })
+  await render()
+  const meta = [...document.querySelectorAll("h3 + p")].map((element) => element.textContent)
+  expect(meta).toEqual(["alice · 1.10.0", "alice · 0.2.0 · Calendar provider"])
+
+  await searchFor("provider")
+  expect(document.body.textContent).toContain("Tuta")
+  expect(document.body.textContent).not.toContain("Dusk")
+})
+
 it("shows local checkout details and only an uninstall action", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [

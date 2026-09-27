@@ -25,12 +25,13 @@ use tokio::sync::Mutex;
 #[cfg(unix)]
 use super::LocalLockEntry;
 use super::{
-    Appearance, FontStyle, LockedProviderAsset, MANIFEST_FILE, MIN_PROVIDER_CALDIR_CORE,
-    PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile,
-    ProviderContribution, is_sha256_hex, load_plugin_lock_file, load_plugins_file, plugins_dir,
+    Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE,
+    MIN_PROVIDER_CALDIR_CORE, PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest,
+    PluginsFile, ProviderContribution, load_plugin_lock_file, load_plugins_file, plugins_dir,
     plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
-    running_app_version, save_plugin_lock_file, save_plugins_file, scan_packages,
-    validate_manifest, validate_manifest_owner, validate_package_id, validate_release_tag,
+    release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
+    scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
+    validate_release_tag,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
@@ -84,8 +85,23 @@ pub struct PluginCatalogEntry {
     pub repo: String,
     pub description: String,
     pub version: String,
+    #[serde(default, deserialize_with = "deserialize_contributions")]
+    pub contributions: Vec<ContributionKind>,
     #[serde(default, deserialize_with = "deserialize_preview_url")]
     pub preview_url: Option<String>,
+}
+
+/// Kinds added by a newer indexer are dropped rather than hiding the plugin.
+fn deserialize_contributions<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<Vec<ContributionKind>, D::Error> {
+    let value = serde_json::Value::deserialize(deserializer)?;
+    Ok(value
+        .as_array()
+        .into_iter()
+        .flatten()
+        .filter_map(|kind| ContributionKind::deserialize(kind).ok())
+        .collect())
 }
 
 /// Preview metadata is optional: bad values must never hide an installable plugin.
@@ -1976,9 +1992,7 @@ fn release_asset(
     let sha256 = asset
         .digest
         .as_deref()
-        .and_then(|digest| digest.strip_prefix("sha256:"))
-        .map(str::to_ascii_lowercase)
-        .filter(|digest| is_sha256_hex(digest))
+        .and_then(release_asset_sha256)
         .ok_or_else(|| {
             PluginInstallError::invalid_package(format!(
                 "release {} asset {:?} has no sha256 digest",
@@ -2467,6 +2481,41 @@ appearance = "dark"
     }
 
     #[tokio::test]
+    async fn catalog_ignores_unknown_contribution_kinds() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader.clone());
+        downloader.set(
+            "/plugins.json",
+            200,
+            br#"[
+            {"id":"alice.dusk", "name":"Dusk", "repo":"alice/dusk", "description":"Theme",
+             "version":"1.0.0", "contributions":["theme", "widget", 7, "provider"]},
+            {"id":"alice.tuta", "name":"Tuta", "repo":"alice/tuta", "description":"Provider",
+             "version":"1.0.0", "contributions":"provider"},
+            {"id":"alice.old", "name":"Old", "repo":"alice/old", "description":"Theme",
+             "version":"1.0.0"}
+        ]"#
+            .to_vec(),
+        );
+        let catalog = manager.catalog().await;
+        assert!(catalog.error.is_none(), "{:?}", catalog.error);
+        let kinds: Vec<_> = catalog
+            .plugins
+            .iter()
+            .map(|plugin| plugin.contributions.as_slice())
+            .collect();
+        assert_eq!(
+            kinds,
+            [
+                &[ContributionKind::Theme, ContributionKind::Provider][..],
+                &[],
+                &[],
+            ]
+        );
+    }
+
+    #[tokio::test]
     async fn inspects_installs_and_uninstalls_a_release() {
         let downloader = Arc::new(FixtureDownloader::new());
         serve_v1(&downloader);
@@ -2940,6 +2989,7 @@ appearance = "dark"
             repo: "Alice/rencal-dusk".into(),
             description: "A newer Dusk".into(),
             version: "9.0.0".into(),
+            contributions: vec![ContributionKind::Theme],
             preview_url: None,
         }];
         assert!(manager.list().await.plugins[0].update_version.is_none());

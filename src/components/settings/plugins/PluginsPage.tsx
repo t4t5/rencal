@@ -175,21 +175,30 @@ export function PluginsPage() {
     const catalogById = new Map(catalog?.plugins.map((plugin) => [plugin.id, plugin]))
     const installedIds = new Set(installed.plugins.map((plugin) => plugin.id))
     const plugins: PluginListItem[] = [
-      ...installed.plugins.map((plugin) => ({
-        ...plugin,
-        description: catalogById.get(plugin.id)?.description ?? null,
-        preview_url: catalogById.get(plugin.id)?.preview_url ?? null,
-        installed: plugin,
-      })),
+      ...installed.plugins.map((plugin) => {
+        const entry = catalogById.get(plugin.id)
+        return {
+          ...plugin,
+          description: entry?.description ?? null,
+          preview_url: entry?.preview_url ?? null,
+          provider: entry?.contributions?.includes("provider") ?? false,
+          installed: plugin,
+        }
+      }),
       ...(catalog?.plugins ?? [])
         .filter((plugin) => !installedIds.has(plugin.id))
-        .map((plugin) => ({ ...plugin, preview_url: plugin.preview_url ?? null, installed: null })),
+        .map((plugin) => ({
+          ...plugin,
+          preview_url: plugin.preview_url ?? null,
+          provider: plugin.contributions?.includes("provider") ?? false,
+          installed: null,
+        })),
     ]
     const query = search.trim().toLowerCase()
 
     return query
       ? plugins.filter((plugin) =>
-          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""}`
+          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${plugin.provider ? "provider" : ""}`
             .toLowerCase()
             .includes(query),
         )
@@ -245,6 +254,7 @@ export function PluginsPage() {
             previewUrl={plugin.preview_url}
             owner={plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]}
             version={plugin.installed?.version ?? plugin.version}
+            provider={plugin.provider}
           >
             {plugin.description && (
               <p className="text-sm text-muted-foreground">{plugin.description}</p>
@@ -295,6 +305,8 @@ export function PluginsPage() {
 type PluginListItem = (InstalledPlugin | PluginCatalogEntry) & {
   description: string | null
   preview_url: string | null
+  /** From the catalog: the plugin ships a calendar provider binary. */
+  provider: boolean
   installed: InstalledPlugin | null
 }
 
@@ -380,12 +392,14 @@ function PluginRow({
   previewUrl,
   owner,
   version,
+  provider,
   children,
 }: {
   name: string
   previewUrl: string | null
   owner: string
   version: string | null
+  provider: boolean
   children: ReactNode
 }) {
   return (
@@ -399,6 +413,7 @@ function PluginRow({
           <p className="text-xs text-muted-foreground break-words">
             {owner}
             {version && ` · ${version}`}
+            {provider && " · Calendar provider"}
           </p>
         </div>
         {children}

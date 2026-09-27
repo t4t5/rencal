@@ -79,11 +79,45 @@ impl ProviderContribution {
     pub fn asset_for(&self, target: &str) -> String {
         self.asset.replacen(PROVIDER_ASSET_TARGET, target, 1)
     }
+
+    /// The target triple a release asset name fills in, if it is one of ours.
+    pub fn asset_target<'a>(&self, name: &'a str) -> Option<&'a str> {
+        let (prefix, suffix) = self.asset.split_once(PROVIDER_ASSET_TARGET)?;
+        name.strip_prefix(prefix)?
+            .strip_suffix(suffix)
+            .filter(|target| !target.is_empty())
+    }
 }
 
 /// Whether renCal can talk to a provider built with this caldir-core.
 pub fn provider_is_compatible(provider: &ProviderContribution) -> bool {
     Version::parse(&provider.caldir_core).is_ok_and(|version| version >= MIN_PROVIDER_CALDIR_CORE)
+}
+
+/// The hex sha256 in a GitHub release asset digest (`sha256:<hex>`). An asset
+/// without one cannot be verified, so it is never installable.
+pub fn release_asset_sha256(digest: &str) -> Option<String> {
+    digest
+        .strip_prefix("sha256:")
+        .map(str::to_ascii_lowercase)
+        .filter(|hex| is_sha256_hex(hex))
+}
+
+pub fn is_sha256_hex(value: &str) -> bool {
+    value.len() == 64
+        && value
+            .bytes()
+            .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+}
+
+/// What a plugin adds to renCal, as the plugin catalog lists it. Fonts count
+/// as part of a theme.
+#[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum ContributionKind {
+    Theme,
+    /// Runs a provider binary on the user's computer.
+    Provider,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -829,6 +863,35 @@ caldir_core = "0.16.0"
             provider_error("\"0.16.0\"", "\"0.16\"")
                 .contains("provider \"tuta\" caldir_core \"0.16\" is not semantic")
         );
+    }
+
+    #[test]
+    fn matches_release_assets_to_their_target() {
+        let provider = provider_built_with("0.16.0");
+        assert_eq!(
+            provider.asset_target("caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz"),
+            Some("x86_64-unknown-linux-gnu")
+        );
+        for name in [
+            "caldir-provider-tuta-.tar.gz",
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.zip",
+            "caldir-provider-proton-x86_64-unknown-linux-gnu.tar.gz",
+            "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz.sha256",
+        ] {
+            assert_eq!(provider.asset_target(name), None, "{name}");
+        }
+    }
+
+    #[test]
+    fn reads_sha256_release_asset_digests() {
+        let hex = "ab".repeat(32);
+        assert_eq!(
+            release_asset_sha256(&format!("sha256:{}", hex.to_uppercase())),
+            Some(hex.clone())
+        );
+        assert_eq!(release_asset_sha256(&hex), None);
+        assert_eq!(release_asset_sha256(&format!("sha512:{hex}")), None);
+        assert_eq!(release_asset_sha256("sha256:abc"), None);
     }
 
     #[test]

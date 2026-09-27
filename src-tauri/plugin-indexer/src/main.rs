@@ -6,7 +6,9 @@ use std::pin::Pin;
 
 use anyhow::{Context, Result, anyhow, bail};
 use rencal_plugin_contract::{
-    MANIFEST_FILE, validate_manifest, validate_manifest_owner, validate_release_tag,
+    ContributionKind, MANIFEST_FILE, MIN_PROVIDER_CALDIR_CORE, PluginManifest,
+    provider_is_compatible, release_asset_sha256, validate_manifest, validate_manifest_owner,
+    validate_release_tag,
 };
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -88,6 +90,15 @@ struct RepositoryOwner {
 struct GithubRelease {
     tag_name: String,
     published_at: String,
+    #[serde(default)]
+    assets: Vec<GithubAsset>,
+}
+
+#[derive(Debug, Deserialize)]
+struct GithubAsset {
+    name: String,
+    /// `sha256:<hex>`; missing on assets uploaded before GitHub added digests.
+    digest: Option<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -110,6 +121,7 @@ struct PackageSource {
     reference: String,
     release_tag: Option<String>,
     released_at: String,
+    assets: Vec<GithubAsset>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq, Serialize)]
@@ -122,7 +134,7 @@ struct PluginIndexEntry {
     tag: String,
     released_at: String,
     stars: u64,
-    contributions: Vec<String>,
+    contributions: Vec<ContributionKind>,
     #[serde(skip_serializing_if = "Option::is_none")]
     preview_url: Option<String>,
 }
@@ -294,6 +306,7 @@ async fn build_index(
                     reference: commit.sha,
                     release_tag: Some(release.tag_name),
                     released_at: release.published_at,
+                    assets: release.assets,
                 }
             }
             FetchResult::Missing => {
@@ -337,6 +350,7 @@ async fn build_index(
                     reference: commit.sha,
                     release_tag: None,
                     released_at: commit.commit.committer.date,
+                    assets: Vec::new(),
                 }
             }
         };
@@ -367,6 +381,15 @@ async fn build_index(
                 continue;
             }
         };
+
+        let contributions =
+            match installable_contributions(&manifest, &source, &repo, &mut warnings) {
+                Ok(contributions) => contributions,
+                Err(error) => {
+                    warnings.push(format!("Skipping {repo}: {error}"));
+                    continue;
+                }
+            };
 
         if !ids.insert(manifest.id.clone()) {
             warnings.push(format!(
@@ -411,7 +434,7 @@ async fn build_index(
             tag: source.release_tag.unwrap_or(source.reference),
             released_at: source.released_at,
             stars: repository.stargazers_count,
-            contributions: vec!["theme".into()],
+            contributions,
             preview_url,
         });
     }
@@ -427,6 +450,59 @@ async fn build_index(
         warnings,
         previews,
     })
+}
+
+/// What renCal can install from this source. Providers run a downloaded
+/// binary, so each needs a caldir-core renCal speaks and a release asset with
+/// a digest to verify it against.
+fn installable_contributions(
+    manifest: &PluginManifest,
+    source: &PackageSource,
+    repo: &str,
+    warnings: &mut Vec<String>,
+) -> Result<Vec<ContributionKind>> {
+    let mut contributions = Vec::new();
+    if !manifest.contributes.themes.is_empty() {
+        contributions.push(ContributionKind::Theme);
+    }
+    let providers = &manifest.contributes.providers;
+    if providers.is_empty() {
+        return Ok(contributions);
+    }
+    if source.release_tag.is_none() {
+        bail!("provider plugins must be published as a GitHub release");
+    }
+
+    let mut installable = false;
+    for provider in providers {
+        if !provider_is_compatible(provider) {
+            warnings.push(format!(
+                "{repo}: provider {:?} was built with caldir-core {}, below {MIN_PROVIDER_CALDIR_CORE}",
+                provider.slug, provider.caldir_core
+            ));
+        } else if !source.assets.iter().any(|asset| {
+            provider.asset_target(&asset.name).is_some()
+                && asset
+                    .digest
+                    .as_deref()
+                    .and_then(release_asset_sha256)
+                    .is_some()
+        }) {
+            warnings.push(format!(
+                "{repo}: provider {:?} has no {} release asset with a sha256 digest",
+                provider.slug, provider.asset
+            ));
+        } else {
+            installable = true;
+        }
+    }
+    if installable {
+        contributions.push(ContributionKind::Provider);
+    }
+    if contributions.is_empty() {
+        bail!("no installable contributions");
+    }
+    Ok(contributions)
 }
 
 fn write_index(path: &Path, entries: &[PluginIndexEntry]) -> Result<()> {
@@ -603,6 +679,21 @@ mod tests {
         }))
     }
 
+    fn release_with_assets(tag: &str, assets: serde_json::Value) -> MockReply {
+        json(serde_json::json!({
+            "tag_name": tag,
+            "published_at": "2026-09-18T12:00:00Z",
+            "assets": assets,
+        }))
+    }
+
+    fn provider_asset(digest: Option<&str>) -> serde_json::Value {
+        serde_json::json!({
+            "name": "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz",
+            "digest": digest,
+        })
+    }
+
     fn commit() -> MockReply {
         json(serde_json::json!({
             "sha": "1111111111111111111111111111111111111111",
@@ -624,6 +715,26 @@ name = "Dusk Dark"
 css = "theme.css"
 appearance = "dark"
 "#
+        )
+    }
+
+    const PROVIDER: &str = r#"
+[[contributes.providers]]
+slug = "tuta"
+name = "Tuta"
+asset = "caldir-provider-tuta-{target}.tar.gz"
+caldir_core = "0.16.0"
+"#;
+
+    fn provider_manifest(owner: &str, caldir_core: &str) -> String {
+        format!(
+            r#"id = "{owner}.tuta"
+name = "Tuta"
+version = "1.0.0"
+description = "Sync your Tuta calendars"
+min_rencal_version = "0.8.0"
+{}"#,
+            PROVIDER.replace("0.16.0", caldir_core)
         )
     }
 
@@ -655,7 +766,7 @@ appearance = "dark"
         assert_eq!(index.entries[0].repo, "Alice/rencal-dusk");
         assert_eq!(index.entries[0].version, "1.2.3");
         assert_eq!(index.entries[0].stars, 42);
-        assert_eq!(index.entries[0].contributions, ["theme"]);
+        assert_eq!(index.entries[0].contributions, [ContributionKind::Theme]);
         assert!(index.entries[0].preview_url.is_none());
         assert!(
             !serde_json::to_value(&index.entries[0])
@@ -699,7 +810,7 @@ appearance = "dark"
 
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries.len(), 1);
-        assert_eq!(index.entries[0].contributions, ["theme"]);
+        assert_eq!(index.entries[0].contributions, [ContributionKind::Theme]);
     }
 
     #[tokio::test]
@@ -732,6 +843,112 @@ appearance = "dark"
             .find(|url| url.path() == "/repos/Alice/rencal-dusk/commits")
             .unwrap();
         assert_eq!(commit_request.query().unwrap(), "sha=main&per_page=1");
+    }
+
+    #[tokio::test]
+    async fn indexes_a_provider_release_with_a_verifiable_asset() {
+        let digest = format!("sha256:{}", "a".repeat(64));
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 1,
+                "items": [repository("Alice", "caldir-provider-tuta", 7)],
+            })),
+            release_with_assets(
+                "v1.0.0",
+                serde_json::json!([
+                    provider_asset(Some(&digest)),
+                    { "name": "README.md", "digest": null },
+                ]),
+            ),
+            commit(),
+            text(&provider_manifest("alice", "0.16.0")),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert!(index.warnings.is_empty(), "{:?}", index.warnings);
+        assert_eq!(index.entries[0].contributions, [ContributionKind::Provider]);
+        assert_eq!(
+            serde_json::to_value(&index.entries[0]).unwrap()["contributions"],
+            serde_json::json!(["provider"])
+        );
+    }
+
+    #[tokio::test]
+    async fn skips_provider_plugins_without_a_release() {
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 1,
+                "items": [repository("Alice", "caldir-provider-tuta", 7)],
+            })),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+            json(serde_json::json!([{
+                "sha": "1111111111111111111111111111111111111111",
+                "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
+            }])),
+            text(&provider_manifest("alice", "0.16.0")),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert!(index.entries.is_empty());
+        assert_eq!(index.warnings.len(), 1);
+        assert!(
+            index.warnings[0].contains("must be published as a GitHub release"),
+            "{:?}",
+            index.warnings
+        );
+    }
+
+    #[tokio::test]
+    async fn drops_providers_rencal_cannot_install() {
+        let digest = format!("sha256:{}", "a".repeat(64));
+        let mixed = format!("{}{PROVIDER}", manifest("carol", "1.0.0")).replace("0.16.0", "0.11.2");
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 3,
+                "items": [
+                    repository("Alice", "no-digest", 3),
+                    repository("Bob", "old-caldir", 2),
+                    repository("Carol", "mixed", 1),
+                ],
+            })),
+            release_with_assets("v1.0.0", serde_json::json!([provider_asset(None)])),
+            commit(),
+            text(&provider_manifest("alice", "0.16.0")),
+            release_with_assets("v1.0.0", serde_json::json!([provider_asset(Some(&digest))])),
+            commit(),
+            text(&provider_manifest("bob", "0.11.2")),
+            release_with_assets("v1.0.0", serde_json::json!([provider_asset(Some(&digest))])),
+            commit(),
+            text(&mixed),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw).await.unwrap();
+
+        assert_eq!(index.entries.len(), 1);
+        assert_eq!(index.entries[0].repo, "Carol/mixed");
+        assert_eq!(index.entries[0].contributions, [ContributionKind::Theme]);
+        let warnings = index.warnings.join("\n");
+        assert!(
+            warnings.contains("Alice/no-digest: provider \"tuta\" has no caldir-provider-tuta-{target}.tar.gz release asset with a sha256 digest"),
+            "{warnings}"
+        );
+        assert!(warnings.contains("Skipping Alice/no-digest: no installable contributions"));
+        assert!(
+            warnings
+                .contains("Bob/old-caldir: provider \"tuta\" was built with caldir-core 0.11.2")
+        );
+        assert!(warnings.contains("Skipping Bob/old-caldir: no installable contributions"));
+        assert!(
+            warnings.contains("Carol/mixed: provider \"tuta\" was built with caldir-core 0.11.2")
+        );
+        assert!(!warnings.contains("Skipping Carol/mixed"));
     }
 
     #[tokio::test]
