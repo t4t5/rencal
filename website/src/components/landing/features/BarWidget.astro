@@ -21,11 +21,11 @@ const STATUS_ICONS = [
 <div
   role="img"
   aria-label="The Omarchy bar showing the next meeting, Daily standup in 16 minutes, above a dropdown with a Join Meeting button"
-  class="bar-widget feature-glow relative h-64"
+  class="bar-widget feature-dots relative h-64"
 >
   <div aria-hidden="true" class="feature-fade-corner absolute inset-0 overflow-hidden pt-9 pl-6">
     <div
-      class="feature-ui flex h-9 items-center gap-5 rounded-l-lg bg-(--bar-bg) pl-4 text-[13px] whitespace-nowrap"
+      class="feature-ui flex h-9 items-center gap-5 bg-(--bar-bg) pl-4 text-[13px] whitespace-nowrap"
     >
       <Icon name="chevronDown" class="size-3.5 rotate-90" />
       <div class="relative flex h-full items-center">
@@ -85,7 +85,6 @@ const STATUS_ICONS = [
 
 <style>
   .bar-widget {
-    --glow: var(--bar-accent);
     --bar-bg: #1a1b26;
     --bar-fg: #a9b1d6;
     --bar-muted: #565f89;

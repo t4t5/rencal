@@ -1,6 +1,6 @@
 ---
-// A card in a features grid: its visual on top, fading into the card, and a
-// two-tone line of text below.
+// A card in a features grid: its visual on top, fading into the card, and its
+// title and description below.
 interface Props {
   title: string
   description: string
@@ -15,9 +15,9 @@ const { title, description, link, class: className } = Astro.props
 <article class:list={["feature-card flex flex-col", className]}>
   <slot />
 
-  <div class="mt-auto p-6 pt-2 text-[15px] leading-relaxed text-pretty">
-    <h3 class="feature-title inline text-[15px] tracking-normal">{title}.</h3>
-    <p class="inline">
+  <div class="mt-auto flex flex-col gap-2 p-6 pt-2">
+    <h3 class="feature-title text-[13px] tracking-[0.04em]">{title}</h3>
+    <p class="text-[15px] leading-relaxed text-pretty">
       {description}
       {
         link && (

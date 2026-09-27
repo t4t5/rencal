@@ -1,13 +1,14 @@
 /* The landing page's features (components/landing/features). */
 
-/* Type: sentence-case sans, with mono kept for the small eyebrows. These are
-   classes because the page's unlayered h2/h3 rules beat Tailwind utilities. */
+/* Terminal-flat: square corners, hairlines instead of shadows or glows, and
+   mono uppercase headings like the hero's. */
+
+/* Classes because the page's unlayered h2/h3 rules beat Tailwind utilities. */
 .feature-title {
   color: var(--foreground);
-  font-family: inherit;
-  font-weight: 500;
-  letter-spacing: -0.025em;
-  text-transform: none;
+  font-family: var(--heading-font-family);
+  font-weight: 400;
+  text-transform: uppercase;
 }
 
 .feature-eyebrow {
@@ -18,30 +19,33 @@
   text-transform: uppercase;
 }
 
-/* A lit surface: faint top-down gradient, hairline border brighter on top. */
+.feature-eyebrow::before {
+  content: "// ";
+  color: color-mix(in srgb, var(--muted) 50%, transparent);
+}
+
+/* A flat panel with a hairline border. */
 .feature-card {
   position: relative;
   overflow: hidden;
-  border-radius: 16px;
-  background: linear-gradient(180deg, rgb(255 255 255 / 0.045), rgb(255 255 255 / 0.015) 60%);
-  box-shadow: 0 24px 48px -24px rgb(0 0 0 / 0.7);
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: var(--background);
 }
 
-.feature-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border: 1px solid rgb(255 255 255 / 0.07);
-  border-top-color: rgb(255 255 255 / 0.13);
-  border-radius: inherit;
-  pointer-events: none;
+/* Cards tiled like tmux panes: one shared hairline between them. */
+.feature-panes {
+  gap: 1px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
 }
 
-/* A piece of app UI floating on a card. */
+.feature-panes > .feature-card {
+  border: none;
+}
+
+/* A piece of app UI placed on a card. */
 .feature-ui {
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.1),
-    0 20px 50px rgb(0 0 0 / 0.55);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
 }
 
 /* Visuals fade out instead of being cut off. */
@@ -56,42 +60,35 @@
   mask-composite: intersect;
 }
 
-/* Ambient light behind a visual, in `--glow` (the brand orange by default). */
-.feature-glow {
+/* A dot grid behind a visual, fading out toward its edges. */
+.feature-dots {
   position: relative;
   isolation: isolate;
 }
 
-.feature-glow::before {
+.feature-dots::before {
   content: "";
   position: absolute;
   z-index: -1;
-  inset: -10% 10% auto;
-  height: 70%;
-  background: radial-gradient(
-    closest-side,
-    color-mix(in srgb, var(--glow, var(--primary)) 22%, transparent),
-    transparent
-  );
-  filter: blur(40px);
+  inset: 0;
+  background-image: radial-gradient(rgb(255 255 255 / 0.14) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-position: center;
+  mask-image: radial-gradient(closest-side, #000, transparent);
   pointer-events: none;
 }
 
-/* A small raised tile holding an icon. */
+/* A small square tile holding an icon. */
 .feature-tile {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #2a2a2a, #1b1b1b);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.1),
-    0 0 0 1px rgb(0 0 0 / 0.5),
-    0 6px 16px rgb(0 0 0 / 0.45);
+  background: #1a1a1a;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
   color: var(--foreground);
 }
 
-/* A physical key; the "keyboard" scene presses it. */
+/* A key; the "keyboard" scene presses it. */
 .keycap {
   display: flex;
   width: 64px;
@@ -99,19 +96,16 @@
   flex-direction: column;
   justify-content: space-between;
   padding: 7px 10px 8px;
-  border-radius: 12px;
-  background: linear-gradient(180deg, #2c2c2c, #1c1c1c);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    inset 0 -3px 0 rgb(0 0 0 / 0.35),
-    0 0 0 1px rgb(0 0 0 / 0.6),
-    0 4px 0 #0c0c0c,
-    0 10px 20px rgb(0 0 0 / 0.45);
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: #1a1a1a;
+  box-shadow: 0 4px 0 rgb(255 255 255 / 0.08);
   color: var(--foreground);
   font-family: var(--heading-font-family);
   transition:
     transform 90ms,
     box-shadow 90ms,
+    border-color 90ms,
+    background-color 90ms,
     color 90ms;
 }
 
@@ -129,13 +123,14 @@
 
 .keycap[data-pressed] {
   transform: translateY(4px);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.12),
-    inset 0 0 0 1px color-mix(in srgb, var(--primary) 70%, transparent),
-    0 0 0 1px rgb(0 0 0 / 0.6),
-    0 0 0 #0c0c0c,
-    0 0 28px color-mix(in srgb, var(--primary) 45%, transparent);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, #1a1a1a);
+  box-shadow: 0 0 0 transparent;
   color: var(--primary);
+}
+
+.keycap[data-pressed] .keycap-hint {
+  color: inherit;
 }
 
 /* Theme picker: a segmented control above the showcase. */
@@ -145,11 +140,7 @@
   max-width: 100%;
   overflow-x: auto;
   scrollbar-width: none;
-  gap: 2px;
-  padding: 4px;
-  border-radius: 20px;
-  background: rgb(255 255 255 / 0.04);
-  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.07);
+  border: 1px solid rgb(255 255 255 / 0.1);
 }
 
 .theme-chip {
@@ -158,16 +149,17 @@
   white-space: nowrap;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  border-radius: 16px;
+  padding: 7px 12px;
   background: transparent;
   color: var(--muted);
-  font-family: inherit;
-  font-size: 13px;
-  text-transform: none;
+  font-size: 12px;
   transition:
     background-color 150ms,
     color 150ms;
+}
+
+.theme-chip + .theme-chip {
+  border-left: 1px solid rgb(255 255 255 / 0.1);
 }
 
 .theme-chip:hover {
@@ -176,14 +168,13 @@
 }
 
 .theme-chip[aria-pressed="true"] {
-  background: rgb(255 255 255 / 0.1);
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.08);
-  color: var(--foreground);
+  background: var(--foreground);
+  color: var(--background);
 }
 
 .theme-chip:focus-visible {
   outline: 2px solid var(--primary);
-  outline-offset: 2px;
+  outline-offset: -2px;
 }
 
 /* A crop of a desktop: the app window on a wallpaper, running off the right
@@ -192,11 +183,8 @@
   position: relative;
   aspect-ratio: 4 / 3;
   overflow: hidden;
-  border-radius: 16px;
   background: #1a1a1a;
-  box-shadow:
-    0 0 0 1px rgb(255 255 255 / 0.08),
-    0 40px 80px -30px rgb(0 0 0 / 0.8);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
 }
 
 .feature-wallpaper {
@@ -239,9 +227,7 @@
 
 /* Hyprland's border around the focused window, in the theme's accent. */
 .feature-window > * {
-  box-shadow:
-    0 0 0 2px var(--window-border),
-    0 24px 60px rgb(0 0 0 / 0.45);
+  box-shadow: 0 0 0 2px var(--window-border);
   transition: box-shadow 500ms;
 }
 

@@ -14,8 +14,8 @@ const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
 <div
   data-theme-showcase
   data-themes={JSON.stringify(themes)}
-  class="feature-glow flex flex-col items-center gap-6"
-  style={`--window-border: ${themes[0].vars["--primary"]}; --glow: var(--window-border)`}
+  class="flex flex-col items-center gap-6"
+  style={`--window-border: ${themes[0].vars["--primary"]}`}
 >
   <div role="group" aria-label="Preview a theme" class="theme-chips">
     {
@@ -26,11 +26,7 @@ const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
           aria-pressed={String(i === 0)}
           class="theme-chip"
         >
-          <span
-            aria-hidden="true"
-            class="size-2.5 rounded-full bg-(--primary)"
-            style={styleOf(theme.vars)}
-          />
+          <span aria-hidden="true" class="size-2 bg-(--primary)" style={styleOf(theme.vars)} />
           {theme.name}
         </button>
       ))

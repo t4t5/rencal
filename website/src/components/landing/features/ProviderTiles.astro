@@ -21,7 +21,7 @@ const at = ({ x, y }: { x: number; y: number }) => `left: ${x}%; top: ${y}%`
 <div
   role="img"
   aria-label="renCal connected to Google, iCloud, Outlook, Proton, CalDAV and provider plugins"
-  class="feature-glow relative h-64 [--glow:white]"
+  class="feature-dots relative h-64"
 >
   <svg
     aria-hidden="true"
@@ -44,11 +44,7 @@ const at = ({ x, y }: { x: number; y: number }) => `left: ${x}%; top: ${y}%`
     }
   </svg>
 
-  <div
-    aria-hidden="true"
-    class="feature-tile absolute size-16 -translate-1/2 rounded-2xl"
-    style={at(CENTER)}
-  >
+  <div aria-hidden="true" class="feature-tile absolute size-16 -translate-1/2" style={at(CENTER)}>
     <RencalLogomark class="size-9" />
   </div>
   {
@@ -58,7 +54,7 @@ const at = ({ x, y }: { x: number; y: number }) => `left: ${x}%; top: ${y}%`
         class:list={[
           "absolute flex size-12 -translate-1/2 items-center justify-center",
           provider.plugin
-            ? "rounded-xl border border-dashed border-white/20 bg-background text-muted"
+            ? "border border-dashed border-white/20 bg-background text-muted"
             : "feature-tile",
         ]}
         style={at(provider)}
