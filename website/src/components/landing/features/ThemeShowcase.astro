@@ -17,20 +17,27 @@ const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
   class="flex flex-col items-center gap-6"
   style={`--window-border: ${themes[0].vars["--primary"]}`}
 >
-  <div role="group" aria-label="Preview a theme" class="theme-chips">
-    {
-      themes.map((theme, i) => (
-        <button
-          type="button"
-          data-theme-chip={theme.id}
-          aria-pressed={String(i === 0)}
-          class="theme-chip"
-        >
-          <span aria-hidden="true" class="size-2 bg-(--primary)" style={styleOf(theme.vars)} />
-          {theme.name}
-        </button>
-      ))
-    }
+  <div class="theme-chips">
+    <div
+      role="group"
+      aria-label="Preview a theme"
+      data-theme-chips
+      class="theme-chips-scroller"
+    >
+      {
+        themes.map((theme, i) => (
+          <button
+            type="button"
+            data-theme-chip={theme.id}
+            aria-pressed={String(i === 0)}
+            class="theme-chip"
+          >
+            <span aria-hidden="true" class="size-2 bg-(--primary)" style={styleOf(theme.vars)} />
+            {theme.name}
+          </button>
+        ))
+      }
+    </div>
   </div>
 
   <div data-theme-stage class="feature-stage w-full">
@@ -63,15 +70,27 @@ const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
     const themes = JSON.parse(showcase.dataset.themes!) as Theme[]
     const stage = showcase.querySelector<HTMLElement>("[data-theme-stage]")!
     const scope = showcase.querySelector<HTMLElement>("[data-app-window]")!
+    const scroller = showcase.querySelector<HTMLElement>("[data-theme-chips]")!
     const chips = [...showcase.querySelectorAll<HTMLButtonElement>("[data-theme-chip]")]
 
     for (const chip of chips) {
       chip.addEventListener("click", () => {
         const theme = themes.find(({ id }) => id === chip.dataset.themeChip)!
         for (const other of chips) other.setAttribute("aria-pressed", String(other === chip))
+        chip.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
         showTheme(theme)
       })
     }
+
+    function updateFades() {
+      const overflow = scroller.scrollWidth - scroller.clientWidth
+      scroller.toggleAttribute("data-fade-start", scroller.scrollLeft > 1)
+      scroller.toggleAttribute("data-fade-end", scroller.scrollLeft < overflow - 1)
+    }
+    scroller.addEventListener("scroll", updateFades, { passive: true })
+    // Chips too: a late webfont widens them without resizing the scroller.
+    const resizes = new ResizeObserver(updateFades)
+    for (const el of [scroller, ...chips]) resizes.observe(el)
 
     function showTheme(theme: Theme) {
       for (const prop of [...scope.style]) {

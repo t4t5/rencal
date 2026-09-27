@@ -2,7 +2,7 @@
 // Two terminal panes side by side, like a tmux split: the caldir directory
 // on the left (static), a coding agent reading it on the right (typed out).
 // Stacked on narrow screens, zoomed in to run off the right edge, with the
-// static pane cut short.
+// static pane cut short. Typed input wraps before the visible edge.
 import { AGENT_SESSION, FILES_SESSION } from "./sessions"
 import Terminal from "./Terminal.astro"
 
@@ -28,7 +28,10 @@ const HEIGHT = 440
   </div>
   <div class="flex min-w-0 flex-col">
     <p class="pane-title">agent</p>
-    <div data-scene-stage class="overflow-hidden max-lg:aspect-[560/490]">
+    <div
+      data-scene-stage
+      class="overflow-hidden max-lg:aspect-[560/490] max-lg:[--term-wrap:360px]"
+    >
       <div class="max-lg:w-[140%]">
         <Terminal
           label="A coding agent listing flight events in the caldir directory to count the days spent abroad in each country"

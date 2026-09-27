@@ -128,13 +128,48 @@
 }
 
 /* Theme picker: a segmented control above the showcase. */
-/* One row; scrolls sideways on phones. */
+/* One row; scrolls sideways on phones, fading at whichever edge has more. */
 .theme-chips {
-  display: inline-flex;
+  display: flex;
   max-width: 100%;
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.theme-chips-scroller {
+  display: flex;
+  min-width: 0;
   overflow-x: auto;
   scrollbar-width: none;
-  border: 1px solid rgb(255 255 255 / 0.1);
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent
+  );
+  transition:
+    --fade-start 150ms,
+    --fade-end 150ms;
+}
+
+.theme-chips-scroller[data-fade-start] {
+  --fade-start: 48px;
+}
+
+.theme-chips-scroller[data-fade-end] {
+  --fade-end: 48px;
 }
 
 .theme-chip {
@@ -203,6 +238,13 @@
   width: 250%;
 }
 
+/* Taller on phones so more of the window shows. */
+@media (max-width: 39.99rem) {
+  .feature-stage {
+    aspect-ratio: 4 / 5;
+  }
+}
+
 @media (min-width: 40rem) {
   .feature-window {
     width: 150%;
@@ -229,6 +271,7 @@
   .feature-wallpaper,
   .feature-window > *,
   .keycap,
+  .theme-chips-scroller,
   .theme-chip {
     transition: none;
   }

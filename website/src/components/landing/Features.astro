@@ -33,11 +33,12 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
           title="Natural input"
           description="Type events the way you say them: “lunch with Sarah tomorrow at 1” or “team sync every Monday”."
         >
-          <div data-scene-stage class="relative h-96">
+          <div data-scene-stage class="relative sm:h-96">
             <!-- Fades late so the form's Repeat row stays visible. -->
-            <div class="absolute inset-0 mask-b-from-85%">
+            <div class="pt-9 pl-6 mask-b-from-85% sm:absolute sm:inset-0 sm:p-0">
+              <!-- Narrow cards scale it down so the longest typed line fits. -->
               <div
-                class="feature-ui absolute top-9 left-6 w-[600px] sm:left-1/2 sm:-translate-x-1/2"
+                class="feature-ui w-[min(600px,calc(100%*600/400))] sm:absolute sm:top-9 sm:left-1/2 sm:w-[600px] sm:-translate-x-1/2"
               >
                 <ComposeCloseup />
               </div>

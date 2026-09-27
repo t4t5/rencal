@@ -1,7 +1,8 @@
 ---
 // A terminal session in the app's colors and mono font. Inputs are typed and
 // outputs revealed by the "terminal" scene, which scrolls like a real terminal;
-// without it (or with `animate` off), the whole session shows.
+// without it (or with `animate` off), the whole session shows. Inputs wrap
+// with a hanging indent, at `--term-wrap` when it's set.
 import Closeup from "./Closeup.astro"
 import type { TerminalLine, Tone } from "./terminal"
 
@@ -33,12 +34,15 @@ const TONES: Record<Tone, string> = {
 >
   <div
     data-term-screen
-    class="h-full overflow-hidden px-5 pt-5 pb-3 font-mono text-[13px] leading-5 *:whitespace-pre"
+    class="h-full overflow-hidden px-5 pt-5 pb-3 font-mono text-[13px] leading-5 whitespace-pre"
   >
     {
       lines.map((line) =>
         "input" in line ? (
-          <div data-term-input={line.input}>
+          <div
+            data-term-input={line.input}
+            class="max-w-(--term-wrap) -indent-[3ch] pl-[3ch] whitespace-pre-wrap"
+          >
             <span class="text-(--primary)">{prompt}</span> <span data-term-text>{line.input}</span>
           </div>
         ) : (
