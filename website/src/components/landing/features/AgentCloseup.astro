@@ -1,44 +1,38 @@
 ---
-// A coding agent answering calendar questions with the caldir CLI.
+// A coding agent answering a calendar question by grepping the caldir directory.
 import Terminal from "./Terminal.astro"
 import type { TerminalLine } from "./terminal"
 
 const THINK_MS = 900
-const tool = (command: string): TerminalLine => ({
-  output: [["● ", "success"], ["Bash", "bold"], `(${command})`],
-  delay: THINK_MS,
-})
-const reply = (text: string): TerminalLine => ({
-  output: [["● ", "muted"], text],
-  delay: THINK_MS,
+const stay = (country: string, days: number): TerminalLine => ({
+  output: ["  ", country.padEnd(16), [`${days} days`.padStart(7), "bold"]],
 })
 
 const lines: TerminalLine[] = [
-  { input: "Am I free for lunch with Sarah on Friday?" },
+  { input: "How many days did I spend abroad in the last 3 years?" },
   { output: [] },
-  tool("caldir events --from 2026-06-26 --to 2026-06-26"),
   {
-    output: [
-      ["  ⎿  ", "muted"],
-      ["Fri Jun 26", "bold"],
-    ],
-    delay: 400,
+    output: [["● ", "success"], ["Bash", "bold"], "(ls ~/caldir/*/ | grep flight)"],
+    delay: THINK_MS,
   },
-  { output: ["       09:30 Product stand-up ", ["[google-work]", "muted"]] },
-  { output: ["       19:00 Grocery delivery ", ["[icloud-personal]", "muted"]] },
+  { output: [["  ⎿  ", "muted"], "2023-08-12T0710__flight-to-lisbon.ics"], delay: 400 },
+  { output: ["     2023-08-26T1805__flight-to-london.ics"] },
+  { output: ["     2024-03-08T1120__flight-to-tokyo.ics"] },
+  { output: [["     … +5 lines (ctrl+o to expand)", "muted"]] },
   { output: [] },
-  reply("Yes, you're free from 10:00 until 19:00."),
+  {
+    output: [["● ", "muted"], "You spent ", ["43 days", "bold"], " abroad across 4 trips:"],
+    delay: THINK_MS,
+  },
   { output: [] },
-  { input: "Great, book it for 1pm" },
-  { output: [] },
-  tool('caldir new "Lunch with Sarah" --start "friday 1pm"'),
-  { output: [] },
-  reply("Done! Lunch with Sarah is on Friday at 13:00."),
+  stay("Portugal", 18),
+  stay("Japan", 16),
+  stay("United States", 9),
 ]
 ---
 
 <Terminal
-  label="A coding agent using the caldir CLI to check a calendar and add a lunch event"
+  label="A coding agent listing flight events in the caldir directory to count the days spent abroad in each country"
   lines={lines}
   prompt=">"
 />
