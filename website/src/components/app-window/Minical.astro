@@ -16,9 +16,11 @@ import {
 
 interface Props {
   activeDate?: string
+  /** The month name and arrows above the grid. */
+  header?: boolean
 }
 
-const { activeDate = TODAY } = Astro.props
+const { activeDate = TODAY, header = true } = Astro.props
 
 // Six weeks from the first Monday of the month.
 const weeks = Array.from({ length: 6 }, (_, i) => addDays(MONTH_START, i * 7)).map((start) =>
@@ -39,28 +41,28 @@ const createdAttr = (event: DemoEvent) =>
   event.created ? { "data-created": "", hidden: true } : {}
 ---
 
-<div data-slot="minical" class="pt-4">
-  <div class="flex h-12 items-center justify-between px-(--layout-padding) pb-4">
-    <div
-      data-typography="heading"
-      class="overflow-hidden text-2xl font-bold text-ellipsis whitespace-nowrap"
-    >
-      {monthName(MONTH_START)}
-      <span class="font-normal text-(--brand)">{MONTH_START.slice(0, 4)}</span>
-    </div>
-    <div class="flex items-center gap-1">
-      <span
-        class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
-      >
-        <Icon name="chevronUp" class="size-4" />
-      </span>
-      <span
-        class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)"
-      >
-        <Icon name="chevronDown" class="size-4" />
-      </span>
-    </div>
-  </div>
+<div data-slot="minical" class:list={[header && "pt-4"]}>
+  {
+    header && (
+      <div class="flex h-12 items-center justify-between px-(--layout-padding) pb-4">
+        <div
+          data-typography="heading"
+          class="overflow-hidden text-2xl font-bold text-ellipsis whitespace-nowrap"
+        >
+          {monthName(MONTH_START)}
+          <span class="font-normal text-(--brand)">{MONTH_START.slice(0, 4)}</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)">
+            <Icon name="chevronUp" class="size-4" />
+          </span>
+          <span class="flex size-(--control-height-xs) items-center justify-center rounded-(--radius-circle)">
+            <Icon name="chevronDown" class="size-4" />
+          </span>
+        </div>
+      </div>
+    )
+  }
 
   <div class="flex">
     {

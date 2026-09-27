@@ -114,13 +114,17 @@ const compose: Scene = {
   },
 }
 
-// Vim keys move the minical's selected day. Ends where the markup starts.
+// Vim keys move the minical's selected day around a loop back to today, so
+// the scene can repeat without a jump.
 const KEYSTROKES: { key: string; days: number }[] = [
+  { key: "k", days: -7 },
+  { key: "k", days: -7 },
+  { key: "l", days: 1 },
   { key: "l", days: 1 },
   { key: "j", days: 7 },
   { key: "h", days: -1 },
-  { key: "k", days: -7 },
   { key: "j", days: 7 },
+  { key: "h", days: -1 },
 ]
 
 function selectDay(root: HTMLElement, date: string) {
@@ -135,25 +139,24 @@ function selectDay(root: HTMLElement, date: string) {
 const keyboard: Scene = {
   rest(root) {
     for (const keycap of $$(root, "[data-keycap]")) keycap.removeAttribute("data-pressed")
-    selectDay(
-      root,
-      KEYSTROKES.reduce((date, stroke) => addDays(date, stroke.days), TODAY),
-    )
+    selectDay(root, TODAY)
   },
 
   async play(root, wait) {
     let date = TODAY
     selectDay(root, date)
-    await wait(900)
+    await wait(600)
 
-    for (const stroke of KEYSTROKES) {
-      const keycap = $(root, `[data-keycap="${stroke.key}"]`)
-      keycap.toggleAttribute("data-pressed", true)
-      date = addDays(date, stroke.days)
-      selectDay(root, date)
-      await wait(160)
-      keycap.removeAttribute("data-pressed")
-      await wait(840)
+    for (;;) {
+      for (const stroke of KEYSTROKES) {
+        const keycap = $(root, `[data-keycap="${stroke.key}"]`)
+        keycap.toggleAttribute("data-pressed", true)
+        date = addDays(date, stroke.days)
+        selectDay(root, date)
+        await wait(160)
+        keycap.removeAttribute("data-pressed")
+        await wait(640)
+      }
     }
   },
 }

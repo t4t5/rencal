@@ -1,6 +1,6 @@
 ---
-// Vim keys above the minical. The "keyboard" scene presses each key and moves
-// the selected day with it.
+// Vim keys above the minical. The "keyboard" scene keeps pressing them, moving
+// the selected day with each press.
 import Minical from "../../app-window/Minical.astro"
 import Closeup from "./Closeup.astro"
 
@@ -12,8 +12,8 @@ const KEYS = [
 ]
 ---
 
-<div data-scene-stage class="feature-dots relative h-80">
-  <div aria-hidden="true" class="flex justify-center gap-3 pt-9">
+<div data-scene-stage class="relative h-80">
+  <div aria-hidden="true" class="flex justify-center gap-2.5 pt-7">
     {
       KEYS.map(({ key, hint }) => (
         <kbd data-keycap={key} class="keycap">
@@ -24,16 +24,16 @@ const KEYS = [
     }
   </div>
 
-  <div class="feature-fade absolute inset-x-0 top-[140px] bottom-0 px-6">
-    <div class="feature-ui mx-auto max-w-[300px]">
+  <div class="feature-fade absolute inset-x-0 top-[104px] bottom-0 px-6">
+    <div class="feature-ui mx-auto max-w-[280px]">
       <Closeup
         label="renCal's mini calendar, with the selected day moved by the H, J, K and L keys"
-        width={340}
-        height={290}
+        width={320}
+        height={250}
         class="bg-(--sidebar)"
         data-scene="keyboard"
       >
-        <Minical activeDate="2026-07-02" />
+        <Minical header={false} />
       </Closeup>
     </div>
   </div>

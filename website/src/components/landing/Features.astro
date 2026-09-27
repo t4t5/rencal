@@ -15,17 +15,15 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
 ---
 
 <div class="px-6 py-10 md:px-10 md:py-16">
-  <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-32 md:gap-48">
+  <div class="mx-auto flex w-full max-w-[1200px] flex-col gap-28 md:gap-40">
     <FeatureSection
-      eyebrow="Local-first"
       title="Your calendar is a folder"
-      description="Every event is an .ics file on your machine. Grep it, script it, back it up with git, or hand it to an agent. No MCP server needed."
+      description="Every event is an .ics file on your machine. Grep it, script it, or hand it to an agent. No MCP server needed."
     >
       <SplitTerminal />
     </FeatureSection>
 
     <FeatureSection
-      eyebrow="Everyday use"
       title="Built for speed"
       description="Add events in plain language, and get around without touching the mouse."
     >
@@ -78,7 +76,6 @@ import ThemeShowcase from "./features/ThemeShowcase.astro"
     </FeatureSection>
 
     <FeatureSection
-      eyebrow="Omarchy native"
       title="Matches your system"
       description="Built for Omarchy Linux. renCal follows your system theme, or pick one of its own."
       link={{ href: "/omarchy/", label: "Learn more" }}
