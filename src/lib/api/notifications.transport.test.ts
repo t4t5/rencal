@@ -21,7 +21,8 @@ it("propagates frontend broadcasts and backend payloads through the native event
   ]
   await Promise.all(subscriptions.map((subscription) => subscription.ready))
 
-  await emitAppEvent("theme-changed", "user:night")
+  const night = { mode: "single", single: "user:night", light: "ren-light", dark: "ren" } as const
+  await emitAppEvent("theme-changed", night)
   await emitAppEvent("rencal-config-changed")
   const settings = {
     time_format: "12h",
@@ -31,13 +32,18 @@ it("propagates frontend broadcasts and backend payloads through the native event
   }
   // Simulate the native producer; application frontend code cannot emit this name.
   await emit("caldir-config-changed", settings)
-  expect(appTheme).toHaveBeenCalledExactlyOnceWith("user:night")
-  expect(settingsTheme).toHaveBeenCalledExactlyOnceWith("user:night")
+  expect(appTheme).toHaveBeenCalledExactlyOnceWith(night)
+  expect(settingsTheme).toHaveBeenCalledExactlyOnceWith(night)
   expect(configChanged).toHaveBeenCalledExactlyOnceWith(null)
   expect(applySettings).toHaveBeenCalledExactlyOnceWith(settings)
 
   subscriptions.forEach((subscription) => subscription.unlisten())
-  await emitAppEvent("theme-changed", "ren")
+  await emitAppEvent("theme-changed", {
+    mode: "single",
+    single: "ren",
+    light: "ren-light",
+    dark: "ren",
+  })
   expect(appTheme).toHaveBeenCalledOnce()
   expect(settingsTheme).toHaveBeenCalledOnce()
 })

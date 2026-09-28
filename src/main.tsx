@@ -11,9 +11,9 @@ import { SettingsProvider } from "@/contexts/SettingsContext"
 
 import { api } from "@/lib/api"
 import { setViewerTzid } from "@/lib/event-time"
-import { preloadCalendarData } from "@/lib/preload-data"
+import { type Preload, preloadCalendarData } from "@/lib/preload-data"
 
-import { ThemeProvider } from "@/themes/ThemeRegistry"
+import { preloadExternalThemes, ThemeProvider } from "@/themes/ThemeRegistry"
 import { AppWindow } from "@/windows/AppWindow"
 import { SettingsWindow } from "@/windows/SettingsWindow"
 
@@ -25,7 +25,10 @@ const appWindow = params.get("appWindow")
 void api.notifications.listen("system-tz-changed", (event) => setViewerTzid(event))
 
 async function bootstrap() {
-  const preload = appWindow === "settings" ? {} : await preloadCalendarData()
+  const [preload, externalThemes] = await Promise.all([
+    appWindow === "settings" ? Promise.resolve<Preload>({}) : preloadCalendarData(),
+    preloadExternalThemes(),
+  ])
 
   const rootEl = document.getElementById("root")
 
@@ -35,7 +38,7 @@ async function bootstrap() {
     <React.StrictMode>
       {/* Theme, Settings, and CalendarState are shared by both windows. */}
       {/* The app-only provider chain continues in AppProviders. */}
-      <ThemeProvider>
+      <ThemeProvider initialExternalThemes={externalThemes}>
         <SettingsProvider>
           <CalendarStateProvider
             initialCalendars={preload.initialCalendars}

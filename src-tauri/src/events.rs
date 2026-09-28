@@ -10,6 +10,7 @@ use tauri::{Emitter, Runtime};
 use crate::external_themes::ExternalThemesSnapshot;
 use crate::omarchy::OmarchyColors;
 use crate::routes::caldir::CaldirSettings;
+use crate::routes::config::ThemeSettings;
 
 #[derive(Clone, Serialize, Type)]
 #[serde(tag = "name", content = "payload", rename_all = "kebab-case")]
@@ -27,7 +28,7 @@ pub enum AppEvent {
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     MenuAction(String),
     #[allow(dead_code)] // Emitted by the frontend only; still part of the contract.
-    ThemeChanged(String),
+    ThemeChanged(ThemeSettings),
 }
 
 impl AppEvent {
@@ -79,6 +80,7 @@ mod tests {
     use super::*;
     use crate::omarchy::OmarchyMode;
     use crate::routes::caldir::TimeFormat;
+    use crate::routes::config::ThemeMode;
     use serde_json::{Value, json};
 
     #[test]
@@ -155,9 +157,14 @@ mod tests {
                 json!("compose-event"),
             ),
             (
-                AppEvent::ThemeChanged("user:test".into()),
+                AppEvent::ThemeChanged(ThemeSettings {
+                    mode: ThemeMode::System,
+                    single: "ren".into(),
+                    light: "ren-light".into(),
+                    dark: "user:test".into(),
+                }),
                 "theme-changed",
-                json!("user:test"),
+                json!({ "mode": "system", "single": "ren", "light": "ren-light", "dark": "user:test" }),
             ),
         ];
         for (event, name, payload) in cases {

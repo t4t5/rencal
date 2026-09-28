@@ -45,11 +45,8 @@ const themeCss = (id: string) => {
 /** ren's own accents, applied on top of the `.rc-scope` defaults. */
 export const REN_VARS = parseThemeCss(themeCss("ren"))
 
-// Omarchy (appearance: null) has no static palette to preview.
-export const THEMES = appThemes
-  .filter((theme) => theme.appearance !== null)
-  .map((theme) => ({
-    id: theme.id,
-    name: theme.name,
-    vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(themeCss(theme.id)) },
-  }))
+export const THEMES = appThemes.map((theme) => ({
+  id: theme.id,
+  name: theme.name,
+  vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(themeCss(theme.id)) },
+}))

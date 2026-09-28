@@ -9,7 +9,6 @@ import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
 
 import { SettingsIcon } from "@/icons/settings"
-import { appearanceFromComputedBackground } from "@/themes/appearance"
 import type { Appearance } from "@/themes/manifest"
 
 export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
@@ -27,9 +26,8 @@ export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
   const screenH = (monitor?.size.height ?? height) / scale
   const needsNative = await needsNativeDecorations()
 
-  const appearance =
-    (document.body.dataset.appearance as Appearance | undefined) ??
-    appearanceFromComputedBackground()
+  // The theme controller always sets it; the fallback is the ren baseline.
+  const appearance = (document.body.dataset.appearance as Appearance | undefined) ?? "dark"
 
   const params = new URLSearchParams({ appWindow: "settings" })
   if (options.tab) params.set("tab", options.tab)

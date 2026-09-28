@@ -1,23 +1,83 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { useTheme } from "@/hooks/useTheme"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
-import { CheckIcon } from "@/icons/check"
+import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
-import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
+import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
+
+// Default --control-height, fixed so themes that resize controls don't shift the grid.
+const CONTROL_SLOT = "flex h-[34px] items-center"
 
 export function ThemesPage() {
-  const { theme, setTheme } = useTheme()
+  const { settings, onOmarchy, setMode, setSlot } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
+  const syncsWithSystem = settings.mode === "system"
+
+  // Which of the pair the grid edits while syncing; browsing never changes the theme.
+  const [pairSlot, setPairSlot] = useState<Appearance>("dark")
+  const slot: ThemeSlot = syncsWithSystem ? pairSlot : "single"
+  const selected = settings[slot]
+
+  // Independent of the selection, so picking a theme never reshuffles the grid.
+  const slotThemes = useMemo(() => themesFor(slot, descriptors), [descriptors, slot])
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
+      <div className="flex flex-col gap-2 w-[180px]">
+        <label htmlFor="theme-mode" className="text-sm leading-5">
+          Theme mode
+        </label>
+        <div className={CONTROL_SLOT}>
+          <Select
+            value={settings.mode}
+            onValueChange={(next) => setMode(next === "system" ? "system" : "single")}
+          >
+            <SelectTrigger id="theme-mode" className="w-full" variant="default">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single">Single theme</SelectItem>
+              <SelectItem value="system">Sync with system</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+      {syncsWithSystem && onOmarchy ? (
+        <p className="text-sm text-muted-foreground">renCal follows your Omarchy theme.</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {syncsWithSystem && (
+            <div className={CONTROL_SLOT}>
+              <Tabs
+                value={pairSlot}
+                onValueChange={(next) => {
+                  if (next === "light" || next === "dark") setPairSlot(next)
+                }}
+              >
+                <TabsList aria-label="Theme slot">
+                  <TabsTrigger value="dark">Dark theme</TabsTrigger>
+                  <TabsTrigger value="light">Light theme</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
+          <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
+        </div>
+      )}
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -33,40 +93,46 @@ export function ThemesPage() {
 
 function ThemeGrid({
   themes,
-  active,
+  selected,
   onSelect,
 }: {
-  themes: ThemeDescriptor[]
-  active: string
+  themes: readonly ThemeDescriptor[]
+  selected: string
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="grid grid-cols-3 gap-3">
-      {themes.map((t) => {
-        const isActive = active === t.id
+    <div className="grid grid-cols-3 gap-x-3 gap-y-4">
+      {themes.map((theme) => {
+        const isActive = theme.id === selected
 
+        // Block layout throughout: WebKit doesn't stretch a flex <button>'s children.
         return (
           <button
-            key={t.id}
-            onClick={() => onSelect(t.id)}
-            className={cn(
-              "flex flex-col overflow-hidden rounded-lg border bg-secondary text-left transition-colors hover:bg-secondary-hover",
-              isActive ? "border-primary ring-1 ring-primary" : "border-border",
-            )}
+            key={theme.id}
+            onClick={() => onSelect(theme.id)}
+            aria-pressed={isActive}
+            className="group block w-full min-w-0 outline-none"
           >
-            <ThemePreview themeId={t.id} />
-
-            <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
-              <span className="truncate text-sm">{t.name}</span>
-              <span
-                className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-circle",
-                  isActive ? "bg-primary" : "border border-input",
-                )}
-              >
-                {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
-              </span>
+            <div
+              className={cn(
+                "overflow-hidden rounded-lg border transition-colors group-focus-visible:ring-2 group-focus-visible:ring-ring",
+                isActive
+                  ? "border-primary ring-1 ring-primary"
+                  : "border-border group-hover:border-muted-foreground",
+              )}
+            >
+              <div aria-hidden className="relative h-28 overflow-hidden">
+                <PreviewWindow theme={theme} />
+              </div>
             </div>
+            <span
+              className={cn(
+                "block truncate pt-2 text-center text-sm leading-5 transition-colors",
+                isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+              )}
+            >
+              {theme.name}
+            </span>
           </button>
         )
       })}
@@ -75,19 +141,19 @@ function ThemeGrid({
 }
 
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const ThemePreview = ({ themeId }: { themeId: string }) => {
-  const { descriptors, externalThemes } = useThemeRegistry()
-  const css = externalThemes.find((theme) => theme.id === themeId)?.css
+const PreviewWindow = ({ theme }: { theme: ThemeDescriptor }) => {
+  const { externalThemes } = useThemeRegistry()
+  const css = externalThemes.find((external) => external.id === theme.id)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
-    <div aria-hidden className="h-28 overflow-hidden pt-4 pl-4">
-      <div
-        data-theme={themeId}
-        data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
-        style={style}
-        className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg"
-      >
+    <div
+      data-theme={theme.id}
+      data-appearance={theme.appearance}
+      style={style}
+      className="absolute inset-0 bg-card pt-4 pl-4"
+    >
+      <div className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg">
         <MinicalPreview />
         <WeekPreview />
       </div>

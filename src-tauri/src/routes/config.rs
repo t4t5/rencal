@@ -35,13 +35,67 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
     }
 }
 
-// `get_theme` returns `Some(theme)` if the config file exists, `None` if it
-// has never been written. The frontend uses the `None` case to migrate a
-// pre-existing `localStorage["theme"]` value up to TOML on first run.
+/// RPC mirror of `rencal_config::ThemeMode`.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeMode {
+    System,
+    Single,
+}
+
+impl From<rencal_config::ThemeMode> for ThemeMode {
+    fn from(value: rencal_config::ThemeMode) -> Self {
+        match value {
+            rencal_config::ThemeMode::System => Self::System,
+            rencal_config::ThemeMode::Single => Self::Single,
+        }
+    }
+}
+
+impl From<ThemeMode> for rencal_config::ThemeMode {
+    fn from(value: ThemeMode) -> Self {
+        match value {
+            ThemeMode::System => Self::System,
+            ThemeMode::Single => Self::Single,
+        }
+    }
+}
+
+/// RPC mirror of `rencal_config::ThemeConfig`, saved and broadcast together.
+#[derive(Clone, Debug, Serialize, Deserialize, Type)]
+pub struct ThemeSettings {
+    pub mode: ThemeMode,
+    pub single: String,
+    pub light: String,
+    pub dark: String,
+}
+
+impl From<rencal_config::ThemeConfig> for ThemeSettings {
+    fn from(value: rencal_config::ThemeConfig) -> Self {
+        Self {
+            mode: value.mode.into(),
+            single: value.single,
+            light: value.light,
+            dark: value.dark,
+        }
+    }
+}
+
+impl From<ThemeSettings> for rencal_config::ThemeConfig {
+    fn from(value: ThemeSettings) -> Self {
+        Self {
+            mode: value.mode.into(),
+            single: value.single,
+            light: value.light,
+            dark: value.dark,
+        }
+    }
+}
+
 #[taurpc::procedures(path = "config", export_to = "../src/rpc/bindings.ts")]
 pub trait ConfigApi {
-    async fn get_theme() -> TauResult<Option<String>>;
-    async fn set_theme(theme: String) -> TauResult<()>;
+    async fn get_theme() -> TauResult<ThemeSettings>;
+    async fn set_theme(settings: ThemeSettings) -> TauResult<()>;
     async fn get_notifications_enabled() -> TauResult<bool>;
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
     async fn get_auto_sync_enabled() -> TauResult<bool>;
@@ -59,16 +113,13 @@ pub struct ConfigApiImpl;
 
 #[taurpc::resolvers]
 impl ConfigApi for ConfigApiImpl {
-    async fn get_theme(self) -> TauResult<Option<String>> {
-        if !RencalConfig::exists() {
-            return Ok(None);
-        }
-        Ok(Some(RencalConfig::load()?.theme))
+    async fn get_theme(self) -> TauResult<ThemeSettings> {
+        Ok(RencalConfig::load()?.theme.into())
     }
 
-    async fn set_theme(self, theme: String) -> TauResult<()> {
+    async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
-        config.theme = theme;
+        config.theme = settings.into();
         config.save().map_err(RpcError::from)
     }
 

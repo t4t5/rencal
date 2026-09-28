@@ -57,10 +57,16 @@ describe("app notification adapter", () => {
   })
 
   it("broadcasts the theme payload and canonical null for omitted unit payloads", async () => {
-    await emitAppEvent("theme-changed", "user:custom")
+    const theme = {
+      mode: "system",
+      single: "ren",
+      light: "ren-light",
+      dark: "user:custom",
+    } as const
+    await emitAppEvent("theme-changed", theme)
     await emitAppEvent("rencal-config-changed")
     await emitAppEvent("rencal-config-changed", null)
-    expect(emit).toHaveBeenNthCalledWith(1, "theme-changed", "user:custom")
+    expect(emit).toHaveBeenNthCalledWith(1, "theme-changed", theme)
     expect(emit).toHaveBeenNthCalledWith(2, "rencal-config-changed", null)
     expect(emit).toHaveBeenNthCalledWith(3, "rencal-config-changed", null)
   })

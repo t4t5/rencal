@@ -1,8 +1,9 @@
-import { getCurrentWindow } from "@tauri-apps/api/window"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
+import { z } from "zod"
 
 import { api, type OmarchyColors } from "@/lib/api"
 
+// Present while Omarchy is installed, so the first render knows before the fetch.
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
@@ -99,6 +100,30 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
   }
 }
 
+const omarchyColorsSchema = z.object({
+  mode: z.enum(["dark", "light"]),
+  name: z.string().nullable(),
+  background: z.string(),
+  foreground: z.string(),
+  bright_foreground: z.string(),
+  accent: z.string(),
+  red: z.string(),
+  green: z.string(),
+  yellow: z.string(),
+  blue: z.string(),
+}) satisfies z.ZodType<OmarchyColors>
+
+function readCachedColors(): OmarchyColors | null {
+  try {
+    const parsed = omarchyColorsSchema.safeParse(
+      JSON.parse(localStorage.getItem(CACHE_KEY) ?? "null"),
+    )
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
 function ensureStyleElement(): HTMLStyleElement {
   let el = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null
   if (!el) {
@@ -123,38 +148,38 @@ function applyOmarchyColors(c: OmarchyColors) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(c))
   } catch {}
-  // Sync OS window chrome if omarchy is the active theme. useTheme can't
-  // do this itself because the appearance comes from Omarchy's palette.
-  if (document.body.dataset.theme === "omarchy") {
-    document.body.dataset.appearance = c.mode
-    void getCurrentWindow().setTheme(c.mode)
-    // Keep index.html's flash-prevention cache in step with the live OS theme.
-    try {
-      localStorage.setItem("themeBackground", c.background)
-    } catch {}
-  }
 }
 
-// Always-on: fetch + listen regardless of the active theme so the omarchy
-// preview tile in settings reflects the current OS theme. The
-// [data-theme="omarchy"] selector ensures the rule only paints elements
-// that actually opt in.
-export function useOmarchyTheme() {
+// Always-on so the palette is current whenever Omarchy is picked; the
+// [data-theme="omarchy"] selector keeps it from painting anything else.
+// Returns the palette (null off Omarchy) for the theme registry.
+export function useOmarchyTheme(): OmarchyColors | null {
+  const [colors, setColors] = useState(readCachedColors)
+
   useEffect(() => {
     let cancelled = false
 
-    void api.themes.getOmarchyColors().then((colors) => {
-      if (cancelled || !colors) return
-      applyOmarchyColors(colors)
+    const update = (next: OmarchyColors) => {
+      applyOmarchyColors(next)
+      setColors(next)
+    }
+
+    void api.themes.getOmarchyColors().then((next) => {
+      if (cancelled) return
+      if (next) return update(next)
+      try {
+        localStorage.removeItem(CACHE_KEY)
+      } catch {}
+      setColors(null)
     })
 
-    const unlistenPromise = api.notifications.listen("omarchy-theme-changed", (event) => {
-      applyOmarchyColors(event)
-    })
+    const unlistenPromise = api.notifications.listen("omarchy-theme-changed", update)
 
     return () => {
       cancelled = true
       unlistenPromise.unlisten()
     }
   }, [])
+
+  return colors
 }

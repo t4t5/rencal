@@ -14,7 +14,7 @@ const loose: ExternalTheme = {
   name: "Local",
   css: "--background: white;",
   source: { kind: "loose" },
-  appearance: null,
+  appearance: "light",
 }
 
 const plugin: ExternalTheme = {
@@ -41,7 +41,6 @@ describe("external themes", () => {
       appearance: "dark",
       source: "plugin",
     })
-    expect(externalThemeDescriptor(loose).appearance).toBeNull()
   })
 
   it("updates styles and removes themes missing from the next snapshot", () => {

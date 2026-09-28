@@ -31,7 +31,7 @@ const looseTheme: ExternalTheme = {
   name: "Local",
   css: "--background: black;",
   source: { kind: "loose" },
-  appearance: null,
+  appearance: "dark",
 }
 
 class MockFontFace {

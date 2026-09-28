@@ -32,8 +32,59 @@ pub enum ConfigError {
     },
 }
 
-fn default_theme() -> String {
-    "ren".to_string()
+/// `System` shows the light or dark theme to match the OS; `Single` shows one theme.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemeMode {
+    #[default]
+    System,
+    Single,
+}
+
+/// The theme mode and the themes it picks from. Switching mode keeps the others.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(default)]
+pub struct ThemeConfig {
+    pub mode: ThemeMode,
+    pub single: String,
+    pub light: String,
+    pub dark: String,
+}
+
+impl Default for ThemeConfig {
+    fn default() -> Self {
+        Self {
+            mode: ThemeMode::default(),
+            single: "ren".to_string(),
+            light: "ren-light".to_string(),
+            dark: "ren".to_string(),
+        }
+    }
+}
+
+/// Before modes existed, `theme` was a single theme id.
+fn deserialize_theme<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<ThemeConfig, D::Error> {
+    // The table is parsed separately so its errors aren't hidden behind the untagged enum's.
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Repr {
+        Legacy(String),
+        Table(toml::Table),
+    }
+    match Repr::deserialize(deserializer)? {
+        // Syncing with the system is how Omarchy's theme is followed now.
+        Repr::Legacy(single) if single == "omarchy" => Ok(ThemeConfig::default()),
+        Repr::Legacy(single) => Ok(ThemeConfig {
+            mode: ThemeMode::Single,
+            single,
+            ..Default::default()
+        }),
+        Repr::Table(table) => toml::Value::Table(table)
+            .try_into()
+            .map_err(serde::de::Error::custom),
+    }
 }
 
 fn default_notifications_enabled() -> bool {
@@ -54,9 +105,6 @@ pub enum FirstDayOfWeek {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
-    #[serde(default = "default_theme")]
-    pub theme: String,
-
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
 
@@ -69,7 +117,10 @@ pub struct RencalConfig {
     #[serde(default)]
     pub show_week_numbers: bool,
 
-    /// Must come AFTER top-level configs since it adds [groups] table header:
+    /// Tables must come AFTER top-level configs since they add a header:
+    #[serde(default, deserialize_with = "deserialize_theme")]
+    pub theme: ThemeConfig,
+
     #[serde(default)]
     pub groups: BTreeMap<String, Vec<String>>,
 }
@@ -77,11 +128,11 @@ pub struct RencalConfig {
 impl Default for RencalConfig {
     fn default() -> Self {
         Self {
-            theme: default_theme(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
             show_week_numbers: false,
+            theme: ThemeConfig::default(),
             groups: BTreeMap::new(),
         }
     }
@@ -97,10 +148,6 @@ impl RencalConfig {
 
     pub fn config_path() -> Result<PathBuf, ConfigError> {
         Ok(Self::config_dir()?.join("config.toml"))
-    }
-
-    pub fn exists() -> bool {
-        Self::config_path().map(|p| p.exists()).unwrap_or(false)
     }
 
     /// A missing file means the user has not configured renCal yet. Existing
@@ -205,6 +252,76 @@ mod tests {
     }
 
     #[test]
+    fn theme_defaults_to_ren_pair_following_the_system() {
+        let config: RencalConfig = toml::from_str("").expect("parse");
+        assert_eq!(config.theme, ThemeConfig::default());
+        assert_eq!(config.theme.mode, ThemeMode::System);
+        assert_eq!(config.theme.light, "ren-light");
+        assert_eq!(config.theme.dark, "ren");
+    }
+
+    #[test]
+    fn legacy_theme_string_becomes_single_theme() {
+        let config: RencalConfig = toml::from_str("theme = \"nord\"").expect("parse");
+        assert_eq!(
+            config.theme,
+            ThemeConfig {
+                mode: ThemeMode::Single,
+                single: "nord".into(),
+                ..Default::default()
+            }
+        );
+    }
+
+    #[test]
+    fn legacy_omarchy_theme_syncs_with_the_system() {
+        let config: RencalConfig = toml::from_str("theme = \"omarchy\"").expect("parse");
+        assert_eq!(config.theme, ThemeConfig::default());
+    }
+
+    #[test]
+    fn theme_table_round_trips_after_scalar_keys() {
+        let config = RencalConfig {
+            theme: ThemeConfig {
+                mode: ThemeMode::Single,
+                single: "omarchy".into(),
+                light: "gruvbox:light".into(),
+                dark: "user:mine".into(),
+            },
+            ..Default::default()
+        };
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("[theme]"));
+        let theme_at = toml_str.find("[theme]").unwrap();
+        assert!(toml_str.find("show_week_numbers").unwrap() < theme_at);
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert_eq!(reparsed.theme, config.theme);
+    }
+
+    #[test]
+    fn partial_theme_table_falls_back_to_defaults() {
+        let config: RencalConfig =
+            toml::from_str("[theme]\nmode = \"single\"\ndark = \"nord\"").expect("parse");
+        assert_eq!(
+            config.theme,
+            ThemeConfig {
+                mode: ThemeMode::Single,
+                dark: "nord".into(),
+                ..Default::default()
+            }
+        );
+    }
+
+    #[test]
+    fn invalid_theme_table_reports_the_field_error() {
+        let error = toml::from_str::<RencalConfig>("[theme]\nmode = \"dark\"")
+            .err()
+            .expect("unknown mode is rejected")
+            .to_string();
+        assert!(error.contains("unknown variant `dark`"), "{error}");
+    }
+
+    #[test]
     fn missing_config_file_falls_back_to_defaults() {
         let path = std::env::temp_dir().join(format!(
             "rencal-config-missing-{}-{}.toml",
@@ -214,7 +331,7 @@ mod tests {
 
         let config = RencalConfig::load_from_path(&path).expect("load missing config");
 
-        assert_eq!(config.theme, default_theme());
+        assert_eq!(config.theme, ThemeConfig::default());
         assert!(config.groups.is_empty());
     }
 

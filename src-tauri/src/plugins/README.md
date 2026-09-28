@@ -26,6 +26,8 @@ css = "theme.css"
 appearance = "dark"
 ```
 
+A theme is listed under its appearance's slot in settings; ship a light and a dark theme to give users a pair.
+
 Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 
 For catalog inclusion, give the repository the `rencal-plugin` GitHub topic and use a plugin ID whose owner matches the repository owner. Manifests have no version: a plugin is versioned by where renCal installs it from. A stable GitHub release is optional for theme plugins. If one exists, renCal installs the latest release and shows its tag; otherwise it installs the head of the default branch and shows the short commit. Publish a release, or push to the default branch of an unreleased theme, to ship an update.

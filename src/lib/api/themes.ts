@@ -7,6 +7,8 @@ import type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
+  ThemeMode,
+  ThemeSettings,
 } from "@/rpc/bindings"
 
 export type {
@@ -17,6 +19,8 @@ export type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
+  ThemeMode,
+  ThemeSettings,
 }
 
 /** Loose and plugin themes; `external-themes-changed` reports later edits. */
@@ -34,13 +38,13 @@ export function getOmarchyColors(): Promise<OmarchyColors | null> {
   return rpc.omarchy.get_colors()
 }
 
-/** The theme id persisted in config.toml, or null when none has been written yet. */
-export function getConfiguredTheme(): Promise<string | null> {
+/** The theme settings in config.toml, or the defaults when it has none. */
+export function getConfiguredTheme(): Promise<ThemeSettings> {
   return rpc.config.get_theme()
 }
 
-export async function setConfiguredTheme(theme: string): Promise<void> {
-  await rpc.config.set_theme(theme)
+export async function setConfiguredTheme(settings: ThemeSettings): Promise<void> {
+  await rpc.config.set_theme(settings)
 }
 
 export const themes = {
