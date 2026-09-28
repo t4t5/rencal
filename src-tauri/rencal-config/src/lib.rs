@@ -36,15 +36,15 @@ fn default_theme() -> String {
     "ren".to_string()
 }
 
-/// Which variant of a theme with light and dark variants to show. Dark by
-/// default so a config from before this setting keeps its look.
+/// Which variant of a theme with light and dark variants to show. Follows the
+/// OS by default.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum AppearanceSetting {
-    Light,
     #[default]
-    Dark,
     System,
+    Light,
+    Dark,
 }
 
 fn default_notifications_enabled() -> bool {
@@ -220,17 +220,17 @@ mod tests {
     }
 
     #[test]
-    fn appearance_defaults_to_dark_and_round_trips() {
+    fn appearance_defaults_to_system_and_round_trips() {
         let config: RencalConfig = toml::from_str("theme = \"nord\"").expect("parse");
-        assert_eq!(config.appearance, AppearanceSetting::Dark);
+        assert_eq!(config.appearance, AppearanceSetting::System);
 
         let config: RencalConfig =
-            toml::from_str("theme = \"ren\"\nappearance = \"system\"").expect("parse");
-        assert_eq!(config.appearance, AppearanceSetting::System);
+            toml::from_str("theme = \"ren\"\nappearance = \"dark\"").expect("parse");
+        assert_eq!(config.appearance, AppearanceSetting::Dark);
 
         let toml_str = toml::to_string_pretty(&config).expect("serialize");
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
-        assert_eq!(reparsed.appearance, AppearanceSetting::System);
+        assert_eq!(reparsed.appearance, AppearanceSetting::Dark);
     }
 
     #[test]

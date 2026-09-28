@@ -11,7 +11,11 @@ import { ThemeProvider } from "./ThemeRegistry"
 
 vi.mock("@/hooks/useOmarchyTheme", () => ({ useOmarchyTheme: vi.fn() }))
 vi.mock("@tauri-apps/api/window", () => ({
-  getCurrentWindow: () => ({ setTheme: vi.fn().mockResolvedValue(undefined) }),
+  getCurrentWindow: () => ({
+    setTheme: vi.fn().mockResolvedValue(undefined),
+    theme: vi.fn().mockResolvedValue("dark"),
+    onThemeChanged: vi.fn().mockResolvedValue(() => {}),
+  }),
 }))
 vi.mock("@/lib/api/internal", () => ({ emitAppEvent: vi.fn().mockResolvedValue(undefined) }))
 vi.mock("@/lib/api", () => ({

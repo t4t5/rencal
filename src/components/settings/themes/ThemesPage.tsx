@@ -81,9 +81,9 @@ const isActiveFamily = (family: ThemeFamily, theme: string) =>
   family.id === theme || family.variants?.light === theme || family.variants?.dark === theme
 
 const APPEARANCE_OPTIONS = [
+  { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
-  { value: "system", label: "System" },
 ] as const satisfies readonly { value: AppearanceSetting; label: string }[]
 
 /**

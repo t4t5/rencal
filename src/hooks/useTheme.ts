@@ -6,7 +6,6 @@ import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useSystemAppearance } from "@/hooks/useSystemAppearance"
 import { type AppearanceSetting, api, type ThemeSettings } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
-import { isMacOS } from "@/lib/utils"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { getActiveAppearance } from "@/themes/appearance"
@@ -22,8 +21,8 @@ const themeSchema = z.string()
 const appearanceSchema = z.enum(["light", "dark", "system"])
 const themeSettingsSchema = z.object({ theme: themeSchema, appearance: appearanceSchema })
 
-// Matches the config default, so a config from before the setting keeps its look.
-const DEFAULT_APPEARANCE: AppearanceSetting = "dark"
+// Matches the config default.
+const DEFAULT_APPEARANCE: AppearanceSetting = "system"
 
 const sameSettings = (a: ThemeSettings, b: ThemeSettings) =>
   a.theme === b.theme && a.appearance === b.appearance
@@ -104,8 +103,7 @@ export function useTheme() {
         // First run with this build: persist whatever the cache holds so the
         // file exists and future reads are unambiguous. On a truly fresh
         // install (no prior localStorage either), default to omarchy when
-        // detected on disk so Omarchy users see their OS theme out of the box,
-        // and on macOS follow the system appearance.
+        // detected on disk so Omarchy users see their OS theme out of the box.
         let initial = settingsRef.current
         const hadCachedTheme = localStorage.getItem("theme") !== null
         if (!hadCachedTheme) {
@@ -113,7 +111,6 @@ export function useTheme() {
             const colors = await api.themes.getOmarchyColors()
             if (cancelled) return
             if (colors) initial = { ...initial, theme: "omarchy" }
-            else if (isMacOS) initial = { ...initial, appearance: "system" }
             setSettingsLocal(initial)
           } catch {}
         }
