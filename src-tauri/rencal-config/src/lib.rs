@@ -32,19 +32,19 @@ pub enum ConfigError {
     },
 }
 
-/// `theme = "ren"` pins one theme; `theme = { light = "…", dark = "…" }`
-/// follows the system appearance.
-#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-#[serde(untagged)]
-pub enum ThemeSetting {
-    Fixed(String),
-    System { light: String, dark: String },
+fn default_theme() -> String {
+    "ren".to_string()
 }
 
-impl Default for ThemeSetting {
-    fn default() -> Self {
-        Self::Fixed("ren".to_string())
-    }
+/// Which variant of a theme with light and dark variants to show. Dark by
+/// default so a config from before this setting keeps its look.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum AppearanceSetting {
+    Light,
+    #[default]
+    Dark,
+    System,
 }
 
 fn default_notifications_enabled() -> bool {
@@ -65,8 +65,11 @@ pub enum FirstDayOfWeek {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
+    #[serde(default = "default_theme")]
+    pub theme: String,
+
     #[serde(default)]
-    pub theme: ThemeSetting,
+    pub appearance: AppearanceSetting,
 
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
@@ -88,7 +91,8 @@ pub struct RencalConfig {
 impl Default for RencalConfig {
     fn default() -> Self {
         Self {
-            theme: ThemeSetting::default(),
+            theme: default_theme(),
+            appearance: AppearanceSetting::default(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
@@ -216,28 +220,17 @@ mod tests {
     }
 
     #[test]
-    fn theme_accepts_one_theme_or_a_light_and_dark_pair() {
+    fn appearance_defaults_to_dark_and_round_trips() {
         let config: RencalConfig = toml::from_str("theme = \"nord\"").expect("parse");
-        assert_eq!(config.theme, ThemeSetting::Fixed("nord".to_string()));
+        assert_eq!(config.appearance, AppearanceSetting::Dark);
 
         let config: RencalConfig =
-            toml::from_str("theme = { light = \"ren-light\", dark = \"ren\" }").expect("parse");
-        let system = ThemeSetting::System {
-            light: "ren-light".to_string(),
-            dark: "ren".to_string(),
-        };
-        assert_eq!(config.theme, system);
+            toml::from_str("theme = \"ren\"\nappearance = \"system\"").expect("parse");
+        assert_eq!(config.appearance, AppearanceSetting::System);
 
-        let mut config = RencalConfig {
-            theme: system.clone(),
-            ..Default::default()
-        };
-        config
-            .groups
-            .insert("work".to_string(), vec!["work-cal".to_string()]);
         let toml_str = toml::to_string_pretty(&config).expect("serialize");
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
-        assert_eq!(reparsed.theme, system);
+        assert_eq!(reparsed.appearance, AppearanceSetting::System);
     }
 
     #[test]
@@ -250,7 +243,7 @@ mod tests {
 
         let config = RencalConfig::load_from_path(&path).expect("load missing config");
 
-        assert_eq!(config.theme, ThemeSetting::default());
+        assert_eq!(config.theme, default_theme());
         assert!(config.groups.is_empty());
     }
 

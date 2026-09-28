@@ -34,12 +34,11 @@ function checkContracts(name: "theme-changed" | "rencal-config-changed", event: 
   api.notifications.listen("event-changed", () => {})
   // @ts-expect-error Listener payloads are determined by the name.
   api.notifications.listen("theme-changed", (_payload: number) => {})
-  void emitAppEvent("theme-changed", "user:custom")
-  void emitAppEvent("theme-changed", { light: "ren-light", dark: "ren" })
+  void emitAppEvent("theme-changed", { theme: "user:custom", appearance: "system" })
   void emitAppEvent("rencal-config-changed")
   void emitAppEvent("rencal-config-changed", null)
-  // @ts-expect-error Theme broadcasts require a theme id or a light/dark pair.
-  void emitAppEvent("theme-changed", 42)
+  // @ts-expect-error Theme broadcasts require a theme and an appearance.
+  void emitAppEvent("theme-changed", "user:custom")
   // @ts-expect-error Theme broadcasts require a payload.
   void emitAppEvent("theme-changed")
   // @ts-expect-error Unit payloads must be null or omitted.

@@ -42,7 +42,7 @@ beforeEach(() => {
   vi.clearAllMocks()
   localStorage.clear()
   localStorage.setItem("theme", JSON.stringify("ren"))
-  vi.mocked(api.themes.getConfigured).mockResolvedValue("ren")
+  vi.mocked(api.themes.getConfigured).mockResolvedValue({ theme: "ren", appearance: "dark" })
   vi.mocked(api.themes.listExternal).mockResolvedValue({ themes: [], errors: [] })
   const container = document.createElement("div")
   document.body.append(container)
@@ -81,7 +81,7 @@ async function updateThemes(themes: ExternalTheme[]) {
 async function changeTheme(theme: string) {
   await act(async () => {
     for (const [name, handler] of vi.mocked(api.notifications.listen).mock.calls) {
-      if (name === "theme-changed") handler(theme)
+      if (name === "theme-changed") handler({ theme, appearance: "dark" })
     }
   })
 }
@@ -101,7 +101,7 @@ it("keeps newly installed CSS inactive, previews its palette, and recovers on a 
   expect(preview.style.getPropertyValue("--background")).toBe("navy")
 
   await act(async () => preview.closest("button")!.click())
-  expect(api.themes.setConfigured).toHaveBeenCalledWith(malicious.id)
+  expect(api.themes.setConfigured).toHaveBeenCalledWith({ theme: malicious.id, appearance: "dark" })
   expect(document.body.dataset.theme).toBe(malicious.id)
   expect(getComputedStyle(ren).display).toBe("none")
 
@@ -120,7 +120,7 @@ it("keeps newly installed CSS inactive, previews its palette, and recovers on a 
 
 it("loads the configured theme when its snapshot arrives and removes its CSS on uninstall", async () => {
   localStorage.setItem("theme", JSON.stringify(malicious.id))
-  vi.mocked(api.themes.getConfigured).mockResolvedValue(malicious.id)
+  vi.mocked(api.themes.getConfigured).mockResolvedValue({ theme: malicious.id, appearance: "dark" })
   await render()
   const button = document.querySelector("button")!
   const originalDisplay = getComputedStyle(button).display

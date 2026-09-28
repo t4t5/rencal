@@ -48,6 +48,7 @@ export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/ap
 export type { CaldirSettings } from "@/lib/api/settings"
 export type { SyncPreview } from "@/lib/api/sync"
 export type {
+  AppearanceSetting,
   ExternalTheme,
   ExternalThemeError,
   ExternalThemeFont,
@@ -55,7 +56,7 @@ export type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
-  ThemeSetting,
+  ThemeSettings,
 } from "@/lib/api/themes"
 export type { CalendarEvent, EventAttendee, Recurrence, ResponseStatus } from "@/lib/cal-events"
 export type { EventConference } from "@/lib/conference"

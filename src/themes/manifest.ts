@@ -1,5 +1,3 @@
-import type { ThemeSetting } from "@/lib/api"
-
 export type Appearance = "light" | "dark"
 
 // `appearance: null` means the theme's appearance is derived at runtime
@@ -43,13 +41,44 @@ export function getDeclaredAppearance(
   return descriptors.find((theme) => theme.id === id)?.appearance ?? null
 }
 
-/** The pair a fresh macOS install, and turning on "Match system appearance", start from. */
-export const DEFAULT_SYSTEM_THEMES = {
-  light: "ren-light",
-  dark: "ren",
-} as const satisfies Record<Appearance, ThemeId>
+/** Built-in themes that ship a light and a dark variant, shown as one card named after the family. */
+const VARIANT_FAMILIES = [
+  { id: "ren", name: "Ren", variants: { light: "ren-light", dark: "ren" } },
+] as const satisfies readonly {
+  id: ThemeId
+  name: string
+  variants: Record<Appearance, ThemeId>
+}[]
 
-/** The theme a setting shows: the setting itself, or the pair's theme for the system appearance. */
-export function resolveThemeSetting(setting: ThemeSetting, system: Appearance): string {
-  return typeof setting === "string" ? setting : setting[system]
+/**
+ * What the theme setting stores and settings shows as one card: a single
+ * theme, or a family whose variant the appearance setting picks. A single
+ * theme's family id is its theme id.
+ */
+export type ThemeFamily = {
+  id: string
+  name: string
+  variants?: Record<Appearance, string>
+}
+
+/** The registry's themes as families, in display order: a family takes its first variant's place. */
+export function getThemeFamilies(descriptors: readonly ThemeDescriptor[]): ThemeFamily[] {
+  const families: ThemeFamily[] = []
+  for (const theme of descriptors) {
+    const family = VARIANT_FAMILIES.find(
+      (f) => f.variants.light === theme.id || f.variants.dark === theme.id,
+    )
+    if (!family) families.push({ id: theme.id, name: theme.name })
+    else if (!families.some((f) => f.id === family.id)) families.push(family)
+  }
+  return families
+}
+
+/** The theme id a family shows in `appearance`. Unknown ids (e.g. a user theme not loaded yet) pass through. */
+export function resolveFamilyTheme(familyId: string, appearance: Appearance): string {
+  return VARIANT_FAMILIES.find((f) => f.id === familyId)?.variants[appearance] ?? familyId
+}
+
+export function hasVariants(familyId: string): boolean {
+  return VARIANT_FAMILIES.some((f) => f.id === familyId)
 }

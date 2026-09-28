@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest"
 
 import {
   BUILTIN_DESCRIPTORS,
-  DEFAULT_SYSTEM_THEMES,
   getDeclaredAppearance,
-  resolveThemeSetting,
+  getThemeFamilies,
+  resolveFamilyTheme,
   type ThemeDescriptor,
 } from "@/themes/manifest"
 
@@ -28,15 +28,25 @@ describe("getDeclaredAppearance", () => {
   })
 })
 
-describe("resolveThemeSetting", () => {
-  it("shows a single theme regardless of the system and a pair's matching half", () => {
-    expect(resolveThemeSetting("nord", "light")).toBe("nord")
-    expect(resolveThemeSetting(DEFAULT_SYSTEM_THEMES, "light")).toBe("ren-light")
-    expect(resolveThemeSetting(DEFAULT_SYSTEM_THEMES, "dark")).toBe("ren")
+describe("theme families", () => {
+  it("shows a family's variants as one card in its first variant's place", () => {
+    const ids = getThemeFamilies(BUILTIN_DESCRIPTORS).map((family) => family.id)
+    expect(ids.slice(0, 3)).toEqual(["omarchy", "ren", "catpuccin-latte"])
+    expect(ids).not.toContain("ren-light")
   })
 
-  it("pairs built-in themes of the matching appearance by default", () => {
-    expect(getDeclaredAppearance(DEFAULT_SYSTEM_THEMES.light, BUILTIN_DESCRIPTORS)).toBe("light")
-    expect(getDeclaredAppearance(DEFAULT_SYSTEM_THEMES.dark, BUILTIN_DESCRIPTORS)).toBe("dark")
+  it("resolves a family's variant by appearance and passes single themes through", () => {
+    expect(resolveFamilyTheme("ren", "light")).toBe("ren-light")
+    expect(resolveFamilyTheme("ren", "dark")).toBe("ren")
+    expect(resolveFamilyTheme("nord", "light")).toBe("nord")
+    expect(resolveFamilyTheme("user:mine", "dark")).toBe("user:mine")
+  })
+
+  it("pairs variants of the matching appearance", () => {
+    for (const family of getThemeFamilies(BUILTIN_DESCRIPTORS)) {
+      if (!family.variants) continue
+      expect(getDeclaredAppearance(family.variants.light, BUILTIN_DESCRIPTORS)).toBe("light")
+      expect(getDeclaredAppearance(family.variants.dark, BUILTIN_DESCRIPTORS)).toBe("dark")
+    }
   })
 })

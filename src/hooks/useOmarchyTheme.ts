@@ -3,7 +3,7 @@ import { useEffect } from "react"
 
 import { api, type OmarchyColors } from "@/lib/api"
 
-import { cacheThemeBackground } from "@/themes/background-cache"
+import { cacheThemeBackground } from "@/themes/bootstrap-cache"
 
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"

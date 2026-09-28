@@ -1,15 +1,14 @@
-// Restore persisted theme before React mounts to avoid a flash. A light/dark
-// pair follows the OS; the window is unforced at launch, so the media query
-// reports the system appearance.
+// Restore persisted theme before React mounts to avoid a flash. useTheme caches
+// the theme to show for each OS appearance; the window is unforced at launch,
+// so the media query reports the system appearance.
 const defaultTheme = document.body.dataset.defaultTheme || "ren"
 let theme = defaultTheme
 try {
-  const setting = JSON.parse(localStorage.getItem("theme"))
-  if (typeof setting === "string") {
-    theme = setting
-  } else if (typeof setting?.light === "string" && typeof setting?.dark === "string") {
-    theme = matchMedia("(prefers-color-scheme: dark)").matches ? setting.dark : setting.light
-  }
+  const variants = JSON.parse(localStorage.getItem("themeVariants"))
+  const variant = variants?.[matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"]
+  // Before the variants cache existed, "theme" held the theme id itself.
+  const stored = typeof variant === "string" ? variant : JSON.parse(localStorage.getItem("theme"))
+  if (typeof stored === "string" && stored) theme = stored
 } catch {}
 document.body.dataset.theme = theme
 

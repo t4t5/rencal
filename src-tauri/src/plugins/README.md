@@ -26,7 +26,7 @@ css = "theme.css"
 appearance = "dark"
 ```
 
-Each theme has one appearance. For a family with light and dark versions, contribute one theme per appearance; users who follow the system appearance pair them in settings.
+Each theme has one appearance and shows as its own card in settings.
 
 Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 

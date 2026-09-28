@@ -1,27 +1,28 @@
-import { useId, useMemo } from "react"
+import { useMemo } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Label } from "@/components/ui/label"
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
-import type { ThemeSetting } from "@/lib/api"
+import type { AppearanceSetting } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
-import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import { getDeclaredAppearance, getThemeFamilies, type ThemeFamily } from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { setting, selectTheme, setFollowSystem } = useTheme()
+  const { theme, appearance, setTheme, setAppearance } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
+  const families = useMemo(() => getThemeFamilies(descriptors), [descriptors])
+  const active = families.find((family) => isActiveFamily(family, theme))
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <FollowSystemSection followsSystem={typeof setting !== "string"} onChange={setFollowSystem} />
-      <ThemeGrid themes={descriptors} setting={setting} onSelect={selectTheme} />
+      <AppearanceSection family={active} appearance={appearance} onChange={setAppearance} />
+      <ThemeGrid families={families} active={active} onSelect={setTheme} />
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -35,76 +36,91 @@ export function ThemesPage() {
   )
 }
 
-const FollowSystemSection = ({
-  followsSystem,
+// A hand-edited config can name a variant rather than its family.
+const isActiveFamily = (family: ThemeFamily, theme: string) =>
+  family.id === theme || family.variants?.light === theme || family.variants?.dark === theme
+
+const APPEARANCE_OPTIONS = [
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
+] as const satisfies readonly { value: AppearanceSetting; label: string }[]
+
+const AppearanceSection = ({
+  family,
+  appearance,
   onChange,
 }: {
-  followsSystem: boolean
-  onChange: (follow: boolean) => void
+  family: ThemeFamily | undefined
+  appearance: AppearanceSetting
+  onChange: (appearance: AppearanceSetting) => void
 }) => {
-  const id = useId()
+  const hint =
+    family?.id === "omarchy"
+      ? "Omarchy (Auto) follows your Omarchy theme."
+      : family && !family.variants
+        ? `${family.name} has no light and dark variants.`
+        : null
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={id}
-          checked={followsSystem}
-          onCheckedChange={(checked) => onChange(checked === true)}
-        />
-        <Label htmlFor={id} className="text-sm">
-          Match system appearance
-        </Label>
+    <div className="flex items-center justify-between gap-4">
+      <div className="flex flex-col gap-1">
+        <span className="text-sm">Appearance</span>
+        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
       </div>
-      <p className="text-xs text-muted-foreground pl-7">
-        Pick a light and a dark theme, and renCal switches between them with your system.
-      </p>
+      <Tabs
+        value={appearance}
+        onValueChange={(value) => {
+          const option = APPEARANCE_OPTIONS.find((o) => o.value === value)
+          if (option) onChange(option.value)
+        }}
+      >
+        <TabsList aria-label="Appearance">
+          {APPEARANCE_OPTIONS.map((option) => (
+            <TabsTrigger key={option.value} value={option.value} disabled={!family?.variants}>
+              {option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
     </div>
   )
 }
 
-/** "Light", "Dark" or both, for the halves of a light/dark pair a theme fills. */
-const pairLabel = (pair: { light: string; dark: string }, id: string) =>
-  [pair.light === id && "Light", pair.dark === id && "Dark"].filter(Boolean).join(" · ")
-
 function ThemeGrid({
-  themes,
-  setting,
+  families,
+  active,
   onSelect,
 }: {
-  themes: ThemeDescriptor[]
-  setting: ThemeSetting
+  families: ThemeFamily[]
+  active: ThemeFamily | undefined
   onSelect: (id: string) => void
 }) {
   return (
     <div className="grid grid-cols-3 gap-3">
-      {themes.map((t) => {
-        const label = typeof setting === "string" ? "" : pairLabel(setting, t.id)
-        const isActive = setting === t.id || label !== ""
+      {families.map((family) => {
+        const isActive = family.id === active?.id
 
         return (
           <button
-            key={t.id}
-            onClick={() => onSelect(t.id)}
+            key={family.id}
+            onClick={() => onSelect(family.id)}
             className={cn(
               "flex flex-col overflow-hidden rounded-lg border bg-secondary text-left transition-colors hover:bg-secondary-hover",
               isActive ? "border-primary ring-1 ring-primary" : "border-border",
             )}
           >
-            <ThemePreview themeId={t.id} />
+            <ThemePreview family={family} />
 
             <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
-              <span className="truncate text-sm">{t.name}</span>
-              <span className="flex shrink-0 items-center gap-1.5">
-                {label && <span className="text-xs text-muted-foreground">{label}</span>}
-                <span
-                  className={cn(
-                    "flex size-4 shrink-0 items-center justify-center rounded-circle",
-                    isActive ? "bg-primary" : "border border-input",
-                  )}
-                >
-                  {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
-                </span>
+              <span className="truncate text-sm">{family.name}</span>
+              <span
+                className={cn(
+                  "flex size-4 shrink-0 items-center justify-center rounded-circle",
+                  isActive ? "bg-primary" : "border border-input",
+                )}
+              >
+                {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
               </span>
             </div>
           </button>
@@ -114,14 +130,28 @@ function ThemeGrid({
   )
 }
 
+/** The family's theme, or its light variant with the dark one over the right half. */
+const ThemePreview = ({ family }: { family: ThemeFamily }) => (
+  <div aria-hidden className="relative h-28 overflow-hidden">
+    {family.variants ? (
+      <>
+        <PreviewWindow themeId={family.variants.light} />
+        <PreviewWindow themeId={family.variants.dark} className="[clip-path:inset(0_0_0_50%)]" />
+      </>
+    ) : (
+      <PreviewWindow themeId={family.id} />
+    )}
+  </div>
+)
+
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const ThemePreview = ({ themeId }: { themeId: string }) => {
+const PreviewWindow = ({ themeId, className }: { themeId: string; className?: string }) => {
   const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
-    <div aria-hidden className="h-28 overflow-hidden pt-4 pl-4">
+    <div className={cn("absolute inset-0 pt-4 pl-4", className)}>
       <div
         data-theme={themeId}
         data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}

@@ -41,6 +41,7 @@ import {
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
+import { getThemeFamilies } from "@/themes/manifest"
 
 const NAV_THROTTLE_MS = 80
 
@@ -63,7 +64,7 @@ export function GlobalShortcuts({
   const [palettePage, setPalettePage] = useState<"root" | PalettePage>("root")
 
   const { navigateToDate } = useCalendarNavigation()
-  const { theme, selectTheme, toggleTheme } = useTheme()
+  const { theme, setTheme, toggleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
@@ -109,9 +110,9 @@ export function GlobalShortcuts({
       heading: "Theme",
       placeholder: "Search themes…",
       empty: "No themes found.",
-      items: descriptors.map((d) => ({ id: d.id, label: d.name })),
+      items: getThemeFamilies(descriptors).map((f) => ({ id: f.id, label: f.name })),
       activeId: theme,
-      onSelect: selectTheme,
+      onSelect: setTheme,
     },
   }
   if (groupOptions.length >= 2) {

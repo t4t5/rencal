@@ -19,13 +19,13 @@ External preview tiles use only custom properties parsed from the theme's top-le
 
 The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. `--today` and `--brand` default to `--primary`, so a pasted shadcn theme stays on-palette; set them for distinct accents. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
 
-## Following the system appearance
+## Families and the appearance setting
 
-The theme setting is a theme id, or a light and dark pair (`theme = { light = "ren-light", dark = "ren" }` in `config.toml`) that follows the OS, like Zed's `theme.light` / `theme.dark`. Themes themselves always have one appearance; a family ships a light and a dark theme, and the user pairs them. A fresh macOS install starts from `DEFAULT_SYSTEM_THEMES` (Ren Light and Ren).
+Each settings card is a theme family (`getThemeFamilies` in `manifest.ts`): a single theme, or a built-in family in `VARIANT_FAMILIES` with a light and a dark theme. The setting stores the family id and a separate appearance, Light, Dark or System (`theme = "ren"` and `appearance = "system"` in `config.toml`), and `resolveFamilyTheme` picks the variant. A single theme ignores the appearance, and settings disables the control for it. The appearance defaults to Dark so configs from before it keep their look; a fresh macOS install starts on System.
 
-While a pair is set, `useTheme` does not force the window theme: a forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`. `useSystemAppearance` hands the window back to the OS with `setTheme(null)` and tracks it. A single theme forces the window to its appearance so the chrome matches. Omarchy (Auto) forces the window from Omarchy's palette, so it can't be half of a pair: selecting it replaces the pair.
+With System and a family, `useTheme` does not force the window theme: a forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`. `useSystemAppearance` hands the window back to the OS with `setTheme(null)` and tracks it. Everything else forces the window to the active theme's appearance so the chrome matches.
 
-`theme-bootstrap.js` resolves a pair from `prefers-color-scheme` before first paint (the window is unforced at launch) and paints that theme's cached background, which is kept per theme id.
+`theme-bootstrap.js` can't resolve families, so `useTheme` caches the theme to show for each OS appearance (`themeVariants`) and each theme's background (`themeBackgrounds`). The bootstrap picks from `prefers-color-scheme` before first paint (the window is unforced at launch).
 
 ## Theme scopes
 

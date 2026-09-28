@@ -35,31 +35,41 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
     }
 }
 
-/// RPC mirror of `rencal_config::ThemeSetting`: a theme id, or a light and
-/// dark pair that follows the system appearance.
+/// RPC mirror of `rencal_config::AppearanceSetting`.
+#[derive(Clone, Copy, Debug, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum AppearanceSetting {
+    Light,
+    Dark,
+    System,
+}
+
+impl From<rencal_config::AppearanceSetting> for AppearanceSetting {
+    fn from(value: rencal_config::AppearanceSetting) -> Self {
+        match value {
+            rencal_config::AppearanceSetting::Light => Self::Light,
+            rencal_config::AppearanceSetting::Dark => Self::Dark,
+            rencal_config::AppearanceSetting::System => Self::System,
+        }
+    }
+}
+
+impl From<AppearanceSetting> for rencal_config::AppearanceSetting {
+    fn from(value: AppearanceSetting) -> Self {
+        match value {
+            AppearanceSetting::Light => Self::Light,
+            AppearanceSetting::Dark => Self::Dark,
+            AppearanceSetting::System => Self::System,
+        }
+    }
+}
+
+/// The theme and the appearance that picks between its light and dark
+/// variants, saved and broadcast together.
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
-#[serde(untagged)]
-pub enum ThemeSetting {
-    Fixed(String),
-    System { light: String, dark: String },
-}
-
-impl From<rencal_config::ThemeSetting> for ThemeSetting {
-    fn from(value: rencal_config::ThemeSetting) -> Self {
-        match value {
-            rencal_config::ThemeSetting::Fixed(id) => Self::Fixed(id),
-            rencal_config::ThemeSetting::System { light, dark } => Self::System { light, dark },
-        }
-    }
-}
-
-impl From<ThemeSetting> for rencal_config::ThemeSetting {
-    fn from(value: ThemeSetting) -> Self {
-        match value {
-            ThemeSetting::Fixed(id) => Self::Fixed(id),
-            ThemeSetting::System { light, dark } => Self::System { light, dark },
-        }
-    }
+pub struct ThemeSettings {
+    pub theme: String,
+    pub appearance: AppearanceSetting,
 }
 
 // `get_theme` returns `Some(theme)` if the config file exists, `None` if it
@@ -67,8 +77,8 @@ impl From<ThemeSetting> for rencal_config::ThemeSetting {
 // pre-existing `localStorage["theme"]` value up to TOML on first run.
 #[taurpc::procedures(path = "config", export_to = "../src/rpc/bindings.ts")]
 pub trait ConfigApi {
-    async fn get_theme() -> TauResult<Option<ThemeSetting>>;
-    async fn set_theme(theme: ThemeSetting) -> TauResult<()>;
+    async fn get_theme() -> TauResult<Option<ThemeSettings>>;
+    async fn set_theme(settings: ThemeSettings) -> TauResult<()>;
     async fn get_notifications_enabled() -> TauResult<bool>;
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
     async fn get_auto_sync_enabled() -> TauResult<bool>;
@@ -86,16 +96,21 @@ pub struct ConfigApiImpl;
 
 #[taurpc::resolvers]
 impl ConfigApi for ConfigApiImpl {
-    async fn get_theme(self) -> TauResult<Option<ThemeSetting>> {
+    async fn get_theme(self) -> TauResult<Option<ThemeSettings>> {
         if !RencalConfig::exists() {
             return Ok(None);
         }
-        Ok(Some(RencalConfig::load()?.theme.into()))
+        let config = RencalConfig::load()?;
+        Ok(Some(ThemeSettings {
+            theme: config.theme,
+            appearance: config.appearance.into(),
+        }))
     }
 
-    async fn set_theme(self, theme: ThemeSetting) -> TauResult<()> {
+    async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
-        config.theme = theme.into();
+        config.theme = settings.theme;
+        config.appearance = settings.appearance.into();
         config.save().map_err(RpcError::from)
     }
 
