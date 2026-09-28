@@ -194,13 +194,12 @@ export type SyncPreview = { calendar_slug: string; to_push_count: number; to_pus
 /**
  * RPC mirror of `rencal_config::ThemeMode`.
  */
-export type ThemeMode = "system" | "light" | "dark"
+export type ThemeMode = "system" | "single"
 
 /**
- * The theme for each appearance and the mode that picks between them,
- * saved and broadcast together.
+ * RPC mirror of `rencal_config::ThemeConfig`, saved and broadcast together.
  */
-export type ThemeSettings = { mode: ThemeMode; light: string; dark: string }
+export type ThemeSettings = { mode: ThemeMode; single: string; light: string; dark: string }
 
 export type TimeFormat = "24h" | "12h"
 

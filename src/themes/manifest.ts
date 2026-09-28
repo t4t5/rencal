@@ -1,14 +1,10 @@
-import type { ThemeSettings } from "@/lib/api"
-
 export type Appearance = "light" | "dark"
 
-/** `system` fits either slot: Omarchy's palette sets its own appearance and the OS's. */
-export type ThemeAppearance = Appearance | "system"
-
-export const APPEARANCES = ["light", "dark"] as const satisfies readonly Appearance[]
+/** `adaptive` takes its appearance from a runtime palette (Omarchy's). */
+export type ThemeAppearance = Appearance | "adaptive"
 
 export const themes = [
-  { id: "omarchy", name: "Omarchy (Auto)", appearance: "system" },
+  { id: "omarchy", name: "Omarchy (Auto)", appearance: "adaptive" },
   { id: "ren", name: "Ren", appearance: "dark" },
   { id: "ren-light", name: "Ren Light", appearance: "light" },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
@@ -49,20 +45,5 @@ export function getActiveAppearance(
   omarchyMode: Appearance | null,
 ): Appearance | null {
   const declared = getDeclaredAppearance(id, descriptors)
-  return declared === "system" ? omarchyMode : declared
-}
-
-// Keep in step with data-default-*-theme in index.html and rencal-config's default.
-export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
-  mode: "system",
-  light: "ren-light",
-  dark: "ren",
-}
-
-/** Themes listed under a slot: those of its appearance, plus Omarchy's `system`. */
-export function themesFor(
-  slot: Appearance,
-  descriptors: readonly ThemeDescriptor[],
-): ThemeDescriptor[] {
-  return descriptors.filter((theme) => theme.appearance === slot || theme.appearance === "system")
+  return declared === "adaptive" ? omarchyMode : declared
 }

@@ -2,96 +2,67 @@ import { describe, expect, it } from "vitest"
 
 import type { ThemeSettings } from "@/lib/api"
 
-import { BUILTIN_DESCRIPTORS, getDeclaredAppearance, themesFor } from "@/themes/manifest"
-import { cycleTheme, pickTheme, resolveTheme } from "@/themes/theme-settings"
+import { BUILTIN_DESCRIPTORS } from "@/themes/manifest"
+import { activeSlot, cycleTheme, resolveSync, themesFor } from "@/themes/theme-settings"
 
-const pair: ThemeSettings = { mode: "system", light: "ren-light", dark: "ren" }
-const same: ThemeSettings = { mode: "system", light: "nord", dark: "nord" }
+const settings: ThemeSettings = { mode: "system", single: "nord", light: "ren-light", dark: "ren" }
 
-const pick = (settings: ThemeSettings, id: string, os: "light" | "dark") =>
-  pickTheme(settings, id, getDeclaredAppearance(id, BUILTIN_DESCRIPTORS), os)
+const ids = (slot: Parameters<typeof themesFor>[0]) =>
+  themesFor(slot, BUILTIN_DESCRIPTORS).map((theme) => theme.id)
 
-describe("resolveTheme", () => {
-  it("follows the OS in System mode with different slots", () => {
-    expect(resolveTheme(pair, "light")).toEqual({
-      activeSlot: "light",
-      activeTheme: "ren-light",
-      followsSystem: true,
-    })
-    expect(resolveTheme(pair, "dark")).toEqual({
-      activeSlot: "dark",
-      activeTheme: "ren",
-      followsSystem: true,
-    })
-  })
-
-  it("doesn't follow the OS when both slots hold the same theme", () => {
-    expect(resolveTheme(same, "light")).toMatchObject({ activeTheme: "nord", followsSystem: false })
-  })
-
-  it("pins the slot in Light or Dark mode", () => {
-    expect(resolveTheme({ ...pair, mode: "dark" }, "light")).toEqual({
-      activeSlot: "dark",
-      activeTheme: "ren",
-      followsSystem: false,
-    })
+describe("activeSlot", () => {
+  it("follows the OS while syncing and shows the single theme otherwise", () => {
+    expect(activeSlot(settings, "light")).toBe("light")
+    expect(activeSlot(settings, "dark")).toBe("dark")
+    expect(activeSlot({ ...settings, mode: "single" }, "light")).toBe("single")
   })
 })
 
-describe("pickTheme", () => {
-  it("fills the theme's slot and keeps a pinned mode showing it", () => {
-    expect(pick({ ...pair, mode: "dark" }, "nord", "light")).toEqual({
-      mode: "dark",
-      light: "ren-light",
-      dark: "nord",
-    })
+describe("resolveSync", () => {
+  it("shows Omarchy while syncing on Omarchy and leaves other settings alone", () => {
+    expect(resolveSync(settings, true)).toEqual({ ...settings, mode: "single", single: "omarchy" })
+    expect(resolveSync(settings, false)).toBe(settings)
+    const single = { ...settings, mode: "single" } as const
+    expect(resolveSync(single, true)).toBe(single)
   })
+})
 
-  it("switches a pinned mode to the theme's appearance", () => {
-    expect(pick({ ...pair, mode: "dark" }, "minimal", "dark")).toEqual({
-      mode: "light",
-      light: "minimal",
-      dark: "ren",
-    })
-  })
-
-  it("keeps System when the OS already shows the theme's slot", () => {
-    expect(pick(pair, "nord", "dark")).toEqual({ ...pair, dark: "nord" })
-  })
-
-  it("pins the mode in System when the OS is on the other side", () => {
-    expect(pick(pair, "nord", "light")).toEqual({ mode: "dark", light: "ren-light", dark: "nord" })
-  })
-
-  it("fills both slots with Omarchy", () => {
-    expect(pick({ ...pair, mode: "light" }, "omarchy", "dark")).toEqual({
-      mode: "light",
-      light: "omarchy",
-      dark: "omarchy",
-    })
-  })
-
-  it("fills the active slot with an unknown theme", () => {
-    expect(pick(pair, "user:mine", "light")).toEqual({ ...pair, light: "user:mine" })
+describe("themesFor", () => {
+  it("offers a pair slot its appearance's and adaptive themes, and single every theme", () => {
+    expect(ids("light")).toContain("ren-light")
+    expect(ids("light")).not.toContain("ren")
+    expect(ids("dark")).toContain("ren")
+    expect(ids("dark")).not.toContain("ren-light")
+    expect(ids("light")).toContain("omarchy")
+    expect(ids("dark")).toContain("omarchy")
+    expect(ids("single")).toEqual(BUILTIN_DESCRIPTORS.map((theme) => theme.id))
   })
 })
 
 describe("cycleTheme", () => {
-  it("stays within the active slot's themes", () => {
-    const light = themesFor("light", BUILTIN_DESCRIPTORS).map((theme) => theme.id)
-    let settings: ThemeSettings = { ...pair, mode: "light" }
+  it("cycles the showing pair slot and leaves the rest alone", () => {
+    const light = ids("light")
+    let next = settings
     const seen: string[] = []
     for (let i = 0; i < light.length; i++) {
-      settings = cycleTheme(settings, BUILTIN_DESCRIPTORS, "dark")
-      seen.push(settings.light)
-      expect(settings.dark).toBe("ren")
-      expect(settings.mode).toBe("light")
+      next = cycleTheme(next, BUILTIN_DESCRIPTORS, "light")
+      seen.push(next.light)
+      expect(next).toMatchObject({ mode: "system", single: "nord", dark: "ren" })
     }
     expect(seen.sort()).toEqual([...light].sort())
   })
 
+  it("cycles every theme in single mode", () => {
+    const single = { ...settings, mode: "single" } as const
+    const all = ids("single")
+    expect(cycleTheme(single, BUILTIN_DESCRIPTORS, "dark").single).toBe(
+      all[(all.indexOf("nord") + 1) % all.length],
+    )
+  })
+
   it("starts the slot's list over from an unlisted theme", () => {
-    const first = themesFor("dark", BUILTIN_DESCRIPTORS)[0]?.id
-    expect(cycleTheme({ ...pair, dark: "user:gone" }, BUILTIN_DESCRIPTORS, "dark").dark).toBe(first)
+    expect(cycleTheme({ ...settings, dark: "user:gone" }, BUILTIN_DESCRIPTORS, "dark").dark).toBe(
+      ids("dark")[0],
+    )
   })
 })

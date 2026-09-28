@@ -5,7 +5,6 @@ import {
   getActiveAppearance,
   getDeclaredAppearance,
   type ThemeDescriptor,
-  themesFor,
 } from "@/themes/manifest"
 
 describe("getDeclaredAppearance", () => {
@@ -28,18 +27,7 @@ describe("getDeclaredAppearance", () => {
   })
 })
 
-describe("slots", () => {
-  it("lists a slot's themes plus Omarchy, which fits either", () => {
-    const light = themesFor("light", BUILTIN_DESCRIPTORS).map((theme) => theme.id)
-    const dark = themesFor("dark", BUILTIN_DESCRIPTORS).map((theme) => theme.id)
-    expect(light).toContain("ren-light")
-    expect(light).not.toContain("ren")
-    expect(dark).toContain("ren")
-    expect(dark).not.toContain("ren-light")
-    expect(light[0]).toBe("omarchy")
-    expect(dark[0]).toBe("omarchy")
-  })
-
+describe("getActiveAppearance", () => {
   it("resolves Omarchy's appearance from its palette mode", () => {
     expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, "light")).toBe("light")
     expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, null)).toBeNull()

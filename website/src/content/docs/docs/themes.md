@@ -11,18 +11,17 @@ You can preview all built-in themes (and design your own) in the [theme playgrou
 | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | <img src="/docs/theme-gruvbox.png" alt="Gruvbox theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-catpuccin-light.png" alt="Catpuccin Light theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-hackerman.png" alt="Hackerman theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> |
 
-By default, renCal syncs with your system: you pick a light theme and a dark theme, and it switches between them with your OS. Set **Theme mode** to **Single theme** to use one theme all the time. In `~/.config/rencal/config.toml` it looks like this:
+By default, renCal syncs with your system: you pick a light theme and a dark theme, and it switches between them with your OS. Set **Theme mode** to **Single theme** to use one theme all the time; your light and dark picks are kept for when you switch back. In `~/.config/rencal/config.toml` it looks like this:
 
 ```toml
 [theme]
-mode = "system"   # system | light | dark
+mode = "system"   # system | single
+single = "ren"
 light = "ren-light"
 dark = "ren"
 ```
 
-Set both to the same theme to use one theme everywhere.
-
-The "Omarchy" theme updates automatically when your system theme changes:
+On Omarchy, syncing with your system uses the "Omarchy" theme instead, which updates automatically when you change your Omarchy theme:
 
 <video src="/docs/omarchy-theme.mp4" autoplay loop muted playsinline></video>
 

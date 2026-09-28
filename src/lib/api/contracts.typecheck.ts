@@ -34,7 +34,12 @@ function checkContracts(name: "theme-changed" | "rencal-config-changed", event: 
   api.notifications.listen("event-changed", () => {})
   // @ts-expect-error Listener payloads are determined by the name.
   api.notifications.listen("theme-changed", (_payload: number) => {})
-  void emitAppEvent("theme-changed", { mode: "system", light: "ren-light", dark: "user:custom" })
+  void emitAppEvent("theme-changed", {
+    mode: "system",
+    single: "ren",
+    light: "ren-light",
+    dark: "user:custom",
+  })
   void emitAppEvent("rencal-config-changed")
   void emitAppEvent("rencal-config-changed", null)
   // @ts-expect-error Theme broadcasts require a mode and both slots.

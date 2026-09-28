@@ -1,9 +1,8 @@
-import { getCurrentWindow } from "@tauri-apps/api/window"
 import { createContext, useContext, useEffect, useMemo, useRef, type ReactNode } from "react"
 import { z } from "zod"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
-import { useSystemAppearance } from "@/hooks/useSystemAppearance"
+import { useWindowTheme } from "@/hooks/useWindowTheme"
 import {
   api,
   type ExternalTheme,
@@ -16,43 +15,38 @@ import { emitAppEvent } from "@/lib/api/internal"
 import { cacheThemeBackground, THEME_SETTINGS_KEY } from "@/themes/bootstrap-cache"
 import { applyExternalThemes } from "@/themes/external"
 import { updateExternalFonts } from "@/themes/external-fonts"
+import { getActiveAppearance, type ThemeDescriptor } from "@/themes/manifest"
 import {
-  type Appearance,
-  APPEARANCES,
-  DEFAULT_THEME_SETTINGS,
-  getActiveAppearance,
-  getDeclaredAppearance,
-  type ThemeDescriptor,
-} from "@/themes/manifest"
-import {
+  activeSlot,
   cycleTheme,
-  followsSystem,
-  pickTheme,
-  resolveTheme,
+  DEFAULT_THEME_SETTINGS,
+  resolveSync,
+  type ThemeSlot,
   withSlot,
 } from "@/themes/theme-settings"
 
 // Slots hold plain ids: an unknown id just renders the :root defaults, so no
 // enum gate is needed.
 const themeSettingsSchema = z.object({
-  mode: z.enum(["system", "light", "dark"]),
+  mode: z.enum(["system", "single"]),
+  single: z.string(),
   light: z.string(),
   dark: z.string(),
 })
 
 const sameSettings = (a: ThemeSettings, b: ThemeSettings) =>
-  a.mode === b.mode && a.light === b.light && a.dark === b.dark
+  a.mode === b.mode && a.single === b.single && a.light === b.light && a.dark === b.dark
 
 type ThemeController = {
   settings: ThemeSettings
   activeTheme: string
-  activeSlot: Appearance
-  setSettings: (next: ThemeSettings) => void
-  setSlot: (slot: Appearance, id: string) => void
+  /** Omarchy is installed, so syncing follows its theme. */
+  onOmarchy: boolean
   setMode: (mode: ThemeMode) => void
-  /** Show a theme now (command palette). */
+  setSlot: (slot: ThemeSlot, id: string) => void
+  /** Show a theme as the single theme (command palette). */
   pickTheme: (id: string) => void
-  /** The active slot's next theme (shortcut). */
+  /** The showing slot's next theme (shortcut). */
   cycleTheme: () => void
 }
 
@@ -78,15 +72,21 @@ export function ThemeController({
     themeSettingsSchema,
     DEFAULT_THEME_SETTINGS,
   )
-  const os = useSystemAppearance(followsSystem(settings))
-  const resolved = resolveTheme(settings, os)
-  const { activeSlot, activeTheme } = resolved
-  // An unknown theme (e.g. a user theme not loaded yet) takes its slot's appearance.
-  const appearance =
-    getActiveAppearance(activeTheme, descriptors, omarchy?.mode ?? null) ?? activeSlot
+  const onOmarchy = omarchy !== null
+  const shown = useMemo(() => resolveSync(settings, onOmarchy), [settings, onOmarchy])
+  const syncsWithSystem = shown.mode === "system"
+  const appearanceOf = (id: string) => getActiveAppearance(id, descriptors, omarchy?.mode ?? null)
+  // An unknown theme (e.g. a user theme not loaded yet) renders the dark ren baseline.
+  const singleAppearance = appearanceOf(shown.single) ?? "dark"
+  // Syncing leaves the window to the OS; a single theme forces its appearance.
+  const os = useWindowTheme(syncsWithSystem ? null : singleAppearance)
+  const activeTheme = shown[activeSlot(shown, os)]
+  const appearance = syncsWithSystem ? (appearanceOf(activeTheme) ?? os) : singleAppearance
 
-  const stateRef = useRef({ settings, os, descriptors })
-  stateRef.current = { settings, os, descriptors }
+  const settingsRef = useRef(settings)
+  useEffect(() => {
+    settingsRef.current = settings
+  }, [settings])
 
   useEffect(() => {
     document.body.dataset.theme = activeTheme
@@ -95,57 +95,31 @@ export function ThemeController({
     updateExternalFonts(activeTheme, externalThemes)
   }, [activeTheme, externalThemes])
 
-  // A forced window reports the forced value to `theme()`, `onThemeChanged` and
-  // `prefers-color-scheme`, so while following the OS useSystemAppearance owns it.
   useEffect(() => {
     document.body.dataset.appearance = appearance
-    if (!resolved.followsSystem) void getCurrentWindow().setTheme(appearance)
-  }, [appearance, resolved.followsSystem])
+  }, [appearance])
 
-  // Cache the resolved --background for theme-bootstrap.js under every slot
-  // showing this theme. Deferred by 1 frame so injected external/Omarchy styles apply first.
+  // Cache the resolved --background for theme-bootstrap.js. Deferred by 1
+  // frame so injected external/Omarchy styles apply first.
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       const bg = getComputedStyle(document.body).getPropertyValue("--background").trim()
-      if (!bg) return
-      for (const slot of APPEARANCES) {
-        if (settings[slot] === activeTheme) cacheThemeBackground(slot, activeTheme, bg)
-      }
+      if (bg) cacheThemeBackground(activeTheme, bg)
     })
     return () => cancelAnimationFrame(raf)
-  }, [activeTheme, settings, externalThemes, omarchy])
-
-  // Omarchy can change while it sits in the inactive slot.
-  useEffect(() => {
-    if (!omarchy) return
-    for (const slot of APPEARANCES) {
-      if (settings[slot] === "omarchy") cacheThemeBackground(slot, "omarchy", omarchy.background)
-    }
-  }, [omarchy, settings])
+  }, [activeTheme, externalThemes, omarchy])
 
   // Reconcile with TOML on mount; write the cached settings up if no file yet.
   useEffect(() => {
     let cancelled = false
-    const hadCachedSettings = localStorage.getItem(THEME_SETTINGS_KEY) !== null
-    void api.themes.getConfigured().then(async (toml) => {
+    void api.themes.getConfigured().then((toml) => {
       if (cancelled) return
       if (toml === null) {
-        // On a truly fresh install, default to omarchy when detected on disk
-        // so Omarchy users see their OS theme out of the box.
-        let initial = stateRef.current.settings
-        if (!hadCachedSettings) {
-          try {
-            const colors = await api.themes.getOmarchyColors()
-            if (cancelled) return
-            if (colors) initial = { ...initial, light: "omarchy", dark: "omarchy" }
-            setSettingsLocal(initial)
-          } catch {}
-        }
-        void api.themes.setConfigured(initial)
+        void api.themes.setConfigured(settingsRef.current)
         return
       }
       const parsed = themeSettingsSchema.safeParse(toml)
-      if (parsed.success && !sameSettings(parsed.data, stateRef.current.settings)) {
+      if (parsed.success && !sameSettings(parsed.data, settingsRef.current)) {
         // TOML wins. Update cache + UI; don't re-write TOML.
         setSettingsLocal(parsed.data)
       }
@@ -159,7 +133,7 @@ export function ThemeController({
   useEffect(() => {
     const unlistenPromise = api.notifications.listen("theme-changed", (event) => {
       const parsed = themeSettingsSchema.safeParse(event)
-      if (parsed.success && !sameSettings(parsed.data, stateRef.current.settings)) {
+      if (parsed.success && !sameSettings(parsed.data, settingsRef.current)) {
         setSettingsLocal(parsed.data)
       }
     })
@@ -180,25 +154,18 @@ export function ThemeController({
           console.error("Failed to persist theme:", err)
         })
     }
-    const current = () => stateRef.current
 
     return {
       settings,
       activeTheme,
-      activeSlot,
-      setSettings,
-      setSlot: (slot, id) => setSettings(withSlot(current().settings, slot, id)),
-      setMode: (mode) => setSettings({ ...current().settings, mode }),
-      pickTheme: (id) => {
-        const { settings, os, descriptors } = current()
-        setSettings(pickTheme(settings, id, getDeclaredAppearance(id, descriptors), os))
-      },
-      cycleTheme: () => {
-        const { settings, os, descriptors } = current()
-        setSettings(cycleTheme(settings, descriptors, os))
-      },
+      onOmarchy,
+      setMode: (mode) => setSettings({ ...settings, mode }),
+      setSlot: (slot, id) => setSettings(withSlot(settings, slot, id)),
+      pickTheme: (id) => setSettings({ ...settings, mode: "single", single: id }),
+      // Cycling while following Omarchy moves on to the next single theme.
+      cycleTheme: () => setSettings(cycleTheme(shown, descriptors, os)),
     }
-  }, [settings, activeTheme, activeSlot, setSettingsLocal])
+  }, [settings, shown, activeTheme, onOmarchy, descriptors, os, setSettingsLocal])
 
   return <ThemeControllerContext.Provider value={value}>{children}</ThemeControllerContext.Provider>
 }

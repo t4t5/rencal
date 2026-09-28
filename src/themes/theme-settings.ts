@@ -1,59 +1,51 @@
 import type { ThemeSettings } from "@/lib/api"
 
-import {
-  type Appearance,
-  type ThemeAppearance,
-  type ThemeDescriptor,
-  themesFor,
-} from "@/themes/manifest"
+import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
 
-export type ResolvedTheme = {
-  activeSlot: Appearance
-  activeTheme: string
-  /** Leave the window unforced and track the OS: only when the OS picks between different themes. */
-  followsSystem: boolean
+/** A settings field holding a theme id. */
+export type ThemeSlot = "single" | Appearance
+
+// Keep in step with theme-bootstrap.js and rencal-config's default.
+export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
+  mode: "system",
+  single: "ren",
+  light: "ren-light",
+  dark: "ren",
 }
 
-export const followsSystem = (settings: ThemeSettings) =>
-  settings.mode === "system" && settings.light !== settings.dark
+/** On Omarchy, syncing follows the desktop's theme: it shows Omarchy as the single theme. */
+export const resolveSync = (settings: ThemeSettings, onOmarchy: boolean): ThemeSettings =>
+  onOmarchy && settings.mode === "system"
+    ? { ...settings, mode: "single", single: "omarchy" }
+    : settings
 
-export function resolveTheme(settings: ThemeSettings, os: Appearance): ResolvedTheme {
-  const activeSlot = settings.mode === "system" ? os : settings.mode
-  return {
-    activeSlot,
-    activeTheme: settings[activeSlot],
-    followsSystem: followsSystem(settings),
-  }
+/** The slot showing: the OS's appearance while syncing with it, otherwise `single`. */
+export const activeSlot = (settings: ThemeSettings, os: Appearance): ThemeSlot =>
+  settings.mode === "system" ? os : "single"
+
+/** Themes offered for a slot: every theme for `single`, otherwise those of its appearance plus adaptive ones. */
+export function themesFor(
+  slot: ThemeSlot,
+  descriptors: readonly ThemeDescriptor[],
+): readonly ThemeDescriptor[] {
+  return slot === "single"
+    ? descriptors
+    : descriptors.filter((theme) => theme.appearance === slot || theme.appearance === "adaptive")
 }
 
-export const withSlot = (settings: ThemeSettings, slot: Appearance, id: string): ThemeSettings =>
-  slot === "light" ? { ...settings, light: id } : { ...settings, dark: id }
+export const withSlot = (settings: ThemeSettings, slot: ThemeSlot, id: string): ThemeSettings => ({
+  ...settings,
+  [slot]: id,
+})
 
-/**
- * Show `id` now: a `system` theme fills both slots; any other fills its
- * appearance's slot (the active one when unknown), and pins the mode to that
- * slot if it wouldn't be showing.
- */
-export function pickTheme(
-  settings: ThemeSettings,
-  id: string,
-  appearance: ThemeAppearance | null,
-  os: Appearance,
-): ThemeSettings {
-  if (appearance === "system") return { ...settings, light: id, dark: id }
-  const slot = appearance ?? resolveTheme(settings, os).activeSlot
-  const next = withSlot(settings, slot, id)
-  return resolveTheme(next, os).activeSlot === slot ? next : { ...next, mode: slot }
-}
-
-/** The active slot's next theme, in display order. */
+/** The showing slot's next theme, in display order. */
 export function cycleTheme(
   settings: ThemeSettings,
   descriptors: readonly ThemeDescriptor[],
   os: Appearance,
 ): ThemeSettings {
-  const { activeSlot, activeTheme } = resolveTheme(settings, os)
-  const ids = themesFor(activeSlot, descriptors).map((theme) => theme.id)
-  const next = ids[(ids.indexOf(activeTheme) + 1) % ids.length]
-  return next === undefined ? settings : withSlot(settings, activeSlot, next)
+  const slot = activeSlot(settings, os)
+  const ids = themesFor(slot, descriptors).map((theme) => theme.id)
+  const next = ids[(ids.indexOf(settings[slot]) + 1) % ids.length]
+  return next === undefined ? settings : withSlot(settings, slot, next)
 }

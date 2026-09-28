@@ -16,38 +16,33 @@ import { cn, isMacOS } from "@/lib/utils"
 import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
-import {
-  type Appearance,
-  getDeclaredAppearance,
-  type ThemeDescriptor,
-  themesFor,
-} from "@/themes/manifest"
+import { type Appearance, getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
 
 export function ThemesPage() {
-  const { settings, activeSlot, activeTheme, setMode, setSlot, pickTheme } = useTheme()
+  const { settings, onOmarchy, setMode, setSlot } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
   const syncsWithSystem = settings.mode === "system"
 
-  // Which slot's grid sync shows; it only browses and never changes the theme.
-  const [slot, setShownSlot] = useState<Appearance>("dark")
-  const selected = syncsWithSystem ? settings[slot] : activeTheme
+  // Which of the pair the grid edits while syncing; browsing never changes the theme.
+  const [pairSlot, setPairSlot] = useState<Appearance>("dark")
+  const slot: ThemeSlot = syncsWithSystem ? pairSlot : "single"
+  const selected = settings[slot]
 
-  // A legacy or hand-edited slot can hold a theme of the other appearance; keep it visible.
-  const slotThemes = useMemo(() => {
-    const fitting = themesFor(slot, descriptors)
-    return descriptors.filter((theme) => fitting.includes(theme) || theme.id === selected)
-  }, [descriptors, slot, selected])
+  // Independent of the selection, so picking a theme never reshuffles the grid.
+  const slotThemes = useMemo(() => themesFor(slot, descriptors), [descriptors, slot])
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <div className="flex flex-col gap-2 w-[180px]">
-        <label className="text-sm">Theme mode</label>
+        <label htmlFor="theme-mode" className="text-sm">
+          Theme mode
+        </label>
         <Select
-          value={syncsWithSystem ? "system" : "single"}
-          // Single pins the showing slot, so the theme doesn't change.
-          onValueChange={(next) => setMode(next === "system" ? "system" : activeSlot)}
+          value={settings.mode}
+          onValueChange={(next) => setMode(next === "system" ? "system" : "single")}
         >
-          <SelectTrigger className="w-full" variant="default">
+          <SelectTrigger id="theme-mode" className="w-full" variant="default">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -56,18 +51,27 @@ export function ThemesPage() {
           </SelectContent>
         </Select>
       </div>
-      {syncsWithSystem ? (
+      {syncsWithSystem && onOmarchy ? (
+        <p className="text-sm text-muted-foreground">renCal follows your Omarchy theme.</p>
+      ) : (
         <div className="flex flex-col gap-3">
-          <OptionTabs
-            label="Theme slot"
-            options={SLOT_OPTIONS}
-            value={slot}
-            onChange={setShownSlot}
-          />
+          {syncsWithSystem && (
+            <div className="flex">
+              <Tabs
+                value={pairSlot}
+                onValueChange={(next) => {
+                  if (next === "light" || next === "dark") setPairSlot(next)
+                }}
+              >
+                <TabsList aria-label="Theme slot">
+                  <TabsTrigger value="dark">Dark theme</TabsTrigger>
+                  <TabsTrigger value="light">Light theme</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+          )}
           <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
         </div>
-      ) : (
-        <ThemeGrid themes={descriptors} selected={selected} onSelect={pickTheme} />
       )}
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
@@ -82,49 +86,12 @@ export function ThemesPage() {
   )
 }
 
-const SLOT_OPTIONS = [
-  { value: "dark", label: "Dark theme" },
-  { value: "light", label: "Light theme" },
-] as const satisfies readonly { value: Appearance; label: string }[]
-
-function OptionTabs<T extends string>({
-  label,
-  options,
-  value,
-  onChange,
-}: {
-  label: string
-  options: readonly { value: T; label: string }[]
-  value: T
-  onChange: (value: T) => void
-}) {
-  return (
-    <div className="flex">
-      <Tabs
-        value={value}
-        onValueChange={(next) => {
-          const option = options.find((o) => o.value === next)
-          if (option) onChange(option.value)
-        }}
-      >
-        <TabsList aria-label={label}>
-          {options.map((option) => (
-            <TabsTrigger key={option.value} value={option.value}>
-              {option.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-    </div>
-  )
-}
-
 function ThemeGrid({
   themes,
   selected,
   onSelect,
 }: {
-  themes: ThemeDescriptor[]
+  themes: readonly ThemeDescriptor[]
   selected: string
   onSelect: (id: string) => void
 }) {
@@ -173,13 +140,13 @@ const PreviewWindow = ({ themeId }: { themeId: string }) => {
   const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
-  // Omarchy's `system` inherits the window's appearance, which follows its palette.
+  // Omarchy is adaptive: it inherits the window's appearance, which follows its palette.
   const appearance = getDeclaredAppearance(themeId, descriptors)
 
   return (
     <div
       data-theme={themeId}
-      data-appearance={appearance === "system" ? undefined : (appearance ?? undefined)}
+      data-appearance={appearance === "adaptive" ? undefined : (appearance ?? undefined)}
       style={style}
       className="absolute inset-0 bg-card pt-4 pl-4"
     >

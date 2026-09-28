@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react"
+import { z } from "zod"
 
 import { api, type OmarchyColors } from "@/lib/api"
 
+// Present while Omarchy is installed; theme-bootstrap.js reads it too.
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
@@ -98,6 +100,30 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
   }
 }
 
+const omarchyColorsSchema = z.object({
+  mode: z.enum(["dark", "light"]),
+  name: z.string().nullable(),
+  background: z.string(),
+  foreground: z.string(),
+  bright_foreground: z.string(),
+  accent: z.string(),
+  red: z.string(),
+  green: z.string(),
+  yellow: z.string(),
+  blue: z.string(),
+}) satisfies z.ZodType<OmarchyColors>
+
+function readCachedColors(): OmarchyColors | null {
+  try {
+    const parsed = omarchyColorsSchema.safeParse(
+      JSON.parse(localStorage.getItem(CACHE_KEY) ?? "null"),
+    )
+    return parsed.success ? parsed.data : null
+  } catch {
+    return null
+  }
+}
+
 function ensureStyleElement(): HTMLStyleElement {
   let el = document.getElementById(STYLE_ELEMENT_ID) as HTMLStyleElement | null
   if (!el) {
@@ -128,9 +154,10 @@ function applyOmarchyColors(c: OmarchyColors) {
 // preview tile in settings reflects the current OS theme. The
 // [data-theme="omarchy"] selector ensures the rule only paints elements
 // that actually opt in. Returns the palette so the theme controller can
-// read its mode and background.
+// read its mode and background. Starts from the cached palette so an Omarchy
+// desktop is recognised before the fetch.
 export function useOmarchyTheme(): OmarchyColors | null {
-  const [colors, setColors] = useState<OmarchyColors | null>(null)
+  const [colors, setColors] = useState(readCachedColors)
 
   useEffect(() => {
     let cancelled = false
@@ -141,8 +168,12 @@ export function useOmarchyTheme(): OmarchyColors | null {
     }
 
     void api.themes.getOmarchyColors().then((next) => {
-      if (cancelled || !next) return
-      update(next)
+      if (cancelled) return
+      if (next) return update(next)
+      try {
+        localStorage.removeItem(CACHE_KEY)
+      } catch {}
+      setColors(null)
     })
 
     const unlistenPromise = api.notifications.listen("omarchy-theme-changed", update)

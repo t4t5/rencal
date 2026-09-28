@@ -41,9 +41,9 @@ const REN_CORE: Record<string, string> = {
   "--surface-tint-step": "5%",
 }
 
-// Omarchy (appearance: "system") has no static palette to preview.
+// Omarchy (appearance: "adaptive") has no static palette to preview.
 const themes = appThemes
-  .filter((theme) => theme.appearance !== "system")
+  .filter((theme) => theme.appearance !== "adaptive")
   .map((theme) => {
     const css = themeFiles[`../../../src/themes/${theme.id}.css`]
     if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)

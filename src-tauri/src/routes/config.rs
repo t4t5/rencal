@@ -40,16 +40,14 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
 #[serde(rename_all = "lowercase")]
 pub enum ThemeMode {
     System,
-    Light,
-    Dark,
+    Single,
 }
 
 impl From<rencal_config::ThemeMode> for ThemeMode {
     fn from(value: rencal_config::ThemeMode) -> Self {
         match value {
             rencal_config::ThemeMode::System => Self::System,
-            rencal_config::ThemeMode::Light => Self::Light,
-            rencal_config::ThemeMode::Dark => Self::Dark,
+            rencal_config::ThemeMode::Single => Self::Single,
         }
     }
 }
@@ -58,17 +56,16 @@ impl From<ThemeMode> for rencal_config::ThemeMode {
     fn from(value: ThemeMode) -> Self {
         match value {
             ThemeMode::System => Self::System,
-            ThemeMode::Light => Self::Light,
-            ThemeMode::Dark => Self::Dark,
+            ThemeMode::Single => Self::Single,
         }
     }
 }
 
-/// The theme for each appearance and the mode that picks between them,
-/// saved and broadcast together.
+/// RPC mirror of `rencal_config::ThemeConfig`, saved and broadcast together.
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 pub struct ThemeSettings {
     pub mode: ThemeMode,
+    pub single: String,
     pub light: String,
     pub dark: String,
 }
@@ -77,6 +74,7 @@ impl From<rencal_config::ThemeConfig> for ThemeSettings {
     fn from(value: rencal_config::ThemeConfig) -> Self {
         Self {
             mode: value.mode.into(),
+            single: value.single,
             light: value.light,
             dark: value.dark,
         }
@@ -87,6 +85,7 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
     fn from(value: ThemeSettings) -> Self {
         Self {
             mode: value.mode.into(),
+            single: value.single,
             light: value.light,
             dark: value.dark,
         }
@@ -94,8 +93,8 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
 }
 
 // `get_theme` returns `Some(theme)` if the config file exists, `None` if it
-// has never been written. The frontend uses the `None` case to migrate a
-// pre-existing `localStorage["theme"]` value up to TOML on first run.
+// has never been written. The frontend uses the `None` case to write its
+// cached theme settings up to TOML on first run.
 #[taurpc::procedures(path = "config", export_to = "../src/rpc/bindings.ts")]
 pub trait ConfigApi {
     async fn get_theme() -> TauResult<Option<ThemeSettings>>;

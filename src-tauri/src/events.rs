@@ -159,11 +159,12 @@ mod tests {
             (
                 AppEvent::ThemeChanged(ThemeSettings {
                     mode: ThemeMode::System,
+                    single: "ren".into(),
                     light: "ren-light".into(),
                     dark: "user:test".into(),
                 }),
                 "theme-changed",
-                json!({ "mode": "system", "light": "ren-light", "dark": "user:test" }),
+                json!({ "mode": "system", "single": "ren", "light": "ren-light", "dark": "user:test" }),
             ),
         ];
         for (event, name, payload) in cases {

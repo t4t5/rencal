@@ -5,6 +5,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { ThemesPage } from "@/components/settings/themes/ThemesPage"
 
+import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
 import { api, type ExternalTheme, type ExternalThemesSnapshot } from "@/lib/api"
 
 import { useTheme } from "./ThemeController"
@@ -39,19 +40,20 @@ const malicious: ExternalTheme = {
   appearance: "dark",
 }
 
-const darkRen = { mode: "dark", light: "ren-light", dark: "ren" } as const
+const singleRen = { mode: "single", single: "ren", light: "ren-light", dark: "ren" } as const
 
 let root: Root
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
   vi.clearAllMocks()
+  vi.mocked(useOmarchyTheme).mockReturnValue(null)
   localStorage.clear()
   appWindow.setTheme.mockResolvedValue(undefined)
   appWindow.theme.mockResolvedValue("dark")
   appWindow.onThemeChanged.mockResolvedValue(() => {})
-  localStorage.setItem("themeSettings", JSON.stringify(darkRen))
-  vi.mocked(api.themes.getConfigured).mockResolvedValue(darkRen)
+  localStorage.setItem("themeSettings", JSON.stringify(singleRen))
+  vi.mocked(api.themes.getConfigured).mockResolvedValue(singleRen)
   vi.mocked(api.themes.listExternal).mockResolvedValue({ themes: [], errors: [] })
   const container = document.createElement("div")
   document.body.append(container)
@@ -86,7 +88,7 @@ async function updateThemes(themes: ExternalTheme[]) {
 async function changeTheme(theme: string) {
   await act(async () => {
     for (const [name, handler] of vi.mocked(api.notifications.listen).mock.calls) {
-      if (name === "theme-changed") handler({ ...darkRen, dark: theme })
+      if (name === "theme-changed") handler({ ...singleRen, single: theme })
     }
   })
 }
@@ -106,7 +108,7 @@ it("keeps newly installed CSS inactive, previews its palette, and recovers on a 
   expect(preview.style.getPropertyValue("--background")).toBe("navy")
 
   await act(async () => preview.closest("button")!.click())
-  expect(api.themes.setConfigured).toHaveBeenCalledWith({ ...darkRen, dark: malicious.id })
+  expect(api.themes.setConfigured).toHaveBeenCalledWith({ ...singleRen, single: malicious.id })
   expect(document.body.dataset.theme).toBe(malicious.id)
   expect(getComputedStyle(ren).display).toBe("none")
 
@@ -124,7 +126,7 @@ it("keeps newly installed CSS inactive, previews its palette, and recovers on a 
 })
 
 it("loads the configured theme when its snapshot arrives and removes its CSS on uninstall", async () => {
-  const settings = { ...darkRen, dark: malicious.id }
+  const settings = { ...singleRen, single: malicious.id }
   localStorage.setItem("themeSettings", JSON.stringify(settings))
   vi.mocked(api.themes.getConfigured).mockResolvedValue(settings)
   await render()
@@ -163,24 +165,70 @@ it("applies the theme once however many components read it", async () => {
   expect(document.body.dataset.theme).toBe("ren")
 })
 
-it("single theme mode lists every theme and pins the picked theme's appearance", async () => {
+const themeButton = (name: string) =>
+  [...document.querySelectorAll("button[aria-pressed]")].find((b) => b.textContent === name)
+
+it("single theme mode lists every theme and sets the single theme", async () => {
   await render()
   const names = [...document.querySelectorAll("button[aria-pressed]")].map((b) => b.textContent)
   expect(names).toContain("Ren")
   expect(names).toContain("Ren Light")
   expect(document.querySelector('[aria-label="Theme slot"]')).toBeNull()
 
-  const nord = [...document.querySelectorAll("button")].find((b) => b.textContent === "Nord")!
-  await act(async () => nord.click())
-  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...darkRen, dark: "nord" })
+  await act(async () => (themeButton("Ren Light") as HTMLElement).click())
+  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...singleRen, single: "ren-light" })
+  expect(appWindow.setTheme).toHaveBeenLastCalledWith("light")
+})
 
-  const renLight = [...document.querySelectorAll("button")].find(
-    (b) => b.textContent === "Ren Light",
-  )!
-  await act(async () => renLight.click())
-  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({
+it("sync mode edits the pair and leaves the window to the OS", async () => {
+  const syncing = { ...singleRen, mode: "system" } as const
+  localStorage.setItem("themeSettings", JSON.stringify(syncing))
+  vi.mocked(api.themes.getConfigured).mockResolvedValue(syncing)
+  await render()
+
+  expect(appWindow.setTheme).toHaveBeenCalledExactlyOnceWith(null)
+  expect(document.querySelector('[aria-label="Theme slot"]')).not.toBeNull()
+  expect(themeButton("Ren Light")).toBeUndefined()
+
+  await act(async () => (themeButton("Nord") as HTMLElement).click())
+  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...syncing, dark: "nord" })
+  expect(document.body.dataset.theme).toBe("nord")
+})
+
+it("keeps a slot's grid fixed when a hand-edited theme is replaced", async () => {
+  const syncing = { ...singleRen, mode: "system", dark: "ren-light" } as const
+  localStorage.setItem("themeSettings", JSON.stringify(syncing))
+  vi.mocked(api.themes.getConfigured).mockResolvedValue(syncing)
+  await render()
+
+  const names = () =>
+    [...document.querySelectorAll("button[aria-pressed]")].map((b) => b.textContent)
+  const before = names()
+  expect(before).not.toContain("Ren Light")
+  await act(async () => (themeButton("Nord") as HTMLElement).click())
+  expect(names()).toEqual(before)
+})
+
+it("sync mode on Omarchy follows the Omarchy theme and hides the pair", async () => {
+  vi.mocked(useOmarchyTheme).mockReturnValue({
     mode: "light",
-    light: "ren-light",
-    dark: "nord",
+    name: "rose-pine",
+    background: "#faf4ed",
+    foreground: "#575279",
+    bright_foreground: "#575279",
+    accent: "#56949f",
+    red: "#b4637a",
+    green: "#286983",
+    yellow: "#ea9d34",
+    blue: "#56949f",
   })
+  const syncing = { ...singleRen, mode: "system" } as const
+  localStorage.setItem("themeSettings", JSON.stringify(syncing))
+  vi.mocked(api.themes.getConfigured).mockResolvedValue(syncing)
+  await render()
+
+  expect(document.body.dataset.theme).toBe("omarchy")
+  expect(appWindow.setTheme).toHaveBeenCalledExactlyOnceWith("light")
+  expect(document.querySelector('[aria-label="Theme slot"]')).toBeNull()
+  expect(themeButton("Ren")).toBeUndefined()
 })

@@ -32,21 +32,21 @@ pub enum ConfigError {
     },
 }
 
-/// Which theme slot is showing: `System` follows the OS appearance.
+/// `System` shows the light or dark theme to match the OS; `Single` shows one theme.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeMode {
     #[default]
     System,
-    Light,
-    Dark,
+    Single,
 }
 
-/// The theme for each appearance and the mode that picks between them.
+/// The theme mode and the themes it picks from. Switching mode keeps the others.
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
-#[serde(from = "ThemeConfigRepr")]
+#[serde(default)]
 pub struct ThemeConfig {
     pub mode: ThemeMode,
+    pub single: String,
     pub light: String,
     pub dark: String,
 }
@@ -55,45 +55,33 @@ impl Default for ThemeConfig {
     fn default() -> Self {
         Self {
             mode: ThemeMode::default(),
+            single: "ren".to_string(),
             light: "ren-light".to_string(),
             dark: "ren".to_string(),
         }
     }
 }
 
-#[derive(Deserialize)]
-#[serde(default)]
-struct ThemeTable {
-    mode: ThemeMode,
-    light: String,
-    dark: String,
-}
-
-impl Default for ThemeTable {
-    fn default() -> Self {
-        let ThemeConfig { mode, light, dark } = ThemeConfig::default();
-        Self { mode, light, dark }
+/// Before modes existed, `theme` was a single theme id.
+fn deserialize_theme<'de, D: serde::Deserializer<'de>>(
+    deserializer: D,
+) -> Result<ThemeConfig, D::Error> {
+    // The table is parsed separately so its errors aren't hidden behind the untagged enum's.
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum Repr {
+        Legacy(String),
+        Table(toml::Table),
     }
-}
-
-/// Before slots existed, `theme` was a single theme id.
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum ThemeConfigRepr {
-    Legacy(String),
-    Table(ThemeTable),
-}
-
-impl From<ThemeConfigRepr> for ThemeConfig {
-    fn from(repr: ThemeConfigRepr) -> Self {
-        match repr {
-            ThemeConfigRepr::Legacy(id) => Self {
-                mode: ThemeMode::System,
-                light: id.clone(),
-                dark: id,
-            },
-            ThemeConfigRepr::Table(ThemeTable { mode, light, dark }) => Self { mode, light, dark },
-        }
+    match Repr::deserialize(deserializer)? {
+        Repr::Legacy(single) => Ok(ThemeConfig {
+            mode: ThemeMode::Single,
+            single,
+            ..Default::default()
+        }),
+        Repr::Table(table) => toml::Value::Table(table)
+            .try_into()
+            .map_err(serde::de::Error::custom),
     }
 }
 
@@ -128,7 +116,7 @@ pub struct RencalConfig {
     pub show_week_numbers: bool,
 
     /// Tables must come AFTER top-level configs since they add a header:
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_theme")]
     pub theme: ThemeConfig,
 
     #[serde(default)]
@@ -275,14 +263,14 @@ mod tests {
     }
 
     #[test]
-    fn legacy_theme_string_fills_both_slots() {
+    fn legacy_theme_string_becomes_single_theme() {
         let config: RencalConfig = toml::from_str("theme = \"nord\"").expect("parse");
         assert_eq!(
             config.theme,
             ThemeConfig {
-                mode: ThemeMode::System,
-                light: "nord".into(),
-                dark: "nord".into(),
+                mode: ThemeMode::Single,
+                single: "nord".into(),
+                ..Default::default()
             }
         );
     }
@@ -291,7 +279,8 @@ mod tests {
     fn theme_table_round_trips_after_scalar_keys() {
         let config = RencalConfig {
             theme: ThemeConfig {
-                mode: ThemeMode::Dark,
+                mode: ThemeMode::Single,
+                single: "omarchy".into(),
                 light: "gruvbox:light".into(),
                 dark: "user:mine".into(),
             },
@@ -308,15 +297,24 @@ mod tests {
     #[test]
     fn partial_theme_table_falls_back_to_defaults() {
         let config: RencalConfig =
-            toml::from_str("[theme]\nmode = \"light\"\ndark = \"nord\"").expect("parse");
+            toml::from_str("[theme]\nmode = \"single\"\ndark = \"nord\"").expect("parse");
         assert_eq!(
             config.theme,
             ThemeConfig {
-                mode: ThemeMode::Light,
-                light: "ren-light".into(),
+                mode: ThemeMode::Single,
                 dark: "nord".into(),
+                ..Default::default()
             }
         );
+    }
+
+    #[test]
+    fn invalid_theme_table_reports_the_field_error() {
+        let error = toml::from_str::<RencalConfig>("[theme]\nmode = \"dark\"")
+            .err()
+            .expect("unknown mode is rejected")
+            .to_string();
+        assert!(error.contains("unknown variant `dark`"), "{error}");
     }
 
     #[test]
