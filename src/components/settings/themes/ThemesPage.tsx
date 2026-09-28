@@ -1,27 +1,68 @@
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { useTheme } from "@/hooks/useTheme"
-import type { AppearanceSetting } from "@/lib/api"
+import type { AppearanceSetting, ExternalTheme } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
+import { appearanceFromCss } from "@/themes/appearance"
 import { externalThemePalette } from "@/themes/external"
-import { getDeclaredAppearance, getThemeFamilies, type ThemeFamily } from "@/themes/manifest"
+import {
+  getDeclaredAppearance,
+  getThemeFamilies,
+  type ThemeDescriptor,
+  type ThemeFamily,
+} from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { theme, appearance, setTheme, setAppearance } = useTheme()
-  const { descriptors, errors } = useThemeRegistry()
-  const families = useMemo(() => getThemeFamilies(descriptors), [descriptors])
+  const { theme, appearance, setSettings, setAppearance } = useTheme()
+  const { descriptors, externalThemes, errors } = useThemeRegistry()
+  const families = useMemo(
+    () =>
+      getThemeFamilies(descriptors).map((family) => ({
+        ...family,
+        tabs: getFamilyTabs(family, descriptors, externalThemes),
+      })),
+    [descriptors, externalThemes],
+  )
   const active = families.find((family) => isActiveFamily(family, theme))
+
+  // The tab shows the stored appearance, or a single theme's own when they differ (it
+  // ignores the stored one). A tab that doesn't list the active theme only filters
+  // the grid until a theme is picked there.
+  const [browsing, setBrowsing] = useState<AppearanceSetting | null>(null)
+  const tab =
+    browsing ??
+    (active && !active.tabs.includes(appearance) ? active.tabs[0] : undefined) ??
+    appearance
+
+  const selectTab = (next: AppearanceSetting) => {
+    if (active?.tabs.includes(next)) {
+      setBrowsing(null)
+      setAppearance(next)
+    } else {
+      setBrowsing(next)
+    }
+  }
+
+  const selectFamily = (id: string) => {
+    setBrowsing(null)
+    setSettings({ theme: id, appearance: tab })
+  }
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <AppearanceSection family={active} appearance={appearance} onChange={setAppearance} />
-      <ThemeGrid families={families} active={active} onSelect={setTheme} />
+      <AppearanceSection tab={tab} onChange={selectTab} />
+      <ThemeGrid
+        families={families.filter((family) => family.tabs.includes(tab))}
+        active={active}
+        tab={tab}
+        onSelect={selectFamily}
+      />
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -45,54 +86,60 @@ const APPEARANCE_OPTIONS = [
   { value: "system", label: "System" },
 ] as const satisfies readonly { value: AppearanceSetting; label: string }[]
 
+/**
+ * The appearance tabs that list a family: a family with variants under every
+ * tab, Omarchy (which follows the OS theme) under System, and any other theme
+ * under its own appearance.
+ */
+function getFamilyTabs(
+  family: ThemeFamily,
+  descriptors: readonly ThemeDescriptor[],
+  externalThemes: readonly ExternalTheme[],
+): AppearanceSetting[] {
+  if (family.variants) return APPEARANCE_OPTIONS.map((option) => option.value)
+  const css = externalThemes.find((theme) => theme.id === family.id)?.css
+  const appearance =
+    getDeclaredAppearance(family.id, descriptors) ??
+    (css === undefined ? null : appearanceFromCss(css))
+  return [appearance ?? "system"]
+}
+
 const AppearanceSection = ({
-  family,
-  appearance,
+  tab,
   onChange,
 }: {
-  family: ThemeFamily | undefined
-  appearance: AppearanceSetting
+  tab: AppearanceSetting
   onChange: (appearance: AppearanceSetting) => void
-}) => {
-  const hint =
-    family?.id === "omarchy"
-      ? "Omarchy (Auto) follows your Omarchy theme."
-      : family && !family.variants
-        ? `${family.name} has no light and dark variants.`
-        : null
-
-  return (
-    <div className="flex items-center justify-between gap-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-sm">Appearance</span>
-        {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
-      </div>
-      <Tabs
-        value={appearance}
-        onValueChange={(value) => {
-          const option = APPEARANCE_OPTIONS.find((o) => o.value === value)
-          if (option) onChange(option.value)
-        }}
-      >
-        <TabsList aria-label="Appearance">
-          {APPEARANCE_OPTIONS.map((option) => (
-            <TabsTrigger key={option.value} value={option.value} disabled={!family?.variants}>
-              {option.label}
-            </TabsTrigger>
-          ))}
-        </TabsList>
-      </Tabs>
-    </div>
-  )
-}
+}) => (
+  <div className="flex items-center justify-between gap-4">
+    <span className="text-sm">Appearance</span>
+    <Tabs
+      value={tab}
+      onValueChange={(value) => {
+        const option = APPEARANCE_OPTIONS.find((o) => o.value === value)
+        if (option) onChange(option.value)
+      }}
+    >
+      <TabsList aria-label="Appearance">
+        {APPEARANCE_OPTIONS.map((option) => (
+          <TabsTrigger key={option.value} value={option.value}>
+            {option.label}
+          </TabsTrigger>
+        ))}
+      </TabsList>
+    </Tabs>
+  </div>
+)
 
 function ThemeGrid({
   families,
   active,
+  tab,
   onSelect,
 }: {
   families: ThemeFamily[]
   active: ThemeFamily | undefined
+  tab: AppearanceSetting
   onSelect: (id: string) => void
 }) {
   return (
@@ -116,7 +163,7 @@ function ThemeGrid({
                   : "border-border group-hover:border-muted-foreground",
               )}
             >
-              <ThemePreview family={family} />
+              <ThemePreview family={family} tab={tab} />
             </div>
             <span
               className={cn(
@@ -133,16 +180,18 @@ function ThemeGrid({
   )
 }
 
-/** The family's theme, or its light variant with the dark one over the right half. */
-const ThemePreview = ({ family }: { family: ThemeFamily }) => (
+/** The theme the tab shows; under System, a family's light variant with the dark one over the right half. */
+const ThemePreview = ({ family, tab }: { family: ThemeFamily; tab: AppearanceSetting }) => (
   <div aria-hidden className="relative h-28 overflow-hidden">
-    {family.variants ? (
+    {!family.variants ? (
+      <PreviewWindow themeId={family.id} />
+    ) : tab === "system" ? (
       <>
         <PreviewWindow themeId={family.variants.light} />
         <PreviewWindow themeId={family.variants.dark} className="[clip-path:inset(0_0_0_50%)]" />
       </>
     ) : (
-      <PreviewWindow themeId={family.id} />
+      <PreviewWindow themeId={family.variants[tab]} />
     )}
   </div>
 )

@@ -1,3 +1,4 @@
+import { externalThemePalette } from "./external"
 import { type Appearance, getDeclaredAppearance, type ThemeDescriptor } from "./manifest"
 
 function luminance(r: number, g: number, b: number): number {
@@ -18,7 +19,18 @@ function resolveColor(css: string): [number, number, number] | null {
 // Reads the rendered body background (`bg-background`). Used for themes whose
 // appearance isn't declared statically (omarchy, user themes).
 export function appearanceFromComputedBackground(): Appearance {
-  const rgb = resolveColor(getComputedStyle(document.body).backgroundColor)
+  return appearanceOfBackground(getComputedStyle(document.body).backgroundColor)
+}
+
+// Reads a theme file's `--background`, for user themes that don't declare an
+// appearance. Without one the theme falls back to the dark ren baseline.
+export function appearanceFromCss(css: string): Appearance {
+  const background = externalThemePalette(css)["--background"]
+  return background ? appearanceOfBackground(background) : "dark"
+}
+
+function appearanceOfBackground(css: string): Appearance {
+  const rgb = resolveColor(css)
   if (!rgb) return "dark"
   return luminance(...rgb) > 0.5 ? "light" : "dark"
 }

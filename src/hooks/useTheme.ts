@@ -170,5 +170,5 @@ export function useTheme() {
     if (next) setTheme(next)
   }
 
-  return { theme, appearance, setTheme, setAppearance, toggleTheme }
+  return { theme, appearance, setSettings, setTheme, setAppearance, toggleTheme }
 }
