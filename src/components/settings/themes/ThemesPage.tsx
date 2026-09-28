@@ -1,6 +1,13 @@
 import { useMemo, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import type { ThemeMode } from "@/lib/api"
@@ -34,13 +41,28 @@ export function ThemesPage() {
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <div className="flex flex-col gap-3">
-        <OptionTabs
-          label="Appearance"
-          options={MODE_OPTIONS}
+      <div className="flex flex-col gap-2 w-[150px]">
+        <label className="text-sm">Appearance</label>
+        <Select
           value={settings.mode}
-          onChange={setMode}
-        />
+          onValueChange={(next) => {
+            const option = MODE_OPTIONS.find((o) => o.value === next)
+            if (option) setMode(option.value)
+          }}
+        >
+          <SelectTrigger className="w-full" variant="default">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {MODE_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      <div className="flex flex-col gap-3">
         {settings.mode === "system" && (
           <OptionTabs
             label="Theme slot"
@@ -49,8 +71,8 @@ export function ThemesPage() {
             onChange={setShownSlot}
           />
         )}
+        <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
       </div>
-      <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
