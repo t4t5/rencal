@@ -63,7 +63,7 @@ export function GlobalShortcuts({
   const [palettePage, setPalettePage] = useState<"root" | PalettePage>("root")
 
   const { navigateToDate } = useCalendarNavigation()
-  const { theme, setTheme, toggleTheme } = useTheme()
+  const { theme, selectTheme, toggleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
@@ -111,7 +111,7 @@ export function GlobalShortcuts({
       empty: "No themes found.",
       items: descriptors.map((d) => ({ id: d.id, label: d.name })),
       activeId: theme,
-      onSelect: setTheme,
+      onSelect: selectTheme,
     },
   }
   if (groupOptions.length >= 2) {

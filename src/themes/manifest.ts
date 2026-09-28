@@ -1,13 +1,13 @@
+import type { ThemeSetting } from "@/lib/api"
+
 export type Appearance = "light" | "dark"
 
-// `"both"` means the theme (a plugin theme) ships a light and a dark variant and
-// shows the one matching the OS. `null` means the appearance is derived at
-// runtime (e.g. omarchy, which inherits from the OS theme).
-export type ThemeAppearance = Appearance | "both" | null
-
+// `appearance: null` means the theme's appearance is derived at runtime
+// (e.g. omarchy, which inherits from the OS theme).
 export const themes = [
   { id: "omarchy", name: "Omarchy (Auto)", appearance: null },
   { id: "ren", name: "Ren", appearance: "dark" },
+  { id: "ren-light", name: "Ren Light", appearance: "light" },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },
@@ -25,7 +25,7 @@ export type ThemeSource = "builtin" | "external" | "plugin"
 export type ThemeDescriptor = {
   id: string
   name: string
-  appearance: ThemeAppearance
+  appearance: Appearance | null
   source: ThemeSource
 }
 
@@ -36,19 +36,20 @@ export const BUILTIN_DESCRIPTORS: ThemeDescriptor[] = themes.map((t) => ({
   source: "builtin",
 }))
 
-export function getThemeAppearance(
+export function getDeclaredAppearance(
   id: string,
   descriptors: readonly ThemeDescriptor[],
-): ThemeAppearance {
+): Appearance | null {
   return descriptors.find((theme) => theme.id === id)?.appearance ?? null
 }
 
-/** The appearance a theme renders in, or null when it must be derived at runtime. */
-export function resolveAppearance(
-  id: string,
-  descriptors: readonly ThemeDescriptor[],
-  system: Appearance,
-): Appearance | null {
-  const appearance = getThemeAppearance(id, descriptors)
-  return appearance === "both" ? system : appearance
+/** The pair a fresh macOS install, and turning on "Match system appearance", start from. */
+export const DEFAULT_SYSTEM_THEMES = {
+  light: "ren-light",
+  dark: "ren",
+} as const satisfies Record<Appearance, ThemeId>
+
+/** The theme a setting shows: the setting itself, or the pair's theme for the system appearance. */
+export function resolveThemeSetting(setting: ThemeSetting, system: Appearance): string {
+  return typeof setting === "string" ? setting : setting[system]
 }

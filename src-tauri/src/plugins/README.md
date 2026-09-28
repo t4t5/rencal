@@ -26,17 +26,7 @@ css = "theme.css"
 appearance = "dark"
 ```
 
-A theme with a light and a dark variant sets `light` and `dark` instead of `css` and `appearance`:
-
-```toml
-[[contributes.themes]]
-id = "gruvbox"
-name = "Gruvbox"
-light = "themes/light.css"
-dark = "themes/dark.css"
-```
-
-renCal shows it as one theme and picks the variant that matches the system appearance. Each theme sets either `css` and `appearance` or `light` and `dark`; mixing them, or setting only one of `light` and `dark`, is an error. The `light`/`dark` form needs renCal 0.8.0 or newer, so set `min_rencal_version` to at least that: older versions then report a clear version error instead of failing to parse the manifest.
+Each theme has one appearance. For a family with light and dark versions, contribute one theme per appearance; users who follow the system appearance pair them in settings.
 
 Fonts are shared by every theme in a package and must use WOFF2. `weight` defaults to `400` and `style` to `normal`; theme CSS should include suitable fallback fonts.
 

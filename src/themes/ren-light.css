@@ -1,0 +1,16 @@
+/* Ren on a light base: the pair ren follows the system appearance with. Every
+   other token comes from the `:root, [data-theme]` baseline in src/global.css. */
+--background: #fafafa;
+--foreground: #131313;
+--muted-foreground: color-mix(in srgb, var(--foreground) 55%, transparent);
+
+/* Ren's orange and blue, deepened to hold contrast on white. */
+--primary: #e2530a;
+--today: #1f75e0;
+--brand: #e2530a;
+
+--success: #2e7d32;
+--warning: #c2410c;
+--destructive: #d32f2f;
+
+--surface-tint-step: 4%;

@@ -3,6 +3,8 @@ import { useEffect } from "react"
 
 import { api, type OmarchyColors } from "@/lib/api"
 
+import { cacheThemeBackground } from "@/themes/background-cache"
+
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
@@ -129,10 +131,7 @@ function applyOmarchyColors(c: OmarchyColors) {
     document.body.dataset.appearance = c.mode
     void getCurrentWindow().setTheme(c.mode)
     // Keep index.html's flash-prevention cache in step with the live OS theme.
-    try {
-      localStorage.setItem("themeBackground", c.background)
-      localStorage.setItem("themeAppearanceResolved", c.mode)
-    } catch {}
+    cacheThemeBackground("omarchy", c.background)
   }
 }
 

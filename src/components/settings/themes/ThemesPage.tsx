@@ -1,23 +1,27 @@
-import { useMemo } from "react"
+import { useId, useMemo } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
 
 import { useTheme } from "@/hooks/useTheme"
+import type { ThemeSetting } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
-import { externalThemeCss, externalThemePalette } from "@/themes/external"
-import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
+import { externalThemePalette } from "@/themes/external"
+import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { theme, setTheme } = useTheme()
+  const { setting, selectTheme, setFollowSystem } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <ThemeGrid themes={descriptors} active={theme} onSelect={setTheme} />
+      <FollowSystemSection followsSystem={typeof setting !== "string"} onChange={setFollowSystem} />
+      <ThemeGrid themes={descriptors} setting={setting} onSelect={selectTheme} />
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -31,19 +35,52 @@ export function ThemesPage() {
   )
 }
 
+const FollowSystemSection = ({
+  followsSystem,
+  onChange,
+}: {
+  followsSystem: boolean
+  onChange: (follow: boolean) => void
+}) => {
+  const id = useId()
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
+        <Checkbox
+          id={id}
+          checked={followsSystem}
+          onCheckedChange={(checked) => onChange(checked === true)}
+        />
+        <Label htmlFor={id} className="text-sm">
+          Match system appearance
+        </Label>
+      </div>
+      <p className="text-xs text-muted-foreground pl-7">
+        Pick a light and a dark theme, and renCal switches between them with your system.
+      </p>
+    </div>
+  )
+}
+
+/** "Light", "Dark" or both, for the halves of a light/dark pair a theme fills. */
+const pairLabel = (pair: { light: string; dark: string }, id: string) =>
+  [pair.light === id && "Light", pair.dark === id && "Dark"].filter(Boolean).join(" · ")
+
 function ThemeGrid({
   themes,
-  active,
+  setting,
   onSelect,
 }: {
   themes: ThemeDescriptor[]
-  active: string
+  setting: ThemeSetting
   onSelect: (id: string) => void
 }) {
   return (
     <div className="grid grid-cols-3 gap-3">
       {themes.map((t) => {
-        const isActive = active === t.id
+        const label = typeof setting === "string" ? "" : pairLabel(setting, t.id)
+        const isActive = setting === t.id || label !== ""
 
         return (
           <button
@@ -54,17 +91,20 @@ function ThemeGrid({
               isActive ? "border-primary ring-1 ring-primary" : "border-border",
             )}
           >
-            <ThemePreview theme={t} />
+            <ThemePreview themeId={t.id} />
 
             <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
               <span className="truncate text-sm">{t.name}</span>
-              <span
-                className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-circle",
-                  isActive ? "bg-primary" : "border border-input",
-                )}
-              >
-                {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
+              <span className="flex shrink-0 items-center gap-1.5">
+                {label && <span className="text-xs text-muted-foreground">{label}</span>}
+                <span
+                  className={cn(
+                    "flex size-4 shrink-0 items-center justify-center rounded-circle",
+                    isActive ? "bg-primary" : "border border-input",
+                  )}
+                >
+                  {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
+                </span>
               </span>
             </div>
           </button>
@@ -74,41 +114,17 @@ function ThemeGrid({
   )
 }
 
-/** A theme with both variants is split diagonally: light top-left, dark bottom-right. */
-const ThemePreview = ({ theme }: { theme: ThemeDescriptor }) => {
-  if (theme.appearance !== "both") {
-    return <ThemePreviewWindow themeId={theme.id} appearance={theme.appearance} />
-  }
-
-  return (
-    <div className="relative">
-      <ThemePreviewWindow themeId={theme.id} appearance="light" />
-      <div className="absolute inset-0 [clip-path:polygon(100%_0,100%_100%,0_100%)]">
-        <ThemePreviewWindow themeId={theme.id} appearance="dark" />
-      </div>
-    </div>
-  )
-}
-
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const ThemePreviewWindow = ({
-  themeId,
-  appearance,
-}: {
-  themeId: string
-  appearance: Appearance | null
-}) => {
-  const { externalThemes } = useThemeRegistry()
-  const external = externalThemes.find((theme) => theme.id === themeId)
-  // Runtime-appearance themes have a single variant, so either key finds it.
-  const css = external && externalThemeCss(external, appearance ?? "dark")
+const ThemePreview = ({ themeId }: { themeId: string }) => {
+  const { descriptors, externalThemes } = useThemeRegistry()
+  const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
     <div aria-hidden className="h-28 overflow-hidden pt-4 pl-4">
       <div
         data-theme={themeId}
-        data-appearance={appearance ?? undefined}
+        data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
         style={style}
         className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg"
       >

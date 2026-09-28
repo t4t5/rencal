@@ -1,6 +1,6 @@
 import type { ExternalTheme } from "@/lib/api"
 
-import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
+import type { ThemeDescriptor } from "@/themes/manifest"
 
 const STYLE_ATTR = "data-external-theme"
 
@@ -21,26 +21,9 @@ export function applyExternalThemes(themes: ExternalTheme[], active: string) {
       element.setAttribute(STYLE_ATTR, theme.id)
       document.head.appendChild(element)
     }
-    const next = externalThemeRules(theme)
+    const next = `[data-theme="${CSS.escape(theme.id)}"] {\n${theme.css}\n}`
     if (element.textContent !== next) element.textContent = next
   }
-}
-
-// A theme with both variants gets one rule per variant; useTheme sets
-// `data-appearance` on <body> to pick between them.
-function externalThemeRules({ id, variants }: ExternalTheme): string {
-  const scope = `[data-theme="${CSS.escape(id)}"]`
-  if (variants.kind === "single") return `${scope} {\n${variants.css}\n}`
-  return [
-    `${scope}[data-appearance="light"] {\n${variants.light}\n}`,
-    `${scope}[data-appearance="dark"] {\n${variants.dark}\n}`,
-  ].join("\n\n")
-}
-
-/** The CSS a preview of `appearance` should use. Single-variant themes have one. */
-export function externalThemeCss({ variants }: ExternalTheme, appearance: Appearance): string {
-  if (variants.kind === "single") return variants.css
-  return appearance === "light" ? variants.light : variants.dark
 }
 
 // Parse as an inline declaration block on a detached element. Copy only custom
@@ -62,7 +45,7 @@ export function externalThemeDescriptor(theme: ExternalTheme): ThemeDescriptor {
   return {
     id: theme.id,
     name: theme.name,
-    appearance: theme.variants.kind === "both" ? "both" : theme.variants.appearance,
+    appearance: theme.appearance,
     source: theme.source.kind === "plugin" ? "plugin" : "external",
   }
 }

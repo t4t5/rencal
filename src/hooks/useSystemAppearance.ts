@@ -3,10 +3,9 @@ import { useEffect, useState } from "react"
 
 import type { Appearance } from "@/themes/manifest"
 
+// Matches theme-bootstrap.js: the window is unforced at launch, so the media
+// query reports the OS until something forces it.
 function initialAppearance(): Appearance {
-  // theme-bootstrap.js restores the last resolved appearance before first paint.
-  const cached = document.body.dataset.appearance
-  if (cached === "light" || cached === "dark") return cached
   return window.matchMedia?.("(prefers-color-scheme: dark)").matches === false ? "light" : "dark"
 }
 

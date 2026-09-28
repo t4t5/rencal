@@ -4,77 +4,67 @@ import { z } from "zod"
 
 import { useLocalStorage } from "@/hooks/useLocalStorage"
 import { useSystemAppearance } from "@/hooks/useSystemAppearance"
-import { api } from "@/lib/api"
+import { api, type ThemeSetting } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
+import { isMacOS } from "@/lib/utils"
 
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
-import { appearanceFromComputedBackground } from "@/themes/appearance"
+import { getActiveAppearance, getPairAppearance } from "@/themes/appearance"
+import { cacheThemeBackground } from "@/themes/background-cache"
 import { applyExternalThemes } from "@/themes/external"
 import { updateExternalFonts } from "@/themes/external-fonts"
-import { getThemeAppearance, resolveAppearance, THEME_IDS } from "@/themes/manifest"
+import { DEFAULT_SYSTEM_THEMES, resolveThemeSetting, THEME_IDS } from "@/themes/manifest"
 
-// Theme id is a plain string: a built-in id or a user theme's `user:<slug>`.
-// An unknown id just renders the :root defaults, so no enum gate is needed.
-const themeSchema = z.string()
-export type Theme = string
+// A theme id (a built-in id or a user theme's `user:<slug>`), or a light and
+// dark pair that follows the system appearance. An unknown id just renders
+// the :root defaults, so no enum gate is needed.
+const themeSettingSchema = z.union([z.string(), z.object({ light: z.string(), dark: z.string() })])
 
-// index.html reads these to paint the right background and variant before the CSS bundle loads.
-const BACKGROUND_CACHE_KEY = "themeBackground"
-const APPEARANCE_CACHE_KEY = "themeAppearanceResolved"
+const sameSetting = (a: ThemeSetting, b: ThemeSetting) => JSON.stringify(a) === JSON.stringify(b)
 
-function getDefaultTheme(): Theme {
+function getDefaultTheme(): ThemeSetting {
   // Read default theme from index.html
   return document.body.dataset.defaultTheme || THEME_IDS[0]
 }
 
-// Single mutator for theme. localStorage is a flash-prevention cache;
-// ~/.config/rencal/config.toml (via rpc.config) is canonical. To stay in
-// sync, every set goes through `setTheme` below — nothing else writes
+// Single mutator for the theme setting. localStorage is a flash-prevention
+// cache; ~/.config/rencal/config.toml (via rpc.config) is canonical. To stay
+// in sync, every set goes through `setSetting` below — nothing else writes
 // either store. On mount we reconcile from TOML (TOML wins on conflict).
 export function useTheme() {
-  const [theme, setThemeLocal] = useLocalStorage("theme", themeSchema, getDefaultTheme())
+  const [setting, setSettingLocal] = useLocalStorage("theme", themeSettingSchema, getDefaultTheme())
   const { descriptors, externalThemes } = useThemeRegistry()
-  const themeRef = useRef(theme)
-  themeRef.current = theme
+  const settingRef = useRef(setting)
+  settingRef.current = setting
 
-  // A theme with both variants follows the OS. Everything else forces the
-  // window chrome to match the theme.
-  const followsSystem = getThemeAppearance(theme, descriptors) === "both"
+  const followsSystem = typeof setting !== "string"
   const systemAppearance = useSystemAppearance(followsSystem)
+  const theme = resolveThemeSetting(setting, systemAppearance)
 
   useEffect(() => {
     document.body.dataset.theme = theme
     document.body.style.removeProperty("--background")
-    // Variant CSS is keyed on `data-appearance`, so set it before injecting.
-    const resolved = resolveAppearance(theme, descriptors, systemAppearance)
-    if (resolved) document.body.dataset.appearance = resolved
     applyExternalThemes(externalThemes, theme)
     updateExternalFonts(theme, externalThemes)
     // Expose the appearance to CSS (`data-appearance`) and sync OS window chrome.
     // Omarchy/user styles are injected async, hence the `descriptors` dependency;
     // useOmarchyTheme re-syncs once its colors arrive.
-    const appearance = resolved ?? appearanceFromComputedBackground()
+    const appearance = getActiveAppearance(theme, descriptors)
     document.body.dataset.appearance = appearance
-    try {
-      localStorage.setItem(APPEARANCE_CACHE_KEY, appearance)
-    } catch {}
-    // While following the OS, useSystemAppearance keeps the window unforced.
+    // A forced window stops reporting OS appearance changes, so a pair leaves
+    // it to useSystemAppearance.
     if (!followsSystem) void getCurrentWindow().setTheme(appearance)
-  }, [theme, descriptors, externalThemes, systemAppearance, followsSystem])
+  }, [theme, descriptors, externalThemes, followsSystem])
 
   // Cache the resolved --background for index.html's flash-prevention.
   // Deferred by 1 frame so any runtime-injected user/omarchy styles are applied first.
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
       const bg = getComputedStyle(document.body).getPropertyValue("--background").trim()
-      if (bg) {
-        try {
-          localStorage.setItem(BACKGROUND_CACHE_KEY, bg)
-        } catch {}
-      }
+      if (bg) cacheThemeBackground(theme, bg)
     })
     return () => cancelAnimationFrame(raf)
-  }, [theme, externalThemes, systemAppearance])
+  }, [theme, externalThemes])
 
   // Reconcile with TOML on mount; migrate cached value up if no file yet.
   useEffect(() => {
@@ -85,26 +75,26 @@ export function useTheme() {
         // First run with this build: persist whatever the cache holds so the
         // file exists and future reads are unambiguous. On a truly fresh
         // install (no prior localStorage either), default to omarchy when
-        // detected on disk so Omarchy users see their OS theme out of the box.
-        let initial = themeRef.current
+        // detected on disk so Omarchy users see their OS theme out of the box,
+        // and on macOS to a pair that follows the system appearance.
+        let initial = settingRef.current
         const hadCachedTheme = localStorage.getItem("theme") !== null
         if (!hadCachedTheme) {
           try {
             const colors = await api.themes.getOmarchyColors()
             if (cancelled) return
-            if (colors) {
-              initial = "omarchy"
-              setThemeLocal(initial)
-            }
+            if (colors) initial = "omarchy"
+            else if (isMacOS) initial = DEFAULT_SYSTEM_THEMES
+            setSettingLocal(initial)
           } catch {}
         }
         void api.themes.setConfigured(initial)
         return
       }
-      const parsed = themeSchema.safeParse(toml)
-      if (parsed.success && parsed.data !== themeRef.current) {
+      const parsed = themeSettingSchema.safeParse(toml)
+      if (parsed.success && !sameSetting(parsed.data, settingRef.current)) {
         // TOML wins. Update cache + UI; don't re-write TOML.
-        setThemeLocal(parsed.data)
+        setSettingLocal(parsed.data)
       }
     })
     return () => {
@@ -115,9 +105,9 @@ export function useTheme() {
   // Cross-window sync. Don't re-emit — would loop.
   useEffect(() => {
     const unlistenPromise = api.notifications.listen("theme-changed", (event) => {
-      const parsed = themeSchema.safeParse(event)
-      if (parsed.success && parsed.data !== themeRef.current) {
-        setThemeLocal(parsed.data)
+      const parsed = themeSettingSchema.safeParse(event)
+      if (parsed.success && !sameSetting(parsed.data, settingRef.current)) {
+        setSettingLocal(parsed.data)
       }
     })
     return () => {
@@ -125,26 +115,44 @@ export function useTheme() {
     }
   }, [])
 
-  const setTheme = (t: Theme) => {
-    setThemeLocal(t)
+  const setSetting = (next: ThemeSetting) => {
+    setSettingLocal(next)
     void api.themes
-      .setConfigured(t)
+      .setConfigured(next)
       .then(() => {
-        void emitAppEvent("theme-changed", t)
+        void emitAppEvent("theme-changed", next)
       })
       .catch((err: unknown) => {
         console.error("Failed to persist theme:", err)
       })
   }
 
+  // While following the system, a theme replaces the half of the pair that
+  // matches its appearance. Omarchy fits neither half, so it replaces the pair.
+  const selectTheme = (id: string) => {
+    const current = settingRef.current
+    const half =
+      typeof current === "string" ? null : getPairAppearance(id, descriptors, externalThemes)
+    setSetting(half && typeof current !== "string" ? { ...current, [half]: id } : id)
+  }
+
+  // Turning it on keeps the current theme in its half of the pair; turning it
+  // off keeps whichever theme is showing.
+  const setFollowSystem = (follow: boolean) => {
+    if (!follow) return setSetting(theme)
+    const half = getPairAppearance(theme, descriptors, externalThemes)
+    setSetting(half ? { ...DEFAULT_SYSTEM_THEMES, [half]: theme } : DEFAULT_SYSTEM_THEMES)
+  }
+
   // Cycle through every registered theme (built-in + user), in display order.
+  // Picks a single theme, so it stops following the system.
   const toggleTheme = () => {
     const ids = descriptors.map((d) => d.id)
     if (ids.length === 0) return
-    const i = ids.indexOf(themeRef.current)
+    const i = ids.indexOf(theme)
     const next = ids[(i + 1) % ids.length]
-    if (next) setTheme(next)
+    if (next) setSetting(next)
   }
 
-  return { theme, setTheme, toggleTheme }
+  return { theme, setting, selectTheme, setFollowSystem, toggleTheme }
 }

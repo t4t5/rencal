@@ -55,6 +55,7 @@ export type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
+  ThemeSetting,
 } from "@/lib/api/themes"
 export type { CalendarEvent, EventAttendee, Recurrence, ResponseStatus } from "@/lib/cal-events"
 export type { EventConference } from "@/lib/conference"

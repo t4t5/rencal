@@ -29,112 +29,12 @@ pub enum Appearance {
     Dark,
 }
 
-/// The CSS a theme ships: one file with a fixed appearance, or a light and a
-/// dark variant that renCal picks between at runtime.
-#[derive(Clone, Debug, Eq, PartialEq)]
-pub enum ThemeVariants {
-    Single { css: String, appearance: Appearance },
-    Both { light: String, dark: String },
-}
-
-impl ThemeVariants {
-    /// Package-relative CSS paths, one per variant.
-    pub fn css_paths(&self) -> Vec<&str> {
-        match self {
-            Self::Single { css, .. } => vec![css],
-            Self::Both { light, dark } => vec![light, dark],
-        }
-    }
-
-    /// The appearances this theme can render in.
-    pub fn appearances(&self) -> Vec<Appearance> {
-        match self {
-            Self::Single { appearance, .. } => vec![*appearance],
-            Self::Both { .. } => vec![Appearance::Light, Appearance::Dark],
-        }
-    }
-}
-
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
-#[serde(try_from = "RawThemeContribution", into = "RawThemeContribution")]
 pub struct ThemeContribution {
     pub id: String,
     pub name: String,
-    pub variants: ThemeVariants,
-}
-
-/// The TOML form of a theme: either `css` + `appearance` or `light` + `dark`.
-#[derive(Clone, Deserialize, Serialize)]
-struct RawThemeContribution {
-    id: String,
-    name: String,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    css: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    appearance: Option<Appearance>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    light: Option<String>,
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    dark: Option<String>,
-}
-
-impl TryFrom<RawThemeContribution> for ThemeContribution {
-    type Error = PluginError;
-
-    fn try_from(raw: RawThemeContribution) -> Result<Self, PluginError> {
-        let id = raw.id;
-        let variants = match (raw.css, raw.appearance, raw.light, raw.dark) {
-            (Some(css), Some(appearance), None, None) => ThemeVariants::Single { css, appearance },
-            (None, None, Some(light), Some(dark)) => ThemeVariants::Both { light, dark },
-            (Some(_), _, Some(_), _) | (Some(_), _, _, Some(_)) => {
-                return Err(PluginError::new(format!(
-                    "theme {id:?} must set either css or light and dark, not both"
-                )));
-            }
-            (Some(_), None, None, None) => {
-                return Err(PluginError::new(format!(
-                    "theme {id:?} must set appearance alongside css"
-                )));
-            }
-            (None, Some(_), _, _) => {
-                return Err(PluginError::new(format!(
-                    "theme {id:?} sets appearance without css; light and dark variants do not take one"
-                )));
-            }
-            (None, None, Some(_), None) | (None, None, None, Some(_)) => {
-                return Err(PluginError::new(format!(
-                    "theme {id:?} must set both light and dark"
-                )));
-            }
-            (None, None, None, None) => {
-                return Err(PluginError::new(format!(
-                    "theme {id:?} must set css and appearance, or light and dark"
-                )));
-            }
-        };
-        Ok(Self {
-            id,
-            name: raw.name,
-            variants,
-        })
-    }
-}
-
-impl From<ThemeContribution> for RawThemeContribution {
-    fn from(theme: ThemeContribution) -> Self {
-        let (css, appearance, light, dark) = match theme.variants {
-            ThemeVariants::Single { css, appearance } => (Some(css), Some(appearance), None, None),
-            ThemeVariants::Both { light, dark } => (None, None, Some(light), Some(dark)),
-        };
-        Self {
-            id: theme.id,
-            name: theme.name,
-            css,
-            appearance,
-            light,
-            dark,
-        }
-    }
+    pub css: String,
+    pub appearance: Appearance,
 }
 
 #[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize, Type)]
@@ -302,9 +202,7 @@ pub fn validate_manifest(
             &format!("theme {:?} name", theme.id),
             MAX_NAME_LENGTH,
         )?;
-        for path in theme.variants.css_paths() {
-            validate_css_path(path)?;
-        }
+        validate_css_path(&theme.css)?;
     }
 
     let mut provider_slugs = HashSet::new();
@@ -991,96 +889,5 @@ caldir_core = "0.16.0"
         assert!(provider_is_compatible(&provider_built_with(
             &next.to_string()
         )));
-    }
-
-    const BOTH_THEME: &str = "css = \"themes/dark.css\"\nappearance = \"dark\"";
-
-    fn with_theme_fields(fields: &str) -> String {
-        MANIFEST.replacen(BOTH_THEME, fields, 1)
-    }
-
-    #[test]
-    fn parses_single_and_both_variant_themes() {
-        let single = validate_manifest(MANIFEST, None).unwrap();
-        assert_eq!(
-            single.contributes.themes[0].variants,
-            ThemeVariants::Single {
-                css: "themes/dark.css".into(),
-                appearance: Appearance::Dark,
-            }
-        );
-
-        let both = validate_manifest(
-            &with_theme_fields("light = \"themes/light.css\"\ndark = \"themes/dark.css\""),
-            None,
-        )
-        .unwrap();
-        let variants = &both.contributes.themes[0].variants;
-        assert_eq!(
-            variants,
-            &ThemeVariants::Both {
-                light: "themes/light.css".into(),
-                dark: "themes/dark.css".into(),
-            }
-        );
-        assert_eq!(
-            variants.css_paths(),
-            ["themes/light.css", "themes/dark.css"]
-        );
-        assert_eq!(
-            variants.appearances(),
-            [Appearance::Light, Appearance::Dark]
-        );
-    }
-
-    #[test]
-    fn rejects_mixed_and_incomplete_theme_variants() {
-        for (fields, expected) in [
-            (
-                "css = \"a.css\"\nappearance = \"dark\"\nlight = \"b.css\"",
-                "must set either css or light and dark, not both",
-            ),
-            (
-                "css = \"a.css\"\nlight = \"b.css\"\ndark = \"c.css\"",
-                "must set either css or light and dark, not both",
-            ),
-            ("css = \"a.css\"", "must set appearance alongside css"),
-            (
-                "appearance = \"dark\"\nlight = \"b.css\"\ndark = \"c.css\"",
-                "sets appearance without css",
-            ),
-            ("light = \"b.css\"", "must set both light and dark"),
-            ("dark = \"c.css\"", "must set both light and dark"),
-            ("", "must set css and appearance, or light and dark"),
-        ] {
-            let error = validate_manifest(&with_theme_fields(fields), None)
-                .unwrap_err()
-                .to_string();
-            assert!(error.contains(expected), "{fields:?}: {error}");
-            assert!(error.contains("theme \"dark\""), "{fields:?}: {error}");
-        }
-    }
-
-    #[test]
-    fn validates_both_variant_css_paths() {
-        for path in [
-            "../light.css",
-            "/light.css",
-            "themes\\\\light.css",
-            "themes/light.txt",
-        ] {
-            for fields in [
-                format!("light = \"{path}\"\ndark = \"themes/dark.css\""),
-                format!("light = \"themes/light.css\"\ndark = \"{path}\""),
-            ] {
-                let error = validate_manifest(&with_theme_fields(&fields), None)
-                    .unwrap_err()
-                    .to_string();
-                assert!(
-                    error.contains("must be a relative .css path"),
-                    "{fields}: {error}"
-                );
-            }
-        }
     }
 }

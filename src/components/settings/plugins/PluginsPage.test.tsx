@@ -37,7 +37,7 @@ const plugin: PluginInspection = {
   description: "A quiet theme",
   min_rencal_version: "0.7.0",
   compatible: true,
-  themes: [{ id: "dark", name: "Dusk Dark", appearances: ["dark"] }],
+  themes: [{ id: "dark", name: "Dusk Dark", appearance: "dark" }],
   fonts: [
     {
       family: "Pixel",

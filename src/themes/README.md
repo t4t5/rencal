@@ -19,26 +19,13 @@ External preview tiles use only custom properties parsed from the theme's top-le
 
 The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. `--today` and `--brand` default to `--primary`, so a pasted shadcn theme stays on-palette; set them for distinct accents. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
 
-## Light and dark variants
+## Following the system appearance
 
-A plugin theme can ship a light and a dark variant instead of one file (`light` / `dark` in `rencal-plugin.toml`, see `src-tauri/src/plugins/README.md`). `applyExternalThemes` wraps each variant in a selector that also matches `data-appearance`:
+The theme setting is a theme id, or a light and dark pair (`theme = { light = "ren-light", dark = "ren" }` in `config.toml`) that follows the OS, like Zed's `theme.light` / `theme.dark`. Themes themselves always have one appearance; a family ships a light and a dark theme, and the user pairs them. A fresh macOS install starts from `DEFAULT_SYSTEM_THEMES` (Ren Light and Ren).
 
-```css
-[data-theme="alice.gruvbox/gruvbox"][data-appearance="light"] {
-  /* light.css */
-}
-[data-theme="alice.gruvbox/gruvbox"][data-appearance="dark"] {
-  /* dark.css */
-}
-```
+While a pair is set, `useTheme` does not force the window theme: a forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`. `useSystemAppearance` hands the window back to the OS with `setTheme(null)` and tracks it. A single theme forces the window to its appearance so the chrome matches. Omarchy (Auto) forces the window from Omarchy's palette, so it can't be half of a pair: selecting it replaces the pair.
 
-The theme id stays the same for both, so config, `theme-bootstrap.js` and cross-window sync store one string. Both selectors are more specific than the `:root, [data-theme]` baseline in `src/global.css`, so the baseline applies first.
-
-Their descriptors are marked `appearance: "both"`, and `resolveAppearance` picks the variant matching the OS. Themes with a fixed `"light"`/`"dark"` keep it, and `null` themes (omarchy, loose user themes) derive it at runtime. `useTheme` sets `data-appearance` on `<body>` before injecting external CSS, because the variant rule depends on it.
-
-While a theme with both variants is selected, `useTheme` does not force the window theme: `useSystemAppearance` calls `setTheme(null)` and reads the OS value from the window's `theme()` / `onThemeChanged`. A forced window reports the forced value there and in `prefers-color-scheme`, so every other case forces the window to the resolved appearance so its chrome matches.
-
-Preview tiles render a both-variant theme as two scopes, one per `data-appearance`, clipped diagonally.
+`theme-bootstrap.js` resolves a pair from `prefers-color-scheme` before first paint (the window is unforced at launch) and paints that theme's cached background, which is kept per theme id.
 
 ## Theme scopes
 
@@ -125,7 +112,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 #### Event text
 
-Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the event-text formula. The formula and its parameters are internal and may change.
+Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
 
 ### Surface tint system
 

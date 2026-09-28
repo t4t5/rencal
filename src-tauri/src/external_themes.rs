@@ -1,6 +1,5 @@
 //! User-supplied CSS themes loaded from the loose themes and plugin directories.
-//! The frontend wraps each one in `[data-theme="<id>"] { … }` when injecting, or
-//! in `[data-theme="<id>"][data-appearance="light|dark"]` for a plugin theme with both variants.
+//! The frontend wraps each one in `[data-theme="<id>"] { … }` when injecting.
 
 use crate::events::AppEvent;
 
@@ -14,7 +13,7 @@ use specta::Type;
 use tauri::AppHandle;
 
 use crate::fs_watch::{is_any_change, watch_debounced};
-use crate::plugins::{self, ExternalThemeCss, FontStyle, MANIFEST_FILE};
+use crate::plugins::{self, Appearance, FontStyle, MANIFEST_FILE};
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
 #[serde(tag = "kind", rename_all = "snake_case")]
@@ -28,8 +27,9 @@ pub struct ExternalTheme {
     pub id: String,
     /// Loose themes use `@name` (or the filename as fallback).
     pub name: String,
-    pub variants: ExternalThemeCss,
+    pub css: String,
     pub source: ExternalThemeSource,
+    pub appearance: Option<Appearance>,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
@@ -183,11 +183,9 @@ fn scan_loose(dir: &std::path::Path) -> Vec<ExternalTheme> {
         themes.push(ExternalTheme {
             id: format!("user:{slug}"),
             name: parse_name(&css, stem),
-            variants: ExternalThemeCss::Single {
-                css,
-                appearance: None,
-            },
+            css,
             source: ExternalThemeSource::Loose,
+            appearance: None,
         });
     }
 
@@ -210,10 +208,11 @@ fn scan_from(
                 snapshot.themes.push(ExternalTheme {
                     id: theme.id,
                     name: theme.name,
-                    variants: theme.variants,
+                    css: theme.css,
                     source: ExternalThemeSource::Plugin {
                         id: package.id.clone(),
                     },
+                    appearance: Some(theme.appearance),
                 });
             }
         }

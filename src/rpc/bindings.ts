@@ -54,16 +54,7 @@ export type ExternalTheme = { id: string;
 /**
  * Loose themes use `@name` (or the filename as fallback).
  */
-name: string; variants: ExternalThemeCss; source: ExternalThemeSource }
-
-/**
- * A theme's CSS contents, as sent to the frontend in `ExternalTheme`.
- */
-export type ExternalThemeCss = 
-/**
- * `appearance: None` means the frontend derives it from `--background`.
- */
-{ kind: "single"; css: string; appearance: Appearance | null } | { kind: "both"; light: string; dark: string }
+name: string; css: string; source: ExternalThemeSource; appearance: Appearance | null }
 
 export type ExternalThemeError = { package: string; message: string }
 
@@ -108,11 +99,7 @@ export type PluginInspection = { id: string; name: string; description: string; 
 
 export type PluginInstallLink = { repo: string }
 
-export type PluginThemeInspection = { id: string; name: string; 
-/**
- * One entry for a single-appearance theme, light then dark for a theme with both.
- */
-appearances: Appearance[] }
+export type PluginThemeInspection = { id: string; name: string; appearance: Appearance }
 
 export type ProviderConnectInfo = { step: ProviderConnectStepKind; fields: ProviderField[]; instructions: string | null }
 
@@ -204,6 +191,12 @@ new_recurrence: RpcRecurrence | null }
 
 export type SyncPreview = { calendar_slug: string; to_push_count: number; to_push_delete_count: number; to_pull_count: number }
 
+/**
+ * RPC mirror of `rencal_config::ThemeSetting`: a theme id, or a light and
+ * dark pair that follows the system appearance.
+ */
+export type ThemeSetting = string | { light: string; dark: string }
+
 export type TimeFormat = "24h" | "12h"
 
 /**
@@ -251,13 +244,13 @@ get_first_day_of_week: () => Promise<FirstDayOfWeek>,
 get_groups: () => Promise<Partial<{ [key in string]: string[] }>>, 
 get_notifications_enabled: () => Promise<boolean>, 
 get_show_week_numbers: () => Promise<boolean>, 
-get_theme: () => Promise<string | null>, 
+get_theme: () => Promise<ThemeSetting | null>, 
 set_auto_sync_enabled: (enabled: boolean) => Promise<null>, 
 set_first_day_of_week: (day: FirstDayOfWeek) => Promise<null>, 
 set_groups: (groups: Partial<{ [key in string]: string[] }>) => Promise<null>, 
 set_notifications_enabled: (enabled: boolean) => Promise<null>, 
 set_show_week_numbers: (show: boolean) => Promise<null>, 
-set_theme: (theme: string) => Promise<null>},
+set_theme: (theme: ThemeSetting) => Promise<null>},
 "omarchy": {get_colors: () => Promise<OmarchyColors | null>},
 "platform": {has_pending_plugin_install: () => Promise<boolean>, 
 needs_native_decorations: () => Promise<boolean>, 

@@ -10,12 +10,9 @@ import { api, type ExternalTheme, type ExternalThemesSnapshot } from "@/lib/api"
 import { ThemeProvider } from "./ThemeRegistry"
 
 vi.mock("@/hooks/useOmarchyTheme", () => ({ useOmarchyTheme: vi.fn() }))
-const appWindow = vi.hoisted(() => ({
-  setTheme: vi.fn(),
-  theme: vi.fn(),
-  onThemeChanged: vi.fn(),
+vi.mock("@tauri-apps/api/window", () => ({
+  getCurrentWindow: () => ({ setTheme: vi.fn().mockResolvedValue(undefined) }),
 }))
-vi.mock("@tauri-apps/api/window", () => ({ getCurrentWindow: () => appWindow }))
 vi.mock("@/lib/api/internal", () => ({ emitAppEvent: vi.fn().mockResolvedValue(undefined) }))
 vi.mock("@/lib/api", () => ({
   api: {
@@ -33,16 +30,9 @@ vi.mock("@/lib/api", () => ({
 const malicious: ExternalTheme = {
   id: "alice.dusk/dark",
   name: "Dusk",
-  variants: {
-    kind: "single",
-    css: "--background: navy; } button { display:none!important } /*",
-    appearance: "dark",
-  },
+  css: "--background: navy; } button { display:none!important } /*",
   source: { kind: "plugin", id: "alice.dusk" },
-}
-
-function withCss(theme: ExternalTheme, css: string): ExternalTheme {
-  return { ...theme, variants: { kind: "single", css, appearance: "dark" } }
+  appearance: "dark",
 }
 
 let root: Root
@@ -54,9 +44,6 @@ beforeEach(() => {
   localStorage.setItem("theme", JSON.stringify("ren"))
   vi.mocked(api.themes.getConfigured).mockResolvedValue("ren")
   vi.mocked(api.themes.listExternal).mockResolvedValue({ themes: [], errors: [] })
-  appWindow.setTheme.mockResolvedValue(undefined)
-  appWindow.theme.mockResolvedValue("light")
-  appWindow.onThemeChanged.mockResolvedValue(vi.fn())
   const container = document.createElement("div")
   document.body.append(container)
   root = createRoot(container)
@@ -124,7 +111,7 @@ it("keeps newly installed CSS inactive, previews its palette, and recovers on a 
   expect(document.head.querySelector("style[data-external-theme]")).toBeNull()
 
   await updateThemes([
-    withCss(malicious, "--background: green; } button { display:none!important } /*"),
+    { ...malicious, css: "--background: green; } button { display:none!important } /*" },
   ])
   expect(preview.style.getPropertyValue("--background")).toBe("green")
   expect(getComputedStyle(ren).display).toBe(originalDisplay)
@@ -141,42 +128,11 @@ it("loads the configured theme when its snapshot arrives and removes its CSS on 
   await updateThemes([malicious])
   expect(getComputedStyle(button).display).toBe("none")
 
-  await updateThemes([withCss(malicious, "--background: green;")])
+  await updateThemes([{ ...malicious, css: "--background: green;" }])
   expect(getComputedStyle(button).display).toBe(originalDisplay)
   expect(document.head.querySelector("style[data-external-theme]")?.textContent).toContain("green")
 
   await updateThemes([])
   expect(document.head.querySelector("style[data-external-theme]")).toBeNull()
   expect(getComputedStyle(button).display).toBe(originalDisplay)
-})
-
-it("previews both variants and follows the system for a theme with both", async () => {
-  const both: ExternalTheme = {
-    id: "alice.gruvbox/gruvbox",
-    name: "Gruvbox",
-    variants: { kind: "both", light: "--background: beige;", dark: "--background: black;" },
-    source: { kind: "plugin", id: "alice.gruvbox" },
-  }
-  await render()
-  await updateThemes([both])
-
-  const tile = document.querySelector('[data-theme="alice.gruvbox/gruvbox"]')!.closest("button")!
-  const previews = tile.querySelectorAll<HTMLElement>('[data-theme="alice.gruvbox/gruvbox"]')
-  expect([...previews].map((preview) => preview.dataset.appearance)).toEqual(["light", "dark"])
-  expect(previews[0]!.style.getPropertyValue("--background")).toBe("beige")
-  expect(previews[1]!.style.getPropertyValue("--background")).toBe("black")
-
-  await act(async () => tile.click())
-  expect(appWindow.setTheme).toHaveBeenCalledWith(null)
-  expect(document.body.dataset.appearance).toBe("light")
-  expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("beige")
-
-  // The OS switches.
-  await act(async () => {
-    const [handler] = appWindow.onThemeChanged.mock.calls.at(-1)!
-    ;(handler as (event: { payload: string }) => void)({ payload: "dark" })
-  })
-  expect(document.body.dataset.appearance).toBe("dark")
-  expect(getComputedStyle(document.body).getPropertyValue("--background").trim()).toBe("black")
-  expect(localStorage.getItem("themeAppearanceResolved")).toBe("dark")
 })
