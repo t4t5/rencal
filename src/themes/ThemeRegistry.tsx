@@ -52,10 +52,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Omarchy's runtime palette injection lives here so it runs once per window.
   const omarchy = useOmarchyTheme()
+  const onOmarchy = omarchy !== null
 
+  // The Omarchy theme only has a palette to paint with on an Omarchy desktop.
   const descriptors = useMemo<ThemeDescriptor[]>(
-    () => [...BUILTIN_DESCRIPTORS, ...externalThemes.map(externalThemeDescriptor)],
-    [externalThemes],
+    () => [
+      ...BUILTIN_DESCRIPTORS.filter((theme) => onOmarchy || theme.id !== "omarchy"),
+      ...externalThemes.map(externalThemeDescriptor),
+    ],
+    [externalThemes, onOmarchy],
   )
 
   const value = useMemo<ThemeRegistry>(

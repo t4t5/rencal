@@ -6,7 +6,7 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { ThemesPage } from "@/components/settings/themes/ThemesPage"
 
 import { useOmarchyTheme } from "@/hooks/useOmarchyTheme"
-import { api, type ExternalTheme, type ExternalThemesSnapshot } from "@/lib/api"
+import { api, type ExternalTheme, type ExternalThemesSnapshot, type OmarchyColors } from "@/lib/api"
 
 import { useTheme } from "./ThemeController"
 import { ThemeProvider } from "./ThemeRegistry"
@@ -38,6 +38,19 @@ const malicious: ExternalTheme = {
   css: "--background: navy; } button { display:none!important } /*",
   source: { kind: "plugin", id: "alice.dusk" },
   appearance: "dark",
+}
+
+const rosePine: OmarchyColors = {
+  mode: "light",
+  name: "rose-pine",
+  background: "#faf4ed",
+  foreground: "#575279",
+  bright_foreground: "#575279",
+  accent: "#56949f",
+  red: "#b4637a",
+  green: "#286983",
+  yellow: "#ea9d34",
+  blue: "#56949f",
 }
 
 const singleRen = { mode: "single", single: "ren", light: "ren-light", dark: "ren" } as const
@@ -180,6 +193,15 @@ it("single theme mode lists every theme and sets the single theme", async () => 
   expect(appWindow.setTheme).toHaveBeenLastCalledWith("light")
 })
 
+it("offers the Omarchy theme only on Omarchy", async () => {
+  await render()
+  expect(themeButton("Omarchy (Auto)")).toBeUndefined()
+
+  vi.mocked(useOmarchyTheme).mockReturnValue(rosePine)
+  await render()
+  expect(themeButton("Omarchy (Auto)")).toBeDefined()
+})
+
 it("sync mode edits the pair and leaves the window to the OS", async () => {
   const syncing = { ...singleRen, mode: "system" } as const
   localStorage.setItem("themeSettings", JSON.stringify(syncing))
@@ -210,18 +232,7 @@ it("keeps a slot's grid fixed when a hand-edited theme is replaced", async () =>
 })
 
 it("sync mode on Omarchy follows the Omarchy theme and hides the pair", async () => {
-  vi.mocked(useOmarchyTheme).mockReturnValue({
-    mode: "light",
-    name: "rose-pine",
-    background: "#faf4ed",
-    foreground: "#575279",
-    bright_foreground: "#575279",
-    accent: "#56949f",
-    red: "#b4637a",
-    green: "#286983",
-    yellow: "#ea9d34",
-    blue: "#56949f",
-  })
+  vi.mocked(useOmarchyTheme).mockReturnValue(rosePine)
   const syncing = { ...singleRen, mode: "system" } as const
   localStorage.setItem("themeSettings", JSON.stringify(syncing))
   vi.mocked(api.themes.getConfigured).mockResolvedValue(syncing)
