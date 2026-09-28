@@ -54,9 +54,12 @@ const { open = false, placeholder = true } = Astro.props
               class="rc-caret -mr-px hidden h-[1lh] w-px bg-(--foreground) in-data-composing:inline-block"
             ></span>{
               placeholder && (
-                <span data-compose-placeholder hidden class="text-(--placeholder-foreground)">
-                  Meeting at 3pm
-                </span>
+                <span
+                  data-compose-placeholder
+                  hidden
+                  class="text-(--placeholder-foreground)"
+                  set:text="Meeting at 3pm"
+                />
               )
             }
           </div>
