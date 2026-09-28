@@ -56,7 +56,7 @@ export function ThemesPage() {
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <AppearanceSection tab={tab} onChange={selectTab} />
+      <AppearanceTabs tab={tab} onChange={selectTab} />
       <ThemeGrid
         families={families.filter((family) => family.tabs.includes(tab))}
         active={active}
@@ -104,15 +104,14 @@ function getFamilyTabs(
   return [appearance ?? "system"]
 }
 
-const AppearanceSection = ({
+const AppearanceTabs = ({
   tab,
   onChange,
 }: {
   tab: AppearanceSetting
   onChange: (appearance: AppearanceSetting) => void
 }) => (
-  <div className="flex items-center justify-between gap-4">
-    <span className="text-sm">Appearance</span>
+  <div className="flex">
     <Tabs
       value={tab}
       onValueChange={(value) => {
