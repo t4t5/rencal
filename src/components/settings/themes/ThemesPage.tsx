@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import type { ThemeMode } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
@@ -25,13 +24,14 @@ import {
 } from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { settings, activeSlot, setMode, setSlot } = useTheme()
+  const { settings, activeSlot, activeTheme, setMode, setSlot, pickTheme } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
+  const syncsWithSystem = settings.mode === "system"
 
-  // Which slot's grid System shows; it only browses and never changes the theme.
+  // Which slot's grid sync shows; it only browses and never changes the theme.
   const [shownSlot, setShownSlot] = useState<Appearance | null>(null)
-  const slot = settings.mode === "system" ? (shownSlot ?? activeSlot) : settings.mode
-  const selected = settings[slot]
+  const slot = shownSlot ?? activeSlot
+  const selected = syncsWithSystem ? settings[slot] : activeTheme
 
   // A legacy or hand-edited slot can hold a theme of the other appearance; keep it visible.
   const slotThemes = useMemo(() => {
@@ -41,38 +41,35 @@ export function ThemesPage() {
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <div className="flex flex-col gap-2 w-[150px]">
-        <label className="text-sm">Appearance</label>
+      <div className="flex flex-col gap-2 w-[180px]">
+        <label className="text-sm">Theme mode</label>
         <Select
-          value={settings.mode}
-          onValueChange={(next) => {
-            const option = MODE_OPTIONS.find((o) => o.value === next)
-            if (option) setMode(option.value)
-          }}
+          value={syncsWithSystem ? "system" : "single"}
+          // Single pins the showing slot, so the theme doesn't change.
+          onValueChange={(next) => setMode(next === "system" ? "system" : activeSlot)}
         >
           <SelectTrigger className="w-full" variant="default">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
-            {MODE_OPTIONS.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
+            <SelectItem value="single">Single theme</SelectItem>
+            <SelectItem value="system">Sync with system</SelectItem>
           </SelectContent>
         </Select>
       </div>
-      <div className="flex flex-col gap-3">
-        {settings.mode === "system" && (
+      {syncsWithSystem ? (
+        <div className="flex flex-col gap-3">
           <OptionTabs
             label="Theme slot"
             options={SLOT_OPTIONS}
             value={slot}
             onChange={setShownSlot}
           />
-        )}
-        <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
-      </div>
+          <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
+        </div>
+      ) : (
+        <ThemeGrid themes={descriptors} selected={selected} onSelect={pickTheme} />
+      )}
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -85,12 +82,6 @@ export function ThemesPage() {
     </SettingsContent>
   )
 }
-
-const MODE_OPTIONS = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-] as const satisfies readonly { value: ThemeMode; label: string }[]
 
 const SLOT_OPTIONS = [
   { value: "light", label: "Light theme" },

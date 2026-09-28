@@ -163,14 +163,24 @@ it("applies the theme once however many components read it", async () => {
   expect(document.body.dataset.theme).toBe("ren")
 })
 
-it("shows only the pinned slot's themes and fills that slot on pick", async () => {
+it("single theme mode lists every theme and pins the picked theme's appearance", async () => {
   await render()
   const names = [...document.querySelectorAll("button[aria-pressed]")].map((b) => b.textContent)
   expect(names).toContain("Ren")
-  expect(names).not.toContain("Ren Light")
+  expect(names).toContain("Ren Light")
   expect(document.querySelector('[aria-label="Theme slot"]')).toBeNull()
 
   const nord = [...document.querySelectorAll("button")].find((b) => b.textContent === "Nord")!
   await act(async () => nord.click())
-  expect(api.themes.setConfigured).toHaveBeenCalledWith({ ...darkRen, dark: "nord" })
+  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...darkRen, dark: "nord" })
+
+  const renLight = [...document.querySelectorAll("button")].find(
+    (b) => b.textContent === "Ren Light",
+  )!
+  await act(async () => renLight.click())
+  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({
+    mode: "light",
+    light: "ren-light",
+    dark: "nord",
+  })
 })
