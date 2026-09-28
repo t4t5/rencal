@@ -193,13 +193,26 @@ it("single theme mode lists every theme and sets the single theme", async () => 
   expect(appWindow.setTheme).toHaveBeenLastCalledWith("light")
 })
 
-it("offers the Omarchy theme only on Omarchy", async () => {
-  await render()
+it("shows Omarchy by syncing, not as a card", async () => {
+  vi.mocked(useOmarchyTheme).mockReturnValue(rosePine)
+  const PickOmarchy = () => {
+    const { pickTheme } = useTheme()
+    return <button onClick={() => pickTheme("omarchy")}>Pick Omarchy</button>
+  }
+  await render(
+    <>
+      <PickOmarchy />
+      <ThemesPage />
+    </>,
+  )
   expect(themeButton("Omarchy (Auto)")).toBeUndefined()
 
-  vi.mocked(useOmarchyTheme).mockReturnValue(rosePine)
-  await render()
-  expect(themeButton("Omarchy (Auto)")).toBeDefined()
+  const pick = [...document.querySelectorAll("button")].find(
+    (b) => b.textContent === "Pick Omarchy",
+  )
+  await act(async () => pick?.click())
+  expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...singleRen, mode: "system" })
+  expect(document.body.dataset.theme).toBe("omarchy")
 })
 
 it("sync mode edits the pair and leaves the window to the OS", async () => {

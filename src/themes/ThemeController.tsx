@@ -20,6 +20,7 @@ import {
   activeSlot,
   cycleTheme,
   DEFAULT_THEME_SETTINGS,
+  pickTheme,
   resolveSync,
   type ThemeSlot,
   withSlot,
@@ -44,7 +45,7 @@ type ThemeController = {
   onOmarchy: boolean
   setMode: (mode: ThemeMode) => void
   setSlot: (slot: ThemeSlot, id: string) => void
-  /** Show a theme as the single theme (command palette). */
+  /** Show a theme as the single theme, or sync for Omarchy (command palette). */
   pickTheme: (id: string) => void
   /** The showing slot's next theme (shortcut). */
   cycleTheme: () => void
@@ -161,8 +162,7 @@ export function ThemeController({
       onOmarchy,
       setMode: (mode) => setSettings({ ...settings, mode }),
       setSlot: (slot, id) => setSettings(withSlot(settings, slot, id)),
-      pickTheme: (id) => setSettings({ ...settings, mode: "single", single: id }),
-      // Cycling while following Omarchy moves on to the next single theme.
+      pickTheme: (id) => setSettings(pickTheme(settings, id, descriptors)),
       cycleTheme: () => setSettings(cycleTheme(shown, descriptors, os)),
     }
   }, [settings, shown, activeTheme, onOmarchy, descriptors, os, setSettingsLocal])

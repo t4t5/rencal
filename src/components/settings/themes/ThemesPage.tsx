@@ -16,7 +16,7 @@ import { cn, isMacOS } from "@/lib/utils"
 import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
-import { type Appearance, getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
 import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
 
 export function ThemesPage() {
@@ -117,7 +117,7 @@ function ThemeGrid({
               )}
             >
               <div aria-hidden className="relative h-28 overflow-hidden">
-                <PreviewWindow themeId={theme.id} />
+                <PreviewWindow theme={theme} />
               </div>
             </div>
             <span
@@ -136,17 +136,16 @@ function ThemeGrid({
 }
 
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const PreviewWindow = ({ themeId }: { themeId: string }) => {
-  const { descriptors, externalThemes } = useThemeRegistry()
-  const css = externalThemes.find((theme) => theme.id === themeId)?.css
+const PreviewWindow = ({ theme }: { theme: ThemeDescriptor }) => {
+  const { externalThemes } = useThemeRegistry()
+  const css = externalThemes.find((external) => external.id === theme.id)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
-  // Omarchy is adaptive: it inherits the window's appearance, which follows its palette.
-  const appearance = getDeclaredAppearance(themeId, descriptors)
 
   return (
     <div
-      data-theme={themeId}
-      data-appearance={appearance === "adaptive" ? undefined : (appearance ?? undefined)}
+      data-theme={theme.id}
+      // Grids never offer adaptive themes (see themesFor).
+      data-appearance={theme.appearance === "adaptive" ? undefined : theme.appearance}
       style={style}
       className="absolute inset-0 bg-card pt-4 pl-4"
     >

@@ -74,6 +74,8 @@ fn deserialize_theme<'de, D: serde::Deserializer<'de>>(
         Table(toml::Table),
     }
     match Repr::deserialize(deserializer)? {
+        // Syncing with the system is how Omarchy's theme is followed now.
+        Repr::Legacy(single) if single == "omarchy" => Ok(ThemeConfig::default()),
         Repr::Legacy(single) => Ok(ThemeConfig {
             mode: ThemeMode::Single,
             single,
@@ -273,6 +275,12 @@ mod tests {
                 ..Default::default()
             }
         );
+    }
+
+    #[test]
+    fn legacy_omarchy_theme_syncs_with_the_system() {
+        let config: RencalConfig = toml::from_str("theme = \"omarchy\"").expect("parse");
+        assert_eq!(config.theme, ThemeConfig::default());
     }
 
     #[test]

@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { ThemeSettings } from "@/lib/api"
 
 import { BUILTIN_DESCRIPTORS } from "@/themes/manifest"
-import { activeSlot, cycleTheme, resolveSync, themesFor } from "@/themes/theme-settings"
+import { activeSlot, cycleTheme, pickTheme, resolveSync, themesFor } from "@/themes/theme-settings"
 
 const settings: ThemeSettings = { mode: "system", single: "nord", light: "ren-light", dark: "ren" }
 
@@ -28,14 +28,29 @@ describe("resolveSync", () => {
 })
 
 describe("themesFor", () => {
-  it("offers a pair slot its appearance's and adaptive themes, and single every theme", () => {
+  it("offers a pair slot its appearance's themes, single every theme, and no slot Omarchy", () => {
     expect(ids("light")).toContain("ren-light")
     expect(ids("light")).not.toContain("ren")
     expect(ids("dark")).toContain("ren")
     expect(ids("dark")).not.toContain("ren-light")
-    expect(ids("light")).toContain("omarchy")
-    expect(ids("dark")).toContain("omarchy")
-    expect(ids("single")).toEqual(BUILTIN_DESCRIPTORS.map((theme) => theme.id))
+    for (const slot of ["single", "light", "dark"] as const) {
+      expect(ids(slot)).not.toContain("omarchy")
+    }
+    expect(ids("single")).toEqual(
+      BUILTIN_DESCRIPTORS.filter((theme) => theme.id !== "omarchy").map((theme) => theme.id),
+    )
+  })
+})
+
+describe("pickTheme", () => {
+  it("shows a theme as the single theme, and Omarchy by syncing", () => {
+    expect(pickTheme(settings, "minimal", BUILTIN_DESCRIPTORS)).toEqual({
+      ...settings,
+      mode: "single",
+      single: "minimal",
+    })
+    const single = { ...settings, mode: "single" } as const
+    expect(pickTheme(single, "omarchy", BUILTIN_DESCRIPTORS)).toEqual(settings)
   })
 })
 
@@ -58,6 +73,14 @@ describe("cycleTheme", () => {
     expect(cycleTheme(single, BUILTIN_DESCRIPTORS, "dark").single).toBe(
       all[(all.indexOf("nord") + 1) % all.length],
     )
+  })
+
+  it("cycles from Omarchy to a single theme and back to syncing", () => {
+    const onOmarchy = resolveSync(settings, true)
+    const afterOmarchy = cycleTheme(onOmarchy, BUILTIN_DESCRIPTORS, "dark")
+    expect(afterOmarchy).toEqual({ ...settings, mode: "single", single: "ren" })
+    const last = { ...settings, mode: "single", single: "minimal" } as const
+    expect(cycleTheme(last, BUILTIN_DESCRIPTORS, "dark")).toEqual({ ...last, mode: "system" })
   })
 
   it("starts the slot's list over from an unlisted theme", () => {
