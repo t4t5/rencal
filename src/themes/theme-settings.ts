@@ -18,15 +18,14 @@ export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
   dark: "ren",
 }
 
-/** On Omarchy, syncing follows the desktop's theme: it shows Omarchy as the single theme. */
-export const resolveSync = (settings: ThemeSettings, onOmarchy: boolean): ThemeSettings =>
-  onOmarchy && settings.mode === "system"
-    ? { ...settings, mode: "single", single: OMARCHY_THEME_ID }
-    : settings
-
-/** The slot showing: the OS's appearance while syncing with it, otherwise `single`. */
-export const activeSlot = (settings: ThemeSettings, os: Appearance): ThemeSlot =>
-  settings.mode === "system" ? os : "single"
+/**
+ * The theme shown whatever the OS appearance, which forces the window to its
+ * own; null while following the OS. On Omarchy, syncing shows Omarchy.
+ */
+export function forcedTheme(settings: ThemeSettings, onOmarchy: boolean): string | null {
+  if (settings.mode === "single") return settings.single
+  return onOmarchy ? OMARCHY_THEME_ID : null
+}
 
 /** Themes offered for a slot. Omarchy is shown by syncing, so no slot offers it. */
 export function themesFor(
@@ -48,18 +47,19 @@ export const pickTheme = (settings: ThemeSettings, id: string): ThemeSettings =>
   isOmarchy(id) ? { ...settings, mode: "system" } : { ...settings, mode: "single", single: id }
 
 /**
- * The showing slot's next theme, in display order. `settings` is resolved
- * (`resolveSync`), so on Omarchy the single list includes Omarchy, picked by syncing.
+ * The showing theme's next one, in display order: within the OS's slot while
+ * following it, otherwise among every theme (on Omarchy, Omarchy too).
  */
 export function cycleTheme(
   settings: ThemeSettings,
   descriptors: readonly ThemeDescriptor[],
+  onOmarchy: boolean,
   os: Appearance,
 ): ThemeSettings {
-  const slot = activeSlot(settings, os)
-  const themes = slot === "single" ? descriptors : themesFor(slot, descriptors)
+  const forced = forcedTheme(settings, onOmarchy)
+  const themes = forced === null ? themesFor(os, descriptors) : descriptors
   const ids = themes.map((theme) => theme.id)
-  const next = ids[(ids.indexOf(settings[slot]) + 1) % ids.length]
+  const next = ids[(ids.indexOf(forced ?? settings[os]) + 1) % ids.length]
   if (next === undefined) return settings
-  return slot === "single" ? pickTheme(settings, next) : withSlot(settings, slot, next)
+  return forced === null ? withSlot(settings, os, next) : pickTheme(settings, next)
 }

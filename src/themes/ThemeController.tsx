@@ -17,11 +17,10 @@ import { applyExternalThemes } from "@/themes/external"
 import { updateExternalFonts } from "@/themes/external-fonts"
 import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
 import {
-  activeSlot,
   cycleTheme,
   DEFAULT_THEME_SETTINGS,
+  forcedTheme,
   pickTheme,
-  resolveSync,
   type ThemeSlot,
   withSlot,
 } from "@/themes/theme-settings"
@@ -76,15 +75,13 @@ export function ThemeController({
     DEFAULT_THEME_SETTINGS,
   )
   const onOmarchy = omarchy !== null
-  const shown = useMemo(() => resolveSync(settings, onOmarchy), [settings, onOmarchy])
-  const syncsWithSystem = shown.mode === "system"
+  const forced = forcedTheme(settings, onOmarchy)
   const appearanceOf = (id: string) => getDeclaredAppearance(id, descriptors)
   // An unknown theme (e.g. a user theme not loaded yet) renders the dark ren baseline.
-  const singleAppearance = appearanceOf(shown.single) ?? "dark"
-  // Syncing leaves the window to the OS; a single theme forces its appearance.
-  const os = useWindowTheme(syncsWithSystem ? null : singleAppearance)
-  const activeTheme = shown[activeSlot(shown, os)]
-  const appearance = syncsWithSystem ? (appearanceOf(activeTheme) ?? os) : singleAppearance
+  const forcedAppearance = forced === null ? null : (appearanceOf(forced) ?? "dark")
+  const os = useWindowTheme(forcedAppearance)
+  const activeTheme = forced ?? settings[os]
+  const appearance = forcedAppearance ?? appearanceOf(activeTheme) ?? os
 
   const settingsRef = useRef(settings)
   useEffect(() => {
@@ -103,12 +100,11 @@ export function ThemeController({
   }, [appearance])
 
   // The theme theme-bootstrap.js shows at next launch, per OS appearance.
+  const bootLight = forced ?? settings.light
+  const bootDark = forced ?? settings.dark
   useEffect(() => {
-    cacheBootThemes({
-      light: shown[activeSlot(shown, "light")],
-      dark: shown[activeSlot(shown, "dark")],
-    })
-  }, [shown])
+    cacheBootThemes({ light: bootLight, dark: bootDark })
+  }, [bootLight, bootDark])
 
   // Cache the resolved --background for theme-bootstrap.js. Deferred by 1
   // frame so injected external/Omarchy styles apply first.
@@ -173,9 +169,9 @@ export function ThemeController({
       setMode: (mode) => setSettings({ ...settings, mode }),
       setSlot: (slot, id) => setSettings(withSlot(settings, slot, id)),
       pickTheme: (id) => setSettings(pickTheme(settings, id)),
-      cycleTheme: () => setSettings(cycleTheme(shown, descriptors, os)),
+      cycleTheme: () => setSettings(cycleTheme(settings, descriptors, onOmarchy, os)),
     }
-  }, [settings, shown, activeTheme, onOmarchy, descriptors, os, setSettingsLocal])
+  }, [settings, activeTheme, onOmarchy, descriptors, os, setSettingsLocal])
 
   return <ThemeControllerContext.Provider value={value}>{children}</ThemeControllerContext.Provider>
 }

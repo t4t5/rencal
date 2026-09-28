@@ -45,22 +45,42 @@ function luminance(r: number, g: number, b: number): number {
   return (0.299 * r + 0.587 * g + 0.114 * b) / 255
 }
 
+let canvas: CanvasRenderingContext2D | null | undefined
+
 // Resolves any CSS colour to sRGB by painting it on a 1×1 canvas.
 function resolveColor(css: string): [number, number, number] | null {
-  const ctx = document.createElement("canvas").getContext("2d")
-  if (!ctx) return null
-  ctx.fillStyle = css
-  ctx.fillRect(0, 0, 1, 1)
-  const [r, g, b, a] = ctx.getImageData(0, 0, 1, 1).data
+  canvas ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true })
+  if (!canvas) return null
+  canvas.clearRect(0, 0, 1, 1)
+  // An unparseable colour leaves fillStyle as is, so it paints nothing.
+  canvas.fillStyle = "transparent"
+  canvas.fillStyle = css
+  canvas.fillRect(0, 0, 1, 1)
+  const [r, g, b, a] = canvas.getImageData(0, 0, 1, 1).data
   if (r === undefined || g === undefined || b === undefined || a === 0) return null
   return [r, g, b]
 }
 
-// Reads a theme file's `--background`, for user themes that don't declare an
-// appearance. Without one the theme falls back to the dark ren baseline.
-function appearanceFromCss(css: string): Appearance {
-  const background = externalThemePalette(css)["--background"]
-  const rgb = background ? resolveColor(background) : null
+// Resolves the palette's `--background` on a hidden probe scoped like a preview
+// tile, so var() and color-mix() see the theme's and the baseline's tokens.
+function resolvedBackground(id: string, palette: Record<`--${string}`, string>): string {
+  const probe = document.createElement("div")
+  probe.hidden = true
+  probe.dataset.theme = id
+  for (const [name, value] of Object.entries(palette)) probe.style.setProperty(name, value)
+  probe.style.backgroundColor = "var(--background)"
+  document.body.append(probe)
+  const background = getComputedStyle(probe).backgroundColor
+  probe.remove()
+  return background
+}
+
+// For user themes that don't declare an appearance. Without a `--background`
+// the theme falls back to the dark ren baseline.
+function appearanceFromCss(id: string, css: string): Appearance {
+  const palette = externalThemePalette(css)
+  if (!palette["--background"]) return "dark"
+  const rgb = resolveColor(resolvedBackground(id, palette))
   if (!rgb) return "dark"
   return luminance(...rgb) > 0.5 ? "light" : "dark"
 }
@@ -69,7 +89,7 @@ export function externalThemeDescriptor(theme: ExternalTheme): ThemeDescriptor {
   return {
     id: theme.id,
     name: theme.name,
-    appearance: theme.appearance ?? appearanceFromCss(theme.css),
+    appearance: theme.appearance ?? appearanceFromCss(theme.id, theme.css),
     source: theme.source.kind === "plugin" ? "plugin" : "external",
   }
 }

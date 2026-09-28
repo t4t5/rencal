@@ -25,7 +25,7 @@ The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in 
 
 Every theme declares `light` or `dark`; loose user themes get it from their `--background`. The `light` and `dark` slots offer themes of that appearance, and Single offers all of them.
 
-**Omarchy.** On an Omarchy desktop (detected by its palette, see `useOmarchyTheme`), the registry adds an `omarchy` theme with the palette's appearance, and System mode shows it instead of the pair (`resolveSync`). No slot offers it: picking it from the command palette or cycling onto it switches to System.
+**Omarchy.** On an Omarchy desktop (detected by its palette, see `useOmarchyTheme`), the registry adds an `omarchy` theme with the palette's appearance, and System mode shows it instead of the pair (`forcedTheme`). No slot offers it: picking it from the command palette or cycling onto it switches to System.
 
 `ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window. A forced window reports the forced appearance to `prefers-color-scheme`, so `useWindowTheme` leaves the window unforced while syncing and forces the theme's appearance otherwise.
 

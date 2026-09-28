@@ -45,15 +45,17 @@ describe("external themes", () => {
   })
 
   it("infers a loose theme's appearance from its background", () => {
-    // happy-dom has no canvas; resolve the two colours used here.
+    // happy-dom has no canvas; resolve the colours used here.
     const colors: Record<string, number[]> = {
       white: [255, 255, 255, 255],
       "#111": [17, 17, 17, 255],
     }
     const ctx = {
       fillStyle: "",
+      clearRect: () => {},
       fillRect: () => {},
-      getImageData: () => ({ data: colors[ctx.fillStyle] }),
+      // Anything else is unparseable and paints nothing.
+      getImageData: () => ({ data: colors[ctx.fillStyle] ?? [0, 0, 0, 0] }),
     }
     vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
       ctx as unknown as CanvasRenderingContext2D,
@@ -61,6 +63,13 @@ describe("external themes", () => {
 
     expect(externalThemeDescriptor(loose).appearance).toBe("light")
     expect(externalThemeDescriptor({ ...loose, css: "--background: #111;" }).appearance).toBe(
+      "dark",
+    )
+    expect(
+      externalThemeDescriptor({ ...loose, css: "--background: var(--paper); --paper: white;" })
+        .appearance,
+    ).toBe("light")
+    expect(externalThemeDescriptor({ ...loose, css: "--background: nope;" }).appearance).toBe(
       "dark",
     )
     expect(externalThemeDescriptor({ ...loose, css: "--primary: red;" }).appearance).toBe("dark")

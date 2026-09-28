@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest"
 import type { ThemeSettings } from "@/lib/api"
 
 import { BUILTIN_DESCRIPTORS, omarchyDescriptor } from "@/themes/manifest"
-import { activeSlot, cycleTheme, pickTheme, resolveSync, themesFor } from "@/themes/theme-settings"
+import { cycleTheme, forcedTheme, pickTheme, themesFor } from "@/themes/theme-settings"
 
 const settings: ThemeSettings = { mode: "system", single: "nord", light: "ren-light", dark: "ren" }
 
@@ -13,20 +13,13 @@ const withOmarchy = [omarchyDescriptor("light"), ...BUILTIN_DESCRIPTORS]
 const ids = (slot: Parameters<typeof themesFor>[0]) =>
   themesFor(slot, BUILTIN_DESCRIPTORS).map((theme) => theme.id)
 
-describe("activeSlot", () => {
-  it("follows the OS while syncing and shows the single theme otherwise", () => {
-    expect(activeSlot(settings, "light")).toBe("light")
-    expect(activeSlot(settings, "dark")).toBe("dark")
-    expect(activeSlot({ ...settings, mode: "single" }, "light")).toBe("single")
-  })
-})
-
-describe("resolveSync", () => {
-  it("shows Omarchy while syncing on Omarchy and leaves other settings alone", () => {
-    expect(resolveSync(settings, true)).toEqual({ ...settings, mode: "single", single: "omarchy" })
-    expect(resolveSync(settings, false)).toBe(settings)
+describe("forcedTheme", () => {
+  it("follows the OS while syncing, except on Omarchy, and forces the single theme", () => {
+    expect(forcedTheme(settings, false)).toBeNull()
+    expect(forcedTheme(settings, true)).toBe("omarchy")
     const single = { ...settings, mode: "single" } as const
-    expect(resolveSync(single, true)).toBe(single)
+    expect(forcedTheme(single, false)).toBe("nord")
+    expect(forcedTheme(single, true)).toBe("nord")
   })
 })
 
@@ -61,7 +54,7 @@ describe("cycleTheme", () => {
     let next = settings
     const seen: string[] = []
     for (let i = 0; i < light.length; i++) {
-      next = cycleTheme(next, BUILTIN_DESCRIPTORS, "light")
+      next = cycleTheme(next, BUILTIN_DESCRIPTORS, false, "light")
       seen.push(next.light)
       expect(next).toMatchObject({ mode: "system", single: "nord", dark: "ren" })
     }
@@ -71,22 +64,21 @@ describe("cycleTheme", () => {
   it("cycles every theme in single mode", () => {
     const single = { ...settings, mode: "single" } as const
     const all = ids("single")
-    expect(cycleTheme(single, BUILTIN_DESCRIPTORS, "dark").single).toBe(
+    expect(cycleTheme(single, BUILTIN_DESCRIPTORS, false, "dark").single).toBe(
       all[(all.indexOf("nord") + 1) % all.length],
     )
   })
 
   it("cycles from Omarchy to a single theme and back to syncing", () => {
-    const onOmarchy = resolveSync(settings, true)
-    const afterOmarchy = cycleTheme(onOmarchy, withOmarchy, "dark")
+    const afterOmarchy = cycleTheme(settings, withOmarchy, true, "dark")
     expect(afterOmarchy).toEqual({ ...settings, mode: "single", single: "ren" })
     const last = { ...settings, mode: "single", single: "minimal" } as const
-    expect(cycleTheme(last, withOmarchy, "dark")).toEqual({ ...last, mode: "system" })
+    expect(cycleTheme(last, withOmarchy, true, "dark")).toEqual({ ...last, mode: "system" })
   })
 
   it("starts the slot's list over from an unlisted theme", () => {
-    expect(cycleTheme({ ...settings, dark: "user:gone" }, BUILTIN_DESCRIPTORS, "dark").dark).toBe(
-      ids("dark")[0],
-    )
+    expect(
+      cycleTheme({ ...settings, dark: "user:gone" }, BUILTIN_DESCRIPTORS, false, "dark").dark,
+    ).toBe(ids("dark")[0])
   })
 })
