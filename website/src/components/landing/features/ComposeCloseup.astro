@@ -1,0 +1,18 @@
+---
+// The sidebar's compose box, zoomed in, parsing events as they're typed. The
+// "compose" scene types them; the first one's final state is filled in on load.
+import ComposeBox from "../../app-window/ComposeBox.astro"
+import Closeup from "./Closeup.astro"
+---
+
+<Closeup
+  label='Typing events like "Lunch with Sarah tomorrow at 1pm" into renCal, which fills in the date, time, location and repeat'
+  width={600}
+  height={344}
+  class="bg-(--sidebar)"
+  data-scene="compose"
+  data-composing
+  data-typing
+>
+  <ComposeBox open placeholder={false} />
+</Closeup>

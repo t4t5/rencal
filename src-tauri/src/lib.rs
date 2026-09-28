@@ -6,6 +6,8 @@ mod fs_watch;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 #[cfg(target_os = "macos")]
+mod macos_notifications;
+#[cfg(target_os = "macos")]
 mod menu;
 mod notifications;
 #[cfg(target_os = "linux")]
@@ -162,7 +164,7 @@ fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
     true
 }
 
-fn spawn_reminder_loop_if_needed(app: &tauri::App, state: Arc<AppState>) {
+fn spawn_reminder_loop_if_needed(app: &tauri::App) {
     #[cfg(target_os = "linux")]
     if !linux_reminders::should_run_in_process_reminders() {
         log::info!("rencal-notifierd is active — skipping in-process reminder loop");
@@ -171,7 +173,7 @@ fn spawn_reminder_loop_if_needed(app: &tauri::App, state: Arc<AppState>) {
 
     spawn_task(
         "reminder loop",
-        notifications::run_reminder_loop(app.handle().clone(), state),
+        notifications::run_reminder_loop(app.handle().clone()),
     );
 }
 
@@ -329,7 +331,12 @@ pub async fn run() {
                 }
             }
 
-            spawn_reminder_loop_if_needed(app, state.clone());
+            // Registers the click delegate; must happen during launch so a
+            // click that cold-launches renCal still reaches it.
+            #[cfg(target_os = "macos")]
+            macos_notifications::init(app.handle().clone(), state.clone());
+
+            spawn_reminder_loop_if_needed(app);
 
             // AppState notifications → webview events:
             spawn_task(

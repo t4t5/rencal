@@ -1,0 +1,95 @@
+---
+// The sidebar header: the compose input, which expands out of the "+" button,
+// and the event form drawer below it (src/components/event-parts/ComposeEvent.tsx
+// in the app). It opens with `data-composing` / `data-typing` on the window.
+import EventForm from "./EventForm.astro"
+import Icon from "./Icon.astro"
+
+interface Props {
+  /** Render with the form drawer already open. */
+  open?: boolean
+  /** Show "Meeting at 3pm" in the empty input. */
+  placeholder?: boolean
+}
+
+const { open = false, placeholder = true } = Astro.props
+---
+
+<div data-slot="sidebar-header" class="flex flex-col p-(--layout-padding) pb-0">
+  <div data-slot="sidebar-toolbar" class="relative flex items-center justify-end">
+    <div class="flex w-full justify-end">
+      <div
+        data-compose-spacer
+        class="h-(--control-height) grow transition-[flex-grow] duration-200 ease-out in-data-composing:grow-0"
+      >
+      </div>
+      <div
+        class="relative shrink-0 grow-0 basis-(--control-height) transition-[flex-grow,flex-basis] duration-200 ease-out in-data-composing:grow in-data-composing:basis-0"
+      >
+        <div class="relative w-full">
+          <div
+            aria-hidden="true"
+            class="pointer-events-none absolute inset-0 overflow-hidden rounded-(--radius-md)"
+          >
+            {
+              /* One per phrase the parser can recognise: repeat, time, location. */
+              [0, 1, 2].map(() => (
+                <div
+                  data-compose-highlight
+                  hidden
+                  class="absolute inset-y-1.5 rounded-(--radius-sm) outline-1 outline-offset-2 outline-(--muted-foreground)/40 outline-dashed"
+                />
+              ))
+            }
+          </div>
+          <span
+            data-compose-measure
+            class="pointer-events-none invisible absolute top-0 left-0 text-sm whitespace-pre"
+          ></span>
+          <div
+            class="flex h-(--control-height) w-full min-w-0 items-center overflow-hidden rounded-(--radius-md) bg-(--secondary) px-2 text-sm whitespace-pre shadow-[inset_0_0_0_1px_var(--button-border,transparent)] in-data-typing:pr-9"
+          >
+            <span data-compose-text></span><span
+              data-compose-caret
+              class="rc-caret -mr-px hidden h-[1lh] w-px bg-(--foreground) in-data-composing:inline-block"
+            ></span>{
+              placeholder && (
+                <span
+                  data-compose-placeholder
+                  hidden
+                  class="text-(--placeholder-foreground)"
+                  set:text="Meeting at 3pm"
+                />
+              )
+            }
+          </div>
+          <span
+            class="absolute top-1/2 right-2 hidden size-(--control-height-xs) -translate-y-1/2 items-center justify-center rounded-(--radius-circle) text-(--muted-foreground) in-data-typing:flex"
+          >
+            <Icon name="close" class="size-3.5" />
+          </span>
+        </div>
+        <div
+          class="pointer-events-none absolute inset-x-0 top-0 flex h-(--control-height) items-center justify-center opacity-100 transition-opacity duration-150 in-data-composing:opacity-0"
+        >
+          <Icon name="plus" class="size-4" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    data-compose-drawer
+    data-open={open || undefined}
+    class="grid grid-rows-[0fr] transition-[grid-template-rows] duration-200 ease-out data-open:grid-rows-[1fr]"
+  >
+    <div class="overflow-hidden pt-4">
+      <div
+        data-compose-card
+        class="flex flex-col gap-0 rounded-(--radius-xl) bg-(--card) p-0 text-(--card-foreground)"
+      >
+        <EventForm variant="compose" />
+      </div>
+    </div>
+  </div>
+</div>

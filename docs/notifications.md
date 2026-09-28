@@ -6,8 +6,8 @@ notifications. The platform-agnostic logic lives in `src-tauri/reminder-core/`. 
 hosts:
 
 - **macOS / Windows**: in-process tokio task spawned from `src-tauri/src/lib.rs::setup()`. macOS
-  uses `mac-notification-sys` directly so the click response can open the reminder's event;
-  Windows uses `tauri-plugin-notification`.
+  posts through `UNUserNotificationCenter` (`src-tauri/src/macos_notifications.rs`); Windows uses
+  `tauri-plugin-notification`.
 - **Linux**: a separate `rencal-notifierd` binary autostarted as a systemd user service. The GUI
   detects the daemon via `systemctl --user is-active` and skips its own loop when active. If the
   daemon isn't installed, the GUI falls back to running the loop in-process and shelling out to
@@ -21,11 +21,29 @@ Every fired reminder carries a `rencal://event?uid=...` deep link, plus `recurre
 specific recurring occurrence. Clicking the notification opens and focuses rencal, then the
 normal event deep-link flow finds the local event and opens its details.
 
-- **macOS** waits for the native notification click response in the notification's worker thread
-  and enqueues the deep link directly in the running app.
+- **macOS** stores the deep link in the notification's `userInfo`. A `UNUserNotificationCenter`
+  delegate, registered once in `setup()`, receives the click, enqueues the deep link and focuses
+  the main window. Posting is fire-and-forget: no thread waits on a notification. Clicks in
+  Notification Center also work after renCal has quit, since macOS relaunches the app and hands
+  the response to the delegate; the deep-link inbox holds the URL until the webview drains it.
+  The request identifier is the event URL, so a second reminder for the same event replaces the
+  first. See "macOS notes" below.
 - **Linux** gives `notify-send` a FreeDesktop `default` action. On activation, the daemon (or GUI
   fallback) opens the deep link with `gio open`, falling back to `xdg-open`. Older `notify-send`
   versions without action support still receive the reminder, but cannot make it clickable.
+
+### macOS notes
+
+- `UNUserNotificationCenter` only works from a `.app` bundle; outside one it raises an
+  Objective-C exception. Unbundled builds (`just dev`) detect this from the main bundle path and
+  only log reminders. The bundle must also be code-signed: an unsigned or linker-only ad-hoc
+  signed `.app` gets `UNErrorDomain error 1` (not allowed) from every call. Use
+  `just bundle-debug-macos`, which signs with `APPLE_SIGNING_IDENTITY` from `.env`.
+- renCal requests notification permission at launch, so first-run users see the system prompt
+  once. A denial is logged and reminders are silently dropped by macOS.
+- The delegate's `willPresent` callback asks for banner, list and sound, otherwise macOS hides
+  banners while renCal is the frontmost app.
+- Logs: `~/Library/Logs/org.ren.rencal/`.
 
 ## Why a daemon on Linux
 

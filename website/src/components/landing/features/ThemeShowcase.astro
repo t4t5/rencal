@@ -1,0 +1,107 @@
+---
+// The app window on an Omarchy desktop, restyled by the theme chips above it.
+// As in Omarchy, each theme brings its own wallpaper, and the window border
+// takes the theme's primary color.
+import "../../../styles/features.css"
+
+import { THEMES, styleOf } from "../../app-window/themes"
+import ThemesCloseup from "./ThemesCloseup.astro"
+import { THEME_WALLPAPERS } from "./wallpapers"
+
+const themes = THEMES.map(({ id, name, vars }) => ({ id, name, vars }))
+---
+
+<div
+  data-theme-showcase
+  data-themes={JSON.stringify(themes)}
+  class="flex flex-col items-center gap-6"
+  style={`--window-border: ${themes[0].vars["--primary"]}`}
+>
+  <div class="theme-chips">
+    <div
+      role="group"
+      aria-label="Preview a theme"
+      data-theme-chips
+      class="theme-chips-scroller"
+    >
+      {
+        themes.map((theme, i) => (
+          <button
+            type="button"
+            data-theme-chip={theme.id}
+            aria-pressed={String(i === 0)}
+            class="theme-chip"
+          >
+            <span aria-hidden="true" class="size-2 bg-(--primary)" style={styleOf(theme.vars)} />
+            {theme.name}
+          </button>
+        ))
+      }
+    </div>
+  </div>
+
+  <div data-theme-stage class="feature-stage w-full">
+    {
+      themes.map((theme, i) => (
+        <img
+          src={THEME_WALLPAPERS[theme.id]}
+          alt=""
+          loading="lazy"
+          decoding="async"
+          data-wallpaper={theme.id}
+          data-active={i === 0 || undefined}
+          class="feature-wallpaper"
+        />
+      ))
+    }
+    <div class="feature-window">
+      <ThemesCloseup />
+    </div>
+  </div>
+</div>
+
+<script>
+  interface Theme {
+    id: string
+    vars: Record<string, string>
+  }
+
+  for (const showcase of document.querySelectorAll<HTMLElement>("[data-theme-showcase]")) {
+    const themes = JSON.parse(showcase.dataset.themes!) as Theme[]
+    const stage = showcase.querySelector<HTMLElement>("[data-theme-stage]")!
+    const scope = showcase.querySelector<HTMLElement>("[data-app-window]")!
+    const scroller = showcase.querySelector<HTMLElement>("[data-theme-chips]")!
+    const chips = [...showcase.querySelectorAll<HTMLButtonElement>("[data-theme-chip]")]
+
+    for (const chip of chips) {
+      chip.addEventListener("click", () => {
+        const theme = themes.find(({ id }) => id === chip.dataset.themeChip)!
+        for (const other of chips) other.setAttribute("aria-pressed", String(other === chip))
+        chip.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" })
+        showTheme(theme)
+      })
+    }
+
+    function updateFades() {
+      const overflow = scroller.scrollWidth - scroller.clientWidth
+      scroller.toggleAttribute("data-fade-start", scroller.scrollLeft > 1)
+      scroller.toggleAttribute("data-fade-end", scroller.scrollLeft < overflow - 1)
+    }
+    scroller.addEventListener("scroll", updateFades, { passive: true })
+    // Chips too: a late webfont widens them without resizing the scroller.
+    const resizes = new ResizeObserver(updateFades)
+    for (const el of [scroller, ...chips]) resizes.observe(el)
+
+    function showTheme(theme: Theme) {
+      for (const prop of [...scope.style]) {
+        if (prop.startsWith("--")) scope.style.removeProperty(prop)
+      }
+      for (const [prop, value] of Object.entries(theme.vars)) scope.style.setProperty(prop, value)
+      for (const wallpaper of stage.querySelectorAll<HTMLElement>("[data-wallpaper]")) {
+        wallpaper.toggleAttribute("data-active", wallpaper.dataset.wallpaper === theme.id)
+      }
+      const primary = getComputedStyle(scope).getPropertyValue("--primary").trim()
+      showcase.style.setProperty("--window-border", primary)
+    }
+  }
+</script>

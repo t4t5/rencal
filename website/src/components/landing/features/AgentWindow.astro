@@ -1,0 +1,34 @@
+---
+// Claude Code in the caldir directory, answering a question from the files.
+import { AGENT_SESSION } from "./caldir"
+import DesktopWindow from "./DesktopWindow.astro"
+import Terminal from "./Terminal.astro"
+---
+
+<DesktopWindow
+  label="Claude Code in the ~/caldir directory, listing flight events to count the days spent abroad in each country"
+  title="claude"
+  width={560}
+  height={470}
+>
+  <Terminal lines={AGENT_SESSION} prompt=">">
+    <div class="mb-5 flex items-center gap-4">
+      <!-- Claude Code's mascot, as in its banner. -->
+      <svg viewBox="0 0 120 68" class="w-[76px] shrink-0 text-[#d97757]">
+        <path
+          fill="currentColor"
+          d="M13 0h94v28h13v12h-13v10H13V40H0V28h13Z M28 50h7v18h-7Z M40 50h7v18h-7Z M70 50h7v18h-7Z M82 50h7v18h-7Z"
+        ></path>
+        <path fill="var(--background)" d="M28 13h7v13h-7Z M82 13h7v13h-7Z"></path>
+      </svg>
+      <div>
+        <div>
+          <span class="font-bold">Claude Code</span>
+          <span class="text-(--muted-foreground)">v2.1.280</span>
+        </div>
+        <div class="text-(--muted-foreground)">Opus 5.5 · Claude Max</div>
+        <div class="text-(--muted-foreground)">~/caldir</div>
+      </div>
+    </div>
+  </Terminal>
+</DesktopWindow>

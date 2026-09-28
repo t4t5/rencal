@@ -1,0 +1,37 @@
+---
+// A piece of the app's UI at a fixed logical size, scaled to its container's
+// width like the hero's AppWindow. A smaller logical width means a closer zoom.
+import "../../../styles/app-scope.css"
+import "../../../styles/app-window.css"
+
+import { REN_VARS, styleOf } from "../../app-window/themes"
+
+interface Props {
+  /** Accessible description, announced as an image. */
+  label: string
+  /** Logical size in CSS px, before scaling. */
+  width: number
+  height: number
+  class?: string
+  [attr: `data-${string}`]: unknown
+}
+
+const { label, width, height, class: className, ...attrs } = Astro.props
+---
+
+<div
+  role="img"
+  aria-label={label}
+  class="rc-window-frame relative overflow-hidden"
+  style={`--rc-window-width: ${width}px; --rc-window-height: ${height}px; --rc-window-ratio: ${width} / ${height}`}
+>
+  <div
+    data-closeup
+    aria-hidden="true"
+    class:list={["rc-scope rc-window absolute top-0 left-0 overflow-clip select-none", className]}
+    style={styleOf(REN_VARS)}
+    {...attrs}
+  >
+    <slot />
+  </div>
+</div>

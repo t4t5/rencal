@@ -1,0 +1,75 @@
+---
+// A file browser's tree view of the caldir directory. Files matching the
+// agent's grep start selected; the "terminal" scene selects them as it runs.
+import { AGENT_GREP, CALDIR } from "./caldir"
+import DesktopWindow from "./DesktopWindow.astro"
+
+const row = "grid h-6 grid-cols-[1fr_56px_88px] items-center gap-3 pr-4"
+---
+
+<DesktopWindow
+  label="A file browser showing the ~/caldir directory: a folder per calendar, with one .ics file per event"
+  title="caldir"
+  width={600}
+  height={430}
+>
+  <div class="font-sans text-[13px] leading-6">
+    <div
+      class:list={[
+        row,
+        "border-b border-(--foreground)/10 pl-4 text-[11px] text-(--muted-foreground)",
+      ]}
+    >
+      <span>Name</span>
+      <span>Size</span>
+      <span>Kind</span>
+    </div>
+    <ul class="pt-1 [&>li:nth-child(even)]:bg-(--foreground)/3">
+      {
+        CALDIR.map((folder) => (
+          <>
+            <li class:list={[row, "pl-2"]}>
+              <span class="flex min-w-0 items-center gap-1.5">
+                <svg viewBox="0 0 16 16" class="size-3 shrink-0 text-(--muted-foreground)">
+                  <path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+                <svg viewBox="0 0 16 16" class="size-4 shrink-0" style={`color: ${folder.color}`}>
+                  <path
+                    d="M1 3.5V13a.5.5 0 0 0 .5.5h13a.5.5 0 0 0 .5-.5V5a.5.5 0 0 0-.5-.5H7.2L5.7 2.9a.5.5 0 0 0-.4-.2H1.8a.8.8 0 0 0-.8.8Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span class="truncate">{folder.name}</span>
+              </span>
+              <span class="text-(--muted-foreground)">--</span>
+              <span class="text-(--muted-foreground)">Folder</span>
+            </li>
+            {folder.files.map((file) => (
+              <li
+                data-file={file}
+                data-selected={file.includes(AGENT_GREP) || undefined}
+                class:list={[
+                  row,
+                  "pl-[42px] data-selected:bg-[color-mix(in_srgb,var(--primary)_22%,transparent)]!",
+                ]}
+              >
+                <span class="flex min-w-0 items-center gap-1.5">
+                  <svg viewBox="0 0 16 16" class="size-4 shrink-0 text-(--muted-foreground)">
+                    <path
+                      d="M3.5 1.5h6l3 3v10h-9Z M9.5 1.5v3h3"
+                      fill="none"
+                      stroke="currentColor"
+                    />
+                  </svg>
+                  <span class="truncate">{file}</span>
+                </span>
+                <span class="text-(--muted-foreground)">1 KB</span>
+                <span class="text-(--muted-foreground)">iCalendar</span>
+              </li>
+            ))}
+          </>
+        ))
+      }
+    </ul>
+  </div>
+</DesktopWindow>

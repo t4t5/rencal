@@ -12,44 +12,7 @@ import { site } from "../site"
 
 // Built-in themes are read from the app source at build time, so a theme
 // registered in the manifest shows up here automatically.
-import { themes as appThemes } from "../../../src/themes/manifest"
-
-const themeFiles = import.meta.glob<string>("../../../src/themes/*.css", {
-  query: "?raw",
-  import: "default",
-  eager: true,
-})
-
-function parseThemeCss(css: string): Record<string, string> {
-  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "")
-  const vars: Record<string, string> = {}
-  for (const match of withoutComments.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-    vars[match[1]] = match[2].trim()
-  }
-  return vars
-}
-
-// Most of ren's color primitives live in the app's global.css `:root` block
-// (ren.css only sets its accents), so they're spelled out here. Keep in sync
-// with the app's global.css.
-const REN_CORE: Record<string, string> = {
-  "--background": "#131313",
-  "--foreground": "white",
-  "--muted-foreground": "rgba(255, 255, 255, 0.5)",
-  "--primary": "#f56313",
-  "--surface-tint": "white",
-  "--surface-tint-step": "5%",
-}
-
-const themes = appThemes.map((theme) => {
-  const css = themeFiles[`../../../src/themes/${theme.id}.css`]
-  if (css === undefined) throw new Error(`Missing theme file for "${theme.id}"`)
-  return {
-    id: theme.id,
-    name: theme.name,
-    vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(css) },
-  }
-})
+import { REN_CORE, THEMES as themes } from "../components/app-window/themes"
 
 const renTheme = themes.find((theme) => theme.id === "ren")
 if (renTheme === undefined) throw new Error('Missing "ren" theme in manifest')

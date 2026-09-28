@@ -1,0 +1,278 @@
+/* The landing page's features (components/landing/features). */
+
+/* Terminal-flat: square corners, hairlines instead of shadows or glows, and
+   mono uppercase headings like the hero's. */
+
+/* Classes because the page's unlayered h2/h3 rules beat Tailwind utilities. */
+.feature-title {
+  color: var(--foreground);
+  font-family: var(--heading-font-family);
+  font-weight: 400;
+  text-transform: uppercase;
+}
+
+/* A flat panel with a hairline border. */
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgb(255 255 255 / 0.1);
+  background: var(--background);
+}
+
+/* Cards tiled like tmux panes: one shared hairline between them. */
+.feature-panes {
+  gap: 1px;
+  background: rgb(255 255 255 / 0.1);
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.feature-panes > .feature-card {
+  border: none;
+}
+
+/* A piece of app UI placed on a card. */
+.feature-ui {
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.14);
+}
+
+/* Visuals fade out instead of being cut off. */
+.feature-fade {
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 95%);
+}
+
+.feature-fade-corner {
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 95%),
+    linear-gradient(to right, #000 65%, transparent 98%);
+  mask-composite: intersect;
+}
+
+.feature-fade-sides {
+  mask-image:
+    linear-gradient(to bottom, #000 55%, transparent 95%),
+    linear-gradient(to right, transparent 2%, #000 20%, #000 80%, transparent 98%);
+  mask-composite: intersect;
+}
+
+/* A dot grid behind a visual, fading out toward its edges. */
+.feature-dots {
+  position: relative;
+  isolation: isolate;
+}
+
+.feature-dots::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background-image: radial-gradient(rgb(255 255 255 / 0.14) 1px, transparent 1.5px);
+  background-size: 16px 16px;
+  background-position: center;
+  mask-image: radial-gradient(closest-side, #000, transparent);
+  pointer-events: none;
+}
+
+/* A small square tile holding an icon. */
+.feature-tile {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.14);
+  color: var(--foreground);
+}
+
+/* A key; the "keyboard" scene presses it. */
+.keycap {
+  display: flex;
+  width: 52px;
+  height: 52px;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6px 8px 7px;
+  border: 1px solid rgb(255 255 255 / 0.2);
+  background: #1a1a1a;
+  box-shadow: 0 3px 0 rgb(255 255 255 / 0.08);
+  color: var(--foreground);
+  font-family: var(--heading-font-family);
+  transition:
+    transform 90ms,
+    box-shadow 90ms,
+    border-color 90ms,
+    background-color 90ms,
+    color 90ms;
+}
+
+.keycap-hint {
+  align-self: flex-end;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1;
+}
+
+.keycap-letter {
+  font-size: 17px;
+  line-height: 1;
+}
+
+.keycap[data-pressed] {
+  transform: translateY(3px);
+  border-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 12%, #1a1a1a);
+  box-shadow: 0 0 0 transparent;
+  color: var(--primary);
+}
+
+.keycap[data-pressed] .keycap-hint {
+  color: inherit;
+}
+
+/* Theme picker: a segmented control above the showcase. */
+/* One row; scrolls sideways on phones, fading at whichever edge has more. */
+.theme-chips {
+  display: flex;
+  max-width: 100%;
+  border: 1px solid rgb(255 255 255 / 0.1);
+}
+
+@property --fade-start {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+@property --fade-end {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 0px;
+}
+
+.theme-chips-scroller {
+  display: flex;
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  mask-image: linear-gradient(
+    to right,
+    transparent,
+    #000 var(--fade-start),
+    #000 calc(100% - var(--fade-end)),
+    transparent
+  );
+  transition:
+    --fade-start 150ms,
+    --fade-end 150ms;
+}
+
+.theme-chips-scroller[data-fade-start] {
+  --fade-start: 48px;
+}
+
+.theme-chips-scroller[data-fade-end] {
+  --fade-end: 48px;
+}
+
+.theme-chip {
+  display: inline-flex;
+  flex: none;
+  white-space: nowrap;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  transition:
+    background-color 150ms,
+    color 150ms;
+}
+
+.theme-chip + .theme-chip {
+  border-left: 1px solid rgb(255 255 255 / 0.1);
+}
+
+.theme-chip:hover {
+  background: rgb(255 255 255 / 0.05);
+  color: var(--foreground);
+}
+
+.theme-chip[aria-pressed="true"] {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.theme-chip:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+
+/* A crop of a desktop: the app window on a wallpaper, running off the right
+   edge and the bottom (ThemeShowcase). */
+.feature-stage {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: #1a1a1a;
+  box-shadow: 0 0 0 1px rgb(255 255 255 / 0.1);
+}
+
+.feature-wallpaper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 500ms;
+}
+
+.feature-wallpaper[data-active] {
+  opacity: 1;
+}
+
+/* Zoomed in on narrow screens, down to the sidebar on phones. */
+.feature-window {
+  position: absolute;
+  top: 10%;
+  left: 6%;
+  width: 250%;
+}
+
+/* Taller on phones so more of the window shows. */
+@media (max-width: 39.99rem) {
+  .feature-stage {
+    aspect-ratio: 4 / 5;
+  }
+}
+
+@media (min-width: 40rem) {
+  .feature-window {
+    width: 150%;
+  }
+}
+
+@media (min-width: 64rem) {
+  .feature-stage {
+    aspect-ratio: 16 / 7;
+  }
+
+  .feature-window {
+    width: 100%;
+  }
+}
+
+/* Hyprland's border around the focused window, in the theme's accent. */
+.feature-window > * {
+  box-shadow: 0 0 0 2px var(--window-border);
+  transition: box-shadow 500ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature-wallpaper,
+  .feature-window > *,
+  .keycap,
+  .theme-chips-scroller,
+  .theme-chip {
+    transition: none;
+  }
+}
