@@ -3,7 +3,7 @@ import { z } from "zod"
 
 import { api, type OmarchyColors } from "@/lib/api"
 
-// Present while Omarchy is installed; theme-bootstrap.js reads it too.
+// Present while Omarchy is installed, so the first render knows before the fetch.
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
 
@@ -150,12 +150,9 @@ function applyOmarchyColors(c: OmarchyColors) {
   } catch {}
 }
 
-// Always-on: fetch + listen regardless of the active theme so the omarchy
-// preview tile in settings reflects the current OS theme. The
-// [data-theme="omarchy"] selector ensures the rule only paints elements
-// that actually opt in. Returns the palette so the theme controller can
-// read its mode and background. Starts from the cached palette so an Omarchy
-// desktop is recognised before the fetch.
+// Always-on so the palette is current whenever Omarchy is picked; the
+// [data-theme="omarchy"] selector keeps it from painting anything else.
+// Returns the palette (null off Omarchy) for the theme registry.
 export function useOmarchyTheme(): OmarchyColors | null {
   const [colors, setColors] = useState(readCachedColors)
 

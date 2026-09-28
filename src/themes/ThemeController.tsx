@@ -12,10 +12,10 @@ import {
 } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 
-import { cacheThemeBackground, THEME_SETTINGS_KEY } from "@/themes/bootstrap-cache"
+import { cacheBootThemes, cacheThemeBackground } from "@/themes/bootstrap-cache"
 import { applyExternalThemes } from "@/themes/external"
 import { updateExternalFonts } from "@/themes/external-fonts"
-import { getActiveAppearance, type ThemeDescriptor } from "@/themes/manifest"
+import { getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
 import {
   activeSlot,
   cycleTheme,
@@ -26,6 +26,8 @@ import {
   withSlot,
 } from "@/themes/theme-settings"
 
+const THEME_SETTINGS_KEY = "themeSettings"
+
 // Slots hold plain ids: an unknown id just renders the :root defaults, so no
 // enum gate is needed.
 const themeSettingsSchema = z.object({
@@ -33,12 +35,12 @@ const themeSettingsSchema = z.object({
   single: z.string(),
   light: z.string(),
   dark: z.string(),
-})
+}) satisfies z.ZodType<ThemeSettings>
 
 const sameSettings = (a: ThemeSettings, b: ThemeSettings) =>
-  a.mode === b.mode && a.single === b.single && a.light === b.light && a.dark === b.dark
+  (Object.keys(a) as (keyof ThemeSettings)[]).every((key) => a[key] === b[key])
 
-type ThemeController = {
+type ThemeControllerValue = {
   settings: ThemeSettings
   activeTheme: string
   /** Omarchy is installed, so syncing follows its theme. */
@@ -51,7 +53,7 @@ type ThemeController = {
   cycleTheme: () => void
 }
 
-const ThemeControllerContext = createContext<ThemeController | null>(null)
+const ThemeControllerContext = createContext<ThemeControllerValue | null>(null)
 
 // Owns the theme settings and applies them, once per window. localStorage is a
 // flash-prevention cache; ~/.config/rencal/config.toml (via rpc.config) is
@@ -76,7 +78,7 @@ export function ThemeController({
   const onOmarchy = omarchy !== null
   const shown = useMemo(() => resolveSync(settings, onOmarchy), [settings, onOmarchy])
   const syncsWithSystem = shown.mode === "system"
-  const appearanceOf = (id: string) => getActiveAppearance(id, descriptors, omarchy?.mode ?? null)
+  const appearanceOf = (id: string) => getDeclaredAppearance(id, descriptors)
   // An unknown theme (e.g. a user theme not loaded yet) renders the dark ren baseline.
   const singleAppearance = appearanceOf(shown.single) ?? "dark"
   // Syncing leaves the window to the OS; a single theme forces its appearance.
@@ -99,6 +101,14 @@ export function ThemeController({
   useEffect(() => {
     document.body.dataset.appearance = appearance
   }, [appearance])
+
+  // The theme theme-bootstrap.js shows at next launch, per OS appearance.
+  useEffect(() => {
+    cacheBootThemes({
+      light: shown[activeSlot(shown, "light")],
+      dark: shown[activeSlot(shown, "dark")],
+    })
+  }, [shown])
 
   // Cache the resolved --background for theme-bootstrap.js. Deferred by 1
   // frame so injected external/Omarchy styles apply first.
@@ -143,7 +153,7 @@ export function ThemeController({
     }
   }, [setSettingsLocal])
 
-  const value = useMemo<ThemeController>(() => {
+  const value = useMemo<ThemeControllerValue>(() => {
     const setSettings = (next: ThemeSettings) => {
       setSettingsLocal(next)
       void api.themes
@@ -162,7 +172,7 @@ export function ThemeController({
       onOmarchy,
       setMode: (mode) => setSettings({ ...settings, mode }),
       setSlot: (slot, id) => setSettings(withSlot(settings, slot, id)),
-      pickTheme: (id) => setSettings(pickTheme(settings, id, descriptors)),
+      pickTheme: (id) => setSettings(pickTheme(settings, id)),
       cycleTheme: () => setSettings(cycleTheme(shown, descriptors, os)),
     }
   }, [settings, shown, activeTheme, onOmarchy, descriptors, os, setSettingsLocal])
@@ -170,7 +180,7 @@ export function ThemeController({
   return <ThemeControllerContext.Provider value={value}>{children}</ThemeControllerContext.Provider>
 }
 
-export function useTheme(): ThemeController {
+export function useTheme(): ThemeControllerValue {
   const ctx = useContext(ThemeControllerContext)
   if (!ctx) throw new Error("useTheme must be used within a ThemeProvider")
   return ctx

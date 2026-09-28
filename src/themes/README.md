@@ -21,13 +21,15 @@ The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in 
 
 ## Mode and slots
 
-The theme setting (`[theme]` in `config.toml`) has a `mode` and three slots: `single`, `light` and `dark`. Single mode shows `single`; System mode shows `light` or `dark` to match the OS, except on Omarchy, where it shows the `omarchy` theme and so follows the desktop's theme (`resolveSync`). Omarchy is detected by its palette, which `useOmarchyTheme` caches in `omarchyColors` so the first render and `theme-bootstrap.js` see it before the fetch. Switching mode keeps every slot, so a pair survives a detour through Single. A legacy `theme = "x"` becomes Single with `x`, except `omarchy`, which becomes System. `theme-settings.ts` holds the slot logic.
+`[theme]` in `config.toml` has a `mode` and three slots: `single`, `light` and `dark`. Single mode shows `single`; System mode shows `light` or `dark` to match the OS. Switching mode keeps every slot. A legacy `theme = "x"` becomes Single with `x` (`omarchy` becomes System). The slot logic is in `theme-settings.ts`.
 
-Every theme has an appearance, `light`, `dark` or `adaptive`. Built-in and plugin themes declare it, loose user themes get it from their `--background`, and Omarchy is `adaptive`: its palette sets it at runtime. The `light` and `dark` slots offer themes of that appearance, and Single offers both. No slot offers an adaptive theme: syncing is how Omarchy is shown, so picking it from the command palette (`pickTheme`) or cycling onto it switches to System.
+Every theme declares `light` or `dark`; loose user themes get it from their `--background`. The `light` and `dark` slots offer themes of that appearance, and Single offers all of them.
 
-`ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window; `useTheme()` only reads its context. `useWindowTheme` owns the window theme. A forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`, so System mode leaves the window unforced and tracks the OS, while Single (and System on Omarchy) forces the theme's appearance (Omarchy's palette mode) so the chrome matches.
+**Omarchy.** On an Omarchy desktop (detected by its palette, see `useOmarchyTheme`), the registry adds an `omarchy` theme with the palette's appearance, and System mode shows it instead of the pair (`resolveSync`). No slot offers it: picking it from the command palette or cycling onto it switches to System.
 
-`theme-bootstrap.js` restores the theme before first paint from the cached settings (`themeSettings`), resolving System with `prefers-color-scheme` (the window is unforced at launch), or to `omarchy` when the Omarchy palette is cached. It also applies the theme's cached background (`themeBackgrounds`, keyed by theme id).
+`ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window. A forced window reports the forced appearance to `prefers-color-scheme`, so `useWindowTheme` leaves the window unforced while syncing and forces the theme's appearance otherwise.
+
+`theme-bootstrap.js` paints before React mounts from two caches the controller writes: the theme to show per OS appearance (`themeByAppearance`) and each theme's last background (`themeBackgrounds`).
 
 ## Theme scopes
 

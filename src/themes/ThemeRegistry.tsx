@@ -11,7 +11,7 @@ import {
 import { ThemeController } from "@/themes/ThemeController"
 import { externalThemeDescriptor } from "@/themes/external"
 import { disposeExternalFonts } from "@/themes/external-fonts"
-import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
+import { BUILTIN_DESCRIPTORS, omarchyDescriptor, type ThemeDescriptor } from "@/themes/manifest"
 
 type ThemeRegistry = {
   descriptors: ThemeDescriptor[]
@@ -52,15 +52,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   // Omarchy's runtime palette injection lives here so it runs once per window.
   const omarchy = useOmarchyTheme()
-  const onOmarchy = omarchy !== null
+  const omarchyMode = omarchy?.mode ?? null
 
   // The Omarchy theme only has a palette to paint with on an Omarchy desktop.
   const descriptors = useMemo<ThemeDescriptor[]>(
     () => [
-      ...BUILTIN_DESCRIPTORS.filter((theme) => onOmarchy || theme.id !== "omarchy"),
+      ...(omarchyMode ? [omarchyDescriptor(omarchyMode)] : []),
+      ...BUILTIN_DESCRIPTORS,
       ...externalThemes.map(externalThemeDescriptor),
     ],
-    [externalThemes, onOmarchy],
+    [externalThemes, omarchyMode],
   )
 
   const value = useMemo<ThemeRegistry>(

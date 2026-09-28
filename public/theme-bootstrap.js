@@ -1,24 +1,12 @@
-// Restore the persisted theme before React mounts to avoid a flash. The theme
-// controller caches its settings (`themeSettings`) and each theme's background
-// (`themeBackgrounds`); the window is unforced at launch, so the media query
-// reports the OS. On Omarchy (its palette is cached) syncing shows the Omarchy
-// theme, as resolveSync does. Defaults match DEFAULT_THEME_SETTINGS.
-let settings = { mode: "system", single: "ren", light: "ren-light", dark: "ren" }
-let onOmarchy = false
+// Restore the theme before React mounts to avoid a flash. The theme controller
+// caches which theme to show for each OS appearance; the window is unforced at
+// launch, so the media query reports the OS. The fallback is the default pair.
+const appearance = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+let theme = appearance === "dark" ? "ren" : "ren-light"
 try {
-  const stored = JSON.parse(localStorage.getItem("themeSettings"))
-  if (stored && typeof stored === "object") settings = { ...settings, ...stored }
-  onOmarchy = localStorage.getItem("omarchyColors") !== null
+  const cached = JSON.parse(localStorage.getItem("themeByAppearance"))?.[appearance]
+  if (typeof cached === "string" && cached) theme = cached
 } catch {}
-if (onOmarchy && settings.mode === "system")
-  settings = { ...settings, mode: "single", single: "omarchy" }
-const slot =
-  settings.mode !== "system"
-    ? "single"
-    : matchMedia("(prefers-color-scheme: dark)").matches
-      ? "dark"
-      : "light"
-const theme = typeof settings[slot] === "string" && settings[slot] ? settings[slot] : "ren"
 document.body.dataset.theme = theme
 
 // Apply the theme's last-known background so we don't flash a stale color

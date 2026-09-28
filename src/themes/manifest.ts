@@ -1,10 +1,6 @@
 export type Appearance = "light" | "dark"
 
-/** `adaptive` takes its appearance from a runtime palette (Omarchy's). */
-export type ThemeAppearance = Appearance | "adaptive"
-
 export const themes = [
-  { id: "omarchy", name: "Omarchy (Auto)", appearance: "adaptive" },
   { id: "ren", name: "Ren", appearance: "dark" },
   { id: "ren-light", name: "Ren Light", appearance: "light" },
   { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
@@ -13,14 +9,14 @@ export const themes = [
   { id: "nord", name: "Nord", appearance: "dark" },
   { id: "electric-blue", name: "Electric Blue", appearance: "light" },
   { id: "minimal", name: "Minimal Light", appearance: "light" },
-] as const satisfies readonly { id: string; name: string; appearance: ThemeAppearance }[]
+] as const satisfies readonly { id: string; name: string; appearance: Appearance }[]
 
 export type ThemeSource = "builtin" | "external" | "plugin"
 
 export type ThemeDescriptor = {
   id: string
   name: string
-  appearance: ThemeAppearance
+  appearance: Appearance
   source: ThemeSource
 }
 
@@ -31,19 +27,22 @@ export const BUILTIN_DESCRIPTORS: ThemeDescriptor[] = themes.map((t) => ({
   source: "builtin",
 }))
 
+// Painted from the desktop's palette, so it's registered only on Omarchy and
+// shown by syncing with the system rather than picked for a slot.
+export const OMARCHY_THEME_ID = "omarchy"
+
+export const isOmarchy = (id: string) => id === OMARCHY_THEME_ID
+
+export const omarchyDescriptor = (appearance: Appearance): ThemeDescriptor => ({
+  id: OMARCHY_THEME_ID,
+  name: "Omarchy (Auto)",
+  appearance,
+  source: "builtin",
+})
+
 export function getDeclaredAppearance(
   id: string,
   descriptors: readonly ThemeDescriptor[],
-): ThemeAppearance | null {
-  return descriptors.find((theme) => theme.id === id)?.appearance ?? null
-}
-
-/** The appearance `id` paints with; null for an unknown theme, or Omarchy before its palette loads. */
-export function getActiveAppearance(
-  id: string,
-  descriptors: readonly ThemeDescriptor[],
-  omarchyMode: Appearance | null,
 ): Appearance | null {
-  const declared = getDeclaredAppearance(id, descriptors)
-  return declared === "adaptive" ? omarchyMode : declared
+  return descriptors.find((theme) => theme.id === id)?.appearance ?? null
 }

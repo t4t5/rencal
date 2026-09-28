@@ -178,6 +178,8 @@ it("applies the theme once however many components read it", async () => {
   expect(document.body.dataset.theme).toBe("ren")
 })
 
+const bootThemes = (): unknown => JSON.parse(localStorage.getItem("themeByAppearance") ?? "null")
+
 const themeButton = (name: string) =>
   [...document.querySelectorAll("button[aria-pressed]")].find((b) => b.textContent === name)
 
@@ -228,6 +230,7 @@ it("sync mode edits the pair and leaves the window to the OS", async () => {
   await act(async () => (themeButton("Nord") as HTMLElement).click())
   expect(api.themes.setConfigured).toHaveBeenLastCalledWith({ ...syncing, dark: "nord" })
   expect(document.body.dataset.theme).toBe("nord")
+  expect(bootThemes()).toEqual({ light: "ren-light", dark: "nord" })
 })
 
 it("keeps a slot's grid fixed when a hand-edited theme is replaced", async () => {
@@ -252,6 +255,7 @@ it("sync mode on Omarchy follows the Omarchy theme and hides the pair", async ()
   await render()
 
   expect(document.body.dataset.theme).toBe("omarchy")
+  expect(bootThemes()).toEqual({ light: "omarchy", dark: "omarchy" })
   expect(appWindow.setTheme).toHaveBeenCalledExactlyOnceWith("light")
   expect(document.querySelector('[aria-label="Theme slot"]')).toBeNull()
   expect(themeButton("Ren")).toBeUndefined()

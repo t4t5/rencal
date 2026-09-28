@@ -3,16 +3,14 @@ import { useEffect, useState } from "react"
 
 import type { Appearance } from "@/themes/manifest"
 
-// Matches theme-bootstrap.js: the window is unforced at launch, so the media
-// query reports the OS until something forces it.
+// The window is unforced at launch, so this is the OS appearance.
 function initialAppearance(): Appearance {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
-// Owns the window's theme: forces it to `forced`, or with null hands it back to
-// the OS and tracks the OS appearance. A forced window reports the forced value
-// from `theme()`, `onThemeChanged` and `prefers-color-scheme`, so while forced
-// this returns the last OS appearance read.
+// Forces the window's theme, or with null hands it back to the OS and tracks
+// it. A forced window hides the OS appearance, so while forced this returns the
+// last one read.
 export function useWindowTheme(forced: Appearance | null): Appearance {
   const [os, setOs] = useState(initialAppearance)
 

@@ -1,11 +1,16 @@
 import type { ThemeSettings } from "@/lib/api"
 
-import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
+import {
+  type Appearance,
+  isOmarchy,
+  OMARCHY_THEME_ID,
+  type ThemeDescriptor,
+} from "@/themes/manifest"
 
 /** A settings field holding a theme id. */
 export type ThemeSlot = "single" | Appearance
 
-// Keep in step with theme-bootstrap.js and rencal-config's default.
+// Keep in step with rencal-config's default.
 export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
   mode: "system",
   single: "ren",
@@ -16,20 +21,20 @@ export const DEFAULT_THEME_SETTINGS: ThemeSettings = {
 /** On Omarchy, syncing follows the desktop's theme: it shows Omarchy as the single theme. */
 export const resolveSync = (settings: ThemeSettings, onOmarchy: boolean): ThemeSettings =>
   onOmarchy && settings.mode === "system"
-    ? { ...settings, mode: "single", single: "omarchy" }
+    ? { ...settings, mode: "single", single: OMARCHY_THEME_ID }
     : settings
 
 /** The slot showing: the OS's appearance while syncing with it, otherwise `single`. */
 export const activeSlot = (settings: ThemeSettings, os: Appearance): ThemeSlot =>
   settings.mode === "system" ? os : "single"
 
-/** Themes offered for a slot. Adaptive themes (Omarchy) are shown by syncing, so no slot offers them. */
+/** Themes offered for a slot. Omarchy is shown by syncing, so no slot offers it. */
 export function themesFor(
   slot: ThemeSlot,
   descriptors: readonly ThemeDescriptor[],
 ): readonly ThemeDescriptor[] {
-  return descriptors.filter((theme) =>
-    slot === "single" ? theme.appearance !== "adaptive" : theme.appearance === slot,
+  return descriptors.filter(
+    (theme) => !isOmarchy(theme.id) && (slot === "single" || theme.appearance === slot),
   )
 }
 
@@ -38,15 +43,9 @@ export const withSlot = (settings: ThemeSettings, slot: ThemeSlot, id: string): 
   [slot]: id,
 })
 
-/** Shows `id` as the single theme; an adaptive theme (Omarchy) is shown by syncing instead. */
-export function pickTheme(
-  settings: ThemeSettings,
-  id: string,
-  descriptors: readonly ThemeDescriptor[],
-): ThemeSettings {
-  const adaptive = descriptors.some((theme) => theme.id === id && theme.appearance === "adaptive")
-  return adaptive ? { ...settings, mode: "system" } : { ...settings, mode: "single", single: id }
-}
+/** Shows `id` as the single theme; Omarchy is shown by syncing instead. */
+export const pickTheme = (settings: ThemeSettings, id: string): ThemeSettings =>
+  isOmarchy(id) ? { ...settings, mode: "system" } : { ...settings, mode: "single", single: id }
 
 /**
  * The showing slot's next theme, in display order. `settings` is resolved
@@ -62,5 +61,5 @@ export function cycleTheme(
   const ids = themes.map((theme) => theme.id)
   const next = ids[(ids.indexOf(settings[slot]) + 1) % ids.length]
   if (next === undefined) return settings
-  return slot === "single" ? pickTheme(settings, next, descriptors) : withSlot(settings, slot, next)
+  return slot === "single" ? pickTheme(settings, next) : withSlot(settings, slot, next)
 }

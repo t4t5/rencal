@@ -144,8 +144,7 @@ const PreviewWindow = ({ theme }: { theme: ThemeDescriptor }) => {
   return (
     <div
       data-theme={theme.id}
-      // Grids never offer adaptive themes (see themesFor).
-      data-appearance={theme.appearance === "adaptive" ? undefined : theme.appearance}
+      data-appearance={theme.appearance}
       style={style}
       className="absolute inset-0 bg-card pt-4 pl-4"
     >

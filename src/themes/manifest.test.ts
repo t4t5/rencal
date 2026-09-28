@@ -1,11 +1,6 @@
 import { describe, expect, it } from "vitest"
 
-import {
-  BUILTIN_DESCRIPTORS,
-  getActiveAppearance,
-  getDeclaredAppearance,
-  type ThemeDescriptor,
-} from "@/themes/manifest"
+import { BUILTIN_DESCRIPTORS, getDeclaredAppearance, type ThemeDescriptor } from "@/themes/manifest"
 
 describe("getDeclaredAppearance", () => {
   it("resolves built-in and plugin themes from the active registry", () => {
@@ -24,14 +19,5 @@ describe("getDeclaredAppearance", () => {
 
   it("keeps the contract debug palette out of user-facing theme lists", () => {
     expect(BUILTIN_DESCRIPTORS.some((theme) => theme.id === "contract-debug")).toBe(false)
-  })
-})
-
-describe("getActiveAppearance", () => {
-  it("resolves Omarchy's appearance from its palette mode", () => {
-    expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, "light")).toBe("light")
-    expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, null)).toBeNull()
-    expect(getActiveAppearance("nord", BUILTIN_DESCRIPTORS, "light")).toBe("dark")
-    expect(getActiveAppearance("missing", BUILTIN_DESCRIPTORS, "light")).toBeNull()
   })
 })
