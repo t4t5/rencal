@@ -92,12 +92,9 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
     }
 }
 
-// `get_theme` returns `Some(theme)` if the config file exists, `None` if it
-// has never been written. The frontend uses the `None` case to write its
-// cached theme settings up to TOML on first run.
 #[taurpc::procedures(path = "config", export_to = "../src/rpc/bindings.ts")]
 pub trait ConfigApi {
-    async fn get_theme() -> TauResult<Option<ThemeSettings>>;
+    async fn get_theme() -> TauResult<ThemeSettings>;
     async fn set_theme(settings: ThemeSettings) -> TauResult<()>;
     async fn get_notifications_enabled() -> TauResult<bool>;
     async fn set_notifications_enabled(enabled: bool) -> TauResult<()>;
@@ -116,11 +113,8 @@ pub struct ConfigApiImpl;
 
 #[taurpc::resolvers]
 impl ConfigApi for ConfigApiImpl {
-    async fn get_theme(self) -> TauResult<Option<ThemeSettings>> {
-        if !RencalConfig::exists() {
-            return Ok(None);
-        }
-        Ok(Some(RencalConfig::load()?.theme.into()))
+    async fn get_theme(self) -> TauResult<ThemeSettings> {
+        Ok(RencalConfig::load()?.theme.into())
     }
 
     async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {

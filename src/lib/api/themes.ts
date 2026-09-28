@@ -38,8 +38,8 @@ export function getOmarchyColors(): Promise<OmarchyColors | null> {
   return rpc.omarchy.get_colors()
 }
 
-/** The theme settings persisted in config.toml, or null when none has been written yet. */
-export function getConfiguredTheme(): Promise<ThemeSettings | null> {
+/** The theme settings in config.toml, or the defaults when it has none. */
+export function getConfiguredTheme(): Promise<ThemeSettings> {
   return rpc.config.get_theme()
 }
 

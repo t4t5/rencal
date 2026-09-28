@@ -150,10 +150,6 @@ impl RencalConfig {
         Ok(Self::config_dir()?.join("config.toml"))
     }
 
-    pub fn exists() -> bool {
-        Self::config_path().map(|p| p.exists()).unwrap_or(false)
-    }
-
     /// A missing file means the user has not configured renCal yet. Existing
     /// files must be readable and valid so callers never overwrite a broken
     /// config with defaults.

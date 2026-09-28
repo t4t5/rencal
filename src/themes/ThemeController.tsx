@@ -116,15 +116,11 @@ export function ThemeController({
     return () => cancelAnimationFrame(raf)
   }, [activeTheme, externalThemes, omarchy])
 
-  // Reconcile with TOML on mount; write the cached settings up if no file yet.
+  // Reconcile with TOML on mount.
   useEffect(() => {
     let cancelled = false
     void api.themes.getConfigured().then((toml) => {
       if (cancelled) return
-      if (toml === null) {
-        void api.themes.setConfigured(settingsRef.current)
-        return
-      }
       const parsed = themeSettingsSchema.safeParse(toml)
       if (parsed.success && !sameSettings(parsed.data, settingsRef.current)) {
         // TOML wins. Update cache + UI; don't re-write TOML.
