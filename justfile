@@ -140,6 +140,21 @@ test-notification:
   caldir new "Test notification" --start "today ${start_time}" --reminder 1m
   echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
 
+# Build a signed debug .app and open it. macOS notifications only work from a signed bundle.
+bundle-debug-macos: ensure-providers
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # UNUserNotificationCenter rejects unsigned bundles. Export only the signing
+  # identity from .env: with APPLE_ID set too, tauri would also notarize.
+  APPLE_SIGNING_IDENTITY="$(set -a && source .env && echo "${APPLE_SIGNING_IDENTITY:-}")"
+  if [[ -z "$APPLE_SIGNING_IDENTITY" ]]; then
+    echo "Set APPLE_SIGNING_IDENTITY in .env (see 'security find-identity -v -p codesigning')." >&2
+    exit 1
+  fi
+  export APPLE_SIGNING_IDENTITY
+  pnpm tauri build --debug --bundles app --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+  open src-tauri/target/debug/bundle/macos/renCal.app
+
 clear-notification-cache:
   rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
 
