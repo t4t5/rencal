@@ -29,8 +29,7 @@ export function ThemesPage() {
   const syncsWithSystem = settings.mode === "system"
 
   // Which slot's grid sync shows; it only browses and never changes the theme.
-  const [shownSlot, setShownSlot] = useState<Appearance | null>(null)
-  const slot = shownSlot ?? activeSlot
+  const [slot, setShownSlot] = useState<Appearance>("dark")
   const selected = syncsWithSystem ? settings[slot] : activeTheme
 
   // A legacy or hand-edited slot can hold a theme of the other appearance; keep it visible.
@@ -84,8 +83,8 @@ export function ThemesPage() {
 }
 
 const SLOT_OPTIONS = [
-  { value: "light", label: "Light theme" },
   { value: "dark", label: "Dark theme" },
+  { value: "light", label: "Light theme" },
 ] as const satisfies readonly { value: Appearance; label: string }[]
 
 function OptionTabs<T extends string>({
