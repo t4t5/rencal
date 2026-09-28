@@ -7,6 +7,7 @@ import {
   type ExternalThemeError,
   type ExternalThemesSnapshot,
 } from "@/lib/api"
+import { logger } from "@/lib/logger"
 
 import { ThemeController } from "@/themes/ThemeController"
 import { externalThemeDescriptor } from "@/themes/external"
@@ -21,31 +22,38 @@ type ThemeRegistry = {
 
 const ThemeRegistryContext = createContext<ThemeRegistry | null>(null)
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [externalThemes, setExternalThemes] = useState<ExternalTheme[]>([])
-  const [errors, setErrors] = useState<ExternalThemeError[]>([])
+// Loaded before the first render so an external active theme paints without a
+// flash of the ren baseline.
+export async function preloadExternalThemes(): Promise<ExternalThemesSnapshot> {
+  try {
+    return await api.themes.listExternal()
+  } catch (err) {
+    logger.error("Failed to load external themes", err)
+    return { themes: [], errors: [] }
+  }
+}
+
+export function ThemeProvider({
+  initialExternalThemes,
+  children,
+}: {
+  initialExternalThemes: ExternalThemesSnapshot
+  children: ReactNode
+}) {
+  const [externalThemes, setExternalThemes] = useState<ExternalTheme[]>(
+    initialExternalThemes.themes,
+  )
+  const [errors, setErrors] = useState<ExternalThemeError[]>(initialExternalThemes.errors)
 
   useEffect(() => disposeExternalFonts, [])
 
-  // Fetch loose and plugin themes, then keep them in sync with disk.
+  // Keep loose and plugin themes in sync with disk.
   useEffect(() => {
-    let cancelled = false
-
-    const update = (snapshot: ExternalThemesSnapshot) => {
-      setExternalThemes(snapshot.themes)
-      setErrors(snapshot.errors)
-    }
-
-    void api.themes.listExternal().then((snapshot) => {
-      if (!cancelled) update(snapshot)
-    })
-
     const unlistenPromise = api.notifications.listen("external-themes-changed", (event) => {
-      update(event)
+      setExternalThemes(event.themes)
+      setErrors(event.errors)
     })
-
     return () => {
-      cancelled = true
       unlistenPromise.unlisten()
     }
   }, [])

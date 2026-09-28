@@ -22,7 +22,6 @@ vi.mock("@/lib/api/internal", () => ({ emitAppEvent: vi.fn().mockResolvedValue(u
 vi.mock("@/lib/api", () => ({
   api: {
     themes: {
-      listExternal: vi.fn(),
       getConfigured: vi.fn(),
       setConfigured: vi.fn().mockResolvedValue(undefined),
     },
@@ -67,7 +66,6 @@ beforeEach(() => {
   appWindow.onThemeChanged.mockResolvedValue(() => {})
   localStorage.setItem("themeSettings", JSON.stringify(singleRen))
   vi.mocked(api.themes.getConfigured).mockResolvedValue(singleRen)
-  vi.mocked(api.themes.listExternal).mockResolvedValue({ themes: [], errors: [] })
   const container = document.createElement("div")
   document.body.append(container)
   root = createRoot(container)
@@ -83,9 +81,13 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 
-async function render(children: ReactNode = <ThemesPage />) {
+async function render(children: ReactNode = <ThemesPage />, externalThemes: ExternalTheme[] = []) {
   await act(async () => {
-    root.render(<ThemeProvider>{children}</ThemeProvider>)
+    root.render(
+      <ThemeProvider initialExternalThemes={{ themes: externalThemes, errors: [] }}>
+        {children}
+      </ThemeProvider>,
+    )
   })
 }
 
@@ -156,6 +158,24 @@ it("loads the configured theme when its snapshot arrives and removes its CSS on 
   await updateThemes([])
   expect(document.head.querySelector("style[data-external-theme]")).toBeNull()
   expect(getComputedStyle(button).display).toBe(originalDisplay)
+})
+
+it("paints a preloaded external theme on first render without a dark detour", async () => {
+  const paper: ExternalTheme = {
+    ...malicious,
+    id: "paper",
+    css: "--background: silver;",
+    appearance: "light",
+  }
+  const settings = { ...singleRen, single: paper.id }
+  localStorage.setItem("themeSettings", JSON.stringify(settings))
+  vi.mocked(api.themes.getConfigured).mockResolvedValue(settings)
+  await render(<ThemesPage />, [paper])
+
+  expect(document.head.querySelector("style[data-external-theme]")?.textContent).toContain("silver")
+  expect(document.body.dataset.appearance).toBe("light")
+  expect(appWindow.setTheme).toHaveBeenCalledOnce()
+  expect(appWindow.setTheme).toHaveBeenCalledWith("light")
 })
 
 it("applies the theme once however many components read it", async () => {

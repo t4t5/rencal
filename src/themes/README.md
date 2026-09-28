@@ -27,7 +27,7 @@ Every theme declares `light` or `dark`; loose user themes with an `@appearance` 
 
 **Omarchy.** On an Omarchy desktop (detected by its palette, see `useOmarchyTheme`), the registry adds an `omarchy` theme with the palette's appearance, and System mode shows it instead of the pair (`forcedTheme`). No slot offers it: picking it from the command palette or cycling onto it switches to System.
 
-`ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window. A forced window reports the forced appearance to `prefers-color-scheme`, so `useWindowTheme` leaves the window unforced while syncing and forces the theme's appearance otherwise.
+`ThemeProvider` renders with the external themes `main.tsx` loaded before the first render, so an external active theme paints without a flash of the ren baseline. `ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window. A forced window reports the forced appearance to `prefers-color-scheme`, so `useWindowTheme` leaves the window unforced while syncing and forces the theme's appearance otherwise.
 
 `theme-bootstrap.js` paints before React mounts from two caches the controller writes: the theme to show per OS appearance (`themeByAppearance`) and each theme's last background (`themeBackgrounds`). Before the controller's first run it leaves `<body>` on the ren baseline.
 
