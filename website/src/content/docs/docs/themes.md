@@ -31,6 +31,7 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 
 ```css
 /* @name My Theme */
+/* @appearance dark */
 --background: #0f0f0f;
 --foreground: #eaeaea;
 --primary: #7c3aed;
@@ -38,4 +39,4 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. renCal derives surfaces, borders, hover states, and other colors from those values. Set `--primary-foreground` when the default text colour on `--primary` lacks contrast.
+Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. renCal derives surfaces, borders, hover states, and other colors from those values. Set `--primary-foreground` when the default text colour on `--primary` lacks contrast. Themes are dark unless they have an `@appearance light` comment, which lists them as light themes in the settings.

@@ -19,6 +19,9 @@ import { externalThemePalette } from "@/themes/external"
 import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
 import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
 
+// Default --control-height, fixed so themes that resize controls don't shift the grid.
+const CONTROL_SLOT = "flex h-[34px] items-center"
+
 export function ThemesPage() {
   const { settings, onOmarchy, setMode, setSlot } = useTheme()
   const { descriptors, errors } = useThemeRegistry()
@@ -35,28 +38,30 @@ export function ThemesPage() {
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
       <div className="flex flex-col gap-2 w-[180px]">
-        <label htmlFor="theme-mode" className="text-sm">
+        <label htmlFor="theme-mode" className="text-sm leading-5">
           Theme mode
         </label>
-        <Select
-          value={settings.mode}
-          onValueChange={(next) => setMode(next === "system" ? "system" : "single")}
-        >
-          <SelectTrigger id="theme-mode" className="w-full" variant="default">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="single">Single theme</SelectItem>
-            <SelectItem value="system">Sync with system</SelectItem>
-          </SelectContent>
-        </Select>
+        <div className={CONTROL_SLOT}>
+          <Select
+            value={settings.mode}
+            onValueChange={(next) => setMode(next === "system" ? "system" : "single")}
+          >
+            <SelectTrigger id="theme-mode" className="w-full" variant="default">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="single">Single theme</SelectItem>
+              <SelectItem value="system">Sync with system</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {syncsWithSystem && onOmarchy ? (
         <p className="text-sm text-muted-foreground">renCal follows your Omarchy theme.</p>
       ) : (
         <div className="flex flex-col gap-3">
           {syncsWithSystem && (
-            <div className="flex">
+            <div className={CONTROL_SLOT}>
               <Tabs
                 value={pairSlot}
                 onValueChange={(next) => {
@@ -122,7 +127,7 @@ function ThemeGrid({
             </div>
             <span
               className={cn(
-                "block truncate pt-2 text-center text-sm transition-colors",
+                "block truncate pt-2 text-center text-sm leading-5 transition-colors",
                 isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
               )}
             >

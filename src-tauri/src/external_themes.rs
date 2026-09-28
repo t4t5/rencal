@@ -29,7 +29,8 @@ pub struct ExternalTheme {
     pub name: String,
     pub css: String,
     pub source: ExternalThemeSource,
-    pub appearance: Option<Appearance>,
+    /// Loose themes use `@appearance` (dark if missing).
+    pub appearance: Appearance,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize, Type)]
@@ -107,10 +108,13 @@ fn write_readme(dir: &std::path::Path) {
 
 Drop a .css file in this folder and it shows up in Settings > Themes.
 The filename becomes the theme name (override with a `@name` comment).
+Themes are dark unless marked `@appearance light`, which lists them as
+light themes in settings.
 
 A theme is a bare block of CSS variables — no selector needed:
 
     /* @name My Theme */
+    /* @appearance dark */
     --background: #0f1115;
     --foreground: #e6e6e6;
     --surface-tint: #ffffff;
@@ -140,17 +144,25 @@ fn slugify(input: &str) -> String {
     out
 }
 
+/// The rest of the line after a `@<key>` comment directive, trimmed.
+fn parse_directive(css: &str, key: &str) -> Option<String> {
+    let idx = css.find(key)?;
+    let line = css[idx + key.len()..].lines().next().unwrap_or("");
+    let value = line.replace("*/", "");
+    let value = value.trim();
+    (!value.is_empty()).then(|| value.to_string())
+}
+
 fn parse_name(css: &str, fallback: &str) -> String {
-    if let Some(idx) = css.find("@name") {
-        let rest = &css[idx + "@name".len()..];
-        let line = rest.lines().next().unwrap_or("");
-        let name = line.replace("*/", "");
-        let name = name.trim();
-        if !name.is_empty() {
-            return name.to_string();
-        }
+    parse_directive(css, "@name").unwrap_or_else(|| fallback.to_string())
+}
+
+/// Loose themes are dark, like the ren baseline, unless they say otherwise.
+fn parse_appearance(css: &str) -> Appearance {
+    match parse_directive(css, "@appearance").as_deref() {
+        Some("light") => Appearance::Light,
+        _ => Appearance::Dark,
     }
-    fallback.to_string()
 }
 
 fn ensure_plugins_dir() -> Option<PathBuf> {
@@ -183,9 +195,9 @@ fn scan_loose(dir: &std::path::Path) -> Vec<ExternalTheme> {
         themes.push(ExternalTheme {
             id: format!("user:{slug}"),
             name: parse_name(&css, stem),
+            appearance: parse_appearance(&css),
             css,
             source: ExternalThemeSource::Loose,
-            appearance: None,
         });
     }
 
@@ -212,7 +224,7 @@ fn scan_from(
                     source: ExternalThemeSource::Plugin {
                         id: package.id.clone(),
                     },
-                    appearance: Some(theme.appearance),
+                    appearance: theme.appearance,
                 });
             }
         }
@@ -404,8 +416,8 @@ pub async fn run_watcher(app: AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::{
-        ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from, parse_name, scan_from,
-        slugify,
+        Appearance, ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from,
+        parse_appearance, parse_name, scan_from, slugify,
     };
     use base64::Engine;
 
@@ -459,6 +471,20 @@ appearance = "dark"
         assert_eq!(parse_name("--background: #000;", "file"), "file");
         // Trailing comment close is stripped, surrounding whitespace trimmed.
         assert_eq!(parse_name("/*@name   Solar  */", "file"), "Solar");
+    }
+
+    #[test]
+    fn parse_appearance_reads_directive_else_dark() {
+        assert_eq!(
+            parse_appearance("/* @appearance light */\n--background: #fff;"),
+            Appearance::Light
+        );
+        assert_eq!(parse_appearance("/*@appearance dark*/"), Appearance::Dark);
+        assert_eq!(parse_appearance("--background: #fff;"), Appearance::Dark);
+        assert_eq!(
+            parse_appearance("/* @appearance sepia */"),
+            Appearance::Dark
+        );
     }
 
     #[test]

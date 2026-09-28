@@ -23,7 +23,7 @@ The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in 
 
 `[theme]` in `config.toml` has a `mode` and three slots: `single`, `light` and `dark`. Single mode shows `single`; System mode shows `light` or `dark` to match the OS. Switching mode keeps every slot. A legacy `theme = "x"` becomes Single with `x` (`omarchy` becomes System). The slot logic is in `theme-settings.ts`.
 
-Every theme declares `light` or `dark`; loose user themes get it from their `--background`. The `light` and `dark` slots offer themes of that appearance, and Single offers all of them.
+Every theme declares `light` or `dark`; loose user themes with an `@appearance` comment, dark if missing. The `light` and `dark` slots offer themes of that appearance, and Single offers all of them.
 
 **Omarchy.** On an Omarchy desktop (detected by its palette, see `useOmarchyTheme`), the registry adds an `omarchy` theme with the palette's appearance, and System mode shows it instead of the pair (`forcedTheme`). No slot offers it: picking it from the command palette or cycling onto it switches to System.
 
@@ -59,6 +59,7 @@ End users add themes without touching the source. Drop a `.css` file into `~/.co
 
 - Same bare-declaration format as built-ins — **no selector**.
 - The filename becomes the display name; override it with a leading `/* @name My Theme */` comment.
+- Themes are dark unless marked with a `/* @appearance light */` comment, which lists them in the light slot.
 - Edits/additions/removals apply live (a Rust file-watcher re-emits the list).
 - Ids are namespaced `user:<slug>` so they never collide with built-ins.
 

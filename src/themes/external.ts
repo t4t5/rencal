@@ -1,6 +1,6 @@
 import type { ExternalTheme } from "@/lib/api"
 
-import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
+import type { ThemeDescriptor } from "@/themes/manifest"
 
 const STYLE_ATTR = "data-external-theme"
 
@@ -41,55 +41,11 @@ export function externalThemePalette(css: string): Record<`--${string}`, string>
   return palette
 }
 
-function luminance(r: number, g: number, b: number): number {
-  return (0.299 * r + 0.587 * g + 0.114 * b) / 255
-}
-
-let canvas: CanvasRenderingContext2D | null | undefined
-
-// Resolves any CSS colour to sRGB by painting it on a 1×1 canvas.
-function resolveColor(css: string): [number, number, number] | null {
-  canvas ??= document.createElement("canvas").getContext("2d", { willReadFrequently: true })
-  if (!canvas) return null
-  canvas.clearRect(0, 0, 1, 1)
-  // An unparseable colour leaves fillStyle as is, so it paints nothing.
-  canvas.fillStyle = "transparent"
-  canvas.fillStyle = css
-  canvas.fillRect(0, 0, 1, 1)
-  const [r, g, b, a] = canvas.getImageData(0, 0, 1, 1).data
-  if (r === undefined || g === undefined || b === undefined || a === 0) return null
-  return [r, g, b]
-}
-
-// Resolves the palette's `--background` on a hidden probe scoped like a preview
-// tile, so var() and color-mix() see the theme's and the baseline's tokens.
-function resolvedBackground(id: string, palette: Record<`--${string}`, string>): string {
-  const probe = document.createElement("div")
-  probe.hidden = true
-  probe.dataset.theme = id
-  for (const [name, value] of Object.entries(palette)) probe.style.setProperty(name, value)
-  probe.style.backgroundColor = "var(--background)"
-  document.body.append(probe)
-  const background = getComputedStyle(probe).backgroundColor
-  probe.remove()
-  return background
-}
-
-// For user themes that don't declare an appearance. Without a `--background`
-// the theme falls back to the dark ren baseline.
-function appearanceFromCss(id: string, css: string): Appearance {
-  const palette = externalThemePalette(css)
-  if (!palette["--background"]) return "dark"
-  const rgb = resolveColor(resolvedBackground(id, palette))
-  if (!rgb) return "dark"
-  return luminance(...rgb) > 0.5 ? "light" : "dark"
-}
-
 export function externalThemeDescriptor(theme: ExternalTheme): ThemeDescriptor {
   return {
     id: theme.id,
     name: theme.name,
-    appearance: theme.appearance ?? appearanceFromCss(theme.id, theme.css),
+    appearance: theme.appearance,
     source: theme.source.kind === "plugin" ? "plugin" : "external",
   }
 }

@@ -54,7 +54,11 @@ export type ExternalTheme = { id: string;
 /**
  * Loose themes use `@name` (or the filename as fallback).
  */
-name: string; css: string; source: ExternalThemeSource; appearance: Appearance | null }
+name: string; css: string; source: ExternalThemeSource; 
+/**
+ * Loose themes use `@appearance` (dark if missing).
+ */
+appearance: Appearance }
 
 export type ExternalThemeError = { package: string; message: string }
 
