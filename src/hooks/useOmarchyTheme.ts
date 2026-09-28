@@ -1,9 +1,6 @@
-import { getCurrentWindow } from "@tauri-apps/api/window"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 import { api, type OmarchyColors } from "@/lib/api"
-
-import { cacheThemeBackground } from "@/themes/bootstrap-cache"
 
 const CACHE_KEY = "omarchyColors"
 const STYLE_ELEMENT_ID = "omarchy-theme-vars"
@@ -125,36 +122,36 @@ function applyOmarchyColors(c: OmarchyColors) {
   try {
     localStorage.setItem(CACHE_KEY, JSON.stringify(c))
   } catch {}
-  // Sync OS window chrome if omarchy is the active theme. useTheme can't
-  // do this itself because the appearance comes from Omarchy's palette.
-  if (document.body.dataset.theme === "omarchy") {
-    document.body.dataset.appearance = c.mode
-    void getCurrentWindow().setTheme(c.mode)
-    // Keep index.html's flash-prevention cache in step with the live OS theme.
-    cacheThemeBackground("omarchy", c.background)
-  }
 }
 
 // Always-on: fetch + listen regardless of the active theme so the omarchy
 // preview tile in settings reflects the current OS theme. The
 // [data-theme="omarchy"] selector ensures the rule only paints elements
-// that actually opt in.
-export function useOmarchyTheme() {
+// that actually opt in. Returns the palette so the theme controller can
+// read its mode and background.
+export function useOmarchyTheme(): OmarchyColors | null {
+  const [colors, setColors] = useState<OmarchyColors | null>(null)
+
   useEffect(() => {
     let cancelled = false
 
-    void api.themes.getOmarchyColors().then((colors) => {
-      if (cancelled || !colors) return
-      applyOmarchyColors(colors)
+    const update = (next: OmarchyColors) => {
+      applyOmarchyColors(next)
+      setColors(next)
+    }
+
+    void api.themes.getOmarchyColors().then((next) => {
+      if (cancelled || !next) return
+      update(next)
     })
 
-    const unlistenPromise = api.notifications.listen("omarchy-theme-changed", (event) => {
-      applyOmarchyColors(event)
-    })
+    const unlistenPromise = api.notifications.listen("omarchy-theme-changed", update)
 
     return () => {
       cancelled = true
       unlistenPromise.unlisten()
     }
   }, [])
+
+  return colors
 }

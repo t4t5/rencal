@@ -80,7 +80,7 @@ mod tests {
     use super::*;
     use crate::omarchy::OmarchyMode;
     use crate::routes::caldir::TimeFormat;
-    use crate::routes::config::AppearanceSetting;
+    use crate::routes::config::ThemeMode;
     use serde_json::{Value, json};
 
     #[test]
@@ -158,11 +158,12 @@ mod tests {
             ),
             (
                 AppEvent::ThemeChanged(ThemeSettings {
-                    theme: "user:test".into(),
-                    appearance: AppearanceSetting::System,
+                    mode: ThemeMode::System,
+                    light: "ren-light".into(),
+                    dark: "user:test".into(),
                 }),
                 "theme-changed",
-                json!({ "theme": "user:test", "appearance": "system" }),
+                json!({ "mode": "system", "light": "ren-light", "dark": "user:test" }),
             ),
         ];
         for (event, name, payload) in cases {

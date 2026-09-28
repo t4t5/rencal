@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest"
 
 import {
   BUILTIN_DESCRIPTORS,
+  getActiveAppearance,
   getDeclaredAppearance,
-  getThemeFamilies,
-  resolveFamilyTheme,
   type ThemeDescriptor,
+  themesFor,
 } from "@/themes/manifest"
 
 describe("getDeclaredAppearance", () => {
@@ -28,25 +28,22 @@ describe("getDeclaredAppearance", () => {
   })
 })
 
-describe("theme families", () => {
-  it("shows a family's variants as one card in its first variant's place", () => {
-    const ids = getThemeFamilies(BUILTIN_DESCRIPTORS).map((family) => family.id)
-    expect(ids.slice(0, 3)).toEqual(["omarchy", "ren", "catpuccin-latte"])
-    expect(ids).not.toContain("ren-light")
+describe("slots", () => {
+  it("lists a slot's themes plus Omarchy, which fits either", () => {
+    const light = themesFor("light", BUILTIN_DESCRIPTORS).map((theme) => theme.id)
+    const dark = themesFor("dark", BUILTIN_DESCRIPTORS).map((theme) => theme.id)
+    expect(light).toContain("ren-light")
+    expect(light).not.toContain("ren")
+    expect(dark).toContain("ren")
+    expect(dark).not.toContain("ren-light")
+    expect(light[0]).toBe("omarchy")
+    expect(dark[0]).toBe("omarchy")
   })
 
-  it("resolves a family's variant by appearance and passes single themes through", () => {
-    expect(resolveFamilyTheme("ren", "light")).toBe("ren-light")
-    expect(resolveFamilyTheme("ren", "dark")).toBe("ren")
-    expect(resolveFamilyTheme("nord", "light")).toBe("nord")
-    expect(resolveFamilyTheme("user:mine", "dark")).toBe("user:mine")
-  })
-
-  it("pairs variants of the matching appearance", () => {
-    for (const family of getThemeFamilies(BUILTIN_DESCRIPTORS)) {
-      if (!family.variants) continue
-      expect(getDeclaredAppearance(family.variants.light, BUILTIN_DESCRIPTORS)).toBe("light")
-      expect(getDeclaredAppearance(family.variants.dark, BUILTIN_DESCRIPTORS)).toBe("dark")
-    }
+  it("resolves Omarchy's appearance from its palette mode", () => {
+    expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, "light")).toBe("light")
+    expect(getActiveAppearance("omarchy", BUILTIN_DESCRIPTORS, null)).toBeNull()
+    expect(getActiveAppearance("nord", BUILTIN_DESCRIPTORS, "light")).toBe("dark")
+    expect(getActiveAppearance("missing", BUILTIN_DESCRIPTORS, "light")).toBeNull()
   })
 })

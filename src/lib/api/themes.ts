@@ -1,6 +1,5 @@
 import { rpc } from "@/rpc"
 import type {
-  AppearanceSetting,
   ExternalTheme,
   ExternalThemeError,
   ExternalThemeFont,
@@ -8,11 +7,11 @@ import type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
+  ThemeMode,
   ThemeSettings,
 } from "@/rpc/bindings"
 
 export type {
-  AppearanceSetting,
   ExternalTheme,
   ExternalThemeError,
   ExternalThemeFont,
@@ -20,6 +19,7 @@ export type {
   ExternalThemesSnapshot,
   FontStyle,
   OmarchyColors,
+  ThemeMode,
   ThemeSettings,
 }
 

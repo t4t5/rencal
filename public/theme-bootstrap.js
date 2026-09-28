@@ -1,24 +1,31 @@
-// Restore persisted theme before React mounts to avoid a flash. useTheme caches
-// the theme to show for each OS appearance; the window is unforced at launch,
-// so the media query reports the system appearance.
-const defaultTheme = document.body.dataset.defaultTheme || "ren"
-let theme = defaultTheme
+// Restore the persisted theme before React mounts to avoid a flash. The theme
+// controller caches its settings (`themeSettings`) and each slot's background;
+// the window is unforced at launch, so the media query reports the OS.
+const defaults = document.body.dataset
+let settings = {
+  mode: "system",
+  light: defaults.defaultLightTheme,
+  dark: defaults.defaultDarkTheme,
+}
 try {
-  const variants = JSON.parse(localStorage.getItem("themeVariants"))
-  const variant = variants?.[matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"]
-  // Before the variants cache existed, "theme" held the theme id itself.
-  const stored = typeof variant === "string" ? variant : JSON.parse(localStorage.getItem("theme"))
-  if (typeof stored === "string" && stored) theme = stored
+  const stored = JSON.parse(localStorage.getItem("themeSettings"))
+  if (stored && typeof stored === "object") settings = { ...settings, ...stored }
 } catch {}
+const slot =
+  settings.mode === "light" || settings.mode === "dark"
+    ? settings.mode
+    : matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light"
+const theme = typeof settings[slot] === "string" && settings[slot] ? settings[slot] : "ren"
 document.body.dataset.theme = theme
 
-// Apply that theme's last-known background so we don't flash a stale color
-// before the CSS bundle (and any external-theme <style>) loads. Works for every
-// theme because useTheme caches the resolved --background per theme.
+// Apply the slot's last-known background so we don't flash a stale color
+// before the CSS bundle (and any external-theme <style>) loads.
 try {
-  const background = JSON.parse(localStorage.getItem("themeBackgrounds"))?.[theme]
-  if (typeof background === "string") {
-    document.body.style.setProperty("--background", background)
-    document.documentElement.style.backgroundColor = background
+  const cached = JSON.parse(localStorage.getItem("themeBackgrounds"))?.[slot]
+  if (cached?.theme === theme && typeof cached.background === "string") {
+    document.body.style.setProperty("--background", cached.background)
+    document.documentElement.style.backgroundColor = cached.background
   }
 } catch {}

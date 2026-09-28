@@ -2,28 +2,29 @@ import { z } from "zod"
 
 import type { Appearance } from "@/themes/manifest"
 
-// theme-bootstrap.js restores the theme before the CSS bundle loads. It can't
-// resolve a family's variants, so useTheme caches the theme to show for each
-// OS appearance, plus each theme's resolved background: with the appearance
-// set to System, the OS can switch variants while renCal is closed.
-const VARIANTS_CACHE_KEY = "themeVariants"
+// theme-bootstrap.js restores the theme before the CSS bundle loads. It reads
+// the settings from `THEME_SETTINGS_KEY` and each slot's last background from
+// `themeBackgrounds`, which applies only while the slot still holds that theme.
+export const THEME_SETTINGS_KEY = "themeSettings"
 const BACKGROUND_CACHE_KEY = "themeBackgrounds"
 
-const backgroundCacheSchema = z.record(z.string(), z.string())
+const backgroundEntrySchema = z.object({ theme: z.string(), background: z.string() })
+const backgroundCacheSchema = z.object({
+  light: backgroundEntrySchema.optional(),
+  dark: backgroundEntrySchema.optional(),
+})
 
-export function cacheThemeVariants(variants: Record<Appearance, string>) {
-  try {
-    localStorage.setItem(VARIANTS_CACHE_KEY, JSON.stringify(variants))
-  } catch {}
-}
-
-export function cacheThemeBackground(themeId: string, background: string) {
+export function cacheThemeBackground(slot: Appearance, theme: string, background: string) {
   try {
     const parsed = backgroundCacheSchema.safeParse(
       JSON.parse(localStorage.getItem(BACKGROUND_CACHE_KEY) ?? "{}"),
     )
     const cache = parsed.success ? parsed.data : {}
-    if (cache[themeId] === background) return
-    localStorage.setItem(BACKGROUND_CACHE_KEY, JSON.stringify({ ...cache, [themeId]: background }))
+    const entry = cache[slot]
+    if (entry?.theme === theme && entry.background === background) return
+    localStorage.setItem(
+      BACKGROUND_CACHE_KEY,
+      JSON.stringify({ ...cache, [slot]: { theme, background } }),
+    )
   } catch {}
 }

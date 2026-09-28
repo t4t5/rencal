@@ -35,41 +35,62 @@ impl From<FirstDayOfWeek> for rencal_config::FirstDayOfWeek {
     }
 }
 
-/// RPC mirror of `rencal_config::AppearanceSetting`.
+/// RPC mirror of `rencal_config::ThemeMode`.
 #[derive(Clone, Copy, Debug, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
-pub enum AppearanceSetting {
+pub enum ThemeMode {
+    System,
     Light,
     Dark,
-    System,
 }
 
-impl From<rencal_config::AppearanceSetting> for AppearanceSetting {
-    fn from(value: rencal_config::AppearanceSetting) -> Self {
+impl From<rencal_config::ThemeMode> for ThemeMode {
+    fn from(value: rencal_config::ThemeMode) -> Self {
         match value {
-            rencal_config::AppearanceSetting::Light => Self::Light,
-            rencal_config::AppearanceSetting::Dark => Self::Dark,
-            rencal_config::AppearanceSetting::System => Self::System,
+            rencal_config::ThemeMode::System => Self::System,
+            rencal_config::ThemeMode::Light => Self::Light,
+            rencal_config::ThemeMode::Dark => Self::Dark,
         }
     }
 }
 
-impl From<AppearanceSetting> for rencal_config::AppearanceSetting {
-    fn from(value: AppearanceSetting) -> Self {
+impl From<ThemeMode> for rencal_config::ThemeMode {
+    fn from(value: ThemeMode) -> Self {
         match value {
-            AppearanceSetting::Light => Self::Light,
-            AppearanceSetting::Dark => Self::Dark,
-            AppearanceSetting::System => Self::System,
+            ThemeMode::System => Self::System,
+            ThemeMode::Light => Self::Light,
+            ThemeMode::Dark => Self::Dark,
         }
     }
 }
 
-/// The theme and the appearance that picks between its light and dark
-/// variants, saved and broadcast together.
+/// The theme for each appearance and the mode that picks between them,
+/// saved and broadcast together.
 #[derive(Clone, Debug, Serialize, Deserialize, Type)]
 pub struct ThemeSettings {
-    pub theme: String,
-    pub appearance: AppearanceSetting,
+    pub mode: ThemeMode,
+    pub light: String,
+    pub dark: String,
+}
+
+impl From<rencal_config::ThemeConfig> for ThemeSettings {
+    fn from(value: rencal_config::ThemeConfig) -> Self {
+        Self {
+            mode: value.mode.into(),
+            light: value.light,
+            dark: value.dark,
+        }
+    }
+}
+
+impl From<ThemeSettings> for rencal_config::ThemeConfig {
+    fn from(value: ThemeSettings) -> Self {
+        Self {
+            mode: value.mode.into(),
+            light: value.light,
+            dark: value.dark,
+        }
+    }
 }
 
 // `get_theme` returns `Some(theme)` if the config file exists, `None` if it
@@ -100,17 +121,12 @@ impl ConfigApi for ConfigApiImpl {
         if !RencalConfig::exists() {
             return Ok(None);
         }
-        let config = RencalConfig::load()?;
-        Ok(Some(ThemeSettings {
-            theme: config.theme,
-            appearance: config.appearance.into(),
-        }))
+        Ok(Some(RencalConfig::load()?.theme.into()))
     }
 
     async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
-        config.theme = settings.theme;
-        config.appearance = settings.appearance.into();
+        config.theme = settings.into();
         config.save().map_err(RpcError::from)
     }
 

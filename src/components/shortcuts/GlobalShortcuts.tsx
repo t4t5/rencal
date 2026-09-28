@@ -25,7 +25,6 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
-import { useTheme } from "@/hooks/useTheme"
 import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
@@ -40,8 +39,8 @@ import {
 } from "@/lib/palette-commands"
 import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
 
+import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
-import { getThemeFamilies } from "@/themes/manifest"
 
 const NAV_THROTTLE_MS = 80
 
@@ -64,7 +63,7 @@ export function GlobalShortcuts({
   const [palettePage, setPalettePage] = useState<"root" | PalettePage>("root")
 
   const { navigateToDate } = useCalendarNavigation()
-  const { theme, setTheme, toggleTheme } = useTheme()
+  const { activeTheme, pickTheme, cycleTheme } = useTheme()
   const { descriptors } = useThemeRegistry()
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
@@ -83,7 +82,7 @@ export function GlobalShortcuts({
       setPalettePage("go-to-date")
       setPaletteOpen(true)
     },
-    toggleTheme,
+    toggleTheme: cycleTheme,
     groups,
     activeGroup,
     setActiveGroup,
@@ -110,9 +109,9 @@ export function GlobalShortcuts({
       heading: "Theme",
       placeholder: "Search themes…",
       empty: "No themes found.",
-      items: getThemeFamilies(descriptors).map((f) => ({ id: f.id, label: f.name })),
-      activeId: theme,
-      onSelect: setTheme,
+      items: descriptors.map((theme) => ({ id: theme.id, label: theme.name })),
+      activeId: activeTheme,
+      onSelect: pickTheme,
     },
   }
   if (groupOptions.length >= 2) {

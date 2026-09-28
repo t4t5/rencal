@@ -21,7 +21,7 @@ it("propagates frontend broadcasts and backend payloads through the native event
   ]
   await Promise.all(subscriptions.map((subscription) => subscription.ready))
 
-  const night = { theme: "user:night", appearance: "dark" } as const
+  const night = { mode: "dark", light: "ren-light", dark: "user:night" } as const
   await emitAppEvent("theme-changed", night)
   await emitAppEvent("rencal-config-changed")
   const settings = {
@@ -38,7 +38,7 @@ it("propagates frontend broadcasts and backend payloads through the native event
   expect(applySettings).toHaveBeenCalledExactlyOnceWith(settings)
 
   subscriptions.forEach((subscription) => subscription.unlisten())
-  await emitAppEvent("theme-changed", { theme: "ren", appearance: "dark" })
+  await emitAppEvent("theme-changed", { mode: "dark", light: "ren-light", dark: "ren" })
   expect(appTheme).toHaveBeenCalledOnce()
   expect(settingsTheme).toHaveBeenCalledOnce()
 })

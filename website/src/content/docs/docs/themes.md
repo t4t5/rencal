@@ -11,12 +11,16 @@ You can preview all built-in themes (and design your own) in the [theme playgrou
 | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | <img src="/docs/theme-gruvbox.png" alt="Gruvbox theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-catpuccin-light.png" alt="Catpuccin Light theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-hackerman.png" alt="Hackerman theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> |
 
-Themes with light and dark variants, like Ren, follow the **Light**, **Dark** or **System** appearance setting in the theme settings. System, the default on macOS, switches with your OS. In `~/.config/rencal/config.toml` it looks like this:
+You pick a light theme and a dark theme, and the **Appearance** setting chooses between them: **Light** or **Dark** always shows that theme, and **System**, the default, switches with your OS. In `~/.config/rencal/config.toml` it looks like this:
 
 ```toml
-theme = "ren"
-appearance = "system"
+[theme]
+mode = "system"   # system | light | dark
+light = "ren-light"
+dark = "ren"
 ```
+
+Set both to the same theme to use one theme everywhere.
 
 The "Omarchy" theme updates automatically when your system theme changes:
 

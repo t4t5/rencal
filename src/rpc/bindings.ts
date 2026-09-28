@@ -6,11 +6,6 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Appearance = "light" | "dark"
 
-/**
- * RPC mirror of `rencal_config::AppearanceSetting`.
- */
-export type AppearanceSetting = "light" | "dark" | "system"
-
 export type CaldirSettings = { time_format: TimeFormat; default_reminders: number[]; default_calendar: string | null; 
 /**
  * Tildified for display.
@@ -197,10 +192,15 @@ new_recurrence: RpcRecurrence | null }
 export type SyncPreview = { calendar_slug: string; to_push_count: number; to_push_delete_count: number; to_pull_count: number }
 
 /**
- * The theme and the appearance that picks between its light and dark
- * variants, saved and broadcast together.
+ * RPC mirror of `rencal_config::ThemeMode`.
  */
-export type ThemeSettings = { theme: string; appearance: AppearanceSetting }
+export type ThemeMode = "system" | "light" | "dark"
+
+/**
+ * The theme for each appearance and the mode that picks between them,
+ * saved and broadcast together.
+ */
+export type ThemeSettings = { mode: ThemeMode; light: string; dark: string }
 
 export type TimeFormat = "24h" | "12h"
 

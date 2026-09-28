@@ -6,14 +6,14 @@ import type { Appearance } from "@/themes/manifest"
 // Matches theme-bootstrap.js: the window is unforced at launch, so the media
 // query reports the OS until something forces it.
 function initialAppearance(): Appearance {
-  return window.matchMedia?.("(prefers-color-scheme: dark)").matches === false ? "light" : "dark"
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 
-// The OS appearance, tracked only while `enabled`. Forcing the window's theme
-// with `setTheme("dark")` also makes `theme()`, `onThemeChanged` and
-// `prefers-color-scheme` report the forced value, so while enabled this hook
-// hands the window back to the OS with `setTheme(null)`. The caller must not
-// force the window theme while it's enabled.
+// The OS appearance, tracked only while `enabled` and otherwise the last value
+// read. Forcing the window's theme with `setTheme("dark")` also makes `theme()`,
+// `onThemeChanged` and `prefers-color-scheme` report the forced value, so while
+// enabled this hook hands the window back to the OS with `setTheme(null)`. The
+// caller must not force the window theme while it's enabled.
 export function useSystemAppearance(enabled: boolean): Appearance {
   const [appearance, setAppearance] = useState(initialAppearance)
 

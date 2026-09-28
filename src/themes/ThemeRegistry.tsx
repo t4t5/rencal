@@ -8,6 +8,7 @@ import {
   type ExternalThemesSnapshot,
 } from "@/lib/api"
 
+import { ThemeController } from "@/themes/ThemeController"
 import { externalThemeDescriptor } from "@/themes/external"
 import { disposeExternalFonts } from "@/themes/external-fonts"
 import { BUILTIN_DESCRIPTORS, type ThemeDescriptor } from "@/themes/manifest"
@@ -49,9 +50,8 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
-  // Omarchy's runtime palette injection lives here so it runs once per window,
-  // not once per useTheme() call.
-  useOmarchyTheme()
+  // Omarchy's runtime palette injection lives here so it runs once per window.
+  const omarchy = useOmarchyTheme()
 
   const descriptors = useMemo<ThemeDescriptor[]>(
     () => [...BUILTIN_DESCRIPTORS, ...externalThemes.map(externalThemeDescriptor)],
@@ -63,7 +63,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     [descriptors, errors, externalThemes],
   )
 
-  return <ThemeRegistryContext.Provider value={value}>{children}</ThemeRegistryContext.Provider>
+  return (
+    <ThemeRegistryContext.Provider value={value}>
+      <ThemeController descriptors={descriptors} externalThemes={externalThemes} omarchy={omarchy}>
+        {children}
+      </ThemeController>
+    </ThemeRegistryContext.Provider>
+  )
 }
 
 export function useThemeRegistry(): ThemeRegistry {

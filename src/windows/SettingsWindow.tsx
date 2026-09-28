@@ -6,7 +6,6 @@ import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 
-import { useTheme } from "@/hooks/useTheme"
 import { api } from "@/lib/api"
 import { cn, isMacOS } from "@/lib/utils"
 
@@ -17,7 +16,6 @@ export function SettingsWindow() {
     const requested = new URLSearchParams(window.location.search).get("tab")
     return NAV_ITEMS.find((item) => item.tab === requested)?.tab ?? "general"
   })
-  useTheme()
 
   useEffect(() => {
     const subscription = api.notifications.listen("plugin-deep-link-available", () => {

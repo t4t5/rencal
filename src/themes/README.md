@@ -13,19 +13,19 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 The `[data-theme="<id>"]` selector is added **for you**:
 
 - **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`).
-- **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. `useTheme` injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
+- **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. The theme controller injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets, and tiles avoid app `data-slot`s, so the active theme's selectors don't restyle them either: a tile looks the same whether or not its theme is selected. Installing or updating an inactive theme therefore does not enable its full CSS.
 
 The defaults (the "ren" look) live in a `:root, [data-theme]` baseline block in `src/global.css`; a theme only changes what makes it distinct. Most tokens are **derived** from a handful of primitives via `color-mix()` in that same block. In practice, setting `--background`, `--foreground`, `--surface-tint`, and `--primary` gets you most of a theme—hover, card, border, secondary, muted text, and the other surfaces follow automatically. `--today` and `--brand` default to `--primary`, so a pasted shadcn theme stays on-palette; set them for distinct accents. Text on `--primary` defaults to `--background`; set `--primary-foreground` when that pairing lacks contrast. See `tokyonight.css` for a minimal example.
 
-## Families and the appearance setting
+## Mode and slots
 
-Each settings card is a theme family (`getThemeFamilies` in `manifest.ts`): a single theme, or a built-in family in `VARIANT_FAMILIES` with a light and a dark theme. The setting stores the family id and a separate appearance, System, Light or Dark (`theme = "ren"` and `appearance = "system"` in `config.toml`), and `resolveFamilyTheme` picks the variant. A single theme ignores the appearance. Settings lists each card under the appearance tabs it fits: a family under all three, Omarchy under System (it follows the OS theme), and a single theme under its own appearance, read from its `--background` when it doesn't declare one. Picking a card stores the tab as the appearance. The appearance defaults to System.
+The theme setting holds a light theme, a dark theme, and a mode that picks between them (`[theme]` with `mode`, `light` and `dark` in `config.toml`; a legacy `theme = "x"` fills both slots). System, the default, follows the OS; Light and Dark pin a slot. `resolveTheme` in `theme-settings.ts` derives the active slot and theme. Every theme has an appearance, `light` or `dark`, listing it under that slot in settings: built-in and plugin themes declare it, and loose user themes get it from their `--background`. Omarchy's `system` fits either slot, since its palette sets the OS color scheme too.
 
-With System and a family, `useTheme` does not force the window theme: a forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`. `useSystemAppearance` hands the window back to the OS with `setTheme(null)` and tracks it. Everything else forces the window to the active theme's appearance so the chrome matches.
+`ThemeController` (rendered by `ThemeProvider`) owns the settings and applies them once per window; `useTheme()` only reads its context. A forced window reports the forced value from `theme()`, `onThemeChanged` and `prefers-color-scheme`, so while System picks between two different themes the window stays unforced and `useSystemAppearance` tracks the OS. Otherwise the window is forced to the active theme's appearance (Omarchy's palette mode) so the chrome matches.
 
-`theme-bootstrap.js` can't resolve families, so `useTheme` caches the theme to show for each OS appearance (`themeVariants`) and each theme's background (`themeBackgrounds`). The bootstrap picks from `prefers-color-scheme` before first paint (the window is unforced at launch).
+`theme-bootstrap.js` restores the theme before first paint from the cached settings (`themeSettings`), resolving System with `prefers-color-scheme` (the window is unforced at launch). It also applies the slot's cached background (`themeBackgrounds`), keyed by slot and used only while the slot still holds that theme.
 
 ## Theme scopes
 
@@ -47,7 +47,7 @@ The promise covers custom properties only. It has these limits:
    { id: "mytheme", name: "My Theme", appearance: "dark" },
    ```
 
-That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, `useTheme` picks it up, and Ctrl/Cmd+Shift+T cycles through every registered theme. The website's theme playground (`website/src/pages/themes.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: `useTheme` caches the active theme's `--background` and `index.html` repaints it on next launch.)
+That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, it's listed under its appearance's slot, and Ctrl/Cmd+Shift+T cycles through the active slot's themes. The website's theme playground (`website/src/pages/themes.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: the theme controller caches the active theme's `--background` and `index.html` repaints it on next launch.)
 
 ## User themes
 
@@ -112,7 +112,7 @@ colour overrides are unset by default and opt in to their documented behaviour.
 
 #### Event text
 
-Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). `useTheme` puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
+Event text is derived from each event's accent colour: on dark themes a chroma-boosted accent mixed into `--foreground` for a soft pastel, on light themes the accent with its lightness capped (the mix would muddy it — yellow + black is olive). The theme controller puts the theme's appearance on `<body>` as `data-appearance`, which picks the variant. The formula and its parameters are internal and may change.
 
 ### Surface tint system
 

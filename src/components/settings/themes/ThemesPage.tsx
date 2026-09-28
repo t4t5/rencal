@@ -3,66 +3,54 @@ import { useMemo, useState } from "react"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import { useTheme } from "@/hooks/useTheme"
-import type { AppearanceSetting, ExternalTheme } from "@/lib/api"
+import type { ThemeMode } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
+import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
-import { appearanceFromCss } from "@/themes/appearance"
 import { externalThemePalette } from "@/themes/external"
 import {
+  type Appearance,
   getDeclaredAppearance,
-  getThemeFamilies,
   type ThemeDescriptor,
-  type ThemeFamily,
+  themesFor,
 } from "@/themes/manifest"
 
 export function ThemesPage() {
-  const { theme, appearance, setSettings, setAppearance } = useTheme()
-  const { descriptors, externalThemes, errors } = useThemeRegistry()
-  const families = useMemo(
-    () =>
-      getThemeFamilies(descriptors).map((family) => ({
-        ...family,
-        tabs: getFamilyTabs(family, descriptors, externalThemes),
-      })),
-    [descriptors, externalThemes],
-  )
-  const active = families.find((family) => isActiveFamily(family, theme))
+  const { settings, activeSlot, setMode, setSlot } = useTheme()
+  const { descriptors, errors } = useThemeRegistry()
 
-  // The tab shows the stored appearance, or a single theme's own when they differ (it
-  // ignores the stored one). A tab that doesn't list the active theme only filters
-  // the grid until a theme is picked there.
-  const [browsing, setBrowsing] = useState<AppearanceSetting | null>(null)
-  const tab =
-    browsing ??
-    (active && !active.tabs.includes(appearance) ? active.tabs[0] : undefined) ??
-    appearance
+  // Which slot's grid System shows; it only browses and never changes the theme.
+  const [shownSlot, setShownSlot] = useState<Appearance | null>(null)
+  const slot = settings.mode === "system" ? (shownSlot ?? activeSlot) : settings.mode
+  const selected = settings[slot]
 
-  const selectTab = (next: AppearanceSetting) => {
-    if (active?.tabs.includes(next)) {
-      setBrowsing(null)
-      setAppearance(next)
-    } else {
-      setBrowsing(next)
-    }
-  }
-
-  const selectFamily = (id: string) => {
-    setBrowsing(null)
-    setSettings({ theme: id, appearance: tab })
-  }
+  // A legacy or hand-edited slot can hold a theme of the other appearance; keep it visible.
+  const slotThemes = useMemo(() => {
+    const fitting = themesFor(slot, descriptors)
+    return descriptors.filter((theme) => fitting.includes(theme) || theme.id === selected)
+  }, [descriptors, slot, selected])
 
   return (
     <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
-      <AppearanceTabs tab={tab} onChange={selectTab} />
-      <ThemeGrid
-        families={families.filter((family) => family.tabs.includes(tab))}
-        active={active}
-        tab={tab}
-        onSelect={selectFamily}
-      />
+      <div className="flex flex-col gap-3">
+        <OptionTabs
+          label="Appearance"
+          options={MODE_OPTIONS}
+          value={settings.mode}
+          onChange={setMode}
+        />
+        {settings.mode === "system" && (
+          <OptionTabs
+            label="Theme slot"
+            options={SLOT_OPTIONS}
+            value={slot}
+            onChange={setShownSlot}
+          />
+        )}
+      </div>
+      <ThemeGrid themes={slotThemes} selected={selected} onSelect={(id) => setSlot(slot, id)} />
       {errors.length > 0 && (
         <div role="alert" className="flex flex-col gap-1 text-sm text-destructive">
           {errors.map((error) => (
@@ -76,81 +64,68 @@ export function ThemesPage() {
   )
 }
 
-// A hand-edited config can name a variant rather than its family.
-const isActiveFamily = (family: ThemeFamily, theme: string) =>
-  family.id === theme || family.variants?.light === theme || family.variants?.dark === theme
-
-const APPEARANCE_OPTIONS = [
+const MODE_OPTIONS = [
   { value: "system", label: "System" },
   { value: "light", label: "Light" },
   { value: "dark", label: "Dark" },
-] as const satisfies readonly { value: AppearanceSetting; label: string }[]
+] as const satisfies readonly { value: ThemeMode; label: string }[]
 
-/**
- * The appearance tabs that list a family: a family with variants under every
- * tab, Omarchy (which follows the OS theme) under System, and any other theme
- * under its own appearance.
- */
-function getFamilyTabs(
-  family: ThemeFamily,
-  descriptors: readonly ThemeDescriptor[],
-  externalThemes: readonly ExternalTheme[],
-): AppearanceSetting[] {
-  if (family.variants) return APPEARANCE_OPTIONS.map((option) => option.value)
-  const css = externalThemes.find((theme) => theme.id === family.id)?.css
-  const appearance =
-    getDeclaredAppearance(family.id, descriptors) ??
-    (css === undefined ? null : appearanceFromCss(css))
-  return [appearance ?? "system"]
-}
+const SLOT_OPTIONS = [
+  { value: "light", label: "Light theme" },
+  { value: "dark", label: "Dark theme" },
+] as const satisfies readonly { value: Appearance; label: string }[]
 
-const AppearanceTabs = ({
-  tab,
+function OptionTabs<T extends string>({
+  label,
+  options,
+  value,
   onChange,
 }: {
-  tab: AppearanceSetting
-  onChange: (appearance: AppearanceSetting) => void
-}) => (
-  <div className="flex">
-    <Tabs
-      value={tab}
-      onValueChange={(value) => {
-        const option = APPEARANCE_OPTIONS.find((o) => o.value === value)
-        if (option) onChange(option.value)
-      }}
-    >
-      <TabsList aria-label="Appearance">
-        {APPEARANCE_OPTIONS.map((option) => (
-          <TabsTrigger key={option.value} value={option.value}>
-            {option.label}
-          </TabsTrigger>
-        ))}
-      </TabsList>
-    </Tabs>
-  </div>
-)
+  label: string
+  options: readonly { value: T; label: string }[]
+  value: T
+  onChange: (value: T) => void
+}) {
+  return (
+    <div className="flex">
+      <Tabs
+        value={value}
+        onValueChange={(next) => {
+          const option = options.find((o) => o.value === next)
+          if (option) onChange(option.value)
+        }}
+      >
+        <TabsList aria-label={label}>
+          {options.map((option) => (
+            <TabsTrigger key={option.value} value={option.value}>
+              {option.label}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
+    </div>
+  )
+}
 
 function ThemeGrid({
-  families,
-  active,
-  tab,
+  themes,
+  selected,
   onSelect,
 }: {
-  families: ThemeFamily[]
-  active: ThemeFamily | undefined
-  tab: AppearanceSetting
+  themes: ThemeDescriptor[]
+  selected: string
   onSelect: (id: string) => void
 }) {
   return (
     <div className="grid grid-cols-3 gap-x-3 gap-y-4">
-      {families.map((family) => {
-        const isActive = family.id === active?.id
+      {themes.map((theme) => {
+        const isActive = theme.id === selected
 
         // Block layout throughout: WebKit doesn't stretch a flex <button>'s children.
         return (
           <button
-            key={family.id}
-            onClick={() => onSelect(family.id)}
+            key={theme.id}
+            onClick={() => onSelect(theme.id)}
             aria-pressed={isActive}
             className="group block w-full min-w-0 outline-none"
           >
@@ -162,7 +137,9 @@ function ThemeGrid({
                   : "border-border group-hover:border-muted-foreground",
               )}
             >
-              <ThemePreview family={family} tab={tab} />
+              <div aria-hidden className="relative h-28 overflow-hidden">
+                <PreviewWindow themeId={theme.id} />
+              </div>
             </div>
             <span
               className={cn(
@@ -170,7 +147,7 @@ function ThemeGrid({
                 isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
               )}
             >
-              {family.name}
+              {theme.name}
             </span>
           </button>
         )
@@ -179,34 +156,20 @@ function ThemeGrid({
   )
 }
 
-/** The theme the tab shows; under System, a family's light variant with the dark one over the right half. */
-const ThemePreview = ({ family, tab }: { family: ThemeFamily; tab: AppearanceSetting }) => (
-  <div aria-hidden className="relative h-28 overflow-hidden">
-    {!family.variants ? (
-      <PreviewWindow themeId={family.id} />
-    ) : tab === "system" ? (
-      <>
-        <PreviewWindow themeId={family.variants.light} />
-        <PreviewWindow themeId={family.variants.dark} className="[clip-path:inset(0_0_0_50%)]" />
-      </>
-    ) : (
-      <PreviewWindow themeId={family.variants[tab]} />
-    )}
-  </div>
-)
-
 /** A cropped window of the theme's minical and week view, painted from its tokens so it looks the same active or not. */
-const PreviewWindow = ({ themeId, className }: { themeId: string; className?: string }) => {
+const PreviewWindow = ({ themeId }: { themeId: string }) => {
   const { descriptors, externalThemes } = useThemeRegistry()
   const css = externalThemes.find((theme) => theme.id === themeId)?.css
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
+  // Omarchy's `system` inherits the window's appearance, which follows its palette.
+  const appearance = getDeclaredAppearance(themeId, descriptors)
 
   return (
     <div
       data-theme={themeId}
-      data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
+      data-appearance={appearance === "system" ? undefined : (appearance ?? undefined)}
       style={style}
-      className={cn("absolute inset-0 bg-card pt-4 pl-4", className)}
+      className="absolute inset-0 bg-card pt-4 pl-4"
     >
       <div className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg">
         <MinicalPreview />

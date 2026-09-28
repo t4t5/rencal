@@ -32,19 +32,69 @@ pub enum ConfigError {
     },
 }
 
-fn default_theme() -> String {
-    "ren".to_string()
-}
-
-/// Which variant of a theme with light and dark variants to show. Follows the
-/// OS by default.
+/// Which theme slot is showing: `System` follows the OS appearance.
 #[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
-pub enum AppearanceSetting {
+pub enum ThemeMode {
     #[default]
     System,
     Light,
     Dark,
+}
+
+/// The theme for each appearance and the mode that picks between them.
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq)]
+#[serde(from = "ThemeConfigRepr")]
+pub struct ThemeConfig {
+    pub mode: ThemeMode,
+    pub light: String,
+    pub dark: String,
+}
+
+impl Default for ThemeConfig {
+    fn default() -> Self {
+        Self {
+            mode: ThemeMode::default(),
+            light: "ren-light".to_string(),
+            dark: "ren".to_string(),
+        }
+    }
+}
+
+#[derive(Deserialize)]
+#[serde(default)]
+struct ThemeTable {
+    mode: ThemeMode,
+    light: String,
+    dark: String,
+}
+
+impl Default for ThemeTable {
+    fn default() -> Self {
+        let ThemeConfig { mode, light, dark } = ThemeConfig::default();
+        Self { mode, light, dark }
+    }
+}
+
+/// Before slots existed, `theme` was a single theme id.
+#[derive(Deserialize)]
+#[serde(untagged)]
+enum ThemeConfigRepr {
+    Legacy(String),
+    Table(ThemeTable),
+}
+
+impl From<ThemeConfigRepr> for ThemeConfig {
+    fn from(repr: ThemeConfigRepr) -> Self {
+        match repr {
+            ThemeConfigRepr::Legacy(id) => Self {
+                mode: ThemeMode::System,
+                light: id.clone(),
+                dark: id,
+            },
+            ThemeConfigRepr::Table(ThemeTable { mode, light, dark }) => Self { mode, light, dark },
+        }
+    }
 }
 
 fn default_notifications_enabled() -> bool {
@@ -65,12 +115,6 @@ pub enum FirstDayOfWeek {
 
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
-    #[serde(default = "default_theme")]
-    pub theme: String,
-
-    #[serde(default)]
-    pub appearance: AppearanceSetting,
-
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,
 
@@ -83,7 +127,10 @@ pub struct RencalConfig {
     #[serde(default)]
     pub show_week_numbers: bool,
 
-    /// Must come AFTER top-level configs since it adds [groups] table header:
+    /// Tables must come AFTER top-level configs since they add a header:
+    #[serde(default)]
+    pub theme: ThemeConfig,
+
     #[serde(default)]
     pub groups: BTreeMap<String, Vec<String>>,
 }
@@ -91,12 +138,11 @@ pub struct RencalConfig {
 impl Default for RencalConfig {
     fn default() -> Self {
         Self {
-            theme: default_theme(),
-            appearance: AppearanceSetting::default(),
             notifications_enabled: default_notifications_enabled(),
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
             show_week_numbers: false,
+            theme: ThemeConfig::default(),
             groups: BTreeMap::new(),
         }
     }
@@ -220,17 +266,57 @@ mod tests {
     }
 
     #[test]
-    fn appearance_defaults_to_system_and_round_trips() {
+    fn theme_defaults_to_ren_pair_following_the_system() {
+        let config: RencalConfig = toml::from_str("").expect("parse");
+        assert_eq!(config.theme, ThemeConfig::default());
+        assert_eq!(config.theme.mode, ThemeMode::System);
+        assert_eq!(config.theme.light, "ren-light");
+        assert_eq!(config.theme.dark, "ren");
+    }
+
+    #[test]
+    fn legacy_theme_string_fills_both_slots() {
         let config: RencalConfig = toml::from_str("theme = \"nord\"").expect("parse");
-        assert_eq!(config.appearance, AppearanceSetting::System);
+        assert_eq!(
+            config.theme,
+            ThemeConfig {
+                mode: ThemeMode::System,
+                light: "nord".into(),
+                dark: "nord".into(),
+            }
+        );
+    }
 
-        let config: RencalConfig =
-            toml::from_str("theme = \"ren\"\nappearance = \"dark\"").expect("parse");
-        assert_eq!(config.appearance, AppearanceSetting::Dark);
-
+    #[test]
+    fn theme_table_round_trips_after_scalar_keys() {
+        let config = RencalConfig {
+            theme: ThemeConfig {
+                mode: ThemeMode::Dark,
+                light: "gruvbox:light".into(),
+                dark: "user:mine".into(),
+            },
+            ..Default::default()
+        };
         let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        assert!(toml_str.contains("[theme]"));
+        let theme_at = toml_str.find("[theme]").unwrap();
+        assert!(toml_str.find("show_week_numbers").unwrap() < theme_at);
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
-        assert_eq!(reparsed.appearance, AppearanceSetting::Dark);
+        assert_eq!(reparsed.theme, config.theme);
+    }
+
+    #[test]
+    fn partial_theme_table_falls_back_to_defaults() {
+        let config: RencalConfig =
+            toml::from_str("[theme]\nmode = \"light\"\ndark = \"nord\"").expect("parse");
+        assert_eq!(
+            config.theme,
+            ThemeConfig {
+                mode: ThemeMode::Light,
+                light: "ren-light".into(),
+                dark: "nord".into(),
+            }
+        );
     }
 
     #[test]
@@ -243,7 +329,7 @@ mod tests {
 
         let config = RencalConfig::load_from_path(&path).expect("load missing config");
 
-        assert_eq!(config.theme, default_theme());
+        assert_eq!(config.theme, ThemeConfig::default());
         assert!(config.groups.is_empty());
     }
 

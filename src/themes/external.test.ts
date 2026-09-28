@@ -1,5 +1,5 @@
 // @vitest-environment happy-dom
-import { afterEach, describe, expect, it } from "vitest"
+import { afterEach, describe, expect, it, vi } from "vitest"
 
 import type { ExternalTheme } from "@/lib/api"
 
@@ -26,6 +26,7 @@ const plugin: ExternalTheme = {
 }
 
 afterEach(() => {
+  vi.restoreAllMocks()
   document.body.replaceChildren()
   delete document.body.dataset.theme
   document.head
@@ -41,7 +42,28 @@ describe("external themes", () => {
       appearance: "dark",
       source: "plugin",
     })
-    expect(externalThemeDescriptor(loose).appearance).toBeNull()
+  })
+
+  it("infers a loose theme's appearance from its background", () => {
+    // happy-dom has no canvas; resolve the two colours used here.
+    const colors: Record<string, number[]> = {
+      white: [255, 255, 255, 255],
+      "#111": [17, 17, 17, 255],
+    }
+    const ctx = {
+      fillStyle: "",
+      fillRect: () => {},
+      getImageData: () => ({ data: colors[ctx.fillStyle] }),
+    }
+    vi.spyOn(HTMLCanvasElement.prototype, "getContext").mockReturnValue(
+      ctx as unknown as CanvasRenderingContext2D,
+    )
+
+    expect(externalThemeDescriptor(loose).appearance).toBe("light")
+    expect(externalThemeDescriptor({ ...loose, css: "--background: #111;" }).appearance).toBe(
+      "dark",
+    )
+    expect(externalThemeDescriptor({ ...loose, css: "--primary: red;" }).appearance).toBe("dark")
   })
 
   it("updates styles and removes themes missing from the next snapshot", () => {
