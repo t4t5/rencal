@@ -8,7 +8,6 @@ import type { AppearanceSetting } from "@/lib/api"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { cn, isMacOS } from "@/lib/utils"
 
-import { CheckIcon } from "@/icons/check"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
 import { externalThemePalette } from "@/themes/external"
 import { getDeclaredAppearance, getThemeFamilies, type ThemeFamily } from "@/themes/manifest"
@@ -97,32 +96,36 @@ function ThemeGrid({
   onSelect: (id: string) => void
 }) {
   return (
-    <div className="grid grid-cols-3 gap-3">
+    <div className="grid grid-cols-3 gap-x-3 gap-y-4">
       {families.map((family) => {
         const isActive = family.id === active?.id
 
+        // Block layout throughout: WebKit doesn't stretch a flex <button>'s children.
         return (
           <button
             key={family.id}
             onClick={() => onSelect(family.id)}
-            className={cn(
-              "flex flex-col overflow-hidden rounded-lg border bg-secondary text-left transition-colors hover:bg-secondary-hover",
-              isActive ? "border-primary ring-1 ring-primary" : "border-border",
-            )}
+            aria-pressed={isActive}
+            className="group block w-full min-w-0 outline-none"
           >
-            <ThemePreview family={family} />
-
-            <div className="flex items-center justify-between gap-2 border-t border-border px-3 py-2">
-              <span className="truncate text-sm">{family.name}</span>
-              <span
-                className={cn(
-                  "flex size-4 shrink-0 items-center justify-center rounded-circle",
-                  isActive ? "bg-primary" : "border border-input",
-                )}
-              >
-                {isActive && <CheckIcon className="size-3 text-primary-foreground" />}
-              </span>
+            <div
+              className={cn(
+                "overflow-hidden rounded-lg border transition-colors group-focus-visible:ring-2 group-focus-visible:ring-ring",
+                isActive
+                  ? "border-primary ring-1 ring-primary"
+                  : "border-border group-hover:border-muted-foreground",
+              )}
+            >
+              <ThemePreview family={family} />
             </div>
+            <span
+              className={cn(
+                "block truncate pt-2 text-center text-sm transition-colors",
+                isActive ? "text-foreground" : "text-muted-foreground group-hover:text-foreground",
+              )}
+            >
+              {family.name}
+            </span>
           </button>
         )
       })}
@@ -151,13 +154,13 @@ const PreviewWindow = ({ themeId, className }: { themeId: string; className?: st
   const style = useMemo(() => (css ? externalThemePalette(css) : undefined), [css])
 
   return (
-    <div className={cn("absolute inset-0 pt-4 pl-4", className)}>
-      <div
-        data-theme={themeId}
-        data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
-        style={style}
-        className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg"
-      >
+    <div
+      data-theme={themeId}
+      data-appearance={getDeclaredAppearance(themeId, descriptors) ?? undefined}
+      style={style}
+      className={cn("absolute inset-0 bg-card pt-4 pl-4", className)}
+    >
+      <div className="flex h-[140px] w-[260px] overflow-hidden rounded-tl-lg bg-background shadow-lg">
         <MinicalPreview />
         <WeekPreview />
       </div>
