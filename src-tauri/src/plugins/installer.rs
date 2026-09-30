@@ -189,6 +189,16 @@ pub struct PluginFontInspection {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+pub struct PluginProviderInspection {
+    pub slug: String,
+    pub name: String,
+    /// This platform's release asset, or `None` when the release has none.
+    pub asset: Option<String>,
+    /// Whether renCal can run a provider built with its caldir-core.
+    pub compatible: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 pub struct PluginInspection {
     pub id: String,
     pub name: String,
@@ -200,6 +210,7 @@ pub struct PluginInspection {
     pub compatible: bool,
     pub themes: Vec<PluginThemeInspection>,
     pub fonts: Vec<PluginFontInspection>,
+    pub providers: Vec<PluginProviderInspection>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -282,6 +293,19 @@ impl ResolvedProvider {
 }
 
 impl ResolvedPackage {
+    fn set_providers(&mut self, providers: Vec<ResolvedProvider>) {
+        self.inspection.providers = providers
+            .iter()
+            .map(|provider| PluginProviderInspection {
+                slug: provider.contribution.slug.clone(),
+                name: provider.contribution.name.clone(),
+                asset: provider.asset.as_ref().map(|asset| asset.asset.clone()),
+                compatible: provider_is_compatible(&provider.contribution),
+            })
+            .collect();
+        self.providers = providers;
+    }
+
     fn lock_entry(&self, repository: &Repository) -> PluginLockEntry {
         PluginLockEntry {
             id: self.manifest.id.clone(),
@@ -1198,7 +1222,7 @@ impl PluginManager {
             let mut package = self
                 .resolve_commit_ref(repository, commit, Some(&release.tag_name))
                 .await?;
-            package.providers = package
+            let providers = package
                 .manifest
                 .contributes
                 .providers
@@ -1210,6 +1234,7 @@ impl PluginManager {
                     })
                 })
                 .collect::<Result<_, PluginInstallError>>()?;
+            package.set_providers(providers);
             return Ok(package);
         }
 
@@ -1233,7 +1258,7 @@ impl PluginManager {
             .resolve_commit_ref(repository, entry.commit.clone(), entry.tag.as_deref())
             .await?;
         // Providers missing from the lock had no usable asset at install time.
-        package.providers = package
+        let providers = package
             .manifest
             .contributes
             .providers
@@ -1258,6 +1283,7 @@ impl PluginManager {
                 })
             })
             .collect::<Result<_, PluginInstallError>>()?;
+        package.set_providers(providers);
         Ok(package)
     }
 
@@ -1349,6 +1375,7 @@ impl PluginManager {
                     style: font.style,
                 })
                 .collect(),
+            providers: Vec::new(),
         };
         Ok(ResolvedPackage {
             inspection,
@@ -3625,6 +3652,18 @@ appearance = "dark"
         let temp = tempfile::tempdir().unwrap();
         let manager = manager(&temp, downloader);
 
+        let inspection = manager.inspect(TUTA_REPO).await.unwrap();
+        assert!(inspection.themes.is_empty());
+        assert_eq!(
+            inspection.providers,
+            [PluginProviderInspection {
+                slug: "tuta".into(),
+                name: "Tuta".into(),
+                asset: Some(tuta_asset(GNU)),
+                compatible: true,
+            }]
+        );
+
         manager.install(TUTA_REPO).await.unwrap();
 
         assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-gnu");
@@ -3780,10 +3819,10 @@ appearance = "dark"
             PROVIDER_MANIFEST,
             &[(darwin, &archive)],
         );
-        let error = manager(&temp, downloader)
-            .install(TUTA_REPO)
-            .await
-            .unwrap_err();
+        let manager_without_asset = manager(&temp, downloader);
+        let inspection = manager_without_asset.inspect(TUTA_REPO).await.unwrap();
+        assert_eq!(inspection.providers[0].asset, None);
+        let error = manager_without_asset.install(TUTA_REPO).await.unwrap_err();
         assert_eq!(error.kind, PluginInstallErrorKind::Incompatible);
         assert_eq!(
             error.to_string(),

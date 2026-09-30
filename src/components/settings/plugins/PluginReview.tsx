@@ -67,16 +67,18 @@ export function PluginReview({
             {plugin.min_rencal_version} or newer
           </dd>
         </dl>
-        <div className="flex flex-col gap-1">
-          <span className="text-muted-foreground">Themes</span>
-          <ul className="flex flex-col gap-1">
-            {plugin.themes.map((theme) => (
-              <li key={theme.id} className="break-words">
-                {theme.name} · {theme.appearance}
-              </li>
-            ))}
-          </ul>
-        </div>
+        {plugin.themes.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground">Themes</span>
+            <ul className="flex flex-col gap-1">
+              {plugin.themes.map((theme) => (
+                <li key={theme.id} className="break-words">
+                  {theme.name} · {theme.appearance}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {plugin.fonts.length > 0 && (
           <div className="flex flex-col gap-1">
             <span className="text-muted-foreground">Fonts</span>
@@ -89,10 +91,23 @@ export function PluginReview({
             </ul>
           </div>
         )}
-        <p className="text-muted-foreground">
-          Listings are unreviewed community packages. Choose a theme in Settings → Themes after
-          installing. Your current selection will stay the same.
-        </p>
+        {plugin.providers.length > 0 && (
+          <div className="flex flex-col gap-1">
+            <span className="text-muted-foreground">Calendar providers</span>
+            <ul className="flex flex-col gap-1">
+              {plugin.providers.map((provider) => (
+                <li key={provider.slug} className="break-words">
+                  {!provider.compatible
+                    ? `${provider.name} · built for an older caldir, won't be installed`
+                    : !provider.asset
+                      ? `${provider.name} · not available for this platform`
+                      : `Adds the ${provider.name} calendar provider (runs caldir-provider-${provider.slug} to sync accounts)`}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        <p className="text-muted-foreground">Note: Listings are unreviewed community packages.</p>
         {error && (
           <p role="alert" className="text-destructive">
             {error}

@@ -46,6 +46,7 @@ const plugin: PluginInspection = {
       style: "normal",
     },
   ],
+  providers: [],
 }
 const entry: PluginCatalogEntry = { ...plugin, tag: "v1.10.0" }
 const installed: InstalledPlugin = {
@@ -133,6 +134,33 @@ it("omits the font review section for a package without fonts", async () => {
   await render()
   await click("Review install")
   expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain("Fonts")
+})
+
+it("reviews a provider-only plugin without the theme hint", async () => {
+  vi.mocked(api.plugins.inspect).mockResolvedValue({
+    ...plugin,
+    themes: [],
+    fonts: [],
+    providers: [
+      {
+        slug: "tuta",
+        name: "Tuta",
+        asset: "caldir-provider-tuta-x86_64-unknown-linux-musl.tar.gz",
+        compatible: true,
+      },
+      { slug: "proton", name: "Proton", asset: null, compatible: true },
+    ],
+  })
+  await render()
+  await click("Review install")
+  const text = document.querySelector('[role="dialog"]')!.textContent
+  expect(text).toContain("Calendar providers")
+  expect(text).toContain(
+    "Adds the Tuta calendar provider (runs caldir-provider-tuta to sync accounts)",
+  )
+  expect(text).toContain("Proton · not available for this platform")
+  expect(text).not.toContain("Themes")
+  expect(text).not.toContain("Choose a theme")
 })
 
 it("reviews an install received from a deep link", async () => {

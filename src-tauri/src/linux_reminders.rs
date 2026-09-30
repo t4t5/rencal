@@ -71,13 +71,23 @@ fn is_notifierd_active() -> bool {
 /// systemd reports 0 when the unit isn't running.
 fn notifierd_main_pid() -> Option<u32> {
     let output = std::process::Command::new("systemctl")
-        .args(["--user", "show", "-p", "MainPID", "--value", NOTIFIERD_SERVICE])
+        .args([
+            "--user",
+            "show",
+            "-p",
+            "MainPID",
+            "--value",
+            NOTIFIERD_SERVICE,
+        ])
         .output()
         .ok()?;
     if !output.status.success() {
         return None;
     }
-    let pid: u32 = String::from_utf8_lossy(&output.stdout).trim().parse().ok()?;
+    let pid: u32 = String::from_utf8_lossy(&output.stdout)
+        .trim()
+        .parse()
+        .ok()?;
     (pid != 0).then_some(pid)
 }
 

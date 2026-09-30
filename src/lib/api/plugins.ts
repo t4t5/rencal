@@ -7,6 +7,7 @@ import type {
   PluginFontInspection,
   PluginInspection,
   PluginInstallLink,
+  PluginProviderInspection,
   PluginThemeInspection,
 } from "@/rpc/bindings"
 
@@ -18,6 +19,7 @@ export type {
   PluginFontInspection,
   PluginInspection,
   PluginInstallLink,
+  PluginProviderInspection,
   PluginThemeInspection,
 }
 

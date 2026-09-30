@@ -42,6 +42,7 @@ export type {
   PluginFontInspection,
   PluginInspection,
   PluginInstallLink,
+  PluginProviderInspection,
   PluginThemeInspection,
 } from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/api/providers"

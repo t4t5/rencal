@@ -99,9 +99,19 @@ export type PluginCatalogEntry = { id: string; name: string; repo: string; descr
 
 export type PluginFontInspection = { family: string; file: string; weight: number; style: FontStyle }
 
-export type PluginInspection = { id: string; name: string; description: string; repo: string; version: string; min_rencal_version: string; compatible: boolean; themes: PluginThemeInspection[]; fonts: PluginFontInspection[] }
+export type PluginInspection = { id: string; name: string; description: string; repo: string; version: string; min_rencal_version: string; compatible: boolean; themes: PluginThemeInspection[]; fonts: PluginFontInspection[]; providers: PluginProviderInspection[] }
 
 export type PluginInstallLink = { repo: string }
+
+export type PluginProviderInspection = { slug: string; name: string; 
+/**
+ * This platform's release asset, or `None` when the release has none.
+ */
+asset: string | null; 
+/**
+ * Whether renCal can run a provider built with its caldir-core.
+ */
+compatible: boolean }
 
 export type PluginThemeInspection = { id: string; name: string; appearance: Appearance }
 

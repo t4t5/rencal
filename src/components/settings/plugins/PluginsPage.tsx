@@ -138,6 +138,7 @@ export function PluginsPage() {
   }
 
   async function inspect(repository: string, key: string, fromInstallLink = false) {
+    if (busyRef.current) return
     startBusy(key)
     clearError(key)
     if (fromInstallLink) setInstallLinkError(null)
@@ -154,6 +155,7 @@ export function PluginsPage() {
   inspectRef.current = inspect
 
   async function uninstall(id: string) {
+    if (busyRef.current) return
     startBusy(id)
     clearError(id)
     try {
@@ -168,8 +170,6 @@ export function PluginsPage() {
       finishBusy()
     }
   }
-
-  const disabled = busy !== null || review !== null
 
   const visiblePlugins = useMemo(() => {
     if (!installed) return []
@@ -278,7 +278,6 @@ export function PluginsPage() {
             <PluginActions
               plugin={plugin}
               busy={busy}
-              disabled={disabled}
               onInspect={inspect}
               onUninstall={uninstall}
             />
@@ -322,13 +321,11 @@ function catalogVersion(tag: string): string {
 function PluginActions({
   plugin,
   busy,
-  disabled,
   onInspect,
   onUninstall,
 }: {
   plugin: PluginListItem
   busy: string | null
-  disabled: boolean
   onInspect: (repository: string, key: string) => Promise<void>
   onUninstall: (id: string) => Promise<void>
 }) {
@@ -340,10 +337,9 @@ function PluginActions({
       <Button
         size="sm"
         className="self-start"
-        disabled={disabled}
         onClick={() => void onInspect(repository, repository)}
       >
-        {busy === repository ? "Checking…" : "Review install"}
+        Review install
       </Button>
     )
   }
@@ -354,7 +350,7 @@ function PluginActions({
         size="sm"
         className="self-start"
         variant="secondary"
-        disabled={disabled}
+        disabled={busy === installed.id}
         onClick={() => void onUninstall(installed.id)}
       >
         {busy === installed.id ? "Working…" : "Uninstall"}
@@ -365,20 +361,12 @@ function PluginActions({
   return (
     <div className="flex flex-wrap gap-2">
       {installed?.update_version && repository && (
-        <Button
-          size="sm"
-          disabled={disabled}
-          onClick={() => void onInspect(repository, installed.id)}
-        >
+        <Button size="sm" onClick={() => void onInspect(repository, installed.id)}>
           Update to {installed.update_version}
         </Button>
       )}
       {!installed?.update_version && installed?.error && repository && (
-        <Button
-          size="sm"
-          disabled={disabled}
-          onClick={() => void onInspect(repository, installed.id)}
-        >
+        <Button size="sm" onClick={() => void onInspect(repository, installed.id)}>
           Reinstall
         </Button>
       )}
@@ -386,7 +374,7 @@ function PluginActions({
         <Button
           size="sm"
           variant="secondary"
-          disabled={disabled}
+          disabled={busy === installed.id}
           onClick={() => void onUninstall(installed.id)}
         >
           {busy === installed.id ? "Working…" : "Uninstall"}
