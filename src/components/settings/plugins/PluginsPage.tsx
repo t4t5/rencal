@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 
 import { OrbitRing } from "@/components/loading-ui/orbit-ring"
 import { SettingsContent } from "@/components/settings/SettingsContent"
@@ -8,17 +8,17 @@ import { Input } from "@/components/ui/input"
 import {
   api,
   getErrorMessage,
-  type InstalledPlugin,
   type InstalledPlugins,
   type PluginCatalog,
-  type PluginCatalogEntry,
-  type PluginInspection,
   type PluginInstallLink,
 } from "@/lib/api"
 
-import { RencalLogomarkIcon } from "@/icons/rencal-logomark"
+import { PluginPreview } from "./PluginPreview"
+import { PluginSheet } from "./PluginSheet"
+import { pluginOwner, type PluginListItem } from "./plugin-list"
 
-import { PluginReview } from "./PluginReview"
+/** Deep links only know the repo, so a selection is resolved against the latest lists. */
+type Selection = { id: string | null; repo: string | null }
 
 export function PluginsPage() {
   const [installed, setInstalled] = useState<InstalledPlugins | null>(null)
@@ -26,28 +26,18 @@ export function PluginsPage() {
   const [listError, setListError] = useState<string | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [search, setSearch] = useState("")
-  const [busy, setBusy] = useState<string | null>(null)
-  const [errors, setErrors] = useState<Record<string, string>>({})
   const [installLinkError, setInstallLinkError] = useState<string | null>(null)
-  const [review, setReview] = useState<PluginInspection | null>(null)
+  const [selection, setSelection] = useState<Selection | null>(null)
   const listRequest = useRef(0)
-  const busyRef = useRef<string | null>(null)
+  const busyRef = useRef(false)
   const pendingInstall = useRef<PluginInstallLink | null>(null)
-  const inspectRef = useRef<
-    (repository: string, key: string, fromInstallLink?: boolean) => Promise<void>
-  >(async () => {})
 
-  function startBusy(key: string) {
-    busyRef.current = key
-    setBusy(key)
-  }
-
-  function finishBusy() {
-    busyRef.current = null
-    setBusy(null)
+  function setBusy(busy: boolean) {
+    busyRef.current = busy
+    if (busy) return
     const pending = pendingInstall.current
     pendingInstall.current = null
-    if (pending) void inspectRef.current(pending.repo, pending.repo, true)
+    if (pending) setSelection({ id: null, repo: pending.repo })
   }
 
   const refreshInstalled = useCallback(async () => {
@@ -97,10 +87,11 @@ export function PluginsPage() {
       try {
         const link = await api.plugins.takePendingInstall()
         if (disposed || !link) return
+        setInstallLinkError(null)
         if (busyRef.current) {
           pendingInstall.current = link
         } else {
-          void inspectRef.current(link.repo, link.repo, true)
+          setSelection({ id: null, repo: link.repo })
         }
       } catch (error) {
         if (!disposed) {
@@ -129,54 +120,12 @@ export function PluginsPage() {
     }
   }, [])
 
-  function clearError(key: string) {
-    setErrors((previous) => {
-      const next = { ...previous }
-      delete next[key]
-      return next
-    })
-  }
-
-  async function inspect(repository: string, key: string, fromInstallLink = false) {
-    if (busyRef.current) return
-    startBusy(key)
-    clearError(key)
-    if (fromInstallLink) setInstallLinkError(null)
-    try {
-      setReview(await api.plugins.inspect(repository.trim()))
-    } catch (error) {
-      const message = getErrorMessage(error, "Failed to inspect plugin")
-      if (fromInstallLink) setInstallLinkError(message)
-      else setErrors((previous) => ({ ...previous, [key]: message }))
-    } finally {
-      finishBusy()
-    }
-  }
-  inspectRef.current = inspect
-
-  async function uninstall(id: string) {
-    if (busyRef.current) return
-    startBusy(id)
-    clearError(id)
-    try {
-      await api.plugins.uninstall(id)
-      await refreshInstalled()
-    } catch (error) {
-      setErrors((previous) => ({
-        ...previous,
-        [id]: getErrorMessage(error, "Failed to uninstall plugin"),
-      }))
-    } finally {
-      finishBusy()
-    }
-  }
-
-  const visiblePlugins = useMemo(() => {
+  const plugins = useMemo(() => {
     if (!installed) return []
 
     const catalogById = new Map(catalog?.plugins.map((plugin) => [plugin.id, plugin]))
     const installedIds = new Set(installed.plugins.map((plugin) => plugin.id))
-    const plugins: PluginListItem[] = [
+    return [
       ...installed.plugins.map((plugin) => {
         const entry = catalogById.get(plugin.id)
         return {
@@ -196,9 +145,11 @@ export function PluginsPage() {
           provider: plugin.contributions?.includes("provider") ?? false,
           installed: null,
         })),
-    ]
-    const query = search.trim().toLowerCase()
+    ] satisfies PluginListItem[]
+  }, [catalog, installed])
 
+  const visiblePlugins = useMemo(() => {
+    const query = search.trim().toLowerCase()
     return query
       ? plugins.filter((plugin) =>
           `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${plugin.provider ? "provider" : ""}`
@@ -206,7 +157,9 @@ export function PluginsPage() {
             .includes(query),
         )
       : plugins
-  }, [catalog, installed, search])
+  }, [plugins, search])
+
+  const selected = selection && resolveSelection(plugins, selection)
 
   return (
     <SettingsContent className="w-full min-w-0 mt-3">
@@ -250,53 +203,27 @@ export function PluginsPage() {
             {search ? "No plugins match your search." : "No plugins listed yet."}
           </p>
         )}
-        {visiblePlugins.map((plugin) => (
-          <PluginRow
-            key={plugin.id}
-            name={plugin.name}
-            previewUrl={plugin.preview_url}
-            owner={plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]}
-            version={plugin.version}
-            provider={plugin.provider}
-          >
-            {plugin.description && (
-              <p className="text-sm text-muted-foreground">{plugin.description}</p>
-            )}
-            {plugin.installed?.local_dir ? (
-              <p className="text-xs text-muted-foreground break-words">
-                Local checkout · {plugin.installed.local_dir}
-                {plugin.installed.repo && ` · shadows ${plugin.installed.repo}`}
-              </p>
-            ) : plugin.installed?.repo === null ? (
-              <p className="text-xs text-muted-foreground">Installed locally</p>
-            ) : null}
-            <ErrorMessage
-              message={
-                errors[plugin.installed?.id ?? plugin.repo ?? plugin.id] ?? plugin.installed?.error
-              }
-            />
-            <PluginActions
-              plugin={plugin}
-              busy={busy}
-              onInspect={inspect}
-              onUninstall={uninstall}
-            />
-          </PluginRow>
-        ))}
+        {visiblePlugins.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {visiblePlugins.map((plugin) => (
+              <PluginCard
+                key={plugin.id}
+                plugin={plugin}
+                onSelect={() => setSelection({ id: plugin.id, repo: plugin.repo })}
+              />
+            ))}
+          </div>
+        )}
       </div>
-      {review && (
-        <PluginReview
-          plugin={review}
-          updating={installed?.plugins.some((plugin) => plugin.id === review.id) ?? false}
-          onClose={() => setReview(null)}
-          onInstalled={() => {
-            finishBusy()
-            setReview(null)
+      {selected && (
+        <PluginSheet
+          key={`${selection.id ?? ""}:${selection.repo ?? ""}`}
+          plugin={selected}
+          onClose={() => setSelection(null)}
+          onBusyChange={setBusy}
+          onChanged={() => {
+            setSelection(null)
             void refreshInstalled()
-          }}
-          onInstallingChange={(installing) => {
-            if (installing) startBusy(review.repo)
-            else finishBusy()
           }}
         />
       )}
@@ -304,140 +231,69 @@ export function PluginsPage() {
   )
 }
 
-type PluginListItem = (InstalledPlugin | PluginCatalogEntry) & {
-  version: string | null
-  description: string | null
-  preview_url: string | null
-  /** From the catalog: the plugin ships a calendar provider binary. */
-  provider: boolean
-  installed: InstalledPlugin | null
-}
-
 /** Releases show their tag; unreleased themes show a short commit. */
 function catalogVersion(tag: string): string {
   return /^[0-9a-f]{40}$/.test(tag) ? tag.slice(0, 7) : tag
 }
 
-function PluginActions({
-  plugin,
-  busy,
-  onInspect,
-  onUninstall,
-}: {
-  plugin: PluginListItem
-  busy: string | null
-  onInspect: (repository: string, key: string) => Promise<void>
-  onUninstall: (id: string) => Promise<void>
-}) {
-  const installed = plugin.installed
-  const repository = plugin.repo
-
-  if (!installed && repository) {
-    return (
-      <Button
-        size="sm"
-        className="self-start"
-        onClick={() => void onInspect(repository, repository)}
-      >
-        Review install
-      </Button>
-    )
-  }
-
-  if (installed?.local_dir) {
-    return (
-      <Button
-        size="sm"
-        className="self-start"
-        variant="secondary"
-        disabled={busy === installed.id}
-        onClick={() => void onUninstall(installed.id)}
-      >
-        {busy === installed.id ? "Working…" : "Uninstall"}
-      </Button>
-    )
-  }
-
-  return (
-    <div className="flex flex-wrap gap-2">
-      {installed?.update_version && repository && (
-        <Button size="sm" onClick={() => void onInspect(repository, installed.id)}>
-          Update to {installed.update_version}
-        </Button>
-      )}
-      {!installed?.update_version && installed?.error && repository && (
-        <Button size="sm" onClick={() => void onInspect(repository, installed.id)}>
-          Reinstall
-        </Button>
-      )}
-      {installed && (
-        <Button
-          size="sm"
-          variant="secondary"
-          disabled={busy === installed.id}
-          onClick={() => void onUninstall(installed.id)}
-        >
-          {busy === installed.id ? "Working…" : "Uninstall"}
-        </Button>
-      )}
-    </div>
+function resolveSelection(plugins: PluginListItem[], selection: Selection): PluginListItem {
+  const repo = selection.repo?.toLowerCase()
+  const match = plugins.find((plugin) =>
+    selection.id ? plugin.id === selection.id : plugin.repo?.toLowerCase() === repo,
   )
+  if (match) return match
+  const name = selection.repo?.split("/").at(-1) ?? selection.id ?? ""
+  return {
+    id: selection.id ?? name,
+    name,
+    repo: selection.repo,
+    version: null,
+    description: null,
+    preview_url: null,
+    provider: false,
+    installed: null,
+  }
 }
 
-function PluginRow({
-  name,
-  previewUrl,
-  owner,
-  version,
-  provider,
-  children,
-}: {
-  name: string
-  previewUrl: string | null
-  owner: string
-  version: string | null
-  provider: boolean
-  children: ReactNode
-}) {
+function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: () => void }) {
+  const error = plugin.installed?.error
+  const status = plugin.installed?.update_version
+    ? "Update available"
+    : plugin.installed
+      ? "Installed"
+      : null
+
+  // Block layout: WebKit doesn't stretch a flex <button>'s children.
   return (
-    <div className="flex gap-4 rounded-md border border-border p-4 min-w-0">
-      <PluginPreview key={previewUrl} url={previewUrl} name={name} />
-      <div className="flex flex-1 flex-col gap-3 min-w-0">
-        <div className="flex flex-col gap-1 min-w-0">
-          <h3 data-typography="heading" className="text-sm break-words">
-            {name}
-          </h3>
-          <p className="text-xs text-muted-foreground break-words">
-            {owner}
-            {version && ` · ${version}`}
-            {provider && " · Calendar provider"}
-          </p>
+    <button
+      type="button"
+      onClick={onSelect}
+      className="group block w-full min-w-0 rounded-lg border border-border p-4 text-left outline-none transition-colors hover:border-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+    >
+      <div className="flex flex-col gap-3 min-w-0">
+        <div className="flex items-start gap-2 min-w-0">
+          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
+            <h3 data-typography="heading" className="truncate text-sm">
+              {plugin.name}
+            </h3>
+            <p className="truncate text-xs text-muted-foreground">
+              {pluginOwner(plugin)}
+              {plugin.provider && " · Calendar provider"}
+            </p>
+          </div>
+          {status && (
+            <span className="shrink-0 rounded-xs border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
+              {status}
+            </span>
+          )}
         </div>
-        {children}
+        <PluginPreview key={plugin.preview_url} url={plugin.preview_url} name={plugin.name} />
+        {plugin.description && (
+          <p className="line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
+        )}
+        {error && <p className="line-clamp-2 text-xs text-destructive">{error}</p>}
       </div>
-    </div>
-  )
-}
-
-function PluginPreview({ url, name }: { url: string | null; name: string }) {
-  const [failed, setFailed] = useState(false)
-  return (
-    <div className="relative flex aspect-video w-28 sm:w-40 shrink-0 self-start items-center justify-center overflow-hidden rounded-xs bg-muted">
-      {url && !failed ? (
-        <img
-          src={url}
-          alt={`${name} preview`}
-          width={160}
-          height={90}
-          loading="lazy"
-          decoding="async"
-          className="absolute size-full object-contain"
-          onError={() => setFailed(true)}
-        />
-      ) : (
-        <RencalLogomarkIcon className="w-8 opacity-15 grayscale" />
-      )}
-    </div>
+    </button>
   )
 }
 

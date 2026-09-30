@@ -92,13 +92,23 @@ function button(label: string) {
   return match
 }
 
-async function click(label: string) {
+function card(name: string) {
+  const match = [...document.querySelectorAll("h3")].find((heading) => heading.textContent === name)
+  const target = match?.closest("button")
+  if (!target) throw new Error(`Card ${name} not found: ${document.body.textContent}`)
+  return target
+}
+
+async function press(target: HTMLElement) {
   await act(async () => {
-    const target = button(label)
     target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }))
     target.click()
   })
 }
+
+const click = (label: string) => press(button(label))
+const open = (name: string) => press(card(name))
+const sheetText = () => document.querySelector('[role="dialog"]')?.textContent ?? ""
 
 async function searchFor(query: string) {
   const input = document.querySelector<HTMLInputElement>('[aria-label="Search plugins"]')!
@@ -108,16 +118,17 @@ async function searchFor(query: string) {
   })
 }
 
-it("reviews a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
+it("describes a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
   await render()
-  await click("Review install")
+  expect(card("Dusk").textContent).not.toContain("Installed")
+  await open("Dusk")
   expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
   expect(api.plugins.install).not.toHaveBeenCalled()
-  const dialog = document.querySelector('[role="dialog"]')!
-  expect(dialog.textContent).toContain("Dusk Dark")
-  expect(dialog.textContent).toContain("Pixel · 700 · normal · pixel-bold.woff2")
-  expect(dialog.textContent).toContain("Compatible")
-  expect(dialog.textContent).toContain("unreviewed community packages")
+  expect(sheetText()).toContain("Dusk Dark")
+  expect(sheetText()).toContain("Pixel · 700 · normal · pixel-bold.woff2")
+  expect(sheetText()).toContain("Compatible")
+  expect(sheetText()).toContain("unreviewed community packages")
+  expect(() => button("Uninstall")).toThrow()
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [{ ...installed, version: plugin.version, update_version: null }],
     errors: [],
@@ -125,18 +136,18 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   await click("Install")
   expect(api.plugins.install).toHaveBeenCalledWith("alice/dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
-  expect(document.body.textContent).toContain("v1.10.0")
+  expect(card("Dusk").textContent).toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("omits the font review section for a package without fonts", async () => {
+it("omits the font section for a package without fonts", async () => {
   vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, fonts: [] })
   await render()
-  await click("Review install")
-  expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain("Fonts")
+  await open("Dusk")
+  expect(sheetText()).not.toContain("Fonts")
 })
 
-it("reviews a provider-only plugin without the theme hint", async () => {
+it("describes a provider-only plugin without the theme hint", async () => {
   vi.mocked(api.plugins.inspect).mockResolvedValue({
     ...plugin,
     themes: [],
@@ -152,22 +163,22 @@ it("reviews a provider-only plugin without the theme hint", async () => {
     ],
   })
   await render()
-  await click("Review install")
-  const text = document.querySelector('[role="dialog"]')!.textContent
-  expect(text).toContain("Calendar providers")
-  expect(text).toContain(
+  await open("Dusk")
+  expect(sheetText()).toContain("Calendar providers")
+  expect(sheetText()).toContain(
     "Adds the Tuta calendar provider (runs caldir-provider-tuta to sync accounts)",
   )
-  expect(text).toContain("Proton · not available for this platform")
-  expect(text).not.toContain("Themes")
-  expect(text).not.toContain("Choose a theme")
+  expect(sheetText()).toContain("Proton · not available for this platform")
+  expect(sheetText()).not.toContain("Themes")
+  expect(sheetText()).not.toContain("Choose a theme")
 })
 
-it("reviews an install received from a deep link", async () => {
+it("describes an install received from a deep link", async () => {
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
   await render()
   expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
-  expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Dusk")
+  expect(sheetText()).toContain("Dusk")
+  expect(button("Install").disabled).toBe(false)
 })
 
 it("does nothing when there is no pending deep-link install", async () => {
@@ -177,42 +188,45 @@ it("does nothing when there is no pending deep-link install", async () => {
   expect(document.querySelector('[role="dialog"]')).toBeNull()
 })
 
-it("blocks incompatible installs and lets the user cancel", async () => {
+it("blocks incompatible installs", async () => {
   vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, compatible: false })
   await render()
-  await click("Review install")
+  await open("Dusk")
   expect(button("Install").disabled).toBe(true)
-  expect(document.querySelector('[role="dialog"]')!.textContent).toContain("Not compatible")
-  await click("Cancel")
-  expect(api.plugins.install).not.toHaveBeenCalled()
+  expect(sheetText()).toContain("Not compatible")
 })
 
-it("keeps a failed update review open, then updates and uninstalls without changing selection", async () => {
+it("keeps a failed update open, then updates and uninstalls without changing selection", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   await render()
-  await click("Update to v1.10.0")
+  expect(card("Dusk").textContent).toContain("Update available")
+  await open("Dusk")
+  expect(sheetText()).toContain("v1.2.0 · v1.10.0 available")
   vi.mocked(api.plugins.install).mockRejectedValueOnce(new Error("GitHub rate limit exceeded"))
-  await click("Update")
-  expect(document.querySelector('[role="dialog"]')!.textContent).toContain(
-    "GitHub rate limit exceeded",
-  )
+  await click("Update to v1.10.0")
+  expect(sheetText()).toContain("GitHub rate limit exceeded")
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [{ ...installed, version: plugin.version, update_version: null }],
     errors: [],
   })
-  await click("Update")
-  expect(document.body.textContent).not.toContain("Update to")
+  await click("Update to v1.10.0")
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(card("Dusk").textContent).toContain("Installed")
+
+  await open("Dusk")
+  expect(() => button("Update to v1.10.0")).toThrow()
   vi.mocked(api.plugins.uninstall).mockRejectedValueOnce(new Error("Cannot write plugins.toml"))
   await click("Uninstall")
-  expect(document.body.textContent).toContain("Cannot write plugins.toml")
+  expect(sheetText()).toContain("Cannot write plugins.toml")
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   await click("Uninstall")
   expect(api.plugins.uninstall).toHaveBeenCalledWith(plugin.id)
-  expect(document.body.textContent).toContain("Review install")
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(card("Dusk").textContent).not.toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("shows installed plugins first and filters the unified list", async () => {
+it("shows installed plugins first and filters the grid", async () => {
   const anotherPlugin: PluginCatalogEntry = {
     ...entry,
     id: "bob.dawn",
@@ -255,14 +269,14 @@ it("marks calendar provider plugins from the catalog", async () => {
   })
   await render()
   const meta = [...document.querySelectorAll("h3 + p")].map((element) => element.textContent)
-  expect(meta).toEqual(["alice · v1.10.0", "alice · v0.2.0 · Calendar provider"])
+  expect(meta).toEqual(["alice", "alice · Calendar provider"])
 
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")
   expect(document.body.textContent).not.toContain("Dusk")
 })
 
-it("shows local checkout details and only an uninstall action", async () => {
+it("describes a local checkout with only an uninstall action", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [
       {
@@ -275,16 +289,15 @@ it("shows local checkout details and only an uninstall action", async () => {
     errors: [],
   })
   await render()
-
-  expect(document.body.textContent).toContain(
-    "Local checkout · /home/alice/dev/rencal-dusk · shadows alice/dusk",
-  )
-  expect(document.body.textContent).not.toContain("Update to")
-  expect(document.body.textContent).not.toContain("Reinstall")
-  expect(button("Uninstall")).toBeTruthy()
-
   await searchFor("/home/alice/dev")
-  expect(document.body.textContent).toContain("Dusk")
+  expect(card("Dusk").textContent).toContain("Package files are missing")
+  await open("Dusk")
+
+  expect(api.plugins.inspect).not.toHaveBeenCalled()
+  expect(sheetText()).toContain("/home/alice/dev/rencal-dusk")
+  expect(sheetText()).not.toContain("Update to")
+  expect(sheetText()).not.toContain("Reinstall")
+  expect(button("Uninstall")).toBeTruthy()
 })
 
 it("retries the catalog when it is unavailable", async () => {
