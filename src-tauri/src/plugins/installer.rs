@@ -38,6 +38,8 @@ const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
 pub(super) const ICON_FILE_LIMIT: usize = 64 * 1024;
+/// Local previews travel inline on every plugin list, so stay well below the catalog's 10 MiB.
+const LOCAL_PREVIEW_LIMIT: usize = 4 * 1024 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
 /// Release archives are not part of `PACKAGE_LIMIT`; Tuta's are about 4 MB.
 const PROVIDER_ARCHIVE_LIMIT: usize = 64 * 1024 * 1024;
@@ -63,6 +65,11 @@ const HOST_TARGETS: &[&str] = if cfg!(all(target_os = "linux", target_arch = "x8
 pub struct InstalledPlugin {
     pub id: String,
     pub name: String,
+    /// From the installed manifest, for plugins the catalog doesn't list.
+    pub description: Option<String>,
+    pub contributions: Vec<ContributionKind>,
+    /// Local checkouts only: their `preview.png` as a `data:` URL.
+    pub preview_url: Option<String>,
     pub repo: Option<String>,
     pub local_dir: Option<String>,
     pub version: Option<String>,
@@ -475,6 +482,9 @@ impl PluginManager {
                 repo: Some(entry.repo),
                 local_dir: None,
                 update_version: None,
+                description: None,
+                contributions: Vec::new(),
+                preview_url: None,
                 error: Some(
                     "Package files are missing. Install the repository again to restore it.".into(),
                 ),
@@ -491,13 +501,25 @@ impl PluginManager {
                         provider.name
                     )
                 });
+            let contributions = [
+                (!package.themes.is_empty()).then_some(ContributionKind::Theme),
+                (!package.providers.is_empty()).then_some(ContributionKind::Provider),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
             if let Some(row) = plugins.iter_mut().find(|row| row.id == package.id) {
                 row.name = package.name;
+                row.description = Some(package.description);
+                row.contributions = contributions;
                 row.error = error;
             } else {
                 plugins.push(InstalledPlugin {
                     id: package.id,
                     name: package.name,
+                    description: Some(package.description),
+                    contributions,
+                    preview_url: None,
                     repo: None,
                     local_dir: None,
                     version: None,
@@ -513,6 +535,9 @@ impl PluginManager {
                 plugins.push(InstalledPlugin {
                     name: error.package.clone(),
                     id: error.package,
+                    description: None,
+                    contributions: Vec::new(),
+                    preview_url: None,
                     repo: None,
                     local_dir: None,
                     version: None,
@@ -524,8 +549,10 @@ impl PluginManager {
             }
         }
         for entry in &locks.local {
+            let preview_url = local_preview_data_url(Path::new(&entry.dir));
             if let Some(row) = plugins.iter_mut().find(|row| row.id == entry.id) {
                 row.local_dir = Some(entry.dir.clone());
+                row.preview_url = preview_url;
                 if row
                     .error
                     .as_deref()
@@ -537,6 +564,9 @@ impl PluginManager {
                 plugins.push(InstalledPlugin {
                     id: entry.id.clone(),
                     name: entry.id.clone(),
+                    description: None,
+                    contributions: Vec::new(),
+                    preview_url,
                     repo: None,
                     local_dir: Some(entry.dir.clone()),
                     version: None,
@@ -2201,6 +2231,25 @@ pub(super) fn is_svg(bytes: &[u8]) -> bool {
     }
 }
 
+/// A local checkout's `preview.png` as a `data:` URL. Installed packages have
+/// no preview; the catalog hosts theirs.
+fn local_preview_data_url(dir: &Path) -> Option<String> {
+    use base64::Engine;
+
+    let mut bytes = Vec::new();
+    std::fs::File::open(dir.join("preview.png"))
+        .ok()?
+        .take(LOCAL_PREVIEW_LIMIT as u64 + 1)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    (bytes.len() <= LOCAL_PREVIEW_LIMIT && bytes.starts_with(b"\x89PNG\r\n\x1a\n")).then(|| {
+        format!(
+            "data:image/png;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(bytes)
+        )
+    })
+}
+
 fn remove_path(path: &Path) -> std::io::Result<()> {
     match std::fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_dir() => std::fs::remove_dir_all(path),
@@ -3051,6 +3100,18 @@ appearance = "dark"
         assert_eq!(snapshot.plugins[0].name, "Dusk");
         assert_eq!(snapshot.plugins[0].local_dir.as_deref(), checkout.to_str());
         assert_eq!(snapshot.plugins[0].repo, None);
+        assert!(snapshot.plugins[0].description.is_some());
+        assert_eq!(
+            snapshot.plugins[0].contributions,
+            vec![ContributionKind::Theme]
+        );
+        assert_eq!(snapshot.plugins[0].preview_url, None);
+
+        std::fs::write(checkout.join("preview.png"), b"\x89PNG\r\n\x1a\nrest").unwrap();
+        let preview = manager.list().await.plugins[0].preview_url.clone().unwrap();
+        assert!(preview.starts_with("data:image/png;base64,"));
+        std::fs::write(checkout.join("preview.png"), b"not a png").unwrap();
+        assert_eq!(manager.list().await.plugins[0].preview_url, None);
 
         *manager.inner.catalog.lock().await = vec![PluginCatalogEntry {
             id: "alice.dusk".into(),

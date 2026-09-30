@@ -38,6 +38,9 @@ const plugin = { ...entry, version: entry.tag }
 const installed: InstalledPlugin = {
   id: plugin.id,
   name: plugin.name,
+  description: null,
+  contributions: [],
+  preview_url: null,
   repo: plugin.repo,
   local_dir: null,
   version: "v1.2.0",
@@ -110,6 +113,30 @@ async function searchFor(query: string) {
   })
 }
 
+it("describes an unlisted plugin from its installed manifest", async () => {
+  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [], error: null })
+  vi.mocked(api.plugins.list).mockResolvedValue({
+    plugins: [
+      {
+        ...installed,
+        repo: null,
+        local_dir: "/home/alice/dusk",
+        update_version: null,
+        description: "A local theme",
+        contributions: ["theme"],
+        preview_url: "data:image/png;base64,AA==",
+      },
+    ],
+    errors: [],
+  })
+  await render()
+  expect(card("Dusk").textContent).toContain("A local theme")
+  expect(card("Dusk").textContent).toContain("Theme")
+  expect(card("Dusk").querySelector("img")?.getAttribute("src")).toBe("data:image/png;base64,AA==")
+  await open("Dusk")
+  expect(sheetText()).toContain("isn't listed in the renCal catalog")
+})
+
 it("describes a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
   await render()
   expect(card("Dusk").textContent).not.toContain("Installed")
@@ -144,7 +171,7 @@ it("describes a provider plugin from the catalog", async () => {
   })
   await render()
   await open("Dusk")
-  expect(sheetText()).toContain("Calendar provider")
+  expect(sheetText()).toContain("Provider")
   expect(sheetText()).not.toContain("Theme")
 })
 
@@ -237,7 +264,7 @@ it("shows installed plugins first and filters the grid", async () => {
   expect(document.body.textContent).toContain("No plugins match your search.")
 })
 
-it("marks calendar provider plugins from the catalog", async () => {
+it("marks provider plugins from the catalog", async () => {
   vi.mocked(api.plugins.catalog).mockResolvedValue({
     plugins: [
       entry,
@@ -254,8 +281,8 @@ it("marks calendar provider plugins from the catalog", async () => {
   })
   await render()
   expect(card("Dusk").textContent).toContain("Theme")
-  expect(card("Dusk").textContent).not.toContain("Calendar provider")
-  expect(card("Tuta").textContent).toContain("Calendar provider")
+  expect(card("Dusk").textContent).not.toContain("Provider")
+  expect(card("Tuta").textContent).toContain("Provider")
 
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")

@@ -131,9 +131,10 @@ export function PluginsPage() {
         const entry = catalogById.get(plugin.id)
         return {
           ...plugin,
-          description: entry?.description ?? null,
-          preview_url: entry?.preview_url ?? null,
-          contributions: entry ? (entry.contributions ?? []) : null,
+          description: entry?.description ?? plugin.description,
+          preview_url: entry?.preview_url ?? plugin.preview_url,
+          contributions: entry?.contributions ?? plugin.contributions,
+          listed: entry !== undefined,
           installed: plugin,
         }
       }),
@@ -144,6 +145,7 @@ export function PluginsPage() {
           version: catalogVersion(plugin.tag),
           preview_url: plugin.preview_url ?? null,
           contributions: plugin.contributions ?? [],
+          listed: true,
           installed: null,
         })),
     ] satisfies PluginListItem[]
@@ -251,7 +253,8 @@ function resolveSelection(plugins: PluginListItem[], selection: Selection): Plug
     version: null,
     description: null,
     preview_url: null,
-    contributions: null,
+    contributions: [],
+    listed: false,
     installed: null,
   }
 }
@@ -275,9 +278,9 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
         <h3 data-typography="heading" className="truncate text-sm">
           {plugin.name}
         </h3>
-        {(plugin.contributions?.length || status) && (
+        {(plugin.contributions.length > 0 || status) && (
           <div className="flex flex-wrap gap-1.5">
-            {plugin.contributions?.map((kind) => (
+            {plugin.contributions.map((kind) => (
               <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
             ))}
             {status && <PluginBadge solid>{status}</PluginBadge>}

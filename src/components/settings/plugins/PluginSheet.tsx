@@ -71,7 +71,7 @@ export function PluginSheet({
     >
       <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
         <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
-          <div className="flex flex-col gap-6 p-6 text-sm min-w-0">
+          <div className="flex flex-col gap-4 p-6 text-sm min-w-0">
             <SheetHeader className="gap-3 p-0">
               <div className="flex items-start justify-between gap-4">
                 <SheetTitle className="break-words text-lg min-w-0">{plugin.name}</SheetTitle>
@@ -86,9 +86,9 @@ export function PluginSheet({
                   </Button>
                 </SheetClose>
               </div>
-              {(plugin.contributions?.length || installed) && (
+              {(plugin.contributions.length > 0 || installed) && (
                 <div className="flex flex-wrap gap-1.5">
-                  {plugin.contributions?.map((kind) => (
+                  {plugin.contributions.map((kind) => (
                     <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
                   ))}
                   {installed && <PluginBadge solid>Installed</PluginBadge>}
@@ -139,12 +139,11 @@ export function PluginSheet({
                     variant="secondary"
                     onClick={() => void openUrl(`https://github.com/${plugin.repo}`)}
                   >
-                    <ArrowUpRightIcon />
                     View on GitHub
                   </Button>
                 )}
               </div>
-              {!plugin.contributions && (
+              {!plugin.listed && (
                 <p className="text-xs text-muted-foreground">
                   This plugin isn't listed in the renCal catalog.
                 </p>

@@ -78,7 +78,15 @@ export type FirstDayOfWeek = "monday" | "sunday"
 
 export type FontStyle = "normal" | "italic" | "oblique"
 
-export type InstalledPlugin = { id: string; name: string; repo: string | null; local_dir: string | null; version: string | null; update_version: string | null; error: string | null }
+export type InstalledPlugin = { id: string; name: string; 
+/**
+ * From the installed manifest, for plugins the catalog doesn't list.
+ */
+description: string | null; contributions: ContributionKind[]; 
+/**
+ * Local checkouts only: their `preview.png` as a `data:` URL.
+ */
+preview_url: string | null; repo: string | null; local_dir: string | null; version: string | null; update_version: string | null; error: string | null }
 
 export type InstalledPlugins = { plugins: InstalledPlugin[]; errors: string[] }
 

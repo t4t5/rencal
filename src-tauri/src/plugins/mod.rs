@@ -528,6 +528,7 @@ pub struct ScannedProvider {
 pub struct ScannedPackage {
     pub id: String,
     pub name: String,
+    pub description: String,
     pub themes: Vec<ScannedTheme>,
     pub providers: Vec<ScannedProvider>,
 }
@@ -638,6 +639,7 @@ fn scan_package(
     Ok(ScannedPackage {
         id: manifest.id,
         name: manifest.name,
+        description: manifest.description,
         themes,
         providers,
     })

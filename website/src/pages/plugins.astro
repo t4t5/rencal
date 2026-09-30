@@ -52,7 +52,7 @@ const plugins = rawIndex.sort(
 const authorOf = (repo: string) => repo.split("/", 1)[0]
 // Providers run a program on the user's computer, so they are labelled apart from themes.
 const kindOf = (plugin: PluginIndexEntry) =>
-  plugin.contributions.includes("provider") ? "Calendar provider" : null
+  plugin.contributions.includes("provider") ? "Provider" : null
 // The site is redeployed whenever the index changes, so build time is when the list was refreshed.
 const builtAt = new Date()
 ---
