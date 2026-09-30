@@ -128,30 +128,34 @@ export function PluginsPage() {
   const plugins = useMemo(() => {
     if (!installed) return []
 
-    const catalogById = new Map(catalog?.plugins.map((plugin) => [plugin.id, plugin]))
-    const installedIds = new Set(installed.plugins.map((plugin) => plugin.id))
+    const installedById = new Map(installed.plugins.map((plugin) => [plugin.id, plugin]))
+    const catalogIds = new Set(catalog?.plugins.map((plugin) => plugin.id))
     return [
-      ...installed.plugins.map((plugin) => {
-        const entry = catalogById.get(plugin.id)
+      ...(catalog?.plugins ?? []).map((entry) => {
+        const plugin = installedById.get(entry.id)
+        if (!plugin) {
+          return {
+            ...entry,
+            version: catalogVersion(entry.tag),
+            preview_url: entry.preview_url ?? null,
+            contributions: entry.contributions ?? [],
+            listed: true,
+            installed: null,
+          }
+        }
         return {
           ...plugin,
-          description: entry?.description ?? plugin.description,
-          preview_url: entry?.preview_url ?? plugin.preview_url,
-          contributions: entry?.contributions ?? plugin.contributions,
-          listed: entry !== undefined,
+          description: entry.description ?? plugin.description,
+          preview_url: entry.preview_url ?? plugin.preview_url,
+          contributions: entry.contributions ?? plugin.contributions,
+          listed: true,
           installed: plugin,
         }
       }),
-      ...(catalog?.plugins ?? [])
-        .filter((plugin) => !installedIds.has(plugin.id))
-        .map((plugin) => ({
-          ...plugin,
-          version: catalogVersion(plugin.tag),
-          preview_url: plugin.preview_url ?? null,
-          contributions: plugin.contributions ?? [],
-          listed: true,
-          installed: null,
-        })),
+      // Local and unlisted plugins aren't in the catalog
+      ...installed.plugins
+        .filter((plugin) => !catalogIds.has(plugin.id))
+        .map((plugin) => ({ ...plugin, listed: false, installed: plugin })),
     ] satisfies PluginListItem[]
   }, [catalog, installed])
 
