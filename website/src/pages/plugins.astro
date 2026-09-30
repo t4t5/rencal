@@ -208,9 +208,9 @@ const builtAt = new Date()
             </Button>
           </div>
 
-          <div class="plugin-preview">
-            <RencalLogomark class="plugin-preview-fallback" />
-            {plugin.preview_url && (
+          {plugin.preview_url && (
+            <div class="plugin-preview">
+              <RencalLogomark class="plugin-preview-fallback" />
               <img
                 src={plugin.preview_url}
                 alt={`${plugin.name} preview`}
@@ -220,8 +220,8 @@ const builtAt = new Date()
                 decoding="async"
                 data-plugin-preview
               />
-            )}
-          </div>
+            </div>
+          )}
 
           <section class="plugin-sheet-details">
             <h3>Details</h3>
