@@ -36,7 +36,7 @@ export function ThemesPage() {
   const slotThemes = useMemo(() => themesFor(slot, descriptors), [descriptors, slot])
 
   return (
-    <SettingsContent className={cn("w-full", { "pt-8": !isMacOS })}>
+    <SettingsContent className="w-full">
       <div className="flex flex-col gap-2 w-[180px]">
         <label htmlFor="theme-mode" className="text-sm leading-5">
           Theme mode

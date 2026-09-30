@@ -1,16 +1,14 @@
 // @vitest-environment happy-dom
+import { openUrl } from "@tauri-apps/plugin-opener"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
-import {
-  api,
-  type InstalledPlugin,
-  type PluginCatalogEntry,
-  type PluginInspection,
-} from "@/lib/api"
+import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
 
 import { PluginsPage } from "./PluginsPage"
+
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }))
 
 vi.mock("@/lib/api", () => ({
   api: {
@@ -18,7 +16,6 @@ vi.mock("@/lib/api", () => ({
       list: vi.fn(),
       catalog: vi.fn(),
       takePendingInstall: vi.fn(),
-      inspect: vi.fn(),
       install: vi.fn(),
       uninstall: vi.fn(),
     },
@@ -29,28 +26,21 @@ vi.mock("@/lib/api", () => ({
     error instanceof Error ? error.message : fallback,
 }))
 
-const plugin: PluginInspection = {
+const entry: PluginCatalogEntry = {
   id: "alice.dusk",
   name: "Dusk",
   repo: "alice/dusk",
-  version: "v1.10.0",
   description: "A quiet theme",
-  min_rencal_version: "0.7.0",
-  compatible: true,
-  themes: [{ id: "dark", name: "Dusk Dark", appearance: "dark" }],
-  fonts: [
-    {
-      family: "Pixel",
-      file: "fonts/pixel-bold.woff2",
-      weight: 700,
-      style: "normal",
-    },
-  ],
+  tag: "v1.10.0",
+  contributions: ["theme"],
 }
-const entry: PluginCatalogEntry = { ...plugin, tag: "v1.10.0" }
+const plugin = { ...entry, version: entry.tag }
 const installed: InstalledPlugin = {
   id: plugin.id,
   name: plugin.name,
+  description: null,
+  contributions: [],
+  preview_url: null,
   repo: plugin.repo,
   local_dir: null,
   version: "v1.2.0",
@@ -68,8 +58,14 @@ beforeEach(() => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
-  vi.mocked(api.plugins.inspect).mockResolvedValue(plugin)
-  vi.mocked(api.plugins.install).mockResolvedValue(plugin)
+  vi.mocked(api.plugins.install).mockResolvedValue({
+    ...plugin,
+    min_rencal_version: "0.7.0",
+    compatible: true,
+    themes: [],
+    fonts: [],
+    providers: [],
+  })
   vi.mocked(api.plugins.uninstall).mockResolvedValue(undefined)
 })
 
@@ -91,13 +87,23 @@ function button(label: string) {
   return match
 }
 
-async function click(label: string) {
+function card(name: string) {
+  const match = [...document.querySelectorAll("h3")].find((heading) => heading.textContent === name)
+  const target = match?.closest("button")
+  if (!target) throw new Error(`Card ${name} not found: ${document.body.textContent}`)
+  return target
+}
+
+async function press(target: HTMLElement) {
   await act(async () => {
-    const target = button(label)
     target.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0 }))
     target.click()
   })
 }
+
+const click = (label: string) => press(button(label))
+const open = (name: string) => press(card(name))
+const sheetText = () => document.querySelector('[role="dialog"]')?.textContent ?? ""
 
 async function searchFor(query: string) {
   const input = document.querySelector<HTMLInputElement>('[aria-label="Search plugins"]')!
@@ -107,16 +113,42 @@ async function searchFor(query: string) {
   })
 }
 
-it("reviews a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
+it("describes an unlisted plugin from its installed manifest", async () => {
+  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [], error: null })
+  vi.mocked(api.plugins.list).mockResolvedValue({
+    plugins: [
+      {
+        ...installed,
+        repo: null,
+        local_dir: "/home/alice/dusk",
+        update_version: null,
+        description: "A local theme",
+        contributions: ["theme"],
+        preview_url: "data:image/png;base64,AA==",
+      },
+    ],
+    errors: [],
+  })
   await render()
-  await click("Review install")
-  expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
+  expect(card("Dusk").textContent).toContain("A local theme")
+  expect(card("Dusk").textContent).toContain("Theme")
+  expect(card("Dusk").querySelector("img")).toBeNull()
+  await open("Dusk")
+  expect(sheetText()).toContain("isn't listed in the renCal catalog")
+  expect(document.querySelector('[role="dialog"] img')?.getAttribute("src")).toBe(
+    "data:image/png;base64,AA==",
+  )
+})
+
+it("describes a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
+  await render()
+  expect(card("Dusk").textContent).not.toContain("Installed")
+  await open("Dusk")
   expect(api.plugins.install).not.toHaveBeenCalled()
-  const dialog = document.querySelector('[role="dialog"]')!
-  expect(dialog.textContent).toContain("Dusk Dark")
-  expect(dialog.textContent).toContain("Pixel · 700 · normal · pixel-bold.woff2")
-  expect(dialog.textContent).toContain("Compatible")
-  expect(dialog.textContent).toContain("unreviewed community packages")
+  expect(sheetText()).toContain("alice/dusk")
+  expect(sheetText()).toContain("v1.10.0")
+  expect(sheetText()).toContain("Theme")
+  expect(() => button("Uninstall")).toThrow()
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [{ ...installed, version: plugin.version, update_version: null }],
     errors: [],
@@ -124,84 +156,124 @@ it("reviews a catalog plugin, installs it, and refreshes the list without select
   await click("Install")
   expect(api.plugins.install).toHaveBeenCalledWith("alice/dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
-  expect(document.body.textContent).toContain("v1.10.0")
+  expect(card("Dusk").textContent).toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("omits the font review section for a package without fonts", async () => {
-  vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, fonts: [] })
+it("opens the plugin's repository on GitHub", async () => {
   await render()
-  await click("Review install")
-  expect(document.querySelector('[role="dialog"]')?.textContent).not.toContain("Fonts")
+  await open("Dusk")
+  await click("View on GitHub")
+  expect(openUrl).toHaveBeenCalledWith("https://github.com/alice/dusk")
 })
 
-it("reviews an install received from a deep link", async () => {
+it("describes a provider plugin from the catalog", async () => {
+  vi.mocked(api.plugins.catalog).mockResolvedValue({
+    plugins: [{ ...entry, contributions: ["provider"] }],
+    error: null,
+  })
+  await render()
+  await open("Dusk")
+  expect(sheetText()).toContain("Provider")
+  expect(sheetText()).not.toContain("Theme")
+})
+
+it("keeps an install error in the sheet", async () => {
+  vi.mocked(api.plugins.install).mockRejectedValueOnce(
+    new Error("Dusk requires renCal 9.0.0 or newer"),
+  )
+  await render()
+  await open("Dusk")
+  await click("Install")
+  expect(sheetText()).toContain("Dusk requires renCal 9.0.0 or newer")
+  expect(button("Install").disabled).toBe(false)
+})
+
+it("describes an install received from a deep link", async () => {
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
   await render()
-  expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
-  expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Dusk")
+  expect(sheetText()).toContain("A quiet theme")
+  expect(button("Install").disabled).toBe(false)
+})
+
+it("describes a deep link to a plugin that isn't in the catalog", async () => {
+  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "bob/rencal-dawn" })
+  await render()
+  expect(sheetText()).toContain("rencal-dawn")
+  expect(sheetText()).toContain("isn't listed in the renCal catalog")
+  await click("Install")
+  expect(api.plugins.install).toHaveBeenCalledWith("bob/rencal-dawn")
 })
 
 it("does nothing when there is no pending deep-link install", async () => {
   await render()
   expect(api.plugins.takePendingInstall).toHaveBeenCalledOnce()
-  expect(api.plugins.inspect).not.toHaveBeenCalled()
   expect(document.querySelector('[role="dialog"]')).toBeNull()
 })
 
-it("blocks incompatible installs and lets the user cancel", async () => {
-  vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, compatible: false })
-  await render()
-  await click("Review install")
-  expect(button("Install").disabled).toBe(true)
-  expect(document.querySelector('[role="dialog"]')!.textContent).toContain("Not compatible")
-  await click("Cancel")
-  expect(api.plugins.install).not.toHaveBeenCalled()
-})
-
-it("keeps a failed update review open, then updates and uninstalls without changing selection", async () => {
+it("keeps a failed update open, then updates and uninstalls without changing selection", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   await render()
-  await click("Update to v1.10.0")
+  expect(card("Dusk").textContent).toContain("Update available")
+  await open("Dusk")
+  expect(sheetText()).toContain("v1.2.0 · v1.10.0 available")
   vi.mocked(api.plugins.install).mockRejectedValueOnce(new Error("GitHub rate limit exceeded"))
-  await click("Update")
-  expect(document.querySelector('[role="dialog"]')!.textContent).toContain(
-    "GitHub rate limit exceeded",
-  )
+  await click("Update to v1.10.0")
+  expect(sheetText()).toContain("GitHub rate limit exceeded")
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [{ ...installed, version: plugin.version, update_version: null }],
     errors: [],
   })
-  await click("Update")
-  expect(document.body.textContent).not.toContain("Update to")
+  await click("Update to v1.10.0")
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(card("Dusk").textContent).toContain("Installed")
+
+  await open("Dusk")
+  expect(() => button("Update to v1.10.0")).toThrow()
   vi.mocked(api.plugins.uninstall).mockRejectedValueOnce(new Error("Cannot write plugins.toml"))
   await click("Uninstall")
-  expect(document.body.textContent).toContain("Cannot write plugins.toml")
+  expect(sheetText()).toContain("Cannot write plugins.toml")
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   await click("Uninstall")
   expect(api.plugins.uninstall).toHaveBeenCalledWith(plugin.id)
-  expect(document.body.textContent).toContain("Review install")
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(card("Dusk").textContent).not.toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("shows installed plugins first and filters the unified list", async () => {
+it("sorts and filters the grid", async () => {
   const anotherPlugin: PluginCatalogEntry = {
     ...entry,
     id: "bob.dawn",
     name: "Dawn",
     repo: "bob/dawn",
     description: "A bright theme",
+    stars: 12,
+    released_at: "2026-08-01T00:00:00Z",
   }
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({
-    plugins: [anotherPlugin, entry],
+    plugins: [{ ...entry, stars: 3, released_at: "2026-09-01T00:00:00Z" }, anotherPlugin],
     error: null,
   })
   await render()
-  expect([...document.querySelectorAll("h3")].map((heading) => heading.textContent)).toEqual([
-    "Dusk",
-    "Dawn",
-  ])
+  const names = () => [...document.querySelectorAll("h3")].map((heading) => heading.textContent)
+  expect(names()).toEqual(["Dawn", "Dusk"])
+
+  await act(async () => {
+    document
+      .querySelector('[aria-label="Sort plugins"]')!
+      .dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }),
+      )
+  })
+  const latest = [...document.querySelectorAll('[role="option"]')].find(
+    (option) => option.textContent === "Latest",
+  )!
+  await act(async () => {
+    latest.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  })
+  expect(names()).toEqual(["Dusk", "Dawn"])
 
   await searchFor("bright")
   expect(document.body.textContent).toContain("Dawn")
@@ -210,7 +282,7 @@ it("shows installed plugins first and filters the unified list", async () => {
   expect(document.body.textContent).toContain("No plugins match your search.")
 })
 
-it("marks calendar provider plugins from the catalog", async () => {
+it("marks provider plugins from the catalog", async () => {
   vi.mocked(api.plugins.catalog).mockResolvedValue({
     plugins: [
       entry,
@@ -226,15 +298,16 @@ it("marks calendar provider plugins from the catalog", async () => {
     error: null,
   })
   await render()
-  const meta = [...document.querySelectorAll("h3 + p")].map((element) => element.textContent)
-  expect(meta).toEqual(["alice · v1.10.0", "alice · v0.2.0 · Calendar provider"])
+  expect(card("Dusk").textContent).toContain("Theme")
+  expect(card("Dusk").textContent).not.toContain("Provider")
+  expect(card("Tuta").textContent).toContain("Provider")
 
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")
   expect(document.body.textContent).not.toContain("Dusk")
 })
 
-it("shows local checkout details and only an uninstall action", async () => {
+it("describes a local checkout with only an uninstall action", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [
       {
@@ -247,16 +320,14 @@ it("shows local checkout details and only an uninstall action", async () => {
     errors: [],
   })
   await render()
-
-  expect(document.body.textContent).toContain(
-    "Local checkout · /home/alice/dev/rencal-dusk · shadows alice/dusk",
-  )
-  expect(document.body.textContent).not.toContain("Update to")
-  expect(document.body.textContent).not.toContain("Reinstall")
-  expect(button("Uninstall")).toBeTruthy()
-
   await searchFor("/home/alice/dev")
-  expect(document.body.textContent).toContain("Dusk")
+  expect(card("Dusk").textContent).toContain("Package files are missing")
+  await open("Dusk")
+
+  expect(sheetText()).toContain("/home/alice/dev/rencal-dusk")
+  expect(sheetText()).not.toContain("Update to")
+  expect(sheetText()).not.toContain("Reinstall")
+  expect(button("Uninstall")).toBeTruthy()
 })
 
 it("retries the catalog when it is unavailable", async () => {

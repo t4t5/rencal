@@ -35,14 +35,13 @@ export type { Contact } from "@/lib/api/contacts"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"
 export type {
+  ContributionKind,
   InstalledPlugin,
   InstalledPlugins,
   PluginCatalog,
   PluginCatalogEntry,
-  PluginFontInspection,
   PluginInspection,
   PluginInstallLink,
-  PluginThemeInspection,
 } from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/api/providers"
 export type { CaldirSettings } from "@/lib/api/settings"

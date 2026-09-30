@@ -319,6 +319,7 @@ pub async fn run() {
             #[cfg(target_os = "linux")]
             {
                 linux_reminders::enable_notifierd_if_needed();
+                linux_reminders::restart_notifierd_if_upgraded();
                 if let Some(listener) = instance_listener {
                     let app_handle = app.handle().clone();
                     let inbox_state = state.clone();

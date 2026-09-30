@@ -9,7 +9,6 @@ use crate::routes::error::{RpcError, RpcErrorKind};
 pub trait PluginsApi {
     async fn list() -> TauResult<InstalledPlugins>;
     async fn catalog() -> TauResult<PluginCatalog>;
-    async fn inspect(repo: String) -> TauResult<PluginInspection>;
     async fn install(repo: String) -> TauResult<PluginInspection>;
     async fn uninstall(id: String) -> TauResult<()>;
 }
@@ -33,13 +32,6 @@ impl PluginsApi for PluginsApiImpl {
 
     async fn catalog(self) -> TauResult<PluginCatalog> {
         Ok(self.manager.catalog().await)
-    }
-
-    async fn inspect(self, repo: String) -> TauResult<PluginInspection> {
-        self.manager
-            .inspect(&repo)
-            .await
-            .map_err(|error| RpcError::from(error).context(format!("Plugin [{repo}]")))
     }
 
     async fn install(self, repo: String) -> TauResult<PluginInspection> {

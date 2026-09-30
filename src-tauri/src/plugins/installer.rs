@@ -27,7 +27,7 @@ use super::LocalLockEntry;
 use super::{
     Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE,
     MIN_PROVIDER_CALDIR_CORE, PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest,
-    PluginsFile, ProviderContribution, load_plugin_lock_file, load_plugins_file, plugins_dir,
+    PluginsFile, ProviderContribution, load_declared_plugins, load_plugin_lock_file, plugins_dir,
     plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
     release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
     scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
@@ -38,6 +38,8 @@ const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
 pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
 pub(super) const ICON_FILE_LIMIT: usize = 64 * 1024;
+/// Local previews travel inline on every plugin list, so stay well below the catalog's 10 MiB.
+const LOCAL_PREVIEW_LIMIT: usize = 4 * 1024 * 1024;
 const PACKAGE_LIMIT: usize = 4 * 1024 * 1024;
 /// Release archives are not part of `PACKAGE_LIMIT`; Tuta's are about 4 MB.
 const PROVIDER_ARCHIVE_LIMIT: usize = 64 * 1024 * 1024;
@@ -63,6 +65,11 @@ const HOST_TARGETS: &[&str] = if cfg!(all(target_os = "linux", target_arch = "x8
 pub struct InstalledPlugin {
     pub id: String,
     pub name: String,
+    /// From the installed manifest, for plugins the catalog doesn't list.
+    pub description: Option<String>,
+    pub contributions: Vec<ContributionKind>,
+    /// Local checkouts only: their `preview.png` as a `data:` URL.
+    pub preview_url: Option<String>,
     pub repo: Option<String>,
     pub local_dir: Option<String>,
     pub version: Option<String>,
@@ -89,6 +96,10 @@ pub struct PluginCatalogEntry {
     pub contributions: Vec<ContributionKind>,
     #[serde(default, deserialize_with = "deserialize_preview_url")]
     pub preview_url: Option<String>,
+    #[serde(default)]
+    pub stars: u32,
+    #[serde(default)]
+    pub released_at: Option<String>,
 }
 
 /// Kinds added by a newer indexer are dropped rather than hiding the plugin.
@@ -189,6 +200,16 @@ pub struct PluginFontInspection {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+pub struct PluginProviderInspection {
+    pub slug: String,
+    pub name: String,
+    /// This platform's release asset, or `None` when the release has none.
+    pub asset: Option<String>,
+    /// Whether renCal can run a provider built with its caldir-core.
+    pub compatible: bool,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 pub struct PluginInspection {
     pub id: String,
     pub name: String,
@@ -200,6 +221,7 @@ pub struct PluginInspection {
     pub compatible: bool,
     pub themes: Vec<PluginThemeInspection>,
     pub fonts: Vec<PluginFontInspection>,
+    pub providers: Vec<PluginProviderInspection>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -282,6 +304,19 @@ impl ResolvedProvider {
 }
 
 impl ResolvedPackage {
+    fn set_providers(&mut self, providers: Vec<ResolvedProvider>) {
+        self.inspection.providers = providers
+            .iter()
+            .map(|provider| PluginProviderInspection {
+                slug: provider.contribution.slug.clone(),
+                name: provider.contribution.name.clone(),
+                asset: provider.asset.as_ref().map(|asset| asset.asset.clone()),
+                compatible: provider_is_compatible(&provider.contribution),
+            })
+            .collect();
+        self.providers = providers;
+    }
+
     fn lock_entry(&self, repository: &Repository) -> PluginLockEntry {
         PluginLockEntry {
             id: self.manifest.id.clone(),
@@ -410,9 +445,13 @@ impl PluginManager {
     pub async fn list(&self) -> InstalledPlugins {
         let _guard = self.inner.mutations.lock().await;
         let mut errors = Vec::new();
-        let (declarations, locks) = self.load_state().unwrap_or_else(|error| {
+        let (declarations, locks) = self.load_declared_state().unwrap_or_else(|error| {
             errors.push(error.to_string());
-            (PluginsFile::default(), PluginLockFile::default())
+            (Some(PluginsFile::default()), PluginLockFile::default())
+        });
+        let declarations = declarations.unwrap_or_else(|| {
+            errors.extend(self.undeclared_warning(&locks));
+            PluginsFile::default()
         });
         let scan = scan_packages(&self.inner.packages_dir, running_app_version().as_ref());
         let parsed = declarations.declarations().unwrap_or_default();
@@ -447,6 +486,9 @@ impl PluginManager {
                 repo: Some(entry.repo),
                 local_dir: None,
                 update_version: None,
+                description: None,
+                contributions: Vec::new(),
+                preview_url: None,
                 error: Some(
                     "Package files are missing. Install the repository again to restore it.".into(),
                 ),
@@ -463,13 +505,25 @@ impl PluginManager {
                         provider.name
                     )
                 });
+            let contributions = [
+                (!package.themes.is_empty()).then_some(ContributionKind::Theme),
+                (!package.providers.is_empty()).then_some(ContributionKind::Provider),
+            ]
+            .into_iter()
+            .flatten()
+            .collect();
             if let Some(row) = plugins.iter_mut().find(|row| row.id == package.id) {
                 row.name = package.name;
+                row.description = Some(package.description);
+                row.contributions = contributions;
                 row.error = error;
             } else {
                 plugins.push(InstalledPlugin {
                     id: package.id,
                     name: package.name,
+                    description: Some(package.description),
+                    contributions,
+                    preview_url: None,
                     repo: None,
                     local_dir: None,
                     version: None,
@@ -485,6 +539,9 @@ impl PluginManager {
                 plugins.push(InstalledPlugin {
                     name: error.package.clone(),
                     id: error.package,
+                    description: None,
+                    contributions: Vec::new(),
+                    preview_url: None,
                     repo: None,
                     local_dir: None,
                     version: None,
@@ -496,8 +553,10 @@ impl PluginManager {
             }
         }
         for entry in &locks.local {
+            let preview_url = local_preview_data_url(Path::new(&entry.dir));
             if let Some(row) = plugins.iter_mut().find(|row| row.id == entry.id) {
                 row.local_dir = Some(entry.dir.clone());
+                row.preview_url = preview_url;
                 if row
                     .error
                     .as_deref()
@@ -509,6 +568,9 @@ impl PluginManager {
                 plugins.push(InstalledPlugin {
                     id: entry.id.clone(),
                     name: entry.id.clone(),
+                    description: None,
+                    contributions: Vec::new(),
+                    preview_url,
                     repo: None,
                     local_dir: Some(entry.dir.clone()),
                     version: None,
@@ -738,8 +800,19 @@ impl PluginManager {
     pub async fn reconcile(&self) -> Vec<PluginReconcileError> {
         let (missing, mut errors) = {
             let _guard = self.inner.mutations.lock().await;
-            let (declarations, mut locks) = match self.load_state() {
-                Ok(state) => state,
+            let (declarations, mut locks) = match self.load_declared_state() {
+                Ok((Some(declarations), locks)) => (declarations, locks),
+                // Nothing is declared, so there is nothing to link or restore.
+                Ok((None, locks)) => {
+                    return self
+                        .undeclared_warning(&locks)
+                        .map(|message| PluginReconcileError {
+                            package: self.inner.declarations_path.display().to_string(),
+                            message,
+                        })
+                        .into_iter()
+                        .collect();
+                }
                 Err(error) => {
                     return vec![PluginReconcileError {
                         package: self.inner.declarations_path.display().to_string(),
@@ -1127,18 +1200,42 @@ impl PluginManager {
         Ok(())
     }
 
-    fn load_declarations(&self) -> Result<PluginsFile, PluginInstallError> {
-        load_plugins_file(&self.inner.declarations_path).map_err(|error| {
-            PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
-        })
+    fn load_state(&self) -> Result<(PluginsFile, PluginLockFile), PluginInstallError> {
+        let (declarations, locks) = self.load_declared_state()?;
+        Ok((declarations.unwrap_or_default(), locks))
     }
 
-    fn load_state(&self) -> Result<(PluginsFile, PluginLockFile), PluginInstallError> {
-        let declarations = self.load_declarations()?;
+    /// Like `load_state`, but `None` means plugins.toml declares nothing yet.
+    fn load_declared_state(
+        &self,
+    ) -> Result<(Option<PluginsFile>, PluginLockFile), PluginInstallError> {
+        let declarations =
+            load_declared_plugins(&self.inner.declarations_path).map_err(|error| {
+                PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+            })?;
         let locks = load_plugin_lock_file(&self.inner.lock_path).map_err(|error| {
             PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
         })?;
         Ok((declarations, locks))
+    }
+
+    /// Explains why locked packages survive a missing or empty plugins.toml.
+    fn undeclared_warning(&self, locks: &PluginLockFile) -> Option<String> {
+        let ids: HashSet<_> = locks
+            .plugins
+            .iter()
+            .map(|entry| &entry.id)
+            .chain(locks.local.iter().map(|entry| &entry.id))
+            .collect();
+        if ids.is_empty() {
+            return None;
+        }
+        let count = ids.len();
+        let noun = if count == 1 { "plugin" } else { "plugins" };
+        Some(format!(
+            "{} is missing or has no plugins list; keeping {count} installed {noun}. Set `plugins = []` to remove them.",
+            self.inner.declarations_path.display()
+        ))
     }
 
     async fn resolve_latest(
@@ -1159,7 +1256,7 @@ impl PluginManager {
             let mut package = self
                 .resolve_commit_ref(repository, commit, Some(&release.tag_name))
                 .await?;
-            package.providers = package
+            let providers = package
                 .manifest
                 .contributes
                 .providers
@@ -1171,6 +1268,7 @@ impl PluginManager {
                     })
                 })
                 .collect::<Result<_, PluginInstallError>>()?;
+            package.set_providers(providers);
             return Ok(package);
         }
 
@@ -1194,7 +1292,7 @@ impl PluginManager {
             .resolve_commit_ref(repository, entry.commit.clone(), entry.tag.as_deref())
             .await?;
         // Providers missing from the lock had no usable asset at install time.
-        package.providers = package
+        let providers = package
             .manifest
             .contributes
             .providers
@@ -1219,6 +1317,7 @@ impl PluginManager {
                 })
             })
             .collect::<Result<_, PluginInstallError>>()?;
+        package.set_providers(providers);
         Ok(package)
     }
 
@@ -1310,6 +1409,7 @@ impl PluginManager {
                     style: font.style,
                 })
                 .collect(),
+            providers: Vec::new(),
         };
         Ok(ResolvedPackage {
             inspection,
@@ -2135,6 +2235,25 @@ pub(super) fn is_svg(bytes: &[u8]) -> bool {
     }
 }
 
+/// A local checkout's `preview.png` as a `data:` URL. Installed packages have
+/// no preview; the catalog hosts theirs.
+fn local_preview_data_url(dir: &Path) -> Option<String> {
+    use base64::Engine;
+
+    let mut bytes = Vec::new();
+    std::fs::File::open(dir.join("preview.png"))
+        .ok()?
+        .take(LOCAL_PREVIEW_LIMIT as u64 + 1)
+        .read_to_end(&mut bytes)
+        .ok()?;
+    (bytes.len() <= LOCAL_PREVIEW_LIMIT && bytes.starts_with(b"\x89PNG\r\n\x1a\n")).then(|| {
+        format!(
+            "data:image/png;base64,{}",
+            base64::engine::general_purpose::STANDARD.encode(bytes)
+        )
+    })
+}
+
 fn remove_path(path: &Path) -> std::io::Result<()> {
     match std::fs::symlink_metadata(path) {
         Ok(metadata) if metadata.file_type().is_dir() => std::fs::remove_dir_all(path),
@@ -2153,6 +2272,7 @@ fn restore_pruned_packages(moved: &[(PathBuf, PathBuf)]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::plugins::load_plugins_file;
     use std::collections::HashMap;
     use std::sync::Mutex as StdMutex;
     use tokio::sync::Notify;
@@ -2984,6 +3104,18 @@ appearance = "dark"
         assert_eq!(snapshot.plugins[0].name, "Dusk");
         assert_eq!(snapshot.plugins[0].local_dir.as_deref(), checkout.to_str());
         assert_eq!(snapshot.plugins[0].repo, None);
+        assert!(snapshot.plugins[0].description.is_some());
+        assert_eq!(
+            snapshot.plugins[0].contributions,
+            vec![ContributionKind::Theme]
+        );
+        assert_eq!(snapshot.plugins[0].preview_url, None);
+
+        std::fs::write(checkout.join("preview.png"), b"\x89PNG\r\n\x1a\nrest").unwrap();
+        let preview = manager.list().await.plugins[0].preview_url.clone().unwrap();
+        assert!(preview.starts_with("data:image/png;base64,"));
+        std::fs::write(checkout.join("preview.png"), b"not a png").unwrap();
+        assert_eq!(manager.list().await.plugins[0].preview_url, None);
 
         *manager.inner.catalog.lock().await = vec![PluginCatalogEntry {
             id: "alice.dusk".into(),
@@ -2993,6 +3125,8 @@ appearance = "dark"
             tag: "v9.0.0".into(),
             contributions: vec![ContributionKind::Theme],
             preview_url: None,
+            stars: 0,
+            released_at: None,
         }];
         assert!(manager.list().await.plugins[0].update_version.is_none());
     }
@@ -3329,6 +3463,91 @@ appearance = "dark"
         );
     }
 
+    fn assert_dusk_kept(temp: &tempfile::TempDir) {
+        assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+        assert_eq!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .len(),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn reconcile_keeps_locked_plugins_when_declarations_are_missing() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        std::fs::remove_file(temp.path().join("config/plugins.toml")).unwrap();
+
+        let errors = manager.reconcile().await;
+
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("keeping 1 installed plugin"));
+        assert_dusk_kept(&temp);
+        assert_eq!(manager.list().await.errors, vec![errors[0].message.clone()]);
+    }
+
+    #[tokio::test]
+    async fn reconcile_keeps_locked_plugins_when_declarations_are_empty() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+
+        for contents in ["", " \n\n", "# plugins = []\n"] {
+            std::fs::write(temp.path().join("config/plugins.toml"), contents).unwrap();
+            assert_eq!(manager.reconcile().await.len(), 1, "{contents:?}");
+            assert_dusk_kept(&temp);
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn reconcile_reports_a_dangling_declarations_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let declarations_path = temp.path().join("config/plugins.toml");
+        let target = temp.path().join("dotfiles/plugins.toml");
+        std::fs::remove_file(&declarations_path).unwrap();
+        symlink(&target, &declarations_path).unwrap();
+
+        let errors = manager.reconcile().await;
+
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("broken symlink"));
+        assert!(errors[0].message.contains(&target.display().to_string()));
+        assert_dusk_kept(&temp);
+    }
+
+    #[tokio::test]
+    async fn reconcile_prunes_everything_for_an_explicit_empty_list() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        std::fs::write(temp.path().join("config/plugins.toml"), "plugins = []\n").unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .is_empty()
+        );
+    }
+
     #[tokio::test]
     async fn classifies_repository_release_and_rate_limit_failures() {
         let downloader = Arc::new(FixtureDownloader::new());
@@ -3500,6 +3719,18 @@ appearance = "dark"
         let temp = tempfile::tempdir().unwrap();
         let manager = manager(&temp, downloader);
 
+        let inspection = manager.inspect(TUTA_REPO).await.unwrap();
+        assert!(inspection.themes.is_empty());
+        assert_eq!(
+            inspection.providers,
+            [PluginProviderInspection {
+                slug: "tuta".into(),
+                name: "Tuta".into(),
+                asset: Some(tuta_asset(GNU)),
+                compatible: true,
+            }]
+        );
+
         manager.install(TUTA_REPO).await.unwrap();
 
         assert_eq!(std::fs::read(tuta_binary(&temp)).unwrap(), b"tuta-gnu");
@@ -3655,10 +3886,10 @@ appearance = "dark"
             PROVIDER_MANIFEST,
             &[(darwin, &archive)],
         );
-        let error = manager(&temp, downloader)
-            .install(TUTA_REPO)
-            .await
-            .unwrap_err();
+        let manager_without_asset = manager(&temp, downloader);
+        let inspection = manager_without_asset.inspect(TUTA_REPO).await.unwrap();
+        assert_eq!(inspection.providers[0].asset, None);
+        let error = manager_without_asset.install(TUTA_REPO).await.unwrap_err();
         assert_eq!(error.kind, PluginInstallErrorKind::Incompatible);
         assert_eq!(
             error.to_string(),

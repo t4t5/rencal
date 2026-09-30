@@ -10,7 +10,7 @@ use std::time::Duration as StdDuration;
 
 use caldir_core::{Caldir, Event, EventTime, ParticipationStatus, Status, TimeFormat};
 use chrono::{DateTime, Duration, Local, NaiveDate, Utc};
-use rencal_config::RencalConfig;
+use rencal_config::ReminderSettings;
 use url::Url;
 
 use delivered_cache::{DeliveredCache, DeliveryKey};
@@ -121,6 +121,26 @@ fn open_event_url(event_url: &str) {
     }
 }
 
+/// Whether the process behind `proc_exe` (a `/proc/<pid>/exe` link) runs a
+/// binary that a package upgrade has since replaced. An upgrade unlinks the
+/// old file, which the kernel reports as "<path> (deleted)". Requiring a new
+/// file at that path skips uninstalls and the gap mid-upgrade.
+#[cfg(target_os = "linux")]
+pub fn binary_was_upgraded(proc_exe: &Path) -> bool {
+    std::fs::read_link(proc_exe)
+        .ok()
+        .and_then(|target| unlinked_binary_path(&target))
+        .is_some_and(|path| path.exists())
+}
+
+#[cfg(any(target_os = "linux", test))]
+fn unlinked_binary_path(link_target: &Path) -> Option<PathBuf> {
+    link_target
+        .to_str()?
+        .strip_suffix(" (deleted)")
+        .map(PathBuf::from)
+}
+
 /// Runs the reminder check loop aligned to minute boundaries.
 /// Fires once immediately on entry so a freshly-launched host (GUI or daemon)
 /// fires any catch-up reminders right away instead of waiting up to ~60s.
@@ -153,7 +173,7 @@ pub fn check_and_notify(
     icon: Option<&Path>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     let now = Utc::now();
-    let notifications_enabled = RencalConfig::load()?.notifications_enabled;
+    let notifications_enabled = ReminderSettings::load()?.notifications_enabled;
 
     let cache_path = delivered_cache_path();
     let mut cache = cache_path
@@ -517,6 +537,24 @@ mod tests {
         assert_eq!(
             select_best_trigger(triggers, window_start, now),
             Some((30, now - Duration::minutes(30)))
+        );
+    }
+
+    // ---- unlinked_binary_path --------------------------------------------
+
+    #[test]
+    fn unlinked_binary_path_strips_the_deleted_suffix() {
+        assert_eq!(
+            unlinked_binary_path(Path::new("/usr/bin/rencal-notifierd (deleted)")),
+            Some(PathBuf::from("/usr/bin/rencal-notifierd"))
+        );
+    }
+
+    #[test]
+    fn unlinked_binary_path_ignores_live_binaries() {
+        assert_eq!(
+            unlinked_binary_path(Path::new("/usr/bin/rencal-notifierd")),
+            None
         );
     }
 
