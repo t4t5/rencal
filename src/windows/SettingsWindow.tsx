@@ -7,7 +7,6 @@ import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { Toaster } from "@/components/ui/sonner"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 
-import { api } from "@/lib/api"
 import { cn, isMacOS } from "@/lib/utils"
 
 import { CloseIcon } from "@/icons/close"
@@ -17,13 +16,6 @@ export function SettingsWindow() {
     const requested = new URLSearchParams(window.location.search).get("tab")
     return NAV_ITEMS.find((item) => item.tab === requested)?.tab ?? "general"
   })
-
-  useEffect(() => {
-    const subscription = api.notifications.listen("plugin-deep-link-available", () => {
-      setActiveTab("plugins")
-    })
-    return subscription.unlisten
-  }, [])
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {

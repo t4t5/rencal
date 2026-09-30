@@ -14,20 +14,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-import {
-  api,
-  getErrorMessage,
-  type InstalledPlugins,
-  type PluginCatalog,
-  type PluginInstallLink,
-} from "@/lib/api"
+import { api, getErrorMessage, type InstalledPlugins, type PluginCatalog } from "@/lib/api"
 
 import { PluginBadge } from "./PluginBadge"
 import { PluginSheet } from "./PluginSheet"
-import { CONTRIBUTION_LABELS, isProvider, pluginOwner, type PluginListItem } from "./plugin-list"
-
-/** Deep links only know the repo, so a selection is resolved against the latest lists. */
-type Selection = { id: string | null; repo: string | null }
+import {
+  CONTRIBUTION_LABELS,
+  isProvider,
+  mergePlugins,
+  pluginOwner,
+  resolveSelection,
+  type PluginListItem,
+  type PluginSelection,
+} from "./plugin-list"
 
 type PluginSort = "stars" | "latest"
 
@@ -40,19 +39,8 @@ export function PluginsPage() {
   const [sort, setSort] = useState<PluginSort>("stars")
   const [installedOnly, setInstalledOnly] = useState(false)
   const installedOnlyId = useId()
-  const [installLinkError, setInstallLinkError] = useState<string | null>(null)
-  const [selection, setSelection] = useState<Selection | null>(null)
+  const [selection, setSelection] = useState<PluginSelection | null>(null)
   const listRequest = useRef(0)
-  const busyRef = useRef(false)
-  const pendingInstall = useRef<PluginInstallLink | null>(null)
-
-  function setBusy(busy: boolean) {
-    busyRef.current = busy
-    if (busy) return
-    const pending = pendingInstall.current
-    pendingInstall.current = null
-    if (pending) setSelection({ id: null, repo: pending.repo })
-  }
 
   const refreshInstalled = useCallback(async () => {
     const request = ++listRequest.current
@@ -94,89 +82,10 @@ export function PluginsPage() {
     }
   }, [refreshInstalled, refreshCatalog])
 
-  useEffect(() => {
-    let disposed = false
-
-    const drainPendingInstall = async () => {
-      try {
-        const link = await api.plugins.takePendingInstall()
-        if (disposed || !link) return
-        setInstallLinkError(null)
-        if (busyRef.current) {
-          pendingInstall.current = link
-        } else {
-          setSelection({ id: null, repo: link.repo })
-        }
-      } catch (error) {
-        if (!disposed) {
-          setInstallLinkError(getErrorMessage(error, "Failed to open plugin install link"))
-        }
-      }
-    }
-
-    const subscription = api.notifications.listen(
-      "plugin-deep-link-available",
-      () => void drainPendingInstall(),
-    )
-    void subscription.ready
-      .then(() => {
-        if (!disposed) void drainPendingInstall()
-      })
-      .catch((error: unknown) => {
-        if (!disposed) {
-          setInstallLinkError(getErrorMessage(error, "Failed to watch plugin install links"))
-        }
-      })
-
-    return () => {
-      disposed = true
-      subscription.unlisten()
-    }
-  }, [])
-
-  const plugins = useMemo(() => {
-    if (!installed) return []
-
-    const installedById = new Map(installed.plugins.map((plugin) => [plugin.id, plugin]))
-    const catalogIds = new Set(catalog?.plugins.map((plugin) => plugin.id))
-    return [
-      ...(catalog?.plugins ?? []).map((entry) => {
-        const plugin = installedById.get(entry.id)
-        if (!plugin) {
-          return {
-            ...entry,
-            version: catalogVersion(entry.tag),
-            preview_url: entry.preview_url ?? null,
-            contributions: entry.contributions ?? [],
-            stars: entry.stars ?? 0,
-            released_at: entry.released_at ?? null,
-            listed: true,
-            installed: null,
-          }
-        }
-        return {
-          ...plugin,
-          description: entry.description ?? plugin.description,
-          preview_url: entry.preview_url ?? plugin.preview_url,
-          contributions: entry.contributions ?? plugin.contributions,
-          stars: entry.stars ?? 0,
-          released_at: entry.released_at ?? null,
-          listed: true,
-          installed: plugin,
-        }
-      }),
-      // Local and unlisted plugins aren't in the catalog
-      ...installed.plugins
-        .filter((plugin) => !catalogIds.has(plugin.id))
-        .map((plugin) => ({
-          ...plugin,
-          stars: 0,
-          released_at: null,
-          listed: false,
-          installed: plugin,
-        })),
-    ] satisfies PluginListItem[]
-  }, [catalog, installed])
+  const plugins = useMemo(
+    () => (installed ? mergePlugins(installed, catalog) : []),
+    [catalog, installed],
+  )
 
   const visiblePlugins = useMemo(() => {
     const query = search.trim().toLowerCase()
@@ -240,7 +149,6 @@ export function PluginsPage() {
             </Button>
           </div>
         )}
-        <ErrorMessage message={installLinkError} />
         {installed?.errors.map((error) => (
           <ErrorMessage key={error} message={error} />
         ))}
@@ -284,7 +192,6 @@ export function PluginsPage() {
           key={`${selection.id ?? ""}:${selection.repo ?? ""}`}
           plugin={selected}
           onClose={() => setSelection(null)}
-          onBusyChange={setBusy}
           onChanged={() => {
             setSelection(null)
             void refreshInstalled()
@@ -302,11 +209,6 @@ function pluginCount(visible: number, total: number): string {
     : `${visible.toLocaleString()} of ${total.toLocaleString()} ${noun}`
 }
 
-/** Releases show their tag; unreleased themes show a short commit. */
-function catalogVersion(tag: string): string {
-  return /^[0-9a-f]{40}$/.test(tag) ? tag.slice(0, 7) : tag
-}
-
 /** Unlisted plugins have no stars or release date, so they sort last; ties go by name. */
 function comparePlugins(left: PluginListItem, right: PluginListItem, sort: PluginSort): number {
   const byKey =
@@ -314,28 +216,6 @@ function comparePlugins(left: PluginListItem, right: PluginListItem, sort: Plugi
       ? right.stars - left.stars
       : (right.released_at ?? "").localeCompare(left.released_at ?? "")
   return byKey || left.name.localeCompare(right.name, undefined, { sensitivity: "base" })
-}
-
-function resolveSelection(plugins: PluginListItem[], selection: Selection): PluginListItem {
-  const repo = selection.repo?.toLowerCase()
-  const match = plugins.find((plugin) =>
-    selection.id ? plugin.id === selection.id : plugin.repo?.toLowerCase() === repo,
-  )
-  if (match) return match
-  const name = selection.repo?.split("/").at(-1) ?? selection.id ?? ""
-  return {
-    id: selection.id ?? name,
-    name,
-    repo: selection.repo,
-    version: null,
-    description: null,
-    preview_url: null,
-    contributions: [],
-    stars: 0,
-    released_at: null,
-    listed: false,
-    installed: null,
-  }
 }
 
 function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: () => void }) {

@@ -17,7 +17,6 @@ vi.mock("@/lib/api", () => ({
     plugins: {
       list: vi.fn(),
       catalog: vi.fn(),
-      takePendingInstall: vi.fn(),
       install: vi.fn(),
       uninstall: vi.fn(),
     },
@@ -59,7 +58,6 @@ beforeEach(() => {
   root = createRoot(container)
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
   vi.mocked(api.plugins.install).mockResolvedValue({
     ...plugin,
     min_rencal_version: "0.7.0",
@@ -190,28 +188,6 @@ it("keeps an install error in the sheet", async () => {
   await click("Install")
   expect(sheetText()).toContain("Dusk requires renCal 9.0.0 or newer")
   expect(button("Install").disabled).toBe(false)
-})
-
-it("describes an install received from a deep link", async () => {
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
-  await render()
-  expect(sheetText()).toContain("A quiet theme")
-  expect(button("Install").disabled).toBe(false)
-})
-
-it("describes a deep link to a plugin that isn't in the catalog", async () => {
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "bob/rencal-dawn" })
-  await render()
-  expect(sheetText()).toContain("rencal-dawn")
-  expect(sheetText()).toContain("isn't listed in the renCal catalog")
-  await click("Install")
-  expect(api.plugins.install).toHaveBeenCalledWith("bob/rencal-dawn")
-})
-
-it("does nothing when there is no pending deep-link install", async () => {
-  await render()
-  expect(api.plugins.takePendingInstall).toHaveBeenCalledOnce()
-  expect(document.querySelector('[role="dialog"]')).toBeNull()
 })
 
 it("keeps a failed update open, then updates and uninstalls without changing selection", async () => {
