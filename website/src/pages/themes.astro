@@ -4,6 +4,7 @@ import "../styles/themes.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
 import AppWindow from "../components/app-window/AppWindow.astro"
+import Button from "../components/Button.astro"
 import ThemeTile from "../components/themes/ThemeTile.astro"
 import CheckIcon from "../icons/check.astro"
 import CopyIcon from "../icons/copy.astro"
@@ -198,25 +199,20 @@ const segControls = [
           <pre class="tp-code"><code id="tp-css-code" /></pre>
 
           <div class="flex gap-2">
-            <button
-              type="button"
+            <Button
               id="tp-copy"
               data-copy-command=""
               aria-label="Copy theme CSS"
-              class="flex flex-1 items-center justify-center gap-2! text-sm"
+              class="flex-1 text-sm"
             >
               Copy
               <span data-icon-copy><CopyIcon class="h-4 w-4" /></span>
               <span data-icon-check hidden><CheckIcon class="h-4 w-4" /></span>
-            </button>
-            <button
-              type="button"
-              id="tp-download"
-              class="primary flex flex-1 items-center justify-center gap-2!"
-            >
+            </Button>
+            <Button id="tp-download" variant="primary" class="flex-1">
               <DownloadIcon class="h-4 w-4" />
               Download
-            </button>
+            </Button>
           </div>
           <p class="text-sm opacity-80">
             If you want to share your theme with others, you can

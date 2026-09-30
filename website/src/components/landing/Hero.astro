@@ -5,6 +5,7 @@ import AppleLogo from "../../icons/apple.astro"
 import WindowsLogo from "../../icons/windows.astro"
 import { site } from "../../site"
 import AppWindow from "../app-window/AppWindow.astro"
+import Button from "../Button.astro"
 ---
 
 <div class="text-center flex flex-col items-center gap-7 border-b border-b-separator px-4">
@@ -27,13 +28,8 @@ import AppWindow from "../app-window/AppWindow.astro"
   </div>
 
   <div class="flex gap-5">
-    <a href="/download/">
-      <button class="primary">Download</button>
-    </a>
-
-    <a href="/docs/installation/">
-      <button>Docs</button>
-    </a>
+    <Button href="/download/" variant="primary">Download</Button>
+    <Button href="/docs/installation/">Docs</Button>
   </div>
 
   <div id="platform-availability" class="hidden gap-3 items-center">

@@ -2,6 +2,7 @@
 import "../styles/index.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
+import Button from "../components/Button.astro"
 import CopyButton from "../components/CopyButton.astro"
 import InstallPlatform from "../components/download/InstallPlatform.astro"
 import InstallRow from "../components/download/InstallRow.astro"
@@ -78,15 +79,16 @@ if (latestRelease) {
       >
       </div>
 
-      <a
+      <Button
         href={macDownloads[0]?.href ?? releasesUrl}
         hidden
         data-platform-mac
-        class="button-outline text-[17px] flex items-center py-3! px-4! gap-3"
+        variant="outline"
+        size="lg"
       >
         <DownloadIcon class="h-4 w-4 relative top-[-1px]" />
         <span>Download renCal for Mac</span>
-      </a>
+      </Button>
 
       <h2 class="text-2xl" hidden data-platform-linux>Download renCal</h2>
 
