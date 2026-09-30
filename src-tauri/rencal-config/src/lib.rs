@@ -7,6 +7,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, thiserror::Error)]
@@ -158,23 +159,7 @@ impl RencalConfig {
     }
 
     fn load_from_path(path: &Path) -> Result<Self, ConfigError> {
-        let contents = match std::fs::read_to_string(path) {
-            Ok(contents) => contents,
-            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
-                return Ok(Self::default());
-            }
-            Err(error) => {
-                return Err(ConfigError::Read {
-                    path: path.to_owned(),
-                    source: error,
-                });
-            }
-        };
-
-        toml::from_str(&contents).map_err(|source| ConfigError::Parse {
-            path: path.to_owned(),
-            source,
-        })
+        load_toml(path)
     }
 
     pub fn save(&self) -> Result<(), ConfigError> {
@@ -188,6 +173,48 @@ impl RencalConfig {
         let contents = toml::to_string_pretty(self).map_err(ConfigError::Serialize)?;
         std::fs::write(&path, contents).map_err(|source| ConfigError::Write { path, source })
     }
+}
+
+/// The part of the config the reminder loop reads. Other keys are ignored, so
+/// a daemon left running across an upgrade still parses a newer app's config.
+#[derive(Deserialize)]
+pub struct ReminderSettings {
+    #[serde(default = "default_notifications_enabled")]
+    pub notifications_enabled: bool,
+}
+
+impl Default for ReminderSettings {
+    fn default() -> Self {
+        Self {
+            notifications_enabled: default_notifications_enabled(),
+        }
+    }
+}
+
+impl ReminderSettings {
+    pub fn load() -> Result<Self, ConfigError> {
+        load_toml(&RencalConfig::config_path()?)
+    }
+}
+
+fn load_toml<T: DeserializeOwned + Default>(path: &Path) -> Result<T, ConfigError> {
+    let contents = match std::fs::read_to_string(path) {
+        Ok(contents) => contents,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            return Ok(T::default());
+        }
+        Err(error) => {
+            return Err(ConfigError::Read {
+                path: path.to_owned(),
+                source: error,
+            });
+        }
+    };
+
+    toml::from_str(&contents).map_err(|source| ConfigError::Parse {
+        path: path.to_owned(),
+        source,
+    })
 }
 
 #[cfg(test)]
@@ -319,6 +346,20 @@ mod tests {
             .expect("unknown mode is rejected")
             .to_string();
         assert!(error.contains("unknown variant `dark`"), "{error}");
+    }
+
+    #[test]
+    fn reminder_settings_parse_any_theme_shape_and_unknown_keys() {
+        for contents in [
+            "notifications_enabled = false\ntheme = \"nord\"",
+            "notifications_enabled = false\nfuture_key = 1\n\n[theme]\nmode = \"single\"",
+            "notifications_enabled = false\ntheme = 42",
+        ] {
+            let settings: ReminderSettings = toml::from_str(contents).expect(contents);
+            assert!(!settings.notifications_enabled);
+        }
+        let settings: ReminderSettings = toml::from_str("").expect("parse");
+        assert!(settings.notifications_enabled);
     }
 
     #[test]

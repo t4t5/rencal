@@ -80,6 +80,16 @@ it runs `systemctl --user enable --now rencal-notifierd.service`. So a fresh
 package install + first launch of rencal is enough; users never need to touch
 `systemctl` themselves. Already-enabled and not-found cases are no-ops.
 
+### Upgrades
+
+Package upgrades replace `/usr/bin/rencal-notifierd` but nothing restarts the
+running daemon, which keeps executing the old binary. The daemon checks
+`/proc/self/exe` every minute and exits non-zero once it points at a replaced
+file, so `Restart=on-failure` starts the new one. Daemons from before that check
+existed are restarted by the GUI on launch (`restart_notifierd_if_upgraded()`).
+The daemon also reads only `notifications_enabled` from the config
+(`ReminderSettings`), so a config written by a newer app still parses.
+
 Uninstall with `just uninstall-notifierd` (self-install) or your package
 manager (system install).
 

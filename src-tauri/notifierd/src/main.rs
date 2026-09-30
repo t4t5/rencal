@@ -55,5 +55,24 @@ async fn main() {
     } else {
         log::info!("icon: <none found> (set RENCAL_NOTIFIER_ICON to override)");
     }
-    reminder_core::run_reminder_loop(reminder_core::NotifySendNotifier, icon).await;
+    tokio::select! {
+        _ = reminder_core::run_reminder_loop(reminder_core::NotifySendNotifier, icon) => {}
+        _ = wait_for_upgrade() => {
+            // Non-zero so `Restart=on-failure` starts the new binary.
+            log::info!("binary replaced by an upgrade — exiting so systemd restarts it");
+            std::process::exit(1);
+        }
+    }
+}
+
+/// Package upgrades replace the binary but leave this process running the old
+/// one, which may not understand a newer app's config.
+#[cfg(target_os = "linux")]
+async fn wait_for_upgrade() {
+    loop {
+        tokio::time::sleep(std::time::Duration::from_secs(60)).await;
+        if reminder_core::binary_was_upgraded(std::path::Path::new("/proc/self/exe")) {
+            return;
+        }
+    }
 }

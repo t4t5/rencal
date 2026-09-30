@@ -34,6 +34,24 @@ pub fn enable_notifierd_if_needed() {
         .status();
 }
 
+/// Package upgrades replace the daemon's binary but leave the old process
+/// running, and it may fail to parse the new app's config on every tick. Newer
+/// daemons restart themselves; this catches ones that predate that.
+pub fn restart_notifierd_if_upgraded() {
+    let Some(pid) = notifierd_main_pid() else {
+        return;
+    };
+    let proc_exe = std::path::PathBuf::from(format!("/proc/{pid}/exe"));
+    if !reminder_core::binary_was_upgraded(&proc_exe) {
+        return;
+    }
+
+    log::info!("Restarting {NOTIFIERD_SERVICE}: its binary was upgraded");
+    let _ = std::process::Command::new("systemctl")
+        .args(["--user", "try-restart", NOTIFIERD_SERVICE])
+        .status();
+}
+
 /// Return true when the GUI should run the fallback reminder loop.
 ///
 /// If the systemd daemon is active, it is the single reminder source and the
@@ -48,6 +66,19 @@ fn is_notifierd_active() -> bool {
         .status()
         .map(|s| s.success())
         .unwrap_or(false)
+}
+
+/// systemd reports 0 when the unit isn't running.
+fn notifierd_main_pid() -> Option<u32> {
+    let output = std::process::Command::new("systemctl")
+        .args(["--user", "show", "-p", "MainPID", "--value", NOTIFIERD_SERVICE])
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let pid: u32 = String::from_utf8_lossy(&output.stdout).trim().parse().ok()?;
+    (pid != 0).then_some(pid)
 }
 
 fn notifierd_unit_exists() -> bool {
