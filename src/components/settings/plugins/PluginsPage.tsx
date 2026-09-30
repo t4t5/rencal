@@ -6,6 +6,13 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 import {
   api,
@@ -23,12 +30,15 @@ import { CONTRIBUTION_LABELS, isProvider, pluginOwner, type PluginListItem } fro
 /** Deep links only know the repo, so a selection is resolved against the latest lists. */
 type Selection = { id: string | null; repo: string | null }
 
+type PluginSort = "stars" | "latest"
+
 export function PluginsPage() {
   const [installed, setInstalled] = useState<InstalledPlugins | null>(null)
   const [catalog, setCatalog] = useState<PluginCatalog | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [search, setSearch] = useState("")
+  const [sort, setSort] = useState<PluginSort>("stars")
   const [installedOnly, setInstalledOnly] = useState(false)
   const installedOnlyId = useId()
   const [installLinkError, setInstallLinkError] = useState<string | null>(null)
@@ -139,6 +149,8 @@ export function PluginsPage() {
             version: catalogVersion(entry.tag),
             preview_url: entry.preview_url ?? null,
             contributions: entry.contributions ?? [],
+            stars: entry.stars ?? 0,
+            released_at: entry.released_at ?? null,
             listed: true,
             installed: null,
           }
@@ -148,6 +160,8 @@ export function PluginsPage() {
           description: entry.description ?? plugin.description,
           preview_url: entry.preview_url ?? plugin.preview_url,
           contributions: entry.contributions ?? plugin.contributions,
+          stars: entry.stars ?? 0,
+          released_at: entry.released_at ?? null,
           listed: true,
           installed: plugin,
         }
@@ -155,33 +169,53 @@ export function PluginsPage() {
       // Local and unlisted plugins aren't in the catalog
       ...installed.plugins
         .filter((plugin) => !catalogIds.has(plugin.id))
-        .map((plugin) => ({ ...plugin, listed: false, installed: plugin })),
+        .map((plugin) => ({
+          ...plugin,
+          stars: 0,
+          released_at: null,
+          listed: false,
+          installed: plugin,
+        })),
     ] satisfies PluginListItem[]
   }, [catalog, installed])
 
   const visiblePlugins = useMemo(() => {
     const query = search.trim().toLowerCase()
-    return plugins.filter(
-      (plugin) =>
-        (!installedOnly || plugin.installed) &&
-        `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${isProvider(plugin) ? "provider" : ""}`
-          .toLowerCase()
-          .includes(query),
-    )
-  }, [plugins, search, installedOnly])
+    return plugins
+      .filter(
+        (plugin) =>
+          (!installedOnly || plugin.installed) &&
+          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${isProvider(plugin) ? "provider" : ""}`
+            .toLowerCase()
+            .includes(query),
+      )
+      .sort((left, right) => comparePlugins(left, right, sort))
+  }, [plugins, search, installedOnly, sort])
 
   const selected = selection && resolveSelection(plugins, selection)
 
   return (
     <SettingsContent className="w-full min-w-0 pt-7">
       <div className="flex shrink-0 flex-col gap-3">
-        <Input
-          variant="default"
-          aria-label="Search plugins"
-          placeholder="Search plugins…"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
+        <div className="flex items-center gap-2">
+          <Input
+            variant="default"
+            className="flex-1"
+            aria-label="Search plugins"
+            placeholder="Search plugins…"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+          <Select value={sort} onValueChange={(next) => setSort(next as PluginSort)}>
+            <SelectTrigger variant="default" aria-label="Sort plugins" className="w-36">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="stars">Most starred</SelectItem>
+              <SelectItem value="latest">Latest</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
         <div className="flex items-center justify-between gap-4 text-sm">
           <p className="text-muted-foreground tabular-nums" role="status">
             {installed && pluginCount(visiblePlugins.length, plugins.length)}
@@ -274,6 +308,15 @@ function catalogVersion(tag: string): string {
   return /^[0-9a-f]{40}$/.test(tag) ? tag.slice(0, 7) : tag
 }
 
+/** Unlisted plugins have no stars or release date, so they sort last; ties go by name. */
+function comparePlugins(left: PluginListItem, right: PluginListItem, sort: PluginSort): number {
+  const byKey =
+    sort === "stars"
+      ? right.stars - left.stars
+      : (right.released_at ?? "").localeCompare(left.released_at ?? "")
+  return byKey || left.name.localeCompare(right.name, undefined, { sensitivity: "base" })
+}
+
 function resolveSelection(plugins: PluginListItem[], selection: Selection): PluginListItem {
   const repo = selection.repo?.toLowerCase()
   const match = plugins.find((plugin) =>
@@ -289,6 +332,8 @@ function resolveSelection(plugins: PluginListItem[], selection: Selection): Plug
     description: null,
     preview_url: null,
     contributions: [],
+    stars: 0,
+    released_at: null,
     listed: false,
     installed: null,
   }

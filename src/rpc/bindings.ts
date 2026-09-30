@@ -103,7 +103,7 @@ export type PluginCatalog = { plugins: PluginCatalogEntry[]; error: string | nul
 /**
  * The catalog is a JSON array. Extra indexer metadata is ignored by the app.
  */
-export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; tag: string; contributions?: ContributionKind[]; preview_url?: string | null }
+export type PluginCatalogEntry = { id: string; name: string; repo: string; description: string; tag: string; contributions?: ContributionKind[]; preview_url?: string | null; stars?: number; released_at?: string | null }
 
 export type PluginFontInspection = { family: string; file: string; weight: number; style: FontStyle }
 

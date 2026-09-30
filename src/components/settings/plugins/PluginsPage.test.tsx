@@ -238,24 +238,39 @@ it("keeps a failed update open, then updates and uninstalls without changing sel
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("shows installed plugins first and filters the grid", async () => {
+it("sorts and filters the grid", async () => {
   const anotherPlugin: PluginCatalogEntry = {
     ...entry,
     id: "bob.dawn",
     name: "Dawn",
     repo: "bob/dawn",
     description: "A bright theme",
+    stars: 12,
+    released_at: "2026-08-01T00:00:00Z",
   }
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({
-    plugins: [anotherPlugin, entry],
+    plugins: [{ ...entry, stars: 3, released_at: "2026-09-01T00:00:00Z" }, anotherPlugin],
     error: null,
   })
   await render()
-  expect([...document.querySelectorAll("h3")].map((heading) => heading.textContent)).toEqual([
-    "Dusk",
-    "Dawn",
-  ])
+  const names = () => [...document.querySelectorAll("h3")].map((heading) => heading.textContent)
+  expect(names()).toEqual(["Dawn", "Dusk"])
+
+  await act(async () => {
+    document
+      .querySelector('[aria-label="Sort plugins"]')!
+      .dispatchEvent(
+        new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }),
+      )
+  })
+  const latest = [...document.querySelectorAll('[role="option"]')].find(
+    (option) => option.textContent === "Latest",
+  )!
+  await act(async () => {
+    latest.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }))
+  })
+  expect(names()).toEqual(["Dusk", "Dawn"])
 
   await searchFor("bright")
   expect(document.body.textContent).toContain("Dawn")

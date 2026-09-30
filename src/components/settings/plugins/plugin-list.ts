@@ -8,6 +8,8 @@ export type PluginListItem = {
   description: string | null
   preview_url: string | null
   contributions: ContributionKind[]
+  stars: number
+  released_at: string | null
   /** In the renCal catalog. */
   listed: boolean
   installed: InstalledPlugin | null

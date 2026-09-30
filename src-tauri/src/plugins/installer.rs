@@ -96,6 +96,10 @@ pub struct PluginCatalogEntry {
     pub contributions: Vec<ContributionKind>,
     #[serde(default, deserialize_with = "deserialize_preview_url")]
     pub preview_url: Option<String>,
+    #[serde(default)]
+    pub stars: u32,
+    #[serde(default)]
+    pub released_at: Option<String>,
 }
 
 /// Kinds added by a newer indexer are dropped rather than hiding the plugin.
@@ -3121,6 +3125,8 @@ appearance = "dark"
             tag: "v9.0.0".into(),
             contributions: vec![ContributionKind::Theme],
             preview_url: None,
+            stars: 0,
+            released_at: None,
         }];
         assert!(manager.list().await.plugins[0].update_version.is_none());
     }
