@@ -27,7 +27,7 @@ use super::LocalLockEntry;
 use super::{
     Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE,
     MIN_PROVIDER_CALDIR_CORE, PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest,
-    PluginsFile, ProviderContribution, load_plugin_lock_file, load_plugins_file, plugins_dir,
+    PluginsFile, ProviderContribution, load_declared_plugins, load_plugin_lock_file, plugins_dir,
     plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
     release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
     scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
@@ -410,9 +410,13 @@ impl PluginManager {
     pub async fn list(&self) -> InstalledPlugins {
         let _guard = self.inner.mutations.lock().await;
         let mut errors = Vec::new();
-        let (declarations, locks) = self.load_state().unwrap_or_else(|error| {
+        let (declarations, locks) = self.load_declared_state().unwrap_or_else(|error| {
             errors.push(error.to_string());
-            (PluginsFile::default(), PluginLockFile::default())
+            (Some(PluginsFile::default()), PluginLockFile::default())
+        });
+        let declarations = declarations.unwrap_or_else(|| {
+            errors.extend(self.undeclared_warning(&locks));
+            PluginsFile::default()
         });
         let scan = scan_packages(&self.inner.packages_dir, running_app_version().as_ref());
         let parsed = declarations.declarations().unwrap_or_default();
@@ -738,8 +742,19 @@ impl PluginManager {
     pub async fn reconcile(&self) -> Vec<PluginReconcileError> {
         let (missing, mut errors) = {
             let _guard = self.inner.mutations.lock().await;
-            let (declarations, mut locks) = match self.load_state() {
-                Ok(state) => state,
+            let (declarations, mut locks) = match self.load_declared_state() {
+                Ok((Some(declarations), locks)) => (declarations, locks),
+                // Nothing is declared, so there is nothing to link or restore.
+                Ok((None, locks)) => {
+                    return self
+                        .undeclared_warning(&locks)
+                        .map(|message| PluginReconcileError {
+                            package: self.inner.declarations_path.display().to_string(),
+                            message,
+                        })
+                        .into_iter()
+                        .collect();
+                }
                 Err(error) => {
                     return vec![PluginReconcileError {
                         package: self.inner.declarations_path.display().to_string(),
@@ -1127,18 +1142,42 @@ impl PluginManager {
         Ok(())
     }
 
-    fn load_declarations(&self) -> Result<PluginsFile, PluginInstallError> {
-        load_plugins_file(&self.inner.declarations_path).map_err(|error| {
-            PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
-        })
+    fn load_state(&self) -> Result<(PluginsFile, PluginLockFile), PluginInstallError> {
+        let (declarations, locks) = self.load_declared_state()?;
+        Ok((declarations.unwrap_or_default(), locks))
     }
 
-    fn load_state(&self) -> Result<(PluginsFile, PluginLockFile), PluginInstallError> {
-        let declarations = self.load_declarations()?;
+    /// Like `load_state`, but `None` means plugins.toml declares nothing yet.
+    fn load_declared_state(
+        &self,
+    ) -> Result<(Option<PluginsFile>, PluginLockFile), PluginInstallError> {
+        let declarations =
+            load_declared_plugins(&self.inner.declarations_path).map_err(|error| {
+                PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
+            })?;
         let locks = load_plugin_lock_file(&self.inner.lock_path).map_err(|error| {
             PluginInstallError::new(PluginInstallErrorKind::Configuration, error.to_string())
         })?;
         Ok((declarations, locks))
+    }
+
+    /// Explains why locked packages survive a missing or empty plugins.toml.
+    fn undeclared_warning(&self, locks: &PluginLockFile) -> Option<String> {
+        let ids: HashSet<_> = locks
+            .plugins
+            .iter()
+            .map(|entry| &entry.id)
+            .chain(locks.local.iter().map(|entry| &entry.id))
+            .collect();
+        if ids.is_empty() {
+            return None;
+        }
+        let count = ids.len();
+        let noun = if count == 1 { "plugin" } else { "plugins" };
+        Some(format!(
+            "{} is missing or has no plugins list; keeping {count} installed {noun}. Set `plugins = []` to remove them.",
+            self.inner.declarations_path.display()
+        ))
     }
 
     async fn resolve_latest(
@@ -2153,6 +2192,7 @@ fn restore_pruned_packages(moved: &[(PathBuf, PathBuf)]) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::plugins::load_plugins_file;
     use std::collections::HashMap;
     use std::sync::Mutex as StdMutex;
     use tokio::sync::Notify;
@@ -3326,6 +3366,91 @@ appearance = "dark"
                 .plugins
                 .len(),
             1
+        );
+    }
+
+    fn assert_dusk_kept(temp: &tempfile::TempDir) {
+        assert!(temp.path().join("data/plugins/alice.dusk").is_dir());
+        assert_eq!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .len(),
+            1
+        );
+    }
+
+    #[tokio::test]
+    async fn reconcile_keeps_locked_plugins_when_declarations_are_missing() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        std::fs::remove_file(temp.path().join("config/plugins.toml")).unwrap();
+
+        let errors = manager.reconcile().await;
+
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("keeping 1 installed plugin"));
+        assert_dusk_kept(&temp);
+        assert_eq!(manager.list().await.errors, vec![errors[0].message.clone()]);
+    }
+
+    #[tokio::test]
+    async fn reconcile_keeps_locked_plugins_when_declarations_are_empty() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+
+        for contents in ["", " \n\n", "# plugins = []\n"] {
+            std::fs::write(temp.path().join("config/plugins.toml"), contents).unwrap();
+            assert_eq!(manager.reconcile().await.len(), 1, "{contents:?}");
+            assert_dusk_kept(&temp);
+        }
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn reconcile_reports_a_dangling_declarations_symlink() {
+        use std::os::unix::fs::symlink;
+
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        let declarations_path = temp.path().join("config/plugins.toml");
+        let target = temp.path().join("dotfiles/plugins.toml");
+        std::fs::remove_file(&declarations_path).unwrap();
+        symlink(&target, &declarations_path).unwrap();
+
+        let errors = manager.reconcile().await;
+
+        assert_eq!(errors.len(), 1);
+        assert!(errors[0].message.contains("broken symlink"));
+        assert!(errors[0].message.contains(&target.display().to_string()));
+        assert_dusk_kept(&temp);
+    }
+
+    #[tokio::test]
+    async fn reconcile_prunes_everything_for_an_explicit_empty_list() {
+        let downloader = Arc::new(FixtureDownloader::new());
+        serve_v1(&downloader);
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+        manager.install("Alice/rencal-dusk").await.unwrap();
+        std::fs::write(temp.path().join("config/plugins.toml"), "plugins = []\n").unwrap();
+
+        assert!(manager.reconcile().await.is_empty());
+        assert!(!temp.path().join("data/plugins/alice.dusk").exists());
+        assert!(
+            load_plugin_lock_file(&temp.path().join("data/plugins.lock"))
+                .unwrap()
+                .plugins
+                .is_empty()
         );
     }
 

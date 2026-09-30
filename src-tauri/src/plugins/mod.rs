@@ -143,13 +143,29 @@ pub fn expand_home(value: &str) -> Result<PathBuf, PluginError> {
 }
 
 pub fn load_plugins_file(path: &Path) -> Result<PluginsFile, PluginError> {
+    Ok(load_declared_plugins(path)?.unwrap_or_default())
+}
+
+/// `None` when the file is missing or has no `plugins` key, so an absent or
+/// truncated file is never mistaken for an explicit `plugins = []`.
+pub fn load_declared_plugins(path: &Path) -> Result<Option<PluginsFile>, PluginError> {
     parse_plugins_file(path, &read_plugins_file(path)?)
 }
 
 fn read_plugins_file(path: &Path) -> Result<String, PluginError> {
     match std::fs::read_to_string(path) {
         Ok(contents) => Ok(contents),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(String::new()),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+            // A dotfile-manager link whose checkout moved is not an empty file.
+            if let Ok(target) = std::fs::read_link(path) {
+                return Err(PluginError::new(format!(
+                    "{} is a broken symlink to {}",
+                    path.display(),
+                    target.display()
+                )));
+            }
+            Ok(String::new())
+        }
         Err(error) => Err(PluginError::new(format!(
             "could not read {}: {error}",
             path.display()
@@ -157,12 +173,21 @@ fn read_plugins_file(path: &Path) -> Result<String, PluginError> {
     }
 }
 
-fn parse_plugins_file(path: &Path, contents: &str) -> Result<PluginsFile, PluginError> {
-    let file: PluginsFile = toml::from_str(contents).map_err(|error| {
+fn parse_plugins_file(path: &Path, contents: &str) -> Result<Option<PluginsFile>, PluginError> {
+    #[derive(Deserialize)]
+    struct Declared {
+        plugins: Option<Vec<String>>,
+    }
+
+    let declared: Declared = toml::from_str(contents).map_err(|error| {
         PluginError::new(format!("could not parse {}: {error}", path.display()))
     })?;
+    let Some(plugins) = declared.plugins else {
+        return Ok(None);
+    };
+    let file = PluginsFile { plugins };
     validate_plugins_file(&file)?;
-    Ok(file)
+    Ok(Some(file))
 }
 
 pub fn save_plugins_file(path: &Path, file: &PluginsFile) -> Result<(), PluginError> {
