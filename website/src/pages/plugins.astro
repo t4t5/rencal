@@ -289,8 +289,6 @@ const builtAt = new Date()
         const sheet = document.getElementById(card.dataset.sheet!)
         if (!(sheet instanceof HTMLDialogElement)) return
         event.preventDefault()
-        const root = document.documentElement
-        root.toggleAttribute("data-scrollbar", root.scrollHeight > root.clientHeight)
         sheet.showModal()
       })
     }
