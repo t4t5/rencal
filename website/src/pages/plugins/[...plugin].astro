@@ -1,71 +1,51 @@
 ---
-import "../styles/index.css"
-import "../styles/plugins.css"
+import "../../styles/index.css"
+import "../../styles/plugins.css"
 
-import fs from "node:fs/promises"
+import BaseLayout from "../../layouts/BaseLayout.astro"
+import Button from "../../components/Button.astro"
+import CloseIcon from "../../icons/close.astro"
+import GitHubLogo from "../../icons/github.astro"
+import RencalLogomark from "../../icons/rencal-logomark.astro"
+import { loadPlugins, type PluginIndexEntry } from "../../lib/plugins"
 
-import BaseLayout from "../layouts/BaseLayout.astro"
-import Button from "../components/Button.astro"
-import CloseIcon from "../icons/close.astro"
-import GitHubLogo from "../icons/github.astro"
-import RencalLogomark from "../icons/rencal-logomark.astro"
-
-interface PluginIndexEntry {
-  id: string
-  name: string
-  repo: string
-  description: string
-  stars: number
-  released_at: string
-  contributions: string[]
-  preview_url?: string
+// `/plugins/<id>/` is the plugin list with that plugin's sheet open, so plugins can be linked to.
+export async function getStaticPaths() {
+  const plugins = await loadPlugins()
+  return [undefined, ...plugins].map((selected) => ({
+    params: { plugin: selected?.id },
+    props: { plugins, selected },
+  }))
 }
 
-function isPluginIndexEntry(value: unknown): value is PluginIndexEntry {
-  if (typeof value !== "object" || value === null) return false
-  const entry = value as Record<string, unknown>
-  return (
-    (entry.preview_url === undefined ||
-      (typeof entry.preview_url === "string" &&
-        /^https:\/\/rencal\.org\/plugin-previews\/[0-9a-f]{64}\.png$/.test(entry.preview_url))) &&
-    typeof entry.id === "string" &&
-    typeof entry.name === "string" &&
-    typeof entry.repo === "string" &&
-    typeof entry.description === "string" &&
-    typeof entry.stars === "number" &&
-    typeof entry.released_at === "string" &&
-    Array.isArray(entry.contributions) &&
-    entry.contributions.every((kind) => typeof kind === "string")
-  )
+interface Props {
+  plugins: PluginIndexEntry[]
+  selected?: PluginIndexEntry
 }
 
-// `just web` renders mock plugins so the grid can be previewed locally.
-const indexPath = import.meta.env.DEV ? "src/data/mock-plugins.json" : "public/plugins.json"
-const rawIndex: unknown = JSON.parse(await fs.readFile(indexPath, "utf8"))
-if (!Array.isArray(rawIndex) || !rawIndex.every(isPluginIndexEntry)) {
-  throw new Error(`${indexPath} is not a valid plugin index`)
-}
-
-const plugins = rawIndex.sort(
-  (left, right) =>
-    right.stars - left.stars ||
-    left.name.localeCompare(right.name, undefined, { sensitivity: "base" }),
-)
+const { plugins, selected } = Astro.props
 const authorOf = (repo: string) => repo.split("/", 1)[0]
 // Providers run a program on the user's computer, so they are labelled apart from themes.
 const kindOf = (plugin: PluginIndexEntry) =>
   plugin.contributions.includes("provider") ? "Provider" : null
 const CONTRIBUTION_LABELS: Record<string, string> = { theme: "Theme", provider: "Provider" }
 const sheetId = (plugin: PluginIndexEntry) => `plugin-sheet-${plugin.id}`
+const LIST_TITLE = "renCal Plugins: community themes for renCal"
+const titleOf = (plugin: PluginIndexEntry) =>
+  `${plugin.name}: renCal plugin by ${authorOf(plugin.repo)}`
 // The site is redeployed whenever the index changes, so build time is when the list was refreshed.
 const builtAt = new Date()
 ---
 
 <BaseLayout
-  title="renCal Plugins: community themes for renCal"
-  description="Browse community-built plugins and themes for renCal."
+  title={selected ? titleOf(selected) : LIST_TITLE}
+  description={selected?.description ?? "Browse community-built plugins and themes for renCal."}
+  image={selected?.preview_url}
 >
-  <section class="mx-auto flex w-full flex-col gap-8 px-6 pt-6 md:px-10">
+  <section
+    class="mx-auto flex w-full flex-col gap-8 px-6 pt-6 md:px-10"
+    data-list-title={LIST_TITLE}
+  >
     <header class="flex max-w-3xl flex-col gap-3">
       <h1 class="text-3xl">Plugins</h1>
       <p class="text-pretty">Browse community-built plugins for renCal.</p>
@@ -115,11 +95,9 @@ const builtAt = new Date()
               data-search={[plugin.name, plugin.repo, plugin.description, kindOf(plugin) ?? ""]
                 .join(" ")
                 .toLowerCase()}
-              data-sheet={sheetId(plugin)}
+              data-plugin={plugin.id}
               aria-haspopup="dialog"
-              href={`https://github.com/${plugin.repo}`}
-              target="_blank"
-              rel="noreferrer"
+              href={`/plugins/${plugin.id}/`}
             >
               <div class="plugin-card-header">
                 <img
@@ -171,6 +149,8 @@ const builtAt = new Date()
       <dialog
         class="plugin-sheet"
         id={sheetId(plugin)}
+        data-plugin={plugin.id}
+        data-title={titleOf(plugin)}
         aria-labelledby={`${sheetId(plugin)}-title`}
       >
         <div class="plugin-sheet-body">
@@ -282,22 +262,70 @@ const builtAt = new Date()
       grid?.append(...ordered)
     }
 
+    const sheets = new Map(
+      [...document.querySelectorAll<HTMLDialogElement>(".plugin-sheet")].map((sheet) => [
+        sheet.dataset.plugin!,
+        sheet,
+      ]),
+    )
+    const listTitle = document.querySelector<HTMLElement>("[data-list-title]")!.dataset.listTitle!
+    // `/plugins/<id>/` → `<id>`
+    const pluginInUrl = () => location.pathname.split("/")[2] || null
+    const pluginPath = (id: string | null) => (id ? `/plugins/${id}/` : "/plugins/")
+
+    function openSheet(sheet: HTMLDialogElement, animate: boolean) {
+      if (animate) return sheet.showModal()
+      sheet.dataset.instant = ""
+      sheet.showModal()
+      // Commit the open styles before transitions return, so closing still animates.
+      void sheet.offsetWidth
+      delete sheet.dataset.instant
+    }
+
+    // The URL is the source of truth for which sheet is open.
+    function syncSheetToUrl({ animate = true } = {}) {
+      const id = pluginInUrl()
+      for (const [pluginId, sheet] of sheets) {
+        if (pluginId === id) {
+          if (!sheet.open) openSheet(sheet, animate)
+        } else if (sheet.open) {
+          sheet.close()
+        }
+      }
+      document.title = (id && sheets.get(id)?.dataset.title) || listTitle
+    }
+
     for (const card of cards) {
       card.addEventListener("click", (event) => {
-        // Modified clicks still open the repository in a new tab.
+        // Modified clicks open the plugin's link in a new tab.
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
-        const sheet = document.getElementById(card.dataset.sheet!)
-        if (!(sheet instanceof HTMLDialogElement)) return
+        const id = card.dataset.plugin!
+        if (!sheets.has(id)) return
         event.preventDefault()
-        sheet.showModal()
+        history.pushState({ plugin: id }, "", pluginPath(id))
+        syncSheetToUrl()
       })
     }
-    for (const sheet of document.querySelectorAll<HTMLDialogElement>(".plugin-sheet")) {
+    for (const [id, sheet] of sheets) {
       // The body fills the panel, so clicks landing on the dialog itself come from the backdrop.
       sheet.addEventListener("click", (event) => {
         if (event.target === sheet) sheet.close()
       })
+      sheet.addEventListener("close", () => {
+        // Back/forward already changed the URL.
+        if (pluginInUrl() !== id) return
+        // Pop the entry the card click pushed, so Back doesn't reopen the sheet.
+        if (history.state?.plugin === id) {
+          history.back()
+        } else {
+          history.replaceState(null, "", pluginPath(null))
+          document.title = listTitle
+        }
+      })
     }
+    window.addEventListener("popstate", () => syncSheetToUrl())
+    // A linked plugin is shown already open rather than sliding in.
+    syncSheetToUrl({ animate: false })
 
     search.addEventListener("input", filter)
     sort.addEventListener("change", reorder)
