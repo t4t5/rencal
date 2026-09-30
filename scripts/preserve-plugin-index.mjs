@@ -59,17 +59,10 @@ if (!publicDirectory || (mode !== undefined && mode !== "--local") || process.ar
 }
 const local = mode === "--local"
 const indexPath = join(publicDirectory, "plugins.json")
-let entries
-if (local) {
-  entries = parseCatalog(await readBounded(indexPath, indexLimit))
-} else {
-  try {
-    entries = parseCatalog(await download(catalogUrl, indexLimit))
-  } catch (error) {
-    console.warn(`Could not restore deployed catalogue: ${error}; using checked-in catalogue`)
-    entries = parseCatalog(await readBounded(indexPath, indexLimit))
-  }
-}
+// No fallback to the checked-in placeholder: deploying it would empty the live catalogue.
+const entries = parseCatalog(
+  local ? await readBounded(indexPath, indexLimit) : await download(catalogUrl, indexLimit),
+)
 
 for (const entry of entries) {
   if (!("preview_url" in entry)) continue

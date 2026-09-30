@@ -30,6 +30,15 @@ jobs:
           workspaces: src-tauri -> target
           key: plugin-indexer
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # The indexer keeps listed plugins that GitHub fails to serve, so it must
+      # start from the deployed index rather than the checked-in placeholder.
+      - name: Restore deployed plugin index
+        run: node scripts/preserve-plugin-index.mjs website/public
+
       - name: Build plugin index
         run: cargo run --manifest-path src-tauri/Cargo.toml -p rencal-plugin-indexer -- website/public/plugins.json
         env:
