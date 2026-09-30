@@ -23,7 +23,6 @@ import {
 } from "@/lib/api"
 
 import { PluginBadge } from "./PluginBadge"
-import { PluginPreview } from "./PluginPreview"
 import { PluginSheet } from "./PluginSheet"
 import { CONTRIBUTION_LABELS, isProvider, pluginOwner, type PluginListItem } from "./plugin-list"
 
@@ -195,8 +194,8 @@ export function PluginsPage() {
   const selected = selection && resolveSelection(plugins, selection)
 
   return (
-    <SettingsContent className="w-full min-w-0 pt-7">
-      <div className="flex shrink-0 flex-col gap-3">
+    <div className="flex w-full min-w-0 flex-col">
+      <div className="flex shrink-0 flex-col gap-3 border-b border-border p-4 pt-7">
         <div className="flex items-center gap-2">
           <Input
             variant="default"
@@ -232,7 +231,7 @@ export function PluginsPage() {
           </div>
         </div>
       </div>
-      <div className="flex flex-col gap-3 min-w-0">
+      <SettingsContent className="min-w-0 gap-3">
         {listError && (
           <div className="flex items-center gap-2">
             <ErrorMessage message={listError} />
@@ -279,7 +278,7 @@ export function PluginsPage() {
             ))}
           </div>
         )}
-      </div>
+      </SettingsContent>
       {selected && (
         <PluginSheet
           key={`${selection.id ?? ""}:${selection.repo ?? ""}`}
@@ -292,7 +291,7 @@ export function PluginsPage() {
           }}
         />
       )}
-    </SettingsContent>
+    </div>
   )
 }
 
@@ -366,7 +365,6 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
             {status && <PluginBadge solid>{status}</PluginBadge>}
           </div>
         )}
-        <PluginPreview key={plugin.preview_url} url={plugin.preview_url} name={plugin.name} />
         {plugin.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
         )}

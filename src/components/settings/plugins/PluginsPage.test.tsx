@@ -132,9 +132,12 @@ it("describes an unlisted plugin from its installed manifest", async () => {
   await render()
   expect(card("Dusk").textContent).toContain("A local theme")
   expect(card("Dusk").textContent).toContain("Theme")
-  expect(card("Dusk").querySelector("img")?.getAttribute("src")).toBe("data:image/png;base64,AA==")
+  expect(card("Dusk").querySelector("img")).toBeNull()
   await open("Dusk")
   expect(sheetText()).toContain("isn't listed in the renCal catalog")
+  expect(document.querySelector('[role="dialog"] img')?.getAttribute("src")).toBe(
+    "data:image/png;base64,AA==",
+  )
 })
 
 it("describes a catalog plugin, installs it, and refreshes the list without selecting a theme", async () => {
