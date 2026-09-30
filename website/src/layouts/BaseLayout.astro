@@ -45,10 +45,10 @@ const jsonLd = JSON.stringify(softwareApplicationJsonLd)
     <script type="application/ld+json" set:html={jsonLd} />
     <script defer data-domain={site.analyticsDomain} src={site.analyticsScript}></script>
   </head>
-  <body>
+  <body class="flex flex-col">
     <Header />
 
-    <main class="flex flex-col gap-14">
+    <main class="flex flex-1 flex-col gap-14">
       <slot />
       <Footer />
     </main>
