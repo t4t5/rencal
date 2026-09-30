@@ -46,7 +46,7 @@ export type {
 } from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/api/providers"
 export type { CaldirSettings } from "@/lib/api/settings"
-export type { SyncPreview } from "@/lib/api/sync"
+export type { SyncFailure, SyncPreview } from "@/lib/api/sync"
 export type {
   ExternalTheme,
   ExternalThemeError,

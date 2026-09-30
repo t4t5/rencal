@@ -5,7 +5,9 @@ use super::types::{
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
-use caldir_core::{CalendarConfig, DateRange, Event, Provider, ProviderSlug, Status};
+use caldir_core::{
+    CaldirError, CalendarConfig, Connection, DateRange, Event, Provider, ProviderSlug, Status,
+};
 use chrono::{DateTime, Utc};
 
 /// An owned handle to a provider binary (`Provider` is an `Arc` inside), so
@@ -16,6 +18,20 @@ pub fn provider(state: &AppState, provider_name: &str) -> TauResult<Provider> {
         .provider(&ProviderSlug::from(provider_name))
         .map_err(RpcError::from)
         .cloned()
+}
+
+/// A connection from `Caldir::connections` with its slug. On failure the
+/// calendar can't be identified, so sync loops record it without a slug.
+pub fn connection_with_slug(
+    connection: Result<Connection, CaldirError>,
+) -> Result<(Connection, String), RpcError> {
+    let connection = connection?;
+    let slug = connection
+        .local()
+        .slug()
+        .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
+        .to_string();
+    Ok((connection, slug))
 }
 
 pub fn is_visible(event: &Event) -> bool {
@@ -133,9 +149,7 @@ pub async fn save_connected_calendars(
         state.save_caldir_config(config)?;
     }
 
-    if let Err(err) = pull_created_calendar_events(state, &created.slugs).await {
-        log::warn!("failed to pull events after connecting provider: {err}");
-    }
+    pull_created_calendar_events(state, &created.slugs).await;
 
     state.notify_calendars_changed();
 
@@ -198,42 +212,43 @@ fn create_connected_calendars(
     Ok(created)
 }
 
-async fn pull_created_calendar_events(
-    state: &AppState,
-    calendar_slugs: &[String],
-) -> TauResult<()> {
+/// Initial pull for freshly connected calendars. A calendar that fails is
+/// logged and skipped; the next sync retries it.
+async fn pull_created_calendar_events(state: &AppState, calendar_slugs: &[String]) {
     if calendar_slugs.is_empty() {
-        return Ok(());
+        return;
     }
 
     let range = DateRange::default_sync_window();
     let connections = state.caldir().connections();
 
     for connection in connections {
-        let mut connection = connection?;
-        let slug = connection
-            .local()
-            .slug()
-            .ok_or_else(|| RpcError::new(RpcErrorKind::Internal, "calendar missing slug"))?
-            .to_string();
+        let (mut connection, slug) = match connection_with_slug(connection) {
+            Ok(opened) => opened,
+            Err(error) => {
+                log::warn!("failed to load calendar after connecting provider: {error}");
+                continue;
+            }
+        };
 
         if !calendar_slugs.contains(&slug) {
             continue;
         }
 
-        let diff = connection
-            .diff(&range)
-            .await
-            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
+        let diff = match connection.diff(&range).await {
+            Ok(diff) => diff,
+            Err(error) => {
+                log::warn!("failed to pull [{slug}] after connecting provider: {error}");
+                continue;
+            }
+        };
 
-        connection
-            .apply_incoming_diff(&diff)
-            .map_err(|e| RpcError::from(e).context(format!("[{slug}]")))?;
-
+        let pulled = connection.apply_incoming_diff(&diff);
         state.invalidate_events(&slug);
+        if let Err(error) = pulled {
+            log::warn!("failed to pull [{slug}] after connecting provider: {error}");
+        }
     }
-
-    Ok(())
 }
 
 #[cfg(test)]
