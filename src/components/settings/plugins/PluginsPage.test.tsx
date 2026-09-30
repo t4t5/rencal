@@ -2,6 +2,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
+import { toast } from "sonner"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
@@ -9,6 +10,7 @@ import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
 import { PluginsPage } from "./PluginsPage"
 
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }))
+vi.mock("sonner", () => ({ toast: { success: vi.fn() } }))
 
 vi.mock("@/lib/api", () => ({
   api: {
@@ -155,6 +157,7 @@ it("describes a catalog plugin, installs it, and refreshes the list without sele
   })
   await click("Install")
   expect(api.plugins.install).toHaveBeenCalledWith("alice/dusk")
+  expect(toast.success).toHaveBeenCalledExactlyOnceWith("Installed Dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(card("Dusk").textContent).toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
@@ -236,6 +239,7 @@ it("keeps a failed update open, then updates and uninstalls without changing sel
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   await click("Uninstall")
   expect(api.plugins.uninstall).toHaveBeenCalledWith(plugin.id)
+  expect(toast.success).toHaveBeenCalledExactlyOnceWith("Uninstalled Dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(card("Dusk").textContent).not.toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()

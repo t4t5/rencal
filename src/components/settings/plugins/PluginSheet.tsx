@@ -1,5 +1,6 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useState } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -45,6 +46,8 @@ export function PluginSheet({
     setActionError(null)
     try {
       await perform()
+      if (next === "install") toast.success(`Installed ${plugin.name}`)
+      if (next === "uninstall") toast.success(`Uninstalled ${plugin.name}`)
       onBusyChange(false)
       onChanged()
     } catch (error) {

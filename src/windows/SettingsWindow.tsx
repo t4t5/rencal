@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
+import { Toaster } from "@/components/ui/sonner"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 
 import { api } from "@/lib/api"
@@ -89,6 +90,8 @@ export function SettingsWindow() {
           </TabsContent>
         ))}
       </Tabs>
+
+      <Toaster />
     </div>
   )
 }

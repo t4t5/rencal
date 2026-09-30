@@ -1,7 +1,7 @@
 import type { ReactNode } from "react"
-import { Toaster } from "sonner"
 
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
+import { Toaster } from "@/components/ui/sonner"
 import { UpdateChecker } from "@/components/update/UpdateChecker"
 
 import { AgendaFocusProvider } from "@/contexts/AgendaFocusContext"
@@ -50,7 +50,7 @@ export function AppProviders({ preload, children }: AppProvidersProps) {
         </RecurrenceEditProvider>
         <MassDeleteConfirmDialog />
         <UpdateChecker />
-        <Toaster richColors position="bottom-right" />
+        <Toaster />
       </SyncProvider>
     </CalEventsProvider>
   )
