@@ -79,10 +79,6 @@ impl DeepLinkInbox {
     pub fn take_plugin_install(&self) -> Option<PluginInstallLink> {
         self.state.lock().plugin_install.take()
     }
-
-    pub fn has_plugin_install(&self) -> bool {
-        self.state.lock().plugin_install.is_some()
-    }
 }
 
 pub fn parse_deep_link(raw: &str) -> Result<DeepLink, String> {
@@ -269,7 +265,6 @@ mod tests {
             "rencal://plugin/install?repo=bob%2Fsecond".into(),
         ]);
         assert_eq!(accepted.plugin_installs, 2);
-        assert!(inbox.has_plugin_install());
         assert_eq!(
             inbox.take_plugin_install(),
             Some(PluginInstallLink {
@@ -277,6 +272,5 @@ mod tests {
             })
         );
         assert_eq!(inbox.take_plugin_install(), None);
-        assert!(!inbox.has_plugin_install());
     }
 }

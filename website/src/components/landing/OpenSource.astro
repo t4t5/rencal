@@ -2,6 +2,7 @@
 import "../../styles/features.css"
 
 import GitHubLogo from "../../icons/github.astro"
+import Button from "../Button.astro"
 import { site } from "../../site"
 ---
 
@@ -15,15 +16,10 @@ import { site } from "../../site"
   </p>
 
   <div class="flex gap-5">
-    <a href="/download/">
-      <button class="primary">Download</button>
-    </a>
-
-    <a href={site.repoUrl} target="_blank">
-      <button class="flex items-center gap-2">
-        <GitHubLogo class="w-5" />
-        <span>Contribute</span>
-      </button>
-    </a>
+    <Button href="/download/" variant="primary">Download</Button>
+    <Button href={site.repoUrl} target="_blank">
+      <GitHubLogo class="w-5" />
+      <span>Contribute</span>
+    </Button>
   </div>
 </div>

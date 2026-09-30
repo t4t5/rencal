@@ -2,6 +2,7 @@
 import "../styles/index.css"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
+import Button from "../components/Button.astro"
 import CodeBlock from "../components/CodeBlock.astro"
 import GitHubLogo from "../icons/github.astro"
 import OmarchyLogo from "../icons/omarchy.astro"
@@ -154,16 +155,11 @@ const widgetInstallCommand = `omarchy plugin add ${widgetRepoUrl} --enable`
     </p>
 
     <div class="flex gap-5">
-      <a href="/download/">
-        <button class="primary">Download</button>
-      </a>
-
-      <a href={site.repoUrl} target="_blank">
-        <button class="flex items-center gap-2">
-          <GitHubLogo class="w-5" />
-          <span>GitHub</span>
-        </button>
-      </a>
+      <Button href="/download/" variant="primary">Download</Button>
+      <Button href={site.repoUrl} target="_blank">
+        <GitHubLogo class="w-5" />
+        <span>GitHub</span>
+      </Button>
     </div>
   </section>
 </BaseLayout>

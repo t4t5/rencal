@@ -2,6 +2,7 @@
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
+import { toast } from "sonner"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
@@ -9,13 +10,13 @@ import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
 import { PluginsPage } from "./PluginsPage"
 
 vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }))
+vi.mock("sonner", () => ({ toast: { success: vi.fn() } }))
 
 vi.mock("@/lib/api", () => ({
   api: {
     plugins: {
       list: vi.fn(),
       catalog: vi.fn(),
-      takePendingInstall: vi.fn(),
       install: vi.fn(),
       uninstall: vi.fn(),
     },
@@ -57,7 +58,6 @@ beforeEach(() => {
   root = createRoot(container)
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
   vi.mocked(api.plugins.install).mockResolvedValue({
     ...plugin,
     min_rencal_version: "0.7.0",
@@ -155,6 +155,7 @@ it("describes a catalog plugin, installs it, and refreshes the list without sele
   })
   await click("Install")
   expect(api.plugins.install).toHaveBeenCalledWith("alice/dusk")
+  expect(toast.success).toHaveBeenCalledExactlyOnceWith("Installed Dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(card("Dusk").textContent).toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
@@ -189,28 +190,6 @@ it("keeps an install error in the sheet", async () => {
   expect(button("Install").disabled).toBe(false)
 })
 
-it("describes an install received from a deep link", async () => {
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
-  await render()
-  expect(sheetText()).toContain("A quiet theme")
-  expect(button("Install").disabled).toBe(false)
-})
-
-it("describes a deep link to a plugin that isn't in the catalog", async () => {
-  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "bob/rencal-dawn" })
-  await render()
-  expect(sheetText()).toContain("rencal-dawn")
-  expect(sheetText()).toContain("isn't listed in the renCal catalog")
-  await click("Install")
-  expect(api.plugins.install).toHaveBeenCalledWith("bob/rencal-dawn")
-})
-
-it("does nothing when there is no pending deep-link install", async () => {
-  await render()
-  expect(api.plugins.takePendingInstall).toHaveBeenCalledOnce()
-  expect(document.querySelector('[role="dialog"]')).toBeNull()
-})
-
 it("keeps a failed update open, then updates and uninstalls without changing selection", async () => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
   await render()
@@ -236,6 +215,7 @@ it("keeps a failed update open, then updates and uninstalls without changing sel
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   await click("Uninstall")
   expect(api.plugins.uninstall).toHaveBeenCalledWith(plugin.id)
+  expect(toast.success).toHaveBeenCalledExactlyOnceWith("Uninstalled Dusk")
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(card("Dusk").textContent).not.toContain("Installed")
   expect(api.themes.setConfigured).not.toHaveBeenCalled()

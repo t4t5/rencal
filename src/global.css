@@ -186,6 +186,10 @@
   --tooltip: color-mix(in srgb, var(--surface-tint) 15%, var(--background));
   --tooltip-foreground: var(--foreground);
 
+  /* A raised surface on dark themes; the light-appearance rule inverts it. */
+  --toast: var(--popover);
+  --toast-foreground: var(--popover-foreground);
+
   /* Muted text on each surface that sets its own foreground. The
      text-*-foreground utilities below swap these into --muted-foreground. */
   --secondary-muted-foreground: var(--muted-foreground);
@@ -194,6 +198,7 @@
   --card-muted-foreground: var(--muted-foreground);
   --popover-muted-foreground: var(--muted-foreground);
   --tooltip-muted-foreground: var(--muted-foreground);
+  --toast-muted-foreground: color-mix(in srgb, var(--toast-foreground) 60%, transparent);
 
   --destructive-foreground: white;
   --overlay: rgb(0 0 0 / 0.5);
@@ -207,6 +212,8 @@
 
 [data-appearance="light"] {
   color-scheme: light;
+  --toast: var(--foreground);
+  --toast-foreground: var(--background);
 }
 
 /* Event text on light themes: keep the accent's hue and cap its lightness
@@ -245,6 +252,8 @@
   --color-popover-foreground: var(--popover-foreground);
   --color-tooltip: var(--tooltip);
   --color-tooltip-foreground: var(--tooltip-foreground);
+  --color-toast: var(--toast);
+  --color-toast-foreground: var(--toast-foreground);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -306,6 +315,10 @@
 
 @utility text-tooltip-foreground {
   --muted-foreground: var(--tooltip-muted-foreground);
+}
+
+@utility text-toast-foreground {
+  --muted-foreground: var(--toast-muted-foreground);
 }
 
 /* Pill radius that squares off on sharp themes; see --radius-circle. */

@@ -69,6 +69,8 @@ fn append_chunk(body: &mut Vec<u8>, chunk: &[u8], limit: usize) -> Result<()> {
 #[derive(Debug, Deserialize)]
 struct SearchResponse {
     total_count: usize,
+    #[serde(default)]
+    incomplete_results: bool,
     items: Vec<SearchRepository>,
 }
 
@@ -123,7 +125,7 @@ struct PackageSource {
     assets: Vec<GithubAsset>,
 }
 
-#[derive(Clone, Debug, Eq, PartialEq, Serialize)]
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 struct PluginIndexEntry {
     id: String,
     name: String,
@@ -166,11 +168,11 @@ async fn fetch_json<T: DeserializeOwned>(
     Ok(FetchResult::Found(value))
 }
 
-async fn fetch_text(
+async fn fetch_bytes(
     client: &dyn GithubClient,
     url: Url,
     context: &str,
-) -> Result<FetchResult<String>> {
+) -> Result<FetchResult<Vec<u8>>> {
     let response = client.get(url, MAX_RESPONSE_SIZE).await?;
     if response.status == StatusCode::NOT_FOUND {
         return Ok(FetchResult::Missing);
@@ -178,9 +180,7 @@ async fn fetch_text(
     if !response.status.is_success() {
         bail!("{context} returned HTTP {}", response.status);
     }
-    let value = String::from_utf8(response.body)
-        .with_context(|| format!("{context} was not valid UTF-8"))?;
-    Ok(FetchResult::Found(value))
+    Ok(FetchResult::Found(response.body))
 }
 
 fn api_url(base: &Url, segments: &[&str]) -> Result<Url> {
@@ -234,6 +234,10 @@ async fn search_repositories(
             FetchResult::Found(response) => response,
             FetchResult::Missing => bail!("repository search unexpectedly returned HTTP 404"),
         };
+        // A timed-out search omits repositories, which would unlist them.
+        if response.incomplete_results {
+            bail!("repository search returned incomplete results");
+        }
         let exhausted = response.items.is_empty()
             || repositories.len() + response.items.len() >= response.total_count
             || response.items.len() < PAGE_SIZE;
@@ -246,10 +250,14 @@ async fn search_repositories(
     Ok(repositories)
 }
 
+/// Indexes every tagged repository. `previous` is the deployed index: a listed
+/// plugin that GitHub fails to serve keeps its entry until the next run, so
+/// an outage can't unlist it.
 async fn build_index(
     client: &dyn GithubClient,
     api_base: &Url,
     raw_base: &Url,
+    previous: &[PluginIndexEntry],
 ) -> Result<IndexResult> {
     let repositories = search_repositories(client, api_base).await?;
     let mut entries = Vec::new();
@@ -259,179 +267,47 @@ async fn build_index(
 
     for repository in repositories {
         let repo = format!("{}/{}", repository.owner.login, repository.name);
-        let release_url = api_url(
+        let (entry, preview) = match index_repository(
+            client,
             api_base,
-            &[
-                "repos",
-                &repository.owner.login,
-                &repository.name,
-                "releases",
-                "latest",
-            ],
-        )?;
-        let source = match fetch_json::<GithubRelease>(
-            client,
-            release_url,
-            &format!("latest release for {repo}"),
-        )
-        .await?
-        {
-            FetchResult::Found(release) => {
-                let url = api_url(
-                    api_base,
-                    &[
-                        "repos",
-                        &repository.owner.login,
-                        &repository.name,
-                        "commits",
-                        &release.tag_name,
-                    ],
-                )?;
-                let commit: GithubCommit =
-                    match fetch_json(client, url, &format!("release commit for {repo}")).await? {
-                        FetchResult::Found(commit) => commit,
-                        FetchResult::Missing => {
-                            warnings.push(format!("Skipping {repo}: release commit is missing"));
-                            continue;
-                        }
-                    };
-                if !valid_commit_sha(&commit.sha) {
-                    warnings.push(format!(
-                        "Skipping {repo}: release returned an invalid commit SHA"
-                    ));
-                    continue;
-                }
-                PackageSource {
-                    reference: commit.sha,
-                    release_tag: Some(release.tag_name),
-                    released_at: release.published_at,
-                    assets: release.assets,
-                }
-            }
-            FetchResult::Missing => {
-                let mut commit_url = api_url(
-                    api_base,
-                    &[
-                        "repos",
-                        &repository.owner.login,
-                        &repository.name,
-                        "commits",
-                    ],
-                )?;
-                commit_url
-                    .query_pairs_mut()
-                    .append_pair("sha", &repository.default_branch)
-                    .append_pair("per_page", "1");
-                let commits: Vec<GithubCommit> = match fetch_json(
-                    client,
-                    commit_url,
-                    &format!("default branch head for {repo}"),
-                )
-                .await?
-                {
-                    FetchResult::Found(commit) => commit,
-                    FetchResult::Missing => {
-                        warnings.push(format!("Skipping {repo}: default branch head is missing"));
-                        continue;
-                    }
-                };
-                let Some(commit) = commits.into_iter().next() else {
-                    warnings.push(format!("Skipping {repo}: default branch has no commits"));
-                    continue;
-                };
-                if !valid_commit_sha(&commit.sha) {
-                    warnings.push(format!(
-                        "Skipping {repo}: default branch returned an invalid commit SHA"
-                    ));
-                    continue;
-                }
-                PackageSource {
-                    reference: commit.sha,
-                    release_tag: None,
-                    released_at: commit.commit.committer.date,
-                    assets: Vec::new(),
-                }
-            }
-        };
-
-        let manifest_url = raw_file_url(raw_base, &repository, &source.reference, MANIFEST_FILE)?;
-        let manifest_text =
-            match fetch_text(client, manifest_url, &format!("{MANIFEST_FILE} for {repo}")).await? {
-                FetchResult::Found(manifest) => manifest,
-                FetchResult::Missing => {
-                    warnings.push(format!(
-                        "Skipping {repo}: {MANIFEST_FILE} is missing at {}",
-                        source.reference
-                    ));
-                    continue;
-                }
-            };
-
-        let manifest = match validate_manifest(&manifest_text, None).and_then(|manifest| {
-            validate_manifest_owner(&manifest, &repository.owner.login)?;
-            Ok(manifest)
-        }) {
-            Ok(manifest) => manifest,
-            Err(error) => {
-                warnings.push(format!("Skipping {repo}: {error}"));
-                continue;
-            }
-        };
-
-        let contributions =
-            match installable_contributions(&manifest, &source, &repo, &mut warnings) {
-                Ok(contributions) => contributions,
-                Err(error) => {
-                    warnings.push(format!("Skipping {repo}: {error}"));
-                    continue;
-                }
-            };
-
-        if !ids.insert(manifest.id.clone()) {
-            warnings.push(format!(
-                "Skipping {repo}: duplicate plugin id {:?}",
-                manifest.id
-            ));
-            continue;
-        }
-
-        let preview_url = match preview::fetch(
-            client,
-            raw_file_url(
-                raw_base,
-                &repository,
-                &repository.default_branch,
-                "preview.png",
-            )?,
+            raw_base,
+            &repository,
+            &repo,
+            &mut warnings,
         )
         .await
         {
-            Ok(Some(preview)) => {
-                let url = preview.url();
-                previews.push(preview);
-                Some(url)
-            }
-            Ok(None) => None,
+            Ok(Some(indexed)) => indexed,
+            Ok(None) => continue,
             Err(error) => {
-                warnings.push(format!(
-                    "{repo} on {}: could not use preview.png: {error:#}",
-                    repository.default_branch
-                ));
-                None
+                let Some(entry) = previous
+                    .iter()
+                    .find(|entry| entry.repo.eq_ignore_ascii_case(&repo))
+                else {
+                    warnings.push(format!("Skipping {repo}: {error:#}"));
+                    continue;
+                };
+                warnings.push(format!("Keeping previous entry for {repo}: {error:#}"));
+                (entry.clone(), None)
             }
         };
 
-        entries.push(PluginIndexEntry {
-            id: manifest.id,
-            name: manifest.name,
-            repo,
-            description: manifest.description,
-            tag: source.release_tag.unwrap_or(source.reference),
-            released_at: source.released_at,
-            stars: repository.stargazers_count,
-            contributions,
-            preview_url,
-        });
+        if !ids.insert(entry.id.clone()) {
+            warnings.push(format!(
+                "Skipping {repo}: duplicate plugin id {:?}",
+                entry.id
+            ));
+            continue;
+        }
+        previews.extend(preview);
+        entries.push(entry);
+    }
+
+    if entries.is_empty() && !previous.is_empty() {
+        bail!(
+            "refusing to replace {} listed plugin(s) with an empty index",
+            previous.len()
+        );
     }
 
     entries.sort_by(|left, right| {
@@ -445,6 +321,186 @@ async fn build_index(
         warnings,
         previews,
     })
+}
+
+/// `Ok(None)` rejects the plugin itself, with a warning; `Err` means GitHub
+/// couldn't be read.
+async fn index_repository(
+    client: &dyn GithubClient,
+    api_base: &Url,
+    raw_base: &Url,
+    repository: &SearchRepository,
+    repo: &str,
+    warnings: &mut Vec<String>,
+) -> Result<Option<(PluginIndexEntry, Option<preview::Preview>)>> {
+    let release_url = api_url(
+        api_base,
+        &[
+            "repos",
+            &repository.owner.login,
+            &repository.name,
+            "releases",
+            "latest",
+        ],
+    )?;
+    let source = match fetch_json::<GithubRelease>(
+        client,
+        release_url,
+        &format!("latest release for {repo}"),
+    )
+    .await?
+    {
+        FetchResult::Found(release) => {
+            let url = api_url(
+                api_base,
+                &[
+                    "repos",
+                    &repository.owner.login,
+                    &repository.name,
+                    "commits",
+                    &release.tag_name,
+                ],
+            )?;
+            let commit: GithubCommit =
+                match fetch_json(client, url, &format!("release commit for {repo}")).await? {
+                    FetchResult::Found(commit) => commit,
+                    FetchResult::Missing => {
+                        warnings.push(format!("Skipping {repo}: release commit is missing"));
+                        return Ok(None);
+                    }
+                };
+            if !valid_commit_sha(&commit.sha) {
+                warnings.push(format!(
+                    "Skipping {repo}: release returned an invalid commit SHA"
+                ));
+                return Ok(None);
+            }
+            PackageSource {
+                reference: commit.sha,
+                release_tag: Some(release.tag_name),
+                released_at: release.published_at,
+                assets: release.assets,
+            }
+        }
+        FetchResult::Missing => {
+            let mut commit_url = api_url(
+                api_base,
+                &[
+                    "repos",
+                    &repository.owner.login,
+                    &repository.name,
+                    "commits",
+                ],
+            )?;
+            commit_url
+                .query_pairs_mut()
+                .append_pair("sha", &repository.default_branch)
+                .append_pair("per_page", "1");
+            let commits: Vec<GithubCommit> = match fetch_json(
+                client,
+                commit_url,
+                &format!("default branch head for {repo}"),
+            )
+            .await?
+            {
+                FetchResult::Found(commit) => commit,
+                FetchResult::Missing => {
+                    warnings.push(format!("Skipping {repo}: default branch head is missing"));
+                    return Ok(None);
+                }
+            };
+            let Some(commit) = commits.into_iter().next() else {
+                warnings.push(format!("Skipping {repo}: default branch has no commits"));
+                return Ok(None);
+            };
+            if !valid_commit_sha(&commit.sha) {
+                warnings.push(format!(
+                    "Skipping {repo}: default branch returned an invalid commit SHA"
+                ));
+                return Ok(None);
+            }
+            PackageSource {
+                reference: commit.sha,
+                release_tag: None,
+                released_at: commit.commit.committer.date,
+                assets: Vec::new(),
+            }
+        }
+    };
+
+    let manifest_url = raw_file_url(raw_base, repository, &source.reference, MANIFEST_FILE)?;
+    let manifest_bytes =
+        match fetch_bytes(client, manifest_url, &format!("{MANIFEST_FILE} for {repo}")).await? {
+            FetchResult::Found(manifest) => manifest,
+            FetchResult::Missing => {
+                warnings.push(format!(
+                    "Skipping {repo}: {MANIFEST_FILE} is missing at {}",
+                    source.reference
+                ));
+                return Ok(None);
+            }
+        };
+    let Ok(manifest_text) = String::from_utf8(manifest_bytes) else {
+        warnings.push(format!(
+            "Skipping {repo}: {MANIFEST_FILE} is not valid UTF-8"
+        ));
+        return Ok(None);
+    };
+
+    let manifest = match validate_manifest(&manifest_text, None).and_then(|manifest| {
+        validate_manifest_owner(&manifest, &repository.owner.login)?;
+        Ok(manifest)
+    }) {
+        Ok(manifest) => manifest,
+        Err(error) => {
+            warnings.push(format!("Skipping {repo}: {error}"));
+            return Ok(None);
+        }
+    };
+
+    let contributions = match installable_contributions(&manifest, &source, repo, warnings) {
+        Ok(contributions) => contributions,
+        Err(error) => {
+            warnings.push(format!("Skipping {repo}: {error}"));
+            return Ok(None);
+        }
+    };
+
+    let preview = match preview::fetch(
+        client,
+        raw_file_url(
+            raw_base,
+            repository,
+            &repository.default_branch,
+            "preview.png",
+        )?,
+    )
+    .await
+    {
+        Ok(preview) => preview,
+        Err(error) => {
+            warnings.push(format!(
+                "{repo} on {}: could not use preview.png: {error:#}",
+                repository.default_branch
+            ));
+            None
+        }
+    };
+
+    Ok(Some((
+        PluginIndexEntry {
+            id: manifest.id,
+            name: manifest.name,
+            repo: repo.to_string(),
+            description: manifest.description,
+            tag: source.release_tag.unwrap_or(source.reference),
+            released_at: source.released_at,
+            stars: repository.stargazers_count,
+            contributions,
+            preview_url: preview.as_ref().map(preview::Preview::url),
+        },
+        preview,
+    )))
 }
 
 /// What renCal can install from this source. Providers run a downloaded
@@ -500,6 +556,16 @@ fn installable_contributions(
     Ok(contributions)
 }
 
+/// A missing file is an empty index, as on a first local run.
+fn read_index(path: &Path) -> Result<Vec<PluginIndexEntry>> {
+    match std::fs::read(path) {
+        Ok(data) => serde_json::from_slice(&data)
+            .with_context(|| format!("{} is not a valid plugin index", path.display())),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(Vec::new()),
+        Err(error) => Err(error).with_context(|| format!("could not read {}", path.display())),
+    }
+}
+
 fn write_index(path: &Path, entries: &[PluginIndexEntry]) -> Result<()> {
     let parent = path
         .parent()
@@ -530,7 +596,8 @@ async fn refresh_index(
     raw_base: &Url,
     output: &Path,
 ) -> Result<IndexResult> {
-    let mut result = build_index(client, api_base, raw_base).await?;
+    let previous = read_index(output)?;
+    let mut result = build_index(client, api_base, raw_base, &previous).await?;
     let directory = output
         .parent()
         .unwrap_or(Path::new("."))
@@ -752,7 +819,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries.len(), 1);
@@ -799,7 +866,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries.len(), 1);
@@ -824,7 +891,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.warnings.is_empty());
         assert_eq!(index.entries[0].tag, commit);
@@ -862,7 +929,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.warnings.is_empty(), "{:?}", index.warnings);
         assert_eq!(index.entries[0].contributions, [ContributionKind::Provider]);
@@ -888,7 +955,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.entries.is_empty());
         assert_eq!(index.warnings.len(), 1);
@@ -925,7 +992,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert_eq!(index.entries.len(), 1);
         assert_eq!(index.entries[0].repo, "Carol/mixed");
@@ -971,7 +1038,7 @@ min_rencal_version = "0.8.0"
         ]);
         let (api, raw) = bases();
 
-        let index = build_index(&client, &api, &raw).await.unwrap();
+        let index = build_index(&client, &api, &raw, &[]).await.unwrap();
 
         assert!(index.entries.is_empty());
         assert_eq!(index.warnings.len(), 3);
@@ -986,10 +1053,133 @@ min_rencal_version = "0.8.0"
         let (api, raw) = bases();
         let temp = tempfile::tempdir().unwrap();
         let output = temp.path().join("plugins.json");
-        std::fs::write(&output, "[\n  {\"last\": \"good\"}\n]\n").unwrap();
+        write_index(&output, &[listed("Alice/rencal-dusk")]).unwrap();
         let before = std::fs::read(&output).unwrap();
 
         assert!(refresh_index(&client, &api, &raw, &output).await.is_err());
+        assert_eq!(std::fs::read(output).unwrap(), before);
+    }
+
+    fn listed(repo: &str) -> PluginIndexEntry {
+        let owner = repo.split('/').next().unwrap().to_lowercase();
+        PluginIndexEntry {
+            id: format!("{owner}.dusk"),
+            name: "Dusk".into(),
+            repo: repo.into(),
+            description: "A quiet dark theme".into(),
+            tag: "v1.0.0".into(),
+            released_at: "2026-09-01T12:00:00Z".into(),
+            stars: 1,
+            contributions: vec![ContributionKind::Theme],
+            preview_url: Some(format!(
+                "https://rencal.org/plugin-previews/{}.png",
+                "b".repeat(64)
+            )),
+        }
+    }
+
+    #[tokio::test]
+    async fn failing_repositories_keep_their_listing_or_stay_unlisted() {
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 3,
+                "items": [
+                    repository("Alice", "rencal-dusk", 3),
+                    repository("Bob", "rencal-new", 2),
+                    repository("Carol", "rencal-dawn", 1),
+                ],
+            })),
+            MockReply::Response(StatusCode::INTERNAL_SERVER_ERROR, Vec::new()),
+            MockReply::Error("connection reset".into()),
+            release("v2.0.0"),
+            commit(),
+            text(&manifest("carol")),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+        let previous = [listed("Alice/rencal-dusk")];
+
+        let index = build_index(&client, &api, &raw, &previous).await.unwrap();
+
+        assert_eq!(index.entries.len(), 2);
+        assert_eq!(index.entries[0], previous[0]);
+        assert_eq!(index.entries[1].repo, "Carol/rencal-dawn");
+        assert_eq!(index.entries[1].tag, "v2.0.0");
+        let warnings = index.warnings.join("\n");
+        assert!(
+            warnings.contains("Keeping previous entry for Alice/rencal-dusk"),
+            "{warnings}"
+        );
+        assert!(
+            warnings.contains("Skipping Bob/rencal-new: connection reset"),
+            "{warnings}"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_listed_plugin_that_breaks_its_manifest_is_unlisted() {
+        let client = MockClient::new(vec![
+            json(serde_json::json!({
+                "total_count": 2,
+                "items": [
+                    repository("Alice", "rencal-dusk", 2),
+                    repository("Carol", "rencal-dawn", 1),
+                ],
+            })),
+            release("v2.0.0"),
+            commit(),
+            MockReply::Response(StatusCode::OK, vec![0xff, 0xfe]),
+            release("v2.0.0"),
+            commit(),
+            text(&manifest("carol")),
+            MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
+        ]);
+        let (api, raw) = bases();
+
+        let index = build_index(&client, &api, &raw, &[listed("Alice/rencal-dusk")])
+            .await
+            .unwrap();
+
+        assert_eq!(index.entries.len(), 1);
+        assert_eq!(index.entries[0].repo, "Carol/rencal-dawn");
+        assert!(index.warnings[0].contains("is not valid UTF-8"));
+    }
+
+    #[tokio::test]
+    async fn incomplete_search_results_fail_the_run() {
+        let client = MockClient::new(vec![json(serde_json::json!({
+            "total_count": 1,
+            "incomplete_results": true,
+            "items": [],
+        }))]);
+        let (api, raw) = bases();
+
+        let error = build_index(&client, &api, &raw, &[]).await.err().unwrap();
+
+        assert!(
+            error.to_string().contains("incomplete results"),
+            "{error:#}"
+        );
+    }
+
+    #[tokio::test]
+    async fn an_empty_index_never_replaces_a_listed_catalog() {
+        let client = MockClient::new(vec![json(serde_json::json!({
+            "total_count": 0,
+            "items": [],
+        }))]);
+        let (api, raw) = bases();
+        let temp = tempfile::tempdir().unwrap();
+        let output = temp.path().join("plugins.json");
+        write_index(&output, &[listed("Alice/rencal-dusk")]).unwrap();
+        let before = std::fs::read(&output).unwrap();
+
+        let error = refresh_index(&client, &api, &raw, &output)
+            .await
+            .err()
+            .unwrap();
+
+        assert!(error.to_string().contains("empty index"), "{error:#}");
         assert_eq!(std::fs::read(output).unwrap(), before);
     }
 }

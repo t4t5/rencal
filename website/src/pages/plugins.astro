@@ -5,7 +5,9 @@ import "../styles/plugins.css"
 import fs from "node:fs/promises"
 
 import BaseLayout from "../layouts/BaseLayout.astro"
-import ArrowUpRightIcon from "../icons/arrow-up-right.astro"
+import Button from "../components/Button.astro"
+import CloseIcon from "../icons/close.astro"
+import GitHubLogo from "../icons/github.astro"
 import RencalLogomark from "../icons/rencal-logomark.astro"
 
 interface PluginIndexEntry {
@@ -53,6 +55,8 @@ const authorOf = (repo: string) => repo.split("/", 1)[0]
 // Providers run a program on the user's computer, so they are labelled apart from themes.
 const kindOf = (plugin: PluginIndexEntry) =>
   plugin.contributions.includes("provider") ? "Provider" : null
+const CONTRIBUTION_LABELS: Record<string, string> = { theme: "Theme", provider: "Provider" }
+const sheetId = (plugin: PluginIndexEntry) => `plugin-sheet-${plugin.id}`
 // The site is redeployed whenever the index changes, so build time is when the list was refreshed.
 const builtAt = new Date()
 ---
@@ -111,6 +115,8 @@ const builtAt = new Date()
               data-search={[plugin.name, plugin.repo, plugin.description, kindOf(plugin) ?? ""]
                 .join(" ")
                 .toLowerCase()}
+              data-sheet={sheetId(plugin)}
+              aria-haspopup="dialog"
               href={`https://github.com/${plugin.repo}`}
               target="_blank"
               rel="noreferrer"
@@ -132,7 +138,6 @@ const builtAt = new Date()
                     {kindOf(plugin) && ` · ${kindOf(plugin)}`}
                   </span>
                 </div>
-                <ArrowUpRightIcon class="plugin-arrow" />
               </div>
 
               <div class="plugin-preview">
@@ -160,6 +165,83 @@ const builtAt = new Date()
     }
     <p class="plugin-empty" id="plugin-no-results" hidden>No plugins match your search.</p>
   </section>
+
+  {
+    plugins.map((plugin) => (
+      <dialog
+        class="plugin-sheet"
+        id={sheetId(plugin)}
+        aria-labelledby={`${sheetId(plugin)}-title`}
+      >
+        <div class="plugin-sheet-body">
+          <header class="plugin-sheet-header">
+            <div class="plugin-sheet-title-row">
+              <h2 class="plugin-sheet-title" id={`${sheetId(plugin)}-title`}>
+                {plugin.name}
+              </h2>
+              <form method="dialog">
+                <button class="plugin-sheet-close" aria-label="Close plugin details">
+                  <CloseIcon />
+                </button>
+              </form>
+            </div>
+            {plugin.contributions.length > 0 && (
+              <div class="plugin-badges">
+                {plugin.contributions.map((kind) => (
+                  <span class="plugin-badge">{CONTRIBUTION_LABELS[kind] ?? kind}</span>
+                ))}
+              </div>
+            )}
+            <p class="plugin-sheet-description">{plugin.description}</p>
+          </header>
+
+          <div class="plugin-sheet-actions">
+            <Button
+              href={`rencal://plugin/install?repo=${encodeURIComponent(plugin.repo)}`}
+              variant="primary"
+            >
+              Install in renCal
+            </Button>
+            <Button href={`https://github.com/${plugin.repo}`} target="_blank" rel="noreferrer">
+              <GitHubLogo class="w-4" />
+              View on GitHub
+            </Button>
+          </div>
+
+          {plugin.preview_url && (
+            <div class="plugin-preview">
+              <RencalLogomark class="plugin-preview-fallback" />
+              <img
+                src={plugin.preview_url}
+                alt={`${plugin.name} preview`}
+                width="960"
+                height="540"
+                loading="lazy"
+                decoding="async"
+                data-plugin-preview
+              />
+            </div>
+          )}
+
+          <section class="plugin-sheet-details">
+            <h3>Details</h3>
+            <dl>
+              <dt>Author</dt>
+              <dd>{authorOf(plugin.repo)}</dd>
+              <dt>Repository</dt>
+              <dd>{plugin.repo}</dd>
+              <dt>Stars</dt>
+              <dd>{plugin.stars}</dd>
+              <dt>Released</dt>
+              <dd>
+                <time datetime={plugin.released_at}>{plugin.released_at.slice(0, 10)}</time>
+              </dd>
+            </dl>
+          </section>
+        </div>
+      </dialog>
+    ))
+  }
 
   <script>
     for (const image of document.querySelectorAll<HTMLImageElement>("[data-plugin-preview]")) {
@@ -200,11 +282,29 @@ const builtAt = new Date()
       grid?.append(...ordered)
     }
 
+    for (const card of cards) {
+      card.addEventListener("click", (event) => {
+        // Modified clicks still open the repository in a new tab.
+        if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return
+        const sheet = document.getElementById(card.dataset.sheet!)
+        if (!(sheet instanceof HTMLDialogElement)) return
+        event.preventDefault()
+        sheet.showModal()
+      })
+    }
+    for (const sheet of document.querySelectorAll<HTMLDialogElement>(".plugin-sheet")) {
+      // The body fills the panel, so clicks landing on the dialog itself come from the backdrop.
+      sheet.addEventListener("click", (event) => {
+        if (event.target === sheet) sheet.close()
+      })
+    }
+
     search.addEventListener("input", filter)
     sort.addEventListener("change", reorder)
     document.addEventListener("keydown", (event) => {
       if (event.key !== "/" || event.target instanceof HTMLInputElement) return
       if (event.target instanceof HTMLSelectElement || event.metaKey || event.ctrlKey) return
+      if (document.querySelector(".plugin-sheet[open]")) return
       event.preventDefault()
       search.focus()
     })

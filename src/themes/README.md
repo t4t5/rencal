@@ -110,6 +110,9 @@ colour overrides are unset by default and opt in to their documented behaviour.
 | `--destructive-foreground`     | Text colour on `--destructive` fills; defaults to `white`.                                                                                                 |
 | `--<fill>-hover`               | Hover fill for `primary`, `destructive`, and `brand`; defaults to the fill lightened by one `--surface-tint-step` of white.                                |
 | `--tooltip-foreground`         | Tooltip text; defaults to `--foreground`.                                                                                                                  |
+| `--toast`                      | Toast surface; defaults to `--popover` on dark themes and `--foreground` (inverted) on light ones.                                                         |
+| `--toast-foreground`           | Toast text; defaults to `--popover-foreground` on dark themes and `--background` on light ones.                                                            |
+| `--toast-muted-foreground`     | Toast descriptions; defaults to `--toast-foreground` at 60%.                                                                                               |
 | `--<surface>-muted-foreground` | Muted text on `secondary`, `accent`, `selected`, `card`, `popover`, and `tooltip`; defaults to `--muted-foreground`.                                       |
 | `--event-color`                | Paints every event (and calendar swatch) in this one colour, ignoring per-calendar and per-event colours. For monochrome themes — see `electric-blue.css`. |
 | `--event-background`           | Solid fill for filled event blocks (all-day chips, week-view timed events), replacing the derived tint.                                                    |
@@ -378,7 +381,8 @@ uses the native title bar instead. The calendar colour dialog's hue slider is a
 native range input exposing `hue-slider`, so its WebKit slider pseudo-elements
 can be styled.
 
-Toasts are rendered by Sonner. Style them through its `data-sonner-toast`
+Toasts are rendered by Sonner on the `--toast` surface, with the icon in the
+type's status colour. Style them further through its `data-sonner-toast`
 attribute and `data-type` (`success`, `info`, `warning`, `error`).
 
 ### Calendar shell styling hooks

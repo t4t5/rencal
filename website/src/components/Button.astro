@@ -1,0 +1,84 @@
+---
+import type { HTMLAttributes } from "astro/types"
+
+type Props = HTMLAttributes<"a"> &
+  HTMLAttributes<"button"> & {
+    variant?: "primary" | "secondary" | "outline"
+    size?: "default" | "lg"
+  }
+
+const {
+  variant = "secondary",
+  size = "default",
+  class: className,
+  href,
+  type = "button",
+  ...rest
+} = Astro.props
+const classes = ["button", `button-${variant}`, size === "lg" && "button-lg", className]
+---
+
+{
+  href ? (
+    <a href={href} class:list={classes} {...rest}>
+      <slot />
+    </a>
+  ) : (
+    <button type={type} class:list={classes} {...rest}>
+      <slot />
+    </button>
+  )
+}
+
+<style is:global>
+  /* Unlayered so it beats the global `button` rule in index.css. */
+  .button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-family: var(--heading-font-family);
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background 150ms;
+  }
+
+  .button:focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+  }
+
+  .button-secondary {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .button-secondary:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .button-primary {
+    background: var(--primary);
+    color: var(--background);
+  }
+
+  .button-primary:hover {
+    background: #ff7b33;
+  }
+
+  .button-outline {
+    border: 1px solid var(--foreground);
+    background: transparent;
+    color: var(--foreground);
+  }
+
+  .button-outline:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .button-lg {
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    font-size: 17px;
+  }
+</style>
