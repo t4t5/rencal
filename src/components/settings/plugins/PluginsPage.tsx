@@ -13,9 +13,10 @@ import {
   type PluginInstallLink,
 } from "@/lib/api"
 
+import { PluginBadge } from "./PluginBadge"
 import { PluginPreview } from "./PluginPreview"
 import { PluginSheet } from "./PluginSheet"
-import { pluginOwner, type PluginListItem } from "./plugin-list"
+import { CONTRIBUTION_LABELS, isProvider, pluginOwner, type PluginListItem } from "./plugin-list"
 
 /** Deep links only know the repo, so a selection is resolved against the latest lists. */
 type Selection = { id: string | null; repo: string | null }
@@ -132,7 +133,7 @@ export function PluginsPage() {
           ...plugin,
           description: entry?.description ?? null,
           preview_url: entry?.preview_url ?? null,
-          provider: entry?.contributions?.includes("provider") ?? false,
+          contributions: entry ? (entry.contributions ?? []) : null,
           installed: plugin,
         }
       }),
@@ -142,7 +143,7 @@ export function PluginsPage() {
           ...plugin,
           version: catalogVersion(plugin.tag),
           preview_url: plugin.preview_url ?? null,
-          provider: plugin.contributions?.includes("provider") ?? false,
+          contributions: plugin.contributions ?? [],
           installed: null,
         })),
     ] satisfies PluginListItem[]
@@ -152,7 +153,7 @@ export function PluginsPage() {
     const query = search.trim().toLowerCase()
     return query
       ? plugins.filter((plugin) =>
-          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${plugin.provider ? "provider" : ""}`
+          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${isProvider(plugin) ? "provider" : ""}`
             .toLowerCase()
             .includes(query),
         )
@@ -250,7 +251,7 @@ function resolveSelection(plugins: PluginListItem[], selection: Selection): Plug
     version: null,
     description: null,
     preview_url: null,
-    provider: false,
+    contributions: null,
     installed: null,
   }
 }
@@ -263,34 +264,30 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
       ? "Installed"
       : null
 
-  // Block layout: WebKit doesn't stretch a flex <button>'s children.
+  // Flex column pins content to the top of a stretched <button>; w-full because WebKit doesn't stretch its children.
   return (
     <button
       type="button"
       onClick={onSelect}
-      className="group block w-full min-w-0 rounded-lg border border-border p-4 text-left outline-none transition-colors hover:border-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
+      className="group flex w-full min-w-0 flex-col justify-start rounded-lg border border-border p-4 text-left outline-none transition-colors hover:border-muted-foreground focus-visible:ring-2 focus-visible:ring-ring"
     >
-      <div className="flex flex-col gap-3 min-w-0">
-        <div className="flex items-start gap-2 min-w-0">
-          <div className="flex flex-1 flex-col gap-0.5 min-w-0">
-            <h3 data-typography="heading" className="truncate text-sm">
-              {plugin.name}
-            </h3>
-            <p className="truncate text-xs text-muted-foreground">
-              {pluginOwner(plugin)}
-              {plugin.provider && " · Calendar provider"}
-            </p>
+      <div className="flex w-full flex-col gap-3 min-w-0">
+        <h3 data-typography="heading" className="truncate text-sm">
+          {plugin.name}
+        </h3>
+        {(plugin.contributions?.length || status) && (
+          <div className="flex flex-wrap gap-1.5">
+            {plugin.contributions?.map((kind) => (
+              <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
+            ))}
+            {status && <PluginBadge solid>{status}</PluginBadge>}
           </div>
-          {status && (
-            <span className="shrink-0 rounded-xs border border-border px-1.5 py-0.5 text-xs text-muted-foreground">
-              {status}
-            </span>
-          )}
-        </div>
+        )}
         <PluginPreview key={plugin.preview_url} url={plugin.preview_url} name={plugin.name} />
         {plugin.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
         )}
+        <p className="truncate text-xs text-muted-foreground">by {pluginOwner(plugin)}</p>
         {error && <p className="line-clamp-2 text-xs text-destructive">{error}</p>}
       </div>
     </button>

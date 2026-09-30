@@ -1,4 +1,4 @@
-import type { InstalledPlugin } from "@/lib/api"
+import type { ContributionKind, InstalledPlugin } from "@/lib/api"
 
 export type PluginListItem = {
   id: string
@@ -7,11 +7,20 @@ export type PluginListItem = {
   version: string | null
   description: string | null
   preview_url: string | null
-  /** From the catalog: the plugin ships a calendar provider binary. */
-  provider: boolean
+  /** From the catalog; `null` when the plugin isn't listed. */
+  contributions: ContributionKind[] | null
   installed: InstalledPlugin | null
 }
 
+export const CONTRIBUTION_LABELS = {
+  theme: "Theme",
+  provider: "Calendar provider",
+} as const satisfies Record<ContributionKind, string>
+
 export function pluginOwner(plugin: PluginListItem): string {
   return plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]
+}
+
+export function isProvider(plugin: PluginListItem): boolean {
+  return plugin.contributions?.includes("provider") ?? false
 }

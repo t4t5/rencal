@@ -1,16 +1,14 @@
 // @vitest-environment happy-dom
+import { openUrl } from "@tauri-apps/plugin-opener"
 import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
-import {
-  api,
-  type InstalledPlugin,
-  type PluginCatalogEntry,
-  type PluginInspection,
-} from "@/lib/api"
+import { api, type InstalledPlugin, type PluginCatalogEntry } from "@/lib/api"
 
 import { PluginsPage } from "./PluginsPage"
+
+vi.mock("@tauri-apps/plugin-opener", () => ({ openUrl: vi.fn() }))
 
 vi.mock("@/lib/api", () => ({
   api: {
@@ -18,7 +16,6 @@ vi.mock("@/lib/api", () => ({
       list: vi.fn(),
       catalog: vi.fn(),
       takePendingInstall: vi.fn(),
-      inspect: vi.fn(),
       install: vi.fn(),
       uninstall: vi.fn(),
     },
@@ -29,26 +26,15 @@ vi.mock("@/lib/api", () => ({
     error instanceof Error ? error.message : fallback,
 }))
 
-const plugin: PluginInspection = {
+const entry: PluginCatalogEntry = {
   id: "alice.dusk",
   name: "Dusk",
   repo: "alice/dusk",
-  version: "v1.10.0",
   description: "A quiet theme",
-  min_rencal_version: "0.7.0",
-  compatible: true,
-  themes: [{ id: "dark", name: "Dusk Dark", appearance: "dark" }],
-  fonts: [
-    {
-      family: "Pixel",
-      file: "fonts/pixel-bold.woff2",
-      weight: 700,
-      style: "normal",
-    },
-  ],
-  providers: [],
+  tag: "v1.10.0",
+  contributions: ["theme"],
 }
-const entry: PluginCatalogEntry = { ...plugin, tag: "v1.10.0" }
+const plugin = { ...entry, version: entry.tag }
 const installed: InstalledPlugin = {
   id: plugin.id,
   name: plugin.name,
@@ -69,8 +55,14 @@ beforeEach(() => {
   vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
   vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [entry], error: null })
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValue(null)
-  vi.mocked(api.plugins.inspect).mockResolvedValue(plugin)
-  vi.mocked(api.plugins.install).mockResolvedValue(plugin)
+  vi.mocked(api.plugins.install).mockResolvedValue({
+    ...plugin,
+    min_rencal_version: "0.7.0",
+    compatible: true,
+    themes: [],
+    fonts: [],
+    providers: [],
+  })
   vi.mocked(api.plugins.uninstall).mockResolvedValue(undefined)
 })
 
@@ -122,12 +114,10 @@ it("describes a catalog plugin, installs it, and refreshes the list without sele
   await render()
   expect(card("Dusk").textContent).not.toContain("Installed")
   await open("Dusk")
-  expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
   expect(api.plugins.install).not.toHaveBeenCalled()
-  expect(sheetText()).toContain("Dusk Dark")
-  expect(sheetText()).toContain("Pixel · 700 · normal · pixel-bold.woff2")
-  expect(sheetText()).toContain("Compatible")
-  expect(sheetText()).toContain("unreviewed community packages")
+  expect(sheetText()).toContain("alice/dusk")
+  expect(sheetText()).toContain("v1.10.0")
+  expect(sheetText()).toContain("Theme")
   expect(() => button("Uninstall")).toThrow()
   vi.mocked(api.plugins.list).mockResolvedValue({
     plugins: [{ ...installed, version: plugin.version, update_version: null }],
@@ -140,60 +130,55 @@ it("describes a catalog plugin, installs it, and refreshes the list without sele
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
-it("omits the font section for a package without fonts", async () => {
-  vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, fonts: [] })
+it("opens the plugin's repository on GitHub", async () => {
   await render()
   await open("Dusk")
-  expect(sheetText()).not.toContain("Fonts")
+  await click("View on GitHub")
+  expect(openUrl).toHaveBeenCalledWith("https://github.com/alice/dusk")
 })
 
-it("describes a provider-only plugin without the theme hint", async () => {
-  vi.mocked(api.plugins.inspect).mockResolvedValue({
-    ...plugin,
-    themes: [],
-    fonts: [],
-    providers: [
-      {
-        slug: "tuta",
-        name: "Tuta",
-        asset: "caldir-provider-tuta-x86_64-unknown-linux-musl.tar.gz",
-        compatible: true,
-      },
-      { slug: "proton", name: "Proton", asset: null, compatible: true },
-    ],
+it("describes a provider plugin from the catalog", async () => {
+  vi.mocked(api.plugins.catalog).mockResolvedValue({
+    plugins: [{ ...entry, contributions: ["provider"] }],
+    error: null,
   })
   await render()
   await open("Dusk")
-  expect(sheetText()).toContain("Calendar providers")
-  expect(sheetText()).toContain(
-    "Adds the Tuta calendar provider (runs caldir-provider-tuta to sync accounts)",
+  expect(sheetText()).toContain("Calendar provider")
+  expect(sheetText()).not.toContain("Theme")
+})
+
+it("keeps an install error in the sheet", async () => {
+  vi.mocked(api.plugins.install).mockRejectedValueOnce(
+    new Error("Dusk requires renCal 9.0.0 or newer"),
   )
-  expect(sheetText()).toContain("Proton · not available for this platform")
-  expect(sheetText()).not.toContain("Themes")
-  expect(sheetText()).not.toContain("Choose a theme")
+  await render()
+  await open("Dusk")
+  await click("Install")
+  expect(sheetText()).toContain("Dusk requires renCal 9.0.0 or newer")
+  expect(button("Install").disabled).toBe(false)
 })
 
 it("describes an install received from a deep link", async () => {
   vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "alice/dusk" })
   await render()
-  expect(api.plugins.inspect).toHaveBeenCalledWith("alice/dusk")
-  expect(sheetText()).toContain("Dusk")
+  expect(sheetText()).toContain("A quiet theme")
   expect(button("Install").disabled).toBe(false)
+})
+
+it("describes a deep link to a plugin that isn't in the catalog", async () => {
+  vi.mocked(api.plugins.takePendingInstall).mockResolvedValueOnce({ repo: "bob/rencal-dawn" })
+  await render()
+  expect(sheetText()).toContain("rencal-dawn")
+  expect(sheetText()).toContain("isn't listed in the renCal catalog")
+  await click("Install")
+  expect(api.plugins.install).toHaveBeenCalledWith("bob/rencal-dawn")
 })
 
 it("does nothing when there is no pending deep-link install", async () => {
   await render()
   expect(api.plugins.takePendingInstall).toHaveBeenCalledOnce()
-  expect(api.plugins.inspect).not.toHaveBeenCalled()
   expect(document.querySelector('[role="dialog"]')).toBeNull()
-})
-
-it("blocks incompatible installs", async () => {
-  vi.mocked(api.plugins.inspect).mockResolvedValue({ ...plugin, compatible: false })
-  await render()
-  await open("Dusk")
-  expect(button("Install").disabled).toBe(true)
-  expect(sheetText()).toContain("Not compatible")
 })
 
 it("keeps a failed update open, then updates and uninstalls without changing selection", async () => {
@@ -268,8 +253,9 @@ it("marks calendar provider plugins from the catalog", async () => {
     error: null,
   })
   await render()
-  const meta = [...document.querySelectorAll("h3 + p")].map((element) => element.textContent)
-  expect(meta).toEqual(["alice", "alice · Calendar provider"])
+  expect(card("Dusk").textContent).toContain("Theme")
+  expect(card("Dusk").textContent).not.toContain("Calendar provider")
+  expect(card("Tuta").textContent).toContain("Calendar provider")
 
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")
@@ -293,7 +279,6 @@ it("describes a local checkout with only an uninstall action", async () => {
   expect(card("Dusk").textContent).toContain("Package files are missing")
   await open("Dusk")
 
-  expect(api.plugins.inspect).not.toHaveBeenCalled()
   expect(sheetText()).toContain("/home/alice/dev/rencal-dusk")
   expect(sheetText()).not.toContain("Update to")
   expect(sheetText()).not.toContain("Reinstall")
