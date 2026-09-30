@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 
 import { OrbitRing } from "@/components/loading-ui/orbit-ring"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 
 import {
   api,
@@ -27,6 +29,8 @@ export function PluginsPage() {
   const [listError, setListError] = useState<string | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
   const [search, setSearch] = useState("")
+  const [installedOnly, setInstalledOnly] = useState(false)
+  const installedOnlyId = useId()
   const [installLinkError, setInstallLinkError] = useState<string | null>(null)
   const [selection, setSelection] = useState<Selection | null>(null)
   const listRequest = useRef(0)
@@ -153,27 +157,43 @@ export function PluginsPage() {
 
   const visiblePlugins = useMemo(() => {
     const query = search.trim().toLowerCase()
-    return query
-      ? plugins.filter((plugin) =>
-          `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${isProvider(plugin) ? "provider" : ""}`
-            .toLowerCase()
-            .includes(query),
-        )
-      : plugins
-  }, [plugins, search])
+    return plugins.filter(
+      (plugin) =>
+        (!installedOnly || plugin.installed) &&
+        `${plugin.name} ${plugin.repo ?? ""} ${plugin.installed?.local_dir ?? ""} ${plugin.description ?? ""} ${isProvider(plugin) ? "provider" : ""}`
+          .toLowerCase()
+          .includes(query),
+    )
+  }, [plugins, search, installedOnly])
 
   const selected = selection && resolveSelection(plugins, selection)
 
   return (
-    <SettingsContent className="w-full min-w-0 mt-3">
-      <Input
-        variant="default"
-        className="shrink-0"
-        aria-label="Search plugins"
-        placeholder="Search plugins…"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-      />
+    <SettingsContent className="w-full min-w-0 pt-7">
+      <div className="flex shrink-0 flex-col gap-3">
+        <Input
+          variant="default"
+          aria-label="Search plugins"
+          placeholder="Search plugins…"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+        />
+        <div className="flex items-center justify-between gap-4 text-sm">
+          <p className="text-muted-foreground tabular-nums" role="status">
+            {installed && pluginCount(visiblePlugins.length, plugins.length)}
+          </p>
+          <div className="flex items-center gap-2">
+            <Checkbox
+              id={installedOnlyId}
+              checked={installedOnly}
+              onCheckedChange={(checked) => setInstalledOnly(checked === true)}
+            />
+            <Label htmlFor={installedOnlyId} className="text-sm">
+              Installed only
+            </Label>
+          </div>
+        </div>
+      </div>
       <div className="flex flex-col gap-3 min-w-0">
         {listError && (
           <div className="flex items-center gap-2">
@@ -203,7 +223,11 @@ export function PluginsPage() {
         )}
         {installed && catalog && !catalog.error && visiblePlugins.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            {search ? "No plugins match your search." : "No plugins listed yet."}
+            {search
+              ? "No plugins match your search."
+              : installedOnly
+                ? "No plugins installed yet."
+                : "No plugins listed yet."}
           </p>
         )}
         {visiblePlugins.length > 0 && (
@@ -232,6 +256,13 @@ export function PluginsPage() {
       )}
     </SettingsContent>
   )
+}
+
+function pluginCount(visible: number, total: number): string {
+  const noun = total === 1 ? "plugin" : "plugins"
+  return visible === total
+    ? `${total.toLocaleString()} ${noun}`
+    : `${visible.toLocaleString()} of ${total.toLocaleString()} ${noun}`
 }
 
 /** Releases show their tag; unreleased themes show a short commit. */
