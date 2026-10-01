@@ -14,7 +14,7 @@ import { site } from "../../site"
   <button
     id="menu-toggle"
     type="button"
-    class="sm:hidden p-2 -mr-2 -mt-1 text-foreground bg-transparent! outline-none"
+    class="lg:hidden p-2 -mr-2 -mt-1 text-foreground bg-transparent! outline-none"
     aria-label="Open menu"
     aria-expanded="false"
     aria-controls="site-nav"
@@ -24,15 +24,15 @@ import { site } from "../../site"
 
   <nav
     id="site-nav"
-    class="hidden absolute top-full inset-x-0 z-50 flex-col gap-5 px-6 py-5 bg-background border-b border-white/10 uppercase text-foreground [&>a:hover]:underline sm:static sm:flex sm:flex-row sm:items-center sm:gap-7 sm:p-0 sm:border-none"
+    class="hidden absolute top-full inset-x-0 z-50 flex-col gap-4 px-7 md:px-9 py-5 bg-background border-b border-white/10 uppercase text-foreground [&>a:hover]:underline lg:static lg:flex lg:flex-row lg:items-center md:gap-7 lg:p-0 lg:border-none text-sm md:text-base"
   >
     <a href="/download/">Download</a>
     <a href="/theme-builder/">Theme Builder</a>
     <a href="/changelog/">Changelog</a>
     <a href="/docs/installation/">Docs</a>
     <a href={site.repoUrl} target="_blank" aria-label="GitHub repo">
-      <span class="sm:hidden">GitHub</span>
-      <GitHubLogo class="hidden sm:block w-6" />
+      <span class="lg:hidden">GitHub</span>
+      <GitHubLogo class="hidden lg:block w-6" />
     </a>
   </nav>
 </header>
