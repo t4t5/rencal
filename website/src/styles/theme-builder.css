@@ -1,0 +1,629 @@
+/* Styles for the /theme-builder page. The app's theme scope (`.rc-scope`)
+ * lives in app-scope.css, shared with the landing page demo. The builder's
+ * own chrome uses the website's design tokens, not the preview scope. */
+@import "./app-scope.css";
+
+.tb,
+.tb-dialog {
+  --tb-line: rgba(255, 255, 255, 0.1);
+  --tb-hover: rgba(255, 255, 255, 0.06);
+  --tb-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+.tb {
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid var(--tb-line);
+}
+
+@media (width >= 64rem) {
+  .tb {
+    min-height: 0;
+    flex: 1;
+    flex-direction: row;
+  }
+}
+
+.tb button {
+  background: transparent;
+  padding: 0;
+  text-transform: none;
+}
+
+.tb-icon-button,
+.tb-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  transition:
+    color 150ms,
+    background 150ms;
+}
+
+.tb-icon-button {
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+}
+
+.tb .tb-text-button {
+  padding: 4px 10px;
+  font-family: var(--tb-mono);
+}
+
+.tb .tb-icon-button:hover:not(:disabled),
+.tb .tb-text-button:hover,
+.tb-dialog .tb-icon-button:hover {
+  background: var(--tb-hover);
+  color: var(--foreground);
+}
+
+.tb-icon-button:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+/* ---------------------------------------------------------------------------
+ * Token panel
+ * ------------------------------------------------------------------------ */
+
+.tb-panel {
+  display: flex;
+  flex-direction: column;
+  order: 2;
+  border-top: 1px solid var(--tb-line);
+}
+
+@media (width >= 64rem) {
+  .tb-panel {
+    order: 0;
+    width: 380px;
+    min-height: 0;
+    flex-shrink: 0;
+    border-top: none;
+    border-right: 1px solid var(--tb-line);
+  }
+}
+
+.tb-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  border-bottom: 1px solid var(--tb-line);
+}
+
+.tb-tabs button {
+  padding: 12px;
+  font-family: var(--tb-mono);
+  color: var(--muted);
+  box-shadow: inset 0 -2px 0 transparent;
+}
+
+.tb-tabs button + button {
+  border-left: 1px solid var(--tb-line);
+}
+
+.tb-tabs button[aria-selected="true"] {
+  color: var(--foreground);
+  box-shadow: inset 0 -2px 0 var(--primary);
+}
+
+.tb-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--tb-line);
+  color: var(--muted);
+}
+
+.tb-search input {
+  min-width: 0;
+  flex: 1;
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--tb-mono);
+  font-size: 14px;
+  outline: none;
+}
+
+.tb-search input::-webkit-search-cancel-button {
+  display: none;
+}
+
+.tb-search kbd {
+  padding: 0 6px;
+  border: 1px solid var(--tb-line);
+  font-family: var(--tb-mono);
+  font-size: 12px;
+}
+
+.tb-search:focus-within kbd {
+  visibility: hidden;
+}
+
+@media (width >= 64rem) {
+  .tb-panel-scroll {
+    min-height: 0;
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+}
+
+.tb-group {
+  border-bottom: 1px solid var(--tb-line);
+}
+
+.tb-group summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  font-family: var(--tb-mono);
+  color: var(--foreground);
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.tb-group summary::-webkit-details-marker {
+  display: none;
+}
+
+.tb-group summary:hover {
+  background: var(--tb-hover);
+}
+
+.tb-count {
+  padding: 0 5px;
+  border: 1px solid var(--tb-line);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.tb-group[open] .tb-count {
+  display: none;
+}
+
+.tb-chevron {
+  margin-left: auto;
+  color: var(--muted);
+  transition: transform 150ms;
+}
+
+.tb-group[open] .tb-chevron {
+  transform: rotate(180deg);
+}
+
+.tb-group[open] {
+  padding-bottom: 6px;
+}
+
+.tb-empty {
+  padding: 24px 14px;
+  font-size: 14px;
+}
+
+/* A token: swatch, label + meta line, value, reset. Range tokens wrap their
+   slider onto a second line. */
+.tb-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+  padding: 7px 8px 7px 14px;
+}
+
+.tb-row:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
+.tb-row-text {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+  gap: 1px;
+  font-family: var(--tb-mono);
+}
+
+.tb-row-label {
+  font-size: 14px;
+  color: var(--foreground);
+}
+
+.tb-row-meta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  overflow: hidden;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  white-space: nowrap;
+}
+
+.tb-row-meta > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tb-link-icon {
+  display: none;
+  flex-shrink: 0;
+}
+
+.tb-row.is-linked .tb-link-icon {
+  display: block;
+}
+
+.tb-swatch {
+  position: relative;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border: 1px solid var(--tb-line);
+  /* Checkerboard, so translucent and unset colors read as such. */
+  background: repeating-conic-gradient(#2a2a2a 0 25%, #1c1c1c 0 50%) 0 0 / 10px 10px;
+  cursor: pointer;
+}
+
+.tb-swatch-fill {
+  position: absolute;
+  inset: 0;
+}
+
+.tb-swatch input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.tb-swatch:focus-within {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
+.tb-value {
+  width: 11ch;
+  padding: 2px 4px;
+  background: transparent;
+  border: 1px solid transparent;
+  font-family: var(--tb-mono);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: right;
+  text-transform: uppercase;
+}
+
+.tb-row.is-set .tb-value {
+  color: var(--foreground);
+}
+
+.tb-value:hover {
+  border-color: var(--tb-line);
+}
+
+.tb-value:focus {
+  width: 18ch;
+  border-color: var(--primary);
+  outline: none;
+  color: var(--foreground);
+  text-align: left;
+  text-transform: none;
+}
+
+.tb-value-out {
+  font-family: var(--tb-mono);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.tb-row.is-set .tb-value-out {
+  color: var(--foreground);
+}
+
+.tb-reset {
+  width: 24px;
+  height: 24px;
+  visibility: hidden;
+}
+
+.tb-row.is-set .tb-reset {
+  visibility: visible;
+}
+
+.tb-range {
+  flex-basis: 100%;
+  margin-right: 32px;
+  accent-color: var(--primary);
+}
+
+.tb-seg {
+  display: inline-flex;
+  border: 1px solid var(--tb-line);
+}
+
+.tb .tb-seg button,
+.tb-dialog .tb-seg button {
+  padding: 3px 10px;
+  font-family: var(--tb-mono);
+  font-size: 12px;
+  color: var(--muted);
+  background: transparent;
+  text-transform: none;
+}
+
+.tb-seg button + button {
+  border-left: 1px solid var(--tb-line);
+}
+
+.tb .tb-seg button[aria-pressed="true"],
+.tb-dialog .tb-seg button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--foreground);
+}
+
+.tb-dialog .tb-seg-lg button {
+  padding: 7px 14px;
+  font-size: 14px;
+}
+
+/* ---------------------------------------------------------------------------
+ * Preview: toolbar + canvas
+ * ------------------------------------------------------------------------ */
+
+.tb-main {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.tb-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--tb-line);
+}
+
+.tb-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tb-divider {
+  width: 1px;
+  height: 18px;
+  margin: 0 6px;
+  background: var(--tb-line);
+}
+
+.tb-picker {
+  position: relative;
+  min-width: 0;
+}
+
+.tb .tb-picker-trigger {
+  display: flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 10px;
+  font-family: var(--tb-mono);
+  color: var(--muted);
+}
+
+.tb .tb-picker-trigger:hover,
+.tb .tb-picker-trigger[aria-expanded="true"] {
+  background: var(--tb-hover);
+}
+
+.tb-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  z-index: 20;
+  display: flex;
+  width: min(360px, calc(100vw - 32px));
+  flex-direction: column;
+  border: 1px solid var(--tb-line);
+  background: #1a1a1a;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.tb-menu[hidden] {
+  display: none;
+}
+
+.tb-menu-search {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--tb-line);
+  background: transparent;
+  font-family: var(--tb-mono);
+  font-size: 14px;
+  color: var(--foreground);
+  outline: none;
+}
+
+.tb-menu-list {
+  display: flex;
+  max-height: min(420px, 60dvh);
+  flex-direction: column;
+  overflow-y: auto;
+  padding: 6px 0;
+}
+
+.tb-menu-heading {
+  padding: 8px 14px 4px;
+  font-family: var(--tb-mono);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.tb .tb-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 14px;
+  font-family: var(--tb-mono);
+  font-size: 14px;
+  color: var(--foreground);
+  text-align: left;
+}
+
+.tb .tb-option:hover,
+.tb .tb-option:focus-visible {
+  background: var(--tb-hover);
+  outline: none;
+}
+
+.tb .tb-option.is-active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* A theme's background with its three accents. */
+.tb-palette {
+  display: flex;
+  flex-shrink: 0;
+  gap: 3px;
+  padding: 5px;
+  border: 1px solid var(--tb-line);
+  background: var(--background);
+}
+
+.tb-palette > span {
+  width: 8px;
+  height: 8px;
+}
+
+.tb-canvas {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding: 24px 16px;
+  background-color: #0e0e0e;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 16px 16px;
+}
+
+/* Narrow screens show only the app's sidebar (see AppWindow's sidebarWhenNarrow). */
+.tb-stage {
+  width: min(100%, 380px);
+}
+
+@media (width >= 64rem) {
+  .tb-canvas {
+    min-height: 0;
+    overflow: auto;
+    padding: 32px;
+  }
+}
+
+/* Wide enough for the whole window: fit it inside the canvas on both axes. */
+@media (width >= 80rem) {
+  .tb-canvas {
+    container-type: size;
+    overflow: hidden;
+  }
+
+  .tb-stage {
+    width: min(100cqw - 64px, (100cqh - 64px) * var(--tb-window-ratio));
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Import / export dialogs
+ * ------------------------------------------------------------------------ */
+
+.tb-dialog {
+  width: min(640px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: 1px solid var(--tb-line);
+  background: #1a1a1a;
+  color: var(--muted);
+}
+
+.tb-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+
+.tb-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--tb-line);
+}
+
+.tb-dialog-header h2 {
+  font-size: 16px;
+}
+
+.tb-dialog .tb-icon-button {
+  padding: 0;
+  background: transparent;
+}
+
+.tb-dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.tb-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tb-field-label {
+  font-size: 12px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.tb-input {
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--foreground);
+}
+
+.tb-input:focus {
+  border-color: var(--primary);
+  outline: none;
+}
+
+.tb-code {
+  max-height: 20rem;
+  overflow: auto;
+  padding: 12px 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  font-family: "Geist Mono", ui-monospace, monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--foreground);
+  white-space: pre;
+}
+
+textarea.tb-code {
+  resize: vertical;
+}

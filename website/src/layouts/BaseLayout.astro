@@ -9,9 +9,16 @@ interface Props {
   description?: string
   /** Absolute URL of the social preview image, replacing the site-wide one. */
   image?: string
+  /** Fill the viewport without a footer, for tool pages like the theme builder. */
+  fullscreen?: boolean
 }
 
-const { title = site.seoTitle, description = site.description, image } = Astro.props
+const {
+  title = site.seoTitle,
+  description = site.description,
+  image,
+  fullscreen = false,
+} = Astro.props
 const ogImage = image ?? site.ogImage
 
 // Cloudflare Pages redirects extensionless paths to their trailing-slash form,
@@ -54,12 +61,12 @@ const jsonLd = JSON.stringify(softwareApplicationJsonLd)
     <script type="application/ld+json" set:html={jsonLd} />
     <script defer data-domain={site.analyticsDomain} src={site.analyticsScript}></script>
   </head>
-  <body class="flex flex-col">
+  <body class:list={["flex flex-col", fullscreen && "lg:h-dvh"]}>
     <Header />
 
-    <main class="flex flex-1 flex-col gap-14">
+    <main class:list={["flex flex-1 flex-col", fullscreen ? "lg:min-h-0" : "gap-14"]}>
       <slot />
-      <Footer />
+      {!fullscreen && <Footer />}
     </main>
   </body>
 </html>

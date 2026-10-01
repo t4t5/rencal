@@ -51,7 +51,7 @@ The promise covers custom properties only. It has these limits:
    { id: "mytheme", name: "My Theme", appearance: "dark" },
    ```
 
-That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, it's listed under its appearance's slot, and Ctrl/Cmd+Shift+T cycles through the active slot's themes. The website's theme playground (`website/src/pages/themes.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: the theme controller caches the active theme's `--background` and `index.html` repaints it on next launch.)
+That's it — no `@import`, no `index.html` edit. The Vite plugin discovers the file by glob, it's listed under its appearance's slot, and Ctrl/Cmd+Shift+T cycles through the active slot's themes. The website's theme builder (`website/src/pages/theme-builder.astro`) also imports the manifest and the CSS files at build time, so the new theme appears there without any website change. (Flash-prevention is automatic: the theme controller caches the active theme's `--background` and `index.html` repaints it on next launch.)
 
 ## User themes
 
@@ -149,7 +149,7 @@ de-emphasized surface. If a theme needs lighter menu highlights, change its
 
 For development, `contract-debug.css` supplies deliberately clashing values for
 these surfaces. It is intentionally absent from the manifest, so it does not
-appear in the theme picker or public playground. Apply it temporarily from the
+appear in the theme picker or the website theme builder. Apply it temporarily from the
 browser console with `document.body.dataset.theme = "contract-debug"`.
 
 ### Structure

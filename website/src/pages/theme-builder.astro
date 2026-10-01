@@ -1,0 +1,817 @@
+---
+import "../styles/index.css"
+import "../styles/theme-builder.css"
+
+import BaseLayout from "../layouts/BaseLayout.astro"
+import AppWindow from "../components/app-window/AppWindow.astro"
+import Button from "../components/Button.astro"
+import TokenRow from "../components/theme-builder/TokenRow.astro"
+import { TOKEN_GROUPS } from "../components/theme-builder/tokens"
+import CheckIcon from "../icons/check.astro"
+import ChevronDownIcon from "../icons/chevron-down.astro"
+import CloseIcon from "../icons/close.astro"
+import CopyIcon from "../icons/copy.astro"
+import DownloadIcon from "../icons/download.astro"
+import RedoIcon from "../icons/redo.astro"
+import SearchIcon from "../icons/search.astro"
+import UndoIcon from "../icons/undo.astro"
+
+// Built-in themes are read from the app source at build time, so a theme
+// registered in the manifest shows up here automatically.
+import { THEMES as themes, styleOf } from "../components/app-window/themes"
+
+const WINDOW = { width: 1100, height: 620 }
+
+const tabs = [
+  { id: "colors", label: "Colors" },
+  { id: "style", label: "Style" },
+] as const
+
+const appearanceLabel = (appearance: string) => (appearance === "light" ? "Light" : "Dark")
+---
+
+<BaseLayout
+  title="renCal Theme Builder: design your own calendar theme"
+  description="Preview renCal's built-in calendar themes and design your own: edit every color, font and shape token against a live preview of the app, then export the theme CSS."
+  fullscreen
+>
+  <h1 class="sr-only">renCal Theme Builder</h1>
+
+  <section class="tb">
+    <!-- Token sidebar -->
+    <aside class="tb-panel" aria-label="Theme tokens">
+      <div class="tb-tabs" role="tablist">
+        {
+          tabs.map((tab, i) => (
+            <button
+              type="button"
+              role="tab"
+              id={`tb-tab-${tab.id}`}
+              aria-controls={`tb-tabpanel-${tab.id}`}
+              aria-selected={String(i === 0)}
+              data-tab={tab.id}
+            >
+              {tab.label}
+            </button>
+          ))
+        }
+      </div>
+
+      <label class="tb-search">
+        <SearchIcon class="size-4 shrink-0" />
+        <input
+          type="search"
+          id="tb-search"
+          placeholder="Search…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="Search tokens"
+        />
+        <kbd>/</kbd>
+      </label>
+
+      <div class="tb-panel-scroll">
+        {
+          tabs.map((tab, i) => (
+            <div
+              role="tabpanel"
+              id={`tb-tabpanel-${tab.id}`}
+              aria-labelledby={`tb-tab-${tab.id}`}
+              data-tabpanel={tab.id}
+              hidden={i !== 0}
+            >
+              {TOKEN_GROUPS.filter((group) => group.tab === tab.id).map((group) => (
+                <details class="tb-group" open>
+                  <summary>
+                    <span>{group.title}</span>
+                    <span class="tb-count">{group.tokens.length}</span>
+                    <ChevronDownIcon class="tb-chevron size-4" />
+                  </summary>
+                  {group.tokens.map((token) => (
+                    <TokenRow token={token} />
+                  ))}
+                </details>
+              ))}
+              <p class="tb-empty" hidden>
+                No tokens match.
+              </p>
+            </div>
+          ))
+        }
+      </div>
+    </aside>
+
+    <!-- Preview -->
+    <div class="tb-main">
+      <div class="tb-toolbar">
+        <div class="tb-picker">
+          <button
+            type="button"
+            id="tb-picker-trigger"
+            class="tb-picker-trigger"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-controls="tb-picker-menu"
+          >
+            <span class="text-muted" data-picker-family>Built-in</span>
+            <span class="text-muted">/</span>
+            <span class="truncate text-foreground" data-picker-name>Ren</span>
+            <ChevronDownIcon class="size-4 shrink-0" />
+          </button>
+
+          <div id="tb-picker-menu" class="tb-menu" hidden>
+            <input
+              type="search"
+              id="tb-picker-search"
+              class="tb-menu-search"
+              placeholder="Search…"
+              autocomplete="off"
+              spellcheck="false"
+              aria-label="Search themes"
+            />
+            <div class="tb-menu-list">
+              <p class="tb-menu-heading">Custom</p>
+              <button
+                type="button"
+                class="tb-option"
+                data-theme-option="custom"
+                data-search="custom"
+              >
+                <span id="tb-custom-palette" class="tb-palette rc-scope" aria-hidden="true">
+                  <span class="bg-(--primary)"></span>
+                  <span class="bg-(--today)"></span>
+                  <span class="bg-(--brand)"></span>
+                </span>
+                <span class="grow truncate" data-custom-name>My Theme</span>
+                <span class="text-xs text-muted" data-custom-appearance>Dark</span>
+              </button>
+
+              <p class="tb-menu-heading">Built-in</p>
+              {
+                themes.map((theme) => (
+                  <button
+                    type="button"
+                    class="tb-option"
+                    data-theme-option={theme.id}
+                    data-search={theme.name.toLowerCase()}
+                  >
+                    <span
+                      class="tb-palette rc-scope"
+                      style={styleOf(theme.vars)}
+                      aria-hidden="true"
+                    >
+                      <span class="bg-(--primary)" />
+                      <span class="bg-(--today)" />
+                      <span class="bg-(--brand)" />
+                    </span>
+                    <span class="grow truncate">{theme.name}</span>
+                    <span class="text-xs text-muted">{appearanceLabel(theme.appearance)}</span>
+                  </button>
+                ))
+              }
+              <p class="tb-empty" hidden>No themes match.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tb-toolbar-actions">
+          <button
+            type="button"
+            id="tb-undo"
+            class="tb-icon-button"
+            title="Undo (Ctrl+Z)"
+            aria-label="Undo"
+            disabled
+          >
+            <UndoIcon class="size-4" />
+          </button>
+          <button
+            type="button"
+            id="tb-redo"
+            class="tb-icon-button"
+            title="Redo (Ctrl+Shift+Z)"
+            aria-label="Redo"
+            disabled
+          >
+            <RedoIcon class="size-4" />
+          </button>
+          <span class="tb-divider" aria-hidden="true"></span>
+          <button type="button" class="tb-text-button" data-open-dialog="tb-import">Import</button>
+          <button type="button" class="tb-text-button" data-open-dialog="tb-export">Export</button>
+        </div>
+      </div>
+
+      <div class="tb-canvas">
+        <div class="tb-stage" style={`--tb-window-ratio: ${WINDOW.width / WINDOW.height}`}>
+          <AppWindow
+            id="rc-preview"
+            label="Preview of renCal in the selected theme"
+            width={WINDOW.width}
+            height={WINDOW.height}
+            sidebarWhenNarrow
+            class="rounded-xl border border-white/10 shadow-2xl"
+          />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Export -->
+  <dialog id="tb-export" class="tb-dialog" aria-labelledby="tb-export-title">
+    <div class="tb-dialog-header">
+      <h2 id="tb-export-title">Export theme</h2>
+      <button type="button" class="tb-icon-button" data-close-dialog aria-label="Close">
+        <CloseIcon class="size-4" />
+      </button>
+    </div>
+
+    <div class="tb-dialog-body">
+      <div class="flex flex-wrap items-end gap-4">
+        <label class="flex min-w-48 grow flex-col gap-1.5">
+          <span class="tb-field-label">Name</span>
+          <input type="text" id="tb-name" class="tb-input" autocomplete="off" spellcheck="false" />
+        </label>
+        <div class="flex flex-col gap-1.5">
+          <span class="tb-field-label">Appearance</span>
+          <div class="tb-seg tb-seg-lg" role="group" aria-label="Appearance" id="tb-appearance">
+            <button type="button" data-appearance="dark">Dark</button>
+            <button type="button" data-appearance="light">Light</button>
+          </div>
+        </div>
+      </div>
+
+      <pre class="tb-code"><code id="tb-css-code" /></pre>
+
+      <p class="text-sm">
+        Save the file to <code>~/.config/rencal/themes/</code> and pick it in Settings → Themes. See the
+        <a href="/docs/themes/" class="text-foreground underline">theme docs</a> for every token.
+      </p>
+    </div>
+
+    <div class="tb-dialog-footer">
+      <Button id="tb-copy" data-copy-command="" aria-label="Copy theme CSS" class="text-sm">
+        Copy
+        <span data-icon-copy><CopyIcon class="size-4" /></span>
+        <span data-icon-check hidden><CheckIcon class="size-4" /></span>
+      </Button>
+      <Button id="tb-download" variant="primary" class="text-sm">
+        <DownloadIcon class="size-4" />
+        Download
+      </Button>
+    </div>
+  </dialog>
+
+  <!-- Import -->
+  <dialog id="tb-import" class="tb-dialog" aria-labelledby="tb-import-title">
+    <form method="dialog" id="tb-import-form">
+      <div class="tb-dialog-header">
+        <h2 id="tb-import-title">Import theme</h2>
+        <button type="button" class="tb-icon-button" data-close-dialog aria-label="Close">
+          <CloseIcon class="size-4" />
+        </button>
+      </div>
+
+      <div class="tb-dialog-body">
+        <p class="text-sm">Paste a renCal theme file to keep editing it here.</p>
+        <textarea
+          id="tb-import-text"
+          class="tb-input tb-code"
+          rows="12"
+          spellcheck="false"
+          placeholder={"/* @name My Theme */\n--background: #1a1b26;\n--foreground: #c0caf5;\n--primary: #7aa2f7;"}
+          aria-label="Theme CSS"></textarea>
+        <p id="tb-import-error" class="text-sm text-primary" hidden>
+          No CSS variables found. A theme is a list of declarations like
+          <code>--primary: #7aa2f7;</code>
+        </p>
+      </div>
+
+      <div class="tb-dialog-footer">
+        <label class="button button-secondary text-sm">
+          Open file…
+          <input type="file" id="tb-import-file" accept=".css,text/css" class="sr-only" />
+        </label>
+        <Button type="submit" variant="primary" class="text-sm">Import</Button>
+      </div>
+    </form>
+  </dialog>
+</BaseLayout>
+
+<script
+  type="application/json"
+  id="tb-data"
+  set:html={JSON.stringify({ themes }).replace(/</g, "\\u003c")}
+/>
+
+<script src="../lib/copy-button.js"></script>
+
+<script>
+  import { parseThemeCss, parseThemeMeta, type Appearance, type ThemeVars } from "../lib/theme-css"
+
+  interface Theme {
+    name: string
+    appearance: Appearance
+    vars: ThemeVars
+  }
+  type BuiltinTheme = Theme & { id: string }
+  interface Snapshot {
+    active: string
+    custom: Theme
+  }
+
+  const data = JSON.parse(document.getElementById("tb-data")!.textContent!) as {
+    themes: BuiltinTheme[]
+  }
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T
+  const preview = $("rc-preview")
+  const customPalette = $("tb-custom-palette")
+  const rows = [...document.querySelectorAll<HTMLElement>(".tb-row")]
+  const search = $<HTMLInputElement>("tb-search")
+  const pickerTrigger = $<HTMLButtonElement>("tb-picker-trigger")
+  const pickerMenu = $("tb-picker-menu")
+  const pickerSearch = $<HTMLInputElement>("tb-picker-search")
+  const options = [...document.querySelectorAll<HTMLElement>("[data-theme-option]")]
+  const undoButton = $<HTMLButtonElement>("tb-undo")
+  const redoButton = $<HTMLButtonElement>("tb-redo")
+  const nameInput = $<HTMLInputElement>("tb-name")
+  const cssOut = $("tb-css-code")
+  const copyButton = $("tb-copy")
+
+  const STORAGE_KEY = "rencal-theme-builder-v1"
+  // The page used to be the /themes playground, which saved only custom vars.
+  const LEGACY_STORAGE_KEY = "rencal-theme-playground-v1"
+
+  const builtin = (id: string) => data.themes.find((theme) => theme.id === id)
+  const isThemeId = (id: unknown): id is string =>
+    id === "custom" || (typeof id === "string" && builtin(id) !== undefined)
+
+  let active = "ren"
+  let custom: Theme = { name: "My Theme", appearance: "dark", vars: { ...builtin("ren")!.vars } }
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null")
+    const legacy = JSON.parse(localStorage.getItem(LEGACY_STORAGE_KEY) ?? "null")
+    if (saved?.custom?.vars) {
+      custom = { ...custom, ...saved.custom }
+    } else if (legacy?.customVars) {
+      custom.vars = legacy.customVars
+    }
+    const savedActive = saved?.active ?? legacy?.active
+    if (isThemeId(savedActive)) active = savedActive
+  } catch {
+    // No saved state (or unreadable storage) — start from the defaults.
+  }
+
+  // Deep link: /theme-builder/#tokyonight selects that theme (wins over saved state).
+  const hashId = decodeURIComponent(location.hash.slice(1))
+  if (isThemeId(hashId)) active = hashId
+
+  const current = (): Theme => (active === "custom" ? custom : builtin(active)!)
+
+  // ---------------------------------------------------------------------------
+  // Undo history: a snapshot before each change. Repeated edits to one token
+  // within a second (dragging a color or slider) collapse into one step.
+
+  const undoStack: Snapshot[] = []
+  const redoStack: Snapshot[] = []
+  let lastEdit = { key: "", time: 0 }
+
+  const snapshot = (): Snapshot => structuredClone({ active, custom })
+
+  function restore(state: Snapshot) {
+    active = state.active
+    custom = state.custom
+    lastEdit = { key: "", time: 0 }
+    render()
+  }
+
+  function change(key: string, apply: () => void) {
+    const now = Date.now()
+    if (key !== lastEdit.key || now - lastEdit.time > 1000) {
+      undoStack.push(snapshot())
+      if (undoStack.length > 200) undoStack.shift()
+      redoStack.length = 0
+    }
+    lastEdit = { key, time: now }
+    apply()
+    render()
+  }
+
+  function undo() {
+    const state = undoStack.pop()
+    if (!state) return
+    redoStack.push(snapshot())
+    restore(state)
+  }
+
+  function redo() {
+    const state = redoStack.pop()
+    if (!state) return
+    undoStack.push(snapshot())
+    restore(state)
+  }
+
+  /** Edits always land on the custom theme; editing a built-in starts from a copy of it. */
+  function editCustom(update: (theme: Theme) => void) {
+    if (active !== "custom") {
+      const base = builtin(active)!
+      custom = { name: custom.name, appearance: base.appearance, vars: { ...base.vars } }
+      active = "custom"
+    }
+    update(custom)
+  }
+
+  const setVar = (name: string, value: string | null) =>
+    change(name, () =>
+      editCustom((theme) => {
+        if (value === null) delete theme.vars[name]
+        else theme.vars[name] = value
+      }),
+    )
+
+  function selectTheme(id: string) {
+    if (id === active) return
+    change("select", () => (active = id))
+    history.replaceState(null, "", `#${id}`)
+  }
+
+  // ---------------------------------------------------------------------------
+  // Color resolution. A hidden probe inside the preview resolves any value,
+  // including var() references and color-mix() derivations, against the
+  // active theme exactly as the preview paints it.
+
+  const probe = document.createElement("span")
+  probe.style.display = "none"
+  preview.appendChild(probe)
+
+  const pixel = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!
+
+  const toHexByte = (channel: number) =>
+    Math.round(Math.min(255, Math.max(0, channel)))
+      .toString(16)
+      .padStart(2, "0")
+
+  function toHex(color: string): string {
+    let channels: number[] | undefined
+    let alpha = 1
+    const rgb = color.match(/^rgba?\(([\d.]+),\s*([\d.]+),\s*([\d.]+)(?:,\s*([\d.]+))?\)$/)
+    const srgb = color.match(/^color\(srgb ([-\d.e]+) ([-\d.e]+) ([-\d.e]+)(?: \/ ([\d.]+))?\)$/)
+    if (rgb) {
+      channels = rgb.slice(1, 4).map(Number)
+      alpha = rgb[4] === undefined ? 1 : Number(rgb[4])
+    } else if (srgb) {
+      channels = srgb.slice(1, 4).map((channel) => Number(channel) * 255)
+      alpha = srgb[4] === undefined ? 1 : Number(srgb[4])
+    } else {
+      // Other color spaces (oklch, …): let the canvas convert it.
+      pixel.clearRect(0, 0, 1, 1)
+      pixel.fillStyle = color
+      pixel.fillRect(0, 0, 1, 1)
+      const [r, g, b, a] = pixel.getImageData(0, 0, 1, 1).data
+      channels = [r, g, b]
+      alpha = a / 255
+    }
+    const hex = "#" + channels.map(toHexByte).join("")
+    return alpha < 1 ? hex + toHexByte(alpha * 255) : hex
+  }
+
+  function resolveColor(expression: string): string {
+    probe.style.color = ""
+    probe.style.color = expression
+    return getComputedStyle(probe).color
+  }
+
+  // ---------------------------------------------------------------------------
+  // Rendering
+
+  function applyVars(el: HTMLElement, vars: ThemeVars) {
+    for (const prop of [...el.style]) if (prop.startsWith("--")) el.style.removeProperty(prop)
+    for (const [name, value] of Object.entries(vars)) el.style.setProperty(name, value)
+  }
+
+  const linkTarget = (value: string | undefined) => value?.match(/^var\((--[\w-]+)\)$/)?.[1]
+
+  function syncRow(row: HTMLElement, vars: ThemeVars) {
+    const name = row.dataset.token!
+    const fallback = row.dataset.fallback
+    const value = vars[name]
+    const effective = value ?? fallback ?? ""
+    const choices = [...row.querySelectorAll<HTMLElement>("[data-choice]")]
+    const isCustomChoice =
+      choices.length > 0 && !choices.some((button) => button.dataset.choice === effective)
+
+    const link = linkTarget(value ?? fallback)
+    row.classList.toggle("is-set", value !== undefined)
+    row.classList.toggle("is-linked", link !== undefined)
+
+    let meta = link ? `Linked to ${link}` : name
+    if (value === undefined && !link && row.dataset.note) meta = row.dataset.note
+    if (value !== undefined && isCustomChoice) meta = value
+    row.querySelector("[data-meta]")!.textContent = meta
+
+    if (row.dataset.kind === "color") {
+      const resolved =
+        value === undefined && fallback === undefined
+          ? null
+          : resolveColor(`var(${name}, ${fallback ?? "transparent"})`)
+      const hex = resolved === null ? "" : toHex(resolved)
+      row.querySelector<HTMLElement>("[data-swatch]")!.style.background = resolved ?? ""
+      row.querySelector<HTMLInputElement>("[data-color-input]")!.value =
+        hex.slice(0, 7) || "#000000"
+      const input = row.querySelector<HTMLInputElement>("[data-value-input]")!
+      input.placeholder = hex === "" ? "unset" : ""
+      if (document.activeElement !== input) input.value = hex
+    } else if (row.dataset.kind === "range") {
+      const input = row.querySelector<HTMLInputElement>("[data-range-input]")!
+      const number = Number.parseFloat(effective) || 0
+      input.value = String(number)
+      row.querySelector("[data-range-out]")!.textContent = `${number}${input.dataset.unit}`
+    } else {
+      for (const button of choices) {
+        button.setAttribute("aria-pressed", String(button.dataset.choice === effective))
+      }
+    }
+  }
+
+  function themeCss(theme: Theme) {
+    const lines = [
+      `/* @name ${theme.name.replace(/\*\//g, "")} */`,
+      `/* @appearance ${theme.appearance} */`,
+      ...Object.entries(theme.vars).map(([name, value]) => `${name}: ${value};`),
+    ]
+    return lines.join("\n")
+  }
+
+  const fileName = (theme: Theme) =>
+    (theme.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "my-theme") + ".css"
+
+  function render() {
+    const theme = current()
+    // applyVars must run first so the probe resolves against the active theme.
+    applyVars(preview, theme.vars)
+    applyVars(customPalette, custom.vars)
+
+    for (const row of rows) syncRow(row, theme.vars)
+
+    document.querySelector("[data-picker-family]")!.textContent =
+      active === "custom" ? "Custom" : "Built-in"
+    document.querySelector("[data-picker-name]")!.textContent = theme.name
+    document.querySelector("[data-custom-name]")!.textContent = custom.name
+    document.querySelector("[data-custom-appearance]")!.textContent =
+      custom.appearance === "light" ? "Light" : "Dark"
+    for (const option of options) {
+      option.classList.toggle("is-active", option.dataset.themeOption === active)
+    }
+
+    if (document.activeElement !== nameInput) nameInput.value = theme.name
+    for (const button of document.querySelectorAll<HTMLElement>("[data-appearance]")) {
+      button.setAttribute("aria-pressed", String(button.dataset.appearance === theme.appearance))
+    }
+    const css = themeCss(theme)
+    cssOut.textContent = css
+    copyButton.setAttribute("data-copy-command", css)
+
+    undoButton.disabled = undoStack.length === 0
+    redoButton.disabled = redoStack.length === 0
+
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ active, custom }))
+    } catch {
+      // Storage unavailable — the builder still works, it just won't persist.
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Token rows
+
+  for (const row of rows) {
+    const name = row.dataset.token!
+
+    row.querySelector("[data-reset]")!.addEventListener("click", () => setVar(name, null))
+
+    row.querySelector("[data-color-input]")?.addEventListener("input", (event) => {
+      setVar(name, (event.target as HTMLInputElement).value)
+    })
+
+    // Shows the resolved hex at rest and the raw declaration while editing.
+    const valueInput = row.querySelector<HTMLInputElement>("[data-value-input]")
+    if (valueInput) {
+      valueInput.addEventListener("focus", () => {
+        valueInput.value = current().vars[name] ?? valueInput.value
+        valueInput.select()
+      })
+      valueInput.addEventListener("blur", () => syncRow(row, current().vars))
+      valueInput.addEventListener("change", () => setVar(name, valueInput.value.trim() || null))
+      valueInput.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") valueInput.blur()
+        if (event.key === "Escape") {
+          valueInput.value = current().vars[name] ?? ""
+          valueInput.blur()
+        }
+      })
+    }
+
+    row.querySelector("[data-range-input]")?.addEventListener("input", (event) => {
+      const input = event.target as HTMLInputElement
+      setVar(name, `${input.value}${input.dataset.unit}`)
+    })
+
+    for (const button of row.querySelectorAll<HTMLElement>("[data-choice]")) {
+      button.addEventListener("click", () => setVar(name, button.dataset.choice!))
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Sidebar tabs and search
+
+  const tabButtons = [...document.querySelectorAll<HTMLElement>("[data-tab]")]
+  const tabPanels = [...document.querySelectorAll<HTMLElement>("[data-tabpanel]")]
+
+  for (const tab of tabButtons) {
+    tab.addEventListener("click", () => {
+      for (const other of tabButtons) other.setAttribute("aria-selected", String(other === tab))
+      for (const panel of tabPanels) panel.hidden = panel.dataset.tabpanel !== tab.dataset.tab
+    })
+  }
+
+  search.addEventListener("input", () => {
+    const query = search.value.trim().toLowerCase()
+    for (const row of rows) row.hidden = !row.dataset.search!.includes(query)
+    for (const panel of tabPanels) {
+      let matches = 0
+      for (const group of panel.querySelectorAll<HTMLDetailsElement>(".tb-group")) {
+        const visible = group.querySelectorAll(".tb-row:not([hidden])").length
+        group.hidden = visible === 0
+        if (query && visible > 0) group.open = true
+        matches += visible
+      }
+      panel.querySelector<HTMLElement>(".tb-empty")!.hidden = matches > 0
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // Theme picker
+
+  function setPickerOpen(open: boolean) {
+    pickerMenu.hidden = !open
+    pickerTrigger.setAttribute("aria-expanded", String(open))
+    if (open) {
+      pickerSearch.value = ""
+      filterOptions()
+      pickerSearch.focus()
+    }
+  }
+
+  function filterOptions() {
+    const query = pickerSearch.value.trim().toLowerCase()
+    for (const option of options) option.hidden = !option.dataset.search!.includes(query)
+    for (const heading of pickerMenu.querySelectorAll<HTMLElement>(".tb-menu-heading")) {
+      let next = heading.nextElementSibling as HTMLElement | null
+      let visible = false
+      while (next?.matches("[data-theme-option]")) {
+        visible ||= !next.hidden
+        next = next.nextElementSibling as HTMLElement | null
+      }
+      heading.hidden = !visible
+    }
+    pickerMenu.querySelector<HTMLElement>(".tb-empty")!.hidden = options.some((o) => !o.hidden)
+  }
+
+  pickerTrigger.addEventListener("click", () => setPickerOpen(pickerMenu.hidden))
+  pickerSearch.addEventListener("input", filterOptions)
+
+  for (const option of options) {
+    option.addEventListener("click", () => {
+      selectTheme(option.dataset.themeOption!)
+      setPickerOpen(false)
+      pickerTrigger.focus()
+    })
+  }
+
+  pickerMenu.addEventListener("keydown", (event) => {
+    const visible = options.filter((option) => !option.hidden)
+    const index = visible.indexOf(document.activeElement as HTMLElement)
+    if (event.key === "ArrowDown" || event.key === "ArrowUp") {
+      event.preventDefault()
+      const step = event.key === "ArrowDown" ? 1 : -1
+      visible[(index + step + visible.length) % visible.length]?.focus()
+    } else if (event.key === "Enter" && document.activeElement === pickerSearch) {
+      visible[0]?.click()
+    } else if (event.key === "Escape") {
+      setPickerOpen(false)
+      pickerTrigger.focus()
+    }
+  })
+
+  document.addEventListener("pointerdown", (event) => {
+    const picker = pickerTrigger.parentElement!
+    if (!pickerMenu.hidden && !picker.contains(event.target as Node)) setPickerOpen(false)
+  })
+
+  // ---------------------------------------------------------------------------
+  // Undo / redo and keyboard shortcuts
+
+  undoButton.addEventListener("click", undo)
+  redoButton.addEventListener("click", redo)
+
+  document.addEventListener("keydown", (event) => {
+    const target = event.target as HTMLElement
+    if (target.closest("input, textarea, select, dialog[open]")) return
+    const mod = event.ctrlKey || event.metaKey
+    const key = event.key.toLowerCase()
+    if (mod && key === "z") {
+      event.preventDefault()
+      if (event.shiftKey) redo()
+      else undo()
+    } else if (mod && key === "y") {
+      event.preventDefault()
+      redo()
+    } else if (event.key === "/" && !mod) {
+      event.preventDefault()
+      search.focus()
+    }
+  })
+
+  // ---------------------------------------------------------------------------
+  // Dialogs
+
+  for (const button of document.querySelectorAll<HTMLElement>("[data-open-dialog]")) {
+    button.addEventListener("click", () => {
+      $<HTMLDialogElement>(button.dataset.openDialog!).showModal()
+    })
+  }
+
+  for (const dialog of document.querySelectorAll<HTMLDialogElement>(".tb-dialog")) {
+    // Clicks on the backdrop land on the dialog element itself.
+    dialog.addEventListener("click", (event) => {
+      if (event.target === dialog) dialog.close()
+    })
+    for (const button of dialog.querySelectorAll("[data-close-dialog]")) {
+      button.addEventListener("click", () => dialog.close())
+    }
+  }
+
+  nameInput.addEventListener("input", () => {
+    change("name", () => editCustom((theme) => (theme.name = nameInput.value)))
+  })
+  nameInput.addEventListener("blur", () => {
+    if (!nameInput.value.trim()) change("name", () => (custom.name = "My Theme"))
+  })
+
+  for (const button of document.querySelectorAll<HTMLElement>("[data-appearance]")) {
+    button.addEventListener("click", () => {
+      const appearance = button.dataset.appearance as Appearance
+      if (appearance === current().appearance) return
+      change("appearance", () => editCustom((theme) => (theme.appearance = appearance)))
+    })
+  }
+
+  $("tb-download").addEventListener("click", () => {
+    const theme = current()
+    const url = URL.createObjectURL(new Blob([themeCss(theme)], { type: "text/css" }))
+    const link = document.createElement("a")
+    link.href = url
+    link.download = fileName(theme)
+    link.click()
+    URL.revokeObjectURL(url)
+  })
+
+  const importDialog = $<HTMLDialogElement>("tb-import")
+  const importText = $<HTMLTextAreaElement>("tb-import-text")
+  const importError = $("tb-import-error")
+
+  $<HTMLInputElement>("tb-import-file").addEventListener("change", async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0]
+    if (file) importText.value = await file.text()
+  })
+
+  importText.addEventListener("input", () => (importError.hidden = true))
+
+  $<HTMLFormElement>("tb-import-form").addEventListener("submit", (event) => {
+    event.preventDefault()
+    const css = importText.value
+    const vars = parseThemeCss(css)
+    if (Object.keys(vars).length === 0) {
+      importError.hidden = false
+      return
+    }
+    const meta = parseThemeMeta(css)
+    change("import", () => {
+      custom = {
+        name: meta.name ?? "Imported Theme",
+        appearance: meta.appearance ?? "dark",
+        vars,
+      }
+      active = "custom"
+    })
+    history.replaceState(null, "", "#custom")
+    importText.value = ""
+    importDialog.close()
+  })
+
+  render()
+</script>
