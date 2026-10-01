@@ -11,6 +11,8 @@ interface Props {
 
 const { variant } = Astro.props
 const isPopover = variant === "popover"
+// The popover shows a saved event, which keeps just one of the default reminders.
+const reminders = isPopover ? DEFAULT_REMINDERS.slice(0, 1) : DEFAULT_REMINDERS
 
 const row =
   "control-row flex min-h-(--control-height) w-full min-w-0 items-center rounded-(--radius-md) border border-transparent text-sm"
@@ -136,9 +138,20 @@ const textareaPadding = "py-[calc((var(--control-height)-1lh)/2-1px)]"
         </span>
       </div>
 
-      <div class:list={[row, "text-(--muted-foreground)"]}>
+      <div data-field="conference-add" class:list={[row, "text-(--muted-foreground)"]}>
         <span class="control-leading"><Icon name="video" /></span>
         <span class="control-content">Add Google Meet</span>
+      </div>
+
+      <div data-field="conference-join" class="flex flex-col gap-1 py-1" hidden>
+        <span
+          data-typography="button"
+          class="inline-flex h-(--control-height) w-full items-center justify-center gap-2 rounded-(--radius-md) bg-(--primary) px-3 font-medium text-(--primary-foreground)"
+        >
+          <Icon name="video" class="size-4" />
+          Join meeting
+        </span>
+        <span data-field="conference-url" class="truncate text-xs text-(--muted-foreground)"></span>
       </div>
 
       <div class={row}>
@@ -160,7 +173,7 @@ const textareaPadding = "py-[calc((var(--control-height)-1lh)/2-1px)]"
           </span>
         </div>
         {
-          DEFAULT_REMINDERS.map((reminder) => (
+          reminders.map((reminder) => (
             <div class={row}>
               <span class="control-leading" />
               <span class="control-content">

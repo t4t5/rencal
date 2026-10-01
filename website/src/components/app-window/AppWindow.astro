@@ -40,6 +40,8 @@ interface Props {
   /** Below xl, show only the sidebar at its natural size instead of scaling
    * the whole window down. */
   sidebarWhenNarrow?: boolean
+  /** Weeks rendered in month view; extra weeks fill a window taller than its default height. */
+  monthWeekCount?: number
 }
 
 const {
@@ -50,6 +52,7 @@ const {
   height = 750,
   activeDate = TODAY,
   sidebarWhenNarrow = false,
+  monthWeekCount = 5,
 } = Astro.props
 
 const renVars = styleOf(REN_VARS)
@@ -75,8 +78,8 @@ const agendaDays = dayRange(AGENDA_START, AGENDA_END).filter(
   (key) => key >= activeDate && (eventsOn(key).length > 0 || GHOST_DAYS.includes(key)),
 )
 
-// Month view: five weeks; the fifth only peeks in below the fold.
-const monthWeeks = weekStarts(5).map(weekOf)
+// Month view: five weeks by default; the fifth only peeks in below the fold.
+const monthWeeks = weekStarts(monthWeekCount).map(weekOf)
 ---
 
 <div

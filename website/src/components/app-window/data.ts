@@ -32,6 +32,8 @@ export interface DemoEvent {
   end?: string
   title: string
   location?: string
+  /** Video meeting link; the event form shows a join button instead of "Add Google Meet". */
+  conference?: string
   /** Hidden until the demo creates it from the compose box. */
   created?: boolean
 }
@@ -72,6 +74,7 @@ export const EVENTS: DemoEvent[] = [
   event("work", "2026-06-23", "10:30", "11:30", "Design handoff review"),
   event("work", "2026-06-25", "11:00", "12:00", "Backend API planning", {
     location: "Meeting Room 2",
+    conference: "https://teams.microsoft.com/l/meetup-join/backend-api-planning",
   }),
   event("work", "2026-06-26", "09:30", "10:00", "Product stand-up", {
     location: "Old Street office",

@@ -202,12 +202,13 @@ const appearanceLabel = (appearance: string) => (appearance === "light" ? "Light
       </div>
 
       <div class="tb-canvas">
-        <div class="tb-stage" style={`--tb-window-ratio: ${WINDOW.width / WINDOW.height}`}>
+        <div class="tb-stage">
           <AppWindow
             id="rc-preview"
             label="Preview of renCal in the selected theme"
             width={WINDOW.width}
             height={WINDOW.height}
+            monthWeekCount={9}
             sidebarWhenNarrow
             class="rounded-xl border border-white/10 shadow-2xl"
           />
@@ -306,6 +307,8 @@ const appearanceLabel = (appearance: string) => (appearance === "light" ? "Light
 <script src="../lib/copy-button.js"></script>
 
 <script>
+  import { showEvent } from "../components/app-window/demo"
+  import { TODAY } from "../components/app-window/data"
   import { parseThemeCss, parseThemeMeta, type Appearance, type ThemeVars } from "../lib/theme-css"
 
   interface Theme {
@@ -814,4 +817,10 @@ const appearanceLabel = (appearance: string) => (appearance === "light" ? "Light
   })
 
   render()
+
+  // Show an open event, so the popover surface can be themed too.
+  const todayEvent = preview.querySelector<HTMLElement>(
+    `[data-slot=agenda-day][data-date="${TODAY}"] [data-event-id]`,
+  )
+  if (todayEvent) showEvent(preview, todayEvent.dataset.eventId!)
 </script>

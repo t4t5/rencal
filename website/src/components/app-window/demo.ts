@@ -98,26 +98,11 @@ export function playDemo(root: HTMLElement) {
   }
 
   function selectEvent(id: string | null) {
-    for (const el of $$("[data-event-id]")) toggle(el, "data-selected", el.dataset.eventId === id)
+    selectEventIn(root, id)
   }
 
   function openPopover(id: string) {
-    const item = $(`[data-slot=agenda-day] [data-event-id="${id}"]`)
-    const data = item.dataset
-    fillForm(
-      popover,
-      {
-        summary: data.title ?? "",
-        date: data.date ?? TODAY,
-        start: data.start ?? "",
-        end: data.end ?? "",
-        allDay: false,
-        location: data.location,
-      },
-      data.calendar as CalendarId,
-    )
-    popover.hidden = false
-    popover.dataset.state = "open"
+    openEventPopover(root, id)
   }
 
   async function closePopover() {
@@ -313,6 +298,42 @@ export function playDemo(root: HTMLElement) {
     }
   })()
   document.addEventListener("visibilitychange", () => !document.hidden && visible && wake?.())
+}
+
+/** Highlights an event in every view, as clicking it in the app does. */
+function selectEventIn(root: HTMLElement, id: string | null) {
+  for (const el of root.querySelectorAll<HTMLElement>("[data-event-id]")) {
+    el.toggleAttribute("data-selected", el.dataset.eventId === id)
+  }
+}
+
+/** Opens the event popover for an agenda event, filled with its details. */
+function openEventPopover(root: HTMLElement, id: string) {
+  const popover = root.querySelector<HTMLElement>("[data-event-popover]")!
+  const data = root.querySelector<HTMLElement>(
+    `[data-slot=agenda-day] [data-event-id="${id}"]`,
+  )!.dataset
+  fillForm(
+    popover,
+    {
+      summary: data.title ?? "",
+      date: data.date ?? TODAY,
+      start: data.start ?? "",
+      end: data.end ?? "",
+      allDay: false,
+      location: data.location,
+      conference: data.conference,
+    },
+    data.calendar as CalendarId,
+  )
+  popover.hidden = false
+  popover.dataset.state = "open"
+}
+
+/** Selects an agenda event and opens its popover, like a click in the app. */
+export function showEvent(root: HTMLElement, id: string) {
+  selectEventIn(root, id)
+  openEventPopover(root, id)
 }
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, Math.max(0, ms)))

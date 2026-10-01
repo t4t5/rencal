@@ -530,15 +530,29 @@
   }
 }
 
-/* Wide enough for the whole window: fit it inside the canvas on both axes. */
+/* Wide enough for the whole window: fill the canvas, up to a square. The
+   window's logical height follows its frame, so the app grows into the space
+   instead of letterboxing. */
 @media (width >= 80rem) {
   .tb-canvas {
     container-type: size;
     overflow: hidden;
+    padding: 24px;
   }
 
   .tb-stage {
-    width: min(100cqw - 64px, (100cqh - 64px) * var(--tb-window-ratio));
+    width: 100cqw;
+    height: min(100cqh, 100cqw);
+  }
+
+  .tb-stage .rc-window-frame {
+    container-type: size;
+    height: 100%;
+    aspect-ratio: auto;
+  }
+
+  .tb-stage .rc-window {
+    height: calc(100cqh / tan(var(--rc-window-angle)));
   }
 }
 
