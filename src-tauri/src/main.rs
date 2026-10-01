@@ -4,18 +4,28 @@
 use std::ffi::{OsStr, OsString};
 use std::process::ExitCode;
 
+mod skill_install;
+
 const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
+const SKILL_INSTALL_USAGE: &str = "usage: rencal skill install";
 
 #[derive(Debug, Eq, PartialEq)]
 enum Command {
     LaunchApp,
     InstallPlugin(String),
+    InstallSkill,
 }
 
-fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command, ()> {
+fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command, &'static str> {
     let Some(command) = args.next() else {
         return Ok(Command::LaunchApp);
     };
+    if command == "skill" {
+        return match (args.next(), args.next()) {
+            (Some(action), None) if action == "install" => Ok(Command::InstallSkill),
+            _ => Err(SKILL_INSTALL_USAGE),
+        };
+    }
     if command != "plugin" {
         // Preserve the existing handling of deep links and platform-injected
         // arguments by passing every command other than `plugin` to Tauri.
@@ -23,13 +33,13 @@ fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command
     }
 
     if args.next().as_deref() != Some(OsStr::new("install")) {
-        return Err(());
+        return Err(PLUGIN_INSTALL_USAGE);
     }
 
     let repository = args.next().and_then(|value| value.into_string().ok());
     match (repository, args.next()) {
         (Some(repository), None) => Ok(Command::InstallPlugin(repository)),
-        _ => Err(()),
+        _ => Err(PLUGIN_INSTALL_USAGE),
     }
 }
 
@@ -61,8 +71,27 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        Err(()) => {
-            eprintln!("{PLUGIN_INSTALL_USAGE}");
+        Ok(Command::InstallSkill) => match skill_install::install() {
+            Ok(report) => {
+                println!("renCal skill installed at {}", report.source.display());
+                for path in report.linked {
+                    println!("Linked {}", path.display());
+                }
+                for path in report.already_linked {
+                    println!("Already linked {}", path.display());
+                }
+                for path in report.skipped {
+                    println!("Skipped existing skill at {}", path.display());
+                }
+                ExitCode::SUCCESS
+            }
+            Err(error) => {
+                eprintln!("Could not install skill: {error}");
+                ExitCode::FAILURE
+            }
+        },
+        Err(usage) => {
+            eprintln!("{usage}");
             ExitCode::from(2)
         }
     }
@@ -99,6 +128,22 @@ mod tests {
     fn plugin_requires_a_known_subcommand() {
         assert!(command_from_args(args(&["plugin"])).is_err());
         assert!(command_from_args(args(&["plugin", "unknown"])).is_err());
+    }
+
+    #[test]
+    fn skill_install_requires_no_other_arguments() {
+        assert_eq!(
+            command_from_args(args(&["skill", "install"])),
+            Ok(Command::InstallSkill)
+        );
+        assert_eq!(
+            command_from_args(args(&["skill"])),
+            Err(SKILL_INSTALL_USAGE)
+        );
+        assert_eq!(
+            command_from_args(args(&["skill", "install", "extra"])),
+            Err(SKILL_INSTALL_USAGE)
+        );
     }
 
     #[test]
