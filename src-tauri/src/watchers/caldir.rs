@@ -20,10 +20,6 @@ fn is_ics_event_file(path: &Path) -> bool {
         .is_some_and(|ext| ext.eq_ignore_ascii_case("ics"))
 }
 
-fn is_calendar_toml(path: &Path) -> bool {
-    path.file_name().is_some_and(|name| name == "calendar.toml")
-}
-
 /// A direct, non-hidden child of the data dir: a calendar directory created,
 /// renamed or removed as a whole (`mv work archive`). Hidden entries such as
 /// `.git` are not calendars.
@@ -35,10 +31,18 @@ fn is_calendar_dir(root: &Path, path: &Path) -> bool {
             .is_some_and(|name| !name.starts_with('.'))
 }
 
+fn is_calendar_config(root: &Path, path: &Path) -> bool {
+    path.file_name().is_some_and(|name| name == "config.toml")
+        && path.parent().is_some_and(|dir| {
+            dir.file_name().is_some_and(|name| name == ".caldir")
+                && dir.parent().is_some_and(|dir| is_calendar_dir(root, dir))
+        })
+}
+
 fn is_relevant(root: &Path, event: &notify::Event) -> bool {
     is_content_change(event)
         && event.paths.iter().any(|path| {
-            is_ics_event_file(path) || is_calendar_toml(path) || is_calendar_dir(root, path)
+            is_ics_event_file(path) || is_calendar_config(root, path) || is_calendar_dir(root, path)
         })
 }
 
@@ -47,8 +51,7 @@ fn is_relevant(root: &Path, event: &notify::Event) -> bool {
 struct Changes {
     /// Calendars whose `.ics` files changed.
     slugs: BTreeSet<String>,
-    /// A `calendar.toml` or a calendar directory was created, edited, renamed
-    /// or removed.
+    /// A calendar's `.caldir/config.toml` or its directory changed.
     calendars: bool,
     /// A path could not be attributed to a calendar.
     unattributed: bool,
@@ -68,7 +71,7 @@ fn classify(root: &Path, paths: &[PathBuf]) -> Changes {
             continue;
         };
 
-        if is_calendar_toml(path) || is_calendar_dir(root, path) {
+        if is_calendar_config(root, path) || is_calendar_dir(root, path) {
             changes.calendars = true;
         } else if is_ics_event_file(path) {
             match slug.to_str() {
@@ -214,14 +217,25 @@ mod tests {
         let root = Path::new("/cal");
         assert!(is_ics_event_file(Path::new("/cal/work/event.ics")));
         assert!(is_ics_event_file(Path::new("/cal/work/EVENT.ICS")));
-        assert!(is_calendar_toml(Path::new("/cal/work/calendar.toml")));
+        assert!(is_calendar_config(
+            root,
+            Path::new("/cal/work/.caldir/config.toml")
+        ));
         assert!(is_calendar_dir(root, Path::new("/cal/work")));
         assert!(!is_calendar_dir(root, Path::new("/cal/.git")));
         assert!(!is_calendar_dir(root, Path::new("/cal/work/nested")));
         assert!(!is_ics_event_file(Path::new(
             "/cal/work/.caldir/state.json"
         )));
-        assert!(!is_calendar_toml(Path::new("/cal/work/config.toml")));
+        for path in [
+            "/cal/work/calendar.toml",
+            "/cal/work/config.toml",
+            "/cal/.caldir/config.toml",
+            "/cal/work/nested/.caldir/config.toml",
+            "/elsewhere/work/.caldir/config.toml",
+        ] {
+            assert!(!is_calendar_config(root, Path::new(path)), "{path}");
+        }
     }
 
     #[test]
@@ -248,13 +262,55 @@ mod tests {
 
     #[test]
     fn classifies_calendar_metadata() {
-        let changes = classify(
-            Path::new("/cal"),
-            &[PathBuf::from("/cal/work/calendar.toml")],
-        );
+        let root = Path::new("/cal");
+        let path = PathBuf::from("/cal/work/.caldir/config.toml");
+        let modified = notify::Event::new(EventKind::Modify(ModifyKind::Data(
+            notify::event::DataChange::Content,
+        )))
+        .add_path(path.clone());
+        assert!(is_relevant(root, &modified));
+        let atomic_save = notify::Event::new(EventKind::Modify(ModifyKind::Name(RenameMode::Both)))
+            .add_path(PathBuf::from("/cal/work/.caldir/.tmp"))
+            .add_path(path.clone());
+        assert!(is_relevant(root, &atomic_save));
+
+        let changes = classify(root, &[path]);
         assert!(changes.slugs.is_empty());
         assert!(changes.calendars);
         assert!(!changes.unattributed);
+    }
+
+    #[tokio::test]
+    async fn sees_an_external_calendar_config_write() {
+        let dir = tempfile::tempdir().unwrap();
+        let root = dir.path().canonicalize().unwrap();
+        let calendar = caldir_core::Calendar::create(
+            &root.join("work"),
+            Some(caldir_core::CalendarConfig::default()),
+        )
+        .unwrap();
+        let filter_root = root.clone();
+        let mut watch = watch_debounced(&[&root], RecursiveMode::Recursive, move |event| {
+            is_relevant(&filter_root, event)
+        })
+        .unwrap();
+
+        let config = caldir_core::CalendarConfig::new(
+            Some("Renamed".into()),
+            Some("#123456".into()),
+            None,
+            None,
+        );
+        config.write(&calendar.config_path()).unwrap();
+
+        let paths = tokio::time::timeout(Duration::from_secs(5), watch.changed())
+            .await
+            .unwrap()
+            .unwrap();
+        assert!(classify(&root, &paths).calendars, "{paths:?}");
+        let reloaded = caldir_core::Calendar::load(calendar.path()).unwrap();
+        assert_eq!(reloaded.name(), Some("Renamed"));
+        assert_eq!(reloaded.color(), Some("#123456"));
     }
 
     #[test]
@@ -286,7 +342,7 @@ mod tests {
             Path::new("/cal"),
             &[
                 PathBuf::from("/cal/work/event.ics"),
-                PathBuf::from("/cal/home/calendar.toml"),
+                PathBuf::from("/cal/home/.caldir/config.toml"),
                 PathBuf::from("/elsewhere/event.ics"),
             ],
         );
