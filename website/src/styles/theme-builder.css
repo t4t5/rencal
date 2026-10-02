@@ -124,7 +124,7 @@
   flex: 1;
   background: transparent;
   color: var(--foreground);
-  font-family: var(--tb-mono);
+  font-family: inherit;
   font-size: 14px;
   outline: none;
 }
@@ -162,8 +162,9 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 12px 14px;
+  padding: 10px 14px;
   font-family: var(--tb-mono);
+  font-size: 14px;
   color: var(--foreground);
   cursor: pointer;
   list-style: none;
@@ -214,9 +215,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  column-gap: 12px;
+  column-gap: 10px;
   row-gap: 6px;
-  padding: 7px 8px 7px 14px;
+  padding: 5px 8px 5px 14px;
 }
 
 .tb-row:hover {
@@ -229,7 +230,6 @@
   flex: 1;
   flex-direction: column;
   gap: 1px;
-  font-family: var(--tb-mono);
 }
 
 .tb-row-label {
@@ -263,13 +263,13 @@
 
 .tb-swatch {
   position: relative;
-  width: 36px;
-  height: 36px;
+  width: 32px;
+  height: 32px;
   flex-shrink: 0;
   overflow: hidden;
-  border: 1px solid var(--tb-line);
   /* Checkerboard, so translucent and unset colors read as such. */
   background: repeating-conic-gradient(#2a2a2a 0 25%, #1c1c1c 0 50%) 0 0 / 10px 10px;
+  box-shadow: inset 0 0 0 1px var(--tb-line);
   cursor: pointer;
 }
 
@@ -297,7 +297,7 @@
   padding: 2px 4px;
   background: transparent;
   border: 1px solid transparent;
-  font-family: var(--tb-mono);
+  font-family: inherit;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
   text-align: right;
@@ -322,7 +322,6 @@
 }
 
 .tb-value-out {
-  font-family: var(--tb-mono);
   font-size: 12px;
   color: rgba(255, 255, 255, 0.45);
 }
@@ -344,7 +343,43 @@
 .tb-range {
   flex-basis: 100%;
   margin-right: 32px;
-  accent-color: var(--primary);
+  height: 16px;
+  appearance: none;
+  background: transparent;
+}
+
+.tb-range::-webkit-slider-runnable-track {
+  height: 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--separator);
+}
+
+.tb-range::-moz-range-track {
+  height: 8px;
+  border: 0;
+  border-radius: 9999px;
+  background: var(--separator);
+}
+
+.tb-range::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  margin-top: -4px;
+  appearance: none;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
+}
+
+.tb-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--primary);
+  cursor: pointer;
 }
 
 .tb-seg {
@@ -355,7 +390,7 @@
 .tb .tb-seg button,
 .tb-dialog .tb-seg button {
   padding: 3px 10px;
-  font-family: var(--tb-mono);
+  font-family: inherit;
   font-size: 12px;
   color: var(--muted);
   background: transparent;
