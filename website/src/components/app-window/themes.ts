@@ -1,23 +1,13 @@
 // The app's built-in themes as CSS variable maps, read from the app source at
 // build time, so a theme registered in the manifest shows up automatically.
 import { themes as appThemes } from "../../../../src/themes/manifest"
+import { parseThemeCss, type ThemeVars } from "../../lib/theme-css"
 
 const themeFiles = import.meta.glob<string>("../../../../src/themes/*.css", {
   query: "?raw",
   import: "default",
   eager: true,
 })
-
-export type ThemeVars = Record<string, string>
-
-export function parseThemeCss(css: string): ThemeVars {
-  const withoutComments = css.replace(/\/\*[\s\S]*?\*\//g, "")
-  const vars: ThemeVars = {}
-  for (const match of withoutComments.matchAll(/(--[\w-]+)\s*:\s*([^;]+);/g)) {
-    vars[match[1]] = match[2].trim()
-  }
-  return vars
-}
 
 export const styleOf = (vars: ThemeVars) =>
   Object.entries(vars)
@@ -48,5 +38,6 @@ export const REN_VARS = parseThemeCss(themeCss("ren"))
 export const THEMES = appThemes.map((theme) => ({
   id: theme.id,
   name: theme.name,
+  appearance: theme.appearance,
   vars: { ...(theme.id === "ren" ? REN_CORE : {}), ...parseThemeCss(themeCss(theme.id)) },
 }))

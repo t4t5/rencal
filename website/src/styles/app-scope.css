@@ -101,22 +101,3 @@
 
   font-family: var(--font-body);
 }
-
-/* Helpers for the theme tiles (ThemeTile.astro) */
-.rc-circle {
-  border-radius: var(--radius-circle);
-}
-
-/* Event colors — same formulas as the app's getEventBlockColors() */
-.rc-ev {
-  --ev: var(--primary);
-  /* --event-color overrides the calendar colour, as in the app. */
-  --ev-paint: var(--event-color, var(--ev));
-  --ev-boost: oklch(from var(--ev-paint) l calc(c * 1.4) h);
-}
-
-.rc-allday {
-  background: var(--event-background, color-mix(in srgb, var(--ev-boost) 20%, var(--background)));
-  color: var(--event-foreground, color-mix(in srgb, var(--ev-boost) 40%, var(--foreground)));
-  border-radius: var(--radius-xs);
-}

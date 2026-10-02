@@ -10,6 +10,7 @@ export interface Draft {
   end: string
   allDay: boolean
   location?: string
+  conference?: string
   /** The repeat select's label, e.g. "every weekday". */
   repeat?: string
   /** Text the parser recognised, in input order, outlined in the compose input. */
@@ -27,6 +28,9 @@ export function fillForm(form: HTMLElement, draft: Draft, calendar: CalendarId) 
     field(name).textContent = value ?? placeholder
     field(name).toggleAttribute("data-empty", !value)
   }
+  field("conference-add").hidden = !!draft.conference
+  field("conference-join").hidden = !draft.conference
+  field("conference-url").textContent = draft.conference ?? ""
   field("start").textContent = draft.start
   field("end").textContent = draft.end
   // All-day drafts keep the last times, disabled (the row and its inputs both fade).

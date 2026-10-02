@@ -1,0 +1,92 @@
+---
+// One editable token in the builder's sidebar. The page script fills in the
+// swatch, meta line and values from the active theme.
+import LinkIcon from "../../icons/link.astro"
+import ResetIcon from "../../icons/reset.astro"
+import type { Token } from "./tokens"
+
+interface Props {
+  token: Token
+}
+
+const { token } = Astro.props
+const { control } = token
+---
+
+<div
+  class="tb-row"
+  data-token={token.name}
+  data-kind={control.kind}
+  data-fallback={token.fallback}
+  data-note={token.note}
+  data-search={`${token.label} ${token.name}`.toLowerCase()}
+>
+  {
+    control.kind === "color" && (
+      <label class="tb-swatch">
+        <span class="tb-swatch-fill" data-swatch />
+        <input type="color" data-color-input aria-label={`${token.label} color picker`} />
+      </label>
+    )
+  }
+
+  <div class="tb-row-text">
+    <span class="tb-row-label">{token.label}</span>
+    <span class="tb-row-meta">
+      <LinkIcon class="tb-link-icon size-3" />
+      <span data-meta>{token.note ?? token.name}</span>
+    </span>
+  </div>
+
+  {
+    control.kind === "color" && (
+      <input
+        type="text"
+        class="tb-value"
+        data-value-input
+        spellcheck="false"
+        autocomplete="off"
+        aria-label={`${token.label} value`}
+      />
+    )
+  }
+
+  {control.kind === "range" && <span class="tb-value-out" data-range-out />}
+
+  {
+    control.kind === "choice" && (
+      <div class="tb-seg" role="group" aria-label={token.label}>
+        {control.options.map((option) => (
+          <button type="button" data-choice={option.value}>
+            {option.label}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  <button
+    type="button"
+    class="tb-icon-button tb-reset"
+    data-reset
+    title="Reset to default"
+    aria-label={`Reset ${token.label}`}
+  >
+    <ResetIcon class="size-3.5" />
+  </button>
+
+  {
+    control.kind === "range" && (
+      <input
+        type="range"
+        class="tb-range"
+        data-range-input
+        data-unit={control.unit}
+        min={control.min}
+        max={control.max}
+        step="1"
+        aria-label={token.label}
+      />
+    )
+  }
+</div>
