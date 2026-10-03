@@ -13,7 +13,7 @@ It shows up within an hour.
 
 ## Preview image
 
-Add a 16:9 `preview.png` to the repository root to show it in the directory.
+Add a `preview.png` to the repository root to show it in the directory.
 
 ## Updates
 

@@ -25,11 +25,10 @@ use tokio::sync::Mutex;
 #[cfg(unix)]
 use super::LocalLockEntry;
 use super::{
-    Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE,
-    MIN_PROVIDER_CALDIR_CORE, PluginDeclaration, PluginLockEntry, PluginLockFile, PluginManifest,
-    PluginsFile, ProviderContribution, load_declared_plugins, load_plugin_lock_file, plugins_dir,
-    plugins_file_path, plugins_lock_path, provider_binary_path, provider_is_compatible,
-    release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
+    Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE, PluginDeclaration,
+    PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile, ProviderContribution,
+    load_declared_plugins, load_plugin_lock_file, plugins_dir, plugins_file_path,
+    plugins_lock_path, provider_binary_path, release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
     scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
 };
 
@@ -205,8 +204,6 @@ pub struct PluginProviderInspection {
     pub name: String,
     /// This platform's release asset, or `None` when the release has none.
     pub asset: Option<String>,
-    /// Whether renCal can run a provider built with its caldir-core.
-    pub compatible: bool,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
@@ -294,15 +291,6 @@ struct ResolvedProvider {
     asset: Option<LockedProviderAsset>,
 }
 
-impl ResolvedProvider {
-    /// Incompatible providers are never downloaded: renCal could not run them.
-    fn installable(&self) -> Option<&LockedProviderAsset> {
-        self.asset
-            .as_ref()
-            .filter(|_| provider_is_compatible(&self.contribution))
-    }
-}
-
 impl ResolvedPackage {
     fn set_providers(&mut self, providers: Vec<ResolvedProvider>) {
         self.inspection.providers = providers
@@ -311,7 +299,6 @@ impl ResolvedPackage {
                 slug: provider.contribution.slug.clone(),
                 name: provider.contribution.name.clone(),
                 asset: provider.asset.as_ref().map(|asset| asset.asset.clone()),
-                compatible: provider_is_compatible(&provider.contribution),
             })
             .collect();
         self.providers = providers;
@@ -326,8 +313,7 @@ impl ResolvedPackage {
             providers: self
                 .providers
                 .iter()
-                .filter_map(ResolvedProvider::installable)
-                .cloned()
+                .filter_map(|provider| provider.asset.clone())
                 .collect(),
         }
     }
@@ -495,16 +481,6 @@ impl PluginManager {
             })
             .collect();
         for package in scan.packages {
-            let error = package
-                .providers
-                .iter()
-                .find(|provider| !provider.compatible)
-                .map(|provider| {
-                    format!(
-                        "{} was built for an older caldir and is disabled. Ask the plugin author to update it.",
-                        provider.name
-                    )
-                });
             let contributions = [
                 (!package.themes.is_empty()).then_some(ContributionKind::Theme),
                 (!package.providers.is_empty()).then_some(ContributionKind::Provider),
@@ -516,7 +492,7 @@ impl PluginManager {
                 row.name = package.name;
                 row.description = Some(package.description);
                 row.contributions = contributions;
-                row.error = error;
+                row.error = None;
             } else {
                 plugins.push(InstalledPlugin {
                     id: package.id,
@@ -528,7 +504,7 @@ impl PluginManager {
                     local_dir: None,
                     version: None,
                     update_version: None,
-                    error,
+                    error: None,
                 });
             }
         }
@@ -1434,14 +1410,14 @@ impl PluginManager {
         ))
     }
 
-    /// Providers without a compatible asset for this host are skipped, which
-    /// can leave nothing to install.
+    /// Providers without an asset for this host are skipped, which can leave
+    /// nothing to install.
     fn require_installable(&self, package: &ResolvedPackage) -> Result<(), PluginInstallError> {
         if !package.manifest.contributes.themes.is_empty()
             || package
                 .providers
                 .iter()
-                .any(|provider| provider.installable().is_some())
+                .any(|provider| provider.asset.is_some())
         {
             return Ok(());
         }
@@ -1450,12 +1426,7 @@ impl PluginManager {
             .first()
             .expect("validated manifests contribute a theme or provider")
             .contribution;
-        let message = if !provider_is_compatible(provider) {
-            format!(
-                "{} was built with caldir-core {}, but renCal needs {MIN_PROVIDER_CALDIR_CORE} or newer. Ask the plugin author to update it.",
-                provider.name, provider.caldir_core
-            )
-        } else if self.inner.targets.is_empty() {
+        let message = if self.inner.targets.is_empty() {
             "provider plugins are not supported on this platform".into()
         } else {
             format!(
@@ -1741,7 +1712,7 @@ impl PluginManager {
         for asset in package
             .providers
             .iter()
-            .filter_map(ResolvedProvider::installable)
+            .filter_map(|provider| provider.asset.as_ref())
         {
             let tag = package.tag.as_deref().ok_or_else(|| {
                 PluginInstallError::invalid_package("provider binaries require a release")
@@ -3582,8 +3553,7 @@ min_rencal_version = "0.8.0"
 slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
-asset = "caldir-provider-tuta-{target}.tar.gz"
-caldir_core = "0.16.0"
+bin = "caldir-provider-tuta-{target}.tar.gz"
 "#;
 
     const MIXED_THEME: &str = r#"
@@ -3727,7 +3697,6 @@ appearance = "dark"
                 slug: "tuta".into(),
                 name: "Tuta".into(),
                 asset: Some(tuta_asset(GNU)),
-                compatible: true,
             }]
         );
 
@@ -4051,67 +4020,6 @@ appearance = "dark"
                 "provider plugins must be installed from a release"
             );
         }
-    }
-
-    #[tokio::test]
-    async fn rejects_providers_built_for_an_older_caldir() {
-        let downloader = Arc::new(FixtureDownloader::new());
-        let old = PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1);
-        serve_provider(
-            &downloader,
-            TUTA_REPO,
-            COMMIT_V1,
-            "v1.0.0",
-            &old,
-            &[(GNU, &tuta_archive(GNU, b"tuta"))],
-        );
-        let temp = tempfile::tempdir().unwrap();
-        let manager = manager(&temp, downloader.clone());
-
-        assert!(manager.inspect(TUTA_REPO).await.is_ok());
-        let error = manager.install(TUTA_REPO).await.unwrap_err();
-        assert_eq!(error.kind, PluginInstallErrorKind::Incompatible);
-        assert_eq!(
-            error.to_string(),
-            format!(
-                "Tuta was built with caldir-core 0.11.2, but renCal needs {MIN_PROVIDER_CALDIR_CORE} or newer. Ask the plugin author to update it."
-            )
-        );
-        assert!(!tuta_package(&temp).exists());
-        let download = format!("/{TUTA_REPO}/releases/download/v1.0.0/{}", tuta_asset(GNU));
-        assert_eq!(downloader.request_count(&download), 0);
-    }
-
-    #[tokio::test]
-    async fn lists_installed_providers_that_became_incompatible() {
-        let downloader = Arc::new(FixtureDownloader::new());
-        serve_provider(
-            &downloader,
-            TUTA_REPO,
-            COMMIT_V1,
-            "v1.0.0",
-            PROVIDER_MANIFEST,
-            &[(GNU, &tuta_archive(GNU, b"tuta"))],
-        );
-        let temp = tempfile::tempdir().unwrap();
-        let manager = manager(&temp, downloader);
-        manager.install(TUTA_REPO).await.unwrap();
-        assert!(manager.list().await.plugins[0].error.is_none());
-
-        // Stands in for a renCal update that raised MIN_PROVIDER_CALDIR_CORE.
-        std::fs::write(
-            tuta_package(&temp).join(MANIFEST_FILE),
-            PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1),
-        )
-        .unwrap();
-
-        let listed = manager.list().await;
-        let error = listed.plugins[0].error.as_deref().unwrap();
-        assert!(
-            error.contains("Tuta was built for an older caldir"),
-            "{error}"
-        );
-        assert!(tuta_binary(&temp).is_file());
     }
 
     #[tokio::test]

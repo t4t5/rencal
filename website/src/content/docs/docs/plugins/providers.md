@@ -17,17 +17,16 @@ min_rencal_version = "0.8.0"
 slug = "example"
 name = "Example Calendar"
 icon = "icons/example.svg"
-asset = "caldir-provider-example-{target}.tar.gz"
-caldir_core = "0.16.0"
+bin = "caldir-provider-example-{target}.tar.gz"
 ```
 
 - `slug` is the URI-friendly name of the provider (e.g. `google`, `fastmail`, `zoho`...)
 - `icon` is the logo or icon show for the provider.
-- `caldir_core` is the `caldir-core` version the binary was built with (`0.14.0` or newer).
+- `bin` is the name of the release archive that holds the binary.
 
 ## Release assets
 
-Providers install from the latest stable GitHub release. Attach one archive per platform, with `{target}` in `asset` replaced by one of:
+Providers install from the latest stable GitHub release. Attach one archive per platform, with `{target}` in `bin` replaced by one of:
 
 | Platform      | Targets                                                     |
 | ------------- | ----------------------------------------------------------- |
@@ -36,7 +35,3 @@ Providers install from the latest stable GitHub release. Attach one archive per 
 | macOS         | `aarch64-apple-darwin` or `x86_64-apple-darwin`             |
 
 Each archive must contain the `caldir-provider-<slug>` binary, at its root or inside one top-level folder.
-
-## Test it locally
-
-Add your checkout to `plugins.toml` [as usual](/docs/plugins/create/#test-it-locally). renCal runs `bin/caldir-provider-<slug>` from the checkout, so symlink your build output there.

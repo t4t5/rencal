@@ -46,21 +46,18 @@ min_rencal_version = "0.8.0"
 slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
-asset = "caldir-provider-tuta-{target}.tar.gz"
-caldir_core = "0.16.0"
+bin = "caldir-provider-tuta-{target}.tar.gz"
 ```
 
 - `slug` is the caldir provider slug, not a plugin-local ID: the binary is `caldir-provider-<slug>`, accounts store it as their provider, and the provider's sessions live in `~/.config/caldir/providers/<slug>`. It uses lowercase `a-z`, `0-9` and hyphens. `google`, `icloud`, `outlook`, `caldav` and `webcal` are reserved, and only one installed plugin may contribute a slug.
 - `name` is shown in **Settings → Accounts**.
 - `icon` is optional: a relative `.svg` path in the repository, at most 64 KiB. Without one, renCal shows a generic calendar icon.
-- `asset` is the release asset file name. It contains `{target}` exactly once and ends in `.tar.gz`. renCal fills in its platform's targets in order and takes the first asset the release has:
+- `bin` is the file name of the release archive holding the binary. It contains `{target}` exactly once and ends in `.tar.gz`. renCal fills in its platform's targets in order and takes the first asset the release has:
   - Linux x86_64: `x86_64-unknown-linux-musl`, `x86_64-unknown-linux-gnu`
   - Linux aarch64: `aarch64-unknown-linux-musl`, `aarch64-unknown-linux-gnu`
   - macOS: `aarch64-apple-darwin` or `x86_64-apple-darwin`
 
   The archive must hold a regular file named `caldir-provider-<slug>` at its root or inside one top-level directory. Everything else in it (README, license, helper binaries) is ignored. Archives may be up to 64 MiB.
-
-- `caldir_core` is the `caldir-core` version the binary was built with. caldir has no protocol handshake, so renCal refuses providers built with a `caldir-core` older than it can talk to (currently `0.14.0`, when events moved to ICS on the wire). A provider that falls behind after a renCal update stays installed but is not run until the plugin is updated.
 
 Provider plugins must be published as a stable GitHub release; the default-branch fallback does not apply. The release tag is the plugin version, so a Rust provider keeps its only copy in `Cargo.toml`. The manifest and icon come from the release commit, and the binary from the release's assets. Every asset needs GitHub's `sha256` digest: renCal verifies the download against it and records it in `plugins.lock`, so a restore installs the same bytes or fails. A release without an asset for the user's platform installs the plugin's themes only, or nothing if it has none.
 
@@ -77,7 +74,7 @@ The binary is registered with renCal only, never put on `PATH`. When several bin
 
 In a local checkout, renCal runs `bin/caldir-provider-<slug>` from the checkout if it exists, so a developer can symlink their build output there. Without it, the plugin contributes only the name and icon, and the binary comes from `PATH`.
 
-The catalog only lists a provider when its `caldir_core` is supported and its release has at least one matching asset with a digest, and labels such plugins as calendar providers.
+The catalog only lists a provider when its release has at least one matching asset with a digest, and labels such plugins as calendar providers.
 
 Declare installed plugins by repository in `~/.config/rencal/plugins.toml`:
 

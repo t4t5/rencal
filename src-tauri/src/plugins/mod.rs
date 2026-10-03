@@ -10,9 +10,8 @@ use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
     Appearance, ContributionKind, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
-    MIN_PROVIDER_CALDIR_CORE, PluginError, PluginManifest, ProviderContribution, ThemeContribution,
-    is_sha256_hex, provider_is_compatible, release_asset_sha256, validate_manifest,
-    validate_manifest_owner, validate_package_id,
+    PluginError, PluginManifest, ProviderContribution, ThemeContribution, is_sha256_hex,
+    release_asset_sha256, validate_manifest, validate_manifest_owner, validate_package_id,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -519,9 +518,6 @@ pub struct ScannedProvider {
     /// `bin/caldir-provider-<slug>` when the package ships one. Local
     /// checkouts may leave it out and use the binary on `PATH`.
     pub binary: Option<PathBuf>,
-    /// False once renCal no longer speaks the provider's wire format; the
-    /// binary must not be run.
-    pub compatible: bool,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -631,7 +627,6 @@ fn scan_package(
                 name: provider.name.clone(),
                 icon: provider.icon.as_ref().map(|icon| directory.join(icon)),
                 binary: binary.is_file().then_some(binary),
-                compatible: provider_is_compatible(provider),
             }
         })
         .collect();
@@ -649,9 +644,8 @@ pub(crate) fn provider_binary_path(package: &Path, slug: &str) -> PathBuf {
     package.join("bin").join(format!("caldir-provider-{slug}"))
 }
 
-/// The `bin/` directories of `packages`, scanned from `root`, that renCal may
-/// register as providers. The registry takes whole directories, so one
-/// incompatible binary keeps the package's other providers out too.
+/// The `bin/` directories of `packages`, scanned from `root`, that ship a
+/// provider binary for renCal to register.
 pub fn provider_dirs<'a>(
     root: &Path,
     packages: &'a [ScannedPackage],
@@ -659,12 +653,10 @@ pub fn provider_dirs<'a>(
     packages
         .iter()
         .filter(|package| {
-            let mut shipped = package
+            package
                 .providers
                 .iter()
-                .filter(|provider| provider.binary.is_some())
-                .peekable();
-            shipped.peek().is_some() && shipped.all(|provider| provider.compatible)
+                .any(|provider| provider.binary.is_some())
         })
         .map(|package| (package, root.join(&package.id).join("bin")))
         .collect()
@@ -1060,8 +1052,7 @@ min_rencal_version = "0.8.0"
 slug = "tuta"
 name = "Tuta"
 icon = "icons/tuta.svg"
-asset = "caldir-provider-tuta-{target}.tar.gz"
-caldir_core = "0.16.0"
+bin = "caldir-provider-tuta-{target}.tar.gz"
 "#;
 
     #[test]
@@ -1079,7 +1070,6 @@ caldir_core = "0.16.0"
         assert_eq!(provider.name, "Tuta");
         assert_eq!(provider.icon, Some(package.join("icons/tuta.svg")));
         assert_eq!(provider.binary, None);
-        assert!(provider.compatible);
 
         let binary = package.join("bin/caldir-provider-tuta");
         std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
@@ -1088,36 +1078,17 @@ caldir_core = "0.16.0"
         assert_eq!(scan.packages[0].providers[0].binary, Some(binary));
     }
 
-    #[test]
-    fn scan_flags_providers_built_for_an_older_caldir() {
-        let temp = tempfile::tempdir().unwrap();
-        let package = temp.path().join("alice.tuta");
-        std::fs::create_dir_all(package.join("bin")).unwrap();
-        std::fs::write(
-            package.join(MANIFEST_FILE),
-            PROVIDER_MANIFEST.replacen("0.16.0", "0.11.2", 1),
-        )
-        .unwrap();
-        std::fs::write(package.join("bin/caldir-provider-tuta"), "").unwrap();
-
-        let scan = scan_packages(temp.path(), None);
-        assert!(scan.errors.is_empty(), "{:?}", scan.errors);
-        let provider = &scan.packages[0].providers[0];
-        assert!(!provider.compatible);
-        assert!(provider.binary.is_some());
-    }
-
-    fn write_provider_package(root: &Path, id: &str, providers: &[(&str, &str, bool)]) {
+    fn write_provider_package(root: &Path, id: &str, providers: &[(&str, bool)]) {
         let package = root.join(id);
         std::fs::create_dir_all(package.join("bin")).unwrap();
         let mut manifest = format!(
             "id = \"{id}\"\nname = \"{id}\"\ndescription = \"Providers\"\n\
              min_rencal_version = \"0.8.0\"\n"
         );
-        for (slug, caldir_core, shipped) in providers {
+        for (slug, shipped) in providers {
             manifest.push_str(&format!(
                 "[[contributes.providers]]\nslug = \"{slug}\"\nname = \"{slug}\"\n\
-                 asset = \"caldir-provider-{slug}-{{target}}.tar.gz\"\ncaldir_core = \"{caldir_core}\"\n"
+                 bin = \"caldir-provider-{slug}-{{target}}.tar.gz\"\n"
             ));
             if *shipped {
                 std::fs::write(provider_binary_path(&package, slug), "").unwrap();
@@ -1127,24 +1098,13 @@ caldir_core = "0.16.0"
     }
 
     #[test]
-    fn provider_dirs_lists_packages_whose_binaries_are_all_compatible() {
+    fn provider_dirs_lists_packages_that_ship_a_binary() {
         let temp = tempfile::tempdir().unwrap();
         let root = temp.path();
-        write_provider_package(root, "alice.tuta", &[("tuta", "0.16.0", true)]);
+        write_provider_package(root, "alice.tuta", &[("tuta", true)]);
         // Only declared, not shipped: the binary comes from PATH.
-        write_provider_package(root, "bob.local", &[("local", "0.16.0", false)]);
-        write_provider_package(
-            root,
-            "carol.mixed",
-            &[("fresh", "0.16.0", true), ("stale", "0.11.2", true)],
-        );
-        // An incompatible contribution without a binary does not matter.
-        write_provider_package(
-            root,
-            "dave.partial",
-            &[("partial", "0.16.0", true), ("old", "0.11.2", false)],
-        );
-        write_provider_package(root, "erin.old", &[("old", "0.11.2", true)]);
+        write_provider_package(root, "bob.local", &[("local", false)]);
+        write_provider_package(root, "carol.partial", &[("partial", true), ("local", false)]);
 
         let packages = scan_packages(root, None).packages;
         let dirs: Vec<_> = provider_dirs(root, &packages)
@@ -1155,7 +1115,7 @@ caldir_core = "0.16.0"
             dirs,
             [
                 ("alice.tuta", root.join("alice.tuta/bin")),
-                ("dave.partial", root.join("dave.partial/bin"))
+                ("carol.partial", root.join("carol.partial/bin"))
             ]
         );
     }

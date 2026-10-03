@@ -115,11 +115,7 @@ export type PluginProviderInspection = { slug: string; name: string;
 /**
  * This platform's release asset, or `None` when the release has none.
  */
-asset: string | null; 
-/**
- * Whether renCal can run a provider built with its caldir-core.
- */
-compatible: boolean }
+asset: string | null }
 
 export type PluginThemeInspection = { id: string; name: string; appearance: Appearance }
 

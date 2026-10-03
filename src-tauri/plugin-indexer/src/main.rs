@@ -6,8 +6,8 @@ use std::pin::Pin;
 
 use anyhow::{Context, Result, anyhow, bail};
 use rencal_plugin_contract::{
-    ContributionKind, MANIFEST_FILE, MIN_PROVIDER_CALDIR_CORE, PluginManifest,
-    provider_is_compatible, release_asset_sha256, validate_manifest, validate_manifest_owner,
+    ContributionKind, MANIFEST_FILE, PluginManifest, release_asset_sha256, validate_manifest,
+    validate_manifest_owner,
 };
 use reqwest::{StatusCode, Url};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
@@ -504,8 +504,7 @@ async fn index_repository(
 }
 
 /// What renCal can install from this source. Providers run a downloaded
-/// binary, so each needs a caldir-core renCal speaks and a release asset with
-/// a digest to verify it against.
+/// binary, so each needs a release asset with a digest to verify it against.
 fn installable_contributions(
     manifest: &PluginManifest,
     source: &PackageSource,
@@ -526,12 +525,7 @@ fn installable_contributions(
 
     let mut installable = false;
     for provider in providers {
-        if !provider_is_compatible(provider) {
-            warnings.push(format!(
-                "{repo}: provider {:?} was built with caldir-core {}, below {MIN_PROVIDER_CALDIR_CORE}",
-                provider.slug, provider.caldir_core
-            ));
-        } else if !source.assets.iter().any(|asset| {
+        if !source.assets.iter().any(|asset| {
             provider.asset_target(&asset.name).is_some()
                 && asset
                     .digest
@@ -541,7 +535,7 @@ fn installable_contributions(
         }) {
             warnings.push(format!(
                 "{repo}: provider {:?} has no {} release asset with a sha256 digest",
-                provider.slug, provider.asset
+                provider.slug, provider.bin
             ));
         } else {
             installable = true;
@@ -783,18 +777,16 @@ appearance = "dark"
 [[contributes.providers]]
 slug = "tuta"
 name = "Tuta"
-asset = "caldir-provider-tuta-{target}.tar.gz"
-caldir_core = "0.16.0"
+bin = "caldir-provider-tuta-{target}.tar.gz"
 "#;
 
-    fn provider_manifest(owner: &str, caldir_core: &str) -> String {
+    fn provider_manifest(owner: &str) -> String {
         format!(
             r#"id = "{owner}.tuta"
 name = "Tuta"
 description = "Sync your Tuta calendars"
 min_rencal_version = "0.8.0"
-{}"#,
-            PROVIDER.replace("0.16.0", caldir_core)
+{PROVIDER}"#
         )
     }
 
@@ -924,7 +916,7 @@ min_rencal_version = "0.8.0"
                 ]),
             ),
             commit(),
-            text(&provider_manifest("alice", "0.16.0")),
+            text(&provider_manifest("alice")),
             MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
         ]);
         let (api, raw) = bases();
@@ -951,7 +943,7 @@ min_rencal_version = "0.8.0"
                 "sha": "1111111111111111111111111111111111111111",
                 "commit": { "committer": { "date": "2026-09-19T12:00:00Z" } },
             }])),
-            text(&provider_manifest("alice", "0.16.0")),
+            text(&provider_manifest("alice")),
         ]);
         let (api, raw) = bases();
 
@@ -968,24 +960,23 @@ min_rencal_version = "0.8.0"
 
     #[tokio::test]
     async fn drops_providers_rencal_cannot_install() {
-        let digest = format!("sha256:{}", "a".repeat(64));
-        let mixed = format!("{}{PROVIDER}", manifest("carol")).replace("0.16.0", "0.11.2");
+        let mixed = format!("{}{PROVIDER}", manifest("carol"));
         let client = MockClient::new(vec![
             json(serde_json::json!({
                 "total_count": 3,
                 "items": [
                     repository("Alice", "no-digest", 3),
-                    repository("Bob", "old-caldir", 2),
+                    repository("Bob", "no-asset", 2),
                     repository("Carol", "mixed", 1),
                 ],
             })),
             release_with_assets("v1.0.0", serde_json::json!([provider_asset(None)])),
             commit(),
-            text(&provider_manifest("alice", "0.16.0")),
-            release_with_assets("v1.0.0", serde_json::json!([provider_asset(Some(&digest))])),
+            text(&provider_manifest("alice")),
+            release_with_assets("v1.0.0", serde_json::json!([])),
             commit(),
-            text(&provider_manifest("bob", "0.11.2")),
-            release_with_assets("v1.0.0", serde_json::json!([provider_asset(Some(&digest))])),
+            text(&provider_manifest("bob")),
+            release_with_assets("v1.0.0", serde_json::json!([provider_asset(None)])),
             commit(),
             text(&mixed),
             MockReply::Response(StatusCode::NOT_FOUND, Vec::new()),
@@ -1003,14 +994,9 @@ min_rencal_version = "0.8.0"
             "{warnings}"
         );
         assert!(warnings.contains("Skipping Alice/no-digest: no installable contributions"));
-        assert!(
-            warnings
-                .contains("Bob/old-caldir: provider \"tuta\" was built with caldir-core 0.11.2")
-        );
-        assert!(warnings.contains("Skipping Bob/old-caldir: no installable contributions"));
-        assert!(
-            warnings.contains("Carol/mixed: provider \"tuta\" was built with caldir-core 0.11.2")
-        );
+        assert!(warnings.contains("Bob/no-asset: provider \"tuta\" has no"));
+        assert!(warnings.contains("Skipping Bob/no-asset: no installable contributions"));
+        assert!(warnings.contains("Carol/mixed: provider \"tuta\" has no"));
         assert!(!warnings.contains("Skipping Carol/mixed"));
     }
 

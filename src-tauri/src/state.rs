@@ -27,7 +27,7 @@ use crate::signal::Signal;
 pub struct ProviderDirs {
     /// Shipped with this build.
     pub bundled: Option<PathBuf>,
-    /// Installed plugin packages; each compatible one contributes its `bin/`.
+    /// Installed plugin packages; each contributes its `bin/`.
     pub plugins: Option<PathBuf>,
 }
 
@@ -511,8 +511,8 @@ mod tests {
             Self::binary(self.dirs.bundled.as_ref().unwrap(), slug)
         }
 
-        /// Installs a plugin package contributing `slug`, built against `caldir_core`.
-        fn plugin(&self, slug: &str, caldir_core: &str) -> PathBuf {
+        /// Installs a plugin package contributing `slug`.
+        fn plugin(&self, slug: &str) -> PathBuf {
             let package = self.package(slug);
             std::fs::create_dir_all(package.join("icons")).unwrap();
             std::fs::write(package.join("icons/icon.svg"), ICON).unwrap();
@@ -528,8 +528,7 @@ min_rencal_version = "0.8.0"
 slug = "{slug}"
 name = "{slug} plugin"
 icon = "icons/icon.svg"
-asset = "caldir-provider-{slug}-{{target}}.tar.gz"
-caldir_core = "{caldir_core}"
+bin = "caldir-provider-{slug}-{{target}}.tar.gz"
 "#
                 ),
             )
@@ -585,9 +584,9 @@ caldir_core = "{caldir_core}"
     fn providers_resolve_bundled_then_plugin_then_path() {
         let fixture = ProviderFixture::new();
         fixture.on_path("tuta");
-        let plugin_tuta = fixture.plugin("tuta", "0.16.0");
+        let plugin_tuta = fixture.plugin("tuta");
         fixture.on_path("hooli");
-        fixture.plugin("hooli", "0.16.0");
+        fixture.plugin("hooli");
         let bundled_hooli = fixture.bundled("hooli");
         let path_only = fixture.on_path("etesync");
 
@@ -603,8 +602,8 @@ caldir_core = "{caldir_core}"
     fn uninstalling_a_plugin_falls_back_to_path() {
         let fixture = ProviderFixture::new();
         let path_tuta = fixture.on_path("tuta");
-        let plugin_tuta = fixture.plugin("tuta", "0.16.0");
-        fixture.plugin("hooli", "0.16.0");
+        let plugin_tuta = fixture.plugin("tuta");
+        fixture.plugin("hooli");
         assert!(resolves_to(&fixture.caldir(), "tuta", &plugin_tuta));
 
         std::fs::remove_dir_all(fixture.package("tuta")).unwrap();
@@ -617,27 +616,13 @@ caldir_core = "{caldir_core}"
 
     #[cfg(unix)]
     #[test]
-    fn incompatible_plugin_binaries_are_not_registered() {
-        let fixture = ProviderFixture::new();
-        let path_tuta = fixture.on_path("tuta");
-        fixture.plugin("tuta", "0.11.2");
-        fixture.plugin("hooli", "0.13.0");
-
-        let caldir = fixture.caldir();
-
-        assert!(resolves_to(&caldir, "tuta", &path_tuta));
-        assert_eq!(resolved(&caldir, "hooli"), None);
-    }
-
-    #[cfg(unix)]
-    #[test]
     fn provider_infos_report_source_path_and_plugin_metadata() {
         use base64::Engine;
 
         let fixture = ProviderFixture::new();
         fixture.on_path("tuta");
-        fixture.plugin("tuta", "0.16.0");
-        fixture.plugin("hooli", "0.16.0");
+        fixture.plugin("tuta");
+        fixture.plugin("hooli");
         fixture.bundled("caldav");
         fixture.on_path("etesync");
         let icon = format!(
@@ -674,25 +659,21 @@ caldir_core = "{caldir_core}"
 
     #[cfg(unix)]
     #[test]
-    fn plugins_without_a_runnable_binary_still_describe_the_path_binary() {
+    fn plugins_without_a_binary_still_describe_the_path_binary() {
         let fixture = ProviderFixture::new();
         fixture.on_path("tuta");
-        fixture.on_path("hooli");
-        // A local checkout without `bin/`, and a plugin built for an older caldir.
-        let local = fixture.plugin("tuta", "0.16.0");
+        // A local checkout without `bin/`.
+        let local = fixture.plugin("tuta");
         std::fs::remove_file(local).unwrap();
-        fixture.plugin("hooli", "0.11.2");
 
         let infos = fixture.infos();
 
-        for (info, slug) in infos.iter().zip(["hooli", "tuta"]) {
-            assert_eq!(info.slug, slug);
-            assert_eq!(info.source, ProviderSource::Path);
-            assert_eq!(info.name, Some(format!("{slug} plugin")));
-            assert!(info.icon.is_some());
-            assert!(info.on_path);
-        }
-        assert_eq!(infos.len(), 2);
+        assert_eq!(infos.len(), 1);
+        assert_eq!(infos[0].slug, "tuta");
+        assert_eq!(infos[0].source, ProviderSource::Path);
+        assert_eq!(infos[0].name, Some("tuta plugin".into()));
+        assert!(infos[0].icon.is_some());
+        assert!(infos[0].on_path);
     }
 
     #[test]
