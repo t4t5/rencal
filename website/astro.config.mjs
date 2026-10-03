@@ -23,6 +23,16 @@ const sidebarItems = [
     ],
   },
   {
+    label: "Plugins",
+    items: [
+      { label: "Install Plugins", slug: "docs/plugins/install" },
+      { label: "Create a Plugin", slug: "docs/plugins/create" },
+      { label: "Theme Plugins", slug: "docs/plugins/themes" },
+      { label: "Provider Plugins", slug: "docs/plugins/providers" },
+      { label: "Publish a Plugin", slug: "docs/plugins/publish" },
+    ],
+  },
+  {
     label: "Help",
     items: [{ label: "Troubleshooting", slug: "docs/troubleshooting" }],
   },

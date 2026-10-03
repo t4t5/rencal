@@ -25,7 +25,7 @@ appearance = "dark"
 --surface-tint: #ffffff;
 ```
 
-renCal derives most surface and border colours from these values. The [theme playground](https://rencal.org/themes/) can generate CSS. Add a second `[[contributes.themes]]` entry with `appearance = "light"` when the user wants a matching light theme. Each theme ID must be unique within the plugin and use lowercase letters, digits, or hyphens. CSS paths must be relative `.css` files in the checkout.
+renCal derives most surface and border colours from these values. The [theme builder](https://rencal.org/theme-builder/) can generate CSS. Add a second `[[contributes.themes]]` entry with `appearance = "light"` when the user wants a matching light theme. Each theme ID must be unique within the plugin and use lowercase letters, digits, or hyphens. CSS paths must be relative `.css` files in the checkout.
 
 Fonts are optional and shared by all themes in the package. Declare each WOFF2 face with `[[contributes.fonts]]`, `family`, and `file`; optional `weight` defaults to 400 and `style` to `normal`. Use a fallback font in the CSS.
 

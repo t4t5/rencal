@@ -5,20 +5,16 @@ description: Customize how renCal looks
 
 Change renCal's theme from the settings, or press <kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>T</kbd> to cycle through them.
 
-You can preview all built-in themes (and design your own) in the [theme builder](/theme-builder/).
-
 | Theme: Gruvbox                                                                                                                         | Theme: Catpuccin Light                                                                                                                                 | Theme: Hackerman                                                                                                                           |
 | -------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | <img src="/docs/theme-gruvbox.png" alt="Gruvbox theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-catpuccin-light.png" alt="Catpuccin Light theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> | <img src="/docs/theme-hackerman.png" alt="Hackerman theme" style="height: 18rem; width: 100%; object-fit: cover; object-position: top;" /> |
 
-By default, renCal syncs with your system: you pick a light theme and a dark theme, and it switches between them with your OS. Set **Theme mode** to **Single theme** to use one theme all the time; your light and dark picks are kept for when you switch back. In `~/.config/rencal/config.toml` it looks like this:
+By default, renCal syncs with your system. To use the same theme all the time, set **Theme mode** to **Single theme**. In `~/.config/rencal/config.toml` it looks like this:
 
 ```toml
 [theme]
-mode = "system"   # system | single
+mode = "single"   # system | single
 single = "ren"
-light = "ren-light"
-dark = "ren"
 ```
 
 On Omarchy, syncing with your system uses the "Omarchy" theme instead, which updates automatically when you change your Omarchy theme:
@@ -27,7 +23,9 @@ On Omarchy, syncing with your system uses the "Omarchy" theme instead, which upd
 
 ## Add your own theme
 
-Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal watches this folder, so new files, edits, and removals show up automatically in the settings.
+Design a theme in the [theme builder](/theme-builder/), then save the exported CSS to `~/.config/rencal/themes/`. renCal picks up new files and edits automatically.
+
+You can also write one by hand. Most themes only need four colors, and renCal derives the rest:
 
 ```css
 /* @name My Theme */
@@ -35,8 +33,7 @@ Create a `.css` file in `~/.config/rencal/themes/` to add a custom theme. renCal
 --background: #0f0f0f;
 --foreground: #eaeaea;
 --primary: #7c3aed;
---primary-foreground: #ffffff;
 --surface-tint: #ffffff;
 ```
 
-Most themes only need to set `--background`, `--foreground`, `--primary`, and `--surface-tint`. renCal derives surfaces, borders, hover states, and other colors from those values. Set `--primary-foreground` when the default text colour on `--primary` lacks contrast. Themes are dark unless they have an `@appearance light` comment, which lists them as light themes in the settings.
+To share your theme, package it as a [theme plugin](/docs/plugins/themes/).
