@@ -50,10 +50,18 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
+          # webkit/appindicator/rsvg: the Tauri app. The rest: the GPUI app.
           sudo apt-get install -y \
             libwebkit2gtk-4.1-dev \
             libayatana-appindicator3-dev \
-            librsvg2-dev
+            librsvg2-dev \
+            libxkbcommon-dev \
+            libxkbcommon-x11-dev \
+            libxcb1-dev \
+            libwayland-dev \
+            libvulkan-dev \
+            libfontconfig1-dev \
+            libfreetype6-dev
 
       - uses: Swatinem/rust-cache@v2
         with:

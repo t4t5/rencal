@@ -212,7 +212,7 @@ pub async fn run() {
     // pulls in the tokio feature transitively from xdg-portal). On
     // macOS/Windows the plugin's native impl is fine.
     #[cfg(target_os = "linux")]
-    let mut instance_guard = match rencal_core::single_instance::try_acquire_or_signal() {
+    let mut instance_guard = match rencal_core::single_instance::try_acquire_or_signal("rencal") {
         Some(g) => g,
         None => return, // existing instance acked and was focused; we exit.
     };

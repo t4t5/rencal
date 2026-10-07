@@ -1,6 +1,6 @@
 # renCal Agent Guide
 
-renCal is a Tauri v2 calendar app for Omarchy, being ported to GPUI (`GPUI_PORT_PLAN.md`). UI-independent Rust backend in `crates/rencal-core/`, Tauri shell in `src-tauri/src/`, React frontend in `src/`, website and public docs in `website/`. The Cargo workspace root is the repo root. Each of those directories has its own `AGENTS.md` with local conventions; procedures live in `.agents/skills/`.
+renCal is a Tauri v2 calendar app for Omarchy, being ported to GPUI (`GPUI_PORT_PLAN.md`). UI-independent Rust backend in `crates/rencal-core/`, Tauri shell in `src-tauri/src/`, React frontend in `src/`, the GPUI app in `crates/rencal-app/`, website and public docs in `website/`. The Cargo workspace root is the repo root. Each of those directories has its own `AGENTS.md` with local conventions; procedures live in `.agents/skills/`.
 
 ## Commands
 
@@ -9,6 +9,7 @@ renCal is a Tauri v2 calendar app for Omarchy, being ported to GPUI (`GPUI_PORT_
 - `just test`: frontend + Rust tests, verifies `src/rpc/bindings.ts` is up to date
 - `just gen-types`: regenerate TypeScript taurpc bindings from Rust
 - `just debug [flags]`: run the app with `VITE_RENCAL_DEBUG` enabled
+- `just app [flags]`: run the GPUI app; flags set `RENCAL_DEBUG` (debug log namespaces, `'*'` for all)
 
 `.agents/hooks/post-edit.sh` runs tsc/eslint or `cargo check` for an edited file (wired up as a post-edit hook where the agent supports it). Run `just check` before handing work over.
 

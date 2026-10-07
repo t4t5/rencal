@@ -104,7 +104,7 @@ pub enum FirstDayOfWeek {
     Sunday,
 }
 
-#[derive(Serialize, Deserialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug, PartialEq)]
 pub struct RencalConfig {
     #[serde(default = "default_notifications_enabled")]
     pub notifications_enabled: bool,

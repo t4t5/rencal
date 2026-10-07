@@ -1,0 +1,31 @@
+[package]
+name = "rencal-app"
+version.workspace = true
+edition = "2024"
+description = "renCal's native GPUI app"
+publish = false
+
+# Named `rencal-app` until cutover; the Tauri app still builds `rencal`.
+[[bin]]
+name = "rencal-app"
+path = "src/main.rs"
+
+[dependencies]
+anyhow = "1.0.100"
+chrono = "0.4.43"
+dirs = "5"
+# Exact pin (GPUI_PORT_PLAN.md D1): gpui-kit pins its GPUI snapshot; upgrade deliberately.
+gpui-kit = "=0.7.1"
+iana-time-zone = "0.1"
+log = "0.4.29"
+parking_lot = "0.12"
+rencal-config = { path = "../../src-tauri/rencal-config" }
+rencal-core = { path = "../rencal-core" }
+rencal-theme = { path = "../rencal-theme" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+
+[dev-dependencies]
+gpui-kit = { version = "=0.7.1", features = ["test-support"] }
+tempfile = "3"

@@ -1,6 +1,6 @@
 # renCal GPUI port plan
 
-Status: Phase 0 implemented (2026-10-07), awaiting review/commit; Phase 1 next. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
+Status: Phases 0–1 implemented (2026-10-07); Phase 1 awaiting review/commit; Phase 2 next. Phase 1 notes are under Phase 1 in §8. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
 Audience: the agent that implements the port. Read this whole file before starting a phase, and read the linked repo docs before touching the area they cover.
 
 This plan ports renCal from Tauri v2 (Rust backend + React webview) to a native Rust app on [GPUI](https://www.gpui.rs/) via [gpui-kit](https://gpui-kit.com/) (`gpui-kit` 0.7.x, Longbridge). It also replaces the CSS theme system with a Zed-style token theme format (see [Zed's theme builder](https://zed.dev/theme-builder) and its schema at `https://zed.dev/schema/themes/v0.2.0.json`).
@@ -442,6 +442,16 @@ Exit: Tauri app unchanged for users; `rencal-theme` resolves all built-ins to fi
 `rencal-app` with gpui-kit pinned; tokio bridge; `Settings`, `ThemeStore` (+ gpui-kit bridge, live reload of user themes, Omarchy, system appearance); `UiState`; watchers wired to entities; main window with CSD title bar, sidebar/main split, collapse; settings window shell; single instance + deep-link intake; logging; `RENCAL_DEBUG`; `just app` / `just debug` recipes.
 
 Exit: app opens on Omarchy and macOS with the configured theme; editing `config.toml` or a theme JSON updates the window live.
+
+Implementation notes (2026-10-07):
+
+- gpui-kit pinned at `=0.7.1` (GPUI `gpui-pre-*` 0.3.8). It ships no `gpui_tokio`; `rencal-app/src/runtime.rs` is the `Tokio` global from D6.
+- Until cutover the GPUI binary is `rencal-app` (the Tauri package owns `rencal`) and its single-instance socket is `rencal-gpui` (`single_instance::try_acquire_or_signal` now takes the name). Rename both in Phase 8.
+- `just app [flags]` runs it; flags set `RENCAL_DEBUG`. `just debug` keeps running the Tauri app until cutover.
+- User themes are `~/.config/rencal/themes/*.json` via `rencal_core::user_themes` (`user:<file stem>`, or `user:<variant name>` for multi-variant families). CSS files there get a diagnostic. Plugin themes are not loaded by the GPUI app until contract v2 (Phase 7).
+- External caldir changes bump a `CaldirRevision` global (calendars/events/providers) that Phase 3's `EventStore` observes.
+- Linux decorations: client-side (frameless) on tiling compositors, server-side on the stacking desktops `rencal_core::platform::needs_native_decorations` lists, as the Tauri app did. Closing the main window quits, except on macOS (dock reopen).
+- Verified headless on Linux (sway + lavapipe): window renders with the configured theme; editing a user theme JSON and `config.toml` updates it live. Not yet verified on a real Omarchy session, on macOS (traffic-light position (16, 30) copied from `tauri.macos.conf.json`), or with fcitx5/AccessKit.
 
 **Phase 2 — Domain crates**
 

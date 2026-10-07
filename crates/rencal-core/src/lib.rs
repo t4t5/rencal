@@ -16,6 +16,7 @@ pub mod fs_watch;
 pub mod linux_reminders;
 pub mod oauth;
 pub mod omarchy;
+pub mod platform;
 pub mod plugins;
 pub mod signal;
 #[cfg(target_os = "linux")]
@@ -23,4 +24,5 @@ pub mod single_instance;
 pub mod skill_install;
 pub mod state;
 pub mod tasks;
+pub mod user_themes;
 pub mod watchers;

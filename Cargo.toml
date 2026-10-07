@@ -1,6 +1,7 @@
 [workspace]
 resolver = "3"
 members = [
+  "crates/rencal-app",
   "crates/rencal-core",
   "crates/rencal-theme",
   "src-tauri",

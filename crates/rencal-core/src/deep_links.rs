@@ -80,6 +80,15 @@ impl DeepLinkInbox {
     }
 }
 
+/// The `rencal:` URLs this process was launched with (Linux passes deep links
+/// as arguments, see `.desktop` `MimeType`).
+pub fn launch_urls() -> Vec<String> {
+    std::env::args_os()
+        .filter_map(|arg| arg.into_string().ok())
+        .filter(|arg| arg.starts_with("rencal:"))
+        .collect()
+}
+
 pub fn parse_deep_link(raw: &str) -> Result<DeepLink, String> {
     let url = Url::parse(raw).map_err(|_| "invalid URL".to_string())?;
     if url.scheme() != "rencal" {

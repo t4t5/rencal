@@ -2,8 +2,10 @@
 //!
 //! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
-//! socket; later launches send deep-link URLs to it and exit. Debug and release
-//! use separate sockets so `tauri dev` does not fight the installed app.
+//! socket; later launches send deep-link URLs to it and exit. Each shell names
+//! its socket (`rencal` for the Tauri app, `rencal-gpui` for the GPUI app until
+//! cutover), and debug and release use separate sockets so a dev build does not
+//! fight the installed app.
 //!
 //! Handshake (issue #114): a later launch writes its URLs and waits briefly
 //! for a one-byte ack. The primary acks only if its binary is still on disk
@@ -44,13 +46,13 @@ impl InstanceGuard {
     }
 }
 
-fn socket_path() -> PathBuf {
+fn socket_path(app: &str) -> PathBuf {
     // Dev rencal (launched with "just dev") & prod rencal (installed with aur)
     // use different sockets so that both can run at the same time:
     let name = if cfg!(debug_assertions) {
-        "rencal-dev"
+        format!("{app}-dev")
     } else {
-        "rencal"
+        app.to_owned()
     };
 
     if let Some(runtime) = dirs::runtime_dir() {
@@ -66,8 +68,8 @@ fn socket_path() -> PathBuf {
 
 /// Either acquire the single-instance role (returning a guard + listener),
 /// or signal the existing instance and return `None` so the caller can exit.
-pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
-    let path = socket_path();
+pub fn try_acquire_or_signal(app: &str) -> Option<InstanceGuard> {
+    let path = socket_path(app);
 
     // Existing instance? Forward deep-link arguments (if any), otherwise focus.
     if let Ok(mut stream) = UnixStream::connect(&path) {
@@ -104,10 +106,7 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
 /// Send our deep-link URLs (possibly none, meaning focus-only) to the primary
 /// and wait for its ack. Any error means the caller should take over.
 fn signal_primary(stream: &mut UnixStream) -> std::io::Result<()> {
-    let urls: Vec<String> = std::env::args_os()
-        .filter_map(|arg| arg.into_string().ok())
-        .filter(|arg| arg.starts_with("rencal:"))
-        .collect();
+    let urls = crate::deep_links::launch_urls();
     stream.write_all(urls.join("\n").as_bytes())?;
     // Half-close so the primary's read_to_string sees EOF while our read
     // side stays open for the ack.

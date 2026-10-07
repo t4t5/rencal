@@ -155,38 +155,53 @@
         };
       });
 
-      devShells = forAllSystems (pkgs: {
-        default = pkgs.mkShell {
-          buildInputs = with pkgs; [
-            cargo
-            rustc
-            clippy
-            rustfmt
-            rust-analyzer
-            nodejs_22
-            pnpm
-            pkg-config
-            webkitgtk_4_1
-            libsoup_3
-            openssl
-            librsvg
-            libayatana-appindicator
-            gtk3
-            glib
-            cairo
-            pango
-            gdk-pixbuf
-            atk
-            libnotify
-            just
-            cargo-tauri
+      devShells = forAllSystems (pkgs:
+        let
+          # The GPUI app (crates/rencal-app) links xkbcommon and loads the
+          # Wayland, X11 and Vulkan libraries at runtime.
+          gpuiLibs = with pkgs; [
+            libxkbcommon
+            wayland
+            vulkan-loader
+            libxcb
+            libx11
+            fontconfig
+            freetype
           ];
+        in
+        {
+          default = pkgs.mkShell {
+            buildInputs = gpuiLibs ++ (with pkgs; [
+              cargo
+              rustc
+              clippy
+              rustfmt
+              rust-analyzer
+              nodejs_22
+              pnpm
+              pkg-config
+              webkitgtk_4_1
+              libsoup_3
+              openssl
+              librsvg
+              libayatana-appindicator
+              gtk3
+              glib
+              cairo
+              pango
+              gdk-pixbuf
+              atk
+              libnotify
+              just
+              cargo-tauri
+            ]);
 
-          shellHook = ''
-            export WEBKIT_DISABLE_COMPOSITING_MODE=1
-          '';
-        };
-      });
+            shellHook = ''
+              export WEBKIT_DISABLE_COMPOSITING_MODE=1
+              export LD_LIBRARY_PATH="${pkgs.lib.makeLibraryPath gpuiLibs}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+            '';
+          };
+        });
 
       overlays.default = final: prev: {
         rencal = self.packages.${prev.stdenv.hostPlatform.system}.rencal;

@@ -90,7 +90,7 @@ impl std::fmt::Display for ExternalThemeFontError {
 
 impl std::error::Error for ExternalThemeFontError {}
 
-fn themes_dir() -> Option<PathBuf> {
+pub(crate) fn themes_dir() -> Option<PathBuf> {
     RencalConfig::config_dir().ok().map(|d| d.join("themes"))
 }
 

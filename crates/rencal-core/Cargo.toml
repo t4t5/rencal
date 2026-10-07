@@ -25,6 +25,7 @@ quick-xml = "0.39"
 reminder-core = { path = "../../src-tauri/reminder-core" }
 rencal-config = { path = "../../src-tauri/rencal-config" }
 rencal-plugin-contract = { path = "../../src-tauri/plugin-contract" }
+rencal-theme = { path = "../rencal-theme" }
 reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "stream"] }
 rustls = { version = "0.23", default-features = false, features = ["ring"] }
 semver = "1"

@@ -18,11 +18,25 @@ pub fn theme_schema() -> Json {
     schema
 }
 
-/// `schema/v1.json` as committed.
+/// `schema/v1.json` as committed. Keys are sorted explicitly: a workspace
+/// build can turn on serde_json's `preserve_order` (GPUI does), which would
+/// otherwise keep schemars' insertion order.
 pub fn theme_schema_string() -> String {
-    let mut out = serde_json::to_string_pretty(&theme_schema()).expect("schema serialises");
+    let mut out = serde_json::to_string_pretty(&sorted(theme_schema())).expect("schema serialises");
     out.push('\n');
     out
+}
+
+fn sorted(value: Json) -> Json {
+    match value {
+        Json::Object(map) => {
+            let mut entries: Vec<_> = map.into_iter().collect();
+            entries.sort_by(|(a, _), (b, _)| a.cmp(b));
+            Json::Object(entries.into_iter().map(|(k, v)| (k, sorted(v))).collect())
+        }
+        Json::Array(items) => Json::Array(items.into_iter().map(sorted).collect()),
+        other => other,
+    }
 }
 
 fn kind_name(kind: Kind) -> &'static str {

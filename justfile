@@ -17,6 +17,10 @@ format-rust:
 dev: ensure-providers
   pnpm tauri dev
 
+# Run the GPUI app (crates/rencal-app). Pass debug log namespaces to enable them: `just app '*'`, `just app theme,watchers`.
+app flags="": ensure-providers
+  RENCAL_DEBUG='{{flags}}' cargo run -p rencal-app
+
 # Run website docs (dev mode)
 web:
   pnpm --dir website dev

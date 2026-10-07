@@ -1,7 +1,10 @@
 {
   "$defs": {
     "Appearance": {
-      "enum": ["light", "dark"],
+      "enum": [
+        "light",
+        "dark"
+      ],
       "type": "string"
     },
     "BorderStyle": {
@@ -55,11 +58,16 @@
                       "type": "string"
                     }
                   },
-                  "required": ["from", "to"],
+                  "required": [
+                    "from",
+                    "to"
+                  ],
                   "type": "object"
                 }
               },
-              "required": ["gradient"],
+              "required": [
+                "gradient"
+              ],
               "type": "object"
             }
           ]
@@ -139,7 +147,9 @@
                 "type": "number"
               }
             },
-            "required": ["color"],
+            "required": [
+              "color"
+            ],
             "type": "object"
           },
           "type": "array"
@@ -539,7 +549,9 @@
               "type": "number"
             }
           },
-          "required": ["color"],
+          "required": [
+            "color"
+          ],
           "type": "object"
         },
         {
@@ -561,13 +573,19 @@
           "default": {}
         }
       },
-      "required": ["name", "appearance"],
+      "required": [
+        "name",
+        "appearance"
+      ],
       "type": "object"
     },
     "Transform": {
       "anyOf": [
         {
-          "enum": ["none", "uppercase"]
+          "enum": [
+            "none",
+            "uppercase"
+          ]
         },
         {
           "type": "null"
@@ -592,10 +610,16 @@
   "description": "One theme file.",
   "properties": {
     "$schema": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "author": {
-      "type": ["string", "null"]
+      "type": [
+        "string",
+        "null"
+      ]
     },
     "name": {
       "type": "string"
@@ -607,7 +631,10 @@
       "type": "array"
     }
   },
-  "required": ["name", "themes"],
+  "required": [
+    "name",
+    "themes"
+  ],
   "title": "renCal theme family",
   "type": "object"
 }
