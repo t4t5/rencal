@@ -2,19 +2,16 @@
 //! `month-view/weekSnapFling.ts`; the scroll session that drives it is app
 //! code, GPUI_PORT_PLAN.md §6.1).
 //!
-//! A fling lands on the week boundary ahead of where native kinetic scrolling
-//! would have stopped; any other scroll settles to the nearest boundary after
-//! `SETTLE_IDLE_MS` without input. Offsets and velocities are px and px/s as
-//! `f64` (see the crate docs).
+//! A fling lands on the week boundary ahead of where kinetic scrolling would
+//! have stopped; any other scroll settles to the nearest boundary after
+//! `SETTLE_IDLE_MS` without input. (The TS session took over WebKitGTK's
+//! native kinetic scroll after a few coasting frames; GPUI has no native
+//! kinetic scrolling on Linux, so the app flings at the finger lift instead
+//! and those takeover constants are gone.) Offsets and velocities are px and
+//! px/s as `f64` (see the crate docs).
 
 /// Kinetic scrolling friction the fling prediction models (WebKitGTK's).
 const DECEL_FRICTION: f64 = 4.0;
-/// Scroll frames without wheel input (native kinetic coasting) seen before the
-/// session takes a fling over.
-pub const TAKEOVER_COAST_FRAMES: u32 = 2;
-/// Consecutive coasting frames that must slow down (same direction, smaller
-/// step) before the takeover, so a still-accelerating gesture isn't taken.
-pub const TAKEOVER_DECAY_PAIRS: u32 = 1;
 /// Window of recent wheel events used to classify a gesture, in ms (TS
 /// `WEBKIT_SCROLL_CAPTURE_MS`).
 pub const SCROLL_CAPTURE_MS: f64 = 150.0;

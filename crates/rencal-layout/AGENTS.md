@@ -27,4 +27,4 @@ Pure layout geometry (`GPUI_PORT_PLAN.md` §3.1, §5, §6.1, §6.2): week/day ti
 - Columns are 0-based with exclusive ends (TS: 1-based CSS grid lines). Lane functions return lane counts (TS: `maxLane`, -1 when empty).
 - `lane-geometry.ts` built CSS `calc()` strings from theme variables; `all_day_bar_rect` takes those metrics (`MonthRowMetrics`) and returns a row-local rectangle. The fixture test evaluates the CSS strings with sample metrics and compares.
 - JS `Math.round` (halves toward +∞) is `js_round` in `lib.rs`; don't use `f64::round` where the TS rounded.
-- Not ported: `startSnapFling`'s frame scheduling, cancel and `shift` (the app's scroll session, Phase 3), and the `weekSnapSession` state machine.
+- Not ported: `startSnapFling`'s frame scheduling, cancel and `shift`, and the `weekSnapSession` state machine: the app's `views/axis.rs` (`InfiniteAxis`, `WeekSnap`) replaces them. The WebKitGTK takeover constants (`TAKEOVER_*`) were dropped: GPUI has no native kinetic scrolling on Linux to take over.

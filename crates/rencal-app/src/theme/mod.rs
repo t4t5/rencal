@@ -133,6 +133,17 @@ impl ThemeStore {
         Settings::update_rencal(cx, move |config| config.theme = next.clone());
     }
 
+    /// The resolved theme, shared (for views that hold it across `cx` uses).
+    pub fn active(cx: &App) -> Arc<ResolvedTheme> {
+        Self::global(cx).active.clone()
+    }
+
+    /// Shows theme `id` in the slot that is showing (the palette's theme menu).
+    pub fn pick(id: &str, cx: &mut App) {
+        let next = selection::pick_theme(&Settings::global(cx).rencal.theme, id);
+        Settings::update_rencal(cx, move |config| config.theme = next.clone());
+    }
+
     pub fn active_id(&self) -> &str {
         &self.active_id
     }

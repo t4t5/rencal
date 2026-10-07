@@ -1,41 +1,36 @@
-//! The main window (GPUI_PORT_PLAN.md §3.4): a collapsible sidebar beside the
-//! main column (header + calendar view). Phase 1 is the frame only; the
-//! sidebar sections and the views arrive in Phase 3.
+//! The main window (GPUI_PORT_PLAN.md §3.4): a collapsible sidebar (minical,
+//! agenda) beside the main column (header + calendar view). Window-level
+//! actions land here: the palettes, the shortcuts overlay and the agenda's
+//! keyboard selection.
 //!
 //! Like the old `AppWindow.tsx`: below the `md` breakpoint the sidebar fills
 //! the window and the main column is hidden; above it, the sidebar is 300px
 //! and collapses with `ctrl-b`.
 
-use gpui_kit::component::button::{Button, ButtonVariants};
-use gpui_kit::component::menu::DropdownMenu;
-use gpui_kit::component::{Disableable, IconName, h_flex, v_flex};
+use gpui_kit::component::{h_flex, v_flex};
 use gpui_kit::{
-    Anchor, AnyWindowHandle, App, AppContext, Context, FocusHandle, Global, InteractiveElement,
-    IntoElement, ParentElement, Pixels, Render, SharedString, Styled, Subscription, Window, div,
-    point, prelude::FluentBuilder, px, size,
+    AnyView, AnyWindowHandle, App, AppContext, Context, Entity, FocusHandle, Global,
+    InteractiveElement, IntoElement, ParentElement, Pixels, Render, Styled, Subscription, Window,
+    div, point, prelude::FluentBuilder, px, size,
 };
-use rencal_theme::ResolvedTheme;
 
 use super::{drag_region, window_options};
-use crate::actions::{
-    CALENDAR_VIEW_CONTEXT, OpenSettings, ShowBoardView, ShowMonthView, ShowWeekView, ToggleSidebar,
-};
-use crate::theme::{ActiveRenTheme, ThemeStore, appearance, hsla};
+use crate::actions::{CALENDAR_VIEW_CONTEXT, Dismiss, OpenSelected};
+use crate::event_store::EventStore;
+use crate::keymap::{GoToDate, NextEvent, PrevEvent, Search, ShowShortcuts, ToggleCommandPalette};
+use crate::palette::{self, Page};
+use crate::settings::Settings;
+use crate::sidebar::{MACOS_TRAFFIC_LIGHTS_WIDTH, Sidebar};
+use crate::sync_state::SyncState;
+use crate::theme::{ThemeStore, appearance};
+use crate::toolbar::{self, InvitesOpen};
+use crate::ui::{Palette, metric};
 use crate::ui_state::UiState;
+use crate::{search, shortcuts_overlay, views};
 
 /// Tailwind's `md`: below it the main column is hidden.
 const MD_BREAKPOINT: Pixels = px(768.);
 const SIDEBAR_WIDTH: Pixels = px(300.);
-/// The macOS traffic lights sit left of the sidebar toolbar.
-const MACOS_TRAFFIC_LIGHTS_WIDTH: Pixels = px(78.);
-
-/// The calendar views, in menu order: `(id, name, action)`. Ids are what
-/// `UiState::calendar_view` stores.
-const VIEWS: [(&str, &str, &dyn gpui_kit::Action); 3] = [
-    ("week", "Week", &ShowWeekView),
-    ("month", "Month", &ShowMonthView),
-    ("board", "Board", &ShowBoardView),
-];
 
 struct MainWindowHandle(AnyWindowHandle);
 
@@ -71,6 +66,10 @@ pub fn show(cx: &mut App) -> bool {
 
 pub struct MainWindow {
     focus: FocusHandle,
+    sidebar: Entity<Sidebar>,
+    /// The shown calendar view and its id; rebuilt when the id changes, so
+    /// each switch opens on the active date like the old tabs did.
+    view: Option<(&'static str, AnyView)>,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -82,16 +81,53 @@ impl MainWindow {
         cx.defer_in(window, |_, window, cx| {
             ThemeStore::set_os_appearance(appearance(window.appearance()), cx);
         });
+        let store = EventStore::global(cx);
         let subscriptions = vec![
             cx.observe_window_appearance(window, |_, window, cx| {
                 ThemeStore::set_os_appearance(appearance(window.appearance()), cx);
             }),
+            // Coming back to the window checks for remote changes.
+            cx.observe_window_activation(window, |_, window, cx| {
+                if window.is_window_active() {
+                    SyncState::request(cx);
+                }
+            }),
             cx.observe_global::<UiState>(|_, cx| cx.notify()),
+            cx.observe_global::<Settings>(|_, cx| cx.notify()),
+            cx.observe_global::<SyncState>(|_, cx| cx.notify()),
+            cx.observe_global::<InvitesOpen>(|_, cx| cx.notify()),
+            cx.observe(&store, |_, _, cx| cx.notify()),
         ];
         Self {
             focus,
+            sidebar: cx.new(|cx| Sidebar::new(window, cx)),
+            view: None,
             _subscriptions: subscriptions,
         }
+    }
+
+    fn calendar_view(&mut self, id: &str, window: &mut Window, cx: &mut App) -> AnyView {
+        let def = views::view_def(id);
+        match &self.view {
+            Some((shown, view)) if *shown == def.id => view.clone(),
+            _ => {
+                let view = views::build(def.id, window, cx);
+                self.view = Some((def.id, view.clone()));
+                view
+            }
+        }
+    }
+
+    fn with_agenda(
+        &mut self,
+        cx: &mut Context<Self>,
+        f: impl FnOnce(
+            &mut crate::sidebar::agenda::Agenda,
+            &mut Context<crate::sidebar::agenda::Agenda>,
+        ),
+    ) {
+        let agenda = self.sidebar.read(cx).agenda().clone();
+        agenda.update(cx, f);
     }
 }
 
@@ -99,8 +135,12 @@ impl Render for MainWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let wide = window.viewport_size().width >= MD_BREAKPOINT;
         let ui = UiState::global(cx).clone();
-        let theme = cx.ren_theme();
+        let calendar_view = self.calendar_view(&ui.calendar_view, window, cx);
+        let theme = ThemeStore::active(cx);
+        let palette = Palette::new(&theme);
         let show_sidebar = !wide || !ui.sidebar_collapsed;
+        self.sidebar
+            .update(cx, |sidebar, _| sidebar.set_narrow(!wide));
 
         h_flex()
             .id("main-window")
@@ -108,8 +148,51 @@ impl Render for MainWindow {
             .track_focus(&self.focus)
             .size_full()
             .overflow_hidden()
+            .on_action(cx.listener(|_, _: &Search, window, cx| search::open(window, cx)))
+            .on_action(cx.listener(|_, _: &ToggleCommandPalette, window, cx| {
+                palette::toggle(Page::Root, window, cx)
+            }))
+            .on_action(
+                cx.listener(|_, _: &GoToDate, window, cx| {
+                    palette::open(Page::GoToDate, window, cx)
+                }),
+            )
+            .on_action(
+                cx.listener(|_, _: &ShowShortcuts, window, cx| shortcuts_overlay::open(window, cx)),
+            )
+            .on_action(cx.listener(|this, _: &NextEvent, _, cx| {
+                this.with_agenda(cx, |agenda, cx| agenda.focus_item(1, cx))
+            }))
+            .on_action(cx.listener(|this, _: &PrevEvent, _, cx| {
+                this.with_agenda(cx, |agenda, cx| agenda.focus_item(-1, cx))
+            }))
+            .on_action(cx.listener(|this, _: &Dismiss, _, cx| {
+                this.with_agenda(cx, |agenda, cx| {
+                    agenda.dismiss(cx);
+                })
+            }))
+            .on_action(cx.listener(|this, _: &OpenSelected, _, cx| {
+                this.with_agenda(cx, |agenda, cx| agenda.open_selected(cx))
+            }))
             .when(show_sidebar, |this| {
-                this.child(sidebar(wide, window.is_fullscreen(), theme))
+                this.child(
+                    div()
+                        .id("sidebar")
+                        .h_full()
+                        .flex_shrink_0()
+                        .overflow_hidden()
+                        .map(|this| {
+                            if wide {
+                                this.w(SIDEBAR_WIDTH)
+                                    .border_r_1()
+                                    .border_color(palette.border)
+                            } else {
+                                this.w_full()
+                            }
+                        })
+                        .bg(palette.sidebar)
+                        .child(self.sidebar.clone()),
+                )
             })
             .when(wide, |this| {
                 this.child(
@@ -117,150 +200,35 @@ impl Render for MainWindow {
                         .flex_1()
                         .min_w_0()
                         .h_full()
-                        .child(header(&ui, theme))
-                        .child(view_placeholder(&ui, theme, cx)),
+                        .child(header(&ui, metric(&theme, "layout.padding"), cx))
+                        .child(div().flex_1().min_h_0().child(calendar_view)),
                 )
             })
     }
 }
 
-fn padding(theme: &ResolvedTheme) -> Pixels {
-    px(theme.number("layout.padding") as f32)
-}
-
-/// A button label in the theme's button typography.
-fn button_label(theme: &ResolvedTheme, label: &str) -> SharedString {
-    theme
-        .transform("typography.button.transform")
-        .apply(label)
-        .into()
-}
-
-fn sidebar(wide: bool, fullscreen: bool, theme: &ResolvedTheme) -> impl IntoElement {
-    let muted = hsla(theme.color("text.muted"));
-    let section = |id: &'static str, label: &'static str| {
-        div()
-            .id(id)
-            .px(padding(theme))
-            .py_2()
-            .text_sm()
-            .text_color(muted)
-            .child(label)
-    };
-    v_flex()
-        .id("sidebar")
-        .h_full()
-        .flex_shrink_0()
-        .overflow_hidden()
-        .map(|this| {
-            if wide {
-                this.w(SIDEBAR_WIDTH)
-            } else {
-                this.w_full()
-            }
-        })
-        .when(wide, |this| {
-            this.border_r_1().border_color(hsla(theme.color("border")))
-        })
-        .bg(hsla(theme.color("sidebar.background")))
-        .child(
-            h_flex()
-                .id("sidebar-toolbar")
-                .items_center()
-                .gap_2()
-                .p(padding(theme))
-                .when(cfg!(target_os = "macos") && !fullscreen && !wide, |this| {
-                    this.pl(MACOS_TRAFFIC_LIGHTS_WIDTH)
-                })
-                .child(drag_region("sidebar-drag").flex_1().h(px(34.)))
-                .child(
-                    Button::new("compose")
-                        .primary()
-                        .label(button_label(theme, "New event"))
-                        .disabled(true),
-                ),
-        )
-        .child(section("minical", "Minical"))
-        .child(section("agenda", "Agenda").flex_1())
-}
-
-fn header(ui: &UiState, theme: &ResolvedTheme) -> impl IntoElement {
-    let current = VIEWS
-        .iter()
-        .find(|(id, ..)| *id == ui.calendar_view)
-        .map_or("View", |(_, name, _)| name);
-    let selected = ui.calendar_view.clone();
-
+fn header(ui: &UiState, padding: Pixels, cx: &mut App) -> impl IntoElement + use<> {
+    let invites = toolbar::invites_badge(cx);
     h_flex()
         .id("main-toolbar")
         .flex_shrink_0()
         .items_center()
         .gap_2()
-        .p(padding(theme))
+        .p(padding)
         .when(cfg!(target_os = "macos") && ui.sidebar_collapsed, |this| {
-            this.pl(MACOS_TRAFFIC_LIGHTS_WIDTH)
+            this.pl(px(MACOS_TRAFFIC_LIGHTS_WIDTH))
         })
         .when(ui.sidebar_collapsed, |this| {
-            this.child(
-                Button::new("show-sidebar")
-                    .ghost()
-                    .icon(IconName::PanelLeftOpen)
-                    .tooltip_with_action("Show sidebar", &ToggleSidebar, None)
-                    .on_click(|_, window, cx| window.dispatch_action(Box::new(ToggleSidebar), cx)),
-            )
+            this.child(toolbar::show_sidebar_button())
         })
-        .child(
-            Button::new("today")
-                .secondary()
-                .label(button_label(theme, "Today"))
-                .disabled(true),
-        )
-        .child(
-            Button::new("settings")
-                .ghost()
-                .icon(IconName::Settings)
-                .tooltip_with_action("Settings", &OpenSettings, None)
-                .on_click(|_, window, cx| window.dispatch_action(Box::new(OpenSettings), cx)),
-        )
+        .child(toolbar::today_button(cx))
+        .child(toolbar::settings_button())
+        .children(invites)
+        .child(toolbar::sync_status(cx))
         .child(drag_region("header-drag").flex_1().h_full())
-        .child(
-            Button::new("calendar-view")
-                .outline()
-                .label(button_label(theme, current))
-                .dropdown_menu_with_anchor(Anchor::TopRight, move |menu, _, _| {
-                    VIEWS.iter().fold(menu, |menu, (id, name, action)| {
-                        menu.menu_with_check(*name, *id == selected, action.boxed_clone())
-                    })
-                }),
-        )
-        .child(
-            Button::new("search")
-                .ghost()
-                .icon(IconName::Search)
-                .disabled(true),
-        )
-}
-
-fn view_placeholder(ui: &UiState, theme: &ResolvedTheme, cx: &App) -> impl IntoElement {
-    let name = VIEWS
-        .iter()
-        .find(|(id, ..)| *id == ui.calendar_view)
-        .map_or("Month", |(_, name, _)| name);
-    let store = ThemeStore::global(cx);
-    v_flex()
-        .id("main-viewport")
-        .flex_1()
-        .min_h_0()
-        .items_center()
-        .justify_center()
-        .gap_1()
-        .child(div().text_lg().child(format!("{name} view")))
-        .child(
-            div()
-                .text_sm()
-                .text_color(hsla(theme.color("text.muted")))
-                .child(format!("Theme: {} ({})", theme.name, store.active_id())),
-        )
+        .children(toolbar::group_switcher(cx))
+        .child(toolbar::view_menu(cx))
+        .child(toolbar::search_button())
 }
 
 #[cfg(test)]
@@ -269,6 +237,7 @@ mod tests {
     use rencal_config::ThemeConfig;
 
     use super::*;
+    use crate::keymap::OpenSettings;
     use crate::{actions, test_support};
 
     fn open_main(cx: &mut TestAppContext) -> AnyWindowHandle {
@@ -311,5 +280,108 @@ mod tests {
         cx.dispatch_action(window, OpenSettings);
         cx.run_until_parked();
         assert_eq!(cx.windows().len(), 2);
+    }
+
+    fn date(s: &str) -> chrono::NaiveDate {
+        s.parse().unwrap()
+    }
+
+    fn active_date(cx: &mut TestAppContext) -> chrono::NaiveDate {
+        cx.update(|cx| crate::navigation::Navigation::active_date(cx))
+    }
+
+    fn selected(cx: &mut TestAppContext) -> Option<String> {
+        cx.update(|cx| {
+            EventStore::global(cx)
+                .read(cx)
+                .selected_event()
+                .map(|key| key.0.clone())
+        })
+    }
+
+    #[gpui_kit::test]
+    fn day_keys_jump_and_t_comes_back_to_today(cx: &mut TestAppContext) {
+        let window = open_main(cx);
+        cx.simulate_keystrokes(window, "l");
+        assert_eq!(active_date(cx), date("2026-10-08"));
+        cx.executor()
+            .advance_clock(std::time::Duration::from_millis(100));
+        cx.simulate_keystrokes(window, "t");
+        assert_eq!(active_date(cx), date("2026-10-07"));
+    }
+
+    #[gpui_kit::test]
+    fn tab_walks_the_agenda_rows_and_escape_lets_go(cx: &mut TestAppContext) {
+        use crate::event_store::test_events::{all_day, timed};
+        use rencal_time::event::DateRange;
+
+        let window = open_main(cx);
+        let utc = chrono_tz::UTC;
+        cx.update(|cx| {
+            EventStore::global(cx).update(cx, |store, cx| {
+                store.set_test_events(
+                    vec![
+                        timed("late", "Late", "2026-10-07 15:00", "2026-10-07 16:00", utc),
+                        timed(
+                            "early",
+                            "Early",
+                            "2026-10-07 09:00",
+                            "2026-10-07 10:00",
+                            utc,
+                        ),
+                        all_day("trip", "Trip", "2026-10-07", "2026-10-08", utc),
+                        timed(
+                            "next",
+                            "Tomorrow",
+                            "2026-10-08 09:00",
+                            "2026-10-08 10:00",
+                            utc,
+                        ),
+                    ],
+                    DateRange {
+                        start: date("2026-08-01"),
+                        end: date("2026-12-01"),
+                    },
+                    cx,
+                )
+            })
+        });
+        cx.run_until_parked();
+
+        // Starts on the active date's first timed row, not the all-day chip.
+        cx.simulate_keystrokes(window, "tab");
+        assert_eq!(selected(cx).as_deref(), Some("work::early"));
+        cx.simulate_keystrokes(window, "tab");
+        assert_eq!(selected(cx).as_deref(), Some("work::late"));
+        cx.simulate_keystrokes(window, "tab");
+        assert_eq!(selected(cx).as_deref(), Some("work::next"));
+        // The selection moves the active date with it.
+        assert_eq!(active_date(cx), date("2026-10-08"));
+        cx.simulate_keystrokes(window, "shift-tab");
+        assert_eq!(selected(cx).as_deref(), Some("work::late"));
+
+        cx.simulate_keystrokes(window, "enter");
+        let active = cx.update(|cx| EventStore::global(cx).read(cx).active_event().cloned());
+        assert_eq!(active.map(|k| k.0).as_deref(), Some("work::late"));
+        // Escape closes the open event first, then drops the selection.
+        cx.simulate_keystrokes(window, "escape");
+        assert_eq!(selected(cx).as_deref(), Some("work::late"));
+        cx.simulate_keystrokes(window, "escape");
+        assert_eq!(selected(cx), None);
+    }
+
+    #[gpui_kit::test]
+    fn the_palette_runs_a_command(cx: &mut TestAppContext) {
+        let window = open_main(cx);
+        cx.simulate_keystrokes(window, "secondary-k");
+        cx.run_until_parked();
+        cx.simulate_input(window, "week view");
+        cx.run_until_parked();
+        cx.simulate_keystrokes(window, "enter");
+        cx.run_until_parked();
+        assert_eq!(ui(cx).calendar_view, "week");
+        // Focus is back on the calendar: its keys work again.
+        cx.simulate_keystrokes(window, "m");
+        assert_eq!(ui(cx).calendar_view, "month");
     }
 }

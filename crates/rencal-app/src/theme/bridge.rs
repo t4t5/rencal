@@ -12,6 +12,8 @@ use gpui_kit::{App, SharedString};
 use rencal_theme::{Appearance, Fill, ResolvedTheme, Rgba, Slot, State};
 use serde_json::{Map, Value as Json, json};
 
+use crate::ui::Fonts;
+
 /// What every CSS generic font family name stands for in GPUI.
 enum Generic {
     Sans,
@@ -153,12 +155,20 @@ pub fn theme_config(theme: &ResolvedTheme, body_font: &str, mono_font: &str) -> 
     serde_json::from_value(config).expect("the mapped theme matches gpui-kit's ThemeConfig")
 }
 
-/// Writes `theme` into gpui-kit's global theme and refreshes every window.
+/// Writes `theme` into gpui-kit's global theme and renCal's `Fonts`, and
+/// refreshes every window.
 pub fn apply(theme: &ResolvedTheme, cx: &mut App) {
     let installed = cx.text_system().all_font_names();
-    let body = font_family(theme.fonts("font.body"), &installed);
-    let mono = font_family(theme.fonts("font.mono"), &installed);
-    let config = Rc::new(theme_config(theme, &body, &mono));
+    let family = |key: &str| font_family(theme.fonts(key), &installed);
+    let fonts = Fonts {
+        body: family("font.body"),
+        mono: family("font.mono"),
+        numerical: family("font.numerical"),
+        heading: family("font.heading"),
+        button: family("font.button"),
+    };
+    let config = Rc::new(theme_config(theme, &fonts.body, &fonts.mono));
+    cx.set_global(fonts);
     Theme::update(cx, |gpui_theme| gpui_theme.apply_config(&config));
 }
 

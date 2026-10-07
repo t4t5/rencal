@@ -7560,6 +7560,7 @@ version = "0.0.1"
 dependencies = [
  "anyhow",
  "chrono",
+ "chrono-tz",
  "dirs 5.0.1",
  "gpui-kit",
  "iana-time-zone",
@@ -7567,7 +7568,10 @@ dependencies = [
  "parking_lot",
  "rencal-config",
  "rencal-core",
+ "rencal-layout",
+ "rencal-text",
  "rencal-theme",
+ "rencal-time",
  "serde",
  "serde_json",
  "tempfile",

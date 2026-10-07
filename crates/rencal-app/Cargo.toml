@@ -13,6 +13,7 @@ path = "src/main.rs"
 [dependencies]
 anyhow = "1.0.100"
 chrono = "0.4.43"
+chrono-tz = "0.10.4"
 dirs = "5"
 # Exact pin (GPUI_PORT_PLAN.md D1): gpui-kit pins its GPUI snapshot; upgrade deliberately.
 gpui-kit = "=0.7.1"
@@ -21,7 +22,10 @@ log = "0.4.29"
 parking_lot = "0.12"
 rencal-config = { path = "../../src-tauri/rencal-config" }
 rencal-core = { path = "../rencal-core" }
+rencal-layout = { path = "../rencal-layout" }
+rencal-text = { path = "../rencal-text" }
 rencal-theme = { path = "../rencal-theme" }
+rencal-time = { path = "../rencal-time" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }

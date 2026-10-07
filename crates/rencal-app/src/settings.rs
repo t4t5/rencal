@@ -35,6 +35,20 @@ impl Settings {
         }
     }
 
+    pub fn first_day_of_week(&self) -> rencal_time::FirstDayOfWeek {
+        match self.rencal.first_day_of_week {
+            rencal_config::FirstDayOfWeek::Monday => rencal_time::FirstDayOfWeek::Monday,
+            rencal_config::FirstDayOfWeek::Sunday => rencal_time::FirstDayOfWeek::Sunday,
+        }
+    }
+
+    pub fn time_format(&self) -> rencal_time::TimeFormat {
+        match self.caldir.time_format {
+            rencal_core::caldir::TimeFormat::H24 => rencal_time::TimeFormat::H24,
+            rencal_core::caldir::TimeFormat::H12 => rencal_time::TimeFormat::H12,
+        }
+    }
+
     /// Applies `edit` now and persists it. The write re-reads the file first,
     /// so it never overwrites edits made elsewhere with stale values, and it
     /// never replaces an unreadable file with defaults.

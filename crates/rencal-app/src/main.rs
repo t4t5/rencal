@@ -4,14 +4,29 @@
 //! opens, so it never flashes the wrong theme.
 
 mod actions;
+mod assets;
+mod backend;
+mod clock;
+mod commands;
 mod deep_links;
+mod event_store;
+mod keymap;
 mod logging;
+mod navigation;
+mod palette;
 mod runtime;
+mod search;
 mod settings;
+mod shortcuts_overlay;
+mod sidebar;
+mod sync_state;
 #[cfg(test)]
 mod test_support;
 mod theme;
+mod toolbar;
+mod ui;
 mod ui_state;
+mod views;
 mod watchers;
 mod windows;
 
@@ -24,8 +39,13 @@ use rencal_core::plugins::{self, PluginManager};
 use rencal_core::state::{AppState, ProviderDirs};
 use tokio::sync::mpsc;
 
+use crate::backend::Backend;
+use crate::clock::Clock;
+use crate::event_store::EventStore;
+use crate::navigation::Navigation;
 use crate::runtime::Tokio;
 use crate::settings::Settings;
+use crate::sync_state::SyncState;
 use crate::theme::ThemeStore;
 use crate::ui_state::UiState;
 use crate::windows::{fatal, main_window};
@@ -34,7 +54,7 @@ use crate::windows::{fatal, main_window};
 #[cfg(target_os = "linux")]
 const INSTANCE_NAME: &str = "rencal-gpui";
 
-struct Backend {
+struct LoadedBackend {
     state: Arc<AppState>,
     plugins: PluginManager,
 }
@@ -58,8 +78,7 @@ fn main() {
     let launch_urls = rencal_core::deep_links::launch_urls();
     let (requests, requests_rx) = mpsc::unbounded_channel();
 
-    // gpui-kit's component icons; renCal's own icons are added in Phase 3.
-    let app = gpui_kit::application().with_assets(gpui_kit::assets::Assets);
+    let app = gpui_kit::application().with_assets(assets::Assets);
     let open_urls = requests.clone();
     app.on_open_urls(move |urls| {
         let _ = open_urls.send(deep_links::Request { urls, reply: None });
@@ -95,7 +114,7 @@ fn main() {
     drop(instance);
 }
 
-fn load_backend() -> Result<Backend, String> {
+fn load_backend() -> Result<LoadedBackend, String> {
     let provider_dirs = ProviderDirs {
         bundled: bundled_providers_dir(),
         plugins: plugins::plugins_dir().ok(),
@@ -104,7 +123,7 @@ fn load_backend() -> Result<Backend, String> {
         .map_err(|err| format!("renCal cannot read caldir's config.toml:\n{err}"))?;
     let plugins = PluginManager::system()
         .map_err(|err| format!("renCal cannot initialize plugin storage:\n{err}"))?;
-    Ok(Backend {
+    Ok(LoadedBackend {
         state: Arc::new(state),
         plugins,
     })
@@ -124,12 +143,12 @@ fn bundled_providers_dir() -> Option<PathBuf> {
 }
 
 fn start(
-    backend: Backend,
+    backend: LoadedBackend,
     launch_urls: Vec<String>,
     requests: mpsc::UnboundedReceiver<deep_links::Request>,
     cx: &mut App,
 ) {
-    let Backend { state, plugins } = backend;
+    let LoadedBackend { state, plugins } = backend;
     cx.set_global(Settings {
         rencal: settings::load_rencal_config(),
         caldir: CaldirSettings::from(state.caldir().config()),
@@ -140,10 +159,18 @@ fn start(
     ThemeStore::init(rencal_core::user_themes::scan(), omarchy, cx);
     actions::init(cx);
     watchers::spawn_all(&state, &plugins, cx);
+    Backend::init(state.clone(), cx);
+    Clock::init(cx);
+    Clock::start_ticking(cx);
+    Navigation::init(cx);
+    EventStore::init(cx);
+    SyncState::init(cx);
+    toolbar::init(cx);
 
     deep_links::intake(&state, &launch_urls);
     deep_links::listen(state, requests, cx);
     open_main_window(cx);
+    deep_links::open_event_links(cx);
 
     // Closing the main window quits, except on macOS, where apps stay in the
     // dock and the dock icon reopens it.
