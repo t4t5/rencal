@@ -7623,6 +7623,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "rencal-layout"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "rencal-time",
+ "serde_json",
+]
+
+[[package]]
 name = "rencal-notifierd"
 version = "0.1.0"
 dependencies = [
@@ -7660,10 +7669,32 @@ dependencies = [
 ]
 
 [[package]]
+name = "rencal-text"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "regex",
+ "rencal-time",
+ "rrule",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "rencal-theme"
 version = "0.0.1"
 dependencies = [
  "schemars 1.2.1",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "rencal-time"
+version = "0.0.1"
+dependencies = [
+ "chrono",
+ "chrono-tz",
  "serde",
  "serde_json",
 ]

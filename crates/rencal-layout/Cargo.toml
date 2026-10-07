@@ -1,0 +1,13 @@
+[package]
+name = "rencal-layout"
+version.workspace = true
+edition = "2024"
+description = "renCal layout geometry: week overlap columns, all-day lanes, month lanes, drag maths"
+publish = false
+
+[dependencies]
+chrono = "0.4.43"
+rencal-time = { path = "../rencal-time" }
+
+[dev-dependencies]
+serde_json = { version = "1", features = ["float_roundtrip"] }

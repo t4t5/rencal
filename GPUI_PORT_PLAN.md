@@ -1,6 +1,6 @@
 # renCal GPUI port plan
 
-Status: Phases 0–1 implemented (2026-10-07); Phase 1 awaiting review/commit; Phase 2 next. Phase 1 notes are under Phase 1 in §8. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
+Status: Phases 0–2 implemented (2026-10-07); Phase 2 awaiting review/commit; Phase 3 next. Phase 1 and 2 notes are under their phases in §8. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
 Audience: the agent that implements the port. Read this whole file before starting a phase, and read the linked repo docs before touching the area they cover.
 
 This plan ports renCal from Tauri v2 (Rust backend + React webview) to a native Rust app on [GPUI](https://www.gpui.rs/) via [gpui-kit](https://gpui-kit.com/) (`gpui-kit` 0.7.x, Longbridge). It also replaces the CSS theme system with a Zed-style token theme format (see [Zed's theme builder](https://zed.dev/theme-builder) and its schema at `https://zed.dev/schema/themes/v0.2.0.json`).
@@ -458,6 +458,14 @@ Implementation notes (2026-10-07):
 `rencal-time`, `rencal-layout`, `rencal-text` ported with fixture parity; port the related vitest suites to Rust tests.
 
 Exit: all fixture tests pass.
+
+Implementation notes (2026-10-07):
+
+- Every case in every `rencal-time`, `rencal-layout` and `rencal-text` fixture file passes, with no skips. The related vitest suites are ported as Rust tests in each crate's `tests/`. The app fixtures (`shortcuts`, `palette_commands`) belong to Phase 3's keymap.
+- `rencal-time` has its own `EventTime` (`Zoned` holds a `DateTime<Tz>`) instead of caldir-core's wallclock + tzid string, because the UI needs Temporal semantics. Conversion to and from caldir-core types goes in `rencal-core`. The viewer's zone and "today" are arguments; `CalendarEvent::date_info` is not serialized and must be refreshed for the viewer (`with_viewer`/`refresh_date_info`). The event model types (`CalendarEvent`, `Calendar`, …) live in `rencal_time::event` and mirror rencal-core's RPC types until cutover.
+- `rencal-layout` refers to events by their index in the input slice and builds no colours (the app resolves them from `calendar_slug`). Placements keep whole minutes; columns are 0-based with exclusive ends; all-day bar geometry returns a pixel `Rect` from theme metrics. `week_snap` has the pure fling/snap maths and the landing curve (`SnapFling`); the session (wheel idle timer, frame loop) is Phase 3's `InfiniteAxis`. Open for Phase 3: whether the WebKitGTK takeover constants (`TAKEOVER_*`, `SCROLL_CAPTURE_MS`) still apply to GPUI scroll input.
+- `rencal-text` expands recurrences with the `rrule` crate (caldir-core's expander) in rrule.js's "fake UTC" wallclock convention, and prints rrule.js-identical `toString`/`toText`. `createRRuleWithDtstart`'s bug is kept because the fixtures pin it: nth weekdays (`BYDAY=2TU`), negative `BYMONTHDAY` and `BYSETPOS`/`BYYEARDAY`/`BYWEEKNO` are dropped when search results move a series to its nearest occurrence. Rules the `rrule` crate rejects (e.g. weekly + `BYMONTHDAY`) leave the master unchanged.
+- The magic parser (`rencal_text::magic`) is a faithful port of the chrono-node 2.9 subset in use (parsers and refiners in chrono's order), checked against chrono-node on ~830 extra phrases beyond the corpus. chrono quirks are reproduced, including dropping an overnight time range typed on a month's last day. Not ported: zone suffixes (`3pm PST`).
 
 **Phase 3 — Read-only calendar**
 

@@ -1,0 +1,17 @@
+[package]
+name = "rencal-text"
+version.workspace = true
+edition = "2024"
+description = "renCal text logic: magic parser, recurrence editing, conference links, suggestions"
+publish = false
+
+[dependencies]
+rencal-time = { path = "../rencal-time" }
+chrono = "0.4.43"
+regex = "1"
+rrule = "0.14"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+serde_json = "1"

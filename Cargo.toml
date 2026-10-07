@@ -3,7 +3,10 @@ resolver = "3"
 members = [
   "crates/rencal-app",
   "crates/rencal-core",
+  "crates/rencal-layout",
+  "crates/rencal-text",
   "crates/rencal-theme",
+  "crates/rencal-time",
   "src-tauri",
   "src-tauri/notifierd",
   "src-tauri/plugin-contract",

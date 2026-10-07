@@ -1,0 +1,15 @@
+[package]
+name = "rencal-time"
+version.workspace = true
+edition = "2024"
+description = "renCal event time model: EventTime, viewer-zone projections, edits, ranges and display"
+publish = false
+
+[dependencies]
+chrono = "0.4.43"
+chrono-tz = "0.10.4"
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+chrono-tz = "0.10.4"
+serde_json = "1"
