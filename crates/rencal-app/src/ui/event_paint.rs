@@ -21,6 +21,12 @@ pub struct EventPaint {
     pub tinted_text: Hsla,
     /// Text of declined / needs-action events, drawn unfilled.
     pub declined_text: Hsla,
+    /// A draft: dashed accent border over this fill, this text and ring.
+    pub draft_fill: Hsla,
+    pub draft_text: Hsla,
+    pub draft_ring: Hsla,
+    /// A drag-to-create selection.
+    pub create_selection: Hsla,
 }
 
 /// How the account owner answered, as far as it changes the drawing.
@@ -80,6 +86,10 @@ pub fn paint_for_accent(accent: Rgba, theme: &ResolvedTheme) -> EventPaint {
         text: hsla(colors.text),
         tinted_text: hsla(colors.tinted_text),
         declined_text: hsla(colors.declined_text),
+        draft_fill: hsla(colors.draft_fill),
+        draft_text: hsla(colors.draft_text),
+        draft_ring: hsla(colors.draft_ring),
+        create_selection: hsla(colors.create_selection),
     }
 }
 

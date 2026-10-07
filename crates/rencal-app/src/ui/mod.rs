@@ -3,6 +3,7 @@
 //! read the theme through these helpers (and `cx.ren_theme()`), never through
 //! gpui-kit's theme.
 
+pub mod anchors;
 pub mod event_paint;
 pub mod kbd;
 

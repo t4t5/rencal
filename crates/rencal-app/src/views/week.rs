@@ -10,6 +10,11 @@
 //!   fully visible; scrolling never changes the active date.
 //! - Events load for the visible days plus a week each side and never block
 //!   scrolling.
+//! - Editing: blocks open the popover, drag to reschedule (day columns take
+//!   single-day timed events, snapped to 15 minutes; the all-day lane and day
+//!   headers take spanning events) and have a menu. Empty column background
+//!   drags to create, double-clicks or right-clicks to create; dragging near
+//!   an edge auto-scrolls.
 
 use std::sync::Arc;
 use std::time::Instant;
@@ -18,9 +23,9 @@ use chrono::{Datelike, Duration as Days, NaiveDate, Timelike};
 use gpui_kit::component::h_flex;
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::{
-    AnyElement, App, Bounds, BoxShadow, Context, ElementId, FontWeight, Hsla, InteractiveElement,
-    IntoElement, ParentElement, Pixels, Render, ScrollWheelEvent, SharedString,
-    StatefulInteractiveElement, Styled, Subscription, Window, div, point, px,
+    AnyElement, App, Bounds, Context, ElementId, FontWeight, Hsla, InteractiveElement, IntoElement,
+    MouseButton, ParentElement, Pixels, Render, ScrollWheelEvent, SharedString,
+    StatefulInteractiveElement, Styled, Subscription, Window, div, px,
 };
 use rencal_layout::{DayRangeLayout, DisplayMode, TimedPlacement, day_range_layout};
 use rencal_theme::{Fill, ResolvedTheme, Slot};
@@ -31,14 +36,21 @@ use rencal_time::{
 };
 
 use super::axis::InfiniteAxis;
-use super::measure;
+use super::interact::{self, AnchorAt, event_block, is_double_click, navigate_on_click};
+use super::{EventRole, ViewEvents, measure, ring};
 use crate::clock::Clock;
+use crate::editing::context_menu;
+use crate::editing::draft::{DayDraft, DraftState};
+use crate::editing::drag::{self, DragState, FloatKind};
 use crate::event_store::EventStore;
 use crate::navigation::{Navigation, ScrollBehavior};
 use crate::settings::Settings;
 use crate::theme::{ThemeStore, hsla};
-use crate::ui::event_paint::{Rsvp, event_paint};
+use crate::ui::anchors::{EventSource, Named, drop_anchor, named_anchor, scroll_anchor};
+use crate::ui::event_paint::{Rsvp, calendar_accent, event_paint};
 use crate::ui::{Palette, Role, event_title, metric, radius, radius_circle, text_size};
+use rencal_layout::drag::{CreateSelection, DropZone, minutes_at_y};
+use rencal_time::at_time;
 
 const HOUR_HEIGHT: f32 = 48.0;
 const GRID_HEIGHT: f32 = 24.0 * HOUR_HEIGHT;
@@ -67,7 +79,7 @@ pub struct WeekView {
 }
 
 struct CachedLayout {
-    revision: u64,
+    revision: (u64, u64, u64),
     first_day: i32,
     day_count: usize,
     layout: Arc<DayRangeLayout>,
@@ -89,8 +101,11 @@ impl WeekView {
             8.0
         };
         let store = EventStore::global(cx);
+        let draft = DraftState::global(cx);
         let subscriptions = vec![
             cx.observe(&store, |_, _, cx| cx.notify()),
+            cx.observe(&draft, |_, _, cx| cx.notify()),
+            cx.observe_global::<DragState>(|_, cx| cx.notify()),
             cx.observe_global_in::<Navigation>(window, |this, _, cx| this.navigated(cx)),
             cx.observe_global::<Settings>(|_, cx| cx.notify()),
             cx.observe_global::<Clock>(|_, cx| cx.notify()),
@@ -150,6 +165,15 @@ impl WeekView {
         cx.notify();
     }
 
+    /// Edge auto-scroll while dragging.
+    fn scroll_by_drag(&mut self, delta: gpui_kit::Point<f32>, cx: &mut Context<Self>) {
+        self.axis.scroll_by(delta.x);
+        let grid_viewport = f32::from(self.bounds.size.height) - self.header_height();
+        let max_scroll = (GRID_HEIGHT - grid_viewport).max(0.0);
+        self.grid_scroll = (self.grid_scroll + delta.y).clamp(0.0, max_scroll);
+        cx.notify();
+    }
+
     fn header_height(&self) -> f32 {
         HEADER_HEIGHT + self.all_day_height()
     }
@@ -167,7 +191,7 @@ impl WeekView {
     fn layout(
         &mut self,
         events: &[CalendarEvent],
-        revision: u64,
+        revision: (u64, u64, u64),
         first_day: i32,
         day_count: usize,
     ) -> Arc<DayRangeLayout> {
@@ -210,11 +234,13 @@ impl WeekView {
 
 /// What the columns of one render share.
 struct Frame {
+    view: ViewEvents,
+    create_color: Hsla,
     palette: Palette,
     theme: Arc<ResolvedTheme>,
     numerical: SharedString,
     calendars: Arc<Vec<Calendar>>,
-    highlighted: [Option<EventKey>; 2],
+    highlighted: [Option<EventKey>; 3],
     today: NaiveDate,
     active_date: NaiveDate,
     viewer: Tz,
@@ -227,6 +253,10 @@ impl Frame {
     fn is_highlighted(&self, event: &CalendarEvent) -> bool {
         let key = event.key();
         self.highlighted.iter().any(|k| k.as_ref() == Some(&key))
+    }
+
+    fn calendars(&self) -> &[Calendar] {
+        &self.calendars
     }
 
     fn day_background(&self, date: NaiveDate) -> Option<Hsla> {
@@ -247,18 +277,28 @@ impl Render for WeekView {
         }
 
         let theme = ThemeStore::active(cx);
+        let view = ViewEvents::read(false, cx);
+        let events = view.events.clone();
+        let revision = view.revision;
+        let create_color = {
+            let calendar = DraftState::default_calendar_id(cx)
+                .and_then(|slug| EventStore::global(cx).read(cx).calendar(&slug).cloned());
+            let accent = calendar_accent(calendar.as_ref(), &theme);
+            crate::ui::event_paint::paint_for_accent(accent, &theme).create_selection
+        };
         let store = EventStore::global(cx).read(cx);
-        let events = store.events().clone();
-        let revision = store.revision();
         let clock = *Clock::global(cx);
         let now = clock.now.with_timezone(&clock.viewer);
         let frame = Frame {
+            view,
+            create_color,
             palette: Palette::new(&theme),
             numerical: Role::Numerical.family(cx),
             calendars: store.calendars().clone(),
             highlighted: [
                 store.active_event().cloned(),
                 store.selected_event().cloned(),
+                context_menu::highlighted(cx),
             ],
             today: clock.today,
             active_date: Navigation::active_date(cx),
@@ -308,21 +348,7 @@ impl Render for WeekView {
             };
             // Column backgrounds and dividers.
             for &(_, date, left) in &days {
-                grid.push(
-                    div()
-                        .id(("week-day", epoch_day(date) as u64))
-                        .absolute()
-                        .top_0()
-                        .left(px(left))
-                        .w(px(frame.day_width))
-                        .h(px(GRID_HEIGHT))
-                        .border_r_1()
-                        .border_color(palette.border)
-                        .when_some(fill, |this, fill| this.bg(fill))
-                        .when_some(frame.day_background(date), |this, bg| this.bg(bg))
-                        .on_click(move |_, _, cx| Navigation::navigate_to(date, None, cx))
-                        .into_any_element(),
-                );
+                grid.push(day_column(&frame, date, left, fill));
             }
             // Hour lines over every column.
             let hour_line = theme.color("week_grid.hour_line");
@@ -347,9 +373,15 @@ impl Render for WeekView {
                     grid.push(timed_block(
                         &frame,
                         &events[placement.event],
+                        frame.view.role(placement.event),
                         placement,
                         left,
                     ));
+                }
+                if let Some((day, selection)) = frame.view.overlay.timed_selection
+                    && day == date
+                {
+                    grid.push(create_selection(&frame, &selection, left));
                 }
                 if date == frame.today {
                     grid.push(current_time(&frame, left));
@@ -363,20 +395,7 @@ impl Render for WeekView {
             if layout.all_day_lanes > 0 {
                 let height = self.all_day_height();
                 for &(_, date, left) in &days {
-                    header.push(
-                        div()
-                            .id(("week-all-day", epoch_day(date) as u64))
-                            .absolute()
-                            .top(px(HEADER_HEIGHT))
-                            .left(px(left))
-                            .w(px(frame.day_width))
-                            .h(px(height))
-                            .border_r_1()
-                            .border_color(palette.border)
-                            .when_some(frame.day_background(date), |this, bg| this.bg(bg))
-                            .on_click(move |_, _, cx| Navigation::navigate_to(date, None, cx))
-                            .into_any_element(),
-                    );
+                    header.push(all_day_cell(&frame, date, left, height));
                 }
                 for item in &layout.all_day_items {
                     let left = GUTTER_WIDTH
@@ -391,7 +410,16 @@ impl Render for WeekView {
                         continue;
                     }
                     let top = HEADER_HEIGHT + 1.0 + item.lane as f32 * LANE_HEIGHT;
-                    header.push(all_day_bar(&frame, &events[item.event], left, right, top));
+                    let fills_row = item.span.end_col - item.span.start_col == 7;
+                    header.push(all_day_bar(
+                        &frame,
+                        &events[item.event],
+                        frame.view.role(item.event),
+                        fills_row,
+                        left,
+                        right,
+                        top,
+                    ));
                 }
             }
         }
@@ -411,6 +439,7 @@ impl Render for WeekView {
                 )
         });
 
+        let weak = cx.entity().downgrade();
         div()
             .id("week-scroll")
             .relative()
@@ -418,6 +447,14 @@ impl Render for WeekView {
             .overflow_hidden()
             .on_scroll_wheel(cx.listener(Self::on_scroll))
             .child(measure(cx.entity().downgrade(), Self::set_bounds))
+            .child(scroll_anchor(
+                true,
+                true,
+                std::rc::Rc::new(move |delta, cx| {
+                    weak.update(cx, |this, cx| this.scroll_by_drag(delta, cx))
+                        .ok();
+                }),
+            ))
             // The time grid, under the header.
             .child(
                 div()
@@ -513,7 +550,8 @@ fn day_header(frame: &Frame, date: NaiveDate, left: f32) -> impl IntoElement + u
         .when(date == frame.active_date, |this| {
             this.text_color(palette.selected_text)
         })
-        .on_click(move |_, _, cx| Navigation::navigate_to(date, None, cx))
+        .on_click(navigate_on_click(date))
+        .child(drop_anchor(DropZone::AllDay, date))
         .child(
             div()
                 .pb(px(8.))
@@ -537,35 +575,150 @@ fn day_header(frame: &Frame, date: NaiveDate, left: f32) -> impl IntoElement + u
         )
 }
 
-fn toggle_event(
-    event: &CalendarEvent,
-) -> impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + use<> {
-    let key = event.key();
-    move |_, _, cx| {
-        cx.stop_propagation();
-        let key = key.clone();
-        EventStore::global(cx).update(cx, |store, cx| store.toggle_active_event(key, cx));
-    }
+/// A day column of the time grid: navigates on click, creates on double
+/// click, from its menu or by dragging.
+fn day_column(frame: &Frame, date: NaiveDate, left: f32, fill: Option<Hsla>) -> AnyElement {
+    let viewer = frame.viewer;
+    let create_at = move |y: Pixels, window: &mut Window, cx: &mut App| {
+        let Some(column) = crate::ui::anchors::Anchors::drop_for(DropZone::Timed, date, cx) else {
+            return;
+        };
+        let minutes = minutes_at_y(
+            f32::from(column.full.top()),
+            f32::from(column.full.size.height),
+            f32::from(y),
+        );
+        let hour = (minutes / 60.0).floor().clamp(0.0, 23.0) as u32;
+        let _ = window;
+        DraftState::open_day_draft(
+            date,
+            Some(column.bounds),
+            DayDraft {
+                start: Some(at_time(date, hour, 0, viewer)),
+                anchor_y: Some(y),
+                ..DayDraft::default()
+            },
+            cx,
+        );
+    };
+    div()
+        .id(("week-day", epoch_day(date) as u64))
+        .absolute()
+        .top_0()
+        .left(px(left))
+        .w(px(frame.day_width))
+        .h(px(GRID_HEIGHT))
+        .border_r_1()
+        .border_color(frame.palette.border)
+        .when_some(fill, |this, fill| this.bg(fill))
+        .when_some(frame.day_background(date), |this, bg| this.bg(bg))
+        .child(drop_anchor(DropZone::Timed, date))
+        .when(date == frame.active_date, |this| {
+            this.child(named_anchor(Named::ActiveDay))
+        })
+        .on_mouse_down(MouseButton::Left, move |e, window, cx| {
+            drag::press_create_timed(date, e.position, window, cx)
+        })
+        .on_mouse_down(MouseButton::Right, move |e, window, cx| {
+            let y = e.position.y;
+            interact::day_menu(e.position, window, cx, move |window, cx| {
+                create_at(y, window, cx)
+            });
+        })
+        .on_click(move |e, window, cx| {
+            if is_double_click(e) {
+                if crate::ui::anchors::Anchors::event_at(e.position(), cx).is_none() {
+                    create_at(e.position().y, window, cx);
+                }
+            } else {
+                navigate_on_click(date)(e, window, cx);
+            }
+        })
+        .into_any_element()
 }
+
+/// A day of the all-day lane: a drop target that creates all-day events on
+/// double click or from its menu.
+fn all_day_cell(frame: &Frame, date: NaiveDate, left: f32, height: f32) -> AnyElement {
+    let create = move |window: &mut Window, cx: &mut App| {
+        let _ = window;
+        let anchor = crate::ui::anchors::Anchors::drop_for(DropZone::AllDay, date, cx)
+            .map(|cell| cell.bounds);
+        DraftState::open_day_draft(
+            date,
+            anchor,
+            DayDraft {
+                all_day: true,
+                ..DayDraft::default()
+            },
+            cx,
+        );
+    };
+    div()
+        .id(("week-all-day", epoch_day(date) as u64))
+        .absolute()
+        .top(px(HEADER_HEIGHT))
+        .left(px(left))
+        .w(px(frame.day_width))
+        .h(px(height))
+        .border_r_1()
+        .border_color(frame.palette.border)
+        .when_some(frame.day_background(date), |this, bg| this.bg(bg))
+        .child(drop_anchor(DropZone::AllDay, date))
+        .on_mouse_down(MouseButton::Right, move |e, window, cx| {
+            interact::day_menu(e.position, window, cx, create);
+        })
+        .on_click(move |e, window, cx| {
+            if is_double_click(e) {
+                create(window, cx);
+            } else {
+                navigate_on_click(date)(e, window, cx);
+            }
+        })
+        .into_any_element()
+}
+
+/// A drag-to-create selection in a day column (`DragToCreateSelection`).
+fn create_selection(frame: &Frame, selection: &CreateSelection, left: f32) -> AnyElement {
+    let day_minutes = f32::from(DAY_MINUTES_I16);
+    let top = selection.start_minutes as f32 / day_minutes * GRID_HEIGHT - 1.0;
+    let height = ((selection.end_minutes - selection.start_minutes) as f32 / day_minutes
+        * GRID_HEIGHT
+        - 3.0)
+        .max(16.0);
+    div()
+        .absolute()
+        .top(px(top))
+        .left(px(left))
+        .w(px((frame.day_width - BLOCK_RIGHT_GAP).max(8.0)))
+        .h(px(height))
+        .rounded(radius(&frame.theme, 0.6))
+        .bg(frame.create_color)
+        .into_any_element()
+}
+
+const DAY_MINUTES_I16: i16 = 24 * 60;
 
 fn all_day_bar(
     frame: &Frame,
     event: &CalendarEvent,
+    role: EventRole,
+    fills_row: bool,
     left: f32,
     right: f32,
     top: f32,
 ) -> AnyElement {
     let theme = &frame.theme;
-    let paint = event_paint(event, &frame.calendars, theme);
+    let paint = event_paint(event, frame.calendars(), theme);
     let highlighted = frame.is_highlighted(event);
-    let rsvp = Rsvp::of(event, &frame.calendars);
-    let faded = Rsvp::is_faded(rsvp);
+    let rsvp = Rsvp::of(event, frame.calendars());
+    let faded = role == EventRole::Normal && Rsvp::is_faded(rsvp);
     // The bar sits inset 2px left, 3px right, 1px above and below.
     let bar_left = left + 2.0;
     let bar_width = (right - left - 5.0).max(0.0);
     // Like a sticky title: keep it in view when the bar starts off-screen.
     let title_offset = (GUTTER_WIDTH + 4.0 - bar_left).clamp(0.0, (bar_width - 24.0).max(0.0));
-    div()
+    let bar = div()
         .id(ElementId::Name(
             format!("week-bar:{}", event.key().0).into(),
         ))
@@ -580,45 +733,73 @@ fn all_day_bar(
         .px(metric(theme, "event.padding_x"))
         .rounded(radius(theme, 0.4))
         .text_size(text_size(theme, "xs"))
-        .map(|this| {
-            if faded {
-                this.border_1()
-                    .border_dashed()
-                    .border_color(paint.color)
-                    .text_color(paint.declined_text)
-                    .opacity(0.5)
-            } else {
-                this.bg(if highlighted {
+        .opacity(frame.view.opacity(event, role))
+        .map(|this| match role {
+            EventRole::Draft => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .bg(paint.draft_fill)
+                .text_color(paint.draft_text)
+                .font_weight(FontWeight::MEDIUM)
+                .shadow(ring(paint.draft_ring, 2.0)),
+            EventRole::Preview => this
+                .bg(paint.fill)
+                .text_color(paint.text)
+                .shadow(ring(paint.color, 1.5)),
+            _ if faded => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .text_color(paint.declined_text)
+                .opacity(0.5),
+            _ => this
+                .bg(if highlighted {
                     paint.selected_fill
                 } else {
                     paint.fill
                 })
-                .text_color(paint.text)
-            }
+                .text_color(paint.text),
         })
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(toggle_event(event))
+        .when(
+            role == EventRole::Normal && rsvp == Some(Rsvp::Declined),
+            |this| this.line_through(),
+        )
         .child(
             div()
                 .min_w_0()
                 .pl(px(title_offset))
                 .truncate()
                 .child(event_title(&event.summary, frame.palette.muted)),
-        )
-        .into_any_element()
+        );
+    event_block(
+        bar,
+        event,
+        EventSource::View,
+        Some(FloatKind::Pill),
+        if fills_row {
+            AnchorAt::Pointer
+        } else {
+            AnchorAt::Block
+        },
+        !role.is_static(),
+    )
+    .into_any_element()
 }
 
 fn timed_block(
     frame: &Frame,
     event: &CalendarEvent,
+    role: EventRole,
     placement: &TimedPlacement,
     left: f32,
 ) -> AnyElement {
     let theme = &frame.theme;
-    let paint = event_paint(event, &frame.calendars, theme);
+    let paint = event_paint(event, frame.calendars(), theme);
     let highlighted = frame.is_highlighted(event);
-    let rsvp = Rsvp::of(event, &frame.calendars);
-    let dashed = Rsvp::is_faded(rsvp);
+    let rsvp = Rsvp::of(event, frame.calendars());
+    let dashed = role == EventRole::Normal && Rsvp::is_faded(rsvp);
+    let draft = role == EventRole::Draft;
     let pad = f32::from(metric(theme, "event.padding_x"));
 
     // The top covers the start hour's grid line; the bottom stops short of
@@ -632,6 +813,8 @@ fn timed_block(
     let end = format_time(&event.end, frame.time_format, frame.viewer);
     let text_color = if dashed {
         paint.declined_text
+    } else if draft {
+        paint.draft_text
     } else {
         paint.text
     };
@@ -679,8 +862,9 @@ fn timed_block(
             .child(time(format!("{start} – {end}")))
             .into_any_element(),
     };
+    let stripe = !dashed && !draft;
 
-    div()
+    let block = div()
         .id(ElementId::Name(
             format!("week-event:{}", event.key().0).into(),
         ))
@@ -692,35 +876,38 @@ fn timed_block(
         .overflow_hidden()
         .rounded(radius(theme, 0.6))
         .px(px(pad))
-        .when(!dashed, |this| this.pl(px(pad + 4.0)))
+        .when(stripe, |this| this.pl(px(pad + 4.0)))
         .text_size(text_size(theme, "xs"))
         .text_color(text_color)
-        // A ring rather than a border keeps the fill flush with the grid lines.
-        .shadow(vec![BoxShadow {
-            color: frame.palette.background,
-            offset: point(px(0.), px(0.)),
-            blur_radius: px(0.),
-            spread_radius: px(1.),
-            inset: false,
-        }])
-        .map(|this| {
-            if dashed {
-                this.bg(frame.palette.background)
-                    .border_1()
-                    .border_dashed()
-                    .border_color(paint.color)
-                    .opacity(0.5)
-            } else {
-                this.bg(if highlighted {
+        .opacity(frame.view.opacity(event, role))
+        .map(|this| match role {
+            EventRole::Draft => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .bg(paint.draft_fill)
+                .shadow(ring(paint.draft_ring, 2.0)),
+            EventRole::Preview => this.bg(paint.fill).shadow(ring(paint.color, 1.5)),
+            _ if dashed => this
+                .shadow(ring(frame.palette.background, 1.0))
+                .bg(frame.palette.background)
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .opacity(0.5),
+            _ => this
+                .shadow(ring(frame.palette.background, 1.0))
+                .bg(if highlighted {
                     paint.selected_fill
                 } else {
                     paint.fill
-                })
-            }
+                }),
         })
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(toggle_event(event))
-        .when(!dashed, |this| {
+        .when(
+            role == EventRole::Normal && rsvp == Some(Rsvp::Declined),
+            |this| this.line_through(),
+        )
+        .when(stripe, |this| {
             this.child(
                 div()
                     .absolute()
@@ -731,8 +918,16 @@ fn timed_block(
                     .bg(paint.color),
             )
         })
-        .child(content)
-        .into_any_element()
+        .child(content);
+    event_block(
+        block,
+        event,
+        EventSource::View,
+        Some(FloatKind::Block),
+        AnchorAt::Block,
+        !role.is_static(),
+    )
+    .into_any_element()
 }
 
 /// A 1px dashed line, as separate quads: GPUI can't paint a border on a quad

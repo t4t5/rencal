@@ -15,15 +15,28 @@ use gpui_kit::{
 };
 
 use super::{drag_region, window_options};
-use crate::actions::{CALENDAR_VIEW_CONTEXT, Dismiss, OpenSelected};
+use crate::actions::{
+    CALENDAR_VIEW_CONTEXT, DeleteOpenEvent, DeleteSelected, Dismiss, EVENT_OPEN, EnterPopover,
+    EnterPopoverBackward, OpenSelected,
+};
+use crate::clock::Clock;
+use crate::editing::draft::{DayDraft, DraftState, last_event_end};
+use crate::editing::form::FormKind;
+use crate::editing::popover::EventPopover;
+use crate::editing::{ClickGuard, commands, context_menu, drag};
 use crate::event_store::EventStore;
-use crate::keymap::{GoToDate, NextEvent, PrevEvent, Search, ShowShortcuts, ToggleCommandPalette};
+use crate::keymap::{
+    AddEvent, ComposeEvent, DuplicateEvent, GoToDate, NextEvent, PrevEvent, Search, ShowShortcuts,
+    ToggleCommandPalette,
+};
+use crate::navigation::Navigation;
 use crate::palette::{self, Page};
 use crate::settings::Settings;
 use crate::sidebar::{MACOS_TRAFFIC_LIGHTS_WIDTH, Sidebar};
 use crate::sync_state::SyncState;
 use crate::theme::{ThemeStore, appearance};
 use crate::toolbar::{self, InvitesOpen};
+use crate::ui::anchors::{Anchors, EventSource, Named};
 use crate::ui::{Palette, metric};
 use crate::ui_state::UiState;
 use crate::{search, shortcuts_overlay, views};
@@ -50,6 +63,19 @@ pub fn open(cx: &mut App) -> anyhow::Result<()> {
     Ok(())
 }
 
+/// The calendar's focus (the main window's content), where keyboard
+/// shortcuts work.
+struct CalendarFocus(FocusHandle);
+
+impl Global for CalendarFocus {}
+
+/// Gives focus back to the calendar (leaving a text field).
+pub fn focus_calendar(window: &mut Window, cx: &mut App) {
+    if let Some(focus) = cx.try_global::<CalendarFocus>().map(|f| f.0.clone()) {
+        window.focus(&focus, cx);
+    }
+}
+
 pub fn handle(cx: &App) -> Option<AnyWindowHandle> {
     cx.try_global::<MainWindowHandle>().map(|handle| handle.0)
 }
@@ -67,6 +93,7 @@ pub fn show(cx: &mut App) -> bool {
 pub struct MainWindow {
     focus: FocusHandle,
     sidebar: Entity<Sidebar>,
+    popover: Entity<EventPopover>,
     /// The shown calendar view and its id; rebuilt when the id changes, so
     /// each switch opens on the active date like the old tabs did.
     view: Option<(&'static str, AnyView)>,
@@ -77,6 +104,7 @@ impl MainWindow {
     fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
+        cx.set_global(CalendarFocus(focus.clone()));
         // Syncing themes follow this window's appearance (the OS's).
         cx.defer_in(window, |_, window, cx| {
             ThemeStore::set_os_appearance(appearance(window.appearance()), cx);
@@ -98,9 +126,13 @@ impl MainWindow {
             cx.observe_global::<InvitesOpen>(|_, cx| cx.notify()),
             cx.observe(&store, |_, _, cx| cx.notify()),
         ];
+        let popover = cx.new(|cx| EventPopover::new(window, cx));
+        let mut subscriptions = subscriptions;
+        subscriptions.push(cx.observe(&popover, |_, _, cx| cx.notify()));
         Self {
             focus,
             sidebar: cx.new(|cx| Sidebar::new(window, cx)),
+            popover,
             view: None,
             _subscriptions: subscriptions,
         }
@@ -131,8 +163,76 @@ impl MainWindow {
     }
 }
 
+impl MainWindow {
+    /// `Escape`: closes the open event or draft, else drops the agenda's
+    /// selection.
+    fn dismiss(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.popover.read(cx).is_open() {
+            self.popover
+                .update(cx, |popover, cx| popover.close(window, cx));
+            return;
+        }
+        self.with_agenda(cx, |agenda, cx| {
+            agenda.dismiss(cx);
+        });
+    }
+
+    /// `a`: a new event on the active day, after its last timed event.
+    fn add_event_on_active_day(&mut self, cx: &mut Context<Self>) {
+        let date = Navigation::active_date(cx);
+        let viewer = Clock::global(cx).viewer;
+        let events = EventStore::global(cx).read(cx).events().clone();
+        let start = last_event_end(date, &events, viewer);
+        let anchor = Anchors::named(Named::ActiveDay, cx);
+        DraftState::open_day_draft(
+            date,
+            anchor,
+            DayDraft {
+                start,
+                ..DayDraft::default()
+            },
+            cx,
+        );
+    }
+
+    /// `d`: duplicates the open event, else the agenda's selected one.
+    fn duplicate(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        if self.popover.read(cx).is_draft() {
+            return;
+        }
+        let store = EventStore::global(cx).read(cx);
+        let (target, source) = match store.active_event_data() {
+            Some(event) => (event.clone(), EventSource::View),
+            None => match store.selected_event().and_then(|key| store.event(key)) {
+                Some(event) => (event.clone(), EventSource::Agenda),
+                None => return,
+            },
+        };
+        let anchor = Anchors::event_bounds_in(&target.key(), source, cx)
+            .or_else(|| Anchors::event_bounds(&target.key(), None, cx));
+        commands::request_duplicate(target, anchor, window, cx);
+    }
+
+    /// `Delete` with the event open and no field focused.
+    fn delete_open_event(&mut self, window: &mut Window, cx: &mut Context<Self>) {
+        let Some(form) = self.popover.read(cx).form() else {
+            return;
+        };
+        let form = form.read(cx);
+        if !matches!(form.kind(), FormKind::Edit { .. }) {
+            return;
+        }
+        let event = form.event().clone();
+        if event.is_readonly(EventStore::global(cx).read(cx).calendars()) {
+            return;
+        }
+        commands::request_delete(event, window, cx);
+    }
+}
+
 impl Render for MainWindow {
     fn render(&mut self, window: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
+        Anchors::begin_frame(cx);
         let wide = window.viewport_size().width >= MD_BREAKPOINT;
         let ui = UiState::global(cx).clone();
         let calendar_view = self.calendar_view(&ui.calendar_view, window, cx);
@@ -141,11 +241,19 @@ impl Render for MainWindow {
         let show_sidebar = !wide || !ui.sidebar_collapsed;
         self.sidebar
             .update(cx, |sidebar, _| sidebar.set_narrow(!wide));
+        self.popover
+            .update(cx, |popover, _| popover.set_narrow(!wide));
+        let key_context = if self.popover.read(cx).is_open() {
+            format!("{CALENDAR_VIEW_CONTEXT} {EVENT_OPEN}")
+        } else {
+            CALENDAR_VIEW_CONTEXT.to_owned()
+        };
 
         h_flex()
             .id("main-window")
-            .key_context(CALENDAR_VIEW_CONTEXT)
+            .key_context(gpui_kit::KeyContext::parse(&key_context).expect("a valid key context"))
             .track_focus(&self.focus)
+            .capture_any_mouse_down(|event, _, cx| ClickGuard::begin_press(event, cx))
             .size_full()
             .overflow_hidden()
             .on_action(cx.listener(|_, _: &Search, window, cx| search::open(window, cx)))
@@ -166,11 +274,43 @@ impl Render for MainWindow {
             .on_action(cx.listener(|this, _: &PrevEvent, _, cx| {
                 this.with_agenda(cx, |agenda, cx| agenda.focus_item(-1, cx))
             }))
-            .on_action(cx.listener(|this, _: &Dismiss, _, cx| {
-                this.with_agenda(cx, |agenda, cx| {
-                    agenda.dismiss(cx);
-                })
+            .on_action(cx.listener(|this, _: &Dismiss, window, cx| this.dismiss(window, cx)))
+            .on_action(cx.listener(|this, _: &EnterPopover, window, cx| {
+                let form = this.popover.read(cx).form().cloned();
+                if let Some(form) = form {
+                    form.update(cx, |form, cx| form.focus_entry(window, cx));
+                }
             }))
+            .on_action(cx.listener(|this, _: &EnterPopoverBackward, window, cx| {
+                // Backwards from outside lands on the last field: let the
+                // trap wrap there from the title.
+                let form = this.popover.read(cx).form().cloned();
+                if let Some(form) = form {
+                    form.update(cx, |form, cx| form.focus_entry(window, cx));
+                    window.focus_prev(cx);
+                }
+            }))
+            .on_action(cx.listener(|this, _: &DeleteOpenEvent, window, cx| {
+                this.delete_open_event(window, cx)
+            }))
+            .on_action(cx.listener(|_, _: &DeleteSelected, window, cx| {
+                let store = EventStore::global(cx).read(cx);
+                let Some(event) = store
+                    .selected_event()
+                    .and_then(|key| store.event(key))
+                    .cloned()
+                else {
+                    return;
+                };
+                if !event.is_readonly(store.calendars()) {
+                    commands::request_delete(event, window, cx);
+                }
+            }))
+            .on_action(cx.listener(|_, _: &ComposeEvent, _, cx| DraftState::start_composing(cx)))
+            .on_action(cx.listener(|this, _: &AddEvent, _, cx| this.add_event_on_active_day(cx)))
+            .on_action(
+                cx.listener(|this, _: &DuplicateEvent, window, cx| this.duplicate(window, cx)),
+            )
             .on_action(cx.listener(|this, _: &OpenSelected, _, cx| {
                 this.with_agenda(cx, |agenda, cx| agenda.open_selected(cx))
             }))
@@ -204,6 +344,15 @@ impl Render for MainWindow {
                         .child(div().flex_1().min_h_0().child(calendar_view)),
                 )
             })
+            .child(self.popover.clone())
+            .children(drag::float_layer(window, cx))
+            .children(context_menu::layer(cx))
+            // Window-wide pointer listeners of an active drag session.
+            .child(
+                gpui_kit::canvas(|_, _, _| {}, |_, _, window, cx| drag::listeners(window, cx))
+                    .absolute()
+                    .size_0(),
+            )
     }
 }
 

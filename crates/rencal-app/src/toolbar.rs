@@ -16,10 +16,12 @@ use gpui_kit::{
 use rencal_text::calendar_groups::{format_group_name, group_options};
 use rencal_time::CalendarEvent;
 use rencal_time::display::{format_short_date, format_time};
+use rencal_time::event::ResponseStatus;
 
 use crate::actions::CALENDAR_VIEW_CONTEXT;
 use crate::assets::RenIcon;
 use crate::clock::Clock;
+use crate::editing::commands;
 use crate::event_store::EventStore;
 use crate::keymap::{GoToToday, OpenSettings, Search, SyncNow, ToggleInvites, ToggleSidebar};
 use crate::settings::Settings;
@@ -164,44 +166,90 @@ pub fn invites_badge(cx: &mut App) -> Option<impl IntoElement + use<>> {
                                 format_time(&invite.start, time_format, clock.viewer)
                             )
                         };
-                        h_flex()
-                            .gap_3()
+                        let rsvp =
+                            |id: &'static str, label: &'static str, response: ResponseStatus| {
+                                let invite = invite.clone();
+                                Button::new(SharedString::from(format!("{id}:{}", invite.key().0)))
+                                    .small()
+                                    .label(label)
+                                    .on_click(move |_, _, cx| commands::rsvp(&invite, response, cx))
+                            };
+                        v_flex()
+                            .gap_2()
                             .p_3()
                             .border_b_1()
                             .border_color(border)
                             .child(
-                                div()
-                                    .size_8()
-                                    .flex_shrink_0()
-                                    .flex()
-                                    .items_center()
-                                    .justify_center()
-                                    .rounded_full()
-                                    .bg(muted)
-                                    .text_color(avatar_text)
-                                    .text_size(size_xs)
-                                    .font_weight(FontWeight::MEDIUM)
-                                    .child(initial.unwrap_or_default()),
+                                h_flex()
+                                    .gap_3()
+                                    .child(
+                                        div()
+                                            .size_8()
+                                            .flex_shrink_0()
+                                            .flex()
+                                            .items_center()
+                                            .justify_center()
+                                            .rounded_full()
+                                            .bg(muted)
+                                            .text_color(avatar_text)
+                                            .text_size(size_xs)
+                                            .font_weight(FontWeight::MEDIUM)
+                                            .child(initial.unwrap_or_default()),
+                                    )
+                                    .child(
+                                        v_flex()
+                                            .min_w_0()
+                                            .gap_0p5()
+                                            .child(
+                                                div()
+                                                    .truncate()
+                                                    .text_size(size_sm)
+                                                    .font_weight(FontWeight::MEDIUM)
+                                                    .child(invite.summary.clone()),
+                                            )
+                                            .child(
+                                                div()
+                                                    .truncate()
+                                                    .text_size(size_xs)
+                                                    .text_color(muted)
+                                                    .child(format!("From: {organizer}")),
+                                            )
+                                            .child(
+                                                div()
+                                                    .text_size(size_xs)
+                                                    .text_color(muted)
+                                                    .child(when),
+                                            ),
+                                    ),
                             )
                             .child(
-                                v_flex()
-                                    .min_w_0()
-                                    .gap_0p5()
+                                h_flex()
+                                    .justify_between()
+                                    .gap_1p5()
                                     .child(
-                                        div()
-                                            .truncate()
-                                            .text_size(size_sm)
-                                            .font_weight(FontWeight::MEDIUM)
-                                            .child(invite.summary.clone()),
+                                        rsvp("invite-maybe", "Maybe", ResponseStatus::Tentative)
+                                            .secondary(),
                                     )
                                     .child(
-                                        div()
-                                            .truncate()
-                                            .text_size(size_xs)
-                                            .text_color(muted)
-                                            .child(format!("From: {organizer}")),
-                                    )
-                                    .child(div().text_size(size_xs).text_color(muted).child(when)),
+                                        h_flex()
+                                            .gap_1p5()
+                                            .child(
+                                                rsvp(
+                                                    "invite-decline",
+                                                    "Decline",
+                                                    ResponseStatus::Declined,
+                                                )
+                                                .secondary(),
+                                            )
+                                            .child(
+                                                rsvp(
+                                                    "invite-accept",
+                                                    "Accept",
+                                                    ResponseStatus::Accepted,
+                                                )
+                                                .primary(),
+                                            ),
+                                    ),
                             )
                     }))
             }),

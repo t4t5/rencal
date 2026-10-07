@@ -33,7 +33,8 @@ pub fn settings(theme: ThemeConfig) -> Settings {
 }
 
 /// gpui-kit, `Settings`, an in-memory `UiState`, the theme store (OS
-/// appearance light), a frozen `Clock` and an empty `EventStore`.
+/// appearance light), a frozen `Clock`, an empty `EventStore` and the
+/// editing state.
 pub fn init(theme: ThemeConfig, omarchy: Option<OmarchyColors>, cx: &mut App) {
     gpui_kit::init(cx);
     cx.set_global(settings(theme));
@@ -45,6 +46,7 @@ pub fn init(theme: ThemeConfig, omarchy: Option<OmarchyColors>, cx: &mut App) {
     EventStore::init(cx);
     SyncState::init(cx);
     toolbar::init(cx);
+    crate::editing::init(cx);
 }
 
 /// The frozen "now" of UI tests: Wednesday 2026-10-07, 10:00 UTC.

@@ -23,7 +23,10 @@ use chrono::NaiveDate;
 use gpui_kit::{App, AppContext, AsyncApp, Context, Entity, Global, Subscription, WeakEntity};
 use rencal_core::error::CoreResult;
 use rencal_text::calendar_groups::visible_calendar_slugs;
-use rencal_time::event::{DateRange, MergePosition, merge_events, start_range_for_date};
+use rencal_time::event::{
+    DateRange, MergePosition, merge_events, reconcile_optimistic_create,
+    rollback_optimistic_create, start_range_for_date,
+};
 use rencal_time::{Calendar, CalendarEvent, EventKey, Tz};
 use tokio::task::JoinHandle;
 
@@ -192,6 +195,76 @@ impl EventStore {
             self.selected_event = key;
             cx.notify();
         }
+    }
+
+    pub fn event(&self, key: &EventKey) -> Option<&CalendarEvent> {
+        self.events.iter().find(|event| &event.key() == key)
+    }
+
+    /// The open event's current data (`None` once it's gone, e.g. deleted).
+    pub fn active_event_data(&self) -> Option<&CalendarEvent> {
+        self.event(self.active_event.as_ref()?)
+    }
+
+    // Optimistic edits (`editing::commands`): applied at once, put back when
+    // the write fails. The next load replaces them with what's on disk.
+
+    /// Replaces the event keyed `key` (the original identity: an edit may
+    /// move it to another calendar). False when it isn't loaded.
+    pub fn replace_event(
+        &mut self,
+        key: &EventKey,
+        event: CalendarEvent,
+        cx: &mut Context<Self>,
+    ) -> bool {
+        let Some(index) = self.events.iter().position(|e| &e.key() == key) else {
+            return false;
+        };
+        Arc::make_mut(&mut self.events)[index] = event.with_viewer(self.viewer);
+        self.bump(cx);
+        true
+    }
+
+    /// Removes the matching events and returns them, for a rollback.
+    pub fn remove_events(
+        &mut self,
+        matches: impl Fn(&CalendarEvent) -> bool,
+        cx: &mut Context<Self>,
+    ) -> Vec<CalendarEvent> {
+        if !self.events.iter().any(&matches) {
+            return Vec::new();
+        }
+        let (removed, kept) = self.events.iter().cloned().partition(|e| matches(e));
+        self.events = Arc::new(kept);
+        self.bump(cx);
+        removed
+    }
+
+    /// Adds events (an optimistic create, or a rollback of `remove_events`).
+    pub fn insert_events(&mut self, events: Vec<CalendarEvent>, cx: &mut Context<Self>) {
+        if events.is_empty() {
+            return;
+        }
+        let viewer = self.viewer;
+        Arc::make_mut(&mut self.events).extend(events.into_iter().map(|e| e.with_viewer(viewer)));
+        self.bump(cx);
+    }
+
+    /// Swaps an optimistic create for the event the backend stored.
+    pub fn reconcile_create(
+        &mut self,
+        optimistic: &EventKey,
+        created: CalendarEvent,
+        cx: &mut Context<Self>,
+    ) {
+        let created = created.with_viewer(self.viewer);
+        reconcile_optimistic_create(Arc::make_mut(&mut self.events), optimistic, created);
+        self.bump(cx);
+    }
+
+    pub fn rollback_create(&mut self, optimistic: &EventKey, cx: &mut Context<Self>) {
+        rollback_optimistic_create(Arc::make_mut(&mut self.events), optimistic);
+        self.bump(cx);
     }
 
     /// Adds an event that isn't in the loaded range (a search result far away).

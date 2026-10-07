@@ -4,8 +4,10 @@
 //! the main window.
 //!
 //! Single-character and calendar-moving bindings live in the `CalendarView`
-//! key context only, so text inputs never trigger them; `keymap::is_global`
-//! names the few that work everywhere.
+//! key context outside text inputs (`CalendarView && !Input`), so typing never
+//! triggers them; `keymap::is_global` names the few that work everywhere.
+//! While an event is open (`event_open`) only the shortcuts that leave it
+//! alone (`allow_while_event_open`) work, like the old `lockBackground`.
 
 use std::rc::Rc;
 use std::time::{Duration, Instant};
@@ -28,6 +30,8 @@ use crate::windows::settings_window;
 
 /// The key context of the calendar views (main window content).
 pub const CALENDAR_VIEW_CONTEXT: &str = "CalendarView";
+/// Set on the calendar context while the event popover is open.
+pub const EVENT_OPEN: &str = "event_open";
 
 /// Keyboard navigation repeats no faster than this.
 const NAV_THROTTLE: Duration = Duration::from_millis(80);
@@ -43,6 +47,15 @@ actions!(
         Dismiss,
         /// `Enter` in the calendar: opens the agenda's selected event.
         OpenSelected,
+        /// `Tab` / `Shift-Tab` from the calendar while an event is open:
+        /// focus moves into the popover.
+        EnterPopover,
+        EnterPopoverBackward,
+        /// `Delete` / `Backspace` while an event is open and no field has
+        /// focus.
+        DeleteOpenEvent,
+        /// `Delete` / `Backspace` on the agenda's selected row.
+        DeleteSelected,
     ]
 );
 
@@ -77,15 +90,28 @@ pub fn init(cx: &mut App) {
     cx.on_action(|_: &PrevMonth, cx| step(cx, previous_month_start));
 }
 
+fn predicate(source: &str) -> Rc<gpui_kit::KeyBindingContextPredicate> {
+    Rc::new(gpui_kit::KeyBindingContextPredicate::parse(source).expect("a valid key context"))
+}
+
 fn bind_keys(cx: &mut App) {
-    let calendar = Rc::new(
-        gpui_kit::KeyBindingContextPredicate::parse(CALENDAR_VIEW_CONTEXT)
-            .expect("a valid key context"),
-    );
+    let calendar = predicate(&format!("{CALENDAR_VIEW_CONTEXT} && !Input"));
+    let calendar_locked = predicate(&format!(
+        "{CALENDAR_VIEW_CONTEXT} && !Input && !{EVENT_OPEN}"
+    ));
+    let global_locked = predicate(&format!("!{EVENT_OPEN}"));
     let mut bindings = Vec::new();
     for shortcut in SHORTCUTS {
         for binding in shortcut.bindings {
-            let context = (!is_global(binding, shortcut.id)).then(|| calendar.clone());
+            let context = match (
+                is_global(binding, shortcut.id),
+                shortcut.allow_while_event_open,
+            ) {
+                (true, true) => None,
+                (true, false) => Some(global_locked.clone()),
+                (false, true) => Some(calendar.clone()),
+                (false, false) => Some(calendar_locked.clone()),
+            };
             match KeyBinding::load(
                 &keystroke(binding.keys),
                 (shortcut.action)(),
@@ -99,21 +125,27 @@ fn bind_keys(cx: &mut App) {
             }
         }
     }
-    bindings.push(KeyBinding::new(
-        "escape",
-        CloseWindow,
-        Some(settings_window::KEY_CONTEXT),
-    ));
-    bindings.push(KeyBinding::new(
-        "escape",
-        Dismiss,
-        Some(CALENDAR_VIEW_CONTEXT),
-    ));
-    bindings.push(KeyBinding::new(
-        "enter",
-        OpenSelected,
-        Some(CALENDAR_VIEW_CONTEXT),
-    ));
+    let calendar_context = format!("{CALENDAR_VIEW_CONTEXT} && !Input");
+    let calendar_closed = format!("{CALENDAR_VIEW_CONTEXT} && !Input && !{EVENT_OPEN}");
+    let open_outside_popover = format!(
+        "{CALENDAR_VIEW_CONTEXT} && {EVENT_OPEN} && !Input && !{}",
+        crate::editing::popover::KEY_CONTEXT
+    );
+    bindings.extend([
+        KeyBinding::new("escape", CloseWindow, Some(settings_window::KEY_CONTEXT)),
+        KeyBinding::new("escape", Dismiss, Some(&calendar_context)),
+        KeyBinding::new("enter", OpenSelected, Some(&calendar_context)),
+        KeyBinding::new("tab", EnterPopover, Some(&open_outside_popover)),
+        KeyBinding::new(
+            "shift-tab",
+            EnterPopoverBackward,
+            Some(&open_outside_popover),
+        ),
+        KeyBinding::new("delete", DeleteOpenEvent, Some(&open_outside_popover)),
+        KeyBinding::new("backspace", DeleteOpenEvent, Some(&open_outside_popover)),
+        KeyBinding::new("delete", DeleteSelected, Some(&calendar_closed)),
+        KeyBinding::new("backspace", DeleteSelected, Some(&calendar_closed)),
+    ]);
     #[cfg(target_os = "macos")]
     bindings.push(KeyBinding::new("cmd-q", Quit, None));
     cx.bind_keys(bindings);

@@ -35,15 +35,18 @@ use rencal_time::{
 
 use crate::assets::RenIcon;
 use crate::clock::Clock;
+use crate::editing::draft::{DRAFT_ID, DraftState};
+use crate::editing::popover;
 use crate::event_store::EventStore;
 use crate::keymap::OpenSettings;
 use crate::navigation::Navigation;
 use crate::settings::Settings;
 use crate::theme::ThemeStore;
-use crate::ui::event_paint::{Rsvp, event_paint};
+use crate::ui::anchors::{Anchors, EventSource, event_anchor};
+use crate::ui::event_paint::{EventPaint, Rsvp, event_paint};
 use crate::ui::{Palette, Role, event_title, line_height, metric, radius, text_size};
 use crate::ui_state::UiState;
-use crate::views::measure;
+use crate::views::{ViewEvents, measure};
 
 /// The day header's height (`h-8`).
 const DATE_BAR_HEIGHT: f32 = 32.0;
@@ -125,8 +128,8 @@ struct Ghost {
 pub struct Agenda {
     list: ListState,
     data: Rc<Data>,
-    /// What `data` was built from: events revision and ghost day.
-    built: Option<(u64, Option<i32>)>,
+    /// What `data` was built from: events (and draft) revision and ghost day.
+    built: Option<((u64, u64, u64), Option<i32>)>,
     ghost: Option<Ghost>,
     initial_scrolled: bool,
     nav_version: u64,
@@ -150,7 +153,9 @@ impl Agenda {
                 .ok();
         });
         let store = EventStore::global(cx);
+        let draft = DraftState::global(cx);
         let subscriptions = vec![
+            cx.observe(&draft, |_, _, cx| cx.notify()),
             cx.observe(&store, |this, store, cx| {
                 if this.focused.is_some() && store.read(cx).selected_event().is_none() {
                     this.focused = None;
@@ -240,10 +245,10 @@ impl Agenda {
     /// Rebuilds the sections from the current data, keeping the day at the top.
     fn rebuild(&mut self) {
         let events = self.data.events.clone();
-        self.rebuild_with(events, self.built.map_or(0, |b| b.0));
+        self.rebuild_with(events, self.built.map_or((0, 0, 0), |b| b.0));
     }
 
-    fn rebuild_with(&mut self, events: Arc<Vec<CalendarEvent>>, revision: u64) {
+    fn rebuild_with(&mut self, events: Arc<Vec<CalendarEvent>>, revision: (u64, u64, u64)) {
         let ghost = self.ghost.as_ref().map(|g| g.day);
         if self.built == Some((revision, ghost)) && Arc::ptr_eq(&events, &self.data.events) {
             return;
@@ -395,16 +400,23 @@ impl Agenda {
         false
     }
 
-    /// `Enter`: opens the selected row's event.
+    /// `Enter`: opens the selected row's event beside its row.
     pub fn open_selected(&mut self, cx: &mut Context<Self>) {
         if let Some((_, key)) = self.focused.clone() {
-            EventStore::global(cx).update(cx, |store, cx| store.set_active_event(Some(key), cx));
+            let anchor = Anchors::event_bounds_in(&key, EventSource::Agenda, cx);
+            popover::open_event(key, anchor, cx);
         }
     }
 
-    fn row_clicked(&mut self, day: i32, key: EventKey, cx: &mut Context<Self>) {
+    fn row_clicked(
+        &mut self,
+        day: i32,
+        key: EventKey,
+        anchor: Option<Bounds<Pixels>>,
+        cx: &mut Context<Self>,
+    ) {
         self.select(day, key.clone(), cx);
-        EventStore::global(cx).update(cx, |store, cx| store.toggle_active_event(key, cx));
+        popover::toggle_event(key, anchor, cx);
         cx.notify();
     }
 }
@@ -429,16 +441,18 @@ impl Render for Agenda {
     fn render(&mut self, _: &mut Window, cx: &mut Context<Self>) -> impl IntoElement {
         let theme = ThemeStore::active(cx);
         let palette = Palette::new(&theme);
+        // The loaded events plus the draft (`useEventsWithDraft`).
+        let view = ViewEvents::read(false, cx);
         let store = EventStore::global(cx).read(cx);
         let loading = store.is_loading();
         let no_calendars = store.calendars().is_empty();
-        let events = store.events().clone();
+        let events = view.events.clone();
         let revision = store.revision();
         let calendars = store.calendars().clone();
         let active = store.active_event().cloned();
 
         if !loading {
-            self.rebuild_with(events.clone(), revision);
+            self.rebuild_with(events.clone(), view.revision);
             if !self.initial_scrolled && !self.data.sections.is_empty() {
                 self.initial_scrolled = true;
                 self.scroll_to_date(Navigation::active_date(cx));
@@ -655,10 +669,11 @@ fn on_row_click(
 ) -> impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + use<> {
     let agenda = frame.agenda.clone();
     let key = event.key();
-    move |_, _, cx| {
+    move |e, _, cx| {
         let key = key.clone();
+        let anchor = Anchors::event_bounds(&key, Some(e.position()), cx);
         agenda
-            .update(cx, |agenda, cx| agenda.row_clicked(day, key, cx))
+            .update(cx, |agenda, cx| agenda.row_clicked(day, key, anchor, cx))
             .ok();
     }
 }
@@ -677,16 +692,20 @@ fn all_day_chip(frame: &Frame, event: &CalendarEvent, day: i32) -> AnyElement {
     let paint = event_paint(event, &frame.calendars, theme);
     let selected = is_selected(frame, event, day);
     let rsvp = Rsvp::of(event, &frame.calendars);
-    let faded = Rsvp::is_faded(rsvp);
-    div()
+    let draft = event.id == DRAFT_ID;
+    let faded = !draft && Rsvp::is_faded(rsvp);
+    let chip = div()
         .id(row_id("agenda-chip", event, day))
+        .relative()
         .px(metric(theme, "event.padding_x"))
         .py(px(1.))
         .line_height(px(16.))
         .rounded(radius(theme, 0.4))
         .text_size(text_size(theme, "xs"))
         .map(|this| {
-            if faded {
+            if draft {
+                draft_style(this, &paint)
+            } else if faded {
                 this.border_1()
                     .border_dashed()
                     .border_color(paint.color)
@@ -701,9 +720,16 @@ fn all_day_chip(frame: &Frame, event: &CalendarEvent, day: i32) -> AnyElement {
                 .text_color(paint.text)
             }
         })
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(on_row_click(frame, event, day))
-        .child(event_title(&event.summary, frame.palette.muted))
+        .when(!draft && rsvp == Some(Rsvp::Declined), |this| {
+            this.line_through()
+        })
+        .child(event_title(&event.summary, frame.palette.muted));
+    // The draft is a stand-in: no click.
+    if draft {
+        return chip.into_any_element();
+    }
+    chip.on_click(on_row_click(frame, event, day))
+        .child(event_anchor(event.key(), EventSource::Agenda))
         .into_any_element()
 }
 
@@ -713,25 +739,34 @@ fn timed_row(frame: &Frame, event: &CalendarEvent, day: i32) -> AnyElement {
     let paint = event_paint(event, &frame.calendars, theme);
     let selected = is_selected(frame, event, day);
     let rsvp = Rsvp::of(event, &frame.calendars);
+    let draft = event.id == DRAFT_ID;
     let links = EventLinks::from(event);
     let join_url = links
         .meeting_url()
         .filter(|_| is_within_join_window(&event.date_info, frame.now_ms));
-    h_flex()
+    let row = h_flex()
         .id(row_id("agenda-row", event, day))
+        .relative()
         .gap_3()
         .py_1()
         .px(frame.padding)
         .map(|this| {
-            if selected {
+            if draft {
+                draft_style(this, &paint)
+            } else if selected {
                 this.bg(palette.selected).text_color(palette.selected_text)
             } else {
                 this.hover(move |style| style.bg(palette.hover))
             }
         })
-        .when(Rsvp::is_faded(rsvp), |this| this.opacity(0.5))
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(on_row_click(frame, event, day))
+        .when(!draft && Rsvp::is_faded(rsvp), |this| this.opacity(0.5))
+        .when(!draft && rsvp == Some(Rsvp::Declined), |this| {
+            this.line_through()
+        })
+        .when(!draft, |this| {
+            this.on_click(on_row_click(frame, event, day))
+                .child(event_anchor(event.key(), EventSource::Agenda))
+        })
         .child(
             div()
                 .w(px(3.))
@@ -782,8 +817,20 @@ fn timed_row(frame: &Frame, event: &CalendarEvent, day: i32) -> AnyElement {
                         cx.open_url(&url);
                     }),
             )
-        })
-        .into_any_element()
+        });
+    row.into_any_element()
+}
+
+/// The draft's look (`[data-draft]`): a dashed accent border over a light
+/// tint.
+fn draft_style<E: Styled>(element: E, paint: &EventPaint) -> E {
+    element
+        .border_1()
+        .border_dashed()
+        .border_color(paint.color)
+        .bg(paint.draft_fill)
+        .text_color(paint.draft_text)
+        .font_weight(FontWeight::MEDIUM)
 }
 
 #[cfg(test)]

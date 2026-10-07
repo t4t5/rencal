@@ -12,6 +12,10 @@
 //!   settles and with reduced motion.
 //! - Events load for the visible months (plus a margin) and never block
 //!   scrolling.
+//! - Editing: blocks open the popover, drag to another day (keeping their
+//!   time) and have a menu; empty cell background drags to create an
+//!   all-day range, double-clicks or right-clicks to create after the day's
+//!   last event. Dragging near the top or bottom auto-scrolls.
 
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -38,14 +42,20 @@ use rencal_time::{
 };
 
 use super::axis::{InfiniteAxis, LIFT_GAP, SETTLE_IDLE, WeekSnap, WheelAction, WheelPhase};
-use super::measure;
+use super::interact::{self, AnchorAt, event_block, is_double_click, navigate_on_click};
+use super::{EventRole, ViewEvents, measure, ring};
 use crate::clock::Clock;
+use crate::editing::context_menu;
+use crate::editing::draft::{DayDraft, DraftState, last_event_end};
+use crate::editing::drag::{self, DragState, FloatKind};
 use crate::event_store::EventStore;
 use crate::navigation::Navigation;
 use crate::settings::Settings;
 use crate::theme::{ThemeStore, hsla};
-use crate::ui::event_paint::{EventPaint, Rsvp, event_paint};
+use crate::ui::anchors::{Anchors, EventSource, Named, drop_anchor, named_anchor, scroll_anchor};
+use crate::ui::event_paint::{EventPaint, Rsvp, calendar_accent, event_paint, paint_for_accent};
 use crate::ui::{Palette, Role, event_title, metric, radius, text_size};
+use rencal_layout::drag::DropZone;
 
 /// Week rows lay out at most this many all-day lanes.
 const MAX_ALL_DAY_LANES: usize = 3;
@@ -95,7 +105,7 @@ pub struct MonthView {
     settle: Option<Task<()>>,
     lift: Option<Task<()>>,
     layouts: HashMap<i32, Rc<MonthWeekLayout>>,
-    layouts_revision: u64,
+    layouts_revision: (u64, u64, u64),
     requested: Option<(NaiveDate, NaiveDate)>,
     _subscriptions: Vec<Subscription>,
 }
@@ -106,8 +116,11 @@ impl MonthView {
         let nav = Navigation::global(cx).clone();
         let month_start = nav.active_date.with_day(1).expect("the 1st exists");
         let store = EventStore::global(cx);
+        let draft = DraftState::global(cx);
         let subscriptions = vec![
             cx.observe(&store, |_, _, cx| cx.notify()),
+            cx.observe(&draft, |_, _, cx| cx.notify()),
+            cx.observe_global::<DragState>(|_, cx| cx.notify()),
             cx.observe_global_in::<Navigation>(window, |this, _, cx| this.navigated(cx)),
             cx.observe_global::<Settings>(|this, cx| this.settings_changed(cx)),
             cx.observe_global::<Clock>(|_, cx| cx.notify()),
@@ -121,7 +134,7 @@ impl MonthView {
             settle: None,
             lift: None,
             layouts: HashMap::new(),
-            layouts_revision: u64::MAX,
+            layouts_revision: (u64::MAX, 0, 0),
             requested: None,
             _subscriptions: subscriptions,
         }
@@ -304,20 +317,29 @@ impl Render for MonthView {
         }
 
         let theme = ThemeStore::active(cx);
+        let view = ViewEvents::read(true, cx);
+        let create_color = {
+            let calendar = DraftState::default_calendar_id(cx)
+                .and_then(|slug| EventStore::global(cx).read(cx).calendar(&slug).cloned());
+            paint_for_accent(calendar_accent(calendar.as_ref(), &theme), &theme).create_selection
+        };
         let store = EventStore::global(cx).read(cx);
-        let events = store.events().clone();
+        let events = view.events.clone();
         let calendars = store.calendars().clone();
         let highlighted = [
             store.active_event().cloned(),
             store.selected_event().cloned(),
+            context_menu::highlighted(cx),
         ];
-        if store.revision() != self.layouts_revision {
-            self.layouts_revision = store.revision();
+        if view.revision != self.layouts_revision {
+            self.layouts_revision = view.revision;
             self.layouts.clear();
         }
         let settings = Settings::global(cx);
         let clock = *Clock::global(cx);
         let ctx = RowContext {
+            view,
+            create_color,
             palette: Palette::new(&theme),
             boundary: hsla(theme.color("text").mix(0.28, theme.color("background"))),
             numerical: Role::Numerical.family(cx),
@@ -390,6 +412,16 @@ impl Render for MonthView {
                     .overflow_hidden()
                     .on_scroll_wheel(cx.listener(Self::on_scroll))
                     .child(measure(cx.entity().downgrade(), Self::set_bounds))
+                    .child(scroll_anchor(false, true, {
+                        let weak = cx.entity().downgrade();
+                        Rc::new(move |delta, cx| {
+                            weak.update(cx, |this, cx| {
+                                this.axis.scroll_by(delta.y);
+                                cx.notify();
+                            })
+                            .ok();
+                        })
+                    }))
                     .children(rows),
             )
     }
@@ -397,6 +429,8 @@ impl Render for MonthView {
 
 /// What every row of one render shares.
 struct RowContext {
+    view: ViewEvents,
+    create_color: Hsla,
     palette: Palette,
     boundary: Hsla,
     numerical: SharedString,
@@ -410,7 +444,7 @@ struct RowContext {
     time_format: TimeFormat,
     theme: Arc<ResolvedTheme>,
     calendars: Arc<Vec<Calendar>>,
-    highlighted: [Option<rencal_time::EventKey>; 2],
+    highlighted: [Option<rencal_time::EventKey>; 3],
 }
 
 impl RowContext {
@@ -535,14 +569,18 @@ fn week_row(
         .children(boundary(false))
         .children(visible_items.iter().map(|item| {
             let event = &events[item.event];
+            let role = ctx.view.role(item.event);
             let rect = all_day_bar_rect(&item.span, item.lane, &ctx.metrics);
-            all_day_bar(ctx, event, item.span.is_start, item.span.is_end)
-                .absolute()
-                .left(px(rect.left))
-                .top(px(rect.top))
-                .w(px(rect.width()))
-                .h(px(rect.height()))
-                .into_any_element()
+            let fills_row = item.span.end_col - item.span.start_col == 7;
+            all_day_bar(
+                ctx,
+                event,
+                role,
+                item.span.is_start,
+                item.span.is_end,
+                fills_row,
+                rect,
+            )
         }));
 
     v_flex()
@@ -576,7 +614,10 @@ fn day_header(ctx: &RowContext, date: NaiveDate, col: usize) -> impl IntoElement
         .when(active, |this| {
             this.bg(palette.selected).text_color(palette.selected_text)
         })
-        .on_click(move |_, _, cx| Navigation::navigate_to(date, None, cx))
+        .on_click(navigate_on_click(date))
+        .on_mouse_down(gpui_kit::MouseButton::Left, move |e, window, cx| {
+            drag::press_create_days(date, e.position, window, cx)
+        })
         .when(date.day() == 1 || active, |this| {
             this.child(
                 div()
@@ -640,7 +681,25 @@ fn day_cell(
         .when(active, |this| {
             this.bg(palette.selected).text_color(palette.selected_text)
         })
-        .on_click(move |_, _, cx| Navigation::navigate_to(date, None, cx))
+        .child(drop_anchor(DropZone::Day, date))
+        .when(active, |this| this.child(named_anchor(Named::ActiveDay)))
+        .on_mouse_down(gpui_kit::MouseButton::Left, move |e, window, cx| {
+            drag::press_create_days(date, e.position, window, cx)
+        })
+        .on_mouse_down(gpui_kit::MouseButton::Right, move |e, window, cx| {
+            interact::day_menu(e.position, window, cx, move |_, cx| {
+                create_after_last(date, cx)
+            });
+        })
+        .on_click(move |e, window, cx| {
+            if is_double_click(e) {
+                if Anchors::event_at(e.position(), cx).is_none() {
+                    create_after_last(date, cx);
+                }
+            } else {
+                navigate_on_click(date)(e, window, cx);
+            }
+        })
         .children(
             reserved_all_day_height(reserved_lanes, lane_height)
                 .map(|height| div().flex_shrink_0().h(px(height))),
@@ -649,7 +708,7 @@ fn day_cell(
             timed
                 .iter()
                 .take(MAX_TIMED_VISIBLE)
-                .map(|&index| timed_event(ctx, &events[index])),
+                .map(|&index| timed_event(ctx, &events[index], ctx.view.role(index))),
         )
         .when(hidden > 0, |this| {
             this.child(
@@ -664,26 +723,34 @@ fn day_cell(
         })
 }
 
-fn toggle_event(
-    event: &CalendarEvent,
-) -> impl Fn(&gpui_kit::ClickEvent, &mut Window, &mut App) + use<> {
-    let key = event.key();
-    move |_, _, cx| {
-        cx.stop_propagation();
-        let key = key.clone();
-        EventStore::global(cx).update(cx, |store, cx| store.toggle_active_event(key, cx));
-    }
+/// A new event on `date` after its last timed event (the cell's "Create
+/// event" and double click), anchored at the cell.
+fn create_after_last(date: NaiveDate, cx: &mut App) {
+    let viewer = Clock::global(cx).viewer;
+    let events = EventStore::global(cx).read(cx).events().clone();
+    let anchor = Anchors::drop_for(DropZone::Day, date, cx).map(|cell| cell.bounds);
+    DraftState::open_day_draft(
+        date,
+        anchor,
+        DayDraft {
+            start: last_event_end(date, &events, viewer),
+            ..DayDraft::default()
+        },
+        cx,
+    );
 }
 
-fn timed_event(ctx: &RowContext, event: &CalendarEvent) -> impl IntoElement + use<> {
+fn timed_event(ctx: &RowContext, event: &CalendarEvent, role: EventRole) -> AnyElement {
     let palette = ctx.palette;
     let theme = &ctx.theme;
     let paint = ctx.paint(event);
     let highlighted = ctx.is_highlighted(event);
     let rsvp = Rsvp::of(event, &ctx.calendars);
     let pad = metric(theme, "event.padding_x");
-    h_flex()
+    let draft = role == EventRole::Draft;
+    let row = h_flex()
         .id(ElementId::Name(event.key().0.into()))
+        .relative()
         .flex_shrink_0()
         .h(crate::ui::line_height(theme, "xs"))
         .items_center()
@@ -692,23 +759,40 @@ fn timed_event(ctx: &RowContext, event: &CalendarEvent) -> impl IntoElement + us
         .overflow_hidden()
         .rounded(radius(theme, 0.4))
         .text_size(text_size(theme, "xs"))
-        .map(|this| {
-            if highlighted {
-                this.bg(palette.selected).text_color(palette.selected_text)
-            } else {
-                this.hover(move |style| style.bg(palette.hover))
-            }
+        .opacity(ctx.view.opacity(event, role))
+        .map(|this| match role {
+            EventRole::Draft => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .bg(paint.draft_fill)
+                .text_color(paint.draft_text)
+                .font_weight(FontWeight::MEDIUM),
+            EventRole::Preview => this
+                .bg(paint.fill)
+                .text_color(paint.text)
+                .shadow(ring(paint.color, 1.5)),
+            _ if highlighted => this.bg(palette.selected).text_color(palette.selected_text),
+            _ => this.hover(move |style| style.bg(palette.hover)),
         })
-        .when(Rsvp::is_faded(rsvp), |this| this.opacity(0.5))
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(toggle_event(event))
-        .child(div().w(px(2.)).h_full().flex_shrink_0().bg(paint.color))
+        .when(role == EventRole::Normal && Rsvp::is_faded(rsvp), |this| {
+            this.opacity(0.5)
+        })
+        .when(
+            role == EventRole::Normal && rsvp == Some(Rsvp::Declined),
+            |this| this.line_through(),
+        )
+        .when(!draft, |this| {
+            this.child(div().w(px(2.)).h_full().flex_shrink_0().bg(paint.color))
+        })
         .child(
             div()
                 .flex_shrink_0()
                 .text_size(text_size(theme, "2xs"))
                 .font_family(ctx.numerical.clone())
-                .when(!highlighted, |this| this.text_color(paint.tinted_text))
+                .when(!highlighted && role == EventRole::Normal, |this| {
+                    this.text_color(paint.tinted_text)
+                })
                 .child(Role::Numerical.text(
                     theme,
                     &format_time(&event.start, ctx.time_format, ctx.viewer),
@@ -719,23 +803,40 @@ fn timed_event(ctx: &RowContext, event: &CalendarEvent) -> impl IntoElement + us
                 .min_w_0()
                 .truncate()
                 .child(event_title(&event.summary, palette.muted)),
-        )
+        );
+    event_block(
+        row,
+        event,
+        EventSource::View,
+        Some(FloatKind::Pill),
+        AnchorAt::Block,
+        !role.is_static(),
+    )
+    .into_any_element()
 }
 
 fn all_day_bar(
     ctx: &RowContext,
     event: &CalendarEvent,
+    role: EventRole,
     is_start: bool,
     is_end: bool,
-) -> gpui_kit::Stateful<gpui_kit::Div> {
+    fills_row: bool,
+    rect: rencal_layout::Rect,
+) -> AnyElement {
     let theme = &ctx.theme;
     let paint = ctx.paint(event);
     let highlighted = ctx.is_highlighted(event);
     let rsvp = Rsvp::of(event, &ctx.calendars);
-    let faded = Rsvp::is_faded(rsvp);
+    let faded = role == EventRole::Normal && Rsvp::is_faded(rsvp);
     let corner = radius(theme, 0.4);
-    div()
+    let bar = div()
         .id(ElementId::Name(format!("bar:{}", event.key().0).into()))
+        .absolute()
+        .left(px(rect.left))
+        .top(px(rect.top))
+        .w(px(rect.width()))
+        .h(px(rect.height()))
         .flex()
         .items_center()
         .overflow_hidden()
@@ -743,30 +844,59 @@ fn all_day_bar(
         .text_size(text_size(theme, "xs"))
         .when(is_start, |this| this.rounded_l(corner))
         .when(is_end, |this| this.rounded_r(corner))
-        .map(|this| {
-            if faded {
-                this.border_1()
-                    .border_dashed()
-                    .border_color(paint.color)
-                    .text_color(paint.declined_text)
-                    .opacity(0.5)
-            } else {
-                this.bg(if highlighted {
+        .opacity(ctx.view.opacity(event, role))
+        .map(|this| match role {
+            EventRole::Selection => this.bg(ctx.create_color),
+            EventRole::Draft => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .bg(paint.draft_fill)
+                .text_color(paint.draft_text)
+                .font_weight(FontWeight::MEDIUM),
+            EventRole::Preview => this
+                .bg(paint.fill)
+                .text_color(paint.text)
+                .shadow(ring(paint.color, 1.5)),
+            _ if faded => this
+                .border_1()
+                .border_dashed()
+                .border_color(paint.color)
+                .text_color(paint.declined_text)
+                .opacity(0.5),
+            _ => this
+                .bg(if highlighted {
                     paint.selected_fill
                 } else {
                     paint.fill
                 })
-                .text_color(paint.text)
-            }
+                .text_color(paint.text),
         })
-        .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(toggle_event(event))
-        .child(
-            div()
-                .min_w_0()
-                .truncate()
-                .child(event_title(&event.summary, ctx.palette.muted)),
+        .when(
+            role == EventRole::Normal && rsvp == Some(Rsvp::Declined),
+            |this| this.line_through(),
         )
+        .when(role != EventRole::Selection, |this| {
+            this.child(
+                div()
+                    .min_w_0()
+                    .truncate()
+                    .child(event_title(&event.summary, ctx.palette.muted)),
+            )
+        });
+    event_block(
+        bar,
+        event,
+        EventSource::View,
+        Some(FloatKind::Pill),
+        if fills_row {
+            AnchorAt::Pointer
+        } else {
+            AnchorAt::Block
+        },
+        !role.is_static(),
+    )
+    .into_any_element()
 }
 
 #[cfg(test)]

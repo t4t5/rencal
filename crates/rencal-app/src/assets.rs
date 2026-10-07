@@ -34,17 +34,32 @@ macro_rules! icons {
 }
 
 icons! {
+    ArrowRight => "arrow-right",
+    ArrowUpRight => "arrow-up-right",
+    Bell => "bell",
     Check => "check",
     ChevronDown => "chevron-down",
     ChevronRight => "chevron-right",
     ChevronUp => "chevron-up",
+    Clock => "clock",
+    Close => "close",
     Cloud => "cloud",
     CloudCheck => "cloud-check",
     CloudWarning => "cloud-warning",
+    Globe => "globe",
+    Link => "link",
+    MoreHoriz => "more-horiz",
+    Plus => "plus",
+    Pushpin => "pushpin",
+    QuestionMark => "question-mark",
+    QuestionMarkCircle => "question-mark-circle",
+    Repeat => "repeat",
     Search => "search",
     Settings => "settings",
     Sidebar => "sidebar",
     Sync => "sync",
+    Undo => "undo",
+    User => "user",
     Video => "video",
 }
 

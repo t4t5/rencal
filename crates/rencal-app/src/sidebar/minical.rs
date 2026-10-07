@@ -21,6 +21,7 @@ use crate::event_store::EventStore;
 use crate::navigation::Navigation;
 use crate::settings::Settings;
 use crate::theme::ThemeStore;
+use crate::ui::anchors::{Named, named_anchor};
 use crate::ui::event_paint::calendar_accent;
 use crate::ui::{Palette, Role, metric, radius_circle, text_size};
 
@@ -267,6 +268,7 @@ impl Render for Minical {
                                         .on_click(move |_, _, cx| {
                                             Navigation::navigate_to(date, None, cx)
                                         })
+                                        .child(named_anchor(Named::MinicalDay(date)))
                                         .child(date.day().to_string())
                                         .when(!dots.is_empty(), |this| {
                                             this.child(
@@ -291,8 +293,10 @@ impl Render for Minical {
         });
 
         v_flex()
+            .relative()
             .pt_4()
             .flex_shrink_0()
+            .child(named_anchor(Named::Minical))
             .child(header)
             .child(weekdays)
             .children(weeks)

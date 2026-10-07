@@ -9,6 +9,7 @@ mod backend;
 mod clock;
 mod commands;
 mod deep_links;
+mod editing;
 mod event_store;
 mod keymap;
 mod logging;
@@ -166,6 +167,7 @@ fn start(
     EventStore::init(cx);
     SyncState::init(cx);
     toolbar::init(cx);
+    editing::init(cx);
 
     deep_links::intake(&state, &launch_urls);
     deep_links::listen(state, requests, cx);

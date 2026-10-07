@@ -123,10 +123,6 @@ pub struct Shortcut {
     pub bindings: &'static [Binding],
     /// An open event locks the view behind it; only shortcuts that leave it
     /// alone opt out.
-    #[cfg_attr(
-        not(test),
-        expect(dead_code, reason = "enforced once events open in a popover (Phase 4)")
-    )]
     pub allow_while_event_open: bool,
     pub action: fn() -> Box<dyn Action>,
 }

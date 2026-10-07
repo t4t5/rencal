@@ -15,9 +15,11 @@ use rencal_time::display::{DatePartStyle, format_month, format_short_date, forma
 use rencal_time::{Calendar, CalendarEvent, EventKey, TimeFormat, Tz, start_of_week};
 
 use crate::clock::Clock;
+use crate::editing::popover;
 use crate::event_store::EventStore;
 use crate::settings::Settings;
 use crate::theme::ThemeStore;
+use crate::ui::anchors::{Anchors, EventSource, event_anchor};
 use crate::ui::event_paint::{Rsvp, event_paint};
 use crate::ui::{Palette, Role, event_title, text_size};
 
@@ -253,6 +255,7 @@ fn board_card(card: &Card, event: &CalendarEvent, show_date: bool, last: bool) -
 
     div()
         .id(ElementId::Name(format!("board:{}", key.0).into()))
+        .relative()
         .py_1p5()
         .when(!last, |this| this.border_b_1().border_color(palette.border))
         .map(|this| {
@@ -264,9 +267,10 @@ fn board_card(card: &Card, event: &CalendarEvent, show_date: bool, last: bool) -
         })
         .when(Rsvp::is_faded(rsvp), |this| this.opacity(0.5))
         .when(rsvp == Some(Rsvp::Declined), |this| this.line_through())
-        .on_click(move |_, _, cx| {
-            let key = key.clone();
-            EventStore::global(cx).update(cx, |store, cx| store.toggle_active_event(key, cx));
+        .child(event_anchor(key.clone(), EventSource::View))
+        .on_click(move |e, _, cx| {
+            let anchor = Anchors::event_bounds(&key, Some(e.position()), cx);
+            popover::toggle_event(key.clone(), anchor, cx);
         })
         .child(
             h_flex()
