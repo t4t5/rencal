@@ -27,7 +27,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          workspaces: . -> target
           key: plugin-indexer
 
       - uses: actions/setup-node@v4
@@ -40,7 +40,7 @@ jobs:
         run: node scripts/preserve-plugin-index.mjs website/public
 
       - name: Build plugin index
-        run: cargo run --manifest-path src-tauri/Cargo.toml -p rencal-plugin-indexer -- website/public/plugins.json
+        run: cargo run -p rencal-plugin-indexer -- website/public/plugins.json
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 

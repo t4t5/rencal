@@ -1,0 +1,6320 @@
+{
+  "source": "src/lib/event-time/projections.ts",
+  "description": "Per viewer zone: ordering instant (epoch ms), viewer-zoned datetime (Temporal ZonedDateTime string), viewer-local date, isAllDay.",
+  "cases": [
+    {
+      "name": "UTC date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774742400000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792886400000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709164800000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798675200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798761600000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T00:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T00:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T05:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-01",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-01T23:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774751400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792895400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772937000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793496600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781514000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781567940000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T00:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T00:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T07:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T05:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T03:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T10:15:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T14:45:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T15:45:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T15:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T01:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T22:00:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T14:30:00+00:00[UTC]"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774738800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792879200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709161200000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798671600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798758000000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T03:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T06:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T01:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T02:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T03:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792884600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772933400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793493000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781506800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781560740000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T03:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T03:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T08:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T06:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T05:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T11:15:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T16:45:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T17:45:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T17:30:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T03:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+02:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T15:30:00+01:00[Europe/Berlin]"
+      }
+    },
+    {
+      "name": "Europe/London date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774742400000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792882800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709164800000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798675200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798761600000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T00:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T05:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T00:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T01:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792895400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772937000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793496600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781510400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781478000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781564340000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T07:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T05:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T04:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T10:15:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T15:45:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T16:45:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T16:30:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T02:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T23:00:00+01:00[Europe/London]"
+      }
+    },
+    {
+      "name": "Europe/London zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Europe/London"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T14:30:00+00:00[Europe/London]"
+      }
+    },
+    {
+      "name": "America/New_York date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774756800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792900800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709182800000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00-05:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798693200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00-05:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798779600000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00-05:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T20:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T21:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T20:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T21:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-01",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-01T19:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T20:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774765800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774762200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792909800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792906200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T03:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781528400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781496000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781582340000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T21:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T20:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T21:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T20:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T03:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T23:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T05:15:00-05:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T10:45:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T11:45:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T11:30:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T21:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T18:00:00-04:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T09:30:00-05:00[America/New_York]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774767600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792911600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709193600000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798704000000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798790400000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T17:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T18:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T17:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T18:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-31",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-31T22:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-01",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-01T16:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T17:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774776600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774773000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792920600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792917000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772965800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T03:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793521800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781539200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781506800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781593140000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T18:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T17:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T18:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T17:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-07",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-07T23:30:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-31",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-31T22:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T20:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T02:15:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T07:45:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T08:45:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T08:30:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T18:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T15:00:00-07:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "America/Los_Angeles zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T06:30:00-08:00[America/Los_Angeles]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774722600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792866600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709145000000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798655400000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798741800000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T06:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T07:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T06:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T07:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T11:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T05:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T05:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774731600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774728000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792875600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792872000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772917200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793476800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781461800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781548140000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T07:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T06:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T07:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T06:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T13:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T11:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T15:45:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T20:15:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T21:15:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T21:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T06:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T03:30:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Kolkata zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T20:00:00+05:30[Asia/Kolkata]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774710000000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792854000000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709132400000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798642800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798729200000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T09:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T10:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T09:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T10:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T14:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T08:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774719000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774715400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792863000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792859400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772904600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793464200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781449200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781535540000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T10:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T09:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T10:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T09:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T16:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T14:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T12:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T19:15:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T23:45:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-04",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-04T00:45:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T00:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T10:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T07:00:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Asia/Tokyo zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Asia/Tokyo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T23:30:00+09:00[Asia/Tokyo]"
+      }
+    },
+    {
+      "name": "Australia/Sydney date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774702800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792846800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709125200000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798635600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798722000000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T11:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T12:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T16:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T09:30:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T10:00:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774711800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774708200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792855800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792852200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772897400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793457000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781478000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781445600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781531940000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T18:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T16:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T13:30:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T21:15:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T01:45:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-04",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-04T01:45:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T02:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T11:00:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T08:00:00+10:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Sydney zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Australia/Sydney"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2027-01-01T01:30:00+11:00[Australia/Sydney]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774702800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792846800000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709125200000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798635600000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798722000000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T11:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T12:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T16:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T10:00:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T10:30:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774711800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774708200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792855800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792852200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772897400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793457000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781476200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781443800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781530140000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T12:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T11:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T18:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T16:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T14:00:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T21:15:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T01:45:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-04",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-04T02:45:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T02:00:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T11:30:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T08:30:00+10:30[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Australia/Lord_Howe zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2027-01-01T01:30:00+11:00[Australia/Lord_Howe]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774692900000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792836900000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709115300000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798625700000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798712100000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T14:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T15:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T14:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T15:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T19:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-02",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-02T12:15:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T12:45:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774701900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774698300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792845900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792842300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772887500000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793447100000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781468100000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781435700000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781522040000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T15:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T14:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T15:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T14:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T21:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T19:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T16:15:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-01-01",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2026-01-01T00:00:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T03:30:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-04",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-04T05:30:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-05",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-05T04:15:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-16",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-16T13:45:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T10:45:00+12:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "Pacific/Chatham zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2027-01-01T04:15:00+13:45[Pacific/Chatham]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774753200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-03-29T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792897200000,
+        "isAllDay": true,
+        "viewerZoned": "2026-10-25T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2024-02-29",
+        "instantMs": 1709175600000,
+        "isAllDay": true,
+        "viewerZoned": "2024-02-29T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798686000000,
+        "isAllDay": true,
+        "viewerZoned": "2026-12-31T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2027-01-01",
+        "instantMs": 1798772400000,
+        "isAllDay": true,
+        "viewerZoned": "2027-01-01T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774744200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T21:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T22:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T21:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792891800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T22:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T02:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-07-01",
+        "instantMs": 1782948600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-07-01T20:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781481600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T21:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774762200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T02:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-29",
+        "instantMs": 1774758600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-29T01:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792906200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T02:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-25",
+        "instantMs": 1792902600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-25T01:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772947800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T02:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793507400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T01:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781524800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T09:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781492400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781578740000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T23:59:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T22:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T21:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-28",
+        "instantMs": 1774747800000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-28T22:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-24",
+        "instantMs": 1792888200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-24T21:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-03-08",
+        "instantMs": 1772955000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-03-08T04:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-11-01",
+        "instantMs": 1793511000000,
+        "isAllDay": false,
+        "viewerZoned": "2026-11-01T02:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781494200000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T00:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2025-12-31",
+        "instantMs": 1767176100000,
+        "isAllDay": false,
+        "viewerZoned": "2025-12-31T07:15:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775313900000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T11:45:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-10-03",
+        "instantMs": 1791042300000,
+        "isAllDay": false,
+        "viewerZoned": "2026-10-03T12:45:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-04-04",
+        "instantMs": 1775316600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-04-04T12:30:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-15",
+        "instantMs": 1781571600000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-15T22:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-06-14",
+        "instantMs": 1781474400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-06-14T19:00:00-03:00[America/Sao_Paulo]"
+      }
+    },
+    {
+      "name": "America/Sao_Paulo zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/Sao_Paulo"
+      },
+      "output": {
+        "dateInViewerZone": "2026-12-31",
+        "instantMs": 1798727400000,
+        "isAllDay": false,
+        "viewerZoned": "2026-12-31T11:30:00-03:00[America/Sao_Paulo]"
+      }
+    }
+  ]
+}

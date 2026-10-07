@@ -1,0 +1,1003 @@
+{
+  "generator": "scripts/fixtures/themes/dump.sh",
+  "id": "nord",
+  "appearance": "dark",
+  "colors": {
+    "background": {
+      "hex": "#2e3440ff",
+      "raw": "rgb(46, 52, 64)"
+    },
+    "foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "placeholder-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "surface-tint": {
+      "hex": "#88c0d0ff",
+      "raw": "rgb(136, 192, 208)"
+    },
+    "primary": {
+      "hex": "#88c0d0ff",
+      "raw": "rgb(136, 192, 208)"
+    },
+    "primary-hover": {
+      "hex": "#96c8d6ff",
+      "raw": "color(srgb 0.589333 0.782588 0.837804)"
+    },
+    "primary-foreground": {
+      "hex": "#2e3440ff",
+      "raw": "rgb(46, 52, 64)"
+    },
+    "today": {
+      "hex": "#5e81acff",
+      "raw": "rgb(94, 129, 172)"
+    },
+    "today-foreground": {
+      "hex": "#ffffffff",
+      "raw": "rgb(255, 255, 255)"
+    },
+    "brand": {
+      "hex": "#81a1c1ff",
+      "raw": "rgb(129, 161, 193)"
+    },
+    "brand-hover": {
+      "hex": "#90acc8ff",
+      "raw": "color(srgb 0.565176 0.675608 0.786039)"
+    },
+    "brand-foreground": {
+      "hex": "#2e3440ff",
+      "raw": "rgb(46, 52, 64)"
+    },
+    "weekend": {
+      "hex": "#88c0d01f",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.12)"
+    },
+    "card": {
+      "hex": "#394551ff",
+      "raw": "color(srgb 0.222745 0.269804 0.318745)"
+    },
+    "card-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "card-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "popover": {
+      "hex": "#394551ff",
+      "raw": "color(srgb 0.222745 0.269804 0.318745)"
+    },
+    "popover-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "popover-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "sidebar": {
+      "hex": "#2e3440ff",
+      "raw": "rgb(46, 52, 64)"
+    },
+    "tooltip": {
+      "hex": "#3b4956ff",
+      "raw": "color(srgb 0.233333 0.286274 0.335686)"
+    },
+    "tooltip-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "tooltip-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "toast": {
+      "hex": "#394551ff",
+      "raw": "color(srgb 0.222745 0.269804 0.318745)"
+    },
+    "toast-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "toast-muted-foreground": {
+      "hex": "#eceff499",
+      "raw": "color(srgb 0.92549 0.937255 0.956863 / 0.6)"
+    },
+    "overlay": {
+      "hex": "#00000080",
+      "raw": "rgba(0, 0, 0, 0.5)"
+    },
+    "border": {
+      "hex": "#88c0d05c",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.36)"
+    },
+    "input": {
+      "hex": "#88c0d07a",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.48)"
+    },
+    "ring": {
+      "hex": "#88c0d0ff",
+      "raw": "rgb(136, 192, 208)"
+    },
+    "button-border": {
+      "hex": "#00000000",
+      "raw": "rgba(0, 0, 0, 0)"
+    },
+    "hover": {
+      "hex": "#88c0d01f",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.12)"
+    },
+    "secondary": {
+      "hex": "#88c0d01f",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.12)"
+    },
+    "secondary-hover": {
+      "hex": "#88c0d03a",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.2256)"
+    },
+    "secondary-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "secondary-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "accent": {
+      "hex": "#88c0d05c",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.36)"
+    },
+    "accent-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "accent-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "selected": {
+      "hex": "#88c0d07a",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.48)"
+    },
+    "selected-foreground": {
+      "hex": "#eceff4ff",
+      "raw": "rgb(236, 239, 244)"
+    },
+    "selected-muted-foreground": {
+      "hex": "#d8dee9ff",
+      "raw": "rgb(216, 222, 233)"
+    },
+    "muted": {
+      "hex": "#88c0d01f",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.12)"
+    },
+    "control-active-background": {
+      "hex": "#88c0d01f",
+      "raw": "color(srgb 0.533333 0.752941 0.815686 / 0.12)"
+    },
+    "control-active-border": {
+      "hex": "#00000000",
+      "raw": "rgba(0, 0, 0, 0)"
+    },
+    "success": {
+      "hex": "#a3be8cff",
+      "raw": "rgb(163, 190, 140)"
+    },
+    "warning": {
+      "hex": "#ebcb8bff",
+      "raw": "rgb(235, 203, 139)"
+    },
+    "destructive": {
+      "hex": "#bf616aff",
+      "raw": "rgb(191, 97, 106)"
+    },
+    "destructive-hover": {
+      "hex": "#c7747cff",
+      "raw": "color(srgb 0.779137 0.454745 0.485804)"
+    },
+    "destructive-foreground": {
+      "hex": "#ffffffff",
+      "raw": "rgb(255, 255, 255)"
+    },
+    "event-color": null,
+    "event-background": null,
+    "event-foreground": null,
+    "event-tint-surface": null
+  },
+  "lengths": {
+    "radius": 5.59375,
+    "radius-circle": 5600,
+    "control-height": 34,
+    "control-height-xs": 24,
+    "control-height-sm": 32,
+    "control-height-lg": 40,
+    "control-padding-inline": 8,
+    "control-content-gap": 8,
+    "control-row-gap": 4,
+    "control-leading-size": 16,
+    "control-trailing-inset": 4,
+    "layout-padding": 12,
+    "nav-padding-inline": 4,
+    "month-padding-inline": 4,
+    "event-padding-inline": 4,
+    "lane-height": 20,
+    "text-2xs": 11,
+    "text-2xs--line-height": 14,
+    "text-xs": 12,
+    "text-xs--line-height": 16,
+    "text-sm": 14,
+    "text-sm--line-height": 20,
+    "text-base": 16,
+    "text-base--line-height": 24,
+    "text-lg": 18,
+    "text-lg--line-height": 28,
+    "text-xl": 20,
+    "text-xl--line-height": 28,
+    "text-2xl": 24,
+    "text-2xl--line-height": 32,
+    "text-heading": null,
+    "text-heading--line-height": null,
+    "text-heading--letter-spacing": null,
+    "text-button": null,
+    "text-button--line-height": null,
+    "text-button--letter-spacing": null,
+    "text-numerical": null,
+    "text-numerical--line-height": null,
+    "text-numerical--letter-spacing": null
+  },
+  "raw": {
+    "surface-tint-step": "12%",
+    "scrollbar-width": null,
+    "font-sans": "system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif",
+    "font-mono": "\"Geist Mono\",ui-monospace,monospace",
+    "font-body": "system-ui,-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,sans-serif",
+    "font-heading": "\"Geist Mono\",ui-monospace,monospace",
+    "font-button": "\"Geist Mono\",ui-monospace,monospace",
+    "font-numerical": "\"Geist Mono\",ui-monospace,monospace",
+    "week-grid-background": null,
+    "text-heading--transform": "uppercase",
+    "text-heading--font-weight": null,
+    "text-button--transform": "uppercase",
+    "text-button--font-weight": null,
+    "text-numerical--transform": "uppercase",
+    "text-numerical--font-weight": null,
+    "calendar-event-text-max-lightness": null,
+    "calendar-event-text-foreground-mix": null
+  },
+  "events": {
+    "#f56313": {
+      "calendar-event-color": {
+        "hex": "#f56313ff",
+        "raw": "rgb(245, 99, 19)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#ff3000ff",
+        "raw": "oklch(0.677162 0.273683 42.7065)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#ff3000ff",
+        "raw": "oklch(0.677162 0.273683 42.7065)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#fca376ff",
+        "raw": "color(srgb 0.988043 0.638451 0.461827)"
+      },
+      "calendar-event-fill": {
+        "hex": "#5c3325ff",
+        "raw": "color(srgb 0.360688 0.201186 0.144639)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#79594eff",
+        "raw": "color(srgb 0.473648 0.3484 0.307084)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#fca376ff",
+        "raw": "color(srgb 0.988043 0.638451 0.461827)"
+      },
+      "week.background": {
+        "hex": "#5c3325ff",
+        "raw": "color(srgb 0.360688 0.201186 0.144639)"
+      },
+      "week.text": {
+        "hex": "#fca376ff",
+        "raw": "color(srgb 0.988043 0.638451 0.461827)"
+      },
+      "week.selected.background": {
+        "hex": "#79594eff",
+        "raw": "color(srgb 0.473648 0.3484 0.307084)"
+      },
+      "declined.text": {
+        "hex": "#ff9056ff",
+        "raw": "color(srgb 1.00368 0.563751 0.338068)"
+      },
+      "declined.border": {
+        "hex": "#f56313ff",
+        "raw": "rgb(245, 99, 19)"
+      },
+      "draft.background": {
+        "hex": "#50332cff",
+        "raw": "color(srgb 0.315614 0.20187 0.171224)"
+      },
+      "draft.text": {
+        "hex": "#ff7d37ff",
+        "raw": "color(srgb 1.01932 0.48905 0.214309)"
+      },
+      "draft.ring": {
+        "hex": "#f5631340",
+        "raw": "color(srgb 0.960784 0.388235 0.0745098 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#ff310033",
+        "raw": "color(srgb 1.08187 0.190246 -0.280727 / 0.2)"
+      }
+    },
+    "#3a93ff": {
+      "calendar-event-color": {
+        "hex": "#3a93ffff",
+        "raw": "rgb(58, 147, 255)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#008cffff",
+        "raw": "oklch(0.664382 0.25324 255.417)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#008cffff",
+        "raw": "oklch(0.664382 0.25324 255.417)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#7bc7ffff",
+        "raw": "color(srgb 0.481715 0.781875 1.03928)"
+      },
+      "calendar-event-fill": {
+        "hex": "#1b466fff",
+        "raw": "color(srgb 0.107524 0.272898 0.433363)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#456789ff",
+        "raw": "color(srgb 0.271118 0.40577 0.538063)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#7bc7ffff",
+        "raw": "color(srgb 0.481715 0.781875 1.03928)"
+      },
+      "week.background": {
+        "hex": "#1b466fff",
+        "raw": "color(srgb 0.107524 0.272898 0.433363)"
+      },
+      "week.text": {
+        "hex": "#7bc7ffff",
+        "raw": "color(srgb 0.481715 0.781875 1.03928)"
+      },
+      "week.selected.background": {
+        "hex": "#456789ff",
+        "raw": "color(srgb 0.271118 0.40577 0.538063)"
+      },
+      "declined.text": {
+        "hex": "#5fbdffff",
+        "raw": "color(srgb 0.370772 0.74303 1.05988)"
+      },
+      "declined.border": {
+        "hex": "#3a93ffff",
+        "raw": "rgb(58, 147, 255)"
+      },
+      "draft.background": {
+        "hex": "#204163ff",
+        "raw": "color(srgb 0.125741 0.255654 0.387768)"
+      },
+      "draft.text": {
+        "hex": "#42b4ffff",
+        "raw": "color(srgb 0.259828 0.704185 1.08048)"
+      },
+      "draft.ring": {
+        "hex": "#3a93ff40",
+        "raw": "color(srgb 0.227451 0.576471 1 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#008cff33",
+        "raw": "color(srgb -0.183947 0.548806 1.1629 / 0.2)"
+      }
+    },
+    "#4caf50": {
+      "calendar-event-color": {
+        "hex": "#4caf50ff",
+        "raw": "rgb(76, 175, 80)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#00b71bff",
+        "raw": "oklch(0.673094 0.227385 144.199)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#00b71bff",
+        "raw": "oklch(0.673094 0.227385 144.199)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#81d99dff",
+        "raw": "color(srgb 0.506573 0.849225 0.616277)"
+      },
+      "calendar-event-fill": {
+        "hex": "#1f4e39ff",
+        "raw": "color(srgb 0.119953 0.306573 0.221864)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#486e5eff",
+        "raw": "color(srgb 0.281061 0.43271 0.368864)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#81d99dff",
+        "raw": "color(srgb 0.506573 0.849225 0.616277)"
+      },
+      "week.background": {
+        "hex": "#1f4e39ff",
+        "raw": "color(srgb 0.119953 0.306573 0.221864)"
+      },
+      "week.text": {
+        "hex": "#81d99dff",
+        "raw": "color(srgb 0.506573 0.849225 0.616277)"
+      },
+      "week.selected.background": {
+        "hex": "#486e5eff",
+        "raw": "color(srgb 0.281061 0.43271 0.368864)"
+      },
+      "declined.text": {
+        "hex": "#66d387ff",
+        "raw": "color(srgb 0.401844 0.827218 0.53113)"
+      },
+      "declined.border": {
+        "hex": "#4caf50ff",
+        "raw": "rgb(76, 175, 80)"
+      },
+      "draft.background": {
+        "hex": "#22483aff",
+        "raw": "color(srgb 0.135063 0.28091 0.229143)"
+      },
+      "draft.text": {
+        "hex": "#4ccd72ff",
+        "raw": "color(srgb 0.297114 0.80521 0.445984)"
+      },
+      "draft.ring": {
+        "hex": "#4caf5040",
+        "raw": "color(srgb 0.298039 0.686275 0.313726 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#00b71b33",
+        "raw": "color(srgb -0.121803 0.71718 0.105398 / 0.2)"
+      }
+    },
+    "#e25252": {
+      "calendar-event-color": {
+        "hex": "#e25252ff",
+        "raw": "rgb(226, 82, 82)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#ff0f34ff",
+        "raw": "oklch(0.632597 0.251645 23.7913)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#ff0f34ff",
+        "raw": "oklch(0.632597 0.251645 23.7913)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#f395a7ff",
+        "raw": "color(srgb 0.954509 0.585863 0.656336)"
+      },
+      "calendar-event-fill": {
+        "hex": "#582d3eff",
+        "raw": "color(srgb 0.343921 0.174893 0.241894)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#755362ff",
+        "raw": "color(srgb 0.460235 0.327365 0.384887)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#f395a7ff",
+        "raw": "color(srgb 0.954509 0.585863 0.656336)"
+      },
+      "week.background": {
+        "hex": "#582d3eff",
+        "raw": "color(srgb 0.343921 0.174893 0.241894)"
+      },
+      "week.text": {
+        "hex": "#f395a7ff",
+        "raw": "color(srgb 0.954509 0.585863 0.656336)"
+      },
+      "week.selected.background": {
+        "hex": "#755362ff",
+        "raw": "color(srgb 0.460235 0.327365 0.384887)"
+      },
+      "declined.text": {
+        "hex": "#f57f94ff",
+        "raw": "color(srgb 0.961764 0.498016 0.581205)"
+      },
+      "declined.border": {
+        "hex": "#e25252ff",
+        "raw": "rgb(226, 82, 82)"
+      },
+      "draft.background": {
+        "hex": "#4d2e3eff",
+        "raw": "color(srgb 0.303039 0.18215 0.244165)"
+      },
+      "draft.text": {
+        "hex": "#f76981ff",
+        "raw": "color(srgb 0.969019 0.410168 0.506073)"
+      },
+      "draft.ring": {
+        "hex": "#e2525240",
+        "raw": "color(srgb 0.886275 0.321569 0.321569 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#fe0f3433",
+        "raw": "color(srgb 0.998038 0.0587763 0.205547 / 0.2)"
+      }
+    },
+    "#9c27b0": {
+      "calendar-event-color": {
+        "hex": "#9c27b0ff",
+        "raw": "rgb(156, 39, 176)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#ae00cbff",
+        "raw": "oklch(0.516827 0.301162 321.246)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#ae00cbff",
+        "raw": "oklch(0.516827 0.301162 321.246)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#d37ae4ff",
+        "raw": "color(srgb 0.827736 0.476804 0.893018)"
+      },
+      "calendar-event-fill": {
+        "hex": "#481f5cff",
+        "raw": "color(srgb 0.280535 0.120363 0.360235)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#68487aff",
+        "raw": "color(srgb 0.409526 0.283741 0.47956)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#d37ae4ff",
+        "raw": "color(srgb 0.827736 0.476804 0.893018)"
+      },
+      "week.background": {
+        "hex": "#481f5cff",
+        "raw": "color(srgb 0.280535 0.120363 0.360235)"
+      },
+      "week.text": {
+        "hex": "#d37ae4ff",
+        "raw": "color(srgb 0.827736 0.476804 0.893018)"
+      },
+      "week.selected.background": {
+        "hex": "#68487aff",
+        "raw": "color(srgb 0.409526 0.283741 0.47956)"
+      },
+      "declined.text": {
+        "hex": "#cd5ce0ff",
+        "raw": "color(srgb 0.803297 0.361691 0.877057)"
+      },
+      "declined.border": {
+        "hex": "#9c27b0ff",
+        "raw": "rgb(156, 39, 176)"
+      },
+      "draft.background": {
+        "hex": "#412455ff",
+        "raw": "color(srgb 0.255499 0.141252 0.332921)"
+      },
+      "draft.text": {
+        "hex": "#c73fdcff",
+        "raw": "color(srgb 0.778859 0.246578 0.861096)"
+      },
+      "draft.ring": {
+        "hex": "#9c27b040",
+        "raw": "color(srgb 0.611765 0.152941 0.690196 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#ae00cb33",
+        "raw": "color(srgb 0.681104 -0.213873 0.797252 / 0.2)"
+      }
+    },
+    "#ffeb3b": {
+      "calendar-event-color": {
+        "hex": "#ffeb3bff",
+        "raw": "rgb(255, 235, 59)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#ffea00ff",
+        "raw": "oklch(0.928465 0.252369 102.483)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#ffea00ff",
+        "raw": "oklch(0.928465 0.252369 102.483)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#f8ed67ff",
+        "raw": "color(srgb 0.971981 0.928969 0.403985)"
+      },
+      "calendar-event-fill": {
+        "hex": "#5a581eff",
+        "raw": "color(srgb 0.352657 0.346445 0.115718)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#777648ff",
+        "raw": "color(srgb 0.467224 0.464607 0.283947)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#f8ed67ff",
+        "raw": "color(srgb 0.971981 0.928969 0.403985)"
+      },
+      "week.background": {
+        "hex": "#5a581eff",
+        "raw": "color(srgb 0.352657 0.346445 0.115718)"
+      },
+      "week.text": {
+        "hex": "#f8ed67ff",
+        "raw": "color(srgb 0.971981 0.928969 0.403985)"
+      },
+      "week.selected.background": {
+        "hex": "#777648ff",
+        "raw": "color(srgb 0.467224 0.464607 0.283947)"
+      },
+      "declined.text": {
+        "hex": "#fbec44ff",
+        "raw": "color(srgb 0.983604 0.926898 0.265765)"
+      },
+      "declined.border": {
+        "hex": "#ffeb3bff",
+        "raw": "rgb(255, 235, 59)"
+      },
+      "draft.background": {
+        "hex": "#4f4f26ff",
+        "raw": "color(srgb 0.309591 0.310814 0.149533)"
+      },
+      "draft.text": {
+        "hex": "#feec21ff",
+        "raw": "color(srgb 0.995227 0.924826 0.127546)"
+      },
+      "draft.ring": {
+        "hex": "#ffeb3b40",
+        "raw": "color(srgb 1 0.921569 0.231373 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#ffea0033",
+        "raw": "color(srgb 1.04172 0.91654 -0.425333 / 0.2)"
+      }
+    },
+    "#00bcd4": {
+      "calendar-event-color": {
+        "hex": "#00bcd4ff",
+        "raw": "rgb(0, 188, 212)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#00c2e5ff",
+        "raw": "oklch(0.729104 0.176999 210.819)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#00c2e5ff",
+        "raw": "oklch(0.729104 0.176999 210.819)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#64ddeeff",
+        "raw": "color(srgb 0.392366 0.867056 0.933942)"
+      },
+      "calendar-event-fill": {
+        "hex": "#105061ff",
+        "raw": "color(srgb 0.0628495 0.315489 0.380696)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#3c707eff",
+        "raw": "color(srgb 0.235378 0.439842 0.49593)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#64ddeeff",
+        "raw": "color(srgb 0.392366 0.867056 0.933942)"
+      },
+      "week.background": {
+        "hex": "#105061ff",
+        "raw": "color(srgb 0.0628495 0.315489 0.380696)"
+      },
+      "week.text": {
+        "hex": "#64ddeeff",
+        "raw": "color(srgb 0.392366 0.867056 0.933942)"
+      },
+      "week.selected.background": {
+        "hex": "#3c707eff",
+        "raw": "color(srgb 0.235378 0.439842 0.49593)"
+      },
+      "declined.text": {
+        "hex": "#42d9edff",
+        "raw": "color(srgb 0.259085 0.849507 0.928212)"
+      },
+      "declined.border": {
+        "hex": "#00bcd4ff",
+        "raw": "rgb(0, 188, 212)"
+      },
+      "draft.background": {
+        "hex": "#184959ff",
+        "raw": "color(srgb 0.0922352 0.287597 0.348267)"
+      },
+      "draft.text": {
+        "hex": "#20d4ebff",
+        "raw": "color(srgb 0.125803 0.831957 0.922481)"
+      },
+      "draft.ring": {
+        "hex": "#00bcd440",
+        "raw": "color(srgb 0 0.737255 0.831373 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#00c2e533",
+        "raw": "color(srgb -0.407321 0.761758 0.89956 / 0.2)"
+      }
+    },
+    "#795548": {
+      "calendar-event-color": {
+        "hex": "#795548ff",
+        "raw": "rgb(121, 85, 72)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#82503eff",
+        "raw": "oklch(0.484533 0.0735773 40.6864)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#82503eff",
+        "raw": "oklch(0.484533 0.0735773 40.6864)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#c2afabff",
+        "raw": "color(srgb 0.759681 0.68813 0.671317)"
+      },
+      "calendar-event-fill": {
+        "hex": "#3f3a40ff",
+        "raw": "color(srgb 0.246507 0.226026 0.249384)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#615e64ff",
+        "raw": "color(srgb 0.382304 0.368272 0.39088)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#c2afabff",
+        "raw": "color(srgb 0.759681 0.68813 0.671317)"
+      },
+      "week.background": {
+        "hex": "#3f3a40ff",
+        "raw": "color(srgb 0.246507 0.226026 0.249384)"
+      },
+      "week.text": {
+        "hex": "#c2afabff",
+        "raw": "color(srgb 0.759681 0.68813 0.671317)"
+      },
+      "week.selected.background": {
+        "hex": "#615e64ff",
+        "raw": "color(srgb 0.382304 0.368272 0.39088)"
+      },
+      "declined.text": {
+        "hex": "#b7a099ff",
+        "raw": "color(srgb 0.718229 0.625849 0.59993)"
+      },
+      "declined.border": {
+        "hex": "#795548ff",
+        "raw": "rgb(121, 85, 72)"
+      },
+      "draft.background": {
+        "hex": "#3b3840ff",
+        "raw": "color(srgb 0.229979 0.2205 0.249783)"
+      },
+      "draft.text": {
+        "hex": "#ad9087ff",
+        "raw": "color(srgb 0.676777 0.563568 0.528544)"
+      },
+      "draft.ring": {
+        "hex": "#79554840",
+        "raw": "color(srgb 0.47451 0.333333 0.282353 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#82503e33",
+        "raw": "color(srgb 0.510968 0.314444 0.242998 / 0.2)"
+      }
+    },
+    "#7287fd": {
+      "calendar-event-color": {
+        "hex": "#7287fdff",
+        "raw": "rgb(114, 135, 253)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#697bffff",
+        "raw": "oklch(0.663748 0.245125 273.144)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#697bffff",
+        "raw": "oklch(0.663748 0.245125 273.144)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#b7c0ffff",
+        "raw": "color(srgb 0.719215 0.754572 1.03481)"
+      },
+      "calendar-event-fill": {
+        "hex": "#3a426eff",
+        "raw": "color(srgb 0.226274 0.259247 0.431128)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#5d6589ff",
+        "raw": "color(srgb 0.366117 0.394849 0.536275)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#b7c0ffff",
+        "raw": "color(srgb 0.719215 0.754572 1.03481)"
+      },
+      "week.background": {
+        "hex": "#3a426eff",
+        "raw": "color(srgb 0.226274 0.259247 0.431128)"
+      },
+      "week.text": {
+        "hex": "#b7c0ffff",
+        "raw": "color(srgb 0.719215 0.754572 1.03481)"
+      },
+      "week.selected.background": {
+        "hex": "#5d6589ff",
+        "raw": "color(srgb 0.366117 0.394849 0.536275)"
+      },
+      "declined.text": {
+        "hex": "#aab5ffff",
+        "raw": "color(srgb 0.667646 0.708902 1.05429)"
+      },
+      "declined.border": {
+        "hex": "#7287fdff",
+        "raw": "rgb(114, 135, 253)"
+      },
+      "draft.background": {
+        "hex": "#373f62ff",
+        "raw": "color(srgb 0.214804 0.245416 0.386091)"
+      },
+      "draft.text": {
+        "hex": "#9da9ffff",
+        "raw": "color(srgb 0.616077 0.663231 1.07378)"
+      },
+      "draft.ring": {
+        "hex": "#7287fd40",
+        "raw": "color(srgb 0.447059 0.529412 0.992157 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#687bff33",
+        "raw": "color(srgb 0.409802 0.480549 1.15172 / 0.2)"
+      }
+    },
+    "#000000": {
+      "calendar-event-color": {
+        "hex": "#000000ff",
+        "raw": "rgb(0, 0, 0)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#000000ff",
+        "raw": "oklch(0 0 0)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#000000ff",
+        "raw": "oklch(0 0 0)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#8e8f92ff",
+        "raw": "color(srgb 0.555294 0.562353 0.574118)"
+      },
+      "calendar-event-fill": {
+        "hex": "#252a33ff",
+        "raw": "color(srgb 0.144314 0.163137 0.200784)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#4d515aff",
+        "raw": "color(srgb 0.300549 0.317961 0.352)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#8e8f92ff",
+        "raw": "color(srgb 0.555294 0.562353 0.574118)"
+      },
+      "week.background": {
+        "hex": "#252a33ff",
+        "raw": "color(srgb 0.144314 0.163137 0.200784)"
+      },
+      "week.text": {
+        "hex": "#8e8f92ff",
+        "raw": "color(srgb 0.555294 0.562353 0.574118)"
+      },
+      "week.selected.background": {
+        "hex": "#4d515aff",
+        "raw": "color(srgb 0.300549 0.317961 0.352)"
+      },
+      "declined.text": {
+        "hex": "#76777aff",
+        "raw": "color(srgb 0.462745 0.468627 0.478431)"
+      },
+      "declined.border": {
+        "hex": "#000000ff",
+        "raw": "rgb(0, 0, 0)"
+      },
+      "draft.background": {
+        "hex": "#272c36ff",
+        "raw": "color(srgb 0.153333 0.173333 0.213333)"
+      },
+      "draft.text": {
+        "hex": "#5e6062ff",
+        "raw": "color(srgb 0.370196 0.374902 0.382745)"
+      },
+      "draft.ring": {
+        "hex": "#00000040",
+        "raw": "color(srgb 0 0 0 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#00000033",
+        "raw": "color(srgb 0 0 0 / 0.2)"
+      }
+    },
+    "#ffffff": {
+      "calendar-event-color": {
+        "hex": "#ffffffff",
+        "raw": "rgb(255, 255, 255)"
+      },
+      "calendar-event-boosted-color": {
+        "hex": "#ffffffff",
+        "raw": "oklch(0.999994 0.000069718 23.7884)"
+      },
+      "calendar-event-tinted-color": {
+        "hex": "#ffffffff",
+        "raw": "oklch(0.999994 0.000069718 23.7884)"
+      },
+      "calendar-event-tinted-foreground": {
+        "hex": "#f4f5f8ff",
+        "raw": "color(srgb 0.955316 0.962346 0.974108)"
+      },
+      "calendar-event-fill": {
+        "hex": "#585d66ff",
+        "raw": "color(srgb 0.344325 0.363134 0.400779)"
+      },
+      "calendar-event-selected-fill": {
+        "hex": "#757a83ff",
+        "raw": "color(srgb 0.460558 0.477958 0.511996)"
+      },
+      "calendar-event-foreground": {
+        "hex": "#f4f5f8ff",
+        "raw": "color(srgb 0.955316 0.962346 0.974108)"
+      },
+      "week.background": {
+        "hex": "#585d66ff",
+        "raw": "color(srgb 0.344325 0.363134 0.400779)"
+      },
+      "week.text": {
+        "hex": "#f4f5f8ff",
+        "raw": "color(srgb 0.955316 0.962346 0.974108)"
+      },
+      "week.selected.background": {
+        "hex": "#757a83ff",
+        "raw": "color(srgb 0.460558 0.477958 0.511996)"
+      },
+      "declined.text": {
+        "hex": "#f6f7f9ff",
+        "raw": "color(srgb 0.962773 0.968618 0.978419)"
+      },
+      "declined.border": {
+        "hex": "#ffffffff",
+        "raw": "rgb(255, 255, 255)"
+      },
+      "draft.background": {
+        "hex": "#4d525dff",
+        "raw": "color(srgb 0.303342 0.323331 0.36333)"
+      },
+      "draft.text": {
+        "hex": "#f7f9fbff",
+        "raw": "color(srgb 0.97023 0.974891 0.98273)"
+      },
+      "draft.ring": {
+        "hex": "#ffffff40",
+        "raw": "color(srgb 1 1 1 / 0.25)"
+      },
+      "create_selection.background": {
+        "hex": "#ffffff33",
+        "raw": "color(srgb 1.00006 0.999982 0.999975 / 0.2)"
+      }
+    }
+  }
+}

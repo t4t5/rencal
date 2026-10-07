@@ -57,7 +57,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          workspaces: . -> target
 
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
@@ -105,12 +105,12 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri -> target
+          workspaces: . -> target
           key: linux-packaging
 
       - run: pnpm install --frozen-lockfile
       - run: scripts/install-caldir-providers.sh
-      - run: cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+      - run: cargo build --release -p rencal-notifierd
 
       - name: Build Linux packages
         env:

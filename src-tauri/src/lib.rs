@@ -1,10 +1,5 @@
 mod deep_links;
-mod event_cache;
 mod events;
-mod external_themes;
-mod fs_watch;
-#[cfg(target_os = "linux")]
-mod linux_reminders;
 #[cfg(target_os = "macos")]
 mod macos_notifications;
 #[cfg(target_os = "macos")]
@@ -12,28 +7,21 @@ mod menu;
 mod notifications;
 #[cfg(target_os = "linux")]
 mod nvidia_workaround;
-mod oauth;
-mod omarchy;
-pub mod plugins;
 mod routes;
-mod signal;
-#[cfg(target_os = "linux")]
-mod single_instance;
-pub mod state;
 mod state_bridge;
-mod tasks;
 mod watchers;
 
+use rencal_core::plugins;
+use rencal_core::state::{AppState, ProviderDirs};
+use rencal_core::tasks::spawn_task;
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::plugins::{PluginsApi, PluginsApiImpl};
 use routes::themes::{ThemesApi, ThemesApiImpl};
-use state::{AppState, ProviderDirs};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tasks::spawn_task;
 use tauri::Manager;
 use tauri_plugin_deep_link::DeepLinkExt;
 use tauri_plugin_dialog::DialogExt;
@@ -166,7 +154,7 @@ fn focus_main_window<R: tauri::Runtime>(app: &tauri::AppHandle<R>) -> bool {
 
 fn spawn_reminder_loop_if_needed(app: &tauri::App) {
     #[cfg(target_os = "linux")]
-    if !linux_reminders::should_run_in_process_reminders() {
+    if !rencal_core::linux_reminders::should_run_in_process_reminders() {
         log::info!("rencal-notifierd is active — skipping in-process reminder loop");
         return;
     }
@@ -224,7 +212,7 @@ pub async fn run() {
     // pulls in the tokio feature transitively from xdg-portal). On
     // macOS/Windows the plugin's native impl is fine.
     #[cfg(target_os = "linux")]
-    let mut instance_guard = match single_instance::try_acquire_or_signal() {
+    let mut instance_guard = match rencal_core::single_instance::try_acquire_or_signal() {
         Some(g) => g,
         None => return, // existing instance acked and was focused; we exit.
     };
@@ -318,12 +306,12 @@ pub async fn run() {
             // Enable systemd notifications:
             #[cfg(target_os = "linux")]
             {
-                linux_reminders::enable_notifierd_if_needed();
-                linux_reminders::restart_notifierd_if_upgraded();
+                rencal_core::linux_reminders::enable_notifierd_if_needed();
+                rencal_core::linux_reminders::restart_notifierd_if_upgraded();
                 if let Some(listener) = instance_listener {
                     let app_handle = app.handle().clone();
                     let inbox_state = state.clone();
-                    single_instance::spawn_listener(listener, move |urls| {
+                    rencal_core::single_instance::spawn_listener(listener, move |urls| {
                         if !urls.is_empty() {
                             deep_links::enqueue_urls(&app_handle, &inbox_state.deep_links, &urls);
                         }

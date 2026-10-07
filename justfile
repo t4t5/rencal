@@ -10,7 +10,6 @@ install:
 format:
   @just format-rust
 
-[working-directory: 'src-tauri']
 format-rust:
   cargo fmt --all
 
@@ -47,17 +46,17 @@ start:
   #!/usr/bin/env bash
   set -euo pipefail
   shopt -s nullglob
-  appimages=(src-tauri/target/release/bundle/appimage/renCal_*.AppImage)
+  appimages=(target/release/bundle/appimage/renCal_*.AppImage)
   if [[ ${#appimages[@]} -ne 1 ]]; then
-    echo "Expected exactly one AppImage in src-tauri/target/release/bundle/appimage. Run 'just build' first." >&2
+    echo "Expected exactly one AppImage in target/release/bundle/appimage. Run 'just build' first." >&2
     exit 1
   fi
   "${appimages[0]}"
 
 # Check Rust and TypeScript types
 check:
-  cargo check --workspace --manifest-path src-tauri/Cargo.toml
-  cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
+  cargo check --workspace
+  cargo clippy --workspace -- -D warnings
   @just typecheck
 
 # Check TypeScript types only
@@ -69,8 +68,16 @@ typecheck:
 # Run frontend and Rust tests, and verify both generated IPC contracts are current
 test:
   pnpm test
-  cargo test --workspace --manifest-path src-tauri/Cargo.toml
+  cargo test --workspace
   bash scripts/check-generated-types.sh
+
+# Regenerate the GPUI port's golden fixtures from the TS implementations (scripts/fixtures/README.md)
+fixtures:
+  pnpm exec vitest run --config scripts/fixtures/vitest.config.ts
+
+# Dump every built-in theme's computed tokens from headless Chromium (rencal-theme parity fixtures)
+theme-fixtures:
+  scripts/fixtures/themes/dump.sh
 
 # Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug agenda`.
 debug flags="*": ensure-providers
@@ -95,7 +102,7 @@ build: ensure-providers
   # Linux deb/rpm bundles ship the reminder daemon — build it first so
   # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
   if [[ "$(uname -s)" == "Linux" ]]; then
-    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+    cargo build --release -p rencal-notifierd
   fi
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
   if [[ "$(uname -s)" == "Linux" ]]; then
@@ -115,7 +122,7 @@ notarize: ensure-providers
   # Updater artifacts (and their signing key) are produced in CI, not here.
   NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
-# Download the caldir provider binaries pinned in src-tauri/Cargo.toml, unless already installed.
+# Download the caldir provider binaries pinned in Cargo.toml, unless already installed.
 ensure-providers:
   scripts/install-caldir-providers.sh
 
@@ -153,21 +160,21 @@ bundle-debug-macos: ensure-providers
   fi
   export APPLE_SIGNING_IDENTITY
   pnpm tauri build --debug --bundles app --config '{ "bundle": { "createUpdaterArtifacts": false } }'
-  open src-tauri/target/debug/bundle/macos/renCal.app
+  open target/debug/bundle/macos/renCal.app
 
 clear-notification-cache:
   rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
 
 # Build the standalone reminder daemon (Linux)
 build-notifierd:
-  cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+  cargo build --release -p rencal-notifierd
 
 # Install the reminder daemon binary + systemd user unit, then enable + start it.
 # Also drops the rencal icon at the XDG user path so daemon notifications get
 # the app icon (deb/rpm/AUR installs put it at /usr/share/icons/... instead).
 # Idempotent — safe to re-run after rebuilds.
 install-notifierd: build-notifierd
-  install -Dm755 src-tauri/target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
+  install -Dm755 target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
   install -d ~/.config/systemd/user
   sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
     src-tauri/notifierd/rencal-notifierd.service \
@@ -203,7 +210,7 @@ deeplink-dev:
     'Terminal=false' \
     'NoDisplay=true' \
     'MimeType=x-scheme-handler/rencal' \
-    'Exec={{justfile_directory()}}/src-tauri/target/debug/rencal %u' \
+    'Exec={{justfile_directory()}}/target/debug/rencal %u' \
     > ~/.local/share/applications/rencal-handler.desktop
   xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
 

@@ -6,8 +6,8 @@ root=$(cd "$(dirname "$0")/../.." && pwd)
 cd "$root"
 file=$(jq -r '.tool_input.file_path // .tool_response.filePath // empty')
 case "$file" in
-  "$root"/src-tauri/*.rs)
-    out=$(cargo check --workspace --manifest-path src-tauri/Cargo.toml -q 2>&1) || { echo "$out" >&2; exit 2; } ;;
+  "$root"/src-tauri/*.rs|"$root"/crates/*.rs)
+    out=$(cargo check --workspace -q 2>&1) || { echo "$out" >&2; exit 2; } ;;
   "$root"/src/*.ts|"$root"/src/*.tsx)
     out=$(pnpm exec tsc --noEmit 2>&1) || { echo "$out" >&2; exit 2; }
     out=$(pnpm exec eslint "$file" 2>&1) || { echo "$out" >&2; exit 2; } ;;

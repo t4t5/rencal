@@ -1,0 +1,19 @@
+[package]
+name = "rencal-theme"
+version.workspace = true
+edition = "2024"
+description = "renCal theme format v2: types, JSON schema, resolver and built-in themes"
+publish = false
+
+[features]
+# Legacy CSS theme → v2 JSON converter (tooling and the website only; the app never reads CSS).
+legacy-css = []
+
+[dependencies]
+schemars = "1.2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[[example]]
+name = "convert-legacy"
+required-features = ["legacy-css"]

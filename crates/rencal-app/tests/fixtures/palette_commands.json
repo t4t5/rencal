@@ -1,0 +1,159 @@
+{
+  "source": "src/lib/palette-commands.ts",
+  "description": "Command palette entries in display order. `label` null means the shortcut's label is used; `submenu`/`page` null when absent.",
+  "cases": [
+    {
+      "name": "groups",
+      "input": null,
+      "output": [
+        "Calendar",
+        "View",
+        "Navigation",
+        "General"
+      ]
+    },
+    {
+      "name": "add-event",
+      "input": null,
+      "output": {
+        "group": "Calendar",
+        "id": "add-event",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "duplicate-event",
+      "input": null,
+      "output": {
+        "group": "Calendar",
+        "id": "duplicate-event",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "search",
+      "input": null,
+      "output": {
+        "group": "Calendar",
+        "id": "search",
+        "label": "Search events…",
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "month",
+      "input": null,
+      "output": {
+        "group": "View",
+        "id": "month",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "week",
+      "input": null,
+      "output": {
+        "group": "View",
+        "id": "week",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "board",
+      "input": null,
+      "output": {
+        "group": "View",
+        "id": "board",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "toggle-week-numbers",
+      "input": null,
+      "output": {
+        "group": "View",
+        "id": "toggle-week-numbers",
+        "label": "Toggle week numbers",
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "switch-group",
+      "input": null,
+      "output": {
+        "group": "View",
+        "id": "switch-group",
+        "label": "Switch calendar group…",
+        "page": null,
+        "submenu": "calendar-groups"
+      }
+    },
+    {
+      "name": "go-to-date",
+      "input": null,
+      "output": {
+        "group": "Navigation",
+        "id": "go-to-date",
+        "label": "Go to date…",
+        "page": "go-to-date",
+        "submenu": null
+      }
+    },
+    {
+      "name": "today",
+      "input": null,
+      "output": {
+        "group": "Navigation",
+        "id": "today",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "toggle-theme",
+      "input": null,
+      "output": {
+        "group": "General",
+        "id": "toggle-theme",
+        "label": "Set theme…",
+        "page": null,
+        "submenu": "themes"
+      }
+    },
+    {
+      "name": "settings",
+      "input": null,
+      "output": {
+        "group": "General",
+        "id": "settings",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    },
+    {
+      "name": "shortcuts",
+      "input": null,
+      "output": {
+        "group": "General",
+        "id": "shortcuts",
+        "label": null,
+        "page": null,
+        "submenu": null
+      }
+    }
+  ]
+}

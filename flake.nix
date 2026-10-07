@@ -44,9 +44,8 @@
               fetcherVersion = 4;
             };
 
-            cargoRoot = "src-tauri";
             cargoDeps = pkgs.rustPlatform.importCargoLock {
-              lockFile = ./src-tauri/Cargo.lock;
+              lockFile = ./Cargo.lock;
               allowBuiltinFetchGit = true;
             };
 
@@ -90,9 +89,7 @@
             buildPhase = ''
               runHook preBuild
 
-              cd src-tauri
               cargo build --release -p rencal-notifierd
-              cd ..
 
               cargo tauri build --bundles deb \
                 --config '{ "bundle": { "createUpdaterArtifacts": false } }'
@@ -104,7 +101,7 @@
               runHook preInstall
 
               mkdir -p $out
-              cd src-tauri/target/release/bundle/deb
+              cd target/release/bundle/deb
               ar x *.deb
               mkdir -p extracted
 

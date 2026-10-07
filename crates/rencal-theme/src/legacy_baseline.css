@@ -1,0 +1,169 @@
+/* The legacy CSS theme contract's baseline, copied from the `:root, [data-theme]`
+   block and the `[data-appearance="light"]` rules of the Tauri app's src/global.css
+   (plus Tailwind's --spacing). The legacy converter evaluates theme declarations on
+   top of it, exactly as the webview did. Frozen: the app no longer reads CSS. */
+
+--spacing: 0.25rem;
+
+--text-heading--transform: uppercase;
+--text-button--transform: uppercase;
+--text-numerical--transform: uppercase;
+
+--radius: 0px;
+--control-height: 34px;
+--control-padding-inline: 8px;
+--control-content-gap: 8px;
+--control-row-gap: 4px;
+--control-leading-size: 16px;
+--layout-padding: calc(var(--spacing) * 3);
+/* Rows keep 8px inside the highlight so their text lands on --layout-padding. */
+--nav-padding-inline: max(0px, var(--layout-padding) - var(--spacing) * 2);
+--month-padding-inline: var(--spacing);
+--event-padding-inline: var(--spacing);
+
+/* Keep in sync with @theme above; checked by global-css.test.ts. */
+--text-2xs: 11px;
+--text-2xs--line-height: 14px;
+--text-xs: 12px;
+--text-xs--line-height: 16px;
+--text-sm: 14px;
+--text-sm--line-height: 20px;
+--text-base: 16px;
+--text-base--line-height: 24px;
+--text-lg: 18px;
+--text-lg--line-height: 28px;
+--text-xl: 20px;
+--text-xl--line-height: 28px;
+--text-2xl: 24px;
+--text-2xl--line-height: 32px;
+
+--background: #131313;
+--foreground: white;
+--muted-foreground: color-mix(in srgb, var(--foreground) 50%, transparent);
+
+--primary: #f56313;
+
+/* Follow --primary so shadcn themes, which lack these, stay on-palette. */
+--today: var(--primary);
+--brand: var(--primary);
+
+--ring: oklch(0.552 0.016 285.938);
+
+--success: #4caf50;
+--warning: #fd8742;
+--destructive: #e25252;
+
+--surface-tint: var(--foreground);
+--surface-tint-step: 5%;
+
+/* Optional overrides stay unset so their var() fallbacks apply. */
+--scrollbar-width: initial;
+--text-heading: initial;
+--text-heading--line-height: initial;
+--text-heading--letter-spacing: initial;
+--text-heading--font-weight: initial;
+--text-button: initial;
+--text-button--line-height: initial;
+--text-button--letter-spacing: initial;
+--text-button--font-weight: initial;
+--text-numerical: initial;
+--text-numerical--line-height: initial;
+--text-numerical--letter-spacing: initial;
+--text-numerical--font-weight: initial;
+--event-color: initial;
+--event-background: initial;
+--event-foreground: initial;
+--event-tint-surface: initial;
+--week-grid-background: initial;
+
+--font-mono: "Geist Mono", ui-monospace, monospace;
+--font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+--font-body: var(--font-sans);
+--font-heading: var(--font-mono);
+--font-button: var(--font-mono);
+--font-numerical: var(--font-mono);
+
+/* Derived from the primitives above, on the same scope. */
+--radius-circle: calc(var(--radius) * 1000); /* Square when --radius is 0, a pill otherwise. */
+--control-height-xs: calc(var(--control-height) - 10px);
+--control-height-sm: calc(var(--control-height) - 2px);
+--control-height-lg: calc(var(--control-height) + 6px);
+/* Trailing slot's end gap; matches its vertical gap in a 1px-bordered field. */
+--control-trailing-inset: calc((var(--control-height) - var(--control-height-xs)) / 2 - 1px);
+--placeholder-foreground: var(--muted-foreground);
+
+--button-border: transparent;
+
+/* Each surface mixes N tint steps into a base, never into another surface,
+     so overriding one shadcn token leaves the others alone. */
+--hover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+--secondary: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+--secondary-hover: color-mix(
+  in srgb,
+  var(--surface-tint) var(--surface-tint-step),
+  var(--secondary)
+);
+--secondary-foreground: var(--foreground);
+
+--accent: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
+--accent-foreground: var(--foreground);
+--selected: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
+--selected-foreground: var(--foreground);
+--today-foreground: var(--primary-foreground);
+--brand-foreground: var(--background);
+--muted: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), transparent);
+--weekend: var(--hover);
+
+--border: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 3), transparent);
+
+/* same as hover, but solid color: */
+--card: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
+--card-foreground: var(--foreground);
+
+/* Sidebar columns (calendar and settings); the page background unless set. */
+--sidebar: var(--background);
+
+/* same as border, but stronger tint */
+--input: color-mix(in srgb, var(--surface-tint) calc(var(--surface-tint-step) * 4), transparent);
+
+/* Interactive controls use one uninterrupted surface while active. */
+--control-active-background: var(--secondary);
+--control-active-border: transparent;
+
+--primary-hover: color-mix(in srgb, white var(--surface-tint-step), var(--primary));
+--destructive-hover: color-mix(in srgb, white var(--surface-tint-step), var(--destructive));
+--brand-hover: color-mix(in srgb, white var(--surface-tint-step), var(--brand));
+--primary-foreground: var(--background);
+
+--popover: color-mix(in srgb, var(--surface-tint) var(--surface-tint-step), var(--background));
+--popover-foreground: var(--foreground);
+
+--tooltip: color-mix(in srgb, var(--surface-tint) 15%, var(--background));
+--tooltip-foreground: var(--foreground);
+
+/* A raised surface on dark themes; the light-appearance rule inverts it. */
+--toast: var(--popover);
+--toast-foreground: var(--popover-foreground);
+
+/* Muted text on each surface that sets its own foreground. The
+     text-*-foreground utilities below swap these into --muted-foreground. */
+--secondary-muted-foreground: var(--muted-foreground);
+--accent-muted-foreground: var(--muted-foreground);
+--selected-muted-foreground: var(--muted-foreground);
+--card-muted-foreground: var(--muted-foreground);
+--popover-muted-foreground: var(--muted-foreground);
+--tooltip-muted-foreground: var(--muted-foreground);
+--toast-muted-foreground: color-mix(in srgb, var(--toast-foreground) 60%, transparent);
+
+--destructive-foreground: white;
+--overlay: rgb(0 0 0 / 0.5);
+
+--lane-height: calc(var(--text-xs--line-height) + 4px);
+
+/* @light */
+
+--toast: var(--foreground);
+--toast-foreground: var(--background);
+
+--calendar-event-text-max-lightness: 0.45;
+--calendar-event-text-foreground-mix: 0%;

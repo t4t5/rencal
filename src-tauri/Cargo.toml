@@ -1,21 +1,6 @@
-[workspace]
-members = [
-  "notifierd",
-  "plugin-contract",
-  "plugin-indexer",
-  "reminder-core",
-  "rencal-config",
-]
-
-[workspace.dependencies]
-caldir-core = "0.16.0"
-
-[workspace.metadata.caldir]
-provider-tag = "v0.14.2"
-
 [package]
 name = "rencal"
-version = "0.0.1"
+version.workspace = true
 description = "A modern open-source calendar"
 authors = ["you"]
 edition = "2024"
@@ -33,6 +18,9 @@ crate-type = ["rlib"]
 [[example]]
 name = "gen_types"
 
+[dev-dependencies]
+tempfile = "3"
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 
@@ -45,41 +33,17 @@ taurpc = "0.5.2"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
 specta-typescript = "=0.0.9"
 tokio = { version = "1", features = ["full"] }
-url = "2.5"
 anyhow = "1.0.100"
-socket2 = "0.5"
-caldir-core = { workspace = true }
-chrono = "0.4.43"
 reminder-core = { path = "reminder-core" }
 rencal-config = { path = "rencal-config" }
-rencal-plugin-contract = { path = "plugin-contract" }
+rencal-core = { path = "../crates/rencal-core", features = ["specta"] }
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
-chrono-tz = "0.10.4"
-toml = "0.8"
-toml_edit = "0.20"
-notify = "6"
-iana-time-zone = "0.1"
-dirs = "5"
 tauri-plugin-log = "2.8.0"
 log = "0.4.29"
 tauri-plugin-deep-link = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-process = "2"
-parking_lot = "0.12"
-semver = "1"
-reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "stream"] }
-rustls = { version = "0.23", default-features = false, features = ["ring"] }
-futures-util = "0.3"
-tempfile = "3"
-base64 = "0.22"
-flate2 = "1"
-quick-xml = "0.39"
-sha2 = "0.10"
-tar = "0.4"
-
-[target.'cfg(target_os = "linux")'.dependencies]
-libc = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = "0.6"

@@ -20,7 +20,7 @@ use objc2_user_notifications::{
 use reminder_core::ReminderNotification;
 use tauri::AppHandle;
 
-use crate::state::AppState;
+use rencal_core::state::AppState;
 
 const EVENT_URL_KEY: &str = "event_url";
 

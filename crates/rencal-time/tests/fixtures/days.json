@@ -1,0 +1,346 @@
+{
+  "source": "src/lib/event-time/day.ts",
+  "description": "epochDay and its inverse, startOfWeek and isoWeekNumber for Monday- and Sunday-first weeks. dayOfWeek is ISO (Mon=1…Sun=7).",
+  "cases": [
+    {
+      "name": "1970-01-01",
+      "input": {
+        "date": "1970-01-01"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "1970-01-01",
+        "dayOfWeek": 4,
+        "epochDay": 0,
+        "fromEpochDay": "1970-01-01",
+        "isoWeekNumber": {
+          "monday": 1,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "1969-12-29",
+          "sunday": "1969-12-28"
+        }
+      }
+    },
+    {
+      "name": "1969-12-31",
+      "input": {
+        "date": "1969-12-31"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "1969-12-31",
+        "dayOfWeek": 3,
+        "epochDay": -1,
+        "fromEpochDay": "1969-12-31",
+        "isoWeekNumber": {
+          "monday": 1,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "1969-12-29",
+          "sunday": "1969-12-28"
+        }
+      }
+    },
+    {
+      "name": "2000-02-29",
+      "input": {
+        "date": "2000-02-29"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2000-02-29",
+        "dayOfWeek": 2,
+        "epochDay": 11016,
+        "fromEpochDay": "2000-02-29",
+        "isoWeekNumber": {
+          "monday": 9,
+          "sunday": 9
+        },
+        "startOfWeek": {
+          "monday": "2000-02-28",
+          "sunday": "2000-02-27"
+        }
+      }
+    },
+    {
+      "name": "2024-02-29",
+      "input": {
+        "date": "2024-02-29"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2024-02-29",
+        "dayOfWeek": 4,
+        "epochDay": 19782,
+        "fromEpochDay": "2024-02-29",
+        "isoWeekNumber": {
+          "monday": 9,
+          "sunday": 9
+        },
+        "startOfWeek": {
+          "monday": "2024-02-26",
+          "sunday": "2024-02-25"
+        }
+      }
+    },
+    {
+      "name": "2026-01-01",
+      "input": {
+        "date": "2026-01-01"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-01-01",
+        "dayOfWeek": 4,
+        "epochDay": 20454,
+        "fromEpochDay": "2026-01-01",
+        "isoWeekNumber": {
+          "monday": 1,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "2025-12-29",
+          "sunday": "2025-12-28"
+        }
+      }
+    },
+    {
+      "name": "2026-03-29",
+      "input": {
+        "date": "2026-03-29"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-03-29",
+        "dayOfWeek": 7,
+        "epochDay": 20541,
+        "fromEpochDay": "2026-03-29",
+        "isoWeekNumber": {
+          "monday": 13,
+          "sunday": 14
+        },
+        "startOfWeek": {
+          "monday": "2026-03-23",
+          "sunday": "2026-03-29"
+        }
+      }
+    },
+    {
+      "name": "2026-06-14",
+      "input": {
+        "date": "2026-06-14"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-06-14",
+        "dayOfWeek": 7,
+        "epochDay": 20618,
+        "fromEpochDay": "2026-06-14",
+        "isoWeekNumber": {
+          "monday": 24,
+          "sunday": 25
+        },
+        "startOfWeek": {
+          "monday": "2026-06-08",
+          "sunday": "2026-06-14"
+        }
+      }
+    },
+    {
+      "name": "2026-06-15",
+      "input": {
+        "date": "2026-06-15"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-06-15",
+        "dayOfWeek": 1,
+        "epochDay": 20619,
+        "fromEpochDay": "2026-06-15",
+        "isoWeekNumber": {
+          "monday": 25,
+          "sunday": 25
+        },
+        "startOfWeek": {
+          "monday": "2026-06-15",
+          "sunday": "2026-06-14"
+        }
+      }
+    },
+    {
+      "name": "2026-12-27",
+      "input": {
+        "date": "2026-12-27"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-12-27",
+        "dayOfWeek": 7,
+        "epochDay": 20814,
+        "fromEpochDay": "2026-12-27",
+        "isoWeekNumber": {
+          "monday": 52,
+          "sunday": 53
+        },
+        "startOfWeek": {
+          "monday": "2026-12-21",
+          "sunday": "2026-12-27"
+        }
+      }
+    },
+    {
+      "name": "2026-12-31",
+      "input": {
+        "date": "2026-12-31"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2026-12-31",
+        "dayOfWeek": 4,
+        "epochDay": 20818,
+        "fromEpochDay": "2026-12-31",
+        "isoWeekNumber": {
+          "monday": 53,
+          "sunday": 53
+        },
+        "startOfWeek": {
+          "monday": "2026-12-28",
+          "sunday": "2026-12-27"
+        }
+      }
+    },
+    {
+      "name": "2027-01-01",
+      "input": {
+        "date": "2027-01-01"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2027-01-01",
+        "dayOfWeek": 5,
+        "epochDay": 20819,
+        "fromEpochDay": "2027-01-01",
+        "isoWeekNumber": {
+          "monday": 53,
+          "sunday": 53
+        },
+        "startOfWeek": {
+          "monday": "2026-12-28",
+          "sunday": "2026-12-27"
+        }
+      }
+    },
+    {
+      "name": "2027-01-03",
+      "input": {
+        "date": "2027-01-03"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2027-01-03",
+        "dayOfWeek": 7,
+        "epochDay": 20821,
+        "fromEpochDay": "2027-01-03",
+        "isoWeekNumber": {
+          "monday": 53,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "2026-12-28",
+          "sunday": "2027-01-03"
+        }
+      }
+    },
+    {
+      "name": "2027-01-04",
+      "input": {
+        "date": "2027-01-04"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2027-01-04",
+        "dayOfWeek": 1,
+        "epochDay": 20822,
+        "fromEpochDay": "2027-01-04",
+        "isoWeekNumber": {
+          "monday": 1,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "2027-01-04",
+          "sunday": "2027-01-03"
+        }
+      }
+    },
+    {
+      "name": "2020-12-31",
+      "input": {
+        "date": "2020-12-31"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2020-12-31",
+        "dayOfWeek": 4,
+        "epochDay": 18627,
+        "fromEpochDay": "2020-12-31",
+        "isoWeekNumber": {
+          "monday": 53,
+          "sunday": 53
+        },
+        "startOfWeek": {
+          "monday": "2020-12-28",
+          "sunday": "2020-12-27"
+        }
+      }
+    },
+    {
+      "name": "2021-01-03",
+      "input": {
+        "date": "2021-01-03"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2021-01-03",
+        "dayOfWeek": 7,
+        "epochDay": 18630,
+        "fromEpochDay": "2021-01-03",
+        "isoWeekNumber": {
+          "monday": 53,
+          "sunday": 1
+        },
+        "startOfWeek": {
+          "monday": "2020-12-28",
+          "sunday": "2021-01-03"
+        }
+      }
+    },
+    {
+      "name": "1900-03-01",
+      "input": {
+        "date": "1900-03-01"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "1900-03-01",
+        "dayOfWeek": 4,
+        "epochDay": -25508,
+        "fromEpochDay": "1900-03-01",
+        "isoWeekNumber": {
+          "monday": 9,
+          "sunday": 9
+        },
+        "startOfWeek": {
+          "monday": "1900-02-26",
+          "sunday": "1900-02-25"
+        }
+      }
+    },
+    {
+      "name": "2100-12-31",
+      "input": {
+        "date": "2100-12-31"
+      },
+      "output": {
+        "dateKeyFromEpochDay": "2100-12-31",
+        "dayOfWeek": 5,
+        "epochDay": 47846,
+        "fromEpochDay": "2100-12-31",
+        "isoWeekNumber": {
+          "monday": 52,
+          "sunday": 52
+        },
+        "startOfWeek": {
+          "monday": "2100-12-27",
+          "sunday": "2100-12-26"
+        }
+      }
+    }
+  ]
+}

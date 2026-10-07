@@ -1,0 +1,563 @@
+{
+  "source": "src/lib/event-url.ts",
+  "description": "Link finding in free text (trailing punctuation and unbalanced brackets trimmed), toOpenableUrl, and the first link worth showing for an event.",
+  "cases": [
+    {
+      "name": "find \"https://us02web.zoom.us/j/123456789?pwd=abc123\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://us02web.zoom.us/j/123456789?pwd=abc123"
+      },
+      "output": [
+        "https://us02web.zoom.us/j/123456789?pwd=abc123"
+      ]
+    },
+    {
+      "name": "find \"https://company.zoom.us/my/room\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://company.zoom.us/my/room"
+      },
+      "output": [
+        "https://company.zoom.us/my/room"
+      ]
+    },
+    {
+      "name": "find \"https://zoomgov.com/j/555\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://zoomgov.com/j/555"
+      },
+      "output": [
+        "https://zoomgov.com/j/555"
+      ]
+    },
+    {
+      "name": "find \"https://meet.google.com/abc-defg-hij\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://meet.google.com/abc-defg-hij"
+      },
+      "output": [
+        "https://meet.google.com/abc-defg-hij"
+      ]
+    },
+    {
+      "name": "find \"https://teams.microsoft.com/l/meetup-join/xyz\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://teams.microsoft.com/l/meetup-join/xyz"
+      },
+      "output": [
+        "https://teams.microsoft.com/l/meetup-join/xyz"
+      ]
+    },
+    {
+      "name": "find \"https://teams.live.com/meet/123\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://teams.live.com/meet/123"
+      },
+      "output": [
+        "https://teams.live.com/meet/123"
+      ]
+    },
+    {
+      "name": "find \"https://company.webex.com/meet/someone\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://company.webex.com/meet/someone"
+      },
+      "output": [
+        "https://company.webex.com/meet/someone"
+      ]
+    },
+    {
+      "name": "find \"https://meet.jit.si/SomeRoom\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://meet.jit.si/SomeRoom"
+      },
+      "output": [
+        "https://meet.jit.si/SomeRoom"
+      ]
+    },
+    {
+      "name": "find \"https://whereby.com/some-room\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://whereby.com/some-room"
+      },
+      "output": [
+        "https://whereby.com/some-room"
+      ]
+    },
+    {
+      "name": "find \"https://www.whereby.com/some-room\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://www.whereby.com/some-room"
+      },
+      "output": [
+        "https://www.whereby.com/some-room"
+      ]
+    },
+    {
+      "name": "find \"https://meet.proton.me/example\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://meet.proton.me/example"
+      },
+      "output": [
+        "https://meet.proton.me/example"
+      ]
+    },
+    {
+      "name": "find \"Join here: https://zoom.us/j/99887766 (passcode 1234)\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Join here: https://zoom.us/j/99887766 (passcode 1234)"
+      },
+      "output": [
+        "https://zoom.us/j/99887766"
+      ]
+    },
+    {
+      "name": "find \"(https://meet.google.com/abc-defg-hij)\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "(https://meet.google.com/abc-defg-hij)"
+      },
+      "output": [
+        "https://meet.google.com/abc-defg-hij"
+      ]
+    },
+    {
+      "name": "find \"Link: https://meet.google.com/abc-defg-hij.\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Link: https://meet.google.com/abc-defg-hij."
+      },
+      "output": [
+        "https://meet.google.com/abc-defg-hij"
+      ]
+    },
+    {
+      "name": "find \"https://zoom.us\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://zoom.us"
+      },
+      "output": [
+        "https://zoom.us"
+      ]
+    },
+    {
+      "name": "find \"https://example.com/zoom.us/j/123\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://example.com/zoom.us/j/123"
+      },
+      "output": [
+        "https://example.com/zoom.us/j/123"
+      ]
+    },
+    {
+      "name": "find \"HTTPS://MEET.GOOGLE.COM/ABC\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "HTTPS://MEET.GOOGLE.COM/ABC"
+      },
+      "output": [
+        "HTTPS://MEET.GOOGLE.COM/ABC"
+      ]
+    },
+    {
+      "name": "find \"Room 4, https://zoom.us/j/1 and https://meet.google.com/x\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Room 4, https://zoom.us/j/1 and https://meet.google.com/x"
+      },
+      "output": [
+        "https://zoom.us/j/1",
+        "https://meet.google.com/x"
+      ]
+    },
+    {
+      "name": "find \"https://example.com\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://example.com"
+      },
+      "output": [
+        "https://example.com"
+      ]
+    },
+    {
+      "name": "find \"www.example.com/path\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "www.example.com/path"
+      },
+      "output": [
+        "www.example.com/path"
+      ]
+    },
+    {
+      "name": "find \"See https://a.example/x then http://b.example and www.c.example\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "See https://a.example/x then http://b.example and www.c.example"
+      },
+      "output": [
+        "https://a.example/x",
+        "http://b.example",
+        "www.c.example"
+      ]
+    },
+    {
+      "name": "find \"foowww.example.com\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "foowww.example.com"
+      },
+      "output": []
+    },
+    {
+      "name": "find \"Tickets: https://example.com/tickets.\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Tickets: https://example.com/tickets."
+      },
+      "output": [
+        "https://example.com/tickets"
+      ]
+    },
+    {
+      "name": "find \"(more at https://example.com/info).\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "(more at https://example.com/info)."
+      },
+      "output": [
+        "https://example.com/info"
+      ]
+    },
+    {
+      "name": "find \"Read https://en.wikipedia.org/wiki/Foo_(bar) first\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Read https://en.wikipedia.org/wiki/Foo_(bar) first"
+      },
+      "output": [
+        "https://en.wikipedia.org/wiki/Foo_(bar)"
+      ]
+    },
+    {
+      "name": "find \"(Read https://en.wikipedia.org/wiki/Foo_(bar))\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "(Read https://en.wikipedia.org/wiki/Foo_(bar))"
+      },
+      "output": [
+        "https://en.wikipedia.org/wiki/Foo_(bar)"
+      ]
+    },
+    {
+      "name": "find \"Really? https://example.com/?q=1!\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Really? https://example.com/?q=1!"
+      },
+      "output": [
+        "https://example.com/?q=1"
+      ]
+    },
+    {
+      "name": "find \"https://example.com/a and https://example.com/b\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "https://example.com/a and https://example.com/b"
+      },
+      "output": [
+        "https://example.com/a",
+        "https://example.com/b"
+      ]
+    },
+    {
+      "name": "find \"Flight details: https://www.flighty.app/\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "Flight details: https://www.flighty.app/"
+      },
+      "output": [
+        "https://www.flighty.app/"
+      ]
+    },
+    {
+      "name": "find \"[docs](https://docs.example/agenda])\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "[docs](https://docs.example/agenda])"
+      },
+      "output": [
+        "https://docs.example/agenda"
+      ]
+    },
+    {
+      "name": "find \"<https://venue.example/map>\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "<https://venue.example/map>"
+      },
+      "output": [
+        "https://venue.example/map"
+      ]
+    },
+    {
+      "name": "find \"\\\"https://quoted.example/x\\\"\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "\"https://quoted.example/x\""
+      },
+      "output": [
+        "https://quoted.example/x"
+      ]
+    },
+    {
+      "name": "find \"mailto:someone@example.com\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "mailto:someone@example.com"
+      },
+      "output": []
+    },
+    {
+      "name": "find \"no links here\"",
+      "input": {
+        "fn": "findUrls",
+        "text": "no links here"
+      },
+      "output": []
+    },
+    {
+      "name": "find \"\"",
+      "input": {
+        "fn": "findUrls",
+        "text": ""
+      },
+      "output": []
+    },
+    {
+      "name": "openable https://example.com",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "https://example.com"
+      },
+      "output": "https://example.com"
+    },
+    {
+      "name": "openable http://example.com",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "http://example.com"
+      },
+      "output": "http://example.com"
+    },
+    {
+      "name": "openable example.com",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "example.com"
+      },
+      "output": "https://example.com"
+    },
+    {
+      "name": "openable example.com/a",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "example.com/a"
+      },
+      "output": "https://example.com/a"
+    },
+    {
+      "name": "openable www.example.com/path",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "www.example.com/path"
+      },
+      "output": "https://www.example.com/path"
+    },
+    {
+      "name": "openable mailto:someone@example.com",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "mailto:someone@example.com"
+      },
+      "output": "mailto:someone@example.com"
+    },
+    {
+      "name": "openable tel:+123",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "tel:+123"
+      },
+      "output": "tel:+123"
+    },
+    {
+      "name": "openable ftp://x.example",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "ftp://x.example"
+      },
+      "output": "ftp://x.example"
+    },
+    {
+      "name": "openable a+b.c-d:thing",
+      "input": {
+        "fn": "toOpenableUrl",
+        "url": "a+b.c-d:thing"
+      },
+      "output": "a+b.c-d:thing"
+    },
+    {
+      "name": "detect event 0",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": null,
+          "location": null,
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": null
+    },
+    {
+      "name": "detect event 1",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "Agenda: https://docs.example/agenda",
+          "location": null,
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "description",
+        "url": "https://docs.example/agenda"
+      }
+    },
+    {
+      "name": "detect event 2",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "https://docs.example/agenda",
+          "location": "https://venue.example/map",
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "location",
+        "url": "https://venue.example/map"
+      }
+    },
+    {
+      "name": "detect event 3",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "https://docs.example/agenda",
+          "location": "https://venue.example/map",
+          "url": "https://venue.example/map"
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "description",
+        "url": "https://docs.example/agenda"
+      }
+    },
+    {
+      "name": "detect event 4",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": null,
+          "location": "https://venue.example/map",
+          "url": "venue.example/map"
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": null
+    },
+    {
+      "name": "detect event 5",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "Join https://zoom.us/j/1 or see https://docs.example",
+          "location": "https://zoom.us/j/1",
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "description",
+        "url": "https://docs.example"
+      }
+    },
+    {
+      "name": "detect event 6",
+      "input": {
+        "event": {
+          "conference": {
+            "provider": "google",
+            "status": "live",
+            "url": "https://meet.google.com/a"
+          },
+          "description": "https://meet.google.com/a then https://meet.jit.si/standup",
+          "location": null,
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": null
+    },
+    {
+      "name": "detect event 7",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "https://meet.jit.si/standup",
+          "location": null,
+          "url": null
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "description",
+        "url": "https://meet.jit.si/standup"
+      }
+    },
+    {
+      "name": "detect event 8",
+      "input": {
+        "event": {
+          "conference": null,
+          "description": "www.example.com",
+          "location": null,
+          "url": "  "
+        },
+        "fn": "detectEventUrl"
+      },
+      "output": {
+        "source": "description",
+        "url": "www.example.com"
+      }
+    }
+  ]
+}

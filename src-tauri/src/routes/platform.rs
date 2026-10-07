@@ -38,8 +38,8 @@ pub fn needs_native_decorations() -> bool {
     false
 }
 
-use crate::deep_links::{EventDeepLink, PluginInstallLink};
-use crate::state::AppState;
+use rencal_core::deep_links::{EventDeepLink, PluginInstallLink};
+use rencal_core::state::AppState;
 use std::sync::Arc;
 
 #[taurpc::procedures(path = "platform", export_to = "../src/rpc/bindings.ts")]

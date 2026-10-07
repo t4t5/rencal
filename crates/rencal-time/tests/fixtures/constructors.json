@@ -1,0 +1,894 @@
+{
+  "source": "src/lib/event-time/constructors.ts",
+  "description": "atTime builds a viewer-zoned datetime (DST gap → later, overlap → earlier). fromDate takes a Date's local wallclock components (as given in `localComponents`, after the Europe/Berlin process zone normalised them) and zones them in the viewer zone.",
+  "cases": [
+    {
+      "name": "atTime UTC 2026-06-15 9:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 9,
+        "minute": 0,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-03-29 2:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-03-29T02:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-03-29 1:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-03-29T01:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-10-25 2:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-10-25 1:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-10-25T01:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-03-08 2:30",
+      "input": {
+        "date": "2026-03-08",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-03-08T02:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-11-01 1:30",
+      "input": {
+        "date": "2026-11-01",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-11-01T01:30:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-10-04 2:15",
+      "input": {
+        "date": "2026-10-04",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 15,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-10-04T02:15:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-04-05 1:45",
+      "input": {
+        "date": "2026-04-05",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 45,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-04-05T01:45:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-06-15 0:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 0,
+        "minute": 0,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-06-15T00:00:00"
+      }
+    },
+    {
+      "name": "atTime UTC 2026-06-15 23:59",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 23,
+        "minute": 59,
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-06-15T23:59:00"
+      }
+    },
+    {
+      "name": "fromDate UTC 2026-3-29-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 29,
+          "hour": 3,
+          "minute": 30,
+          "month": 3,
+          "year": 2026
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-03-29T03:30:00"
+      }
+    },
+    {
+      "name": "fromDate UTC 2026-10-25-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 25,
+          "hour": 2,
+          "minute": 30,
+          "month": 10,
+          "year": 2026
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "fromDate UTC 2026-6-15-9-0",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 15,
+          "hour": 9,
+          "minute": 0,
+          "month": 6,
+          "year": 2026
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "UTC",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-06-15 9:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 9,
+        "minute": 0,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-03-29 2:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-03-29T03:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-03-29 1:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-03-29T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-10-25 2:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-10-25 1:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-10-25T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-03-08 2:30",
+      "input": {
+        "date": "2026-03-08",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-03-08T02:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-11-01 1:30",
+      "input": {
+        "date": "2026-11-01",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-11-01T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-10-04 2:15",
+      "input": {
+        "date": "2026-10-04",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 15,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-10-04T02:15:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-04-05 1:45",
+      "input": {
+        "date": "2026-04-05",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 45,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-04-05T01:45:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-06-15 0:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 0,
+        "minute": 0,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-06-15T00:00:00"
+      }
+    },
+    {
+      "name": "atTime Europe/Berlin 2026-06-15 23:59",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 23,
+        "minute": 59,
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-06-15T23:59:00"
+      }
+    },
+    {
+      "name": "fromDate Europe/Berlin 2026-3-29-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 29,
+          "hour": 3,
+          "minute": 30,
+          "month": 3,
+          "year": 2026
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-03-29T03:30:00"
+      }
+    },
+    {
+      "name": "fromDate Europe/Berlin 2026-10-25-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 25,
+          "hour": 2,
+          "minute": 30,
+          "month": 10,
+          "year": 2026
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "fromDate Europe/Berlin 2026-6-15-9-0",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 15,
+          "hour": 9,
+          "minute": 0,
+          "month": 6,
+          "year": 2026
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Europe/Berlin",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-06-15 9:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 9,
+        "minute": 0,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-03-29 2:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-03-29T02:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-03-29 1:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-03-29T01:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-10-25 2:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-10-25 1:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-10-25T01:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-03-08 2:30",
+      "input": {
+        "date": "2026-03-08",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-03-08T03:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-11-01 1:30",
+      "input": {
+        "date": "2026-11-01",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-11-01T01:30:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-10-04 2:15",
+      "input": {
+        "date": "2026-10-04",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 15,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-10-04T02:15:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-04-05 1:45",
+      "input": {
+        "date": "2026-04-05",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 45,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-04-05T01:45:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-06-15 0:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 0,
+        "minute": 0,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-06-15T00:00:00"
+      }
+    },
+    {
+      "name": "atTime America/New_York 2026-06-15 23:59",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 23,
+        "minute": 59,
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-06-15T23:59:00"
+      }
+    },
+    {
+      "name": "fromDate America/New_York 2026-3-29-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 29,
+          "hour": 3,
+          "minute": 30,
+          "month": 3,
+          "year": 2026
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-03-29T03:30:00"
+      }
+    },
+    {
+      "name": "fromDate America/New_York 2026-10-25-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 25,
+          "hour": 2,
+          "minute": 30,
+          "month": 10,
+          "year": 2026
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "fromDate America/New_York 2026-6-15-9-0",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 15,
+          "hour": 9,
+          "minute": 0,
+          "month": 6,
+          "year": 2026
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "America/New_York",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-06-15 9:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 9,
+        "minute": 0,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-03-29 2:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-03-29T02:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-03-29 1:30",
+      "input": {
+        "date": "2026-03-29",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-03-29T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-10-25 2:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-10-25 1:30",
+      "input": {
+        "date": "2026-10-25",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-10-25T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-03-08 2:30",
+      "input": {
+        "date": "2026-03-08",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-03-08T02:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-11-01 1:30",
+      "input": {
+        "date": "2026-11-01",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 30,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-11-01T01:30:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-10-04 2:15",
+      "input": {
+        "date": "2026-10-04",
+        "fn": "atTime",
+        "hour": 2,
+        "minute": 15,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-10-04T02:45:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-04-05 1:45",
+      "input": {
+        "date": "2026-04-05",
+        "fn": "atTime",
+        "hour": 1,
+        "minute": 45,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-04-05T01:45:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-06-15 0:0",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 0,
+        "minute": 0,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-06-15T00:00:00"
+      }
+    },
+    {
+      "name": "atTime Australia/Lord_Howe 2026-06-15 23:59",
+      "input": {
+        "date": "2026-06-15",
+        "fn": "atTime",
+        "hour": 23,
+        "minute": 59,
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-06-15T23:59:00"
+      }
+    },
+    {
+      "name": "fromDate Australia/Lord_Howe 2026-3-29-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 29,
+          "hour": 3,
+          "minute": 30,
+          "month": 3,
+          "year": 2026
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-03-29T03:30:00"
+      }
+    },
+    {
+      "name": "fromDate Australia/Lord_Howe 2026-10-25-2-30",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 25,
+          "hour": 2,
+          "minute": 30,
+          "month": 10,
+          "year": 2026
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-10-25T02:30:00"
+      }
+    },
+    {
+      "name": "fromDate Australia/Lord_Howe 2026-6-15-9-0",
+      "input": {
+        "fn": "fromDate",
+        "localComponents": {
+          "day": 15,
+          "hour": 9,
+          "minute": 0,
+          "month": 6,
+          "year": 2026
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "kind": "datetime_zoned",
+        "tzid": "Australia/Lord_Howe",
+        "wallclock": "2026-06-15T09:00:00"
+      }
+    }
+  ]
+}

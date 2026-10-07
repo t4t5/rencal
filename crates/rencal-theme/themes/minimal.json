@@ -1,0 +1,51 @@
+{
+  "$schema": "https://rencal.org/schema/themes/v1.json",
+  "name": "Minimal Light",
+  "author": "renCal",
+  "themes": [
+    {
+      "name": "Minimal Light",
+      "appearance": "light",
+      "style": {
+        "background": "#ffffffff",
+        "brand": "#ff2f00ff",
+        "button.border": "#34302d1f",
+        "font.button": [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif"
+        ],
+        "font.heading": [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif"
+        ],
+        "font.numerical": [
+          "system-ui",
+          "-apple-system",
+          "BlinkMacSystemFont",
+          "Segoe UI",
+          "Roboto",
+          "sans-serif"
+        ],
+        "primary": "#34302dff",
+        "radius": 8,
+        "radius.circle": 4,
+        "success": "#4caf50ff",
+        "text": "#34302dff",
+        "text.muted": "#34302d99",
+        "today": "#ff2f00ff",
+        "typography.button.transform": "none",
+        "typography.heading.transform": "none",
+        "typography.numerical.transform": "none",
+        "warning": "#b45309ff"
+      }
+    }
+  ]
+}

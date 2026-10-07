@@ -1,0 +1,28 @@
+{
+  "$schema": "https://rencal.org/schema/themes/v1.json",
+  "name": "Catpuccin Latte",
+  "author": "renCal",
+  "themes": [
+    {
+      "name": "Catpuccin Latte",
+      "appearance": "light",
+      "style": {
+        "background": "#eff1f5ff",
+        "border": "#ccd0daff",
+        "brand": "#fe640bff",
+        "brand.text": "#ffffffff",
+        "element.selected": "#484f7f2e",
+        "error": "#d20f39ff",
+        "primary": "#7287fdff",
+        "primary.text": "#ffffffff",
+        "success": "#40a02bff",
+        "surface.tint": "#484f7fff",
+        "surface.tint_step": 0.1,
+        "text": "#4c4f69ff",
+        "text.muted": "#6c6f85ff",
+        "today": "#1e66f5ff",
+        "warning": "#fe640bff"
+      }
+    }
+  ]
+}

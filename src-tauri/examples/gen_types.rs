@@ -3,8 +3,8 @@
 
 use std::sync::Arc;
 
+use rencal_core::state::{AppState, ProviderDirs};
 use rencal_lib::create_router;
-use rencal_lib::state::{AppState, ProviderDirs};
 
 #[tokio::main]
 async fn main() {

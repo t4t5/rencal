@@ -1,0 +1,6754 @@
+{
+  "source": "src/lib/event-time/display.ts",
+  "description": "en-GB display strings. `now` is the fixed current instant (affects year suffixes and Today/Tomorrow/Yesterday). formatTime's 12h strings come from Intl en-US with 2-digit hours (\"02:00 AM\"); the separator before AM/PM is whatever Node's ICU emits (a plain space here; newer ICU/WebKit builds may emit U+202F). formatWallclockTime always uses a plain space and an unpadded hour.",
+  "cases": [
+    {
+      "name": "formatTime UTC date 2026-03-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels UTC date 2026-03-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin date 2026-03-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin date 2026-03-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York date 2026-03-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels America/New_York date 2026-03-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata date 2026-03-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata date 2026-03-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC date 2026-10-25",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels UTC date 2026-10-25",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin date 2026-10-25",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin date 2026-10-25",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York date 2026-10-25",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels America/New_York date 2026-10-25",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata date 2026-10-25",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata date 2026-10-25",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC date 2024-02-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels UTC date 2024-02-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2024-02-29",
+        "formatLongDate": "Thursday, 29 February 2024",
+        "formatShortDate": "Thu, 29 Feb 2024",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin date 2024-02-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin date 2024-02-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2024-02-29",
+        "formatLongDate": "Thursday, 29 February 2024",
+        "formatShortDate": "Thu, 29 Feb 2024",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York date 2024-02-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels America/New_York date 2024-02-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2024-02-29",
+        "formatLongDate": "Thursday, 29 February 2024",
+        "formatShortDate": "Thu, 29 Feb 2024",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata date 2024-02-29",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata date 2024-02-29",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2024-02-29",
+        "formatLongDate": "Thursday, 29 February 2024",
+        "formatShortDate": "Thu, 29 Feb 2024",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime UTC date 2026-12-31",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels UTC date 2026-12-31",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin date 2026-12-31",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin date 2026-12-31",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York date 2026-12-31",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels America/New_York date 2026-12-31",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata date 2026-12-31",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata date 2026-12-31",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime UTC date 2027-01-01",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels UTC date 2027-01-01",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin date 2027-01-01",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin date 2027-01-01",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York date 2027-01-01",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels America/New_York date 2027-01-01",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata date 2027-01-01",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "",
+        "24h": ""
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata date 2027-01-01",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:30 AM",
+        "24h": "00:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "08:30 PM",
+        "24h": "20:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-28",
+        "formatLongDate": "Saturday, 28 March",
+        "formatShortDate": "Sat, 28 Mar",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "06:00 AM",
+        "24h": "06:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-03-29T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:30 PM",
+        "24h": "21:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-28",
+        "formatLongDate": "Saturday, 28 March",
+        "formatShortDate": "Sat, 28 Mar",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "07:00 AM",
+        "24h": "07:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-03-29T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:30 AM",
+        "24h": "00:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "08:30 PM",
+        "24h": "20:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-24",
+        "formatLongDate": "Saturday, 24 October",
+        "formatShortDate": "Sat, 24 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "06:00 AM",
+        "24h": "06:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-10-25T00:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:30 PM",
+        "24h": "21:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-24",
+        "formatLongDate": "Saturday, 24 October",
+        "formatShortDate": "Sat, 24 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "07:00 AM",
+        "24h": "07:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-10-25T01:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "05:30 AM",
+        "24h": "05:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "06:30 AM",
+        "24h": "06:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "11:00 AM",
+        "24h": "11:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-11-01T05:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "11:30 PM",
+        "24h": "23:30"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-07-01",
+        "formatLongDate": "Wednesday, 1 July",
+        "formatShortDate": "Wed, 1 Jul",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-07-02",
+        "formatLongDate": "Thursday, 2 July",
+        "formatShortDate": "Thu, 2 Jul",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "07:30 PM",
+        "24h": "19:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-07-01",
+        "formatLongDate": "Wednesday, 1 July",
+        "formatShortDate": "Wed, 1 Jul",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "05:00 AM",
+        "24h": "05:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-07-01T23:30:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-07-02",
+        "formatLongDate": "Thursday, 2 July",
+        "formatShortDate": "Thu, 2 Jul",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime UTC utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels UTC utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:00 AM",
+        "24h": "02:00"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "08:00 PM",
+        "24h": "20:00"
+      }
+    },
+    {
+      "name": "date labels America/New_York utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-14",
+        "formatLongDate": "Sunday, 14 June",
+        "formatShortDate": "Sun, 14 Jun",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "05:30 AM",
+        "24h": "05:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata utc 2026-06-15T00:00:00Z",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-03-29T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-03-29T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-10-25T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-10-25T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-03-08T02:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-11-01T01:30:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "09:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "09:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "09:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-06-15T09:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-06-15T00:00:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "11:59 PM",
+        "24h": "23:59"
+      }
+    },
+    {
+      "name": "date labels UTC floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "11:59 PM",
+        "24h": "23:59"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "11:59 PM",
+        "24h": "23:59"
+      }
+    },
+    {
+      "name": "date labels America/New_York floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "11:59 PM",
+        "24h": "23:59"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata floating 2026-06-15T23:59:00",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:30 PM",
+        "24h": "21:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-28",
+        "formatLongDate": "Saturday, 28 March",
+        "formatShortDate": "Sat, 28 Mar",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "07:00 AM",
+        "24h": "07:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:30 AM",
+        "24h": "00:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "08:30 PM",
+        "24h": "20:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-24",
+        "formatLongDate": "Saturday, 24 October",
+        "formatShortDate": "Sat, 24 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "06:00 AM",
+        "24h": "06:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:30 PM",
+        "24h": "21:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-28",
+        "formatLongDate": "Saturday, 28 March",
+        "formatShortDate": "Sat, 28 Mar",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "07:00 AM",
+        "24h": "07:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-29",
+        "formatLongDate": "Sunday, 29 March",
+        "formatShortDate": "Sun, 29 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "12:30 AM",
+        "24h": "00:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "02:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "08:30 PM",
+        "24h": "20:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-24",
+        "formatLongDate": "Saturday, 24 October",
+        "formatShortDate": "Sat, 24 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "06:00 AM",
+        "24h": "06:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-25",
+        "formatLongDate": "Sunday, 25 October",
+        "formatShortDate": "Sun, 25 Oct",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "07:30 AM",
+        "24h": "07:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "08:30 AM",
+        "24h": "08:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "01:00 PM",
+        "24h": "13:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-03-08",
+        "formatLongDate": "Sunday, 8 March",
+        "formatShortDate": "Sun, 8 Mar",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "05:30 AM",
+        "24h": "05:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "06:30 AM",
+        "24h": "06:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "01:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "11:00 AM",
+        "24h": "11:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-11-01",
+        "formatLongDate": "Sunday, 1 November",
+        "formatShortDate": "Sun, 1 Nov",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "05:30 AM",
+        "24h": "05:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "11:30 PM",
+        "24h": "23:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-14",
+        "formatLongDate": "Sunday, 14 June",
+        "formatShortDate": "Sun, 14 Jun",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "09:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "10:15 AM",
+        "24h": "10:15"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "11:15 AM",
+        "24h": "11:15"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "05:15 AM",
+        "24h": "05:15"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "03:45 PM",
+        "24h": "15:45"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "02:45 PM",
+        "24h": "14:45"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "04:45 PM",
+        "24h": "16:45"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "10:45 AM",
+        "24h": "10:45"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "08:15 PM",
+        "24h": "20:15"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "03:45 PM",
+        "24h": "15:45"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-10-03",
+        "formatLongDate": "Saturday, 3 October",
+        "formatShortDate": "Sat, 3 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "05:45 PM",
+        "24h": "17:45"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-10-03",
+        "formatLongDate": "Saturday, 3 October",
+        "formatShortDate": "Sat, 3 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "11:45 AM",
+        "24h": "11:45"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-10-03",
+        "formatLongDate": "Saturday, 3 October",
+        "formatShortDate": "Sat, 3 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "09:15 PM",
+        "24h": "21:15"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-10-03",
+        "formatLongDate": "Saturday, 3 October",
+        "formatShortDate": "Sat, 3 Oct",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "03:30 PM",
+        "24h": "15:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "05:30 PM",
+        "24h": "17:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "11:30 AM",
+        "24h": "11:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "09:00 PM",
+        "24h": "21:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-04-04",
+        "formatLongDate": "Saturday, 4 April",
+        "formatShortDate": "Sat, 4 Apr",
+        "getRelativeDayLabel": "Saturday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "01:00 AM",
+        "24h": "01:00"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-16",
+        "formatLongDate": "Tuesday, 16 June",
+        "formatShortDate": "Tue, 16 Jun",
+        "getRelativeDayLabel": "Tuesday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:00 AM",
+        "24h": "03:00"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-16",
+        "formatLongDate": "Tuesday, 16 June",
+        "formatShortDate": "Tue, 16 Jun",
+        "getRelativeDayLabel": "Tuesday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:00 PM",
+        "24h": "21:00"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "06:30 AM",
+        "24h": "06:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-16",
+        "formatLongDate": "Tuesday, 16 June",
+        "formatShortDate": "Tue, 16 Jun",
+        "getRelativeDayLabel": "Tuesday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "10:00 PM",
+        "24h": "22:00"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-06-14",
+        "formatLongDate": "Sunday, 14 June",
+        "formatShortDate": "Sun, 14 Jun",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "06:00 PM",
+        "24h": "18:00"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-06-14",
+        "formatLongDate": "Sunday, 14 June",
+        "formatShortDate": "Sun, 14 Jun",
+        "getRelativeDayLabel": "Sunday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "03:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-06-15",
+        "formatLongDate": "Monday, 15 June",
+        "formatShortDate": "Mon, 15 Jun",
+        "getRelativeDayLabel": "Monday"
+      }
+    },
+    {
+      "name": "formatTime UTC zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "12h": "02:30 PM",
+        "24h": "14:30"
+      }
+    },
+    {
+      "name": "date labels UTC zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Europe/Berlin zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "12h": "03:30 PM",
+        "24h": "15:30"
+      }
+    },
+    {
+      "name": "date labels Europe/Berlin zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime America/New_York zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "12h": "09:30 AM",
+        "24h": "09:30"
+      }
+    },
+    {
+      "name": "date labels America/New_York zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatTime Asia/Kolkata zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "formatTime",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "12h": "08:00 PM",
+        "24h": "20:00"
+      }
+    },
+    {
+      "name": "date labels Asia/Kolkata zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "fn": "dateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Asia/Kolkata"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday"
+      }
+    },
+    {
+      "name": "formatWallclockTime 0:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 0,
+        "minute": 0
+      },
+      "output": {
+        "12h": "12:00 AM",
+        "24h": "00:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 0:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 0,
+        "minute": 5
+      },
+      "output": {
+        "12h": "12:05 AM",
+        "24h": "00:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 0:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 0,
+        "minute": 30
+      },
+      "output": {
+        "12h": "12:30 AM",
+        "24h": "00:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 0:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 0,
+        "minute": 59
+      },
+      "output": {
+        "12h": "12:59 AM",
+        "24h": "00:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 1:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 1,
+        "minute": 0
+      },
+      "output": {
+        "12h": "1:00 AM",
+        "24h": "01:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 1:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 1,
+        "minute": 5
+      },
+      "output": {
+        "12h": "1:05 AM",
+        "24h": "01:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 1:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 1,
+        "minute": 30
+      },
+      "output": {
+        "12h": "1:30 AM",
+        "24h": "01:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 1:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 1,
+        "minute": 59
+      },
+      "output": {
+        "12h": "1:59 AM",
+        "24h": "01:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 2:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 2,
+        "minute": 0
+      },
+      "output": {
+        "12h": "2:00 AM",
+        "24h": "02:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 2:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 2,
+        "minute": 5
+      },
+      "output": {
+        "12h": "2:05 AM",
+        "24h": "02:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 2:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 2,
+        "minute": 30
+      },
+      "output": {
+        "12h": "2:30 AM",
+        "24h": "02:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 2:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 2,
+        "minute": 59
+      },
+      "output": {
+        "12h": "2:59 AM",
+        "24h": "02:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 3:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 3,
+        "minute": 0
+      },
+      "output": {
+        "12h": "3:00 AM",
+        "24h": "03:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 3:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 3,
+        "minute": 5
+      },
+      "output": {
+        "12h": "3:05 AM",
+        "24h": "03:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 3:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 3,
+        "minute": 30
+      },
+      "output": {
+        "12h": "3:30 AM",
+        "24h": "03:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 3:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 3,
+        "minute": 59
+      },
+      "output": {
+        "12h": "3:59 AM",
+        "24h": "03:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 4:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 4,
+        "minute": 0
+      },
+      "output": {
+        "12h": "4:00 AM",
+        "24h": "04:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 4:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 4,
+        "minute": 5
+      },
+      "output": {
+        "12h": "4:05 AM",
+        "24h": "04:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 4:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 4,
+        "minute": 30
+      },
+      "output": {
+        "12h": "4:30 AM",
+        "24h": "04:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 4:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 4,
+        "minute": 59
+      },
+      "output": {
+        "12h": "4:59 AM",
+        "24h": "04:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 5:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 5,
+        "minute": 0
+      },
+      "output": {
+        "12h": "5:00 AM",
+        "24h": "05:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 5:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 5,
+        "minute": 5
+      },
+      "output": {
+        "12h": "5:05 AM",
+        "24h": "05:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 5:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 5,
+        "minute": 30
+      },
+      "output": {
+        "12h": "5:30 AM",
+        "24h": "05:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 5:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 5,
+        "minute": 59
+      },
+      "output": {
+        "12h": "5:59 AM",
+        "24h": "05:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 6:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 6,
+        "minute": 0
+      },
+      "output": {
+        "12h": "6:00 AM",
+        "24h": "06:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 6:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 6,
+        "minute": 5
+      },
+      "output": {
+        "12h": "6:05 AM",
+        "24h": "06:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 6:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 6,
+        "minute": 30
+      },
+      "output": {
+        "12h": "6:30 AM",
+        "24h": "06:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 6:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 6,
+        "minute": 59
+      },
+      "output": {
+        "12h": "6:59 AM",
+        "24h": "06:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 7:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 7,
+        "minute": 0
+      },
+      "output": {
+        "12h": "7:00 AM",
+        "24h": "07:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 7:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 7,
+        "minute": 5
+      },
+      "output": {
+        "12h": "7:05 AM",
+        "24h": "07:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 7:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 7,
+        "minute": 30
+      },
+      "output": {
+        "12h": "7:30 AM",
+        "24h": "07:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 7:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 7,
+        "minute": 59
+      },
+      "output": {
+        "12h": "7:59 AM",
+        "24h": "07:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 8:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 8,
+        "minute": 0
+      },
+      "output": {
+        "12h": "8:00 AM",
+        "24h": "08:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 8:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 8,
+        "minute": 5
+      },
+      "output": {
+        "12h": "8:05 AM",
+        "24h": "08:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 8:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 8,
+        "minute": 30
+      },
+      "output": {
+        "12h": "8:30 AM",
+        "24h": "08:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 8:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 8,
+        "minute": 59
+      },
+      "output": {
+        "12h": "8:59 AM",
+        "24h": "08:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 9:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 9,
+        "minute": 0
+      },
+      "output": {
+        "12h": "9:00 AM",
+        "24h": "09:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 9:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 9,
+        "minute": 5
+      },
+      "output": {
+        "12h": "9:05 AM",
+        "24h": "09:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 9:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 9,
+        "minute": 30
+      },
+      "output": {
+        "12h": "9:30 AM",
+        "24h": "09:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 9:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 9,
+        "minute": 59
+      },
+      "output": {
+        "12h": "9:59 AM",
+        "24h": "09:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 10:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 10,
+        "minute": 0
+      },
+      "output": {
+        "12h": "10:00 AM",
+        "24h": "10:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 10:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 10,
+        "minute": 5
+      },
+      "output": {
+        "12h": "10:05 AM",
+        "24h": "10:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 10:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 10,
+        "minute": 30
+      },
+      "output": {
+        "12h": "10:30 AM",
+        "24h": "10:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 10:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 10,
+        "minute": 59
+      },
+      "output": {
+        "12h": "10:59 AM",
+        "24h": "10:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 11:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 11,
+        "minute": 0
+      },
+      "output": {
+        "12h": "11:00 AM",
+        "24h": "11:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 11:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 11,
+        "minute": 5
+      },
+      "output": {
+        "12h": "11:05 AM",
+        "24h": "11:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 11:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 11,
+        "minute": 30
+      },
+      "output": {
+        "12h": "11:30 AM",
+        "24h": "11:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 11:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 11,
+        "minute": 59
+      },
+      "output": {
+        "12h": "11:59 AM",
+        "24h": "11:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 12:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 12,
+        "minute": 0
+      },
+      "output": {
+        "12h": "12:00 PM",
+        "24h": "12:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 12:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 12,
+        "minute": 5
+      },
+      "output": {
+        "12h": "12:05 PM",
+        "24h": "12:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 12:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 12,
+        "minute": 30
+      },
+      "output": {
+        "12h": "12:30 PM",
+        "24h": "12:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 12:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 12,
+        "minute": 59
+      },
+      "output": {
+        "12h": "12:59 PM",
+        "24h": "12:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 13:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 13,
+        "minute": 0
+      },
+      "output": {
+        "12h": "1:00 PM",
+        "24h": "13:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 13:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 13,
+        "minute": 5
+      },
+      "output": {
+        "12h": "1:05 PM",
+        "24h": "13:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 13:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 13,
+        "minute": 30
+      },
+      "output": {
+        "12h": "1:30 PM",
+        "24h": "13:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 13:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 13,
+        "minute": 59
+      },
+      "output": {
+        "12h": "1:59 PM",
+        "24h": "13:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 14:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 14,
+        "minute": 0
+      },
+      "output": {
+        "12h": "2:00 PM",
+        "24h": "14:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 14:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 14,
+        "minute": 5
+      },
+      "output": {
+        "12h": "2:05 PM",
+        "24h": "14:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 14:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 14,
+        "minute": 30
+      },
+      "output": {
+        "12h": "2:30 PM",
+        "24h": "14:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 14:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 14,
+        "minute": 59
+      },
+      "output": {
+        "12h": "2:59 PM",
+        "24h": "14:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 15:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 15,
+        "minute": 0
+      },
+      "output": {
+        "12h": "3:00 PM",
+        "24h": "15:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 15:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 15,
+        "minute": 5
+      },
+      "output": {
+        "12h": "3:05 PM",
+        "24h": "15:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 15:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 15,
+        "minute": 30
+      },
+      "output": {
+        "12h": "3:30 PM",
+        "24h": "15:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 15:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 15,
+        "minute": 59
+      },
+      "output": {
+        "12h": "3:59 PM",
+        "24h": "15:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 16:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 16,
+        "minute": 0
+      },
+      "output": {
+        "12h": "4:00 PM",
+        "24h": "16:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 16:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 16,
+        "minute": 5
+      },
+      "output": {
+        "12h": "4:05 PM",
+        "24h": "16:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 16:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 16,
+        "minute": 30
+      },
+      "output": {
+        "12h": "4:30 PM",
+        "24h": "16:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 16:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 16,
+        "minute": 59
+      },
+      "output": {
+        "12h": "4:59 PM",
+        "24h": "16:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 17:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 17,
+        "minute": 0
+      },
+      "output": {
+        "12h": "5:00 PM",
+        "24h": "17:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 17:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 17,
+        "minute": 5
+      },
+      "output": {
+        "12h": "5:05 PM",
+        "24h": "17:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 17:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 17,
+        "minute": 30
+      },
+      "output": {
+        "12h": "5:30 PM",
+        "24h": "17:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 17:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 17,
+        "minute": 59
+      },
+      "output": {
+        "12h": "5:59 PM",
+        "24h": "17:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 18:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 18,
+        "minute": 0
+      },
+      "output": {
+        "12h": "6:00 PM",
+        "24h": "18:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 18:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 18,
+        "minute": 5
+      },
+      "output": {
+        "12h": "6:05 PM",
+        "24h": "18:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 18:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 18,
+        "minute": 30
+      },
+      "output": {
+        "12h": "6:30 PM",
+        "24h": "18:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 18:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 18,
+        "minute": 59
+      },
+      "output": {
+        "12h": "6:59 PM",
+        "24h": "18:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 19:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 19,
+        "minute": 0
+      },
+      "output": {
+        "12h": "7:00 PM",
+        "24h": "19:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 19:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 19,
+        "minute": 5
+      },
+      "output": {
+        "12h": "7:05 PM",
+        "24h": "19:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 19:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 19,
+        "minute": 30
+      },
+      "output": {
+        "12h": "7:30 PM",
+        "24h": "19:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 19:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 19,
+        "minute": 59
+      },
+      "output": {
+        "12h": "7:59 PM",
+        "24h": "19:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 20:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 20,
+        "minute": 0
+      },
+      "output": {
+        "12h": "8:00 PM",
+        "24h": "20:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 20:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 20,
+        "minute": 5
+      },
+      "output": {
+        "12h": "8:05 PM",
+        "24h": "20:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 20:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 20,
+        "minute": 30
+      },
+      "output": {
+        "12h": "8:30 PM",
+        "24h": "20:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 20:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 20,
+        "minute": 59
+      },
+      "output": {
+        "12h": "8:59 PM",
+        "24h": "20:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 21:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 21,
+        "minute": 0
+      },
+      "output": {
+        "12h": "9:00 PM",
+        "24h": "21:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 21:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 21,
+        "minute": 5
+      },
+      "output": {
+        "12h": "9:05 PM",
+        "24h": "21:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 21:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 21,
+        "minute": 30
+      },
+      "output": {
+        "12h": "9:30 PM",
+        "24h": "21:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 21:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 21,
+        "minute": 59
+      },
+      "output": {
+        "12h": "9:59 PM",
+        "24h": "21:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 22:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 22,
+        "minute": 0
+      },
+      "output": {
+        "12h": "10:00 PM",
+        "24h": "22:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 22:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 22,
+        "minute": 5
+      },
+      "output": {
+        "12h": "10:05 PM",
+        "24h": "22:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 22:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 22,
+        "minute": 30
+      },
+      "output": {
+        "12h": "10:30 PM",
+        "24h": "22:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 22:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 22,
+        "minute": 59
+      },
+      "output": {
+        "12h": "10:59 PM",
+        "24h": "22:59"
+      }
+    },
+    {
+      "name": "formatWallclockTime 23:0",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 23,
+        "minute": 0
+      },
+      "output": {
+        "12h": "11:00 PM",
+        "24h": "23:00"
+      }
+    },
+    {
+      "name": "formatWallclockTime 23:5",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 23,
+        "minute": 5
+      },
+      "output": {
+        "12h": "11:05 PM",
+        "24h": "23:05"
+      }
+    },
+    {
+      "name": "formatWallclockTime 23:30",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 23,
+        "minute": 30
+      },
+      "output": {
+        "12h": "11:30 PM",
+        "24h": "23:30"
+      }
+    },
+    {
+      "name": "formatWallclockTime 23:59",
+      "input": {
+        "fn": "formatWallclockTime",
+        "hour": 23,
+        "minute": 59
+      },
+      "output": {
+        "12h": "11:59 PM",
+        "24h": "23:59"
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-17",
+      "input": {
+        "date": "2026-04-17",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-17",
+        "formatDayMonth": "17 Apr",
+        "formatLongDate": "Friday, 17 April",
+        "formatShortDate": "Fri, 17 Apr",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-18",
+      "input": {
+        "date": "2026-04-18",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-18",
+        "formatDayMonth": "18 Apr",
+        "formatLongDate": "Saturday, 18 April",
+        "formatShortDate": "Sat, 18 Apr",
+        "getRelativeDayLabel": "Saturday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Saturday",
+          "short": "Sat"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-19",
+      "input": {
+        "date": "2026-04-19",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-19",
+        "formatDayMonth": "19 Apr",
+        "formatLongDate": "Sunday, 19 April",
+        "formatShortDate": "Sun, 19 Apr",
+        "getRelativeDayLabel": "Yesterday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-20",
+      "input": {
+        "date": "2026-04-20",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-20",
+        "formatDayMonth": "20 Apr",
+        "formatLongDate": "Monday, 20 April",
+        "formatShortDate": "Mon, 20 Apr",
+        "getRelativeDayLabel": "Today",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Monday",
+          "short": "Mon"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-21",
+      "input": {
+        "date": "2026-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-21",
+        "formatDayMonth": "21 Apr",
+        "formatLongDate": "Tuesday, 21 April",
+        "formatShortDate": "Tue, 21 Apr",
+        "getRelativeDayLabel": "Tomorrow",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Tuesday",
+          "short": "Tue"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-22",
+      "input": {
+        "date": "2026-04-22",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-22",
+        "formatDayMonth": "22 Apr",
+        "formatLongDate": "Wednesday, 22 April",
+        "formatShortDate": "Wed, 22 Apr",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-04-26",
+      "input": {
+        "date": "2026-04-26",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-04-26",
+        "formatDayMonth": "26 Apr",
+        "formatLongDate": "Sunday, 26 April",
+        "formatShortDate": "Sun, 26 Apr",
+        "getRelativeDayLabel": "Sunday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-01-01",
+      "input": {
+        "date": "2026-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-01-01",
+        "formatDayMonth": "1 Jan",
+        "formatLongDate": "Thursday, 1 January",
+        "formatShortDate": "Thu, 1 Jan",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2026-12-31",
+      "input": {
+        "date": "2026-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatDayMonth": "31 Dec",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2025-12-31",
+      "input": {
+        "date": "2025-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatDayMonth": "31 Dec 2025",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2027-01-01",
+      "input": {
+        "date": "2027-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatDayMonth": "1 Jan 2027",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date Europe/Berlin 2027-04-21",
+      "input": {
+        "date": "2027-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "formatDateKey": "2027-04-21",
+        "formatDayMonth": "21 Apr 2027",
+        "formatLongDate": "Wednesday, 21 April 2027",
+        "formatShortDate": "Wed, 21 Apr 2027",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-17",
+      "input": {
+        "date": "2026-04-17",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-17",
+        "formatDayMonth": "17 Apr",
+        "formatLongDate": "Friday, 17 April",
+        "formatShortDate": "Fri, 17 Apr",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-18",
+      "input": {
+        "date": "2026-04-18",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-18",
+        "formatDayMonth": "18 Apr",
+        "formatLongDate": "Saturday, 18 April",
+        "formatShortDate": "Sat, 18 Apr",
+        "getRelativeDayLabel": "Saturday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Saturday",
+          "short": "Sat"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-19",
+      "input": {
+        "date": "2026-04-19",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-19",
+        "formatDayMonth": "19 Apr",
+        "formatLongDate": "Sunday, 19 April",
+        "formatShortDate": "Sun, 19 Apr",
+        "getRelativeDayLabel": "Yesterday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-20",
+      "input": {
+        "date": "2026-04-20",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-20",
+        "formatDayMonth": "20 Apr",
+        "formatLongDate": "Monday, 20 April",
+        "formatShortDate": "Mon, 20 Apr",
+        "getRelativeDayLabel": "Today",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Monday",
+          "short": "Mon"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-21",
+      "input": {
+        "date": "2026-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-21",
+        "formatDayMonth": "21 Apr",
+        "formatLongDate": "Tuesday, 21 April",
+        "formatShortDate": "Tue, 21 Apr",
+        "getRelativeDayLabel": "Tomorrow",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Tuesday",
+          "short": "Tue"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-22",
+      "input": {
+        "date": "2026-04-22",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-22",
+        "formatDayMonth": "22 Apr",
+        "formatLongDate": "Wednesday, 22 April",
+        "formatShortDate": "Wed, 22 Apr",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-04-26",
+      "input": {
+        "date": "2026-04-26",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-04-26",
+        "formatDayMonth": "26 Apr",
+        "formatLongDate": "Sunday, 26 April",
+        "formatShortDate": "Sun, 26 Apr",
+        "getRelativeDayLabel": "Sunday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-01-01",
+      "input": {
+        "date": "2026-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-01-01",
+        "formatDayMonth": "1 Jan",
+        "formatLongDate": "Thursday, 1 January",
+        "formatShortDate": "Thu, 1 Jan",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2026-12-31",
+      "input": {
+        "date": "2026-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatDayMonth": "31 Dec",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2025-12-31",
+      "input": {
+        "date": "2025-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatDayMonth": "31 Dec 2025",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2027-01-01",
+      "input": {
+        "date": "2027-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatDayMonth": "1 Jan 2027",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date Pacific/Chatham 2027-04-21",
+      "input": {
+        "date": "2027-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "Pacific/Chatham"
+      },
+      "output": {
+        "formatDateKey": "2027-04-21",
+        "formatDayMonth": "21 Apr 2027",
+        "formatLongDate": "Wednesday, 21 April 2027",
+        "formatShortDate": "Wed, 21 Apr 2027",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-17",
+      "input": {
+        "date": "2026-04-17",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-17",
+        "formatDayMonth": "17 Apr",
+        "formatLongDate": "Friday, 17 April",
+        "formatShortDate": "Fri, 17 Apr",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-18",
+      "input": {
+        "date": "2026-04-18",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-18",
+        "formatDayMonth": "18 Apr",
+        "formatLongDate": "Saturday, 18 April",
+        "formatShortDate": "Sat, 18 Apr",
+        "getRelativeDayLabel": "Saturday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Saturday",
+          "short": "Sat"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-19",
+      "input": {
+        "date": "2026-04-19",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-19",
+        "formatDayMonth": "19 Apr",
+        "formatLongDate": "Sunday, 19 April",
+        "formatShortDate": "Sun, 19 Apr",
+        "getRelativeDayLabel": "Yesterday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-20",
+      "input": {
+        "date": "2026-04-20",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-20",
+        "formatDayMonth": "20 Apr",
+        "formatLongDate": "Monday, 20 April",
+        "formatShortDate": "Mon, 20 Apr",
+        "getRelativeDayLabel": "Today",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Monday",
+          "short": "Mon"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-21",
+      "input": {
+        "date": "2026-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-21",
+        "formatDayMonth": "21 Apr",
+        "formatLongDate": "Tuesday, 21 April",
+        "formatShortDate": "Tue, 21 Apr",
+        "getRelativeDayLabel": "Tomorrow",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Tuesday",
+          "short": "Tue"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-22",
+      "input": {
+        "date": "2026-04-22",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-22",
+        "formatDayMonth": "22 Apr",
+        "formatLongDate": "Wednesday, 22 April",
+        "formatShortDate": "Wed, 22 Apr",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-04-26",
+      "input": {
+        "date": "2026-04-26",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-04-26",
+        "formatDayMonth": "26 Apr",
+        "formatLongDate": "Sunday, 26 April",
+        "formatShortDate": "Sun, 26 Apr",
+        "getRelativeDayLabel": "Sunday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Sunday",
+          "short": "Sun"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-01-01",
+      "input": {
+        "date": "2026-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-01-01",
+        "formatDayMonth": "1 Jan",
+        "formatLongDate": "Thursday, 1 January",
+        "formatShortDate": "Thu, 1 Jan",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2026-12-31",
+      "input": {
+        "date": "2026-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2026-12-31",
+        "formatDayMonth": "31 Dec",
+        "formatLongDate": "Thursday, 31 December",
+        "formatShortDate": "Thu, 31 Dec",
+        "getRelativeDayLabel": "Thursday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Thursday",
+          "short": "Thu"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2025-12-31",
+      "input": {
+        "date": "2025-12-31",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2025-12-31",
+        "formatDayMonth": "31 Dec 2025",
+        "formatLongDate": "Wednesday, 31 December 2025",
+        "formatShortDate": "Wed, 31 Dec 2025",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "December",
+          "short": "Dec"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2027-01-01",
+      "input": {
+        "date": "2027-01-01",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2027-01-01",
+        "formatDayMonth": "1 Jan 2027",
+        "formatLongDate": "Friday, 1 January 2027",
+        "formatShortDate": "Fri, 1 Jan 2027",
+        "getRelativeDayLabel": "Friday",
+        "month": {
+          "long": "January",
+          "short": "Jan"
+        },
+        "weekday": {
+          "long": "Friday",
+          "short": "Fri"
+        }
+      }
+    },
+    {
+      "name": "plain date America/Los_Angeles 2027-04-21",
+      "input": {
+        "date": "2027-04-21",
+        "fn": "plainDateLabels",
+        "now": "2026-04-20T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": {
+        "formatDateKey": "2027-04-21",
+        "formatDayMonth": "21 Apr 2027",
+        "formatLongDate": "Wednesday, 21 April 2027",
+        "formatShortDate": "Wed, 21 Apr 2027",
+        "getRelativeDayLabel": "Wednesday",
+        "month": {
+          "long": "April",
+          "short": "Apr"
+        },
+        "weekday": {
+          "long": "Wednesday",
+          "short": "Wed"
+        }
+      }
+    }
+  ]
+}

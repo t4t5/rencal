@@ -1,0 +1,44 @@
+[package]
+name = "rencal-core"
+version.workspace = true
+edition = "2024"
+description = "renCal's UI-independent backend: state, watchers, caldir operations, plugins"
+
+[features]
+# Derives `specta::Type` on the types the Tauri app exports to TypeScript.
+specta = ["dep:specta"]
+
+[dependencies]
+anyhow = "1.0.100"
+base64 = "0.22"
+caldir-core = { workspace = true }
+chrono = "0.4.43"
+chrono-tz = "0.10.4"
+dirs = "5"
+flate2 = "1"
+futures-util = "0.3"
+iana-time-zone = "0.1"
+log = "0.4.29"
+notify = "6"
+parking_lot = "0.12"
+quick-xml = "0.39"
+reminder-core = { path = "../../src-tauri/reminder-core" }
+rencal-config = { path = "../../src-tauri/rencal-config" }
+rencal-plugin-contract = { path = "../../src-tauri/plugin-contract" }
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "stream"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+semver = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+sha2 = "0.10"
+socket2 = "0.5"
+specta = { version = "=2.0.0-rc.22", features = ["derive"], optional = true }
+tar = "0.4"
+tempfile = "3"
+tokio = { version = "1", features = ["full"] }
+toml = "0.8"
+toml_edit = "0.20"
+url = "2.5"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+libc = "0.2"

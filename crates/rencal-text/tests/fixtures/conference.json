@@ -1,0 +1,733 @@
+{
+  "source": "src/lib/conference.ts",
+  "description": "Meeting-link detection (label + trimmed url, or null), video-meeting predicates, the join window and calendar provisioning rules.",
+  "cases": [
+    {
+      "name": "detect \"https://us02web.zoom.us/j/123456789?pwd=abc123\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://us02web.zoom.us/j/123456789?pwd=abc123"
+      },
+      "output": {
+        "label": "Zoom",
+        "url": "https://us02web.zoom.us/j/123456789?pwd=abc123"
+      }
+    },
+    {
+      "name": "detect \"https://company.zoom.us/my/room\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://company.zoom.us/my/room"
+      },
+      "output": {
+        "label": "Zoom",
+        "url": "https://company.zoom.us/my/room"
+      }
+    },
+    {
+      "name": "detect \"https://zoomgov.com/j/555\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://zoomgov.com/j/555"
+      },
+      "output": {
+        "label": "Zoom",
+        "url": "https://zoomgov.com/j/555"
+      }
+    },
+    {
+      "name": "detect \"https://meet.google.com/abc-defg-hij\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://meet.google.com/abc-defg-hij"
+      },
+      "output": {
+        "label": "Google Meet",
+        "url": "https://meet.google.com/abc-defg-hij"
+      }
+    },
+    {
+      "name": "detect \"https://teams.microsoft.com/l/meetup-join/xyz\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://teams.microsoft.com/l/meetup-join/xyz"
+      },
+      "output": {
+        "label": "Microsoft Teams",
+        "url": "https://teams.microsoft.com/l/meetup-join/xyz"
+      }
+    },
+    {
+      "name": "detect \"https://teams.live.com/meet/123\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://teams.live.com/meet/123"
+      },
+      "output": {
+        "label": "Microsoft Teams",
+        "url": "https://teams.live.com/meet/123"
+      }
+    },
+    {
+      "name": "detect \"https://company.webex.com/meet/someone\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://company.webex.com/meet/someone"
+      },
+      "output": {
+        "label": "Webex",
+        "url": "https://company.webex.com/meet/someone"
+      }
+    },
+    {
+      "name": "detect \"https://meet.jit.si/SomeRoom\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://meet.jit.si/SomeRoom"
+      },
+      "output": {
+        "label": "Jitsi",
+        "url": "https://meet.jit.si/SomeRoom"
+      }
+    },
+    {
+      "name": "detect \"https://whereby.com/some-room\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://whereby.com/some-room"
+      },
+      "output": {
+        "label": "Whereby",
+        "url": "https://whereby.com/some-room"
+      }
+    },
+    {
+      "name": "detect \"https://www.whereby.com/some-room\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://www.whereby.com/some-room"
+      },
+      "output": {
+        "label": "Whereby",
+        "url": "https://www.whereby.com/some-room"
+      }
+    },
+    {
+      "name": "detect \"https://meet.proton.me/example\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://meet.proton.me/example"
+      },
+      "output": {
+        "label": "Proton Meet",
+        "url": "https://meet.proton.me/example"
+      }
+    },
+    {
+      "name": "detect \"Join here: https://zoom.us/j/99887766 (passcode 1234)\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Join here: https://zoom.us/j/99887766 (passcode 1234)"
+      },
+      "output": {
+        "label": "Zoom",
+        "url": "https://zoom.us/j/99887766"
+      }
+    },
+    {
+      "name": "detect \"(https://meet.google.com/abc-defg-hij)\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "(https://meet.google.com/abc-defg-hij)"
+      },
+      "output": {
+        "label": "Google Meet",
+        "url": "https://meet.google.com/abc-defg-hij"
+      }
+    },
+    {
+      "name": "detect \"Link: https://meet.google.com/abc-defg-hij.\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Link: https://meet.google.com/abc-defg-hij."
+      },
+      "output": {
+        "label": "Google Meet",
+        "url": "https://meet.google.com/abc-defg-hij"
+      }
+    },
+    {
+      "name": "detect \"https://zoom.us\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://zoom.us"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"https://example.com/zoom.us/j/123\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://example.com/zoom.us/j/123"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"HTTPS://MEET.GOOGLE.COM/ABC\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "HTTPS://MEET.GOOGLE.COM/ABC"
+      },
+      "output": {
+        "label": "Google Meet",
+        "url": "HTTPS://MEET.GOOGLE.COM/ABC"
+      }
+    },
+    {
+      "name": "detect \"Room 4, https://zoom.us/j/1 and https://meet.google.com/x\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Room 4, https://zoom.us/j/1 and https://meet.google.com/x"
+      },
+      "output": {
+        "label": "Zoom",
+        "url": "https://zoom.us/j/1"
+      }
+    },
+    {
+      "name": "detect \"https://example.com\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://example.com"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"www.example.com/path\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "www.example.com/path"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"See https://a.example/x then http://b.example and www.c.example\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "See https://a.example/x then http://b.example and www.c.example"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"foowww.example.com\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "foowww.example.com"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"Tickets: https://example.com/tickets.\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Tickets: https://example.com/tickets."
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"(more at https://example.com/info).\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "(more at https://example.com/info)."
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"Read https://en.wikipedia.org/wiki/Foo_(bar) first\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Read https://en.wikipedia.org/wiki/Foo_(bar) first"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"(Read https://en.wikipedia.org/wiki/Foo_(bar))\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "(Read https://en.wikipedia.org/wiki/Foo_(bar))"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"Really? https://example.com/?q=1!\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Really? https://example.com/?q=1!"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"https://example.com/a and https://example.com/b\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "https://example.com/a and https://example.com/b"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"Flight details: https://www.flighty.app/\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "Flight details: https://www.flighty.app/"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"[docs](https://docs.example/agenda])\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "[docs](https://docs.example/agenda])"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"<https://venue.example/map>\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "<https://venue.example/map>"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"\\\"https://quoted.example/x\\\"\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "\"https://quoted.example/x\""
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"mailto:someone@example.com\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "mailto:someone@example.com"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"no links here\"",
+      "input": {
+        "fn": "detectConference",
+        "text": "no links here"
+      },
+      "output": null
+    },
+    {
+      "name": "detect \"\"",
+      "input": {
+        "fn": "detectConference",
+        "text": ""
+      },
+      "output": null
+    },
+    {
+      "name": "meeting nothing",
+      "input": {
+        "conference": null,
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": null
+      },
+      "output": {
+        "getMeetingUrl": null,
+        "hasVideoMeeting": false
+      }
+    },
+    {
+      "name": "meeting zoom location",
+      "input": {
+        "conference": null,
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": "https://zoom.us/j/1"
+      },
+      "output": {
+        "getMeetingUrl": "https://zoom.us/j/1",
+        "hasVideoMeeting": true
+      }
+    },
+    {
+      "name": "meeting plain location",
+      "input": {
+        "conference": null,
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": "Room 4"
+      },
+      "output": {
+        "getMeetingUrl": null,
+        "hasVideoMeeting": false
+      }
+    },
+    {
+      "name": "meeting requested",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": null
+      },
+      "output": {
+        "getMeetingUrl": null,
+        "hasVideoMeeting": true
+      }
+    },
+    {
+      "name": "meeting requested + zoom",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": "https://zoom.us/j/1"
+      },
+      "output": {
+        "getMeetingUrl": "https://zoom.us/j/1",
+        "hasVideoMeeting": true
+      }
+    },
+    {
+      "name": "meeting live",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://meet.google.com/a"
+        },
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": null
+      },
+      "output": {
+        "getMeetingUrl": "https://meet.google.com/a",
+        "hasVideoMeeting": true
+      }
+    },
+    {
+      "name": "meeting live + zoom",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://meet.google.com/a"
+        },
+        "fn": "hasVideoMeeting+getMeetingUrl",
+        "location": "https://zoom.us/j/1"
+      },
+      "output": {
+        "getMeetingUrl": "https://meet.google.com/a",
+        "hasVideoMeeting": true
+      }
+    },
+    {
+      "name": "join window -60m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781596400000,
+        "startMs": 1781600000000
+      },
+      "output": false
+    },
+    {
+      "name": "join window -11m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781599340000,
+        "startMs": 1781600000000
+      },
+      "output": false
+    },
+    {
+      "name": "join window -10m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781599400000,
+        "startMs": 1781600000000
+      },
+      "output": true
+    },
+    {
+      "name": "join window -9m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781599460000,
+        "startMs": 1781600000000
+      },
+      "output": true
+    },
+    {
+      "name": "join window 0m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781600000000,
+        "startMs": 1781600000000
+      },
+      "output": true
+    },
+    {
+      "name": "join window 30m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781601800000,
+        "startMs": 1781600000000
+      },
+      "output": true
+    },
+    {
+      "name": "join window 59m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781603540000,
+        "startMs": 1781600000000
+      },
+      "output": true
+    },
+    {
+      "name": "join window 60m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781603600000,
+        "startMs": 1781600000000
+      },
+      "output": false
+    },
+    {
+      "name": "join window 61m",
+      "input": {
+        "endMs": 1781603600000,
+        "fn": "isWithinJoinWindow",
+        "nowMs": 1781603660000,
+        "startMs": 1781600000000
+      },
+      "output": false
+    },
+    {
+      "name": "for calendar google null",
+      "input": {
+        "conference": null,
+        "fn": "conferenceForCalendar",
+        "provider": "google"
+      },
+      "output": {
+        "conference": null,
+        "provider": "google"
+      }
+    },
+    {
+      "name": "for calendar google {\"status\":\"requested\",\"provider\":\"google\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "google"
+      },
+      "output": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "provider": "google"
+      }
+    },
+    {
+      "name": "for calendar google {\"status\":\"requested\",\"provider\":\"outlook\"}",
+      "input": {
+        "conference": {
+          "provider": "outlook",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "google"
+      },
+      "output": {
+        "conference": null,
+        "provider": "google"
+      }
+    },
+    {
+      "name": "for calendar google {\"status\":\"live\",\"provider\":\"google\",\"url\":\"https://x.example\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "google"
+      },
+      "output": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "provider": "google"
+      }
+    },
+    {
+      "name": "for calendar outlook null",
+      "input": {
+        "conference": null,
+        "fn": "conferenceForCalendar",
+        "provider": "outlook"
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar outlook {\"status\":\"requested\",\"provider\":\"google\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "outlook"
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar outlook {\"status\":\"requested\",\"provider\":\"outlook\"}",
+      "input": {
+        "conference": {
+          "provider": "outlook",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "outlook"
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar outlook {\"status\":\"live\",\"provider\":\"google\",\"url\":\"https://x.example\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "outlook"
+      },
+      "output": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar null null",
+      "input": {
+        "conference": null,
+        "fn": "conferenceForCalendar",
+        "provider": null
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar null {\"status\":\"requested\",\"provider\":\"google\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": null
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar null {\"status\":\"requested\",\"provider\":\"outlook\"}",
+      "input": {
+        "conference": {
+          "provider": "outlook",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": null
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "for calendar null {\"status\":\"live\",\"provider\":\"google\",\"url\":\"https://x.example\"}",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": null
+      },
+      "output": {
+        "conference": {
+          "provider": "google",
+          "status": "live",
+          "url": "https://x.example"
+        },
+        "provider": null
+      }
+    },
+    {
+      "name": "no calendar",
+      "input": {
+        "conference": {
+          "provider": "google",
+          "status": "requested"
+        },
+        "fn": "conferenceForCalendar",
+        "provider": "<undefined calendar>"
+      },
+      "output": {
+        "conference": null,
+        "provider": null
+      }
+    },
+    {
+      "name": "join lead",
+      "input": {
+        "fn": "JOIN_LEAD_MINUTES"
+      },
+      "output": 10
+    }
+  ]
+}

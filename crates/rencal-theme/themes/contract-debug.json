@@ -1,0 +1,35 @@
+{
+  "$schema": "https://rencal.org/schema/themes/v1.json",
+  "name": "Contract Debug",
+  "author": "renCal",
+  "themes": [
+    {
+      "name": "Contract Debug",
+      "appearance": "dark",
+      "style": {
+        "background": "#111111ff",
+        "border": "#ff8c00ff",
+        "border.focused": "#ff1493ff",
+        "border.input": "#8a2be2ff",
+        "brand": "#ff4500ff",
+        "element.background": "#ff0000ff",
+        "element.highlight": "#0000ffff",
+        "element.highlight.text": "#ffffffff",
+        "element.muted": "#00ff00ff",
+        "element.selected": "#a0522dff",
+        "element.selected.text": "#ffffffff",
+        "element.text": "#ffffffff",
+        "elevated_surface.background": "#00ffffff",
+        "elevated_surface.text": "#000000ff",
+        "error": "#8b0000ff",
+        "ghost_element.hover": "#ff00ffff",
+        "primary": "#ff7a00ff",
+        "surface.background": "#ffff00ff",
+        "surface.text": "#000000ff",
+        "text": "#f5f5f5ff",
+        "text.muted": "#005500ff",
+        "today": "#00bfffff"
+      }
+    }
+  ]
+}

@@ -78,7 +78,7 @@ jobs:
       - name: Cache Rust build
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: rencal/src-tauri -> target
+          workspaces: rencal -> target
 
       - name: Install Linux system dependencies
         if: runner.os == 'Linux'
@@ -94,7 +94,7 @@ jobs:
         working-directory: rencal
         run: pnpm install --frozen-lockfile
 
-      - name: Sync version into tauri.conf.json and Cargo.toml
+      - name: Sync version into tauri.conf.json and the workspace Cargo.toml
         working-directory: rencal
         env:
           VERSION: ${{ needs.check-version.outputs.version }}
@@ -102,8 +102,8 @@ jobs:
           jq ".version = \"$VERSION\"" src-tauri/tauri.conf.json > src-tauri/tauri.conf.json.tmp
           mv src-tauri/tauri.conf.json.tmp src-tauri/tauri.conf.json
           awk -v ver="$VERSION" '!done && /^version = / { sub(/version = ".*"/, "version = \"" ver "\""); done=1 } 1' \
-            src-tauri/Cargo.toml > src-tauri/Cargo.toml.tmp
-          mv src-tauri/Cargo.toml.tmp src-tauri/Cargo.toml
+            Cargo.toml > Cargo.toml.tmp
+          mv Cargo.toml.tmp Cargo.toml
 
       - name: Install caldir provider binaries
         working-directory: rencal
@@ -133,7 +133,7 @@ jobs:
       # reminder loop in-process via tauri-plugin-notification.
       - name: Build rencal-notifierd
         if: runner.os == 'Linux'
-        working-directory: rencal/src-tauri
+        working-directory: rencal
         run: cargo build --release -p rencal-notifierd
 
       - name: Build and upload draft release

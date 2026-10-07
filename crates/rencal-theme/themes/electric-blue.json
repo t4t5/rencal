@@ -1,0 +1,23 @@
+{
+  "$schema": "https://rencal.org/schema/themes/v1.json",
+  "name": "Electric Blue",
+  "author": "renCal",
+  "themes": [
+    {
+      "name": "Electric Blue",
+      "appearance": "light",
+      "style": {
+        "background": "#ffffffff",
+        "event.background": "#0000f2ff",
+        "event.color": "#0000f2ff",
+        "event.text": "#ffffffff",
+        "primary": "#0000f2ff",
+        "success": "#4caf50ff",
+        "surface.tint_step": 0.06,
+        "text": "#0000f2ff",
+        "text.muted": "#0000f2e6",
+        "warning": "#b45309ff"
+      }
+    }
+  ]
+}

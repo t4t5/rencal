@@ -6,7 +6,7 @@ set -euo pipefail
 shopt -s nullglob
 
 cd "$(dirname "$0")/.."
-bundle="$(realpath "${1:-src-tauri/target/release/bundle}")"
+bundle="$(realpath "${1:-target/release/bundle}")"
 appimages=("$bundle"/appimage/*.AppImage)
 debs=("$bundle"/deb/*.deb)
 rpms=("$bundle"/rpm/*.rpm)

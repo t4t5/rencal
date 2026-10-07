@@ -1,0 +1,20 @@
+{
+  "$schema": "https://rencal.org/schema/themes/v1.json",
+  "name": "Tokyo Night",
+  "author": "renCal",
+  "themes": [
+    {
+      "name": "Tokyo Night",
+      "appearance": "dark",
+      "style": {
+        "background": "#1a1b26ff",
+        "brand": "#f7768eff",
+        "primary": "#7aa2f7ff",
+        "surface.tint": "#a7b7ffff",
+        "text": "#c0caf5ff",
+        "text.muted": "#9aa5ceff",
+        "today": "#7dcfffff"
+      }
+    }
+  ]
+}

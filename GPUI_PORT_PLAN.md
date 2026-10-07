@@ -1,6 +1,6 @@
 # renCal GPUI port plan
 
-Status: plan, not started (written 2026-10-07 on the `gpui` branch, identical to `main` at `f688129a`).
+Status: Phase 0 implemented (2026-10-07), awaiting review/commit; Phase 1 next. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
 Audience: the agent that implements the port. Read this whole file before starting a phase, and read the linked repo docs before touching the area they cover.
 
 This plan ports renCal from Tauri v2 (Rust backend + React webview) to a native Rust app on [GPUI](https://www.gpui.rs/) via [gpui-kit](https://gpui-kit.com/) (`gpui-kit` 0.7.x, Longbridge). It also replaces the CSS theme system with a Zed-style token theme format (see [Zed's theme builder](https://zed.dev/theme-builder) and its schema at `https://zed.dev/schema/themes/v0.2.0.json`).

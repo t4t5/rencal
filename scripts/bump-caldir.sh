@@ -12,7 +12,7 @@ if [[ $# -ne 1 ]]; then
 fi
 
 readonly tag="$1"
-readonly manifest="src-tauri/Cargo.toml"
+readonly manifest="Cargo.toml"
 readonly checksums="src-tauri/caldir-providers.sha256"
 readonly flake="flake.nix"
 readonly -a targets=(

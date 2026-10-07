@@ -1,0 +1,770 @@
+{
+  "source": "src/lib/search-results.ts",
+  "description": "prepareSearchResults: recurring masters moved to their nearest occurrence, then ordered by |start - now| (stable).",
+  "cases": [
+    {
+      "name": "Europe/Berlin at 2026-06-15T08:00:00Z",
+      "input": {
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T10:00:00"
+            },
+            "id": "past",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "soon",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "date": "2027-03-02",
+              "kind": "date"
+            },
+            "id": "far",
+            "start": {
+              "date": "2027-03-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-15",
+              "kind": "date"
+            },
+            "id": "yesterday",
+            "start": {
+              "date": "2026-06-14",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:30:00"
+            },
+            "id": "weekly",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=WEEKLY;BYDAY=MO"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T10:00:00"
+            },
+            "id": "ended-series",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=DAILY;COUNT=3"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-15T08:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-15T07:30:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "now": "2026-06-15T08:00:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "end": {
+            "instant": "2026-06-15T08:00:00Z",
+            "kind": "datetime_utc"
+          },
+          "id": "utc",
+          "start": {
+            "instant": "2026-06-15T07:30:00Z",
+            "kind": "datetime_utc"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T12:00:00"
+          },
+          "id": "soon",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T11:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2026-06-15",
+            "kind": "date"
+          },
+          "id": "yesterday",
+          "start": {
+            "date": "2026-06-14",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:30:00"
+          },
+          "id": "weekly",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T10:00:00"
+          },
+          "id": "past",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2027-03-02",
+            "kind": "date"
+          },
+          "id": "far",
+          "start": {
+            "date": "2027-03-01",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T10:00:00"
+          },
+          "id": "ended-series",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T09:00:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Europe/Berlin at 2026-06-16T23:30:00Z",
+      "input": {
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T10:00:00"
+            },
+            "id": "past",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "soon",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "date": "2027-03-02",
+              "kind": "date"
+            },
+            "id": "far",
+            "start": {
+              "date": "2027-03-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-15",
+              "kind": "date"
+            },
+            "id": "yesterday",
+            "start": {
+              "date": "2026-06-14",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:30:00"
+            },
+            "id": "weekly",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=WEEKLY;BYDAY=MO"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T10:00:00"
+            },
+            "id": "ended-series",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=DAILY;COUNT=3"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-15T08:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-15T07:30:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "now": "2026-06-16T23:30:00Z",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T12:00:00"
+          },
+          "id": "soon",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T11:00:00"
+          }
+        },
+        {
+          "end": {
+            "instant": "2026-06-15T08:00:00Z",
+            "kind": "datetime_utc"
+          },
+          "id": "utc",
+          "start": {
+            "instant": "2026-06-15T07:30:00Z",
+            "kind": "datetime_utc"
+          }
+        },
+        {
+          "end": {
+            "date": "2026-06-15",
+            "kind": "date"
+          },
+          "id": "yesterday",
+          "start": {
+            "date": "2026-06-14",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:30:00"
+          },
+          "id": "weekly",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T10:00:00"
+          },
+          "id": "past",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2027-03-02",
+            "kind": "date"
+          },
+          "id": "far",
+          "start": {
+            "date": "2027-03-01",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T10:00:00"
+          },
+          "id": "ended-series",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T09:00:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "America/Los_Angeles at 2026-06-15T08:00:00Z",
+      "input": {
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T10:00:00"
+            },
+            "id": "past",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "soon",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "date": "2027-03-02",
+              "kind": "date"
+            },
+            "id": "far",
+            "start": {
+              "date": "2027-03-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-15",
+              "kind": "date"
+            },
+            "id": "yesterday",
+            "start": {
+              "date": "2026-06-14",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:30:00"
+            },
+            "id": "weekly",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=WEEKLY;BYDAY=MO"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T10:00:00"
+            },
+            "id": "ended-series",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=DAILY;COUNT=3"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-15T08:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-15T07:30:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "now": "2026-06-15T08:00:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": [
+        {
+          "end": {
+            "instant": "2026-06-15T08:00:00Z",
+            "kind": "datetime_utc"
+          },
+          "id": "utc",
+          "start": {
+            "instant": "2026-06-15T07:30:00Z",
+            "kind": "datetime_utc"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T12:00:00"
+          },
+          "id": "soon",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T11:00:00"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T09:30:00"
+          },
+          "id": "weekly",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2026-06-15",
+            "kind": "date"
+          },
+          "id": "yesterday",
+          "start": {
+            "date": "2026-06-14",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T10:00:00"
+          },
+          "id": "past",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2027-03-02",
+            "kind": "date"
+          },
+          "id": "far",
+          "start": {
+            "date": "2027-03-01",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T10:00:00"
+          },
+          "id": "ended-series",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T09:00:00"
+          }
+        }
+      ]
+    },
+    {
+      "name": "America/Los_Angeles at 2026-06-16T23:30:00Z",
+      "input": {
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T10:00:00"
+            },
+            "id": "past",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-05-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "soon",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "date": "2027-03-02",
+              "kind": "date"
+            },
+            "id": "far",
+            "start": {
+              "date": "2027-03-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-15",
+              "kind": "date"
+            },
+            "id": "yesterday",
+            "start": {
+              "date": "2026-06-14",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:30:00"
+            },
+            "id": "weekly",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=WEEKLY;BYDAY=MO"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-06T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T10:00:00"
+            },
+            "id": "ended-series",
+            "recurrence": {
+              "exdates": [],
+              "rdates": [],
+              "rrule": "FREQ=DAILY;COUNT=3"
+            },
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2025-01-01T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-15T08:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-15T07:30:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "now": "2026-06-16T23:30:00Z",
+        "viewerTz": "America/Los_Angeles"
+      },
+      "output": [
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T12:00:00"
+          },
+          "id": "soon",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-15T11:00:00"
+          }
+        },
+        {
+          "end": {
+            "instant": "2026-06-15T08:00:00Z",
+            "kind": "datetime_utc"
+          },
+          "id": "utc",
+          "start": {
+            "instant": "2026-06-15T07:30:00Z",
+            "kind": "datetime_utc"
+          }
+        },
+        {
+          "end": {
+            "date": "2026-06-15",
+            "kind": "date"
+          },
+          "id": "yesterday",
+          "start": {
+            "date": "2026-06-14",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:30:00"
+          },
+          "id": "weekly",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-22T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T10:00:00"
+          },
+          "id": "past",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-05-01T09:00:00"
+          }
+        },
+        {
+          "end": {
+            "date": "2027-03-02",
+            "kind": "date"
+          },
+          "id": "far",
+          "start": {
+            "date": "2027-03-01",
+            "kind": "date"
+          }
+        },
+        {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T10:00:00"
+          },
+          "id": "ended-series",
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2025-01-03T09:00:00"
+          }
+        }
+      ]
+    }
+  ]
+}

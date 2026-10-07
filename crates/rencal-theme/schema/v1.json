@@ -1,0 +1,613 @@
+{
+  "$defs": {
+    "Appearance": {
+      "enum": ["light", "dark"],
+      "type": "string"
+    },
+    "BorderStyle": {
+      "anyOf": [
+        {
+          "enum": [
+            "solid",
+            "bevel_raised",
+            "bevel_sunken",
+            "bevel_raised_double",
+            "bevel_sunken_double"
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Color": {
+      "anyOf": [
+        {
+          "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Fill": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "type": "string"
+            },
+            {
+              "properties": {
+                "gradient": {
+                  "properties": {
+                    "angle": {
+                      "type": "number"
+                    },
+                    "from": {
+                      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                      "type": "string"
+                    },
+                    "to": {
+                      "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                      "type": "string"
+                    }
+                  },
+                  "required": ["from", "to"],
+                  "type": "object"
+                }
+              },
+              "required": ["gradient"],
+              "type": "object"
+            }
+          ]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Fonts": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "items": {
+                "type": "string"
+              },
+              "minItems": 1,
+              "type": "array"
+            }
+          ],
+          "description": "Font families, first available wins."
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Fraction": {
+      "anyOf": [
+        {
+          "maximum": 1,
+          "minimum": 0,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Px": {
+      "anyOf": [
+        {
+          "description": "Pixels.",
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Shadows": {
+      "anyOf": [
+        {
+          "items": {
+            "properties": {
+              "blur": {
+                "type": "number"
+              },
+              "color": {
+                "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+                "type": "string"
+              },
+              "inset": {
+                "type": "boolean"
+              },
+              "spread": {
+                "type": "number"
+              },
+              "x": {
+                "type": "number"
+              },
+              "y": {
+                "type": "number"
+              }
+            },
+            "required": ["color"],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Style": {
+      "additionalProperties": false,
+      "description": "Flat dotted token keys. Unset or null tokens are derived.",
+      "patternProperties": {
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.border$": {
+          "$ref": "#/$defs/Color"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.border_style$": {
+          "$ref": "#/$defs/BorderStyle"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.border_width$": {
+          "$ref": "#/$defs/Px"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.fill$": {
+          "$ref": "#/$defs/Fill"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.gap$": {
+          "$ref": "#/$defs/Px"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.radius$": {
+          "$ref": "#/$defs/Px"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.shadow$": {
+          "$ref": "#/$defs/Shadows"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.text$": {
+          "$ref": "#/$defs/Color"
+        },
+        "^(button|button\\.primary|control|popover|dialog|dialog\\.title_bar|toast|tabs\\.list|tabs\\.tab|toolbar\\.main|toolbar\\.sidebar|event\\.timed|event\\.all_day|month\\.day|minical\\.day|agenda\\.row|scrollbar|week_grid)(\\.(hover|active|selected|open|today|disabled))?\\.text_shadow$": {
+          "$ref": "#/$defs/TextShadow"
+        }
+      },
+      "properties": {
+        "background": {
+          "$ref": "#/$defs/Color"
+        },
+        "bevel.dark": {
+          "$ref": "#/$defs/Color"
+        },
+        "bevel.highlight": {
+          "$ref": "#/$defs/Color"
+        },
+        "bevel.light": {
+          "$ref": "#/$defs/Color"
+        },
+        "bevel.shadow": {
+          "$ref": "#/$defs/Color"
+        },
+        "border": {
+          "$ref": "#/$defs/Color"
+        },
+        "border.focused": {
+          "$ref": "#/$defs/Color"
+        },
+        "border.input": {
+          "$ref": "#/$defs/Color"
+        },
+        "brand": {
+          "$ref": "#/$defs/Color"
+        },
+        "brand.hover": {
+          "$ref": "#/$defs/Color"
+        },
+        "brand.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "button.border": {
+          "$ref": "#/$defs/Color"
+        },
+        "control.active.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "control.active.border": {
+          "$ref": "#/$defs/Color"
+        },
+        "control.gap": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.height": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.height.lg": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.height.sm": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.height.xs": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.leading_size": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.padding_x": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.row_gap": {
+          "$ref": "#/$defs/Px"
+        },
+        "control.trailing_inset": {
+          "$ref": "#/$defs/Px"
+        },
+        "element.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.highlight": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.highlight.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.highlight.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.hover": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.selected": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.selected.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.selected.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "element.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "elevated_surface.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "elevated_surface.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "elevated_surface.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "error": {
+          "$ref": "#/$defs/Color"
+        },
+        "error.hover": {
+          "$ref": "#/$defs/Color"
+        },
+        "error.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "event.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "event.color": {
+          "$ref": "#/$defs/Color"
+        },
+        "event.padding_x": {
+          "$ref": "#/$defs/Px"
+        },
+        "event.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "event.tint_surface": {
+          "$ref": "#/$defs/Color"
+        },
+        "font.body": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "font.button": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "font.heading": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "font.mono": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "font.numerical": {
+          "$ref": "#/$defs/Fonts"
+        },
+        "ghost_element.hover": {
+          "$ref": "#/$defs/Color"
+        },
+        "layout.padding": {
+          "$ref": "#/$defs/Px"
+        },
+        "month.lane_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "month.padding_x": {
+          "$ref": "#/$defs/Px"
+        },
+        "nav.padding_x": {
+          "$ref": "#/$defs/Px"
+        },
+        "overlay": {
+          "$ref": "#/$defs/Color"
+        },
+        "primary": {
+          "$ref": "#/$defs/Color"
+        },
+        "primary.hover": {
+          "$ref": "#/$defs/Color"
+        },
+        "primary.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "radius": {
+          "$ref": "#/$defs/Px"
+        },
+        "radius.circle": {
+          "$ref": "#/$defs/Px"
+        },
+        "scrollbar.thumb.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "scrollbar.thumb.hover_background": {
+          "$ref": "#/$defs/Color"
+        },
+        "scrollbar.track.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "scrollbar.width": {
+          "$ref": "#/$defs/Px"
+        },
+        "sidebar.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "success": {
+          "$ref": "#/$defs/Color"
+        },
+        "surface.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "surface.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "surface.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "surface.tint": {
+          "$ref": "#/$defs/Color"
+        },
+        "surface.tint_step": {
+          "$ref": "#/$defs/Fraction"
+        },
+        "text": {
+          "$ref": "#/$defs/Color"
+        },
+        "text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "text.placeholder": {
+          "$ref": "#/$defs/Color"
+        },
+        "text.scale.2xl.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.2xl.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.2xs.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.2xs.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.base.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.base.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.lg.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.lg.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.sm.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.sm.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.xl.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.xl.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.xs.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "text.scale.xs.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "toast.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "toast.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "toast.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "today": {
+          "$ref": "#/$defs/Color"
+        },
+        "today.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "tooltip.background": {
+          "$ref": "#/$defs/Color"
+        },
+        "tooltip.text": {
+          "$ref": "#/$defs/Color"
+        },
+        "tooltip.text.muted": {
+          "$ref": "#/$defs/Color"
+        },
+        "typography.button.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.button.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.button.transform": {
+          "$ref": "#/$defs/Transform"
+        },
+        "typography.button.weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "typography.heading.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.heading.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.heading.transform": {
+          "$ref": "#/$defs/Transform"
+        },
+        "typography.heading.weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "typography.numerical.line_height": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.numerical.size": {
+          "$ref": "#/$defs/Px"
+        },
+        "typography.numerical.transform": {
+          "$ref": "#/$defs/Transform"
+        },
+        "typography.numerical.weight": {
+          "$ref": "#/$defs/Weight"
+        },
+        "warning": {
+          "$ref": "#/$defs/Color"
+        },
+        "week_grid.half_hour_line": {
+          "$ref": "#/$defs/Color"
+        },
+        "week_grid.hour_line": {
+          "$ref": "#/$defs/Color"
+        },
+        "weekend.background": {
+          "$ref": "#/$defs/Color"
+        }
+      },
+      "type": "object"
+    },
+    "TextShadow": {
+      "anyOf": [
+        {
+          "properties": {
+            "color": {
+              "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$",
+              "type": "string"
+            },
+            "x": {
+              "type": "number"
+            },
+            "y": {
+              "type": "number"
+            }
+          },
+          "required": ["color"],
+          "type": "object"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "ThemeContent": {
+      "description": "One variant of a family.",
+      "properties": {
+        "appearance": {
+          "$ref": "#/$defs/Appearance"
+        },
+        "name": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/Style",
+          "default": {}
+        }
+      },
+      "required": ["name", "appearance"],
+      "type": "object"
+    },
+    "Transform": {
+      "anyOf": [
+        {
+          "enum": ["none", "uppercase"]
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "Weight": {
+      "anyOf": [
+        {
+          "maximum": 1000,
+          "minimum": 1,
+          "type": "number"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "$id": "https://rencal.org/schema/themes/v1.json",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "One theme file.",
+  "properties": {
+    "$schema": {
+      "type": ["string", "null"]
+    },
+    "author": {
+      "type": ["string", "null"]
+    },
+    "name": {
+      "type": "string"
+    },
+    "themes": {
+      "items": {
+        "$ref": "#/$defs/ThemeContent"
+      },
+      "type": "array"
+    }
+  },
+  "required": ["name", "themes"],
+  "title": "renCal theme family",
+  "type": "object"
+}

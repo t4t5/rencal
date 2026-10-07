@@ -1,0 +1,340 @@
+{
+  "source": "src/lib/calendar-groups.ts",
+  "description": "Calendar group normalisation, option ordering, visible calendars per active group, display names, and the stored active group (`stored` is the raw localStorage value).",
+  "cases": [
+    {
+      "name": "groups empty",
+      "input": {
+        "calendars": [
+          "w1",
+          "w2",
+          "h1"
+        ],
+        "fn": "normalize+options+visible",
+        "groups": {}
+      },
+      "output": {
+        "normalized": {},
+        "options": [
+          "default"
+        ],
+        "visible": {
+          "Zeta": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "alpha": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "default": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "home": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "unknown": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "work": [
+            "w1",
+            "w2",
+            "h1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "groups simple",
+      "input": {
+        "calendars": [
+          "w1",
+          "w2",
+          "h1"
+        ],
+        "fn": "normalize+options+visible",
+        "groups": {
+          "home": [
+            "h1"
+          ],
+          "work": [
+            "w1",
+            "w2"
+          ]
+        }
+      },
+      "output": {
+        "normalized": {
+          "home": [
+            "h1"
+          ],
+          "work": [
+            "w1",
+            "w2"
+          ]
+        },
+        "options": [
+          "default",
+          "home",
+          "work"
+        ],
+        "visible": {
+          "Zeta": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "alpha": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "default": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "home": [
+            "h1"
+          ],
+          "unknown": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "work": [
+            "w1",
+            "w2"
+          ]
+        }
+      }
+    },
+    {
+      "name": "groups with default",
+      "input": {
+        "calendars": [
+          "w1",
+          "w2",
+          "h1"
+        ],
+        "fn": "normalize+options+visible",
+        "groups": {
+          "Zeta": [],
+          "alpha": [
+            "missing"
+          ],
+          "default": [
+            "w1",
+            "h1"
+          ],
+          "work": [
+            "w1"
+          ]
+        }
+      },
+      "output": {
+        "normalized": {
+          "Zeta": [],
+          "alpha": [
+            "missing"
+          ],
+          "default": [
+            "w1",
+            "h1"
+          ],
+          "work": [
+            "w1"
+          ]
+        },
+        "options": [
+          "default",
+          "Zeta",
+          "alpha",
+          "work"
+        ],
+        "visible": {
+          "Zeta": [],
+          "alpha": [],
+          "default": [
+            "w1",
+            "h1"
+          ],
+          "home": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "unknown": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "work": [
+            "w1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "groups junk",
+      "input": {
+        "calendars": [
+          "w1",
+          "w2",
+          "h1"
+        ],
+        "fn": "normalize+options+visible",
+        "groups": {
+          "work": [
+            "w1"
+          ]
+        }
+      },
+      "output": {
+        "normalized": {
+          "work": [
+            "w1"
+          ]
+        },
+        "options": [
+          "default",
+          "work"
+        ],
+        "visible": {
+          "Zeta": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "alpha": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "default": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "home": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "unknown": [
+            "w1",
+            "w2",
+            "h1"
+          ],
+          "work": [
+            "w1"
+          ]
+        }
+      }
+    },
+    {
+      "name": "format \"default\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": "default"
+      },
+      "output": "Default"
+    },
+    {
+      "name": "format \"work\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": "work"
+      },
+      "output": "Work"
+    },
+    {
+      "name": "format \"\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": ""
+      },
+      "output": ""
+    },
+    {
+      "name": "format \"x\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": "x"
+      },
+      "output": "X"
+    },
+    {
+      "name": "format \"Ünicode\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": "Ünicode"
+      },
+      "output": "Ünicode"
+    },
+    {
+      "name": "format \"two words\"",
+      "input": {
+        "fn": "formatGroupName",
+        "name": "two words"
+      },
+      "output": "Two words"
+    },
+    {
+      "name": "stored null",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": null
+      },
+      "output": "default"
+    },
+    {
+      "name": "stored \"\\\"work\\\"\"",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": "\"work\""
+      },
+      "output": "work"
+    },
+    {
+      "name": "stored \"work\"",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": "work"
+      },
+      "output": "default"
+    },
+    {
+      "name": "stored \"42\"",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": "42"
+      },
+      "output": "default"
+    },
+    {
+      "name": "stored \"{\\\"a\\\":1}\"",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": "{\"a\":1}"
+      },
+      "output": "default"
+    },
+    {
+      "name": "stored \"\\\"\\\"\"",
+      "input": {
+        "fn": "getStoredActiveGroup",
+        "stored": "\"\""
+      },
+      "output": ""
+    }
+  ]
+}

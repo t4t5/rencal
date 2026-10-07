@@ -58,7 +58,7 @@
         "desktopTemplate": "linux/rencal.desktop",
         "files": {
           "/usr/lib/renCal/providers": "providers",
-          "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
+          "/usr/bin/rencal-notifierd": "../target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
           "/usr/share/icons/hicolor/scalable/apps/rencal.svg": "icons/linux/icon.svg"
         }
@@ -68,7 +68,7 @@
         "desktopTemplate": "linux/rencal.desktop",
         "files": {
           "/usr/lib/renCal/providers": "providers",
-          "/usr/bin/rencal-notifierd": "target/release/rencal-notifierd",
+          "/usr/bin/rencal-notifierd": "../target/release/rencal-notifierd",
           "/usr/lib/systemd/user/rencal-notifierd.service": "notifierd/rencal-notifierd.service",
           "/usr/share/icons/hicolor/scalable/apps/rencal.svg": "icons/linux/icon.svg"
         }

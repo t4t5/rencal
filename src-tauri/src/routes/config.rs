@@ -1,4 +1,4 @@
-use crate::routes::error::RpcError;
+use rencal_core::error::CoreError;
 use std::collections::BTreeMap;
 
 use rencal_config::RencalConfig;
@@ -120,7 +120,7 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.theme = settings.into();
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 
     async fn get_notifications_enabled(self) -> TauResult<bool> {
@@ -130,7 +130,7 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_notifications_enabled(self, enabled: bool) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.notifications_enabled = enabled;
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 
     async fn get_auto_sync_enabled(self) -> TauResult<bool> {
@@ -140,7 +140,7 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_auto_sync_enabled(self, enabled: bool) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.auto_sync_enabled = enabled;
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 
     async fn get_first_day_of_week(self) -> TauResult<FirstDayOfWeek> {
@@ -150,7 +150,7 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_first_day_of_week(self, day: FirstDayOfWeek) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.first_day_of_week = day.into();
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 
     async fn get_show_week_numbers(self) -> TauResult<bool> {
@@ -160,7 +160,7 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 
     async fn get_groups(self) -> TauResult<BTreeMap<String, Vec<String>>> {
@@ -170,6 +170,6 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_groups(self, groups: BTreeMap<String, Vec<String>>) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.groups = groups;
-        config.save().map_err(RpcError::from)
+        config.save().map_err(CoreError::from)
     }
 }

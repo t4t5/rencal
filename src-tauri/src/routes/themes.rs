@@ -1,5 +1,6 @@
-use crate::external_themes::{self, ExternalThemeFonts, ExternalThemesSnapshot};
-use crate::routes::{TauResult, error::RpcErrorKind};
+use crate::routes::TauResult;
+use rencal_core::error::{CoreError, CoreErrorKind};
+use rencal_core::external_themes::{self, ExternalThemeFonts, ExternalThemesSnapshot};
 
 // list_external: loose CSS themes and installed plugin theme contributions.
 #[taurpc::procedures(path = "themes", export_to = "../src/rpc/bindings.ts")]
@@ -21,14 +22,14 @@ impl ThemesApi for ThemesApiImpl {
         external_themes::load_fonts(&theme_id).map_err(|error| {
             let kind = match error.kind {
                 external_themes::ExternalThemeFontErrorKind::InvalidInput => {
-                    RpcErrorKind::InvalidInput
+                    CoreErrorKind::InvalidInput
                 }
                 external_themes::ExternalThemeFontErrorKind::InvalidPackage => {
-                    RpcErrorKind::InvalidPackage
+                    CoreErrorKind::InvalidPackage
                 }
-                external_themes::ExternalThemeFontErrorKind::Io => RpcErrorKind::Io,
+                external_themes::ExternalThemeFontErrorKind::Io => CoreErrorKind::Io,
             };
-            crate::routes::error::RpcError::new(kind, error.to_string())
+            CoreError::new(kind, error.to_string())
         })
     }
 }

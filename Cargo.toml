@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = [
+  "crates/rencal-core",
+  "crates/rencal-theme",
+  "src-tauri",
+  "src-tauri/notifierd",
+  "src-tauri/plugin-contract",
+  "src-tauri/plugin-indexer",
+  "src-tauri/reminder-core",
+  "src-tauri/rencal-config",
+]
+
+[workspace.package]
+# Release CI writes the release version here.
+version = "0.0.1"
+
+[workspace.dependencies]
+caldir-core = "0.16.0"
+
+[workspace.metadata.caldir]
+provider-tag = "v0.14.2"

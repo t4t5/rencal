@@ -66,6 +66,12 @@ export default tseslint.config(
     },
   },
   {
+    // Golden-fixture generator for the GPUI port; reads generated RPC types to build inputs.
+    files: ["scripts/fixtures/**/*.ts"],
+    extends: [tseslint.configs.base],
+    rules: { "@typescript-eslint/no-explicit-any": "error" },
+  },
+  {
     files: rpcTypeConverters,
     rules: restrictImports({ paths: [rpcProxy], patterns: [parentImports, nativeEvents] }),
   },

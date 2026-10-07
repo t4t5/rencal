@@ -1,0 +1,319 @@
+{
+  "source": "src/hooks/cal-events/all-day-lanes.ts",
+  "description": "clipSpanToRange (1-based start col, exclusive end col) and assignAllDayLanes. `order` lists input indexes in the sorted order the function leaves the items (Array.prototype.sort is stable), with their lane.",
+  "cases": [
+    {
+      "name": "clip 10-10 to 10-16",
+      "input": {
+        "firstDay": 10,
+        "fn": "clipSpanToRange",
+        "lastDay": 10,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": {
+        "endCol": 2,
+        "isEnd": true,
+        "isStart": true,
+        "startCol": 1
+      }
+    },
+    {
+      "name": "clip 8-12 to 10-16",
+      "input": {
+        "firstDay": 8,
+        "fn": "clipSpanToRange",
+        "lastDay": 12,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": {
+        "endCol": 4,
+        "isEnd": true,
+        "isStart": false,
+        "startCol": 1
+      }
+    },
+    {
+      "name": "clip 14-20 to 10-16",
+      "input": {
+        "firstDay": 14,
+        "fn": "clipSpanToRange",
+        "lastDay": 20,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": {
+        "endCol": 8,
+        "isEnd": false,
+        "isStart": true,
+        "startCol": 5
+      }
+    },
+    {
+      "name": "clip 8-20 to 10-16",
+      "input": {
+        "firstDay": 8,
+        "fn": "clipSpanToRange",
+        "lastDay": 20,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": {
+        "endCol": 8,
+        "isEnd": false,
+        "isStart": false,
+        "startCol": 1
+      }
+    },
+    {
+      "name": "clip 2-5 to 10-16",
+      "input": {
+        "firstDay": 2,
+        "fn": "clipSpanToRange",
+        "lastDay": 5,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": null
+    },
+    {
+      "name": "clip 17-20 to 10-16",
+      "input": {
+        "firstDay": 17,
+        "fn": "clipSpanToRange",
+        "lastDay": 20,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": null
+    },
+    {
+      "name": "clip 16-16 to 10-16",
+      "input": {
+        "firstDay": 16,
+        "fn": "clipSpanToRange",
+        "lastDay": 16,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": {
+        "endCol": 8,
+        "isEnd": true,
+        "isStart": true,
+        "startCol": 7
+      }
+    },
+    {
+      "name": "clip 10-9 to 10-16",
+      "input": {
+        "firstDay": 10,
+        "fn": "clipSpanToRange",
+        "lastDay": 9,
+        "rangeFirstDay": 10,
+        "rangeLastDay": 16
+      },
+      "output": null
+    },
+    {
+      "name": "assign nested and staggered",
+      "input": {
+        "columnCount": 7,
+        "fn": "assignAllDayLanes",
+        "spans": [
+          {
+            "endCol": 8,
+            "startCol": 1
+          },
+          {
+            "endCol": 4,
+            "startCol": 2
+          },
+          {
+            "endCol": 5,
+            "startCol": 3
+          },
+          {
+            "endCol": 7,
+            "startCol": 5
+          },
+          {
+            "endCol": 2,
+            "startCol": 1
+          },
+          {
+            "endCol": 8,
+            "startCol": 7
+          }
+        ]
+      },
+      "output": {
+        "maxLane": 2,
+        "order": [
+          {
+            "index": 0,
+            "lane": 0
+          },
+          {
+            "index": 1,
+            "lane": 1
+          },
+          {
+            "index": 2,
+            "lane": 2
+          },
+          {
+            "index": 3,
+            "lane": 1
+          },
+          {
+            "index": 4,
+            "lane": 1
+          },
+          {
+            "index": 5,
+            "lane": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "assign equal spans keep start order",
+      "input": {
+        "columnCount": 7,
+        "fn": "assignAllDayLanes",
+        "spans": [
+          {
+            "endCol": 4,
+            "startCol": 3
+          },
+          {
+            "endCol": 2,
+            "startCol": 1
+          },
+          {
+            "endCol": 3,
+            "startCol": 2
+          },
+          {
+            "endCol": 2,
+            "startCol": 1
+          }
+        ]
+      },
+      "output": {
+        "maxLane": 1,
+        "order": [
+          {
+            "index": 1,
+            "lane": 0
+          },
+          {
+            "index": 3,
+            "lane": 1
+          },
+          {
+            "index": 2,
+            "lane": 0
+          },
+          {
+            "index": 0,
+            "lane": 0
+          }
+        ]
+      }
+    },
+    {
+      "name": "assign full stack",
+      "input": {
+        "columnCount": 7,
+        "fn": "assignAllDayLanes",
+        "spans": [
+          {
+            "endCol": 8,
+            "startCol": 1
+          },
+          {
+            "endCol": 8,
+            "startCol": 1
+          },
+          {
+            "endCol": 8,
+            "startCol": 1
+          }
+        ]
+      },
+      "output": {
+        "maxLane": 2,
+        "order": [
+          {
+            "index": 0,
+            "lane": 0
+          },
+          {
+            "index": 1,
+            "lane": 1
+          },
+          {
+            "index": 2,
+            "lane": 2
+          }
+        ]
+      }
+    },
+    {
+      "name": "assign fill gaps",
+      "input": {
+        "columnCount": 7,
+        "fn": "assignAllDayLanes",
+        "spans": [
+          {
+            "endCol": 3,
+            "startCol": 1
+          },
+          {
+            "endCol": 6,
+            "startCol": 4
+          },
+          {
+            "endCol": 5,
+            "startCol": 2
+          },
+          {
+            "endCol": 8,
+            "startCol": 6
+          },
+          {
+            "endCol": 2,
+            "startCol": 1
+          }
+        ]
+      },
+      "output": {
+        "maxLane": 1,
+        "order": [
+          {
+            "index": 2,
+            "lane": 0
+          },
+          {
+            "index": 0,
+            "lane": 1
+          },
+          {
+            "index": 1,
+            "lane": 1
+          },
+          {
+            "index": 3,
+            "lane": 0
+          },
+          {
+            "index": 4,
+            "lane": 0
+          }
+        ]
+      }
+    }
+  ]
+}

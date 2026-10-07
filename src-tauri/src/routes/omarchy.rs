@@ -1,5 +1,5 @@
-use crate::omarchy::{self, OmarchyColors};
 use crate::routes::TauResult;
+use rencal_core::omarchy::{self, OmarchyColors};
 
 #[taurpc::procedures(path = "omarchy", export_to = "../src/rpc/bindings.ts")]
 pub trait OmarchyApi {

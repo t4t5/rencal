@@ -1,0 +1,886 @@
+{
+  "source": "src/lib/event-time/timezones.ts",
+  "description": "timeZoneCity and timeZoneOffsetLabel (offset of `tzid` at the instant of `at`; date/floating values are anchored in viewerTz). listTimeZones depends on the JS engine's ICU data and is not captured.",
+  "cases": [
+    {
+      "name": "city Europe/Berlin",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Europe/Berlin"
+      },
+      "output": "Berlin"
+    },
+    {
+      "name": "offset Europe/Berlin at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+1"
+    },
+    {
+      "name": "offset Europe/Berlin at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+2"
+    },
+    {
+      "name": "offset Europe/Berlin at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+2"
+    },
+    {
+      "name": "offset Europe/Berlin at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+1"
+    },
+    {
+      "name": "offset Europe/Berlin at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+2"
+    },
+    {
+      "name": "offset Europe/Berlin at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Europe/Berlin",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+1"
+    },
+    {
+      "name": "city America/New_York",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "America/New_York"
+      },
+      "output": "New York"
+    },
+    {
+      "name": "offset America/New_York at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset America/New_York at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/New_York at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/New_York at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/New_York at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/New_York at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/New_York",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "city America/Argentina/Buenos_Aires",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "America/Argentina/Buenos_Aires"
+      },
+      "output": "Buenos Aires"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "offset America/Argentina/Buenos_Aires at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Argentina/Buenos_Aires",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-3"
+    },
+    {
+      "name": "city America/Port_of_Spain",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "America/Port_of_Spain"
+      },
+      "output": "Port of Spain"
+    },
+    {
+      "name": "offset America/Port_of_Spain at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/Port_of_Spain at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/Port_of_Spain at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/Port_of_Spain at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/Port_of_Spain at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "offset America/Port_of_Spain at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "America/Port_of_Spain",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-4"
+    },
+    {
+      "name": "city Asia/Kolkata",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Asia/Kolkata"
+      },
+      "output": "Kolkata"
+    },
+    {
+      "name": "offset Asia/Kolkata at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "offset Asia/Kolkata at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "offset Asia/Kolkata at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "offset Asia/Kolkata at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "offset Asia/Kolkata at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "offset Asia/Kolkata at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kolkata",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:30"
+    },
+    {
+      "name": "city Asia/Kathmandu",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Asia/Kathmandu"
+      },
+      "output": "Kathmandu"
+    },
+    {
+      "name": "offset Asia/Kathmandu at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "offset Asia/Kathmandu at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "offset Asia/Kathmandu at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "offset Asia/Kathmandu at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "offset Asia/Kathmandu at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "offset Asia/Kathmandu at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Asia/Kathmandu",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+5:45"
+    },
+    {
+      "name": "city Pacific/Chatham",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Pacific/Chatham"
+      },
+      "output": "Chatham"
+    },
+    {
+      "name": "offset Pacific/Chatham at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+13:45"
+    },
+    {
+      "name": "offset Pacific/Chatham at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+12:45"
+    },
+    {
+      "name": "offset Pacific/Chatham at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+13:45"
+    },
+    {
+      "name": "offset Pacific/Chatham at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+13:45"
+    },
+    {
+      "name": "offset Pacific/Chatham at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+12:45"
+    },
+    {
+      "name": "offset Pacific/Chatham at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Pacific/Chatham",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+13:45"
+    },
+    {
+      "name": "city Australia/Lord_Howe",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Australia/Lord_Howe"
+      },
+      "output": "Lord Howe"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+11"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+10:30"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+11"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+11"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+10:30"
+    },
+    {
+      "name": "offset Australia/Lord_Howe at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Australia/Lord_Howe",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+11"
+    },
+    {
+      "name": "city UTC",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "UTC"
+      },
+      "output": "UTC"
+    },
+    {
+      "name": "offset UTC at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "offset UTC at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "offset UTC at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "offset UTC at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "offset UTC at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "offset UTC at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "UTC",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT+0"
+    },
+    {
+      "name": "city Etc/GMT+5",
+      "input": {
+        "fn": "timeZoneCity",
+        "tzid": "Etc/GMT+5"
+      },
+      "output": "GMT+5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at utc 2026-01-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-01-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at utc 2026-07-15T12:00:00Z",
+      "input": {
+        "at": {
+          "instant": "2026-07-15T12:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "at": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at date 2026-07-01",
+      "input": {
+        "at": {
+          "date": "2026-07-01",
+          "kind": "date"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    },
+    {
+      "name": "offset Etc/GMT+5 at floating 2026-01-15T09:00:00",
+      "input": {
+        "at": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-01-15T09:00:00"
+        },
+        "fn": "timeZoneOffsetLabel",
+        "tzid": "Etc/GMT+5",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": "GMT-5"
+    }
+  ]
+}

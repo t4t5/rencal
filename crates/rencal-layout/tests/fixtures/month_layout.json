@@ -1,0 +1,4837 @@
+{
+  "source": [
+    "src/hooks/cal-events/useMonthEventLayout.ts",
+    "src/hooks/cal-events/all-day-lanes.ts"
+  ],
+  "description": "Month view layout per week row: spanning items (all-day or crossing a day boundary) with lanes, and single-day timed event ids per column sorted by start instant (stable for ties).",
+  "cases": [
+    {
+      "name": "empty monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "empty sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "single monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "a"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "single sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "a"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "side by side monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:30:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "a",
+              "b"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "side by side sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:30:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "a",
+              "b"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "back to back monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "a",
+              "b"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "back to back sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "a",
+              "b"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "same start, longer first monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:30:00"
+            },
+            "id": "short",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "long",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "mid",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "short",
+              "long",
+              "mid"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "same start, longer first sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:30:00"
+            },
+            "id": "short",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "long",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "mid",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "short",
+              "long",
+              "mid"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "transitive chain monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:45:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "c",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:30:00"
+            },
+            "id": "d",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T14:00:00"
+            },
+            "id": "e",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T13:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "transitive chain sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T09:45:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:00:00"
+            },
+            "id": "c",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T10:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T12:30:00"
+            },
+            "id": "d",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T11:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T14:00:00"
+            },
+            "id": "e",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-15T13:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "column reuse monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T12:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T08:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:30:00"
+            },
+            "id": "c",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T10:00:00"
+            },
+            "id": "d",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:15:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T13:00:00"
+            },
+            "id": "e",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T11:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "column reuse sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T12:00:00"
+            },
+            "id": "a",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            },
+            "id": "b",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T08:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:30:00"
+            },
+            "id": "c",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T10:00:00"
+            },
+            "id": "d",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:15:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T13:00:00"
+            },
+            "id": "e",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T11:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [
+              "a",
+              "b",
+              "c",
+              "d",
+              "e"
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "zero and short durations monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            },
+            "id": "zero",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:15:00"
+            },
+            "id": "15m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:44:00"
+            },
+            "id": "44m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:45:00"
+            },
+            "id": "45m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T12:59:00"
+            },
+            "id": "59m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T12:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T14:00:00"
+            },
+            "id": "60m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T13:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T16:14:00"
+            },
+            "id": "74m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T15:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T18:15:00"
+            },
+            "id": "75m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T17:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [
+              "zero",
+              "15m",
+              "44m",
+              "45m",
+              "59m",
+              "60m",
+              "74m",
+              "75m"
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "zero and short durations sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            },
+            "id": "zero",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:15:00"
+            },
+            "id": "15m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:44:00"
+            },
+            "id": "44m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:45:00"
+            },
+            "id": "45m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T12:59:00"
+            },
+            "id": "59m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T12:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T14:00:00"
+            },
+            "id": "60m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T13:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T16:14:00"
+            },
+            "id": "74m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T15:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T18:15:00"
+            },
+            "id": "75m",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T17:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [
+              "zero",
+              "15m",
+              "44m",
+              "45m",
+              "59m",
+              "60m",
+              "74m",
+              "75m"
+            ],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "ends at midnight monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T00:00:00"
+            },
+            "id": "late",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T00:00:00"
+            },
+            "id": "full",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T00:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [
+              "full",
+              "late"
+            ],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "ends at midnight sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T00:00:00"
+            },
+            "id": "late",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T00:00:00"
+            },
+            "id": "full",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T00:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [
+              "full",
+              "late"
+            ],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "crosses midnight monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T02:00:00"
+            },
+            "id": "overnight",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T17:00:00"
+            },
+            "id": "multi",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 6,
+              "eventId": "multi",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 2
+            },
+            {
+              "endCol": 6,
+              "eventId": "overnight",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 4
+            }
+          ],
+          "maxLane": 1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "crosses midnight sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T02:00:00"
+            },
+            "id": "overnight",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-18T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T17:00:00"
+            },
+            "id": "multi",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 7,
+              "eventId": "multi",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 3
+            },
+            {
+              "endCol": 7,
+              "eventId": "overnight",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 5
+            }
+          ],
+          "maxLane": 1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "all-day mix monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "date": "2026-06-16",
+              "kind": "date"
+            },
+            "id": "one",
+            "start": {
+              "date": "2026-06-15",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-19",
+              "kind": "date"
+            },
+            "id": "three",
+            "start": {
+              "date": "2026-06-16",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-22",
+              "kind": "date"
+            },
+            "id": "week",
+            "start": {
+              "date": "2026-06-15",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-17",
+              "kind": "date"
+            },
+            "id": "before",
+            "start": {
+              "date": "2026-06-10",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-25",
+              "kind": "date"
+            },
+            "id": "after",
+            "start": {
+              "date": "2026-06-20",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-03",
+              "kind": "date"
+            },
+            "id": "outside",
+            "start": {
+              "date": "2026-06-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-18",
+              "kind": "date"
+            },
+            "id": "degenerate",
+            "start": {
+              "date": "2026-06-18",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:00:00"
+            },
+            "id": "t",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [
+            {
+              "endCol": 3,
+              "eventId": "outside",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "before",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 3
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "week",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 1
+            },
+            {
+              "endCol": 5,
+              "eventId": "three",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 2
+            },
+            {
+              "endCol": 3,
+              "eventId": "before",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 2,
+              "startCol": 1
+            },
+            {
+              "endCol": 8,
+              "eventId": "after",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 6
+            },
+            {
+              "endCol": 2,
+              "eventId": "one",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 1
+            },
+            {
+              "endCol": 5,
+              "eventId": "degenerate",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 4
+            }
+          ],
+          "maxLane": 2,
+          "timedByCol": [
+            [],
+            [],
+            [
+              "t"
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 4,
+              "eventId": "after",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "all-day mix sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "date": "2026-06-16",
+              "kind": "date"
+            },
+            "id": "one",
+            "start": {
+              "date": "2026-06-15",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-19",
+              "kind": "date"
+            },
+            "id": "three",
+            "start": {
+              "date": "2026-06-16",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-22",
+              "kind": "date"
+            },
+            "id": "week",
+            "start": {
+              "date": "2026-06-15",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-17",
+              "kind": "date"
+            },
+            "id": "before",
+            "start": {
+              "date": "2026-06-10",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-25",
+              "kind": "date"
+            },
+            "id": "after",
+            "start": {
+              "date": "2026-06-20",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-03",
+              "kind": "date"
+            },
+            "id": "outside",
+            "start": {
+              "date": "2026-06-01",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-18",
+              "kind": "date"
+            },
+            "id": "degenerate",
+            "start": {
+              "date": "2026-06-18",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T11:00:00"
+            },
+            "id": "t",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T10:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [
+            {
+              "endCol": 4,
+              "eventId": "outside",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 2
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "before",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 4
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "week",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 2
+            },
+            {
+              "endCol": 4,
+              "eventId": "before",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 1,
+              "startCol": 1
+            },
+            {
+              "endCol": 6,
+              "eventId": "three",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 3
+            },
+            {
+              "endCol": 3,
+              "eventId": "one",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 2
+            },
+            {
+              "endCol": 6,
+              "eventId": "degenerate",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 5
+            },
+            {
+              "endCol": 8,
+              "eventId": "after",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 7
+            }
+          ],
+          "maxLane": 2,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [
+              "t"
+            ],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 5,
+              "eventId": "after",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            },
+            {
+              "endCol": 2,
+              "eventId": "week",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 1,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "other zones monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "America/New_York",
+              "wallclock": "2026-06-15T19:00:00"
+            },
+            "id": "ny",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "America/New_York",
+              "wallclock": "2026-06-15T18:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Asia/Tokyo",
+              "wallclock": "2026-06-16T09:30:00"
+            },
+            "id": "tokyo",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Asia/Tokyo",
+              "wallclock": "2026-06-16T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-17T22:30:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-17T21:30:00Z",
+              "kind": "datetime_utc"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_floating",
+              "wallclock": "2026-06-18T07:30:00"
+            },
+            "id": "float",
+            "start": {
+              "kind": "datetime_floating",
+              "wallclock": "2026-06-18T07:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 5,
+              "eventId": "utc",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 3
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [
+              "ny",
+              "tokyo"
+            ],
+            [],
+            [
+              "float"
+            ],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "other zones sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "America/New_York",
+              "wallclock": "2026-06-15T19:00:00"
+            },
+            "id": "ny",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "America/New_York",
+              "wallclock": "2026-06-15T18:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Asia/Tokyo",
+              "wallclock": "2026-06-16T09:30:00"
+            },
+            "id": "tokyo",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Asia/Tokyo",
+              "wallclock": "2026-06-16T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-17T22:30:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "utc",
+            "start": {
+              "instant": "2026-06-17T21:30:00Z",
+              "kind": "datetime_utc"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_floating",
+              "wallclock": "2026-06-18T07:30:00"
+            },
+            "id": "float",
+            "start": {
+              "kind": "datetime_floating",
+              "wallclock": "2026-06-18T07:00:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 6,
+              "eventId": "utc",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 4
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [
+              "ny",
+              "tokyo"
+            ],
+            [],
+            [
+              "float"
+            ],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "outside range monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-14T10:00:00"
+            },
+            "id": "before",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-14T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-22T10:00:00"
+            },
+            "id": "after",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-22T09:00:00"
+            }
+          },
+          {
+            "calendar_slug": "work",
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T10:00:00"
+            },
+            "id": "inside",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T09:00:00"
+            }
+          },
+          {
+            "calendar_slug": "missing",
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T10:00:00"
+            },
+            "id": "unknown calendar",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [
+              "before"
+            ]
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            [
+              "inside",
+              "unknown calendar"
+            ]
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "after"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "outside range sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-14T10:00:00"
+            },
+            "id": "before",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-14T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-22T10:00:00"
+            },
+            "id": "after",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-22T09:00:00"
+            }
+          },
+          {
+            "calendar_slug": "work",
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T10:00:00"
+            },
+            "id": "inside",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T09:00:00"
+            }
+          },
+          {
+            "calendar_slug": "missing",
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T10:00:00"
+            },
+            "id": "unknown calendar",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-21T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "before"
+            ],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [
+              "inside",
+              "unknown calendar"
+            ],
+            [
+              "after"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "dense day monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:45:00"
+            },
+            "id": "e0",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:15:00"
+            },
+            "id": "e1",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:15:00"
+            },
+            "id": "e2",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:45:00"
+            },
+            "id": "e3",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:15:00"
+            },
+            "id": "e4",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:15:00"
+            },
+            "id": "e5",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:45:00"
+            },
+            "id": "e6",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:15:00"
+            },
+            "id": "e7",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:15:00"
+            },
+            "id": "e8",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:45:00"
+            },
+            "id": "e9",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:15:00"
+            },
+            "id": "e10",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:15:00"
+            },
+            "id": "e11",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [
+              "e0",
+              "e10",
+              "e5",
+              "e6",
+              "e1",
+              "e11",
+              "e2",
+              "e7",
+              "e8",
+              "e3",
+              "e4",
+              "e9"
+            ],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "dense day sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:45:00"
+            },
+            "id": "e0",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:15:00"
+            },
+            "id": "e1",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:15:00"
+            },
+            "id": "e2",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:45:00"
+            },
+            "id": "e3",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:15:00"
+            },
+            "id": "e4",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:15:00"
+            },
+            "id": "e5",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:45:00"
+            },
+            "id": "e6",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:15:00"
+            },
+            "id": "e7",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:15:00"
+            },
+            "id": "e8",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T10:45:00"
+            },
+            "id": "e9",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:30:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T11:15:00"
+            },
+            "id": "e10",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T12:15:00"
+            },
+            "id": "e11",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-19T09:30:00"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [
+              "e0",
+              "e10",
+              "e5",
+              "e6",
+              "e1",
+              "e11",
+              "e2",
+              "e7",
+              "e8",
+              "e3",
+              "e4",
+              "e9"
+            ],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    },
+    {
+      "name": "month spans monday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "date": "2026-06-20",
+              "kind": "date"
+            },
+            "id": "long",
+            "start": {
+              "date": "2026-06-03",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-09",
+              "kind": "date"
+            },
+            "id": "wrap",
+            "start": {
+              "date": "2026-06-06",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-10",
+              "kind": "date"
+            },
+            "id": "a",
+            "start": {
+              "date": "2026-06-08",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-11",
+              "kind": "date"
+            },
+            "id": "b",
+            "start": {
+              "date": "2026-06-09",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-12",
+              "kind": "date"
+            },
+            "id": "c",
+            "start": {
+              "date": "2026-06-10",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-08T01:00:00"
+            },
+            "id": "overnight",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-07T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T15:00:00"
+            },
+            "id": "t1",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T14:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T09:00:00"
+            },
+            "id": "t0",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-09T06:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "t-utc",
+            "start": {
+              "instant": "2026-06-09T05:00:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "firstDayOfWeek": "monday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "long",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 3
+            },
+            {
+              "endCol": 8,
+              "eventId": "wrap",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 6
+            },
+            {
+              "endCol": 8,
+              "eventId": "overnight",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 7
+            }
+          ],
+          "maxLane": 2,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-01"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "long",
+              "isEnd": false,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            },
+            {
+              "endCol": 3,
+              "eventId": "a",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 1
+            },
+            {
+              "endCol": 4,
+              "eventId": "b",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 2
+            },
+            {
+              "endCol": 5,
+              "eventId": "c",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 3
+            },
+            {
+              "endCol": 2,
+              "eventId": "wrap",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 2,
+              "startCol": 1
+            },
+            {
+              "endCol": 2,
+              "eventId": "overnight",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 3,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 3,
+          "timedByCol": [
+            [],
+            [
+              "t-utc",
+              "t0",
+              "t1"
+            ],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-08"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 6,
+              "eventId": "long",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-15"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-22"
+        }
+      ]
+    },
+    {
+      "name": "month spans sunday",
+      "input": {
+        "calendars": [
+          {
+            "account": null,
+            "color": "#ff0000",
+            "name": "Cal",
+            "provider": null,
+            "read_only": null,
+            "slug": "cal"
+          },
+          {
+            "account": null,
+            "color": null,
+            "name": "Work",
+            "provider": null,
+            "read_only": null,
+            "slug": "work"
+          }
+        ],
+        "events": [
+          {
+            "end": {
+              "date": "2026-06-20",
+              "kind": "date"
+            },
+            "id": "long",
+            "start": {
+              "date": "2026-06-03",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-09",
+              "kind": "date"
+            },
+            "id": "wrap",
+            "start": {
+              "date": "2026-06-06",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-10",
+              "kind": "date"
+            },
+            "id": "a",
+            "start": {
+              "date": "2026-06-08",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-11",
+              "kind": "date"
+            },
+            "id": "b",
+            "start": {
+              "date": "2026-06-09",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "date": "2026-06-12",
+              "kind": "date"
+            },
+            "id": "c",
+            "start": {
+              "date": "2026-06-10",
+              "kind": "date"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-08T01:00:00"
+            },
+            "id": "overnight",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-07T22:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T15:00:00"
+            },
+            "id": "t1",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T14:00:00"
+            }
+          },
+          {
+            "end": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T09:00:00"
+            },
+            "id": "t0",
+            "start": {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-09T08:00:00"
+            }
+          },
+          {
+            "end": {
+              "instant": "2026-06-09T06:00:00Z",
+              "kind": "datetime_utc"
+            },
+            "id": "t-utc",
+            "start": {
+              "instant": "2026-06-09T05:00:00Z",
+              "kind": "datetime_utc"
+            }
+          }
+        ],
+        "firstDayOfWeek": "sunday",
+        "rangeEnd": "2026-07-01",
+        "rangeStart": "2026-06-01",
+        "today": "2026-06-17",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": [
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "long",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 0,
+              "startCol": 4
+            },
+            {
+              "endCol": 8,
+              "eventId": "wrap",
+              "isEnd": false,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 7
+            }
+          ],
+          "maxLane": 1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-05-31"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 8,
+              "eventId": "long",
+              "isEnd": false,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            },
+            {
+              "endCol": 3,
+              "eventId": "wrap",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 1,
+              "startCol": 1
+            },
+            {
+              "endCol": 3,
+              "eventId": "overnight",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 1
+            },
+            {
+              "endCol": 4,
+              "eventId": "a",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 3,
+              "startCol": 2
+            },
+            {
+              "endCol": 5,
+              "eventId": "b",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 1,
+              "startCol": 3
+            },
+            {
+              "endCol": 6,
+              "eventId": "c",
+              "isEnd": true,
+              "isStart": true,
+              "lane": 2,
+              "startCol": 4
+            }
+          ],
+          "maxLane": 3,
+          "timedByCol": [
+            [],
+            [],
+            [
+              "t-utc",
+              "t0",
+              "t1"
+            ],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-07"
+        },
+        {
+          "allDayItems": [
+            {
+              "endCol": 7,
+              "eventId": "long",
+              "isEnd": true,
+              "isStart": false,
+              "lane": 0,
+              "startCol": 1
+            }
+          ],
+          "maxLane": 0,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-14"
+        },
+        {
+          "allDayItems": [],
+          "maxLane": -1,
+          "timedByCol": [
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+            []
+          ],
+          "weekStart": "2026-06-21"
+        }
+      ]
+    }
+  ]
+}

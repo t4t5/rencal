@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Install the caldir provider binaries for the release pinned in src-tauri/Cargo.toml.
+# Install the caldir provider binaries for the release pinned in Cargo.toml.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-readonly manifest="src-tauri/Cargo.toml"
+readonly manifest="Cargo.toml"
 readonly checksums_file="src-tauri/caldir-providers.sha256"
 readonly providers_dir="src-tauri/providers"
 readonly version_file="$providers_dir/.caldir-version"

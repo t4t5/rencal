@@ -1,0 +1,35 @@
+use super::types::{
+    CalendarEvent, SplitRecurringSeriesInput, rpc_recurrence_to_core, rpc_time_to_core,
+};
+use crate::error::CoreResult;
+use crate::state::AppState;
+use caldir_core::EventUid;
+
+pub fn split_recurring_series_at(
+    state: &AppState,
+    input: SplitRecurringSeriesInput,
+) -> CoreResult<CalendarEvent> {
+    let calendar = state.caldir().calendar(&input.calendar_slug)?;
+
+    let split_start = rpc_time_to_core(&input.split_start)?;
+    let split_end = rpc_time_to_core(&input.split_end)?;
+    let new_recurrence = input
+        .new_recurrence
+        .as_ref()
+        .map(rpc_recurrence_to_core)
+        .transpose()?;
+
+    let new_master = calendar.split_recurring_series_at(
+        &EventUid::new(input.master_uid.as_str()),
+        split_start,
+        split_end,
+        new_recurrence,
+    )?;
+    state.invalidate_events(&input.calendar_slug);
+
+    Ok(CalendarEvent::from_event(
+        &new_master,
+        &input.calendar_slug,
+        None,
+    ))
+}

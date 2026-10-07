@@ -1,0 +1,2694 @@
+{
+  "source": [
+    "src/lib/rrule-utils.ts",
+    "src/lib/recurrence-edit.ts",
+    "src/components/event-parts/inputs/RepeatSelect.tsx"
+  ],
+  "description": "rrule.js-backed helpers. Occurrence datetimes are rrule.js 'fake UTC' wallclocks (YYYY-MM-DDTHH:MM). `toText` is rrule.js's English text (RepeatSelect's label for non-preset rules). withNearestOccurrence takes `now` as a viewer-zone wallclock. Round trips bridge exdates/rdates through local-components Dates (process zone Europe/Berlin = viewer zone).",
+  "cases": [
+    {
+      "name": "occurrences FREQ=DAILY from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-16T09:00",
+          "2026-06-17T09:00",
+          "2026-06-18T09:00",
+          "2026-06-19T09:00",
+          "2026-06-20T09:00",
+          "2026-06-21T09:00",
+          "2026-06-22T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-01T00:00",
+          "2026-02-02T00:00",
+          "2026-02-03T00:00",
+          "2026-02-04T00:00",
+          "2026-02-05T00:00",
+          "2026-02-06T00:00",
+          "2026-02-07T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-01T18:30",
+          "2024-03-02T18:30",
+          "2024-03-03T18:30",
+          "2024-03-04T18:30",
+          "2024-03-05T18:30",
+          "2024-03-06T18:30",
+          "2024-03-07T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=DAILY",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=DAILY"
+      },
+      "output": "every day"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-22T09:00",
+          "2026-06-29T09:00",
+          "2026-07-06T09:00",
+          "2026-07-13T09:00",
+          "2026-07-20T09:00",
+          "2026-07-27T09:00",
+          "2026-08-03T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-07T00:00",
+          "2026-02-14T00:00",
+          "2026-02-21T00:00",
+          "2026-02-28T00:00",
+          "2026-03-07T00:00",
+          "2026-03-14T00:00",
+          "2026-03-21T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-07T18:30",
+          "2024-03-14T18:30",
+          "2024-03-21T18:30",
+          "2024-03-28T18:30",
+          "2024-04-04T18:30",
+          "2024-04-11T18:30",
+          "2024-04-18T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY"
+      },
+      "output": "every week"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=2 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=2"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-29T09:00",
+          "2026-07-13T09:00",
+          "2026-07-27T09:00",
+          "2026-08-10T09:00",
+          "2026-08-24T09:00",
+          "2026-09-07T09:00",
+          "2026-09-21T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=2;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=2 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=2"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-14T00:00",
+          "2026-02-28T00:00",
+          "2026-03-14T00:00",
+          "2026-03-28T00:00",
+          "2026-04-11T00:00",
+          "2026-04-25T00:00",
+          "2026-05-09T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=2;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=2 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=2"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-14T18:30",
+          "2024-03-28T18:30",
+          "2024-04-11T18:30",
+          "2024-04-25T18:30",
+          "2024-05-09T18:30",
+          "2024-05-23T18:30",
+          "2024-06-06T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=2;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;INTERVAL=2",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;INTERVAL=2"
+      },
+      "output": "every 2 weeks"
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-07-15T09:00",
+          "2026-08-15T09:00",
+          "2026-09-15T09:00",
+          "2026-10-15T09:00",
+          "2026-11-15T09:00",
+          "2026-12-15T09:00",
+          "2027-01-15T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-03-31T00:00",
+          "2026-05-31T00:00",
+          "2026-07-31T00:00",
+          "2026-08-31T00:00",
+          "2026-10-31T00:00",
+          "2026-12-31T00:00",
+          "2027-01-31T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-29T18:30",
+          "2024-04-29T18:30",
+          "2024-05-29T18:30",
+          "2024-06-29T18:30",
+          "2024-07-29T18:30",
+          "2024-08-29T18:30",
+          "2024-09-29T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=MONTHLY",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=MONTHLY"
+      },
+      "output": "every month"
+    },
+    {
+      "name": "occurrences FREQ=YEARLY from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2027-06-15T09:00",
+          "2028-06-15T09:00",
+          "2029-06-15T09:00",
+          "2030-06-15T09:00",
+          "2031-06-15T09:00",
+          "2032-06-15T09:00",
+          "2033-06-15T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=YEARLY from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2027-01-31T00:00",
+          "2028-01-31T00:00",
+          "2029-01-31T00:00",
+          "2030-01-31T00:00",
+          "2031-01-31T00:00",
+          "2032-01-31T00:00",
+          "2033-01-31T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=YEARLY from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2028-02-29T18:30",
+          "2032-02-29T18:30",
+          "2036-02-29T18:30",
+          "2040-02-29T18:30",
+          "2044-02-29T18:30",
+          "2048-02-29T18:30",
+          "2052-02-29T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=YEARLY",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=YEARLY"
+      },
+      "output": "every year"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-22T09:00",
+          "2026-06-29T09:00",
+          "2026-07-06T09:00",
+          "2026-07-13T09:00",
+          "2026-07-20T09:00",
+          "2026-07-27T09:00",
+          "2026-08-03T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO"
+      },
+      "output": {
+        "first": [
+          "2026-02-02T00:00",
+          "2026-02-09T00:00",
+          "2026-02-16T00:00",
+          "2026-02-23T00:00",
+          "2026-03-02T00:00",
+          "2026-03-09T00:00",
+          "2026-03-16T00:00",
+          "2026-03-23T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO"
+      },
+      "output": {
+        "first": [
+          "2024-03-04T18:30",
+          "2024-03-11T18:30",
+          "2024-03-18T18:30",
+          "2024-03-25T18:30",
+          "2024-04-01T18:30",
+          "2024-04-08T18:30",
+          "2024-04-15T18:30",
+          "2024-04-22T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;BYDAY=MO",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO"
+      },
+      "output": "every week on Monday"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-16T09:00",
+          "2026-06-17T09:00",
+          "2026-06-18T09:00",
+          "2026-06-19T09:00",
+          "2026-06-22T09:00",
+          "2026-06-23T09:00",
+          "2026-06-24T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO,TU,WE,TH,FR"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+      },
+      "output": {
+        "first": [
+          "2026-02-02T00:00",
+          "2026-02-03T00:00",
+          "2026-02-04T00:00",
+          "2026-02-05T00:00",
+          "2026-02-06T00:00",
+          "2026-02-09T00:00",
+          "2026-02-10T00:00",
+          "2026-02-11T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO,TU,WE,TH,FR"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-01T18:30",
+          "2024-03-04T18:30",
+          "2024-03-05T18:30",
+          "2024-03-06T18:30",
+          "2024-03-07T18:30",
+          "2024-03-08T18:30",
+          "2024-03-11T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=MO,TU,WE,TH,FR"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
+      },
+      "output": "every weekday"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=SA,SU from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=SA,SU"
+      },
+      "output": {
+        "first": [
+          "2026-06-20T09:00",
+          "2026-06-21T09:00",
+          "2026-06-27T09:00",
+          "2026-06-28T09:00",
+          "2026-07-04T09:00",
+          "2026-07-05T09:00",
+          "2026-07-11T09:00",
+          "2026-07-12T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=SA,SU"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=SA,SU from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=SA,SU"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-01T00:00",
+          "2026-02-07T00:00",
+          "2026-02-08T00:00",
+          "2026-02-14T00:00",
+          "2026-02-15T00:00",
+          "2026-02-21T00:00",
+          "2026-02-22T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=SA,SU"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;BYDAY=SA,SU from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;BYDAY=SA,SU"
+      },
+      "output": {
+        "first": [
+          "2024-03-02T18:30",
+          "2024-03-03T18:30",
+          "2024-03-09T18:30",
+          "2024-03-10T18:30",
+          "2024-03-16T18:30",
+          "2024-03-17T18:30",
+          "2024-03-23T18:30",
+          "2024-03-24T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=MO;BYDAY=SA,SU"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;BYDAY=SA,SU",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;BYDAY=SA,SU"
+      },
+      "output": "every week on Saturday, Sunday"
+    },
+    {
+      "name": "occurrences FREQ=DAILY;COUNT=5 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;COUNT=5"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-16T09:00",
+          "2026-06-17T09:00",
+          "2026-06-18T09:00",
+          "2026-06-19T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=DAILY;INTERVAL=1;COUNT=5;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;COUNT=5 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;COUNT=5"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-01T00:00",
+          "2026-02-02T00:00",
+          "2026-02-03T00:00",
+          "2026-02-04T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1;COUNT=5;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;COUNT=5 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;COUNT=5"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-01T18:30",
+          "2024-03-02T18:30",
+          "2024-03-03T18:30",
+          "2024-03-04T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=DAILY;INTERVAL=1;COUNT=5;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=DAILY;COUNT=5",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=DAILY;COUNT=5"
+      },
+      "output": "every day for 5 times"
+    },
+    {
+      "name": "occurrences FREQ=DAILY;UNTIL=20260625T000000Z from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;UNTIL=20260625T000000Z"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-16T09:00",
+          "2026-06-17T09:00",
+          "2026-06-18T09:00",
+          "2026-06-19T09:00",
+          "2026-06-20T09:00",
+          "2026-06-21T09:00",
+          "2026-06-22T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=DAILY;INTERVAL=1;UNTIL=20260625T000000Z;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;UNTIL=20260625T000000Z from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;UNTIL=20260625T000000Z"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-02-01T00:00",
+          "2026-02-02T00:00",
+          "2026-02-03T00:00",
+          "2026-02-04T00:00",
+          "2026-02-05T00:00",
+          "2026-02-06T00:00",
+          "2026-02-07T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1;UNTIL=20260625T000000Z;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;UNTIL=20260625T000000Z from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;UNTIL=20260625T000000Z"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-01T18:30",
+          "2024-03-02T18:30",
+          "2024-03-03T18:30",
+          "2024-03-04T18:30",
+          "2024-03-05T18:30",
+          "2024-03-06T18:30",
+          "2024-03-07T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=DAILY;INTERVAL=1;UNTIL=20260625T000000Z;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=DAILY;UNTIL=20260625T000000Z",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=DAILY;UNTIL=20260625T000000Z"
+      },
+      "output": "every day until June 25, 2026"
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYMONTHDAY=31 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=31"
+      },
+      "output": {
+        "first": [
+          "2026-07-31T09:00",
+          "2026-08-31T09:00",
+          "2026-10-31T09:00",
+          "2026-12-31T09:00",
+          "2027-01-31T09:00",
+          "2027-03-31T09:00",
+          "2027-05-31T09:00",
+          "2027-07-31T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO;BYMONTHDAY=31"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYMONTHDAY=31 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=31"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-03-31T00:00",
+          "2026-05-31T00:00",
+          "2026-07-31T00:00",
+          "2026-08-31T00:00",
+          "2026-10-31T00:00",
+          "2026-12-31T00:00",
+          "2027-01-31T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO;BYMONTHDAY=31"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYMONTHDAY=31 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=31"
+      },
+      "output": {
+        "first": [
+          "2024-03-31T18:30",
+          "2024-05-31T18:30",
+          "2024-07-31T18:30",
+          "2024-08-31T18:30",
+          "2024-10-31T18:30",
+          "2024-12-31T18:30",
+          "2025-01-31T18:30",
+          "2025-03-31T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO;BYMONTHDAY=31"
+      }
+    },
+    {
+      "name": "text FREQ=MONTHLY;BYMONTHDAY=31",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=MONTHLY;BYMONTHDAY=31"
+      },
+      "output": "every month on the 31st"
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=2TU from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=2TU"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-07-15T09:00",
+          "2026-08-15T09:00",
+          "2026-09-15T09:00",
+          "2026-10-15T09:00",
+          "2026-11-15T09:00",
+          "2026-12-15T09:00",
+          "2027-01-15T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=2TU from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=2TU"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-03-31T00:00",
+          "2026-05-31T00:00",
+          "2026-07-31T00:00",
+          "2026-08-31T00:00",
+          "2026-10-31T00:00",
+          "2026-12-31T00:00",
+          "2027-01-31T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=2TU from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=2TU"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-29T18:30",
+          "2024-04-29T18:30",
+          "2024-05-29T18:30",
+          "2024-06-29T18:30",
+          "2024-07-29T18:30",
+          "2024-08-29T18:30",
+          "2024-09-29T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=MONTHLY;BYDAY=2TU",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=MONTHLY;BYDAY=2TU"
+      },
+      "output": "every month on the 2nd Tuesday"
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=-1FR from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=-1FR"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-07-15T09:00",
+          "2026-08-15T09:00",
+          "2026-09-15T09:00",
+          "2026-10-15T09:00",
+          "2026-11-15T09:00",
+          "2026-12-15T09:00",
+          "2027-01-15T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=-1FR from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=-1FR"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T00:00",
+          "2026-03-31T00:00",
+          "2026-05-31T00:00",
+          "2026-07-31T00:00",
+          "2026-08-31T00:00",
+          "2026-10-31T00:00",
+          "2026-12-31T00:00",
+          "2027-01-31T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "occurrences FREQ=MONTHLY;BYDAY=-1FR from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=MONTHLY;BYDAY=-1FR"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-29T18:30",
+          "2024-04-29T18:30",
+          "2024-05-29T18:30",
+          "2024-06-29T18:30",
+          "2024-07-29T18:30",
+          "2024-08-29T18:30",
+          "2024-09-29T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=MONTHLY;INTERVAL=1;WKST=MO"
+      }
+    },
+    {
+      "name": "text FREQ=MONTHLY;BYDAY=-1FR",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=MONTHLY;BYDAY=-1FR"
+      },
+      "output": "every month on the last Friday"
+    },
+    {
+      "name": "occurrences FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29"
+      },
+      "output": {
+        "first": [
+          "2028-02-29T09:00",
+          "2032-02-29T09:00",
+          "2036-02-29T09:00",
+          "2040-02-29T09:00",
+          "2044-02-29T09:00",
+          "2048-02-29T09:00",
+          "2052-02-29T09:00",
+          "2056-02-29T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO;BYMONTH=2;BYMONTHDAY=29"
+      }
+    },
+    {
+      "name": "occurrences FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29"
+      },
+      "output": {
+        "first": [
+          "2028-02-29T00:00",
+          "2032-02-29T00:00",
+          "2036-02-29T00:00",
+          "2040-02-29T00:00",
+          "2044-02-29T00:00",
+          "2048-02-29T00:00",
+          "2052-02-29T00:00",
+          "2056-02-29T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO;BYMONTH=2;BYMONTHDAY=29"
+      }
+    },
+    {
+      "name": "occurrences FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2028-02-29T18:30",
+          "2032-02-29T18:30",
+          "2036-02-29T18:30",
+          "2040-02-29T18:30",
+          "2044-02-29T18:30",
+          "2048-02-29T18:30",
+          "2052-02-29T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=YEARLY;INTERVAL=1;WKST=MO;BYMONTH=2;BYMONTHDAY=29"
+      }
+    },
+    {
+      "name": "text FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=YEARLY;BYMONTH=2;BYMONTHDAY=29"
+      },
+      "output": "every February on the 29th"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE"
+      },
+      "output": {
+        "first": [
+          "2026-06-17T09:00",
+          "2026-06-21T09:00",
+          "2026-06-24T09:00",
+          "2026-06-28T09:00",
+          "2026-07-01T09:00",
+          "2026-07-05T09:00",
+          "2026-07-08T09:00",
+          "2026-07-12T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=SU;BYDAY=SU,WE"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE"
+      },
+      "output": {
+        "first": [
+          "2026-02-01T00:00",
+          "2026-02-04T00:00",
+          "2026-02-08T00:00",
+          "2026-02-11T00:00",
+          "2026-02-15T00:00",
+          "2026-02-18T00:00",
+          "2026-02-22T00:00",
+          "2026-02-25T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=SU;BYDAY=SU,WE"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE"
+      },
+      "output": {
+        "first": [
+          "2024-03-03T18:30",
+          "2024-03-06T18:30",
+          "2024-03-10T18:30",
+          "2024-03-13T18:30",
+          "2024-03-17T18:30",
+          "2024-03-20T18:30",
+          "2024-03-24T18:30",
+          "2024-03-27T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=1;WKST=SU;BYDAY=SU,WE"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;WKST=SU;BYDAY=SU,WE"
+      },
+      "output": "every week on Wednesday, Sunday"
+    },
+    {
+      "name": "occurrences FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0"
+      },
+      "output": {
+        "first": [
+          "2026-06-15T09:00",
+          "2026-06-15T17:00",
+          "2026-06-16T09:00",
+          "2026-06-16T17:00",
+          "2026-06-17T09:00",
+          "2026-06-17T17:00",
+          "2026-06-18T09:00",
+          "2026-06-18T17:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO;BYHOUR=9,17;BYMINUTE=0"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0"
+      },
+      "output": {
+        "first": [
+          "2026-01-31T09:00",
+          "2026-01-31T17:00",
+          "2026-02-01T09:00",
+          "2026-02-01T17:00",
+          "2026-02-02T09:00",
+          "2026-02-02T17:00",
+          "2026-02-03T09:00",
+          "2026-02-03T17:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO;BYHOUR=9,17;BYMINUTE=0"
+      }
+    },
+    {
+      "name": "occurrences FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0"
+      },
+      "output": {
+        "first": [
+          "2024-03-01T09:00",
+          "2024-03-01T17:00",
+          "2024-03-02T09:00",
+          "2024-03-02T17:00",
+          "2024-03-03T09:00",
+          "2024-03-03T17:00",
+          "2024-03-04T09:00",
+          "2024-03-04T17:00"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=DAILY;INTERVAL=1;WKST=MO;BYHOUR=9,17;BYMINUTE=0"
+      }
+    },
+    {
+      "name": "text FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=DAILY;BYHOUR=9,17;BYMINUTE=0"
+      },
+      "output": "every day at 9 and 17"
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4 from 2026-06-15T09:00",
+      "input": {
+        "dtstart": "2026-06-15T09:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4"
+      },
+      "output": {
+        "first": [
+          "2026-06-18T09:00",
+          "2026-07-09T09:00",
+          "2026-07-30T09:00",
+          "2026-08-20T09:00"
+        ],
+        "toString": "DTSTART:20260615T090000Z\nRRULE:FREQ=WEEKLY;INTERVAL=3;COUNT=4;WKST=MO;BYDAY=TH"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4 from 2026-01-31T00:00",
+      "input": {
+        "dtstart": "2026-01-31T00:00",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4"
+      },
+      "output": {
+        "first": [
+          "2026-02-19T00:00",
+          "2026-03-12T00:00",
+          "2026-04-02T00:00",
+          "2026-04-23T00:00"
+        ],
+        "toString": "DTSTART:20260131T000000Z\nRRULE:FREQ=WEEKLY;INTERVAL=3;COUNT=4;WKST=MO;BYDAY=TH"
+      }
+    },
+    {
+      "name": "occurrences FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4 from 2024-02-29T18:30",
+      "input": {
+        "dtstart": "2024-02-29T18:30",
+        "fn": "createRRuleWithDtstart",
+        "rrule": "FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4"
+      },
+      "output": {
+        "first": [
+          "2024-02-29T18:30",
+          "2024-03-21T18:30",
+          "2024-04-11T18:30",
+          "2024-05-02T18:30"
+        ],
+        "toString": "DTSTART:20240229T183000Z\nRRULE:FREQ=WEEKLY;INTERVAL=3;COUNT=4;WKST=MO;BYDAY=TH"
+      }
+    },
+    {
+      "name": "text FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4",
+      "input": {
+        "fn": "toText",
+        "rrule": "FREQ=WEEKLY;INTERVAL=3;BYDAY=TH;COUNT=4"
+      },
+      "output": "every 3 weeks on Thursday for 4 times"
+    },
+    {
+      "name": "preset RRULE:FREQ=DAILY",
+      "input": {
+        "fn": "RepeatSelect preset"
+      },
+      "output": {
+        "text": "every day",
+        "value": "RRULE:FREQ=DAILY"
+      }
+    },
+    {
+      "name": "preset RRULE:FREQ=WEEKLY",
+      "input": {
+        "fn": "RepeatSelect preset"
+      },
+      "output": {
+        "text": "every week",
+        "value": "RRULE:FREQ=WEEKLY"
+      }
+    },
+    {
+      "name": "preset RRULE:FREQ=WEEKLY;INTERVAL=2",
+      "input": {
+        "fn": "RepeatSelect preset"
+      },
+      "output": {
+        "text": "every 2 weeks",
+        "value": "RRULE:FREQ=WEEKLY;INTERVAL=2"
+      }
+    },
+    {
+      "name": "preset RRULE:FREQ=MONTHLY",
+      "input": {
+        "fn": "RepeatSelect preset"
+      },
+      "output": {
+        "text": "every month",
+        "value": "RRULE:FREQ=MONTHLY"
+      }
+    },
+    {
+      "name": "preset RRULE:FREQ=YEARLY",
+      "input": {
+        "fn": "RepeatSelect preset"
+      },
+      "output": {
+        "text": "every year",
+        "value": "RRULE:FREQ=YEARLY"
+      }
+    },
+    {
+      "name": "rruleset round trip plain",
+      "input": {
+        "fn": "recurrenceToRRuleSet+rruleToRecurrence",
+        "recurrence": {
+          "exdates": [],
+          "rdates": [],
+          "rrule": "FREQ=WEEKLY;BYDAY=MO"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "recurrence": {
+          "exdates": [],
+          "rdates": [],
+          "rrule": "FREQ=WEEKLY;BYDAY=MO"
+        },
+        "rruleSet": "RRULE:FREQ=WEEKLY;BYDAY=MO"
+      }
+    },
+    {
+      "name": "rruleset round trip with exdates",
+      "input": {
+        "fn": "recurrenceToRRuleSet+rruleToRecurrence",
+        "recurrence": {
+          "exdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            },
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          ],
+          "rdates": [],
+          "rrule": "FREQ=DAILY"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "recurrence": {
+          "exdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-16T09:00:00"
+            },
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-17T09:00:00"
+            }
+          ],
+          "rdates": [],
+          "rrule": "FREQ=DAILY"
+        },
+        "rruleSet": "RRULE:FREQ=DAILY\nEXDATE:20260616T070000Z,20260617T070000Z"
+      }
+    },
+    {
+      "name": "rruleset round trip with rdates",
+      "input": {
+        "fn": "recurrenceToRRuleSet+rruleToRecurrence",
+        "recurrence": {
+          "exdates": [],
+          "rdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-20T09:00:00"
+            },
+            {
+              "instant": "2026-07-04T15:00:00Z",
+              "kind": "datetime_utc"
+            }
+          ],
+          "rrule": "FREQ=MONTHLY;BYMONTHDAY=1"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "recurrence": {
+          "exdates": [],
+          "rdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-20T09:00:00"
+            },
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-07-04T17:00:00"
+            }
+          ],
+          "rrule": "FREQ=MONTHLY;BYMONTHDAY=1"
+        },
+        "rruleSet": "RRULE:FREQ=MONTHLY;BYMONTHDAY=1\nRDATE:20260620T070000Z,20260704T150000Z"
+      }
+    },
+    {
+      "name": "rruleset round trip all-day exdate",
+      "input": {
+        "fn": "recurrenceToRRuleSet+rruleToRecurrence",
+        "recurrence": {
+          "exdates": [
+            {
+              "date": "2026-06-22",
+              "kind": "date"
+            }
+          ],
+          "rdates": [
+            {
+              "date": "2026-06-25",
+              "kind": "date"
+            }
+          ],
+          "rrule": "FREQ=WEEKLY"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "recurrence": {
+          "exdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-22T00:00:00"
+            }
+          ],
+          "rdates": [
+            {
+              "kind": "datetime_zoned",
+              "tzid": "Europe/Berlin",
+              "wallclock": "2026-06-25T00:00:00"
+            }
+          ],
+          "rrule": "FREQ=WEEKLY"
+        },
+        "rruleSet": "RRULE:FREQ=WEEKLY\nRDATE:20260624T220000Z\nEXDATE:20260621T220000Z"
+      }
+    },
+    {
+      "name": "nearest weekly-mon at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T10:00:00"
+          },
+          "id": "weekly-mon",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest weekly-mon at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T10:00:00"
+          },
+          "id": "weekly-mon",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-22T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-22T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest weekly-mon at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T10:00:00"
+          },
+          "id": "weekly-mon",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-30T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-30T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest weekly-mon at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T10:00:00"
+          },
+          "id": "weekly-mon",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;BYDAY=MO"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-01-05T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2027-01-04T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2027-01-04T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest daily-exdates at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:30:00"
+          },
+          "id": "daily-exdates",
+          "recurrence": {
+            "exdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-15T09:00:00"
+              },
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-16T09:00:00"
+              }
+            ],
+            "rdates": [],
+            "rrule": "FREQ=DAILY;COUNT=20"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-17T09:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-17T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest daily-exdates at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:30:00"
+          },
+          "id": "daily-exdates",
+          "recurrence": {
+            "exdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-15T09:00:00"
+              },
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-16T09:00:00"
+              }
+            ],
+            "rdates": [],
+            "rrule": "FREQ=DAILY;COUNT=20"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-17T09:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-17T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest daily-exdates at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:30:00"
+          },
+          "id": "daily-exdates",
+          "recurrence": {
+            "exdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-15T09:00:00"
+              },
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-16T09:00:00"
+              }
+            ],
+            "rdates": [],
+            "rrule": "FREQ=DAILY;COUNT=20"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T09:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest daily-exdates at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:30:00"
+          },
+          "id": "daily-exdates",
+          "recurrence": {
+            "exdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-15T09:00:00"
+              },
+              {
+                "kind": "datetime_zoned",
+                "tzid": "Europe/Berlin",
+                "wallclock": "2026-06-16T09:00:00"
+              }
+            ],
+            "rdates": [],
+            "rrule": "FREQ=DAILY;COUNT=20"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-01T09:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-20T09:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-20T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest ended at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-01-02",
+            "kind": "date"
+          },
+          "id": "ended",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;COUNT=3"
+          },
+          "start": {
+            "date": "2026-01-01",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-01-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-01-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest ended at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-01-02",
+            "kind": "date"
+          },
+          "id": "ended",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;COUNT=3"
+          },
+          "start": {
+            "date": "2026-01-01",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-01-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-01-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest ended at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-01-02",
+            "kind": "date"
+          },
+          "id": "ended",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;COUNT=3"
+          },
+          "start": {
+            "date": "2026-01-01",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-01-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-01-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest ended at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-01-02",
+            "kind": "date"
+          },
+          "id": "ended",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY;COUNT=3"
+          },
+          "start": {
+            "date": "2026-01-01",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-01-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-01-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest rdate-only-ahead at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T13:00:00"
+          },
+          "id": "rdate-only-ahead",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "America/New_York",
+                "wallclock": "2026-06-20T12:00:00"
+              }
+            ],
+            "rrule": "FREQ=YEARLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T12:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-20T13:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-20T12:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest rdate-only-ahead at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T13:00:00"
+          },
+          "id": "rdate-only-ahead",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "America/New_York",
+                "wallclock": "2026-06-20T12:00:00"
+              }
+            ],
+            "rrule": "FREQ=YEARLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T12:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-20T13:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-20T12:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest rdate-only-ahead at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T13:00:00"
+          },
+          "id": "rdate-only-ahead",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "America/New_York",
+                "wallclock": "2026-06-20T12:00:00"
+              }
+            ],
+            "rrule": "FREQ=YEARLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T12:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-05-01T13:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-05-01T12:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest rdate-only-ahead at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T13:00:00"
+          },
+          "id": "rdate-only-ahead",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [
+              {
+                "kind": "datetime_zoned",
+                "tzid": "America/New_York",
+                "wallclock": "2026-06-20T12:00:00"
+              }
+            ],
+            "rrule": "FREQ=YEARLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "America/New_York",
+            "wallclock": "2026-05-01T12:00:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2027-05-01T13:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2027-05-01T12:00:00"
+        }
+      }
+    },
+    {
+      "name": "nearest multi-day-allday at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-04-02",
+            "kind": "date"
+          },
+          "id": "multi-day-allday",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=MONTHLY"
+          },
+          "start": {
+            "date": "2026-03-30",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-07-03",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-30",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest multi-day-allday at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-04-02",
+            "kind": "date"
+          },
+          "id": "multi-day-allday",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=MONTHLY"
+          },
+          "start": {
+            "date": "2026-03-30",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-07-03",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-30",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest multi-day-allday at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-04-02",
+            "kind": "date"
+          },
+          "id": "multi-day-allday",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=MONTHLY"
+          },
+          "start": {
+            "date": "2026-03-30",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-04-02",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-03-30",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest multi-day-allday at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-04-02",
+            "kind": "date"
+          },
+          "id": "multi-day-allday",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=MONTHLY"
+          },
+          "start": {
+            "date": "2026-03-30",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2027-02-02",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2027-01-30",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest dst-crossing at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T03:30:00"
+          },
+          "id": "dst-crossing",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T02:30:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-21T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-21T02:30:00"
+        }
+      }
+    },
+    {
+      "name": "nearest dst-crossing at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T03:30:00"
+          },
+          "id": "dst-crossing",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T02:30:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-21T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-21T02:30:00"
+        }
+      }
+    },
+    {
+      "name": "nearest dst-crossing at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T03:30:00"
+          },
+          "id": "dst-crossing",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T02:30:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-04-05T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-04-05T02:30:00"
+        }
+      }
+    },
+    {
+      "name": "nearest dst-crossing at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T03:30:00"
+          },
+          "id": "dst-crossing",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=WEEKLY"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-03-01T02:30:00"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2027-01-03T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2027-01-03T02:30:00"
+        }
+      }
+    },
+    {
+      "name": "nearest not-recurring at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "not-recurring",
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest not-recurring at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "not-recurring",
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest not-recurring at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "not-recurring",
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest not-recurring at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "not-recurring",
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest bad-rrule at 2026-06-15T08:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "bad-rrule",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=NOPE"
+          },
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T08:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest bad-rrule at 2026-06-15T09:30:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "bad-rrule",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=NOPE"
+          },
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-06-15T09:30:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest bad-rrule at 2026-03-29T12:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "bad-rrule",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=NOPE"
+          },
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2026-03-29T12:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "nearest bad-rrule at 2027-01-01T00:00:00",
+      "input": {
+        "event": {
+          "end": {
+            "date": "2026-06-16",
+            "kind": "date"
+          },
+          "id": "bad-rrule",
+          "recurrence": {
+            "exdates": [],
+            "rdates": [],
+            "rrule": "FREQ=NOPE"
+          },
+          "start": {
+            "date": "2026-06-15",
+            "kind": "date"
+          }
+        },
+        "fn": "withNearestOccurrence",
+        "now": "2027-01-01T00:00:00",
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-16",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-15",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "anchor {\"kind\":\"datetime_zoned\",\"wallclock\":\"2026-06-17T09:00:00\",\"tzid\":\"Europe/Berlin\"} to {\"kind\":\"datetime_zoned\",\"wallclock\":\"2026-06-01T08:00:00\",\"tzid\":\"Europe/Berlin\"}",
+      "input": {
+        "current": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-17T10:00:00"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-17T09:00:00"
+          }
+        },
+        "fn": "anchorRangeToRecurringMaster",
+        "masterStart": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T08:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "anchor {\"kind\":\"date\",\"date\":\"2026-06-17\"} to {\"kind\":\"date\",\"date\":\"2026-06-01\"}",
+      "input": {
+        "current": {
+          "end": {
+            "date": "2026-06-19",
+            "kind": "date"
+          },
+          "start": {
+            "date": "2026-06-17",
+            "kind": "date"
+          }
+        },
+        "fn": "anchorRangeToRecurringMaster",
+        "masterStart": {
+          "date": "2026-06-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "date": "2026-06-03",
+          "kind": "date"
+        },
+        "start": {
+          "date": "2026-06-01",
+          "kind": "date"
+        }
+      }
+    },
+    {
+      "name": "anchor {\"kind\":\"datetime_zoned\",\"wallclock\":\"2026-06-17T23:00:00\",\"tzid\":\"Europe/Berlin\"} to {\"kind\":\"datetime_zoned\",\"wallclock\":\"2026-05-31T23:00:00\",\"tzid\":\"America/New_York\"}",
+      "input": {
+        "current": {
+          "end": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-18T01:00:00"
+          },
+          "start": {
+            "kind": "datetime_zoned",
+            "tzid": "Europe/Berlin",
+            "wallclock": "2026-06-17T23:00:00"
+          }
+        },
+        "fn": "anchorRangeToRecurringMaster",
+        "masterStart": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-05-31T23:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-01T01:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-05-31T23:00:00"
+        }
+      }
+    }
+  ]
+}

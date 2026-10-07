@@ -13,7 +13,7 @@ A theme is a **bare block of CSS custom-property declarations** — no selector:
 The `[data-theme="<id>"]` selector is added **for you**:
 
 - **Built-in themes** (`src/themes/*.css`) are wrapped at build time by the `rencal-themes` Vite plugin (`vite-plugin-rencal-themes.ts`) and bundled as `virtual:rencal-themes.css` (imported in `src/main.tsx`).
-- **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`src-tauri/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. The theme controller injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
+- **External themes** (user files in `~/.config/rencal/themes/*.css` and plugin themes) are read by the Rust watcher (`crates/rencal-core/src/external_themes.rs`) and held in `src/themes/ThemeRegistry.tsx`. The theme controller injects only the selected external theme's CSS, replacing it when selection changes. Selecting a built-in or unknown theme, or removing the active external theme, removes the external stylesheet.
 
 External preview tiles use only custom properties parsed from the theme's top-level declaration block, applied as inline styles on the tile. They do not load custom selectors or stylesheets, and tiles avoid app `data-slot`s, so the active theme's selectors don't restyle them either: a tile looks the same whether or not its theme is selected. Installing or updating an inactive theme therefore does not enable its full CSS.
 
@@ -260,13 +260,13 @@ shadcn names keep their standard meaning, so generated declarations such as `--b
 
 ## Omarchy auto-sync
 
-The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.local/state/omarchy/current/theme/colors.toml` on Omarchy quattro or `~/.config/omarchy/current/theme/colors.toml` on v3, then writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. The Rust integration in `src-tauri/src/omarchy.rs` normalizes v3 ANSI, v4 semantic, and hybrid palettes into one shape. Its file-watcher re-emits on every OS theme change, so changing the Omarchy theme repaints renCal live without a restart.
+The `omarchy` theme is special: it doesn't ship a static palette. renCal reads `~/.local/state/omarchy/current/theme/colors.toml` on Omarchy quattro or `~/.config/omarchy/current/theme/colors.toml` on v3, then writes the colors into a managed `<style>` element as a `[data-theme="omarchy"] { ... }` rule. The Rust integration in `crates/rencal-core/src/omarchy.rs` normalizes v3 ANSI, v4 semantic, and hybrid palettes into one shape. Its file-watcher re-emits on every OS theme change, so changing the Omarchy theme repaints renCal live without a restart.
 
 The fetch + listen runs regardless of the active theme so the omarchy preview tile in settings always reflects the current OS theme — the `[data-theme="omarchy"]` selector keeps the rule from leaking to other themes.
 
 **Monochrome Omarchy themes.** Some Omarchy themes are built around a single hue or none at all (Vantablack, White, Solitude, Lumon). For these, per-calendar event colours would be the only thing clashing with the desktop, so `useOmarchyTheme` gives them the Electric Blue treatment: the accent for `--primary` / `--today` / `--brand` / `--surface-tint`, and `--event-color` / `--event-background` / `--event-foreground` set so every event is a solid accent fill. The list is a static `MONOCHROME_THEMES` set in `src/hooks/useOmarchyTheme.ts`, keyed by the theme slug the Rust side resolves from `current/theme.name` (quattro) or the `current/theme` symlink (v3). "Monochrome" is a design call rather than something the palette reliably encodes (Hackerman's blue is periwinkle next to its greens, matte-black is orange plus red), so add to the list by hand.
 
-If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `src-tauri/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
+If Omarchy isn't installed (or `colors.toml` is missing), no rule is written and the theme falls through to the `:root` defaults in `global.css`. Palette fallback resolution lives in `crates/rencal-core/src/omarchy.rs`; the normalized semantic-color to CSS-variable mapping lives in `src/hooks/useOmarchyTheme.ts`.
 
 ## Escape hatch: custom CSS rules
 

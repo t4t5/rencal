@@ -1,0 +1,47 @@
+[
+  {
+    "id": "tokyo-night",
+    "colors": {
+      "mode": "dark",
+      "name": "tokyo-night",
+      "background": "#1a1b26",
+      "foreground": "#a9b1d6",
+      "bright_foreground": "#c0caf5",
+      "accent": "#7aa2f7",
+      "red": "#f7768e",
+      "green": "#9ece6a",
+      "yellow": "#e0af68",
+      "blue": "#7dcfff"
+    }
+  },
+  {
+    "id": "catppuccin-latte",
+    "colors": {
+      "mode": "light",
+      "name": "catppuccin-latte",
+      "background": "#eff1f5",
+      "foreground": "#4c4f69",
+      "bright_foreground": "#dc8a78",
+      "accent": "#1e66f5",
+      "red": "#d20f39",
+      "green": "#40a02b",
+      "yellow": "#df8e1d",
+      "blue": "#1e66f5"
+    }
+  },
+  {
+    "id": "vantablack",
+    "colors": {
+      "mode": "dark",
+      "name": "vantablack",
+      "background": "#0d0d0d",
+      "foreground": "#ffffff",
+      "bright_foreground": "#ffffff",
+      "accent": "#8d8d8d",
+      "red": "#a4a4a4",
+      "green": "#b6b6b6",
+      "yellow": "#cecece",
+      "blue": "#8d8d8d"
+    }
+  }
+]

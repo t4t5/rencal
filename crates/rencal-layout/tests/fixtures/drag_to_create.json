@@ -1,0 +1,3534 @@
+{
+  "source": "src/lib/drag-to-create.ts",
+  "description": "Drag-to-create math: day selections (inclusive) and their all-day [start, end) range, snapped minute selections (15-min slots), wallclock ranges in the viewer zone (24:00 → next-day midnight; DST gaps resolve later), minutesAtY and clampPointToRect.",
+  "cases": [
+    {
+      "name": "days 2026-06-16 → 2026-06-16",
+      "input": {
+        "anchor": "2026-06-16",
+        "fn": "daySelectionForPointer+daySelectionRange",
+        "pointer": "2026-06-16"
+      },
+      "output": {
+        "range": {
+          "end": {
+            "date": "2026-06-17",
+            "kind": "date"
+          },
+          "start": {
+            "date": "2026-06-16",
+            "kind": "date"
+          }
+        },
+        "selection": {
+          "end": "2026-06-16",
+          "start": "2026-06-16"
+        }
+      }
+    },
+    {
+      "name": "days 2026-06-16 → 2026-06-19",
+      "input": {
+        "anchor": "2026-06-16",
+        "fn": "daySelectionForPointer+daySelectionRange",
+        "pointer": "2026-06-19"
+      },
+      "output": {
+        "range": {
+          "end": {
+            "date": "2026-06-20",
+            "kind": "date"
+          },
+          "start": {
+            "date": "2026-06-16",
+            "kind": "date"
+          }
+        },
+        "selection": {
+          "end": "2026-06-19",
+          "start": "2026-06-16"
+        }
+      }
+    },
+    {
+      "name": "days 2026-06-16 → 2026-06-12",
+      "input": {
+        "anchor": "2026-06-16",
+        "fn": "daySelectionForPointer+daySelectionRange",
+        "pointer": "2026-06-12"
+      },
+      "output": {
+        "range": {
+          "end": {
+            "date": "2026-06-17",
+            "kind": "date"
+          },
+          "start": {
+            "date": "2026-06-12",
+            "kind": "date"
+          }
+        },
+        "selection": {
+          "end": "2026-06-16",
+          "start": "2026-06-12"
+        }
+      }
+    },
+    {
+      "name": "days 2026-12-30 → 2027-01-02",
+      "input": {
+        "anchor": "2026-12-30",
+        "fn": "daySelectionForPointer+daySelectionRange",
+        "pointer": "2027-01-02"
+      },
+      "output": {
+        "range": {
+          "end": {
+            "date": "2027-01-03",
+            "kind": "date"
+          },
+          "start": {
+            "date": "2026-12-30",
+            "kind": "date"
+          }
+        },
+        "selection": {
+          "end": "2027-01-02",
+          "start": "2026-12-30"
+        }
+      }
+    },
+    {
+      "name": "select 0 → -30",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 0",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 7",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 15",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 16",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 539",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 540",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 541",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 600",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 1430",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 1440",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 0 → 1500",
+      "input": {
+        "anchorMinutes": 0,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → -30",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 0",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 7",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 15",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 16",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 539",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 540",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 541",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 600",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 1430",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 1440",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 7.4 → 1500",
+      "input": {
+        "anchorMinutes": 7.4,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → -30",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 0",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 7",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 15",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 16",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 539",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 540",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 541",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 600",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 1430",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 1440",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 14.99 → 1500",
+      "input": {
+        "anchorMinutes": 14.99,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 15 → -30",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 15 → 0",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 15 → 7",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 15 → 15",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 16",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 539",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 540",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 541",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 600",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 1430",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 1440",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 15 → 1500",
+      "input": {
+        "anchorMinutes": 15,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 540 → -30",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 540 → 0",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 540 → 7",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 540 → 15",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 540 → 16",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 540 → 539",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 525
+      }
+    },
+    {
+      "name": "select 540 → 540",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 540 → 541",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 540 → 600",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 540 → 1430",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 540 → 1440",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 540 → 1500",
+      "input": {
+        "anchorMinutes": 540,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → -30",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 547.5 → 0",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 547.5 → 7",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 547.5 → 15",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 547.5 → 16",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 547.5 → 539",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 525
+      }
+    },
+    {
+      "name": "select 547.5 → 540",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → 541",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → 600",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → 1430",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → 1440",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 547.5 → 1500",
+      "input": {
+        "anchorMinutes": 547.5,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1425 → -30",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1425 → 0",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1425 → 7",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1425 → 15",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1425 → 16",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1425 → 539",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 525
+      }
+    },
+    {
+      "name": "select 1425 → 540",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1425 → 541",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1425 → 600",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 600
+      }
+    },
+    {
+      "name": "select 1425 → 1430",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1425 → 1440",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1425 → 1500",
+      "input": {
+        "anchorMinutes": 1425,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1439.9 → -30",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1439.9 → 0",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1439.9 → 7",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1439.9 → 15",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1439.9 → 16",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1439.9 → 539",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 525
+      }
+    },
+    {
+      "name": "select 1439.9 → 540",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1439.9 → 541",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1439.9 → 600",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 600
+      }
+    },
+    {
+      "name": "select 1439.9 → 1430",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1439.9 → 1440",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1439.9 → 1500",
+      "input": {
+        "anchorMinutes": 1439.9,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1440 → -30",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1440 → 0",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1440 → 7",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select 1440 → 15",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1440 → 16",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 15
+      }
+    },
+    {
+      "name": "select 1440 → 539",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 525
+      }
+    },
+    {
+      "name": "select 1440 → 540",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1440 → 541",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 540
+      }
+    },
+    {
+      "name": "select 1440 → 600",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 600
+      }
+    },
+    {
+      "name": "select 1440 → 1430",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1440 → 1440",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select 1440 → 1500",
+      "input": {
+        "anchorMinutes": 1440,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 1425
+      }
+    },
+    {
+      "name": "select -10 → -30",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": -30
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 0",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 0
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 7",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 7
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 15",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 15
+      },
+      "output": {
+        "endMinutes": 15,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 16",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 16
+      },
+      "output": {
+        "endMinutes": 30,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 539",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 539
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 540",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 540
+      },
+      "output": {
+        "endMinutes": 540,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 541",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 541
+      },
+      "output": {
+        "endMinutes": 555,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 600",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 600
+      },
+      "output": {
+        "endMinutes": 600,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 1430",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1430
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 1440",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1440
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "select -10 → 1500",
+      "input": {
+        "anchorMinutes": -10,
+        "fn": "selectionForPointer",
+        "pointerMinutes": 1500
+      },
+      "output": {
+        "endMinutes": 1440,
+        "startMinutes": 0
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-06-16 540-600",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-06-16 120-210",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-06-16 90-150",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-06-16 1380-1440",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-17T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-06-16 0-15",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-16T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-29 540-600",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-29 120-210",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-29 90-150",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-29 1380-1440",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-30T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-29 0-15",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-25 540-600",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-25 120-210",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-25 90-150",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-25 1380-1440",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-26T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-25 0-15",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-08 540-600",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-08 120-210",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-08 90-150",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-08 1380-1440",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-09T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-03-08 0-15",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-08T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-04 540-600",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-04 120-210",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-04 90-150",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-04 1380-1440",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-05T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Europe/Berlin 2026-10-04 0-15",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-04T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-06-16 540-600",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-06-16 120-210",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-06-16 90-150",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-06-16 1380-1440",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-17T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-06-16 0-15",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-06-16T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-29 540-600",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-29 120-210",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-29 90-150",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-29 1380-1440",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-30T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-29 0-15",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-29T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-25 540-600",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-25 120-210",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-25 90-150",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-25 1380-1440",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-26T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-25 0-15",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-25T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-08 540-600",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-08 120-210",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-08 90-150",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-08 1380-1440",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-09T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-03-08 0-15",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-04 540-600",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-04 120-210",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-04 90-150",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-04 1380-1440",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-05T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range America/New_York 2026-10-04 0-15",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-10-04T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-06-16 540-600",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-06-16 120-210",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-06-16 90-150",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-06-16 1380-1440",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-17T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-06-16 0-15",
+      "input": {
+        "day": "2026-06-16",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-06-16T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-29 540-600",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-29 120-210",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-29 90-150",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-29 1380-1440",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-30T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-29 0-15",
+      "input": {
+        "day": "2026-03-29",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-29T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-25 540-600",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-25 120-210",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-25 90-150",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-25 1380-1440",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-26T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-25 0-15",
+      "input": {
+        "day": "2026-10-25",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-25T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-08 540-600",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-08 120-210",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T02:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-08 90-150",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-08 1380-1440",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-09T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-03-08 0-15",
+      "input": {
+        "day": "2026-03-08",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-03-08T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-04 540-600",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 600,
+          "startMinutes": 540
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T10:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T09:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-04 120-210",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 210,
+          "startMinutes": 120
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T03:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-04 90-150",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 150,
+          "startMinutes": 90
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:30:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T01:30:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-04 1380-1440",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 1440,
+          "startMinutes": 1380
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-05T00:00:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T23:00:00"
+        }
+      }
+    },
+    {
+      "name": "range Australia/Lord_Howe 2026-10-04 0-15",
+      "input": {
+        "day": "2026-10-04",
+        "fn": "selectionRange",
+        "selection": {
+          "endMinutes": 15,
+          "startMinutes": 0
+        },
+        "viewerTz": "Australia/Lord_Howe"
+      },
+      "output": {
+        "end": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T00:15:00"
+        },
+        "start": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T00:00:00"
+        }
+      }
+    },
+    {
+      "name": "minutesAtY 100",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 100
+      },
+      "output": 0
+    },
+    {
+      "name": "minutesAtY 101",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 101
+      },
+      "output": 1.25
+    },
+    {
+      "name": "minutesAtY 148",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 148
+      },
+      "output": 60
+    },
+    {
+      "name": "minutesAtY 676",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 676
+      },
+      "output": 720
+    },
+    {
+      "name": "minutesAtY 1252",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 1252
+      },
+      "output": 1440
+    },
+    {
+      "name": "minutesAtY 1300",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 1300
+      },
+      "output": 1500
+    },
+    {
+      "name": "minutesAtY 50",
+      "input": {
+        "fn": "minutesAtY",
+        "rect": {
+          "height": 1152,
+          "top": 100
+        },
+        "y": 50
+      },
+      "output": -62.5
+    },
+    {
+      "name": "clamp 0,0",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 0,
+        "y": 0
+      },
+      "output": {
+        "x": 11,
+        "y": 21
+      }
+    },
+    {
+      "name": "clamp 10,20",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 10,
+        "y": 20
+      },
+      "output": {
+        "x": 11,
+        "y": 21
+      }
+    },
+    {
+      "name": "clamp 100,100",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 100,
+        "y": 100
+      },
+      "output": {
+        "x": 100,
+        "y": 100
+      }
+    },
+    {
+      "name": "clamp 500,500",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 500,
+        "y": 500
+      },
+      "output": {
+        "x": 209,
+        "y": 319
+      }
+    },
+    {
+      "name": "clamp 210,320",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 210,
+        "y": 320
+      },
+      "output": {
+        "x": 209,
+        "y": 319
+      }
+    },
+    {
+      "name": "clamp 11,21",
+      "input": {
+        "fn": "clampPointToRect",
+        "rect": {
+          "bottom": 320,
+          "left": 10,
+          "right": 210,
+          "top": 20
+        },
+        "x": 11,
+        "y": 21
+      },
+      "output": {
+        "x": 11,
+        "y": 21
+      }
+    }
+  ]
+}

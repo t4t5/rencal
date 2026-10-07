@@ -181,7 +181,7 @@ turns on `zbus/tokio`. With Cargo feature unification that flips zbus's blocking
 tokio-based executor that panics from inside `#[tokio::main]` ("Cannot start a runtime from within
 a runtime") — the same shape as the notification panic below, different culprit.
 
-So on Linux we use a tiny stand-in in `src-tauri/src/single_instance.rs`: a Unix domain socket at
+So on Linux we use a tiny stand-in in `crates/rencal-core/src/single_instance.rs`: a Unix domain socket at
 `$XDG_RUNTIME_DIR/rencal.sock` (or `/tmp/rencal-<uid>.sock` when `XDG_RUNTIME_DIR` is unset —
 UID-namespaced so two users on the same host don't collide on a shared `/tmp` path). On startup
 we try to connect — if it succeeds, another instance is alive and we send `focus\n` then exit.

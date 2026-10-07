@@ -1,0 +1,1195 @@
+{
+  "source": "src/components/main/month-view/weekSnapFling.ts",
+  "description": "Month-view week snapping math: fling prediction, snap/fling targets (null = no fling), gesture classification and decay rate.",
+  "cases": [
+    {
+      "name": "predict 0 0 1000",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 0,
+        "maxOffset": 1000,
+        "velocity": 0
+      },
+      "output": 0
+    },
+    {
+      "name": "predict 100 400 1000",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 100,
+        "maxOffset": 1000,
+        "velocity": 400
+      },
+      "output": 200
+    },
+    {
+      "name": "predict 100 -400 1000",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 100,
+        "maxOffset": 1000,
+        "velocity": -400
+      },
+      "output": 0
+    },
+    {
+      "name": "predict 950 1000 1000",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 950,
+        "maxOffset": 1000,
+        "velocity": 1000
+      },
+      "output": 1000
+    },
+    {
+      "name": "predict 20 -1000 1000",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 20,
+        "maxOffset": 1000,
+        "velocity": -1000
+      },
+      "output": 0
+    },
+    {
+      "name": "predict 100 400 -5",
+      "input": {
+        "fn": "predictFlingEnd",
+        "from": 100,
+        "maxOffset": -5,
+        "velocity": 400
+      },
+      "output": 0
+    },
+    {
+      "name": "snap 0 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": 0,
+        "rowHeight": 120
+      },
+      "output": 0
+    },
+    {
+      "name": "snap 59 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": 59,
+        "rowHeight": 120
+      },
+      "output": 0
+    },
+    {
+      "name": "snap 60 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": 60,
+        "rowHeight": 120
+      },
+      "output": 120
+    },
+    {
+      "name": "snap 61 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": 61,
+        "rowHeight": 120
+      },
+      "output": 120
+    },
+    {
+      "name": "snap 990 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": 990,
+        "rowHeight": 120
+      },
+      "output": 960
+    },
+    {
+      "name": "snap -30 120 1000",
+      "input": {
+        "fn": "pickSnapTarget",
+        "maxOffset": 1000,
+        "offset": -30,
+        "rowHeight": 120
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 0 0 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 0 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 1
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 0 -1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 -1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 50
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 0 -50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 -50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 400
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 0 -400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 -400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 2000 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 2000
+      },
+      "output": null
+    },
+    {
+      "name": "fling 0 2000 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 0,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 2000
+      },
+      "output": 480
+    },
+    {
+      "name": "fling 100 0 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 0 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 1
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 100 -1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 -1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -1
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 100 50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 50
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 100 -50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 -50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -50
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 100 400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 400
+      },
+      "output": 240
+    },
+    {
+      "name": "fling 100 -400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 -400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -400
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 100 2000 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 2000
+      },
+      "output": null
+    },
+    {
+      "name": "fling 100 2000 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 100,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 2000
+      },
+      "output": 600
+    },
+    {
+      "name": "fling 120 0 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 0 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 1
+      },
+      "output": 240
+    },
+    {
+      "name": "fling 120 -1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 -1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -1
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 120 50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 50
+      },
+      "output": 240
+    },
+    {
+      "name": "fling 120 -50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 -50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -50
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 120 400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 400
+      },
+      "output": 240
+    },
+    {
+      "name": "fling 120 -400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 -400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -400
+      },
+      "output": 0
+    },
+    {
+      "name": "fling 120 2000 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 2000
+      },
+      "output": null
+    },
+    {
+      "name": "fling 120 2000 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 120,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 2000
+      },
+      "output": 600
+    },
+    {
+      "name": "fling 239.5 0 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 0 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 1
+      },
+      "output": 360
+    },
+    {
+      "name": "fling 239.5 -1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 -1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -1
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 239.5 50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 50
+      },
+      "output": 360
+    },
+    {
+      "name": "fling 239.5 -50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 -50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -50
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 239.5 400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 400
+      },
+      "output": 360
+    },
+    {
+      "name": "fling 239.5 -400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 -400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -400
+      },
+      "output": 120
+    },
+    {
+      "name": "fling 239.5 2000 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 2000
+      },
+      "output": null
+    },
+    {
+      "name": "fling 239.5 2000 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 239.5,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 2000
+      },
+      "output": 720
+    },
+    {
+      "name": "fling 960 0 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 0 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 0
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 1
+      },
+      "output": 1000
+    },
+    {
+      "name": "fling 960 -1 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -1
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 -1 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -1
+      },
+      "output": 840
+    },
+    {
+      "name": "fling 960 50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 50
+      },
+      "output": 1000
+    },
+    {
+      "name": "fling 960 -50 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -50
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 -50 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -50
+      },
+      "output": 840
+    },
+    {
+      "name": "fling 960 400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 400
+      },
+      "output": 1000
+    },
+    {
+      "name": "fling 960 -400 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": -400
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 -400 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": -400
+      },
+      "output": 840
+    },
+    {
+      "name": "fling 960 2000 0",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 0,
+        "velocity": 2000
+      },
+      "output": null
+    },
+    {
+      "name": "fling 960 2000 120",
+      "input": {
+        "fn": "pickFlingTarget",
+        "from": 960,
+        "maxOffset": 1000,
+        "rowHeight": 120,
+        "velocity": 2000
+      },
+      "output": 1000
+    },
+    {
+      "name": "classify empty",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": []
+      },
+      "output": false
+    },
+    {
+      "name": "classify two events",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 10,
+            "t": 0
+          },
+          {
+            "deltaY": 12,
+            "t": 10
+          }
+        ]
+      },
+      "output": false
+    },
+    {
+      "name": "classify uniform mouse wheel",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 100,
+            "t": 0
+          },
+          {
+            "deltaY": 100,
+            "t": 10
+          },
+          {
+            "deltaY": 100,
+            "t": 20
+          }
+        ]
+      },
+      "output": false
+    },
+    {
+      "name": "classify varied touchpad",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 3,
+            "t": 0
+          },
+          {
+            "deltaY": 7,
+            "t": 10
+          },
+          {
+            "deltaY": 12,
+            "t": 20
+          }
+        ]
+      },
+      "output": true
+    },
+    {
+      "name": "classify old events ignored",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 3,
+            "t": 0
+          },
+          {
+            "deltaY": 7,
+            "t": 10
+          },
+          {
+            "deltaY": 12,
+            "t": 300
+          },
+          {
+            "deltaY": 12,
+            "t": 310
+          }
+        ]
+      },
+      "output": false
+    },
+    {
+      "name": "classify line mode",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 3,
+            "t": 0
+          },
+          {
+            "deltaMode": 1,
+            "deltaY": 7,
+            "t": 10
+          },
+          {
+            "deltaY": 12,
+            "t": 20
+          }
+        ]
+      },
+      "output": false
+    },
+    {
+      "name": "classify sign only differs",
+      "input": {
+        "fn": "classifyGesture",
+        "wheelLog": [
+          {
+            "deltaY": 5,
+            "t": 0
+          },
+          {
+            "deltaY": -5,
+            "t": 10
+          },
+          {
+            "deltaY": 5,
+            "t": 20
+          }
+        ]
+      },
+      "output": false
+    },
+    {
+      "name": "decay 0 100",
+      "input": {
+        "distance": 100,
+        "fn": "decayRate",
+        "velocity": 0
+      },
+      "output": 4
+    },
+    {
+      "name": "decay 100 0",
+      "input": {
+        "distance": 0,
+        "fn": "decayRate",
+        "velocity": 100
+      },
+      "output": 4
+    },
+    {
+      "name": "decay 400 100",
+      "input": {
+        "distance": 100,
+        "fn": "decayRate",
+        "velocity": 400
+      },
+      "output": 4
+    },
+    {
+      "name": "decay -400 100",
+      "input": {
+        "distance": 100,
+        "fn": "decayRate",
+        "velocity": -400
+      },
+      "output": 4
+    },
+    {
+      "name": "decay 10000 10",
+      "input": {
+        "distance": 10,
+        "fn": "decayRate",
+        "velocity": 10000
+      },
+      "output": 30
+    },
+    {
+      "name": "decay 10 100",
+      "input": {
+        "distance": 100,
+        "fn": "decayRate",
+        "velocity": 10
+      },
+      "output": 4
+    }
+  ]
+}

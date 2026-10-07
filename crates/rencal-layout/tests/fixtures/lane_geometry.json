@@ -1,0 +1,151 @@
+{
+  "source": "src/components/main/month-view/lane-geometry.ts",
+  "description": "Month all-day bar CSS geometry (CSS calc strings: bars inset by --month-padding-inline at real ends, bleed -2px at clipped ends). LANE_GAP is in px.",
+  "cases": [
+    {
+      "name": "lane gap",
+      "input": {
+        "fn": "LANE_GAP"
+      },
+      "output": 3
+    },
+    {
+      "name": "bar 1-8 true/true lane 0",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 0,
+        "span": {
+          "endCol": 8,
+          "isEnd": true,
+          "isStart": true,
+          "startCol": 1
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(0% + var(--month-padding-inline))",
+        "right": "calc(0% + var(--month-padding-inline))",
+        "top": "calc(var(--lane-height) * 0)"
+      }
+    },
+    {
+      "name": "bar 1-8 true/true lane 2",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 2,
+        "span": {
+          "endCol": 8,
+          "isEnd": true,
+          "isStart": true,
+          "startCol": 1
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(0% + var(--month-padding-inline))",
+        "right": "calc(0% + var(--month-padding-inline))",
+        "top": "calc(var(--lane-height) * 2)"
+      }
+    },
+    {
+      "name": "bar 3-5 false/true lane 0",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 0,
+        "span": {
+          "endCol": 5,
+          "isEnd": true,
+          "isStart": false,
+          "startCol": 3
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(28.57142857142857% + -2px)",
+        "right": "calc(42.857142857142854% + var(--month-padding-inline))",
+        "top": "calc(var(--lane-height) * 0)"
+      }
+    },
+    {
+      "name": "bar 3-5 false/true lane 2",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 2,
+        "span": {
+          "endCol": 5,
+          "isEnd": true,
+          "isStart": false,
+          "startCol": 3
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(28.57142857142857% + -2px)",
+        "right": "calc(42.857142857142854% + var(--month-padding-inline))",
+        "top": "calc(var(--lane-height) * 2)"
+      }
+    },
+    {
+      "name": "bar 6-8 true/false lane 0",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 0,
+        "span": {
+          "endCol": 8,
+          "isEnd": false,
+          "isStart": true,
+          "startCol": 6
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(71.42857142857143% + var(--month-padding-inline))",
+        "right": "calc(0% + -2px)",
+        "top": "calc(var(--lane-height) * 0)"
+      }
+    },
+    {
+      "name": "bar 6-8 true/false lane 2",
+      "input": {
+        "fn": "allDayBarStyle",
+        "lane": 2,
+        "span": {
+          "endCol": 8,
+          "isEnd": false,
+          "isStart": true,
+          "startCol": 6
+        }
+      },
+      "output": {
+        "height": "calc(var(--lane-height) - 3px)",
+        "left": "calc(71.42857142857143% + var(--month-padding-inline))",
+        "right": "calc(0% + -2px)",
+        "top": "calc(var(--lane-height) * 2)"
+      }
+    },
+    {
+      "name": "reserved 0",
+      "input": {
+        "fn": "reservedAllDayHeight",
+        "lanes": 0
+      },
+      "output": null
+    },
+    {
+      "name": "reserved 1",
+      "input": {
+        "fn": "reservedAllDayHeight",
+        "lanes": 1
+      },
+      "output": "calc(var(--lane-height) * 1 - 3px)"
+    },
+    {
+      "name": "reserved 3",
+      "input": {
+        "fn": "reservedAllDayHeight",
+        "lanes": 3
+      },
+      "output": "calc(var(--lane-height) * 3 - 3px)"
+    }
+  ]
+}

@@ -1,3 +1,5 @@
 src/rpc/bindings.ts
 src/rpc/events.generated.ts
 pnpm-lock.yaml
+# Golden fixtures, written by `just fixtures`
+crates/*/tests/fixtures/

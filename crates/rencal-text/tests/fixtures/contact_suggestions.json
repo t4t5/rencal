@@ -1,0 +1,428 @@
+{
+  "source": "src/lib/contact-suggestions.ts",
+  "description": "suggestContacts over the contact list below (outputs are emails in rank order; limit null = default 8) and isValidContactEmail.",
+  "cases": [
+    {
+      "name": "contact list",
+      "input": {
+        "fn": "contacts"
+      },
+      "output": [
+        {
+          "count": 10,
+          "email": "zara@example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Zara Zee"
+        },
+        {
+          "count": 8,
+          "email": "alex@example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Jordan Smith"
+        },
+        {
+          "count": 6,
+          "email": "sam@example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Alex Cooper"
+        },
+        {
+          "count": 4,
+          "email": "person-alex@example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Casey Example"
+        },
+        {
+          "count": 3,
+          "email": "Mixed.Case@Example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Mary Ann Jones"
+        },
+        {
+          "count": 2,
+          "email": "noname@example.org",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": null
+        },
+        {
+          "count": 8,
+          "email": "/andm3ndgynjj5ndm3ndgynkmkgsbdxwst...",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Tristan"
+        },
+        {
+          "count": 10,
+          "email": "tristan@example.com",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Tristan"
+        },
+        {
+          "count": 1,
+          "email": "bad@nodot",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Bad"
+        },
+        {
+          "count": 1,
+          "email": " spaced@example.com ",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Spaced"
+        },
+        {
+          "count": 1,
+          "email": "team0@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 0"
+        },
+        {
+          "count": 1,
+          "email": "team1@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 1"
+        },
+        {
+          "count": 1,
+          "email": "team2@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 2"
+        },
+        {
+          "count": 1,
+          "email": "team3@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 3"
+        },
+        {
+          "count": 1,
+          "email": "team4@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 4"
+        },
+        {
+          "count": 1,
+          "email": "team5@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 5"
+        },
+        {
+          "count": 1,
+          "email": "team6@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 6"
+        },
+        {
+          "count": 1,
+          "email": "team7@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 7"
+        },
+        {
+          "count": 1,
+          "email": "team8@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 8"
+        },
+        {
+          "count": 1,
+          "email": "team9@corp.example",
+          "last_seen": "2026-01-01T00:00:00Z",
+          "name": "Team Member 9"
+        }
+      ]
+    },
+    {
+      "name": "suggest \"\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": ""
+      },
+      "output": []
+    },
+    {
+      "name": "suggest \"   \" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "   "
+      },
+      "output": []
+    },
+    {
+      "name": "suggest \"alex\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "alex"
+      },
+      "output": [
+        "alex@example.com",
+        "sam@example.com",
+        "person-alex@example.com"
+      ]
+    },
+    {
+      "name": "suggest \"ALEX\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "ALEX"
+      },
+      "output": [
+        "alex@example.com",
+        "sam@example.com",
+        "person-alex@example.com"
+      ]
+    },
+    {
+      "name": "suggest \"@example\" excl  ALEX@example.com  limit default",
+      "input": {
+        "excludeEmails": [
+          " ALEX@example.com "
+        ],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "@example"
+      },
+      "output": [
+        "zara@example.com",
+        "sam@example.com",
+        "person-alex@example.com",
+        "Mixed.Case@Example.com",
+        "noname@example.org",
+        "tristan@example.com",
+        " spaced@example.com "
+      ]
+    },
+    {
+      "name": "suggest \"tristan\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "tristan"
+      },
+      "output": [
+        "tristan@example.com"
+      ]
+    },
+    {
+      "name": "suggest \"ann\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "ann"
+      },
+      "output": [
+        "Mixed.Case@Example.com"
+      ]
+    },
+    {
+      "name": "suggest \"jones\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "jones"
+      },
+      "output": [
+        "Mixed.Case@Example.com"
+      ]
+    },
+    {
+      "name": "suggest \"mixed\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "mixed"
+      },
+      "output": [
+        "Mixed.Case@Example.com"
+      ]
+    },
+    {
+      "name": "suggest \"noname\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "noname"
+      },
+      "output": [
+        "noname@example.org"
+      ]
+    },
+    {
+      "name": "suggest \"team\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "team"
+      },
+      "output": [
+        "team0@corp.example",
+        "team1@corp.example",
+        "team2@corp.example",
+        "team3@corp.example",
+        "team4@corp.example",
+        "team5@corp.example",
+        "team6@corp.example",
+        "team7@corp.example"
+      ]
+    },
+    {
+      "name": "suggest \"team\" excl team0@corp.example limit 3",
+      "input": {
+        "excludeEmails": [
+          "team0@corp.example"
+        ],
+        "fn": "suggestContacts",
+        "limit": 3,
+        "query": "team"
+      },
+      "output": [
+        "team1@corp.example",
+        "team2@corp.example",
+        "team3@corp.example"
+      ]
+    },
+    {
+      "name": "suggest \"member 1\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "member 1"
+      },
+      "output": [
+        "team1@corp.example"
+      ]
+    },
+    {
+      "name": "suggest \"corp\" excl  limit 20",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": 20,
+        "query": "corp"
+      },
+      "output": [
+        "team0@corp.example",
+        "team1@corp.example",
+        "team2@corp.example",
+        "team3@corp.example",
+        "team4@corp.example",
+        "team5@corp.example",
+        "team6@corp.example",
+        "team7@corp.example",
+        "team8@corp.example",
+        "team9@corp.example"
+      ]
+    },
+    {
+      "name": "suggest \"spaced\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "spaced"
+      },
+      "output": [
+        " spaced@example.com "
+      ]
+    },
+    {
+      "name": "suggest \"zzz\" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": "zzz"
+      },
+      "output": []
+    },
+    {
+      "name": "suggest \" sam \" excl  limit default",
+      "input": {
+        "excludeEmails": [],
+        "fn": "suggestContacts",
+        "limit": null,
+        "query": " sam "
+      },
+      "output": [
+        "sam@example.com"
+      ]
+    },
+    {
+      "name": "valid \"a@b.c\"",
+      "input": {
+        "email": "a@b.c",
+        "fn": "isValidContactEmail"
+      },
+      "output": true
+    },
+    {
+      "name": "valid \"a@b\"",
+      "input": {
+        "email": "a@b",
+        "fn": "isValidContactEmail"
+      },
+      "output": false
+    },
+    {
+      "name": "valid \"a b@c.d\"",
+      "input": {
+        "email": "a b@c.d",
+        "fn": "isValidContactEmail"
+      },
+      "output": false
+    },
+    {
+      "name": "valid \" A@B.CD \"",
+      "input": {
+        "email": " A@B.CD ",
+        "fn": "isValidContactEmail"
+      },
+      "output": true
+    },
+    {
+      "name": "valid \"@b.c\"",
+      "input": {
+        "email": "@b.c",
+        "fn": "isValidContactEmail"
+      },
+      "output": false
+    },
+    {
+      "name": "valid \"a@.c\"",
+      "input": {
+        "email": "a@.c",
+        "fn": "isValidContactEmail"
+      },
+      "output": false
+    },
+    {
+      "name": "valid \"x@y.z.w\"",
+      "input": {
+        "email": "x@y.z.w",
+        "fn": "isValidContactEmail"
+      },
+      "output": true
+    },
+    {
+      "name": "valid \"\"",
+      "input": {
+        "email": "",
+        "fn": "isValidContactEmail"
+      },
+      "output": false
+    }
+  ]
+}

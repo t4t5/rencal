@@ -1,0 +1,1980 @@
+{
+  "source": "src/lib/event-time/rpc.ts",
+  "description": "fromRpcEventTime then toRpcEventTime. Zoned wallclocks in a DST gap resolve per Temporal 'compatible' (gap → later), overlaps → earlier. `offset` and `epochMs` are of the parsed value; `epochMs` for date/floating is in the viewer zone.",
+  "cases": [
+    {
+      "name": "UTC date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774742400000,
+        "normalized": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792886400000,
+        "normalized": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1709164800000,
+        "normalized": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1798675200000,
+        "normalized": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1798761600000,
+        "normalized": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774744200000,
+        "normalized": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792891800000,
+        "normalized": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1782948600000,
+        "normalized": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781481600000,
+        "normalized": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774751400000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792895400000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792891800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1772937000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1793496600000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781514000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781481600000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781567940000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1772955000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781494200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": "+05:30"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1767176100000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "offset": "+13:45"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1775313900000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1791042300000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1775316600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781571600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "offset": "-07:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1781474400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "UTC zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "UTC"
+      },
+      "output": {
+        "epochMs": 1798727400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "offset": "+09:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774738800000,
+        "normalized": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792879200000,
+        "normalized": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1709161200000,
+        "normalized": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1798671600000,
+        "normalized": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1798758000000,
+        "normalized": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774744200000,
+        "normalized": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792891800000,
+        "normalized": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1782948600000,
+        "normalized": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781481600000,
+        "normalized": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774744200000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792884600000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1772933400000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1793493000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781506800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781474400000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781560740000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1772955000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781494200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": "+05:30"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1767176100000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "offset": "+13:45"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1775313900000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1791042300000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1775316600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781571600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "offset": "-07:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1781474400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "Europe/Berlin zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "Europe/Berlin"
+      },
+      "output": {
+        "epochMs": 1798727400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "offset": "+09:00"
+      }
+    },
+    {
+      "name": "America/New_York date 2026-03-29",
+      "input": {
+        "time": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774756800000,
+        "normalized": {
+          "date": "2026-03-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York date 2026-10-25",
+      "input": {
+        "time": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792900800000,
+        "normalized": {
+          "date": "2026-10-25",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York date 2024-02-29",
+      "input": {
+        "time": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1709182800000,
+        "normalized": {
+          "date": "2024-02-29",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York date 2026-12-31",
+      "input": {
+        "time": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1798693200000,
+        "normalized": {
+          "date": "2026-12-31",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York date 2027-01-01",
+      "input": {
+        "time": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1798779600000,
+        "normalized": {
+          "date": "2027-01-01",
+          "kind": "date"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-03-29T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774744200000,
+        "normalized": {
+          "instant": "2026-03-29T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-03-29T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "instant": "2026-03-29T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-10-25T00:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "instant": "2026-10-25T00:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-10-25T01:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792891800000,
+        "normalized": {
+          "instant": "2026-10-25T01:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-11-01T05:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "instant": "2026-11-01T05:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-07-01T23:30:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1782948600000,
+        "normalized": {
+          "instant": "2026-07-01T23:30:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York utc 2026-06-15T00:00:00Z",
+      "input": {
+        "time": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781481600000,
+        "normalized": {
+          "instant": "2026-06-15T00:00:00Z",
+          "kind": "datetime_utc"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-29T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774765800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-29T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774762200000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-10-25T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792909800000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-10-25T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792906200000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-03-08T02:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1772955000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-11-01T01:30:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T09:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781528400000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T00:00:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781496000000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York floating 2026-06-15T23:59:00",
+      "input": {
+        "time": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781582340000,
+        "normalized": {
+          "kind": "datetime_floating",
+          "wallclock": "2026-06-15T23:59:00"
+        },
+        "offset": null
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-29T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-03-29T03:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-25T02:30:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-10-25T02:30:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-29T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1774747800000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-03-29T02:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-25T01:30:00 Europe/London",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1792888200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/London",
+          "wallclock": "2026-10-25T01:30:00"
+        },
+        "offset": "+01:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-03-08T02:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1772955000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-03-08T03:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-11-01T01:30:00 America/New_York",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1793511000000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/New_York",
+          "wallclock": "2026-11-01T01:30:00"
+        },
+        "offset": "-04:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T09:00:00 Asia/Kolkata",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781494200000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Kolkata",
+          "wallclock": "2026-06-15T09:00:00"
+        },
+        "offset": "+05:30"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-01-01T00:00:00 Pacific/Chatham",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1767176100000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Pacific/Chatham",
+          "wallclock": "2026-01-01T00:00:00"
+        },
+        "offset": "+13:45"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-04-05T01:45:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1775313900000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-04-05T01:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-10-04T02:15:00 Australia/Lord_Howe",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:15:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1791042300000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Lord_Howe",
+          "wallclock": "2026-10-04T02:45:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-04-05T02:30:00 Australia/Sydney",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1775316600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Australia/Sydney",
+          "wallclock": "2026-04-05T02:30:00"
+        },
+        "offset": "+11:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T18:00:00 America/Los_Angeles",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781571600000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "America/Los_Angeles",
+          "wallclock": "2026-06-15T18:00:00"
+        },
+        "offset": "-07:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-06-15T00:00:00 Europe/Berlin",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1781474400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Europe/Berlin",
+          "wallclock": "2026-06-15T00:00:00"
+        },
+        "offset": "+02:00"
+      }
+    },
+    {
+      "name": "America/New_York zoned 2026-12-31T23:30:00 Asia/Tokyo",
+      "input": {
+        "time": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "viewerTz": "America/New_York"
+      },
+      "output": {
+        "epochMs": 1798727400000,
+        "normalized": {
+          "kind": "datetime_zoned",
+          "tzid": "Asia/Tokyo",
+          "wallclock": "2026-12-31T23:30:00"
+        },
+        "offset": "+09:00"
+      }
+    }
+  ]
+}

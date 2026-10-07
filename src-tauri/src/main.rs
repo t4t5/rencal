@@ -4,7 +4,7 @@
 use std::ffi::{OsStr, OsString};
 use std::process::ExitCode;
 
-mod skill_install;
+use rencal_core::skill_install;
 
 const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
 const SKILL_INSTALL_USAGE: &str = "usage: rencal skill install";
@@ -43,9 +43,9 @@ fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command
     }
 }
 
-fn install_plugin(repository: &str) -> Result<rencal_lib::plugins::PluginInspection, String> {
+fn install_plugin(repository: &str) -> Result<rencal_core::plugins::PluginInspection, String> {
     let manager =
-        rencal_lib::plugins::PluginManager::system().map_err(|error| error.to_string())?;
+        rencal_core::plugins::PluginManager::system().map_err(|error| error.to_string())?;
     let runtime = tokio::runtime::Runtime::new().map_err(|error| error.to_string())?;
     runtime
         .block_on(manager.install(repository))

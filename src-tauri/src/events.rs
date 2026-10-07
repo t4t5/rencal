@@ -7,10 +7,10 @@ use serde::Serialize;
 use specta::Type;
 use tauri::{Emitter, Runtime};
 
-use crate::external_themes::ExternalThemesSnapshot;
-use crate::omarchy::OmarchyColors;
-use crate::routes::caldir::CaldirSettings;
 use crate::routes::config::ThemeSettings;
+use rencal_core::caldir::CaldirSettings;
+use rencal_core::external_themes::ExternalThemesSnapshot;
+use rencal_core::omarchy::OmarchyColors;
 
 #[derive(Clone, Serialize, Type)]
 #[serde(tag = "name", content = "payload", rename_all = "kebab-case")]
@@ -78,9 +78,9 @@ pub fn export_types() -> anyhow::Result<()> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::omarchy::OmarchyMode;
-    use crate::routes::caldir::TimeFormat;
     use crate::routes::config::ThemeMode;
+    use rencal_core::caldir::TimeFormat;
+    use rencal_core::omarchy::OmarchyMode;
     use serde_json::{Value, json};
 
     #[test]

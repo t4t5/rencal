@@ -1,6 +1,6 @@
 # renCal Agent Guide
 
-renCal is a Tauri v2 calendar app for Omarchy. Rust backend in `src-tauri/src/`, React frontend in `src/`, website and public docs in `website/`. Each of those directories has its own `AGENTS.md` with local conventions; procedures live in `.agents/skills/`.
+renCal is a Tauri v2 calendar app for Omarchy, being ported to GPUI (`GPUI_PORT_PLAN.md`). UI-independent Rust backend in `crates/rencal-core/`, Tauri shell in `src-tauri/src/`, React frontend in `src/`, website and public docs in `website/`. The Cargo workspace root is the repo root. Each of those directories has its own `AGENTS.md` with local conventions; procedures live in `.agents/skills/`.
 
 ## Commands
 

@@ -1,0 +1,532 @@
+{
+  "source": "src/lib/shortcuts.ts",
+  "description": "The keyboard shortcut table in display order. `type: char` bindings are single printable keys (react-hotkeys-hook `useKey`-style), `hotkey` bindings are modifier/named-key combos where `mod` = Cmd on macOS, Ctrl elsewhere. Optional flags default to false.",
+  "cases": [
+    {
+      "name": "groups",
+      "input": null,
+      "output": [
+        "Navigation",
+        "View",
+        "General"
+      ]
+    },
+    {
+      "name": "next-day",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "right",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "l",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "next-day",
+        "label": "Next day"
+      }
+    },
+    {
+      "name": "prev-day",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "left",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "h",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "prev-day",
+        "label": "Previous day"
+      }
+    },
+    {
+      "name": "next-week",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "down",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "j",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "next-week",
+        "label": "Next week"
+      }
+    },
+    {
+      "name": "prev-week",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "up",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "k",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "prev-week",
+        "label": "Previous week"
+      }
+    },
+    {
+      "name": "next-month",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "ctrl+d",
+            "type": "hotkey"
+          }
+        ],
+        "group": "Navigation",
+        "id": "next-month",
+        "label": "Next month"
+      }
+    },
+    {
+      "name": "prev-month",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "ctrl+u",
+            "type": "hotkey"
+          }
+        ],
+        "group": "Navigation",
+        "id": "prev-month",
+        "label": "Previous month"
+      }
+    },
+    {
+      "name": "next-event",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "tab",
+            "type": "hotkey"
+          }
+        ],
+        "group": "Navigation",
+        "id": "next-event",
+        "label": "Next event"
+      }
+    },
+    {
+      "name": "prev-event",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "shift+tab",
+            "type": "hotkey"
+          }
+        ],
+        "group": "Navigation",
+        "id": "prev-event",
+        "label": "Previous event"
+      }
+    },
+    {
+      "name": "today",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "t",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "today",
+        "label": "Go to today"
+      }
+    },
+    {
+      "name": "go-to-date",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": ".",
+            "type": "char"
+          }
+        ],
+        "group": "Navigation",
+        "id": "go-to-date",
+        "label": "Go to date..."
+      }
+    },
+    {
+      "name": "month",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "m",
+            "type": "char"
+          }
+        ],
+        "group": "View",
+        "id": "month",
+        "label": "Display month view"
+      }
+    },
+    {
+      "name": "board",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "b",
+            "type": "char"
+          }
+        ],
+        "group": "View",
+        "id": "board",
+        "label": "Display board view"
+      }
+    },
+    {
+      "name": "week",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "w",
+            "type": "char"
+          }
+        ],
+        "group": "View",
+        "id": "week",
+        "label": "Display week view"
+      }
+    },
+    {
+      "name": "switch-group",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "g",
+            "type": "char"
+          }
+        ],
+        "group": "View",
+        "id": "switch-group",
+        "label": "Switch calendar group"
+      }
+    },
+    {
+      "name": "toggle-sidebar",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "ctrl+b",
+            "type": "hotkey"
+          }
+        ],
+        "group": "View",
+        "id": "toggle-sidebar",
+        "label": "Toggle sidebar"
+      }
+    },
+    {
+      "name": "search",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": true,
+            "keys": "mod+f",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": true,
+            "keys": "mod+p",
+            "type": "hotkey"
+          },
+          {
+            "allowShift": true,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "/",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "search",
+        "label": "Search"
+      }
+    },
+    {
+      "name": "compose-event",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "c",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "compose-event",
+        "label": "Compose new event"
+      }
+    },
+    {
+      "name": "add-event",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "a",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "add-event",
+        "label": "Add event to selected day"
+      }
+    },
+    {
+      "name": "duplicate-event",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": true,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "d",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "duplicate-event",
+        "label": "Duplicate selected event"
+      }
+    },
+    {
+      "name": "toggle-invites",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "i",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "toggle-invites",
+        "label": "Toggle invitations"
+      }
+    },
+    {
+      "name": "sync",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": true,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "s",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "sync",
+        "label": "Sync now"
+      }
+    },
+    {
+      "name": "settings",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": true,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "mod+comma",
+            "type": "hotkey"
+          }
+        ],
+        "group": "General",
+        "id": "settings",
+        "label": "Go to settings"
+      }
+    },
+    {
+      "name": "toggle-theme",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": true,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "mod+shift+t",
+            "type": "hotkey"
+          }
+        ],
+        "group": "General",
+        "id": "toggle-theme",
+        "label": "Toggle theme"
+      }
+    },
+    {
+      "name": "shortcuts",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": true,
+        "bindings": [
+          {
+            "allowShift": true,
+            "enableOnFormTags": false,
+            "hidden": false,
+            "keys": "?",
+            "type": "char"
+          }
+        ],
+        "group": "General",
+        "id": "shortcuts",
+        "label": "Show keyboard shortcuts"
+      }
+    },
+    {
+      "name": "command-palette",
+      "input": null,
+      "output": {
+        "allowWhileEventOpen": false,
+        "bindings": [
+          {
+            "allowShift": false,
+            "enableOnFormTags": true,
+            "hidden": false,
+            "keys": "mod+k",
+            "type": "hotkey"
+          }
+        ],
+        "group": "General",
+        "id": "command-palette",
+        "label": "Open command palette"
+      }
+    }
+  ]
+}

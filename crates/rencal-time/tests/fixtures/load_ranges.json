@@ -1,0 +1,72 @@
+{
+  "source": "src/lib/cal-events-range.ts",
+  "description": "getStartRangeForDate: the initial [start, end) date range loaded around a date.",
+  "cases": [
+    {
+      "name": "2026-01-15",
+      "input": {
+        "date": "2026-01-15"
+      },
+      "output": {
+        "end": "2026-04-01",
+        "monthsToLoad": 2,
+        "start": "2025-11-01"
+      }
+    },
+    {
+      "name": "2026-03-01",
+      "input": {
+        "date": "2026-03-01"
+      },
+      "output": {
+        "end": "2026-06-01",
+        "monthsToLoad": 2,
+        "start": "2026-01-01"
+      }
+    },
+    {
+      "name": "2026-06-30",
+      "input": {
+        "date": "2026-06-30"
+      },
+      "output": {
+        "end": "2026-09-01",
+        "monthsToLoad": 2,
+        "start": "2026-04-01"
+      }
+    },
+    {
+      "name": "2026-11-20",
+      "input": {
+        "date": "2026-11-20"
+      },
+      "output": {
+        "end": "2027-02-01",
+        "monthsToLoad": 2,
+        "start": "2026-09-01"
+      }
+    },
+    {
+      "name": "2026-12-31",
+      "input": {
+        "date": "2026-12-31"
+      },
+      "output": {
+        "end": "2027-03-01",
+        "monthsToLoad": 2,
+        "start": "2026-10-01"
+      }
+    },
+    {
+      "name": "2024-02-29",
+      "input": {
+        "date": "2024-02-29"
+      },
+      "output": {
+        "end": "2024-05-01",
+        "monthsToLoad": 2,
+        "start": "2023-12-01"
+      }
+    }
+  ]
+}

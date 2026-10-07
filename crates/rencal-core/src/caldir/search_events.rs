@@ -1,0 +1,34 @@
+use super::helpers::{is_visible, sort_by_proximity_to_now};
+use super::types::CalendarEvent;
+use crate::error::CoreResult;
+use crate::state::AppState;
+
+pub fn search_events(
+    state: &AppState,
+    calendar_slugs: Vec<String>,
+    query: String,
+) -> CoreResult<Vec<CalendarEvent>> {
+    let mut events = Vec::new();
+    let query_lower = query.to_lowercase();
+
+    for slug in &calendar_slugs {
+        let parsed = state.events(slug)?;
+        for event in parsed.iter() {
+            if !is_visible(event) {
+                continue;
+            }
+            let summary_match = event
+                .summary
+                .as_deref()
+                .unwrap_or("")
+                .to_lowercase()
+                .contains(&query_lower);
+            if summary_match {
+                events.push(CalendarEvent::from_event(event, slug, None));
+            }
+        }
+    }
+
+    sort_by_proximity_to_now(&mut events);
+    Ok(events)
+}

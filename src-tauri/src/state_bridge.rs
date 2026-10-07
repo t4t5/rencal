@@ -7,8 +7,8 @@ use std::sync::Arc;
 
 use tauri::AppHandle;
 
-use crate::routes::caldir::CaldirSettings;
-use crate::state::AppState;
+use rencal_core::caldir::CaldirSettings;
+use rencal_core::state::AppState;
 
 pub async fn run(app: AppHandle, state: Arc<AppState>) {
     let mut config = state.subscribe_caldir_config();

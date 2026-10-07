@@ -5,7 +5,7 @@ description: Develop renCal against a local caldir checkout instead of the pinne
 
 # Local caldir checkout
 
-renCal pins `caldir-core` (crate) and the provider binaries (release tag) separately in `src-tauri/Cargo.toml`. To develop against a local checkout (`../caldir` by default):
+renCal pins `caldir-core` (crate) and the provider binaries (release tag) separately in the root `Cargo.toml`. To develop against a local checkout (`../caldir` by default):
 
 1. **Providers**: `just build-providers-local [path]` builds them from the checkout into `src-tauri/providers/`.
 2. **caldir-core**: create a gitignored `.cargo/config.toml` in the repo root that patches the crate (path is relative to the repo root):
@@ -15,6 +15,6 @@ renCal pins `caldir-core` (crate) and the provider binaries (release tag) separa
    caldir-core = { path = "../caldir/caldir-core" }
    ```
 
-   This rewrites `src-tauri/Cargo.lock`; do not commit that change.
+   This rewrites `Cargo.lock`; do not commit that change.
 
 3. **Back to the pinned release**: delete `.cargo/config.toml` and `src-tauri/providers/`. The next `just dev` re-downloads the pinned providers.
