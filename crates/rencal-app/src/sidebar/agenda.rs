@@ -12,6 +12,7 @@
 //!   DOM focus), which sets the active date to the row's day.
 
 use std::collections::BTreeMap;
+use std::ops::Range;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -21,9 +22,8 @@ use gpui_kit::component::{Icon, Sizable, h_flex, v_flex};
 use gpui_kit::prelude::FluentBuilder;
 use gpui_kit::{
     AnyElement, App, Bounds, Context, ElementId, FontWeight, InteractiveElement, IntoElement,
-    ListAlignment, ListOffset, ListScrollEvent, ListState, ParentElement, Pixels, Render,
-    SharedString, StatefulInteractiveElement, Styled, Subscription, WeakEntity, Window, div, list,
-    px,
+    ListAlignment, ListOffset, ListState, ParentElement, Pixels, Render, SharedString,
+    StatefulInteractiveElement, Styled, Subscription, WeakEntity, Window, div, list, px,
 };
 use rencal_text::conference::{EventLinks, is_within_join_window};
 use rencal_theme::ResolvedTheme;
@@ -33,12 +33,12 @@ use rencal_time::{
     Calendar, CalendarEvent, EventKey, TimeFormat, Tz, date_from_epoch_day, epoch_day,
 };
 
+use crate::accounts::connect::{self, ConnectStep};
 use crate::assets::RenIcon;
 use crate::clock::Clock;
 use crate::editing::draft::{DRAFT_ID, DraftState};
 use crate::editing::popover;
 use crate::event_store::EventStore;
-use crate::keymap::OpenSettings;
 use crate::navigation::Navigation;
 use crate::settings::Settings;
 use crate::theme::ThemeStore;
@@ -148,9 +148,14 @@ impl Agenda {
     pub fn new(_: &mut Window, cx: &mut Context<Self>) -> Self {
         let list = ListState::new(0, ListAlignment::Top, px(400.));
         let this = cx.entity().downgrade();
+        // GPUI calls this while the list state is borrowed, and `scrolled`
+        // reads the list: run it after.
         list.set_scroll_handler(move |event, _, cx| {
-            this.update(cx, |agenda, cx| agenda.scrolled(event, cx))
-                .ok();
+            let (this, visible, count) = (this.clone(), event.visible_range.clone(), event.count);
+            cx.defer(move |cx| {
+                this.update(cx, |agenda, cx| agenda.scrolled(visible, count, cx))
+                    .ok();
+            });
         });
         let store = EventStore::global(cx);
         let draft = DraftState::global(cx);
@@ -277,12 +282,11 @@ impl Agenda {
         Some((section.day, top.offset_in_item))
     }
 
-    fn scrolled(&mut self, event: &ListScrollEvent, cx: &mut Context<Self>) {
+    fn scrolled(&mut self, visible: Range<usize>, count: usize, cx: &mut Context<Self>) {
         let sections = &self.data.sections;
         if let Some(ghost) = &mut self.ghost {
             let index = sections.iter().position(|s| s.day == ghost.day);
-            let visible = index.is_some_and(|i| event.visible_range.contains(&i));
-            if visible {
+            if index.is_some_and(|i| visible.contains(&i)) {
                 ghost.seen = true;
             } else if ghost.seen {
                 self.ghost = None;
@@ -295,10 +299,10 @@ impl Agenda {
         let store = EventStore::global(cx);
         let store = store.read(cx);
         if let Some(range) = store.loaded_range().filter(|_| !store.is_fetching()) {
-            if event.visible_range.start == 0 {
+            if visible.start == 0 {
                 let start = add_months_to_month_start(range.start, -2);
                 cx.defer(move |cx| EventStore::ensure_loaded(start, range.end, cx));
-            } else if event.visible_range.end + 1 >= event.count {
+            } else if visible.end + 1 >= count {
                 let end = add_months_to_month_start(range.end, 2);
                 cx.defer(move |cx| EventStore::ensure_loaded(range.start, end, cx));
             }
@@ -566,7 +570,9 @@ fn get_started(theme: &ResolvedTheme, palette: Palette) -> impl IntoElement + us
                 .small()
                 .mt_2()
                 .label("Connect a calendar")
-                .on_click(|_, window, cx| window.dispatch_action(Box::new(OpenSettings), cx)),
+                .on_click(|_, window, cx| {
+                    connect::open(ConnectStep::SelectProvider, true, window, cx);
+                }),
         )
 }
 

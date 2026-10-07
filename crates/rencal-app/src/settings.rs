@@ -5,10 +5,13 @@
 
 use std::sync::Arc;
 
-use gpui_kit::{App, Global};
+use gpui_kit::{App, AppContext, Global};
 use rencal_config::RencalConfig;
-use rencal_core::caldir::CaldirSettings;
+use rencal_core::caldir::{self, CaldirSettings};
+use rencal_core::error::CoreResult;
+use rencal_core::state::AppState;
 
+use crate::backend::Backend;
 use crate::runtime::Tokio;
 
 #[derive(Clone, Debug, PartialEq)]
@@ -51,10 +54,14 @@ impl Settings {
 
     /// Applies `edit` now and persists it. The write re-reads the file first,
     /// so it never overwrites edits made elsewhere with stale values, and it
-    /// never replaces an unreadable file with defaults.
+    /// never replaces an unreadable file with defaults. Without the backend
+    /// runtime (tests) nothing is written.
     pub fn update_rencal(cx: &mut App, edit: impl Fn(&mut RencalConfig) + Send + Sync + 'static) {
         let edit = Arc::new(edit);
         Self::update(cx, |settings| edit(&mut settings.rencal));
+        if !cx.has_global::<Tokio>() {
+            return;
+        }
         Tokio::spawn_blocking(cx, move || {
             let result = RencalConfig::load().and_then(|mut config| {
                 edit(&mut config);
@@ -64,6 +71,66 @@ impl Settings {
                 log::error!("could not save renCal's config: {err}");
             }
         });
+    }
+}
+
+impl Settings {
+    /// Applies a caldir setting now and saves it through the backend; the
+    /// caldir config watcher then confirms the stored value.
+    fn update_caldir(
+        cx: &mut App,
+        edit: impl FnOnce(&mut CaldirSettings),
+        save: impl FnOnce(&AppState) -> CoreResult<()> + Send + 'static,
+    ) {
+        Self::update(cx, |settings| edit(&mut settings.caldir));
+        let Some(task) = Backend::write(cx, save) else {
+            return;
+        };
+        cx.background_spawn(async move {
+            match task.await {
+                Ok(Ok(())) => {}
+                Ok(Err(err)) => log::error!("could not save caldir's config: {err}"),
+                Err(err) => log::error!("saving caldir's config failed: {err}"),
+            }
+        })
+        .detach();
+    }
+
+    pub fn set_time_format(time_format: caldir::TimeFormat, cx: &mut App) {
+        let saved = time_format.clone();
+        Self::update_caldir(
+            cx,
+            |settings| settings.time_format = time_format,
+            move |state| caldir::set_time_format(state, saved),
+        );
+    }
+
+    pub fn set_default_reminders(minutes: Vec<i32>, cx: &mut App) {
+        let saved = minutes.clone();
+        Self::update_caldir(
+            cx,
+            |settings| settings.default_reminders = minutes,
+            move |state| caldir::set_default_reminders(state, saved),
+        );
+    }
+
+    pub fn set_default_calendar(slug: Option<String>, cx: &mut App) {
+        let saved = slug.clone();
+        Self::update_caldir(
+            cx,
+            |settings| settings.default_calendar = slug,
+            move |state| caldir::set_default_calendar(state, saved),
+        );
+    }
+
+    /// Not applied up front: the backend normalises the path, and the
+    /// watcher reports the stored one.
+    pub fn set_calendar_dir(path: String, cx: &mut App) {
+        Self::update_caldir(
+            cx,
+            |_| {},
+            move |state| caldir::set_calendar_dir(state, path),
+        );
     }
 }
 

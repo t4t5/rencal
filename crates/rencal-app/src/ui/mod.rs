@@ -5,6 +5,7 @@
 
 pub mod anchors;
 pub mod event_paint;
+pub mod image;
 pub mod kbd;
 
 use gpui_kit::{App, FontWeight, Global, Hsla, Pixels, SharedString, px};
@@ -147,4 +148,26 @@ pub fn event_title(summary: &str, muted: Hsla) -> gpui_kit::AnyElement {
     } else {
         SharedString::from(summary.to_owned()).into_any_element()
     }
+}
+
+/// An error line under a form or list (`text-sm text-destructive`).
+pub fn error_text(theme: &ResolvedTheme, message: impl Into<SharedString>) -> gpui_kit::Div {
+    use gpui_kit::{ParentElement, Styled, div};
+    div()
+        .text_size(text_size(theme, "sm"))
+        .text_color(color(theme, "error"))
+        .child(message.into())
+}
+
+/// Muted explanatory text (`text-<step> text-muted-foreground`).
+pub fn muted_text(
+    theme: &ResolvedTheme,
+    step: &str,
+    text: impl Into<SharedString>,
+) -> gpui_kit::Div {
+    use gpui_kit::{ParentElement, Styled, div};
+    div()
+        .text_size(text_size(theme, step))
+        .text_color(color(theme, "text.muted"))
+        .child(text.into())
 }

@@ -148,6 +148,11 @@ impl ThemeStore {
         &self.active_id
     }
 
+    /// Problems with the user theme files, for Settings › Themes.
+    pub fn diagnostics(&self) -> &[UserThemeDiagnostic] {
+        &self.user.diagnostics
+    }
+
     /// Omarchy is installed, so syncing follows its palette.
     pub fn on_omarchy(&self) -> bool {
         self.omarchy.is_some()

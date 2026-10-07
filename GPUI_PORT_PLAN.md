@@ -1,6 +1,6 @@
 # renCal GPUI port plan
 
-Status: Phases 0–4 implemented (2026-10-07); Phase 4 awaiting review/commit; Phase 5 next. Phase 1–4 notes are under their phases in §8. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
+Status: Phases 0–5 implemented (2026-10-07); Phase 5 awaiting review/commit; Phase 6 next. Phase 1–5 notes are under their phases in §8. Plan written 2026-10-07 on the `gpui` branch at `f688129a`.
 Audience: the agent that implements the port. Read this whole file before starting a phase, and read the linked repo docs before touching the area they cover.
 
 This plan ports renCal from Tauri v2 (Rust backend + React webview) to a native Rust app on [GPUI](https://www.gpui.rs/) via [gpui-kit](https://gpui-kit.com/) (`gpui-kit` 0.7.x, Longbridge). It also replaces the CSS theme system with a Zed-style token theme format (see [Zed's theme builder](https://zed.dev/theme-builder) and its schema at `https://zed.dev/schema/themes/v0.2.0.json`).
@@ -507,6 +507,19 @@ Implementation notes (2026-10-07):
 **Phase 5 — Settings**
 
 General, Calendars (groups, rename, colour via gpui-kit `ColorPicker`, subscriptions, local calendars), Accounts (provider list, credentials form, OAuth connect), Reminders, Themes (slots, previews, diagnostics for broken user/plugin themes), Plugins (catalogue, details, install dialog, deep-link install, sheet); mass-delete confirm on sync.
+
+Implementation notes (2026-10-07):
+
+- Layout: `windows/settings_window/` (one view per page, built fresh when its tab opens, like the old unmounting tabs; `controls`, `groups`, `calendar_dialogs`), `accounts/` (`Providers`, the connect and subscription dialogs), `plugins/` (`Plugins` global, merged list, `PluginDetails`, the deep-link `install_dialog`), `mass_delete.rs`. `crates/rencal-app/AGENTS.md` has the map.
+- The connect dialog is shared by Settings › Accounts, the create gate (no writable calendar now opens it instead of the settings window) and the agenda's get-started state (with the local-only option). Browser sign-ins get a URL opener whose URLs the main thread opens with `cx.open_url`. Reconnect starts the flow directly and opens the dialog only for setup / credentials steps, as before.
+- Writes: renCal's config through `Settings::update_rencal` (now a no-op on disk without the `Tokio` global, so tests never write), caldir's through new `Settings::set_*` (optimistic; the caldir config watcher confirms). Calendar writes reload `EventStore`'s calendars when they land.
+- Calendar colour uses gpui-kit's `ColorPicker` (palette + HSLA, the local-calendar colours featured) in the dialog, replacing the hue slider; saved as `#rrggbb`. The data directory uses `cx.prompt_for_paths` (the portal on Linux).
+- Themes: previews are painted natively from each theme's own resolved tokens (a cropped minical + week window, like the old CSS preview). Diagnostics list the user theme files' problems; plugin themes come back with contract v2 (Phase 7).
+- Plugins: GPUI has no HTTP client on the desktop, so catalog previews are fetched by `rencal_core::plugins::fetch_preview` (only `https://rencal.org/plugin-previews/<sha256>.png`, the old CSP allowlist) and cached per run; local previews and plugin provider icons are `data:` URLs decoded in `ui::image`. The plugin watcher's reconcile bumps `Plugins::revision`, which refreshes the lists. Install links (`rencal://plugin/install?repo=…`) open a dialog in the main window; links wait in the inbox while an action runs.
+- Mass delete: a sync that holds back calendars keeps the sync lock until the main window's dialog is answered (delete / restore / cancel; Escape cancels), as `SyncContext` did. The main window checks on render, so a dialog already open only delays it.
+- GPUI details: `open_dialog` focuses the dialog after the view is built, so inputs are focused after opening; a single-line input passes Enter on to the dialog's Confirm (which closes it and drops the view before its `PressEnter` arrives), so dialogs submit from `on_ok`. Fixed a Phase 3 crash: GPUI runs a `ListState` scroll handler while the list is borrowed, and the agenda's read the list, so any wheel scroll over the agenda panicked (the headless harness had never sent wheel events); the handler now defers.
+- Not ported / deferred: the About section's update check (Phase 6 updater); the destructive (red) style of "Delete calendar" / group "Delete" menu items (gpui-kit's `PopupMenuItem` has no variant).
+- Verified headless on Linux (sway + lavapipe; the virtual pointer now sends wheel events): every page; calendar colour (written to the calendar's config and shown live), group create / toggle (live in the main window), the connect dialog's provider list, credentials step (validation, masked field) and local-only calendar from the get-started state; plugin grid, sheet (preview, scrolling), install and uninstall (toasts, list refresh); the deep-link install dialog through a second launch. UI tests cover the page nav and Escape, calendar toggles, group validation / create / select, the plugin grid and sheet, the mass-delete dialog and the connect dialog's validation; unit tests the plugin list merge / sort / filter / selection, install actions, group edits and provider ordering. Not verified: a real OAuth or CalDAV connect, the reminders combo in the settings window (focus-driven; headless limit), the folder portal, macOS.
 
 **Phase 6 — Platform and distribution**
 

@@ -16,6 +16,7 @@ use rencal_core::watchers::{caldir, caldir_config, plugins, rencal_config, tz};
 use rencal_core::{omarchy, user_themes};
 use tokio::sync::mpsc;
 
+use crate::plugins::Plugins;
 use crate::runtime::Tokio;
 use crate::settings::Settings;
 use crate::theme::{ThemeStore, omarchy_colors};
@@ -41,14 +42,21 @@ pub fn spawn_all(state: &Arc<AppState>, plugin_manager: &PluginManager, cx: &mut
             "caldir config watcher",
             caldir_config::run_watcher(state.clone()),
         );
-        spawn_task(
-            "plugin declarations watcher",
-            plugins::run_watcher(plugin_manager.clone(), state.clone(), || {
-                log::debug!("plugins reconciled");
-            }),
-        );
     }
     follow_state(state.clone(), cx);
+
+    let manager = plugin_manager.clone();
+    let plugin_state = state.clone();
+    forward(
+        cx,
+        "plugin declarations watcher",
+        |tx| {
+            plugins::run_watcher(manager, plugin_state, move || {
+                let _ = tx.send(());
+            })
+        },
+        |(), cx| Plugins::reconciled(cx),
+    );
 
     forward(
         cx,

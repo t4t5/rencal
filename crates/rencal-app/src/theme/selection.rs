@@ -16,8 +16,6 @@ pub struct ThemeDescriptor {
 /// A settings field holding a theme id.
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ThemeSlot {
-    // Picked by Settings → Themes (Phase 5).
-    #[allow(dead_code)]
     Single,
     Light,
     Dark,

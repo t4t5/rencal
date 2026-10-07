@@ -1,19 +1,34 @@
 //! The settings window (GPUI_PORT_PLAN.md §3.4): a second, single-instance
-//! window with a page list. Phase 1 is the shell; the pages arrive in Phase 5.
-//! Like the old `SettingsWindow.tsx`: 800×500, fixed size, closes on Escape.
+//! window with a page list (General, Accounts, Calendars, Reminders, Themes,
+//! Plugins). Like the old `SettingsWindow.tsx`: 800×500, fixed size, closes
+//! on Escape. Each page is its own view, built fresh when its tab opens, as
+//! the old tabs unmounted inactive pages.
+
+mod accounts;
+mod calendar_dialogs;
+mod calendars;
+mod controls;
+mod general;
+mod groups;
+mod plugins;
+mod reminders;
+#[cfg(test)]
+mod tests;
+mod themes;
 
 use gpui_kit::component::button::{Button, ButtonVariants};
 use gpui_kit::component::{IconName, Sizable, h_flex, v_flex};
 use gpui_kit::{
-    AnyWindowHandle, App, AppContext, ClickEvent, Context, FocusHandle, Global, InteractiveElement,
-    IntoElement, ParentElement, Pixels, Render, StatefulInteractiveElement, Styled, Window, div,
-    prelude::FluentBuilder, px, size,
+    AnyView, AnyWindowHandle, App, AppContext, ClickEvent, Context, FocusHandle, Global,
+    InteractiveElement, IntoElement, ParentElement, Pixels, Render, StatefulInteractiveElement,
+    Styled, Window, div, prelude::FluentBuilder, px, size,
 };
 use rencal_theme::ResolvedTheme;
 
 use super::{MACOS_TITLE_BAR_HEIGHT, default_traffic_lights, drag_region, window_options};
 use crate::actions::CloseWindow;
-use crate::theme::{ActiveRenTheme, hsla};
+use crate::assets::RenIcon;
+use crate::theme::{ActiveRenTheme, ThemeStore, hsla};
 
 pub const KEY_CONTEXT: &str = "SettingsWindow";
 const NAV_WIDTH: Pixels = px(200.);
@@ -50,14 +65,27 @@ impl SettingsTab {
         }
     }
 
-    fn icon(self) -> IconName {
+    fn icon(self) -> RenIcon {
         match self {
-            Self::General => IconName::Settings,
-            Self::Accounts => IconName::User,
-            Self::Calendars => IconName::Calendar,
-            Self::Reminders => IconName::Bell,
-            Self::Themes => IconName::Palette,
-            Self::Plugins => IconName::LayoutDashboard,
+            Self::General => RenIcon::Settings,
+            Self::Accounts => RenIcon::User,
+            Self::Calendars => RenIcon::Calendar,
+            Self::Reminders => RenIcon::Bell,
+            Self::Themes => RenIcon::Palette,
+            Self::Plugins => RenIcon::Plugin,
+        }
+    }
+
+    fn page(self, window: &mut Window, cx: &mut App) -> AnyView {
+        match self {
+            Self::General => cx.new(general::GeneralPage::new).into(),
+            Self::Accounts => cx.new(accounts::AccountsPage::new).into(),
+            Self::Calendars => cx.new(calendars::CalendarsPage::new).into(),
+            Self::Reminders => cx
+                .new(|cx| reminders::RemindersPage::new(window, cx))
+                .into(),
+            Self::Themes => cx.new(themes::ThemesPage::new).into(),
+            Self::Plugins => cx.new(|cx| plugins::PluginsPage::new(window, cx)).into(),
         }
     }
 }
@@ -65,6 +93,12 @@ impl SettingsTab {
 struct SettingsWindowHandle(AnyWindowHandle);
 
 impl Global for SettingsWindowHandle {}
+
+#[cfg(test)]
+pub fn handle(cx: &App) -> Option<AnyWindowHandle> {
+    cx.try_global::<SettingsWindowHandle>()
+        .map(|handle| handle.0)
+}
 
 /// Focuses the settings window, opening it first if it is closed.
 pub fn open(cx: &mut App) {
@@ -89,6 +123,7 @@ pub fn open(cx: &mut App) {
 
 pub struct SettingsWindow {
     tab: SettingsTab,
+    page: AnyView,
     focus: FocusHandle,
 }
 
@@ -97,10 +132,27 @@ impl SettingsWindow {
         window.set_window_title("Settings");
         let focus = cx.focus_handle();
         window.focus(&focus, cx);
+        cx.observe_global::<ThemeStore>(|_, cx| cx.notify())
+            .detach();
+        let tab = SettingsTab::default();
         Self {
-            tab: SettingsTab::default(),
+            tab,
+            page: tab.page(window, cx),
             focus,
         }
+    }
+
+    pub fn select(&mut self, tab: SettingsTab, window: &mut Window, cx: &mut Context<Self>) {
+        if tab != self.tab {
+            self.tab = tab;
+            self.page = tab.page(window, cx);
+            cx.notify();
+        }
+    }
+
+    #[cfg(test)]
+    pub fn page(&self) -> &AnyView {
+        &self.page
     }
 }
 
@@ -142,7 +194,15 @@ impl Render for SettingsWindow {
                     .flex_1()
                     .min_h_0()
                     .child(self.nav(theme, cx))
-                    .child(page(self.tab, theme)),
+                    .child(
+                        div()
+                            .id("settings-page")
+                            .flex()
+                            .flex_1()
+                            .min_w_0()
+                            .h_full()
+                            .child(self.page.clone()),
+                    ),
             )
     }
 }
@@ -165,6 +225,7 @@ impl SettingsWindow {
                 let selected = tab == self.tab;
                 h_flex()
                     .id(tab.label())
+                    .debug_selector(move || format!("settings-tab-{}", tab.label()))
                     .items_center()
                     .gap_2()
                     .px_2()
@@ -182,30 +243,9 @@ impl SettingsWindow {
                     })
                     .child(gpui_kit::component::Icon::new(tab.icon()).small())
                     .child(tab.label())
-                    .on_click(cx.listener(move |this, _: &ClickEvent, _, cx| {
-                        this.tab = tab;
-                        cx.notify();
+                    .on_click(cx.listener(move |this, _: &ClickEvent, window, cx| {
+                        this.select(tab, window, cx)
                     }))
             }))
     }
-}
-
-fn page(tab: SettingsTab, theme: &ResolvedTheme) -> impl IntoElement {
-    let padding = px(theme.number("layout.padding") as f32);
-    let heading = theme
-        .transform("typography.heading.transform")
-        .apply(tab.label());
-    v_flex()
-        .id("settings-page")
-        .flex_1()
-        .min_w_0()
-        .gap_2()
-        .p(padding * 2.)
-        .child(div().text_lg().child(heading))
-        .child(
-            div()
-                .text_sm()
-                .text_color(hsla(theme.color("text.muted")))
-                .child("This page is not ported yet."),
-        )
 }

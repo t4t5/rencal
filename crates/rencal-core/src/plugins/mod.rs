@@ -22,7 +22,7 @@ pub(crate) mod installer;
 pub use installer::{
     InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginFontInspection,
     PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager,
-    PluginProviderInspection, PluginReconcileError, PluginThemeInspection,
+    PluginProviderInspection, PluginReconcileError, PluginThemeInspection, fetch_preview,
 };
 
 /// Validate a GitHub repository reference and return its canonical owner/name form.

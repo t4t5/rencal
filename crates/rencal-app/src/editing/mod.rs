@@ -33,9 +33,10 @@ use gpui_kit::component::WindowExt;
 use gpui_kit::component::notification::Notification;
 use gpui_kit::{App, Global, MouseDownEvent, Window};
 
+use crate::accounts::connect::{self, ConnectStep};
 use crate::event_store::EventStore;
 use crate::ui::anchors::Anchors;
-use crate::windows::{main_window, settings_window};
+use crate::windows::main_window;
 
 pub fn init(cx: &mut App) {
     Anchors::init(cx);
@@ -102,9 +103,9 @@ pub fn can_create(cx: &App) -> bool {
         .any(|calendar| calendar.read_only != Some(true))
 }
 
-/// Without a writable calendar, creating asks to connect one. The accounts
-/// page arrives with Settings (Phase 5); until then this opens the settings
-/// window.
+/// Without a writable calendar, creating asks to connect one.
 pub fn prompt_to_connect(cx: &mut App) {
-    settings_window::open(cx);
+    with_main_window(cx, |window, cx| {
+        connect::open(ConnectStep::SelectProvider, false, window, cx);
+    });
 }

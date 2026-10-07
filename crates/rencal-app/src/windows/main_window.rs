@@ -39,7 +39,7 @@ use crate::toolbar::{self, InvitesOpen};
 use crate::ui::anchors::{Anchors, EventSource, Named};
 use crate::ui::{Palette, metric};
 use crate::ui_state::UiState;
-use crate::{search, shortcuts_overlay, views};
+use crate::{mass_delete, search, shortcuts_overlay, views};
 
 /// Tailwind's `md`: below it the main column is hidden.
 const MD_BREAKPOINT: Pixels = px(768.);
@@ -243,6 +243,10 @@ impl Render for MainWindow {
             .update(cx, |sidebar, _| sidebar.set_narrow(!wide));
         self.popover
             .update(cx, |popover, _| popover.set_narrow(!wide));
+        // A sync held back mass deletions: ask, once no other dialog is up.
+        if SyncState::global(cx).pending_mass_delete.is_some() {
+            window.defer(cx, mass_delete::show_if_pending);
+        }
         let key_context = if self.popover.read(cx).is_open() {
             format!("{CALENDAR_VIEW_CONTEXT} {EVENT_OPEN}")
         } else {

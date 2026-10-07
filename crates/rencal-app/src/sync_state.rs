@@ -5,8 +5,9 @@
 //!
 //! Calendars whose pending push would delete `MASS_DELETE_THRESHOLD` or more
 //! events are left unpushed by the backend and reported in
-//! `pending_mass_delete`. The confirm dialog for them arrives in Phase 5;
-//! until then the sync lock is released so later syncs still run.
+//! `pending_mass_delete`; the main window asks about them
+//! (`mass_delete.rs`). The sync lock stays held until the user answers, so
+//! automatic syncs don't pile up behind the dialog.
 
 use gpui_kit::{App, BorrowAppContext, Global};
 use rencal_core::caldir;
@@ -66,9 +67,18 @@ impl SyncState {
     }
 
     /// Installs the state and checks again whenever the connected calendars
-    /// change. `EventStore` must be set.
+    /// change or auto-sync is switched. `EventStore` must be set.
     pub fn init(cx: &mut App) {
         cx.set_global(Self::default());
+        let mut auto_sync = Settings::global(cx).rencal.auto_sync_enabled;
+        cx.observe_global::<Settings>(move |cx| {
+            let enabled = Settings::global(cx).rencal.auto_sync_enabled;
+            if enabled != auto_sync {
+                auto_sync = enabled;
+                Self::request(cx);
+            }
+        })
+        .detach();
         let store = EventStore::global(cx);
         cx.observe(&store, |store, cx| {
             let slugs = connected_calendars(store.read(cx).calendars());
@@ -97,6 +107,86 @@ impl SyncState {
 
     fn update(cx: &mut App, edit: impl FnOnce(&mut Self)) {
         cx.update_global::<Self, _>(|state, _| edit(state));
+    }
+
+    /// Pushes the held-back deletions.
+    pub fn confirm_mass_delete(cx: &mut App) {
+        Self::resolve_mass_delete(true, cx);
+    }
+
+    /// Restores the deleted events instead (drops the pending local changes).
+    pub fn discard_mass_delete(cx: &mut App) {
+        Self::resolve_mass_delete(false, cx);
+    }
+
+    /// Leaves the deletions pending for the next sync to ask again.
+    pub fn cancel_mass_delete(cx: &mut App) {
+        Self::update(cx, |state| {
+            state.pending_mass_delete = None;
+            state.locked = false;
+        });
+    }
+
+    fn resolve_mass_delete(push: bool, cx: &mut App) {
+        let Some(tripped) = Self::global(cx).pending_mass_delete.clone() else {
+            return;
+        };
+        let slugs: Vec<String> = tripped.into_iter().map(|p| p.calendar_slug).collect();
+        let allowed = slugs.clone();
+        let task = Backend::run(cx, move |state| async move {
+            if push {
+                caldir::sync(&state, allowed).await
+            } else {
+                caldir::discard(&state).await
+            }
+        });
+        Self::update(cx, |state| {
+            state.pending_mass_delete = None;
+            state.status = SyncStatus::Syncing;
+            state.error = None;
+        });
+        cx.spawn(async move |cx| {
+            let result = match task {
+                Some(task) => task
+                    .await
+                    .map_err(|err| err.to_string())
+                    .and_then(|result| result.map_err(|err| err.to_string())),
+                None => Ok(()),
+            };
+            cx.update(|cx| {
+                if result.is_ok() {
+                    EventStore::global(cx).update(cx, |store, cx| store.reload(cx));
+                }
+                Self::update(cx, |state| {
+                    match result {
+                        Ok(()) => state
+                            .pending
+                            .retain(|pending| !slugs.contains(&pending.calendar_slug)),
+                        Err(err) => {
+                            log::error!("sync failed: {err}");
+                            state.error = Some(err);
+                        }
+                    }
+                    state.locked = false;
+                    state.status = SyncStatus::Idle;
+                });
+            });
+        })
+        .detach();
+    }
+
+    /// A tripped run's outcome (tests).
+    #[cfg(test)]
+    pub fn set_pending_mass_delete(pending: Vec<PendingSync>, cx: &mut App) {
+        Self::update(cx, |state| {
+            state.locked = true;
+            state.pending_mass_delete = Some(pending);
+        });
+    }
+
+    #[cfg(test)]
+    pub fn is_locked(&self) -> bool {
+        self.locked
     }
 
     fn run(apply: bool, manual: bool, cx: &mut App) {
@@ -173,6 +263,8 @@ impl SyncState {
                         if tripped.is_empty() {
                             state.pending.clear();
                         } else {
+                            // Leave `pending` as is, so the count still
+                            // shows what's outstanding.
                             log::warn!(
                                 "sync held back mass deletions in {:?}",
                                 tripped.iter().map(|t| &t.calendar_slug).collect::<Vec<_>>()
@@ -191,7 +283,8 @@ impl SyncState {
                         log::error!("sync failed: {err}");
                         state.error = Some(err);
                     }
-                    state.locked = false;
+                    // The mass-delete dialog releases the lock when answered.
+                    state.locked = state.pending_mass_delete.is_some();
                     state.status = SyncStatus::Idle;
                 })
             });

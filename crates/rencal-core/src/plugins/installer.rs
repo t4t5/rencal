@@ -60,7 +60,7 @@ const HOST_TARGETS: &[&str] = if cfg!(all(target_os = "linux", target_arch = "x8
     &[]
 };
 
-#[derive(Clone, Debug, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize)]
 #[cfg_attr(feature = "specta", derive(specta::Type))]
 pub struct InstalledPlugin {
     pub id: String,
@@ -124,17 +124,47 @@ fn deserialize_preview_url<'de, D: serde::Deserializer<'de>>(
     let value = serde_json::Value::deserialize(deserializer)?;
     Ok(value
         .as_str()
-        .filter(|url| {
-            url.strip_prefix("https://rencal.org/plugin-previews/")
-                .and_then(|filename| filename.strip_suffix(".png"))
-                .is_some_and(|hash| {
-                    hash.len() == 64
-                        && hash
-                            .bytes()
-                            .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
-                })
-        })
+        .filter(|url| is_preview_url(url))
         .map(str::to_owned))
+}
+
+/// A catalog preview: a content-addressed PNG on rencal.org.
+fn is_preview_url(url: &str) -> bool {
+    url.strip_prefix("https://rencal.org/plugin-previews/")
+        .and_then(|filename| filename.strip_suffix(".png"))
+        .is_some_and(|hash| {
+            hash.len() == 64
+                && hash
+                    .bytes()
+                    .all(|byte| byte.is_ascii_digit() || (b'a'..=b'f').contains(&byte))
+        })
+}
+
+/// Downloads a catalog preview image. Only the catalog's preview URLs are
+/// fetched (what the webview's CSP allowed before).
+pub async fn fetch_preview(url: &str) -> Result<Vec<u8>, PluginInstallError> {
+    if !is_preview_url(url) {
+        return Err(PluginInstallError::new(
+            PluginInstallErrorKind::InvalidInput,
+            format!("not a plugin preview URL: {url}"),
+        ));
+    }
+    let network = |error: reqwest::Error| {
+        PluginInstallError::new(PluginInstallErrorKind::Network, error.to_string())
+    };
+    let _ = rustls::crypto::ring::default_provider().install_default();
+    let client = reqwest::Client::builder()
+        .user_agent(format!("renCal/{}", env!("CARGO_PKG_VERSION")))
+        .timeout(REQUEST_TIMEOUT)
+        .build()
+        .map_err(network)?;
+    let response = client
+        .get(url)
+        .send()
+        .await
+        .and_then(reqwest::Response::error_for_status)
+        .map_err(network)?;
+    Ok(response.bytes().await.map_err(network)?.to_vec())
 }
 
 #[derive(Clone, Debug, Serialize)]

@@ -192,7 +192,7 @@ fn delete_text(
     }
 }
 
-fn dialog_title(title: &str, cx: &App) -> impl IntoElement + use<> {
+pub fn dialog_title(title: &str, cx: &App) -> impl IntoElement + use<> {
     let theme = cx.ren_theme();
     div()
         .font_family(Role::Heading.family(cx))
@@ -202,7 +202,7 @@ fn dialog_title(title: &str, cx: &App) -> impl IntoElement + use<> {
         .child(Role::Heading.text(theme, title))
 }
 
-fn description(
+pub fn description(
     text: SharedString,
     highlight: Option<std::ops::Range<usize>>,
     cx: &App,

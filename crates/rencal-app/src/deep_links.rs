@@ -2,7 +2,8 @@
 //! arguments, from later launches through the Linux single-instance socket, or
 //! from macOS `open_urls`. All of them land in `AppState`'s deep-link inbox.
 //! Event links (from reminder notifications) are drained here and open the
-//! event (`useEventDeepLinks`); plugin installs wait for Phase 5.
+//! event (`useEventDeepLinks`); plugin install links open the install dialog
+//! (`plugins::install_dialog`).
 
 use std::sync::Arc;
 
@@ -29,6 +30,7 @@ pub fn listen(state: Arc<AppState>, mut requests: mpsc::UnboundedReceiver<Reques
             let shown = cx.update(|cx| {
                 intake(&state, &request.urls);
                 open_event_links(cx);
+                crate::plugins::install_dialog::drain(cx);
                 main_window::show(cx)
             });
             if let Some(reply) = request.reply {

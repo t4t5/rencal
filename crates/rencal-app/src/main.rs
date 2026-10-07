@@ -3,6 +3,7 @@
 //! the globals (settings, UI state, theme) resolve before the first window
 //! opens, so it never flashes the wrong theme.
 
+mod accounts;
 mod actions;
 mod assets;
 mod backend;
@@ -13,8 +14,10 @@ mod editing;
 mod event_store;
 mod keymap;
 mod logging;
+mod mass_delete;
 mod navigation;
 mod palette;
+mod plugins;
 mod runtime;
 mod search;
 mod settings;
@@ -36,7 +39,7 @@ use std::sync::Arc;
 
 use gpui_kit::App;
 use rencal_core::caldir::CaldirSettings;
-use rencal_core::plugins::{self, PluginManager};
+use rencal_core::plugins::{self as core_plugins, PluginManager};
 use rencal_core::state::{AppState, ProviderDirs};
 use tokio::sync::mpsc;
 
@@ -118,7 +121,7 @@ fn main() {
 fn load_backend() -> Result<LoadedBackend, String> {
     let provider_dirs = ProviderDirs {
         bundled: bundled_providers_dir(),
-        plugins: plugins::plugins_dir().ok(),
+        plugins: core_plugins::plugins_dir().ok(),
     };
     let state = AppState::load(provider_dirs)
         .map_err(|err| format!("renCal cannot read caldir's config.toml:\n{err}"))?;
@@ -159,6 +162,7 @@ fn start(
     let omarchy = rencal_core::omarchy::read_colors().map(theme::omarchy_colors);
     ThemeStore::init(rencal_core::user_themes::scan(), omarchy, cx);
     actions::init(cx);
+    plugins::Plugins::init(Some(plugins.clone()), cx);
     watchers::spawn_all(&state, &plugins, cx);
     Backend::init(state.clone(), cx);
     Clock::init(cx);
@@ -166,6 +170,7 @@ fn start(
     Navigation::init(cx);
     EventStore::init(cx);
     SyncState::init(cx);
+    accounts::providers::Providers::init(cx);
     toolbar::init(cx);
     editing::init(cx);
 
@@ -173,6 +178,7 @@ fn start(
     deep_links::listen(state, requests, cx);
     open_main_window(cx);
     deep_links::open_event_links(cx);
+    plugins::install_dialog::drain(cx);
 
     // Closing the main window quits, except on macOS, where apps stay in the
     // dock and the dock icon reopens it.

@@ -87,6 +87,9 @@ pub enum ReminderEvent {
 pub struct ReminderField {
     combo: Entity<ComboState>,
     query: String,
+    /// Settings › Reminders' variant: a bordered input without the bell,
+    /// rows not indented under it.
+    plain: bool,
     _subscriptions: Vec<Subscription>,
 }
 
@@ -94,15 +97,25 @@ impl EventEmitter<ReminderEvent> for ReminderField {}
 
 impl ReminderField {
     pub fn new(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        Self::build("Reminders", false, window, cx)
+    }
+
+    /// The default reminders field in Settings › Reminders.
+    pub fn plain(window: &mut Window, cx: &mut Context<Self>) -> Self {
+        Self::build("Add reminder", true, window, cx)
+    }
+
+    fn build(placeholder: &str, plain: bool, window: &mut Window, cx: &mut Context<Self>) -> Self {
         let combo = cx.new(|cx| {
             let mut combo = ComboState::new(true, window, cx);
-            combo.set_placeholder("Reminders", window, cx);
+            combo.set_placeholder(placeholder, window, cx);
             combo
         });
         let subscriptions = vec![cx.subscribe_in(&combo, window, Self::on_combo)];
         Self {
             combo,
             query: String::new(),
+            plain,
             _subscriptions: subscriptions,
         }
     }
@@ -179,6 +192,7 @@ impl ReminderField {
         let mut sorted = reminders.to_vec();
         sorted.sort_unstable();
         let entity = cx.entity().downgrade();
+        let plain = self.plain;
         let rows: Vec<_> = sorted
             .into_iter()
             .map(|mins| {
@@ -192,7 +206,7 @@ impl ReminderField {
                             .bg(controls.highlight)
                             .text_color(controls.highlight_text)
                     })
-                    .child(controls.leading(None))
+                    .when(!plain, |this| this.child(controls.leading(None)))
                     .child(
                         div()
                             .flex_1()
@@ -214,21 +228,34 @@ impl ReminderField {
                     )
             })
             .collect();
+        let field = combo(
+            "reminders",
+            &self.combo,
+            controls,
+            (!plain).then(|| controls.leading(Some(RenIcon::Bell))),
+            None,
+            options,
+            "No results found.",
+            px(200.),
+            false,
+            window,
+            cx,
+        );
         v_flex()
             .gap_1()
-            .child(combo(
-                "reminders",
-                &self.combo,
-                controls,
-                Some(controls.leading(Some(RenIcon::Bell))),
-                None,
-                options,
-                "No results found.",
-                px(200.),
-                false,
-                window,
-                cx,
-            ))
+            .map(|this| {
+                if plain {
+                    this.child(
+                        div()
+                            .rounded(controls.radius)
+                            .border_1()
+                            .border_color(controls.border_input)
+                            .child(field),
+                    )
+                } else {
+                    this.child(field)
+                }
+            })
             .children(rows)
     }
 }

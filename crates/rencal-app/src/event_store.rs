@@ -170,6 +170,14 @@ impl EventStore {
         self.calendars.iter().find(|calendar| calendar.slug == slug)
     }
 
+    /// The calendar's display name, or its slug.
+    pub fn calendar_name(&self, slug: &str) -> String {
+        self.calendar(slug)
+            .and_then(|calendar| calendar.name.clone())
+            .filter(|name| !name.is_empty())
+            .unwrap_or_else(|| slug.to_owned())
+    }
+
     pub fn active_event(&self) -> Option<&EventKey> {
         self.active_event.as_ref()
     }
@@ -310,6 +318,12 @@ impl EventStore {
             invite.refresh_date_info(viewer);
         }
         self.bump(cx);
+    }
+
+    /// Re-reads the calendars (after a calendar write: rename, colour,
+    /// connect, delete), without waiting for the watcher.
+    pub fn reload_calendars(&mut self, cx: &mut Context<Self>) {
+        self.load_calendars(cx);
     }
 
     fn load_calendars(&mut self, cx: &mut Context<Self>) {
