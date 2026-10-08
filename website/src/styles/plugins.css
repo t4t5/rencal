@@ -245,11 +245,6 @@
   transition: none;
 }
 
-/* Search results and the sheet's scroll lock both toggle the scrollbar; reserve its space so the grid doesn't resize. */
-html:has(.plugin-grid) {
-  scrollbar-gutter: stable;
-}
-
 html:has(.plugin-sheet[open]) {
   overflow: hidden;
 }

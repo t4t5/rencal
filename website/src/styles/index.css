@@ -25,6 +25,11 @@
   --color-separator: var(--separator);
 }
 
+/* Reserve the scrollbar's space on every page so layouts don't shift between scrolling and non-scrolling pages. */
+html {
+  scrollbar-gutter: stable;
+}
+
 body {
   background-color: var(--background);
   color: var(--muted);
