@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     caldir = {
-      url = "github:t4t5/caldir/v0.14.2";
+      url = "github:t4t5/caldir/v0.14.6";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };

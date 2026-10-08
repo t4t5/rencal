@@ -1,0 +1,2 @@
+# Matches caldir: caldir-core's config errors inline the TOML parser error (>128 bytes).
+large-error-threshold = 256
