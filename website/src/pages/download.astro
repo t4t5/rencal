@@ -27,20 +27,45 @@ try {
 const assetUrl = (pattern: RegExp) =>
   latestRelease?.assets.find((asset) => pattern.test(asset.name))?.browser_download_url
 
-interface DownloadRow {
-  label: string
+interface Download {
   architecture: string
   href?: string
 }
 
+interface DownloadRow {
+  label: string
+  downloads: Download[]
+}
+
 const linuxDownloads: DownloadRow[] = [
-  { label: "Debian (deb)", architecture: "x64", href: assetUrl(/_amd64\.deb$/) },
-  { label: "Red Hat / Fedora (rpm)", architecture: "x64", href: assetUrl(/\.x86_64\.rpm$/) },
-  { label: "AppImage", architecture: "x64", href: assetUrl(/_amd64\.AppImage$/) },
+  {
+    label: "Debian (deb)",
+    downloads: [
+      { architecture: "x64", href: assetUrl(/_amd64\.deb$/) },
+      { architecture: "ARM64", href: assetUrl(/_arm64\.deb$/) },
+    ],
+  },
+  {
+    label: "Red Hat / Fedora (rpm)",
+    downloads: [
+      { architecture: "x64", href: assetUrl(/\.x86_64\.rpm$/) },
+      { architecture: "ARM64", href: assetUrl(/\.aarch64\.rpm$/) },
+    ],
+  },
+  {
+    label: "AppImage",
+    downloads: [
+      { architecture: "x64", href: assetUrl(/_amd64\.AppImage$/) },
+      { architecture: "ARM64", href: assetUrl(/_aarch64\.AppImage$/) },
+    ],
+  },
 ]
 
 const macDownloads: DownloadRow[] = [
-  { label: "Installer (dmg)", architecture: "Apple Silicon", href: assetUrl(/_aarch64\.dmg$/) },
+  {
+    label: "Installer (dmg)",
+    downloads: [{ architecture: "Apple Silicon", href: assetUrl(/_aarch64\.dmg$/) }],
+  },
 ]
 
 const dateFormat = new Intl.DateTimeFormat("en-US", {
@@ -54,12 +79,14 @@ const releaseDate = latestRelease?.published_at
   : null
 
 if (latestRelease) {
-  const missing = [...linuxDownloads, ...macDownloads].filter((row) => !row.href)
+  const missing = [...linuxDownloads, ...macDownloads].flatMap((row) =>
+    row.downloads
+      .filter((download) => !download.href)
+      .map((download) => `${row.label} ${download.architecture}`),
+  )
   if (missing.length > 0) {
     throw new Error(
-      `Latest GitHub release ${latestRelease.tag_name} is missing download assets: ${missing
-        .map((row) => row.label)
-        .join(", ")}`,
+      `Latest GitHub release ${latestRelease.tag_name} is missing download assets: ${missing.join(", ")}`,
     )
   }
 }
@@ -80,7 +107,7 @@ if (latestRelease) {
       </div>
 
       <Button
-        href={macDownloads[0]?.href ?? releasesUrl}
+        href={macDownloads[0]?.downloads[0]?.href ?? releasesUrl}
         hidden
         data-platform-mac
         variant="outline"
@@ -121,14 +148,18 @@ if (latestRelease) {
           {
             linuxDownloads.map((row) => (
               <InstallRow label={row.label}>
-                <a
-                  href={row.href ?? releasesUrl}
-                  aria-label={`Download renCal for Linux, ${row.label}, ${row.architecture}`}
-                  class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
-                >
-                  <DownloadIcon class="h-4 w-4" />
-                  {row.architecture}
-                </a>
+                <div class="flex flex-wrap gap-2">
+                  {row.downloads.map((download) => (
+                    <a
+                      href={download.href ?? releasesUrl}
+                      aria-label={`Download renCal for Linux, ${row.label}, ${download.architecture}`}
+                      class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+                    >
+                      <DownloadIcon class="h-4 w-4" />
+                      {download.architecture}
+                    </a>
+                  ))}
+                </div>
               </InstallRow>
             ))
           }
@@ -140,14 +171,18 @@ if (latestRelease) {
           {
             macDownloads.map((row) => (
               <InstallRow label={row.label}>
-                <a
-                  href={row.href ?? releasesUrl}
-                  aria-label={`Download renCal for macOS, ${row.architecture}`}
-                  class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
-                >
-                  <DownloadIcon class="h-4 w-4" />
-                  {row.architecture}
-                </a>
+                <div class="flex flex-wrap gap-2">
+                  {row.downloads.map((download) => (
+                    <a
+                      href={download.href ?? releasesUrl}
+                      aria-label={`Download renCal for macOS, ${download.architecture}`}
+                      class="flex items-center gap-2 bg-white/5 px-4 py-2 text-sm hover:bg-white/10"
+                    >
+                      <DownloadIcon class="h-4 w-4" />
+                      {download.architecture}
+                    </a>
+                  ))}
+                </div>
               </InstallRow>
             ))
           }
