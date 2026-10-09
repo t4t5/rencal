@@ -3,8 +3,8 @@
 ```
 GOAL  Quick-add and "Go to date" understand the user's language (German first)
 ├── [x] A  Characterization tests pin today's English behaviour
-├── [ ] B  ParserVocabulary: chrono instance + recurrence/location/connector words
-│   └── [ ] B1 English vocabulary extracted, parser runs on it (tests unchanged, green)
+├── [x] B  ParserVocabulary: chrono instance + recurrence/location/connector words
+│   └── [x] B1 English vocabulary extracted, parser runs on it (tests unchanged, green)
 ├── [ ] C  German vocabulary (chrono.de, jeden/jede/jedes …, montags, werktags, um/am/vom)
 ├── [ ] D  Active language first, English as fallback (mixed input keeps working)
 │   └── [ ] D1 locale activation tells the parser the language (activator followers)
