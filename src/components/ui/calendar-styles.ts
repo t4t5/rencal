@@ -1,5 +1,14 @@
-// Weekday labels indexed by day number (0=Sun … 6=Sat).
-export const WEEKDAY_SHORT = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"] as const
+import { weekdayNames } from "@/lib/event-time"
+
+/** Upper-case short weekday label in the display locale for a JS day number (0 = Sunday … 6 = Saturday). */
+export function weekdayShortLabel(jsDay: number): string {
+  return weekdayNames("short")[(jsDay + 6) % 7].toLocaleUpperCase()
+}
+
+/** Inverse of weekdayShortLabel: the JS day number for a rendered label, or -1. */
+export function jsDayOfShortLabel(label: string): number {
+  return [0, 1, 2, 3, 4, 5, 6].find((jsDay) => weekdayShortLabel(jsDay) === label) ?? -1
+}
 
 export const calendarSharedStyles = {
   root: "bg-background group/calendar p-3 [--cell-size:--spacing(8)]",

@@ -10,7 +10,7 @@ import {
 } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
-import { calendarSharedStyles, WEEKDAY_SHORT } from "@/components/ui/calendar-styles"
+import { calendarSharedStyles, weekdayShortLabel } from "@/components/ui/calendar-styles"
 import {
   Select,
   SelectContent,
@@ -21,7 +21,7 @@ import {
 
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { isoWeekNumber } from "@/lib/event-time"
+import { formatMonth, isoWeekNumber } from "@/lib/event-time"
 import { jsDateToPlainDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
@@ -57,8 +57,8 @@ function Calendar({
       )}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
-        formatWeekdayName: (date) => WEEKDAY_SHORT[date.getDay()],
+        formatMonthDropdown: (date) => formatMonth(jsDateToPlainDate(date), "short"),
+        formatWeekdayName: (date) => weekdayShortLabel(date.getDay()),
         ...formatters,
       }}
       classNames={{

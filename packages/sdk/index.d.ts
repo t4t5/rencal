@@ -44,6 +44,8 @@ export type TimeFormat = "24h" | "12h";
 type DatePartStyle = "short" | "long";
 export declare function formatWeekday(date: Temporal.PlainDate, style: DatePartStyle): string;
 export declare function formatMonth(date: Temporal.PlainDate, style: DatePartStyle): string;
+/** Weekday names in ISO order: index 0 is Monday, 6 is Sunday. */
+export declare function weekdayNames(style: DatePartStyle): string[];
 export declare function formatTime(et: EventTime, timeFormat: TimeFormat): string;
 /**
  * Format a wallclock hour (0–23) and minute per the 12h/24h setting,

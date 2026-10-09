@@ -37,12 +37,15 @@ export {
   formatDayMonth,
   formatLongDate,
   formatMonth,
+  formatMonthYear,
   formatShortDate,
   formatTime,
   formatWallclockTime,
   formatWeekday,
   getRelativeDayLabel,
+  setDisplayLocale,
   type TimeFormat,
+  weekdayNames,
 } from "./display"
 export {
   addDays,

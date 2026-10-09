@@ -52,6 +52,7 @@ export {
   isoWeekNumber,
   isSameDay,
   startOfWeek,
+  weekdayNames,
   toViewerZonedDateTime,
 } from "@/lib/event-time"
 export { cn } from "@/lib/utils"

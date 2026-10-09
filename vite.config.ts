@@ -1,4 +1,5 @@
 /// <reference types="vitest/config" />
+import { lingui } from "@lingui/vite-plugin"
 import tailwindcss from "@tailwindcss/vite"
 import react from "@vitejs/plugin-react"
 import path from "path"
@@ -10,7 +11,7 @@ const host = process.env.TAURI_DEV_HOST
 
 // https://vite.dev/config/
 export default defineConfig(async () => ({
-  plugins: [react(), tailwindcss(), rencalThemes()],
+  plugins: [react(), lingui({ macroTransform: true }), tailwindcss(), rencalThemes()],
 
   resolve: {
     alias: {
@@ -19,6 +20,8 @@ export default defineConfig(async () => ({
   },
 
   test: {
+    // Lingui throws until a locale is active; the setup activates English.
+    setupFiles: ["./src/test-setup/i18n.ts"],
     env: {
       TZ: "Europe/Berlin",
     },

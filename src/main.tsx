@@ -11,6 +11,7 @@ import { SettingsProvider } from "@/contexts/SettingsContext"
 
 import { api } from "@/lib/api"
 import { setViewerTzid } from "@/lib/event-time"
+import { activateSystemLocale } from "@/lib/i18n"
 import { type Preload, preloadCalendarData } from "@/lib/preload-data"
 
 import { preloadExternalThemes, ThemeProvider } from "@/themes/ThemeRegistry"
@@ -26,10 +27,13 @@ const appWindow = params.get("appWindow")
 void api.notifications.listen("system-tz-changed", (event) => setViewerTzid(event))
 
 async function bootstrap() {
+  // The locale must be active before anything renders: Lingui throws on a
+  // translation call without one.
   const [preload, externalThemes, externalViews] = await Promise.all([
     appWindow === "settings" ? Promise.resolve<Preload>({}) : preloadCalendarData(),
     preloadExternalThemes(),
     appWindow === "settings" ? Promise.resolve([]) : preloadExternalViews(),
+    activateSystemLocale(),
   ])
 
   const rootEl = document.getElementById("root")
