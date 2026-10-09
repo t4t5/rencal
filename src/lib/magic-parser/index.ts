@@ -1,5 +1,4 @@
 import { Temporal } from "@js-temporal/polyfill"
-import * as chrono from "chrono-node"
 
 import type { Recurrence } from "@/lib/cal-events"
 import {
@@ -11,6 +10,8 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 import { jsDateToPlainDate } from "@/lib/event-time/js-date"
+import { ENGLISH } from "@/lib/magic-parser/vocabularies/en"
+import type { ParserVocabulary } from "@/lib/magic-parser/vocabulary"
 
 function currentViewerWallclockDate(): Date {
   const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
@@ -36,73 +37,39 @@ interface ParsedEventSegments {
   chronoMatchText: string | null
 }
 
-const DAYS_MAP: Record<string, string> = {
-  monday: "MO",
-  tuesday: "TU",
-  wednesday: "WE",
-  thursday: "TH",
-  friday: "FR",
-  saturday: "SA",
-  sunday: "SU",
+interface RecurrenceResult {
+  rrule: string
+  textForChrono: string
+  index: number
+  length: number
 }
 
-const DAY_NAMES = Object.keys(DAYS_MAP).join("|")
-const RECURRENCE_PATTERN = new RegExp(
-  `\\bevery\\s+(day|week|month|year|weekday|weekend|${DAY_NAMES})\\b`,
-  "i",
-)
-
-/* eslint-disable lingui/no-unlocalized-strings -- parser keywords and RRULE values, not UI text */
-function parseRecurrence(text: string): { rrule: string; textForChrono: string } | null {
-  const match = text.match(RECURRENCE_PATTERN)
-  if (!match) return null
-
-  const unit = match[1].toLowerCase()
-  let rrule: string
-
-  const isDayName = unit in DAYS_MAP
-
-  if (isDayName) {
-    rrule = `FREQ=WEEKLY;BYDAY=${DAYS_MAP[unit]}`
-  } else {
-    switch (unit) {
-      case "day":
-        rrule = "FREQ=DAILY"
-        break
-      case "week":
-        rrule = "FREQ=WEEKLY"
-        break
-      case "month":
-        rrule = "FREQ=MONTHLY"
-        break
-      case "year":
-        rrule = "FREQ=YEARLY"
-        break
-      case "weekday":
-        rrule = "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
-        break
-      case "weekend":
-        rrule = "FREQ=WEEKLY;BYDAY=SA,SU"
-        break
-      default:
-        return null
-    }
+/** The leftmost recurrence phrase of the vocabulary, if any. */
+function parseRecurrence(text: string, vocabulary: ParserVocabulary): RecurrenceResult | null {
+  let best: { match: RegExpMatchArray; rrule: string; keepGroup?: number } | null = null
+  for (const phrase of vocabulary.recurrences) {
+    const match = text.match(phrase.pattern)
+    if (match?.index === undefined) continue
+    if (!best || match.index < best.match.index!) best = { match, ...phrase }
   }
+  if (!best) return null
 
-  // For day names, keep the day in the text so chrono can resolve the start date.
-  // For other units, remove the whole "every ..." match.
-  const before = text.slice(0, match.index)
-  const after = text.slice(match.index! + match[0].length)
-  const textForChrono = isDayName
-    ? (before + unit + after).replace(/\s{2,}/g, " ").trim()
-    : (before + after).replace(/\s{2,}/g, " ").trim()
+  const { match, rrule, keepGroup } = best
+  const index = match.index!
+  // Keep a weekday in the text so chrono can resolve the start date; drop the rest.
+  const kept = keepGroup ? match[keepGroup].toLowerCase() : ""
+  const textForChrono = (text.slice(0, index) + kept + text.slice(index + match[0].length))
+    .replace(/\s{2,}/g, " ")
+    .trim()
 
-  return { rrule, textForChrono }
+  return { rrule, textForChrono, index, length: match[0].length }
 }
-/* eslint-enable lingui/no-unlocalized-strings */
 
-function parseLocation(summary: string): { summary: string; location: string | null } {
-  const match = summary.match(/\b(?:at|in)\s+(.+)$/i)
+function parseLocation(
+  summary: string,
+  vocabulary: ParserVocabulary,
+): { summary: string; location: string | null } {
+  const match = summary.match(vocabulary.location)
   if (!match || !match[1].trim()) return { summary, location: null }
 
   const location = match[1].trim()
@@ -111,11 +78,16 @@ function parseLocation(summary: string): { summary: string; location: string | n
   return { summary: cleaned, location }
 }
 
-function removeMatchAndConnectors(text: string, matchIndex: number, matchText: string): string {
+function removeMatchAndConnectors(
+  text: string,
+  matchIndex: number,
+  matchText: string,
+  vocabulary: ParserVocabulary,
+): string {
   const before = text.slice(0, matchIndex)
   const after = text.slice(matchIndex + matchText.length)
 
-  const cleanedBefore = before.replace(/\b(at|on|for|from)\s*$/i, "")
+  const cleanedBefore = before.replace(vocabulary.connectorsBeforeDate, "")
 
   return (cleanedBefore + after).replace(/\s{2,}/g, " ")
 }
@@ -132,10 +104,11 @@ export interface TextSegment {
 export function segmentEventText(
   text: string,
   referenceDate: Date = currentViewerWallclockDate(),
+  vocabularies: readonly ParserVocabulary[] = activeVocabularies(),
 ): TextSegment[] {
   if (!text.trim()) return [{ text, parsed: false }]
 
-  const parsed = parseEventText(text, referenceDate)
+  const { parsed, vocabulary } = parseBest(text, referenceDate, vocabularies)
 
   if (!parsed.start && !parsed.recurrence && !parsed.location) {
     return [{ text, parsed: false }]
@@ -144,15 +117,15 @@ export function segmentEventText(
   const ranges: Array<{ start: number; end: number }> = []
 
   // Recurrence range
-  const recMatch = text.match(RECURRENCE_PATTERN)
-  if (recMatch && recMatch.index !== undefined) {
-    ranges.push({ start: recMatch.index, end: recMatch.index + recMatch[0].length })
+  const recMatch = parseRecurrence(text, vocabulary)
+  if (recMatch) {
+    ranges.push({ start: recMatch.index, end: recMatch.index + recMatch.length })
   }
 
   // Time range — locate the chrono match in the original text. We use indexOf
   // instead of re-running chrono.parse here to keep typing responsive.
   if (parsed.start && parsed.chronoMatchText) {
-    const searchFrom = recMatch ? recMatch.index! + recMatch[0].length : 0
+    const searchFrom = recMatch ? recMatch.index + recMatch.length : 0
     const idx = text.indexOf(parsed.chronoMatchText, searchFrom)
     if (idx >= 0) {
       ranges.push({ start: idx, end: idx + parsed.chronoMatchText.length })
@@ -201,8 +174,38 @@ export function segmentEventText(
 export function parseEventText(
   text: string,
   referenceDate: Date = currentViewerWallclockDate(),
+  vocabularies: readonly ParserVocabulary[] = activeVocabularies(),
 ): ParsedEventSegments {
-  const recurrenceResult = parseRecurrence(text)
+  return parseBest(text, referenceDate, vocabularies).parsed
+}
+
+/**
+ * Parses with every vocabulary and keeps the reading that recognises the most
+ * text (date plus recurrence); on a tie the earlier vocabulary wins. That lets
+ * the user's language go first while English input keeps working.
+ */
+function parseBest(
+  text: string,
+  referenceDate: Date,
+  vocabularies: readonly ParserVocabulary[],
+): { parsed: ParsedEventSegments; vocabulary: ParserVocabulary } {
+  let best: { parsed: ParsedEventSegments; vocabulary: ParserVocabulary; score: number } | null =
+    null
+  for (const vocabulary of vocabularies) {
+    const { parsed, recognised } = parseWith(text, referenceDate, vocabulary)
+    if (!best || recognised > best.score) best = { parsed, vocabulary, score: recognised }
+  }
+  if (!best) throw new Error("parseEventText needs at least one vocabulary")
+  return best
+}
+
+function parseWith(
+  text: string,
+  referenceDate: Date,
+  vocabulary: ParserVocabulary,
+): { parsed: ParsedEventSegments; recognised: number } {
+  const recurrenceResult = parseRecurrence(text, vocabulary)
+  const recurrenceLength = recurrenceResult?.length ?? 0
 
   const recurrence: Recurrence | null = recurrenceResult
     ? { rrule: recurrenceResult.rrule, exdates: [], rdates: [] }
@@ -210,26 +213,22 @@ export function parseEventText(
 
   const textForChrono = recurrenceResult ? recurrenceResult.textForChrono : text
 
-  const results = chrono.parse(textForChrono, referenceDate, { forwardDate: true })
+  const results = vocabulary.chrono.parse(textForChrono, referenceDate, { forwardDate: true })
 
   if (results.length === 0) {
-    const { summary, location } = parseLocation(textForChrono.trim())
+    const { summary, location } = parseLocation(textForChrono.trim(), vocabulary)
     return {
-      summary,
-      start: null,
-      end: null,
-      recurrence,
-      location,
-      chronoMatchText: null,
+      parsed: { summary, start: null, end: null, recurrence, location, chronoMatchText: null },
+      recognised: recurrenceLength,
     }
   }
 
   const result = results[0]
 
-  let summary = removeMatchAndConnectors(textForChrono, result.index, result.text)
+  let summary = removeMatchAndConnectors(textForChrono, result.index, result.text, vocabulary)
   summary = summary.trim()
 
-  const { summary: finalSummary, location } = parseLocation(summary)
+  const { summary: finalSummary, location } = parseLocation(summary, vocabulary)
 
   const allDay = !result.start.isCertain("hour")
   const tzid = getViewerTzid()
@@ -246,11 +245,18 @@ export function parseEventText(
   }
 
   return {
-    summary: finalSummary,
-    start,
-    end,
-    recurrence,
-    location,
-    chronoMatchText: result.text,
+    parsed: {
+      summary: finalSummary,
+      start,
+      end,
+      recurrence,
+      location,
+      chronoMatchText: result.text,
+    },
+    recognised: recurrenceLength + result.text.length,
   }
+}
+
+function activeVocabularies(): readonly ParserVocabulary[] {
+  return [ENGLISH]
 }
