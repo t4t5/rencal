@@ -10,6 +10,7 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 import { jsDateToPlainDate } from "@/lib/event-time/js-date"
+import { GERMAN } from "@/lib/magic-parser/vocabularies/de"
 import { ENGLISH } from "@/lib/magic-parser/vocabularies/en"
 import type { ParserVocabulary } from "@/lib/magic-parser/vocabulary"
 
@@ -257,6 +258,21 @@ function parseWith(
   }
 }
 
+const VOCABULARIES: readonly ParserVocabulary[] = [ENGLISH, GERMAN]
+
+/** The vocabularies to try for a UI language: that language first, English after it. */
+export function vocabulariesFor(language: string): readonly ParserVocabulary[] {
+  const own = VOCABULARIES.find((v) => v.language === language)
+  return own && own !== ENGLISH ? [own, ENGLISH] : [ENGLISH]
+}
+
+let activeLanguageVocabularies = vocabulariesFor("en")
+
+/** Called when the UI locale is activated (see src/lib/i18n). */
+export function setParserLanguage(language: string): void {
+  activeLanguageVocabularies = vocabulariesFor(language)
+}
+
 function activeVocabularies(): readonly ParserVocabulary[] {
-  return [ENGLISH]
+  return activeLanguageVocabularies
 }
