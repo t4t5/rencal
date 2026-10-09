@@ -21,6 +21,7 @@ export function applyExternalThemes(themes: ExternalTheme[], active: string) {
       element.setAttribute(STYLE_ATTR, theme.id)
       document.head.appendChild(element)
     }
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS rule
     const next = `[data-theme="${CSS.escape(theme.id)}"] {\n${theme.css}\n}`
     if (element.textContent !== next) element.textContent = next
   }

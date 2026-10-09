@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { t } from "@lingui/core/macro"
 import { useMemo, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
@@ -5,7 +7,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
-import { ShortcutDef, ShortcutGroup, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts"
+import {
+  ShortcutDef,
+  ShortcutGroup,
+  SHORTCUT_GROUP_LABELS,
+  SHORTCUT_GROUPS,
+  SHORTCUTS,
+} from "@/lib/shortcuts"
 
 import { CloseIcon } from "@/icons/close"
 import { SearchIcon } from "@/icons/search"
@@ -18,8 +26,11 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
       normalizedQuery
         ? SHORTCUTS.filter(
             (shortcut) =>
-              shortcut.label.toLowerCase().includes(normalizedQuery) ||
-              shortcut.group.toLowerCase().includes(normalizedQuery) ||
+              i18n._(shortcut.label).toLowerCase().includes(normalizedQuery) ||
+              i18n
+                ._(SHORTCUT_GROUP_LABELS[shortcut.group])
+                .toLowerCase()
+                .includes(normalizedQuery) ||
               shortcut.bindings.some(
                 (binding) =>
                   !("hidden" in binding && binding.hidden) &&
@@ -40,10 +51,10 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
       <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 gap-4 border-b p-5">
           <div className="flex items-center justify-between gap-4">
-            <SheetTitle className="text-lg">Keyboard shortcuts</SheetTitle>
+            <SheetTitle className="text-lg">{t`Keyboard shortcuts`}</SheetTitle>
 
             <SheetClose asChild>
-              <Button variant="ghost" size="icon-xs" aria-label="Close keyboard shortcuts">
+              <Button variant="ghost" size="icon-xs" aria-label={t`Close keyboard shortcuts`}>
                 <CloseIcon />
               </Button>
             </SheetClose>
@@ -56,8 +67,8 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Find keyboard shortcuts"
-              aria-label="Find keyboard shortcuts"
+              placeholder={t`Find keyboard shortcuts`}
+              aria-label={t`Find keyboard shortcuts`}
               variant="default"
               className="h-10 pr-3 pl-9"
             />
@@ -72,7 +83,7 @@ export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: ()
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground py-10 text-center text-sm">No shortcuts found</p>
+            <p className="text-muted-foreground py-10 text-center text-sm">{t`No shortcuts found`}</p>
           )}
         </div>
       </SheetContent>
@@ -92,7 +103,9 @@ function ShortcutGroupSection({
 
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-foreground text-sm font-semibold">{group}</h3>
+      <h3 className="text-foreground text-sm font-semibold">
+        {i18n._(SHORTCUT_GROUP_LABELS[group])}
+      </h3>
 
       {groupShortcuts.map((shortcut) => (
         <ShortcutRow key={shortcut.id} shortcut={shortcut} />
@@ -104,14 +117,18 @@ function ShortcutGroupSection({
 function ShortcutRow({ shortcut }: { shortcut: ShortcutDef }) {
   return (
     <div className="flex min-h-8 items-center justify-between gap-4 text-sm">
-      <span className="text-muted-foreground">{shortcut.label}</span>
+      <span className="text-muted-foreground">{i18n._(shortcut.label)}</span>
 
       <div className="flex shrink-0 items-center gap-1.5">
         {shortcut.bindings
           .filter((binding) => !binding.hidden)
           .map((binding, i) => (
             <span key={binding.keys} className="flex items-center gap-1.5">
-              {i > 0 && <span className="text-muted-foreground text-xs">or</span>}
+              {i > 0 && (
+                <span className="text-muted-foreground text-xs">
+                  {t({ message: "or", context: "between alternative shortcut keys" })}
+                </span>
+              )}
               <ShortcutKeys keys={binding.keys} />
             </span>
           ))}

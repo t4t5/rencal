@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { openUrl } from "@tauri-apps/plugin-opener"
 
 import {
@@ -45,7 +46,7 @@ export const UrlInput = ({
             <LinkIcon />
           </InputGroupAddon>
           <InputGroupInput
-            placeholder="Add link"
+            placeholder={t`Add link`}
             value={value ?? ""}
             inputMode="url"
             autoCapitalize="off"
@@ -64,7 +65,7 @@ export const UrlInput = ({
             <InputGroupAddon align="inline-end">
               <InputGroupButton
                 size="icon-xs"
-                aria-label="Open link"
+                aria-label={t`Open link`}
                 className="text-muted-foreground hover:text-foreground"
                 onClick={() => openUrl(toOpenableUrl(url))}
               >

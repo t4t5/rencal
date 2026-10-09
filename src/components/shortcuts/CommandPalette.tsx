@@ -1,4 +1,6 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { i18n } from "@lingui/core"
+import { t } from "@lingui/core/macro"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
@@ -22,6 +24,7 @@ import { Kbd, KbdGroup } from "@/components/ui/kbd"
 import { formatLongDate, dateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
 import {
+  COMMAND_GROUP_LABELS,
   COMMAND_GROUPS,
   PALETTE_COMMANDS,
   type PaletteCommandId,
@@ -118,15 +121,15 @@ export function CommandPalette({
         }}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Command palette</DialogTitle>
-          <DialogDescription>Search for a command to run</DialogDescription>
+          <DialogTitle>{t`Command palette`}</DialogTitle>
+          <DialogDescription>{t`Search for a command to run`}</DialogDescription>
         </DialogHeader>
 
         {/* cmdk's fuzzy filter would hide the date page's single dynamic result, so we disable it: */}
         <Command shouldFilter={!isGoToDatePage} onKeyDown={handleKeyDown}>
           <CommandInput
             placeholder={
-              isGoToDatePage ? "Type a date…" : submenu ? submenu.placeholder : "Type a command…"
+              isGoToDatePage ? t`Type a date…` : submenu ? submenu.placeholder : t`Type a command…`
             }
             value={search}
             onValueChange={setSearch}
@@ -198,7 +201,7 @@ function CommandListContent({
 
   return (
     <>
-      <CommandEmpty>No commands found.</CommandEmpty>
+      <CommandEmpty>{t`No commands found.`}</CommandEmpty>
       <RootCommands submenus={submenus} goToPage={goToPage} run={run} handlers={handlers} />
     </>
   )
@@ -215,38 +218,43 @@ function RootCommands({
   run: (action: () => void) => void
   handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
 }) {
-  return COMMAND_GROUPS.map((group) => (
-    <CommandGroup key={group} heading={group}>
-      {PALETTE_COMMANDS.filter(
-        (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
-      ).map((command) => {
-        const def = SHORTCUT_BY_ID[command.id]
-        const label = command.label ?? def?.label ?? command.id
-        const binding = def?.bindings.find((b) => !b.hidden)
-        const drill = command.submenu ?? command.page
+  return COMMAND_GROUPS.map((group) => {
+    const groupLabel = i18n._(COMMAND_GROUP_LABELS[group])
+    return (
+      <CommandGroup key={group} heading={groupLabel}>
+        {PALETTE_COMMANDS.filter(
+          (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
+        ).map((command) => {
+          const def = SHORTCUT_BY_ID[command.id]
+          // cmdk matches on `value`, so it gets the rendered (translated) label.
+          const descriptor = command.label ?? def?.label
+          const label = descriptor ? i18n._(descriptor) : command.id
+          const binding = def?.bindings.find((b) => !b.hidden)
+          const drill = command.submenu ?? command.page
 
-        return (
-          <CommandItem
-            key={command.id}
-            value={label}
-            keywords={[group]}
-            onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]()))}
-          >
-            <span>{label}</span>
-            {drill ? (
-              <ChevronRightIcon className="ml-auto size-4 opacity-50" />
-            ) : (
-              binding && (
-                <span className="ml-auto">
-                  <ShortcutKeys keys={binding.keys} />
-                </span>
-              )
-            )}
-          </CommandItem>
-        )
-      })}
-    </CommandGroup>
-  ))
+          return (
+            <CommandItem
+              key={command.id}
+              value={label}
+              keywords={[groupLabel]}
+              onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]()))}
+            >
+              <span>{label}</span>
+              {drill ? (
+                <ChevronRightIcon className="ml-auto size-4 opacity-50" />
+              ) : (
+                binding && (
+                  <span className="ml-auto">
+                    <ShortcutKeys keys={binding.keys} />
+                  </span>
+                )
+              )}
+            </CommandItem>
+          )
+        })}
+      </CommandGroup>
+    )
+  })
 }
 
 function GoToDatePage({
@@ -264,13 +272,19 @@ function GoToDatePage({
   if (!date) {
     return (
       <div className="text-muted-foreground px-3 py-6 text-center text-sm">
-        {search ? "No matching date" : `e.g. "5 Sep", "next sunday"...`}
+        {search
+          ? t`No matching date`
+          : t({
+              message: `e.g. "5 Sep", "next sunday"...`,
+              comment:
+                "Example dates the parser understands in this language (see src/lib/magic-parser/vocabularies)",
+            })}
       </div>
     )
   }
 
   return (
-    <CommandGroup heading="Go to date">
+    <CommandGroup heading={t`Go to date`}>
       {/* A constant value keeps cmdk's selection stable as the label changes. */}
       <CommandItem value="go-to-date-result" onSelect={() => onSelect(date)}>
         {formatLongDate(date)}
@@ -291,15 +305,17 @@ function PaletteFooter({ escAction }: { escAction: "close" | "back" }) {
             <ArrowRightIcon className="rotate-90" />
           </Kbd>
         </KbdGroup>
-        navigate
+        {t`navigate`}
       </span>
       <span className="flex items-center gap-1.5">
+        {/* eslint-disable-next-line lingui/no-unlocalized-strings -- key name */}
         <Kbd>Enter</Kbd>
-        select
+        {t`select`}
       </span>
       <span className="flex items-center gap-1.5">
+        {/* eslint-disable-next-line lingui/no-unlocalized-strings -- key name */}
         <Kbd>Esc</Kbd>
-        {escAction}
+        {escAction === "close" ? t`close` : t`back`}
       </span>
     </div>
   )

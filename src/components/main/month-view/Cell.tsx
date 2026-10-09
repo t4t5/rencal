@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useRef, type PointerEvent as ReactPointerEvent } from "react"
 
 import { MonthTimedEvent } from "@/components/events-blocks/month-view/TimedEventBlock"
@@ -127,7 +128,7 @@ export function MonthDayCell({
             })
           }}
         >
-          Create event
+          {t`Create event`}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

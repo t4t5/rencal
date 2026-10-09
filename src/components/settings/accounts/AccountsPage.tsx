@@ -1,3 +1,5 @@
+import { i18n, type MessageDescriptor } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
 import { useEffect, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
@@ -52,7 +54,7 @@ export function AccountsPage() {
       onClose: () => setReconnectStep(null),
       onSetStep: setReconnectStep,
     }).catch((error: unknown) => {
-      setReconnectError(getErrorMessage(error, "Failed to reconnect account"))
+      setReconnectError(getErrorMessage(error, t`Failed to reconnect account`))
       console.error("Failed to start provider reconnection", error)
     })
   }
@@ -74,7 +76,7 @@ export function AccountsPage() {
       )}
 
       {!accounts.length && (
-        <div className="text-sm text-muted-foreground">No accounts connected yet.</div>
+        <div className="text-sm text-muted-foreground">{t`No accounts connected yet.`}</div>
       )}
 
       {reconnectError && (
@@ -85,7 +87,7 @@ export function AccountsPage() {
 
       <Button className="self-start gap-2" onClick={() => setShowAddAccount(true)}>
         <PlusIcon className="size-4" />
-        Connect new account
+        {t`Connect new account`}
       </Button>
 
       {showAddAccount && <AddAccountModal onClose={() => setShowAddAccount(false)} />}
@@ -105,10 +107,10 @@ const statusColors: Record<AccountStatus, string> = {
   disconnected: "bg-destructive",
 }
 
-const statusLabels: Record<AccountStatus, string> = {
-  pending: "Connecting...",
-  connected: "Connected",
-  disconnected: "Failed to connect",
+const statusLabels: Record<AccountStatus, MessageDescriptor> = {
+  pending: msg`Connecting...`,
+  connected: msg`Connected`,
+  disconnected: msg`Failed to connect`,
 }
 
 function Account({
@@ -151,7 +153,7 @@ function Account({
 
   const displayName = getProviderDisplayName(provider, info)
 
-  const statusLabel = statusLabels[status]
+  const statusLabel = i18n._(statusLabels[status])
   const statusColor = statusColors[status]
 
   return (
@@ -196,7 +198,7 @@ const MoreMenu = ({ onReconnect }: { onReconnect: () => void }) => {
         <MoreButton />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onReconnect}>Reconnect...</DropdownMenuItem>
+        <DropdownMenuItem onClick={onReconnect}>{t`Reconnect...`}</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )

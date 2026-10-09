@@ -37,6 +37,7 @@ function floatPosition(float: DragFloat, x: number, y: number): CSSProperties {
       height: float.height,
     }
   }
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS transform value
   return { left: x, top: y, transform: "translate(-12px, -50%)" }
 }
 

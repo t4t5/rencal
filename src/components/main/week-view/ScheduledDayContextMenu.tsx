@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useRef } from "react"
 
 import {
@@ -37,7 +38,7 @@ export function ScheduledDayContextMenu({ children, onCreateEvent }: ScheduledDa
             setTimeout(() => onCreateEvent(anchorRef.current!, clickYRef.current))
           }}
         >
-          Create event
+          {t`Create event`}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

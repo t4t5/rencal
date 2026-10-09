@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -36,8 +37,8 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
   const closeDialog = () => setTargetEvent(null)
 
   const reportError = (procedure: string, err: unknown) => {
-    const message = getErrorMessage(err, "Failed to delete event")
-    toast.error("Failed to delete event", { description: message })
+    const message = getErrorMessage(err, t`Failed to delete event`)
+    toast.error(t`Failed to delete event`, { description: message })
     console.error(`${procedure} failed:`, err)
   }
 
@@ -131,6 +132,7 @@ export function DeleteEventProvider({ children }: { children: ReactNode }) {
       void requestSync()
     } catch (err) {
       restore()
+      // eslint-disable-next-line lingui/no-unlocalized-strings -- procedure name for the console log
       reportError("delete future events", err)
     }
   }

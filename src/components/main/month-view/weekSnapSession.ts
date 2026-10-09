@@ -9,6 +9,7 @@ import {
   WEBKIT_SCROLL_CAPTURE_MS,
 } from "./weekSnapFling"
 
+// eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard key identifiers
 const SCROLL_KEYS = new Set(["ArrowUp", "ArrowDown", "PageUp", "PageDown", "Home", "End", " "])
 
 type SnapContainer = Pick<
@@ -77,6 +78,7 @@ export function attachWeekSnapSession(
     const { enabled, rowHeight } = getState()
     return enabled &&
       rowHeight > 0 &&
+      // eslint-disable-next-line lingui/no-unlocalized-strings -- media query
       !window.matchMedia("(prefers-reduced-motion: reduce)").matches
       ? rowHeight
       : undefined

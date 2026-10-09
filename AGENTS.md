@@ -16,3 +16,12 @@ renCal is a Tauri v2 calendar app for Omarchy. Rust backend in `src-tauri/src/`,
 
 - Use pnpm for dependencies.
 - Frontend imports are absolute (`@/`); relative only for same-directory siblings. No `any`. Both are enforced by eslint.
+
+# Required working mode
+
+See [Semantic Anchors](https://llm-coding.github.io/Semantic-Anchors/) for what each term means.
+
+- Mikado Method for refactorings
+- Always use Domain-Driven Design according to Evans
+- Always TDD, London School
+- Always use Test Double (Meszaros) for implementations especially to create infrastructure adapters

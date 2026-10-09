@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import {
   ContextMenu,
   ContextMenuContent,
@@ -17,7 +19,9 @@ export function AllDayContextMenu({ children, onCreateEvent }: AllDayContextMenu
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent>
-        <ContextMenuItem onClick={() => setTimeout(onCreateEvent)}>Create event</ContextMenuItem>
+        <ContextMenuItem
+          onClick={() => setTimeout(onCreateEvent)}
+        >{t`Create event`}</ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>
   )

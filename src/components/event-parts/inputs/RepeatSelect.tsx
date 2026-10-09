@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
 import { RRule, RRuleSet } from "rrule"
 
 import {
@@ -9,6 +11,7 @@ import {
 import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { SelectMenuTrigger } from "@/components/ui/select"
 
+import { describeRecurrence } from "@/lib/recurrence-text"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -17,23 +20,23 @@ import { RepeatIcon } from "@/icons/repeat"
 const INTERVALS = [
   {
     rrule: new RRule({ freq: RRule.DAILY }),
-    label: "Every day",
+    label: msg`Every day`,
   },
   {
     rrule: new RRule({ freq: RRule.WEEKLY }),
-    label: "Every week",
+    label: msg`Every week`,
   },
   {
     rrule: new RRule({ freq: RRule.WEEKLY, interval: 2 }),
-    label: "Every 2 weeks",
+    label: msg`Every 2 weeks`,
   },
   {
     rrule: new RRule({ freq: RRule.MONTHLY }),
-    label: "Every month",
+    label: msg`Every month`,
   },
   {
     rrule: new RRule({ freq: RRule.YEARLY }),
-    label: "Every year",
+    label: msg`Every year`,
   },
 ]
 
@@ -60,8 +63,8 @@ export const RepeatSelect = ({
   }
 
   const options = [
-    { value: "none", label: "No repeat" },
-    ...INTERVALS.map((i) => ({ value: i.rrule.toString(), label: i.label })),
+    { value: "none", label: t`No repeat` },
+    ...INTERVALS.map((i) => ({ value: i.rrule.toString(), label: i18n._(i.label) })),
   ]
 
   return (
@@ -81,7 +84,9 @@ export const RepeatSelect = ({
             {value ? (
               <span className="block truncate">{getHumanInterval(value)}</span>
             ) : (
-              <span className="text-placeholder-foreground">Repeat</span>
+              <span className="text-placeholder-foreground">
+                {t({ message: "Repeat", context: "recurrence placeholder" })}
+              </span>
             )}
           </ItemContent>
         </SelectMenuTrigger>
@@ -104,13 +109,11 @@ export const RepeatSelect = ({
 
 function getHumanInterval(recurrence: RRule | RRuleSet): string {
   const interval = INTERVALS.find((i) => i.rrule.toString() === recurrence.toString())
-  if (interval) return interval.label
+  if (interval) return i18n._(interval.label)
 
-  if (recurrence instanceof RRuleSet) {
-    const rrules = recurrence.rrules()
-    if (rrules.length > 0) return rrules[0].toText()
-    return "Custom recurrence"
-  }
+  const rule = recurrence instanceof RRuleSet ? recurrence.rrules()[0] : recurrence
+  if (!rule) return t`Custom recurrence`
 
-  return recurrence.toText()
+  // rrule's own describer only speaks English: use it as the last resort there.
+  return describeRecurrence(rule) ?? (i18n.locale === "en" ? rule.toText() : t`Custom recurrence`)
 }

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -18,7 +19,7 @@ import {
   type EventTime,
 } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
-import { parseEventText } from "@/lib/magic-parser"
+import { parseEventText, remindersAfterParse } from "@/lib/magic-parser"
 import { createStrictContext } from "@/lib/strict-context"
 
 import { useCalEvents } from "./CalEventsContext"
@@ -107,6 +108,10 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const [draftReminders, setDraftReminders] = useState<number[]>([])
   const parseTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const hasParsedTimeRef = useRef(false)
+  // True while the draft's reminders come from the typed text ("mit Erinnerung 10 min").
+  const remindersFromTextRef = useRef(false)
+  const defaultRemindersRef = useRef(defaultReminders)
+  defaultRemindersRef.current = defaultReminders
 
   const generateDefaultDraftEvent = useCallback((): DraftEvent => {
     const start = getClosestNextHour()
@@ -141,7 +146,21 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       const parsed = parseEventText(newText)
 
       hasParsedTimeRef.current =
-        parsed.start !== null || parsed.recurrence !== null || parsed.location !== null
+        parsed.start !== null ||
+        parsed.recurrence !== null ||
+        parsed.location !== null ||
+        parsed.reminders !== null
+
+      const next = remindersAfterParse(
+        parsed.reminders,
+        defaultRemindersRef.current,
+        remindersFromTextRef.current,
+      )
+      remindersFromTextRef.current = next.fromText
+      if (next.reminders) {
+        const reminders = next.reminders
+        startTransition(() => setDraftReminders(reminders))
+      }
 
       startTransition(() => {
         setDraftEvent((prev) => {
@@ -163,6 +182,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
   const setDefaultDraftEvent = useCallback(() => {
     if (parseTimerRef.current) clearTimeout(parseTimerRef.current)
     hasParsedTimeRef.current = false
+    remindersFromTextRef.current = false
     setDraftEvent(generateDefaultDraftEvent())
     setDraftReminders(defaultReminders)
   }, [generateDefaultDraftEvent, defaultReminders])
@@ -228,8 +248,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       })
     } catch (err) {
       setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))
-      const message = getErrorMessage(err, "Failed to create event")
-      toast.error("Failed to create event", { description: message })
+      const message = getErrorMessage(err, t`Failed to create event`)
+      toast.error(t`Failed to create event`, { description: message })
       console.error("create_event failed:", err)
       return
     }

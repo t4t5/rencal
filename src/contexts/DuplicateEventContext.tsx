@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useCallback, useMemo, useState, type ReactNode } from "react"
 
 import { RecurrenceConfirmDialog } from "@/components/event-parts/RecurrenceConfirmDialog"
@@ -163,8 +164,8 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
       {children}
       <RecurrenceConfirmDialog
         isOpen={pending !== null}
-        title="Duplicate recurring event"
-        description="This event is part of a recurring series. Which events do you want to duplicate?"
+        title={t`Duplicate recurring event`}
+        description={t`This event is part of a recurring series. Which events do you want to duplicate?`}
         onClose={closeDialog}
         onApplyToThis={handleDuplicateThis}
         onApplyToFuture={handleDuplicateFuture}

@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useEffect, useRef, useState } from "react"
 import { useHotkeys } from "react-hotkeys-hook"
 
@@ -106,9 +107,9 @@ export function GlobalShortcuts({
   // omitted when there's nothing to switch between, hiding its root command.
   const submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>> = {
     themes: {
-      heading: "Theme",
-      placeholder: "Search themes…",
-      empty: "No themes found.",
+      heading: t({ message: "Theme", context: "command palette submenu" }),
+      placeholder: t`Search themes…`,
+      empty: t`No themes found.`,
       items: descriptors.map((theme) => ({ id: theme.id, label: theme.name })),
       activeId: activeTheme,
       onSelect: pickTheme,
@@ -116,9 +117,9 @@ export function GlobalShortcuts({
   }
   if (groupOptions.length >= 2) {
     submenus["calendar-groups"] = {
-      heading: "Group",
-      placeholder: "Search groups…",
-      empty: "No groups found.",
+      heading: t({ message: "Group", context: "calendar group, command palette submenu" }),
+      placeholder: t`Search groups…`,
+      empty: t`No groups found.`,
       items: groupOptions.map((name) => ({ id: name, label: formatGroupName(name) })),
       activeId: activeGroup,
       onSelect: setActiveGroup,

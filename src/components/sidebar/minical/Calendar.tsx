@@ -13,12 +13,16 @@ import {
 } from "react-day-picker"
 
 import { Button } from "@/components/ui/button"
-import { calendarSharedStyles, WEEKDAY_SHORT } from "@/components/ui/calendar-styles"
+import {
+  calendarSharedStyles,
+  jsDayOfShortLabel,
+  weekdayShortLabel,
+} from "@/components/ui/calendar-styles"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useViewerTzid } from "@/hooks/useViewerTzid"
-import { formatDateKey, isoWeekNumber, today } from "@/lib/event-time"
+import { formatDateKey, formatMonth, formatMonthYear, isoWeekNumber, today } from "@/lib/event-time"
 import { jsDateToPlainDate, plainDateToJsDate } from "@/lib/event-time/js-date"
 import { cn } from "@/lib/utils"
 
@@ -70,8 +74,8 @@ function Calendar({
       showWeekNumber={showWeekNumber}
       captionLayout={captionLayout}
       formatters={{
-        formatMonthDropdown: (date) => date.toLocaleString("default", { month: "short" }),
-        formatWeekdayName: (date) => WEEKDAY_SHORT[date.getDay()],
+        formatMonthDropdown: (date) => formatMonth(jsDateToPlainDate(date), "short"),
+        formatWeekdayName: (date) => weekdayShortLabel(date.getDay()),
         ...formatters,
       }}
       classNames={{
@@ -133,10 +137,7 @@ function Calendar({
         MonthCaption: ({ className, ...captionProps }) => {
           return (
             <MonthCaption {...captionProps} className="text-2xl font-bold pl-4">
-              {captionProps.calendarMonth.date.toLocaleString("default", {
-                month: "long",
-                year: "numeric",
-              })}
+              {formatMonthYear(jsDateToPlainDate(captionProps.calendarMonth.date))}
             </MonthCaption>
           )
         },
@@ -180,7 +181,7 @@ function Calendar({
         },
         Weekday: ({ className, children, ...weekdayProps }) => {
           const weekdayName = typeof children === "string" ? children : ""
-          const weekdayNumber = WEEKDAY_SHORT.indexOf(weekdayName as (typeof WEEKDAY_SHORT)[number])
+          const weekdayNumber = jsDayOfShortLabel(weekdayName)
           const isCurrentWeekday = weekdayNumber === today().dayOfWeek % 7
           const isWeekend = weekdayNumber === 0 || weekdayNumber === 6
 

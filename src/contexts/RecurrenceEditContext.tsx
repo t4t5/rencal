@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState, type ReactNode } from "react"
 import { toast } from "sonner"
 
@@ -47,8 +48,8 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const closeDialog = () => setPendingEdit(null)
 
   const reportError = (err: unknown) => {
-    const message = getErrorMessage(err, "Failed to save event")
-    toast.error("Failed to save event", { description: message })
+    const message = getErrorMessage(err, t`Failed to save event`)
+    toast.error(t`Failed to save event`, { description: message })
     console.error("recurring update failed:", err)
   }
 

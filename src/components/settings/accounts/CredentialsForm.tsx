@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -32,7 +33,7 @@ export const CredentialsForm = ({
     const missingRequired = step.fields.filter((f) => f.required).some((f) => !fieldValues[f.id])
 
     if (missingRequired) {
-      setError("Please fill in all required fields")
+      setError(t`Please fill in all required fields`)
       return
     }
 
@@ -43,7 +44,7 @@ export const CredentialsForm = ({
       )
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to connect account"))
+      setError(getErrorMessage(err, t`Failed to connect account`))
     }
   }
 
@@ -77,7 +78,7 @@ export const CredentialsForm = ({
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isConnecting} className="mt-3">
-          {isConnecting ? "Connecting..." : `Connect ${providerName}`}
+          {isConnecting ? t`Connecting...` : t`Connect ${providerName}`}
         </Button>
       </div>
     </form>

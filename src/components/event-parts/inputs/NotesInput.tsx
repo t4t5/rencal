@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import { Textarea } from "@/components/ui/textarea"
 
 export const NotesInput = ({
@@ -11,7 +13,7 @@ export const NotesInput = ({
 }) => {
   return (
     <Textarea
-      placeholder="Notes"
+      placeholder={t`Notes`}
       value={value ?? ""}
       readOnly={readOnly}
       onChange={(e) => onChange(e.target.value)}

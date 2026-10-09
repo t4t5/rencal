@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useCallback } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -83,7 +84,7 @@ const ArrowKeys = () => {
     <div data-slot="minical-navigation" className="flex items-center gap-1">
       <Button
         data-direction="previous"
-        aria-label="Previous month"
+        aria-label={t`Previous month`}
         variant="ghost"
         size="icon-xs"
         round
@@ -94,7 +95,7 @@ const ArrowKeys = () => {
       </Button>
       <Button
         data-direction="next"
-        aria-label="Next month"
+        aria-label={t`Next month`}
         variant="ghost"
         size="icon-xs"
         round

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import type { ReactNode, RefObject } from "react"
 
 import {
@@ -54,17 +55,18 @@ export function EventContextMenu({
             })
           }}
         >
-          Edit event
+          {t`Edit event`}
         </ContextMenuItem>
         {canDuplicate && (
           <ContextMenuItem onClick={() => triggerDuplicate(event, anchorRef.current)}>
-            Duplicate event
+            {t`Duplicate event`}
+            {/* eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard key */}
             <ContextMenuShortcut>D</ContextMenuShortcut>
           </ContextMenuItem>
         )}
         {canDelete && (
           <ContextMenuItem variant="destructive" onClick={() => triggerDelete(event)}>
-            Delete event
+            {t`Delete event`}
           </ContextMenuItem>
         )}
       </ContextMenuContent>

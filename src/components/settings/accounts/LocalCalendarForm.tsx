@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -34,7 +35,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
 
     const trimmed = name.trim()
     if (!trimmed) {
-      setError("Please enter a calendar name")
+      setError(t`Please enter a calendar name`)
       return
     }
 
@@ -45,7 +46,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
       onClose()
     } catch (err) {
       logger.error("Failed to create local calendar:", err)
-      setError(getErrorMessage(err, "Failed to create calendar"))
+      setError(getErrorMessage(err, t`Failed to create calendar`))
     } finally {
       setIsCreating(false)
     }
@@ -56,7 +57,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
       <Input
         variant="default"
         type="text"
-        placeholder="Calendar name"
+        placeholder={t`Calendar name`}
         autoFocus
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -69,7 +70,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
             <button
               key={swatch}
               type="button"
-              aria-label={`Color ${swatch}`}
+              aria-label={t`Color ${swatch}`}
               aria-pressed={selected}
               onClick={() => setColor(swatch)}
               className={cn(
@@ -87,7 +88,7 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
 
       <div className="flex justify-end">
         <Button type="submit" disabled={isCreating || !name.trim()}>
-          {isCreating ? "Creating..." : "Create calendar"}
+          {isCreating ? t`Creating...` : t`Create calendar`}
         </Button>
       </div>
     </form>
