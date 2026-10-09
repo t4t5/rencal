@@ -45,10 +45,7 @@
 }
 
 .release-body a {
-  color: var(--primary);
-}
-
-.release-body a:hover {
+  color: var(--foreground);
   text-decoration: underline;
 }
 

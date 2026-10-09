@@ -7,6 +7,7 @@ import { createMarkdownProcessor } from "@astrojs/markdown-remark"
 import BaseLayout from "../layouts/BaseLayout.astro"
 import type { GitHubRelease } from "../lib/github"
 import { getReleases } from "../lib/github"
+import { linkGitHubReferences } from "../lib/link-github-references.mjs"
 import { site } from "../site"
 
 // Fetched at build time (Astro static output) — the result is baked into the
@@ -28,7 +29,7 @@ const dateFormat = new Intl.DateTimeFormat("en-US", {
   day: "numeric",
 })
 
-const md = await createMarkdownProcessor()
+const md = await createMarkdownProcessor({ rehypePlugins: [[linkGitHubReferences, site.repoUrl]] })
 
 const entries = await Promise.all(
   releases.map(async (release) => ({
