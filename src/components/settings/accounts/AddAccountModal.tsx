@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -30,13 +31,14 @@ export function AddAccountModal({
   const { providers } = useProviders()
   const providerName = (provider: string) =>
     getProviderDisplayName(provider, findProvider(providers, provider))
+  const provider = "provider" in step ? providerName(step.provider) : ""
 
   return (
     <Modal onClose={onClose}>
       {step.kind === "select-provider" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect calendar</DialogTitle>
+            <DialogTitle>{t`Connect calendar`}</DialogTitle>
           </DialogHeader>
 
           <div className="flex flex-col items-center gap-3">
@@ -45,7 +47,7 @@ export function AddAccountModal({
             {showLocalOnlyOption && (
               <div className="w-60 flex flex-col">
                 <Button variant="ghost" onClick={() => setStep({ kind: "local-calendar" })}>
-                  Local-only calendar
+                  {t`Local-only calendar`}
                 </Button>
               </div>
             )}
@@ -56,7 +58,7 @@ export function AddAccountModal({
       {step.kind === "setup" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect {providerName(step.provider)}</DialogTitle>
+            <DialogTitle>{t`Connect ${provider}`}</DialogTitle>
             <DialogDescription>{step.instructions}</DialogDescription>
           </DialogHeader>
 
@@ -66,7 +68,7 @@ export function AddAccountModal({
               setStep({ kind: "credentials", provider: step.provider, fields: step.fields })
             }
           >
-            Continue
+            {t`Continue`}
           </Button>
         </>
       )}
@@ -74,23 +76,19 @@ export function AddAccountModal({
       {step.kind === "credentials" && (
         <>
           <DialogHeader>
-            <DialogTitle>Connect {providerName(step.provider)}</DialogTitle>
+            <DialogTitle>{t`Connect ${provider}`}</DialogTitle>
           </DialogHeader>
 
-          <CredentialsForm
-            step={step}
-            providerName={providerName(step.provider)}
-            onClose={onClose}
-          />
+          <CredentialsForm step={step} providerName={provider} onClose={onClose} />
         </>
       )}
 
       {step.kind === "local-calendar" && (
         <>
           <DialogHeader>
-            <DialogTitle>New local-only calendar</DialogTitle>
+            <DialogTitle>{t`New local-only calendar`}</DialogTitle>
             <DialogDescription>
-              This calendar will live on your computer only, and never be connected to the internet.
+              {t`This calendar will live on your computer only, and never be connected to the internet.`}
             </DialogDescription>
           </DialogHeader>
 

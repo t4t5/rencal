@@ -38,6 +38,7 @@ import { useEventText } from "@/contexts/EventDraftContext"
 import { type EventTime, formatDateKey } from "@/lib/event-time"
 
 const FLIGHT_DURATION_MS = 650
+// eslint-disable-next-line lingui/no-unlocalized-strings -- CSS easing value
 const EASING = "cubic-bezier(0.4, 0, 0.2, 1)"
 
 // Hold the section open a bit past the flight so the clone has a moment

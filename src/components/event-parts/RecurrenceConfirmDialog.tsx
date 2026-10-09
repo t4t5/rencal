@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -11,8 +13,8 @@ import {
 export function RecurrenceConfirmDialog({
   isOpen,
   canApplyToFuture = true,
-  title = "Edit recurring event",
-  description = "This event is part of a recurring series.",
+  title,
+  description,
   onClose,
   onApplyToAll,
   onApplyToFuture,
@@ -27,23 +29,26 @@ export function RecurrenceConfirmDialog({
   onApplyToFuture: () => void
   onApplyToThis: () => void
 }) {
+  const shownTitle = title ?? t`Edit recurring event`
+  const shownDescription = description ?? t`This event is part of a recurring series.`
+
   return (
     <Dialog open={isOpen} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
-          <DialogDescription>{description}</DialogDescription>
+          <DialogTitle>{shownTitle}</DialogTitle>
+          <DialogDescription>{shownDescription}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
           <Button variant="secondary" onClick={onApplyToThis}>
-            Only this event
+            {t`Only this event`}
           </Button>
           {canApplyToFuture && (
             <Button variant="secondary" onClick={onApplyToFuture}>
-              This and future events
+              {t`This and future events`}
             </Button>
           )}
-          <Button onClick={onApplyToAll}>All events</Button>
+          <Button onClick={onApplyToAll}>{t`All events`}</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

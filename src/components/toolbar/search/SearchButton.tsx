@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -14,7 +15,7 @@ export function SearchButton() {
 
   return (
     <>
-      <ShortcutTooltip text="Search" shortcut="/">
+      <ShortcutTooltip text={t`Search`} shortcut="/">
         <Button
           id={SEARCH_BUTTON_EL_ID}
           size="icon"

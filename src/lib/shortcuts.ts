@@ -1,4 +1,6 @@
 // Single source of truth for keyboard shortcuts.
+import type { MessageDescriptor } from "@lingui/core"
+import { msg } from "@lingui/core/macro"
 
 export interface ShortcutBinding {
   keys: string
@@ -12,20 +14,27 @@ export interface ShortcutBinding {
 export interface ShortcutDef {
   id: string
   group: ShortcutGroup
-  label: string
+  label: MessageDescriptor
   bindings: readonly ShortcutBinding[]
   // An open event locks the view behind it; only shortcuts that leave it alone opt out.
   allowWhileEventOpen?: boolean
 }
 
-export const SHORTCUT_GROUPS = ["Navigation", "View", "General"] as const
+// Group ids are compared, not shown; SHORTCUT_GROUP_LABELS holds the display text.
+export const SHORTCUT_GROUPS = ["navigation", "view", "general"] as const
 export type ShortcutGroup = (typeof SHORTCUT_GROUPS)[number]
+
+export const SHORTCUT_GROUP_LABELS: Record<ShortcutGroup, MessageDescriptor> = {
+  navigation: msg({ message: "Navigation", context: "shortcut group" }),
+  view: msg({ message: "View", context: "shortcut group" }),
+  general: msg({ message: "General", context: "shortcut group" }),
+}
 
 export const SHORTCUTS = [
   {
     id: "next-day",
-    group: "Navigation",
-    label: "Next day",
+    group: "navigation",
+    label: msg`Next day`,
     bindings: [
       { keys: "right", type: "hotkey" },
       { keys: "l", type: "char" },
@@ -33,8 +42,8 @@ export const SHORTCUTS = [
   },
   {
     id: "prev-day",
-    group: "Navigation",
-    label: "Previous day",
+    group: "navigation",
+    label: msg`Previous day`,
     bindings: [
       { keys: "left", type: "hotkey" },
       { keys: "h", type: "char" },
@@ -42,8 +51,8 @@ export const SHORTCUTS = [
   },
   {
     id: "next-week",
-    group: "Navigation",
-    label: "Next week",
+    group: "navigation",
+    label: msg`Next week`,
     bindings: [
       { keys: "down", type: "hotkey" },
       { keys: "j", type: "char" },
@@ -51,8 +60,8 @@ export const SHORTCUTS = [
   },
   {
     id: "prev-week",
-    group: "Navigation",
-    label: "Previous week",
+    group: "navigation",
+    label: msg`Previous week`,
     bindings: [
       { keys: "up", type: "hotkey" },
       { keys: "k", type: "char" },
@@ -60,74 +69,74 @@ export const SHORTCUTS = [
   },
   {
     id: "next-month",
-    group: "Navigation",
-    label: "Next month",
+    group: "navigation",
+    label: msg`Next month`,
     bindings: [{ keys: "ctrl+d", type: "hotkey" }],
   },
   {
     id: "prev-month",
-    group: "Navigation",
-    label: "Previous month",
+    group: "navigation",
+    label: msg`Previous month`,
     bindings: [{ keys: "ctrl+u", type: "hotkey" }],
   },
   {
     id: "next-event",
-    group: "Navigation",
-    label: "Next event",
+    group: "navigation",
+    label: msg`Next event`,
     bindings: [{ keys: "tab", type: "hotkey" }],
   },
   {
     id: "prev-event",
-    group: "Navigation",
-    label: "Previous event",
+    group: "navigation",
+    label: msg`Previous event`,
     bindings: [{ keys: "shift+tab", type: "hotkey" }],
   },
   {
     id: "today",
-    group: "Navigation",
-    label: "Go to today",
+    group: "navigation",
+    label: msg`Go to today`,
     bindings: [{ keys: "t", type: "char" }],
   },
   {
     id: "go-to-date",
-    group: "Navigation",
-    label: "Go to date...",
+    group: "navigation",
+    label: msg`Go to date...`,
     bindings: [{ keys: ".", type: "char" }],
   },
   {
     id: "month",
-    group: "View",
-    label: "Display month view",
+    group: "view",
+    label: msg`Display month view`,
     bindings: [{ keys: "m", type: "char" }],
   },
   {
     id: "board",
-    group: "View",
-    label: "Display board view",
+    group: "view",
+    label: msg`Display board view`,
     bindings: [{ keys: "b", type: "char" }],
   },
   {
     id: "week",
-    group: "View",
-    label: "Display week view",
+    group: "view",
+    label: msg`Display week view`,
     bindings: [{ keys: "w", type: "char" }],
   },
   {
     id: "switch-group",
-    group: "View",
-    label: "Switch calendar group",
+    group: "view",
+    label: msg`Switch calendar group`,
     bindings: [{ keys: "g", type: "char" }],
   },
   {
     id: "toggle-sidebar",
-    group: "View",
-    label: "Toggle sidebar",
+    group: "view",
+    label: msg`Toggle sidebar`,
     bindings: [{ keys: "ctrl+b", type: "hotkey" }],
   },
   {
     id: "search",
-    group: "General",
-    label: "Search",
+    group: "general",
+    label: msg`Search`,
     bindings: [
       { keys: "mod+f", type: "hotkey", hidden: true },
       { keys: "mod+p", type: "hotkey", hidden: true },
@@ -136,61 +145,61 @@ export const SHORTCUTS = [
   },
   {
     id: "compose-event",
-    group: "General",
-    label: "Compose new event",
+    group: "general",
+    label: msg`Compose new event`,
     bindings: [{ keys: "c", type: "char" }],
   },
   {
     id: "add-event",
-    group: "General",
-    label: "Add event to selected day",
+    group: "general",
+    label: msg`Add event to selected day`,
     bindings: [{ keys: "a", type: "char" }],
   },
   {
     id: "duplicate-event",
-    group: "General",
-    label: "Duplicate selected event",
+    group: "general",
+    label: msg`Duplicate selected event`,
     bindings: [{ keys: "d", type: "char" }],
     allowWhileEventOpen: true,
   },
   {
     id: "toggle-invites",
-    group: "General",
-    label: "Toggle invitations",
+    group: "general",
+    label: msg`Toggle invitations`,
     bindings: [{ keys: "i", type: "char" }],
   },
   {
     id: "sync",
-    group: "General",
-    label: "Sync now",
+    group: "general",
+    label: msg`Sync now`,
     bindings: [{ keys: "s", type: "char" }],
     allowWhileEventOpen: true,
   },
   {
     id: "settings",
-    group: "General",
-    label: "Go to settings",
+    group: "general",
+    label: msg`Go to settings`,
     bindings: [{ keys: "mod+comma", type: "hotkey" }],
     allowWhileEventOpen: true,
   },
   {
     id: "toggle-theme",
-    group: "General",
-    label: "Toggle theme",
+    group: "general",
+    label: msg`Toggle theme`,
     bindings: [{ keys: "mod+shift+t", type: "hotkey" }],
     allowWhileEventOpen: true,
   },
   {
     id: "shortcuts",
-    group: "General",
-    label: "Show keyboard shortcuts",
+    group: "general",
+    label: msg`Show keyboard shortcuts`,
     bindings: [{ keys: "?", type: "char", allowShift: true }],
     allowWhileEventOpen: true,
   },
   {
     id: "command-palette",
-    group: "General",
-    label: "Open command palette",
+    group: "general",
+    label: msg`Open command palette`,
     // enableOnFormTags so mod+k works (and toggles closed) while an input is focused.
     bindings: [{ keys: "mod+k", type: "hotkey", enableOnFormTags: true }],
   },

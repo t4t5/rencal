@@ -14,6 +14,7 @@ export function useBreakpoint(breakpoint: Breakpoint): boolean {
   const [matches, setMatches] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- media query
     const mq = window.matchMedia(`(min-width: ${breakpoints[breakpoint]}px)`)
     setMatches(mq.matches)
 

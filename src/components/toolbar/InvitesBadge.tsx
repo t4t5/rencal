@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useEffect, useRef, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
@@ -62,11 +63,11 @@ export function InvitesBadge() {
 
   return (
     <Popover>
-      <ShortcutTooltip text="Invitations" shortcut="i">
+      <ShortcutTooltip text={t`Invitations`} shortcut="i">
         <PopoverTrigger asChild>
           <button
             id={INVITES_BUTTON_EL_ID}
-            aria-label="Invitations"
+            aria-label={t`Invitations`}
             onFocus={(event) => {
               if (restoringFocusRef.current) event.preventDefault()
             }}
@@ -89,7 +90,7 @@ export function InvitesBadge() {
         }}
       >
         <PopoverArrow />
-        <div className="p-3 font-medium text-sm border-b">Invitations</div>
+        <div className="p-3 font-medium text-sm border-b">{t`Invitations`}</div>
         <div className="max-h-80 overflow-y-auto">
           {invites.map((invite) => (
             <InviteCard
@@ -114,7 +115,7 @@ function InviteCard({
   onRsvp: (invite: CalendarEvent, response: ResponseStatus) => void
   timeFormat: TimeFormat
 }) {
-  const organizerEmail = invite.organizer?.email ?? "Unknown"
+  const organizerEmail = invite.organizer?.email ?? t({ message: "Unknown", context: "organizer" })
   const organizerName = invite.organizer?.name ?? organizerEmail
   const initial = organizerName.charAt(0).toUpperCase()
 
@@ -137,7 +138,7 @@ function InviteCard({
         <div className="flex flex-col gap-2 min-w-0">
           <div className="flex flex-col gap-0.5">
             <span className="font-medium text-sm truncate">{invite.summary}</span>
-            <span className="text-xs text-muted-foreground truncate">From: {organizerEmail}</span>
+            <span className="text-xs text-muted-foreground truncate">{t`From: ${organizerEmail}`}</span>
             <span className="text-xs text-muted-foreground">{dateStr}</span>
           </div>
         </div>

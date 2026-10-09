@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { plural, t } from "@lingui/core/macro"
 import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react"
 
 import { OrbitRing } from "@/components/loading-ui/orbit-ring"
@@ -51,7 +53,7 @@ export function PluginsPage() {
       setListError(null)
     } catch (error) {
       if (request === listRequest.current)
-        setListError(getErrorMessage(error, "Failed to load installed plugins"))
+        setListError(getErrorMessage(error, t`Failed to load installed plugins`))
     }
   }, [])
 
@@ -62,7 +64,7 @@ export function PluginsPage() {
     } catch (error) {
       setCatalog((previous) => ({
         plugins: previous?.plugins ?? [],
-        error: getErrorMessage(error, "Failed to load plugin catalog"),
+        error: getErrorMessage(error, t`Failed to load plugin catalog`),
       }))
     } finally {
       setCatalogLoading(false)
@@ -109,18 +111,20 @@ export function PluginsPage() {
           <Input
             variant="default"
             className="flex-1"
-            aria-label="Search plugins"
-            placeholder="Search plugins…"
+            aria-label={t`Search plugins`}
+            placeholder={t`Search plugins…`}
             value={search}
             onChange={(event) => setSearch(event.target.value)}
           />
           <Select value={sort} onValueChange={(next) => setSort(next as PluginSort)}>
-            <SelectTrigger variant="default" aria-label="Sort plugins" className="w-36">
+            <SelectTrigger variant="default" aria-label={t`Sort plugins`} className="w-36">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="stars">Most starred</SelectItem>
-              <SelectItem value="latest">Latest</SelectItem>
+              <SelectItem value="stars">{t`Most starred`}</SelectItem>
+              <SelectItem value="latest">
+                {t({ message: "Latest", context: "plugin sort order" })}
+              </SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -135,7 +139,7 @@ export function PluginsPage() {
               onCheckedChange={(checked) => setInstalledOnly(checked === true)}
             />
             <Label htmlFor={installedOnlyId} className="text-sm">
-              Installed only
+              {t`Installed only`}
             </Label>
           </div>
         </div>
@@ -145,7 +149,7 @@ export function PluginsPage() {
           <div className="flex items-center gap-2">
             <ErrorMessage message={listError} />
             <Button variant="ghost" onClick={() => void refreshInstalled()}>
-              Retry
+              {t`Retry`}
             </Button>
           </div>
         )}
@@ -156,23 +160,23 @@ export function PluginsPage() {
           <div className="flex items-center gap-2">
             <ErrorMessage message={catalog.error} />
             <Button variant="ghost" disabled={catalogLoading} onClick={() => void refreshCatalog()}>
-              Retry
+              {t`Retry`}
               {catalogLoading && <OrbitRing className="size-3.5 shrink-0" />}
             </Button>
           </div>
         )}
         {!installed && !listError && (
           <p className="text-sm text-muted-foreground" role="status">
-            Loading plugins…
+            {t`Loading plugins…`}
           </p>
         )}
         {installed && catalog && !catalog.error && visiblePlugins.length === 0 && (
           <p className="text-sm text-muted-foreground">
             {search
-              ? "No plugins match your search."
+              ? t`No plugins match your search.`
               : installedOnly
-                ? "No plugins installed yet."
-                : "No plugins listed yet."}
+                ? t`No plugins installed yet.`
+                : t`No plugins listed yet.`}
           </p>
         )}
         {visiblePlugins.length > 0 && (
@@ -203,10 +207,9 @@ export function PluginsPage() {
 }
 
 function pluginCount(visible: number, total: number): string {
-  const noun = total === 1 ? "plugin" : "plugins"
-  return visible === total
-    ? `${total.toLocaleString()} ${noun}`
-    : `${visible.toLocaleString()} of ${total.toLocaleString()} ${noun}`
+  if (visible === total) return plural(total, { one: "# plugin", other: "# plugins" })
+  const shown = visible.toLocaleString()
+  return plural(total, { one: `${shown} of # plugin`, other: `${shown} of # plugins` })
 }
 
 /** Unlisted plugins have no stars or release date, so they sort last; ties go by name. */
@@ -220,10 +223,11 @@ function comparePlugins(left: PluginListItem, right: PluginListItem, sort: Plugi
 
 function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: () => void }) {
   const error = plugin.installed?.error
+  const owner = pluginOwner(plugin)
   const status = plugin.installed?.update_version
-    ? "Update available"
+    ? t`Update available`
     : plugin.installed
-      ? "Installed"
+      ? t({ message: "Installed", context: "plugin status badge" })
       : null
 
   // Flex column pins content to the top of a stretched <button>; w-full because WebKit doesn't stretch its children.
@@ -240,7 +244,7 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
         {(plugin.contributions.length > 0 || status) && (
           <div className="flex flex-wrap gap-1.5">
             {plugin.contributions.map((kind) => (
-              <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
+              <PluginBadge key={kind}>{i18n._(CONTRIBUTION_LABELS[kind])}</PluginBadge>
             ))}
             {status && <PluginBadge solid>{status}</PluginBadge>}
           </div>
@@ -248,7 +252,7 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
         {plugin.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
         )}
-        <p className="truncate text-xs text-muted-foreground">by {pluginOwner(plugin)}</p>
+        <p className="truncate text-xs text-muted-foreground">{t`by ${owner}`}</p>
         {error && <p className="line-clamp-2 text-xs text-destructive">{error}</p>}
       </div>
     </button>

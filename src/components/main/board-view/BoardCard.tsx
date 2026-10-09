@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import type { MouseEvent } from "react"
 import { memo, useMemo } from "react"
 
@@ -13,7 +14,7 @@ import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import {
   dateInViewerZone,
-  formatMonth,
+  formatDayMonth,
   formatShortDate,
   formatTime,
   isSameDay,
@@ -37,7 +38,7 @@ export const BoardCard = memo(function BoardCard({
 
   const formatRangeDate = (date: CalendarEvent["start"]): string => {
     const plainDate = dateInViewerZone(date)
-    return `${formatMonth(plainDate, "short")} ${plainDate.day},`
+    return `${formatDayMonth(plainDate)},`
   }
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
@@ -90,7 +91,7 @@ export const BoardCard = memo(function BoardCard({
 
           {event.start.kind === "date" && (
             <div data-slot="calendar-event-time" className="text-xs text-muted-foreground h-4">
-              All day
+              {t`All day`}
             </div>
           )}
 

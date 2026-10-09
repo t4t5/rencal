@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -34,8 +35,8 @@ export function PluginInstallDialog() {
       if (link) setRepo(link.repo)
     } catch (error) {
       console.error("Failed to open plugin deep link:", error)
-      toast.error("Couldn’t open plugin link", {
-        description: getErrorMessage(error, "Failed to read the plugin install link"),
+      toast.error(t`Couldn’t open plugin link`, {
+        description: getErrorMessage(error, t`Failed to read the plugin install link`),
       })
     }
   }, [])
@@ -91,7 +92,7 @@ function PluginInstallDialogContent({
       })
       .catch((error: unknown) => {
         if (cancelled) return
-        setLoadError(getErrorMessage(error, "Failed to load plugin details"))
+        setLoadError(getErrorMessage(error, t`Failed to load plugin details`))
         setPlugins([])
       })
     return () => {
@@ -101,6 +102,7 @@ function PluginInstallDialogContent({
 
   const plugin = resolveSelection(plugins ?? [], { id: null, repo })
   const state = usePluginAction(plugin, onClose)
+  const pluginName = plugin.name
 
   useEffect(() => {
     if (!state.action) return
@@ -123,7 +125,7 @@ function PluginInstallDialogContent({
             {plugin.description ? (
               <DialogDescription className="break-words">{plugin.description}</DialogDescription>
             ) : (
-              <DialogDescription className="sr-only">Install {plugin.name}</DialogDescription>
+              <DialogDescription className="sr-only">{t`Install ${pluginName}`}</DialogDescription>
             )}
           </DialogHeader>
           {loadError && (
@@ -135,7 +137,7 @@ function PluginInstallDialogContent({
             <PluginDetails plugin={plugin} state={state} />
           ) : (
             <p className="text-muted-foreground" role="status">
-              Loading plugin…
+              {t`Loading plugin…`}
             </p>
           )}
         </div>

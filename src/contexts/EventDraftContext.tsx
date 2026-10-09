@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, startTransition, useCallback, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -228,8 +229,8 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       })
     } catch (err) {
       setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))
-      const message = getErrorMessage(err, "Failed to create event")
-      toast.error("Failed to create event", { description: message })
+      const message = getErrorMessage(err, t`Failed to create event`)
+      toast.error(t`Failed to create event`, { description: message })
       console.error("create_event failed:", err)
       return
     }

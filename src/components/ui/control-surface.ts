@@ -6,11 +6,15 @@
  * triggers use `focus-visible` and/or Radix's open state.
  */
 const controlSurfaceActive = {
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
   focus: "focus:border-(--control-active-border) focus:bg-(--control-active-background)",
   focusVisible:
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     "focus-visible:border-(--control-active-border) focus-visible:bg-(--control-active-background)",
   focusWithin:
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     "focus-within:border-(--control-active-border) focus-within:bg-(--control-active-background)",
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
   open: "[&[data-state=open]:not([aria-invalid=true])]:border-(--control-active-border) data-[state=open]:bg-(--control-active-background)",
 } as const
 

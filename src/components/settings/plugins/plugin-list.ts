@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from "@lingui/core"
+import { msg } from "@lingui/core/macro"
+
 import type { ContributionKind, InstalledPlugin, InstalledPlugins, PluginCatalog } from "@/lib/api"
 
 export type PluginListItem = {
@@ -19,9 +22,9 @@ export type PluginListItem = {
 export type PluginSelection = { id: string | null; repo: string | null }
 
 export const CONTRIBUTION_LABELS = {
-  theme: "Theme",
-  provider: "Provider",
-} as const satisfies Record<ContributionKind, string>
+  theme: msg({ message: "Theme", context: "plugin contribution kind" }),
+  provider: msg({ message: "Provider", context: "plugin contribution kind" }),
+} as const satisfies Record<ContributionKind, MessageDescriptor>
 
 export function pluginOwner(plugin: PluginListItem): string {
   return plugin.repo?.split("/")[0] ?? plugin.id.split(".")[0]

@@ -1,0 +1,1483 @@
+msgid ""
+msgstr ""
+"POT-Creation-Date: 2026-10-09 09:19+0200\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: @lingui/cli\n"
+"Language: en\n"
+
+#: src/lib/palette-commands.ts
+msgctxt "command group"
+msgid "Calendar"
+msgstr "Calendar"
+
+#: src/lib/palette-commands.ts
+msgctxt "command group"
+msgid "Navigation"
+msgstr "Navigation"
+
+#: src/components/ui/untitled-event-text.tsx
+msgid "Untitled event"
+msgstr "Untitled event"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgctxt "default calendar badge"
+msgid "Default"
+msgstr "Default"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Failed to install plugin"
+msgstr "Failed to install plugin"
+
+#: src/lib/shortcuts.ts
+msgid "Previous event"
+msgstr "Previous event"
+
+#: src/components/sidebar/header/compose-event/ComposeEventButton.tsx
+msgid "Create new event"
+msgstr "Create new event"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Failed to delete calendar"
+msgstr "Failed to delete calendar"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Choose a unique name for this calendar group."
+msgstr "Choose a unique name for this calendar group."
+
+#: src/components/event-parts/RecurrenceConfirmDialog.tsx
+msgid "Edit recurring event"
+msgstr "Edit recurring event"
+
+#: src/components/toolbar/ToggleSidebarButton.tsx
+msgid "Show sidebar"
+msgstr "Show sidebar"
+
+#: src/components/event-parts/inputs/NotesInput.tsx
+msgid "Notes"
+msgstr "Notes"
+
+#: src/components/main/board-view/BoardCard.tsx
+msgid "All day"
+msgstr "All day"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "{name}: {pullCount} to pull"
+msgstr "{name}: {pullCount} to pull"
+
+#: src/components/event-parts/inputs/ConferenceDisplay.tsx
+msgid "Join {service}"
+msgstr "Join {service}"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Every 2 weeks"
+msgstr "Every 2 weeks"
+
+#: src/lib/shortcuts.ts
+msgid "Go to settings"
+msgstr "Go to settings"
+
+#: src/components/sidebar/minical/Minical.tsx
+#: src/lib/shortcuts.ts
+msgid "Previous month"
+msgstr "Previous month"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Shift"
+msgstr "Shift"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "back"
+msgstr "back"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgctxt "calendar group name"
+msgid "Default"
+msgstr "Default"
+
+#: src/lib/palette-commands.ts
+msgid "Search events…"
+msgstr "Search events…"
+
+#: src/lib/shortcuts.ts
+msgid "Toggle theme"
+msgstr "Toggle theme"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Failed to load plugin catalog"
+msgstr "Failed to load plugin catalog"
+
+#: src/components/toolbar/search/SearchPalette.tsx
+msgid "Searching events"
+msgstr "Searching events"
+
+#: src/contexts/SyncContext.tsx
+msgid "Failed to sync calendars"
+msgstr "Failed to sync calendars"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgctxt "calendar account heading"
+msgid "Local-only"
+msgstr "Local-only"
+
+#: src/components/event-parts/ComposeEvent.tsx
+msgid "Add Event"
+msgstr "Add Event"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "No plugins match your search."
+msgstr "No plugins match your search."
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Uninstalling…"
+msgstr "Uninstalling…"
+
+#: src/components/events-blocks/agenda/TimedEventBlock.tsx
+msgctxt "video call"
+msgid "Join"
+msgstr "Join"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Disconnect calendar"
+msgstr "Disconnect calendar"
+
+#: src/components/ui/more-button.tsx
+msgid "More options"
+msgstr "More options"
+
+#: src/lib/shortcuts.ts
+msgid "Open command palette"
+msgstr "Open command palette"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Edit group"
+msgstr "Edit group"
+
+#: src/hooks/useProviders.ts
+msgid "Failed to load providers"
+msgstr "Failed to load providers"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Custom recurrence"
+msgstr "Custom recurrence"
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+msgid "Adding..."
+msgstr "Adding..."
+
+#: src/components/event-parts/inputs/DateTimeSelect.tsx
+msgid "Switch to event's time zone to edit"
+msgstr "Switch to event's time zone to edit"
+
+#: src/components/ui/command.tsx
+msgid "Command Palette"
+msgstr "Command Palette"
+
+#: src/lib/shortcuts.ts
+msgid "Next day"
+msgstr "Next day"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Sort plugins"
+msgstr "Sort plugins"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgid "Search groups…"
+msgstr "Search groups…"
+
+#: src/lib/palette-commands.ts
+msgid "Switch calendar group…"
+msgstr "Switch calendar group…"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "Delete recurring event"
+msgstr "Delete recurring event"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Retry"
+msgstr "Retry"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+msgid "Create calendar"
+msgstr "Create calendar"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "No calendars yet."
+msgstr "No calendars yet."
+
+#: src/components/events-blocks/agenda/TimedEventBlock.tsx
+msgid "Starts at {time}"
+msgstr "Starts at {time}"
+
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgid "Keyboard shortcuts"
+msgstr "Keyboard shortcuts"
+
+#: src/components/ui/password-input.tsx
+msgid "Show password"
+msgstr "Show password"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Tab"
+msgstr "Tab"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "{total, plural, one {{shown} of # plugin} other {{shown} of # plugins}}"
+msgstr "{total, plural, one {{shown} of # plugin} other {{shown} of # plugins}}"
+
+#: src/hooks/useEventDeepLinks.ts
+msgid "Failed to load the linked event"
+msgstr "Failed to load the linked event"
+
+#: src/lib/palette-commands.ts
+msgid "Go to date…"
+msgstr "Go to date…"
+
+#: src/components/main/MainHeader.tsx
+msgctxt "view name"
+msgid "Month"
+msgstr "Month"
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+msgid "Please enter a calendar URL"
+msgstr "Please enter a calendar URL"
+
+#: src/components/event-parts/inputs/DateTimeSelect.tsx
+msgid "Show in event's time zone"
+msgstr "Show in event's time zone"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Failed to reconnect account"
+msgstr "Failed to reconnect account"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "Checking for changes..."
+msgstr "Checking for changes..."
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Failed to connect"
+msgstr "Failed to connect"
+
+#: src/components/toolbar/search/SearchButton.tsx
+#: src/lib/shortcuts.ts
+msgid "Search"
+msgstr "Search"
+
+#: src/components/toolbar/search/SearchPalette.tsx
+msgid "Search your events..."
+msgstr "Search your events..."
+
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+msgid "Choose a color for {calendarName}."
+msgstr "Choose a color for {calendarName}."
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+msgid "Change calendar color"
+msgstr "Change calendar color"
+
+#: src/hooks/useEventDeepLinks.ts
+msgid "Couldn’t open event"
+msgstr "Couldn’t open event"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Down"
+msgstr "Down"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "No accounts connected yet."
+msgstr "No accounts connected yet."
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "Click to sync"
+msgstr "Click to sync"
+
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgid "Close keyboard shortcuts"
+msgstr "Close keyboard shortcuts"
+
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+msgid "Save color"
+msgstr "Save color"
+
+#: src/components/toolbar/InvitesBadge.tsx
+msgctxt "organizer"
+msgid "Unknown"
+msgstr "Unknown"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+msgid "Failed to create calendar"
+msgstr "Failed to create calendar"
+
+#: src/lib/shortcuts.ts
+msgid "Toggle sidebar"
+msgstr "Toggle sidebar"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgid "Search themes…"
+msgstr "Search themes…"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Accounts"
+msgstr "Accounts"
+
+#: src/components/main/board-view/BoardView.tsx
+#: src/lib/event-time/display.ts
+msgid "Tomorrow"
+msgstr "Tomorrow"
+
+#: src/lib/shortcuts.ts
+msgid "Compose new event"
+msgstr "Compose new event"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Loading plugins…"
+msgstr "Loading plugins…"
+
+#: src/components/event-parts/inputs/RsvpSelect.tsx
+msgid "Accepted"
+msgstr "Accepted"
+
+#: src/lib/shortcuts.ts
+msgid "Show keyboard shortcuts"
+msgstr "Show keyboard shortcuts"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Uncheck if you prefer to manually push/pull changes."
+msgstr "Uncheck if you prefer to manually push/pull changes."
+
+#: src/lib/recurrence-text.ts
+msgid "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+msgstr "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+#: src/lib/updater.ts
+msgid "Update available"
+msgstr "Update available"
+
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Enter a calendar name."
+msgstr "Enter a calendar name."
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Reminders"
+msgstr "Reminders"
+
+#: src/lib/recurrence-text.ts
+msgid "{n, plural, one {Every year} other {Every # years}}"
+msgstr "{n, plural, one {Every year} other {Every # years}}"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Enter"
+msgstr "Enter"
+
+#: src/components/sync/MassDeleteConfirmDialog.tsx
+msgid "Confirm large deletion"
+msgstr "Confirm large deletion"
+
+#: src/components/event-parts/EditEvent.tsx
+msgid "Failed to respond to invite"
+msgstr "Failed to respond to invite"
+
+#: src/hooks/useEventDeepLinks.ts
+msgid "No matching local event."
+msgstr "No matching local event."
+
+#: src/components/event-parts/inputs/RsvpBar.tsx
+#: src/components/event-parts/inputs/RsvpSelect.tsx
+msgctxt "rsvp"
+msgid "Maybe"
+msgstr "Maybe"
+
+#: src/lib/shortcuts.ts
+msgid "Switch calendar group"
+msgstr "Switch calendar group"
+
+#: src/lib/updater.ts
+msgid "renCal v{version} is available. Download and install it now?"
+msgstr "renCal v{version} is available. Download and install it now?"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+msgid "Color {swatch}"
+msgstr "Color {swatch}"
+
+#: src/lib/palette-commands.ts
+msgid "Set theme…"
+msgstr "Set theme…"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+#: src/components/settings/calendars/GroupsColumn.tsx
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+#: src/components/sync/MassDeleteConfirmDialog.tsx
+msgid "Cancel"
+msgstr "Cancel"
+
+#: src/components/main/MainHeader.tsx
+msgctxt "navigate to current date"
+msgid "Today"
+msgstr "Today"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "No repeat"
+msgstr "No repeat"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "Type a date…"
+msgstr "Type a date…"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "{name}: {pushCount} to push"
+msgstr "{name}: {pushCount} to push"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Light theme"
+msgstr "Light theme"
+
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+msgid "Calendar color hue"
+msgstr "Calendar color hue"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Installing…"
+msgstr "Installing…"
+
+#: src/lib/event-time/display.ts
+msgid "Today"
+msgstr "Today"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgctxt "calendar group, command palette submenu"
+msgid "Group"
+msgstr "Group"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Version"
+msgstr "Version"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Deleting..."
+msgstr "Deleting..."
+
+#: src/components/sidebar/agenda/Agenda.tsx
+#: src/components/sidebar/agenda/DaySection.tsx
+msgid "No events"
+msgstr "No events"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgctxt "change data directory button"
+msgid "Change"
+msgstr "Change"
+
+#: src/hooks/useEventDeepLinks.ts
+msgid "Event not found"
+msgstr "Event not found"
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+msgid "Paste a public .ics calendar feed URL (webcal or http)"
+msgstr "Paste a public .ics calendar feed URL (webcal or http)"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Installed {name}"
+msgstr "Installed {name}"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Ctrl"
+msgstr "Ctrl"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Calendars"
+msgstr "Calendars"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Esc"
+msgstr "Esc"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Search plugins…"
+msgstr "Search plugins…"
+
+#: src/components/settings/plugins/PluginSheet.tsx
+msgid "Close plugin details"
+msgstr "Close plugin details"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Alt"
+msgstr "Alt"
+
+#: src/lib/recurrence-text.ts
+msgid "{n, plural, one {Every day} other {Every # days}}"
+msgstr "{n, plural, one {Every day} other {Every # days}}"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Calendar groups"
+msgstr "Calendar groups"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgid "No groups found."
+msgstr "No groups found."
+
+#: src/lib/updater.ts
+msgctxt "update dialog button"
+msgid "Download"
+msgstr "Download"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Themes"
+msgstr "Themes"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "by {owner}"
+msgstr "by {owner}"
+
+#: src/components/main/board-view/BoardView.tsx
+msgid "This Week"
+msgstr "This Week"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Uninstall"
+msgstr "Uninstall"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "{updateVersion} available"
+msgstr "{updateVersion} available"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "There's an update available"
+msgstr "There's an update available"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Update to {updateVersion}"
+msgstr "Update to {updateVersion}"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Data directory"
+msgstr "Data directory"
+
+#: src/components/settings/accounts/CredentialsForm.tsx
+#: src/components/settings/accounts/ProviderList.tsx
+msgid "Failed to connect account"
+msgstr "Failed to connect account"
+
+#: src/components/settings/accounts/ProviderList.tsx
+msgid "Other CalDAV server"
+msgstr "Other CalDAV server"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgctxt "plugin sort order"
+msgid "Latest"
+msgstr "Latest"
+
+#: src/lib/palette-commands.ts
+msgctxt "command group"
+msgid "View"
+msgstr "View"
+
+#: src/lib/shortcuts.ts
+msgid "Display week view"
+msgstr "Display week view"
+
+#: src/components/event-parts/inputs/RsvpBar.tsx
+msgid "Accept"
+msgstr "Accept"
+
+#: src/components/sidebar/minical/Minical.tsx
+#: src/lib/shortcuts.ts
+msgid "Next month"
+msgstr "Next month"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgid "No themes found."
+msgstr "No themes found."
+
+#: src/components/toolbar/search/SearchPalette.tsx
+msgid "Search visible calendars for an event"
+msgstr "Search visible calendars for an event"
+
+#: src/contexts/DuplicateEventContext.tsx
+msgid "Duplicate recurring event"
+msgstr "Duplicate recurring event"
+
+#: src/lib/event-url.ts
+msgid "Linked in event location"
+msgstr "Linked in event location"
+
+#: src/lib/recurrence-text.ts
+msgctxt "weekly recurrence"
+msgid "{base} on {names}"
+msgstr "{base} on {names}"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "Connect {provider}"
+msgstr "Connect {provider}"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Default is reserved."
+msgstr "Default is reserved."
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "On day of event ({time})"
+msgstr "On day of event ({time})"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Dark theme"
+msgstr "Dark theme"
+
+#: src/lib/shortcuts.ts
+msgctxt "shortcut group"
+msgid "Navigation"
+msgstr "Navigation"
+
+#: src/lib/recurrence-text.ts
+msgctxt "recurrence count"
+msgid "{description}, {count, plural, one {# time} other {# times}}"
+msgstr "{description}, {count, plural, one {# time} other {# times}}"
+
+#: src/components/plugins/PluginInstallDialog.tsx
+msgid "Couldn’t open plugin link"
+msgstr "Couldn’t open plugin link"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Most starred"
+msgstr "Most starred"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "At time of event"
+msgstr "At time of event"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Installed only"
+msgstr "Installed only"
+
+#: src/components/settings/reminders/RemindersPage.tsx
+msgid "Default reminders"
+msgstr "Default reminders"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+msgid "Creating..."
+msgstr "Creating..."
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgctxt "calendar group menu"
+msgid "Edit"
+msgstr "Edit"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "View on GitHub"
+msgstr "View on GitHub"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Path"
+msgstr "Path"
+
+#: src/components/settings/reminders/RemindersPage.tsx
+msgid "Enable notifications"
+msgstr "Enable notifications"
+
+#. The examples are fed to the date parser, which only understands English
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "e.g. \"5 Sep\", \"next sunday\"..."
+msgstr "e.g. \"5 Sep\", \"next sunday\"..."
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Failed to uninstall plugin"
+msgstr "Failed to uninstall plugin"
+
+#: src/components/sync/MassDeleteConfirmDialog.tsx
+msgid "Syncing would delete {totalDeletes, plural, one {# event} other {# events}} from {calendarCount, plural, one {# calendar} other {# calendars}}. Continue?"
+msgstr "Syncing would delete {totalDeletes, plural, one {# event} other {# events}} from {calendarCount, plural, one {# calendar} other {# calendars}}. Continue?"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Repository"
+msgstr "Repository"
+
+#: src/lib/shortcuts.ts
+msgid "Next week"
+msgstr "Next week"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+#: src/components/settings/plugins/PluginsPage.tsx
+msgctxt "plugin status badge"
+msgid "Installed"
+msgstr "Installed"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "Go to date"
+msgstr "Go to date"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Right"
+msgstr "Right"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Uninstalled {name}"
+msgstr "Uninstalled {name}"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+#: src/components/settings/accounts/CredentialsForm.tsx
+msgid "Connecting..."
+msgstr "Connecting..."
+
+#: src/components/plugins/PluginInstallDialog.tsx
+msgid "Loading plugin…"
+msgstr "Loading plugin…"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Are you sure you want to delete \"{calendarName}\"? All events will be permanently deleted."
+msgstr "Are you sure you want to delete \"{calendarName}\"? All events will be permanently deleted."
+
+#: src/components/event-parts/inputs/RsvpBar.tsx
+msgid "Decline"
+msgstr "Decline"
+
+#: src/lib/palette-commands.ts
+msgctxt "command group"
+msgid "General"
+msgstr "General"
+
+#: src/lib/shortcuts.ts
+msgid "Go to date..."
+msgstr "Go to date..."
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+#: src/components/event-parts/RecurrenceConfirmDialog.tsx
+msgid "This and future events"
+msgstr "This and future events"
+
+#: src/lib/shortcuts.ts
+msgctxt "shortcut group"
+msgid "General"
+msgstr "General"
+
+#: src/lib/conference.ts
+msgctxt "video meeting"
+msgid "Meeting"
+msgstr "Meeting"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Updating…"
+msgstr "Updating…"
+
+#: src/components/toolbar/InvitesBadge.tsx
+msgid "From: {organizerEmail}"
+msgstr "From: {organizerEmail}"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "New group"
+msgstr "New group"
+
+#: src/components/ui/command.tsx
+msgid "Search for a command to run..."
+msgstr "Search for a command to run..."
+
+#: src/lib/updater.ts
+msgctxt "update dialog button"
+msgid "Later"
+msgstr "Later"
+
+#: src/components/main/MainHeader.tsx
+msgctxt "view name"
+msgid "Board"
+msgstr "Board"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Every month"
+msgstr "Every month"
+
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgid "Find keyboard shortcuts"
+msgstr "Find keyboard shortcuts"
+
+#: src/lib/shortcuts.ts
+msgid "Sync now"
+msgstr "Sync now"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Disconnect \"{calendarName}\"? This will delete the directory from this computer."
+msgstr "Disconnect \"{calendarName}\"? This will delete the directory from this computer."
+
+#: src/lib/recurrence-text.ts
+msgctxt "monthly recurrence"
+msgid "{base} on the {position} {weekdayName}"
+msgstr "{base} on the {position} {weekdayName}"
+
+#: src/components/main/MainHeader.tsx
+msgid "Go to Today"
+msgstr "Go to Today"
+
+#: src/components/plugins/PluginInstallDialog.tsx
+msgid "Install {pluginName}"
+msgstr "Install {pluginName}"
+
+#: src/components/toolbar/search/SearchPalette.tsx
+msgid "Search events"
+msgstr "Search events"
+
+#: src/lib/palette-commands.ts
+msgid "Toggle week numbers"
+msgstr "Toggle week numbers"
+
+#: src/lib/shortcuts.ts
+msgid "Previous day"
+msgstr "Previous day"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgctxt "recurrence placeholder"
+msgid "Repeat"
+msgstr "Repeat"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Rename calendar"
+msgstr "Rename calendar"
+
+#: src/lib/shortcuts.ts
+msgid "Display board view"
+msgstr "Display board view"
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Add subscription"
+msgstr "Add subscription"
+
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgid "No shortcuts found"
+msgstr "No shortcuts found"
+
+#: src/components/main/MainHeader.tsx
+msgctxt "view name"
+msgid "Week"
+msgstr "Week"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+#: src/components/event-parts/EditEvent.tsx
+#: src/components/EventContextMenu.tsx
+msgid "Delete event"
+msgstr "Delete event"
+
+#: src/lib/shortcuts.ts
+msgid "Previous week"
+msgstr "Previous week"
+
+#: src/components/event-parts/inputs/DateTimeSelect.tsx
+msgid "Show in your time zone"
+msgstr "Show in your time zone"
+
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgctxt "between alternative shortcut keys"
+msgid "or"
+msgstr "or"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+#: src/components/event-parts/inputs/TimeInput.tsx
+msgid "No results found."
+msgstr "No results found."
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+msgid "Please enter a webcal, http, or https URL"
+msgstr "Please enter a webcal, http, or https URL"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgctxt "calendar group menu"
+msgid "Delete"
+msgstr "Delete"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Time format"
+msgstr "Time format"
+
+#: src/components/plugins/PluginInstallDialog.tsx
+msgid "Failed to read the plugin install link"
+msgstr "Failed to read the plugin install link"
+
+#: src/components/events-blocks/agenda/TimedEventBlock.tsx
+msgid "Ends at {time}"
+msgstr "Ends at {time}"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "Are you sure you want to delete the event {eventName}?"
+msgstr "Are you sure you want to delete the event {eventName}?"
+
+#: src/components/event-parts/inputs/TimeZoneSelect.tsx
+msgid "Search timezones"
+msgstr "Search timezones"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "No matching date"
+msgstr "No matching date"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "No plugins listed yet."
+msgstr "No plugins listed yet."
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "{days, plural, one {# day} other {# days}}"
+msgstr "{days, plural, one {# day} other {# days}}"
+
+#: src/lib/shortcuts.ts
+msgctxt "shortcut group"
+msgid "View"
+msgstr "View"
+
+#: src/contexts/EventDraftContext.tsx
+msgid "Failed to create event"
+msgstr "Failed to create event"
+
+#: src/components/event-parts/inputs/DateTimeSelect.tsx
+msgid "Add timezone"
+msgstr "Add timezone"
+
+#: src/lib/recurrence-text.ts
+msgid "{n, plural, one {Every week} other {Every # weeks}}"
+msgstr "{n, plural, one {Every week} other {Every # weeks}}"
+
+#: src/lib/providers.ts
+msgctxt "provider name"
+msgid "Unknown"
+msgstr "Unknown"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Plugins"
+msgstr "Plugins"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+#: src/components/event-parts/RecurrenceConfirmDialog.tsx
+msgid "Only this event"
+msgstr "Only this event"
+
+#: src/components/shortcuts/GlobalShortcuts.tsx
+msgctxt "command palette submenu"
+msgid "Theme"
+msgstr "Theme"
+
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Failed to rename calendar"
+msgstr "Failed to rename calendar"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "renCal follows your Omarchy theme."
+msgstr "renCal follows your Omarchy theme."
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Disconnecting..."
+msgstr "Disconnecting..."
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgctxt "reminder offset"
+msgid "{duration} before"
+msgstr "{duration} before"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "Search for a command to run"
+msgstr "Search for a command to run"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Every year"
+msgstr "Every year"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "{minutes, plural, one {# minute} other {# minutes}}"
+msgstr "{minutes, plural, one {# minute} other {# minutes}}"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Failed to load installed plugins"
+msgstr "Failed to load installed plugins"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Set as default"
+msgstr "Set as default"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+#: src/components/event-parts/RecurrenceConfirmDialog.tsx
+msgid "All events"
+msgstr "All events"
+
+#: src/components/event-parts/RecurrenceConfirmDialog.tsx
+msgid "This event is part of a recurring series."
+msgstr "This event is part of a recurring series."
+
+#: src/lib/recurrence-text.ts
+msgctxt "recurrence end"
+msgid "{description} until {date}"
+msgstr "{description} until {date}"
+
+#: src/components/ui/password-input.tsx
+msgid "Hide password"
+msgstr "Hide password"
+
+#: src/components/toolbar/search/SearchPalette.tsx
+msgid "No events found."
+msgstr "No events found."
+
+#: src/components/main/month-view/Cell.tsx
+#: src/components/main/week-view/AllDayContextMenu.tsx
+#: src/components/main/week-view/ScheduledDayContextMenu.tsx
+msgid "Create event"
+msgstr "Create event"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "This calendar will live on your computer only, and never be connected to the internet."
+msgstr "This calendar will live on your computer only, and never be connected to the internet."
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "This event is part of a recurring series. Which events do you want to delete?"
+msgstr "This event is part of a recurring series. Which events do you want to delete?"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Connected"
+msgstr "Connected"
+
+#: src/lib/shortcuts.ts
+msgid "Toggle invitations"
+msgstr "Toggle invitations"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "navigate"
+msgstr "navigate"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Left"
+msgstr "Left"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Single theme"
+msgstr "Single theme"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "Connect calendar"
+msgstr "Connect calendar"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Space"
+msgstr "Space"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "close"
+msgstr "close"
+
+#: src/contexts/DeleteEventContext.tsx
+msgid "Failed to delete event"
+msgstr "Failed to delete event"
+
+#: src/components/sync/MassDeleteConfirmDialog.tsx
+msgid "{totalDeletes, plural, one {Delete # event} other {Delete # events}}"
+msgstr "{totalDeletes, plural, one {Delete # event} other {Delete # events}}"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Automatic sync"
+msgstr "Automatic sync"
+
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "Delete calendar"
+msgstr "Delete calendar"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "The event {eventName} is part of a recurring series. Which events do you want to delete?"
+msgstr "The event {eventName} is part of a recurring series. Which events do you want to delete?"
+
+#: src/components/settings/calendars/AddSubscriptionModal.tsx
+msgid "Failed to add subscription"
+msgstr "Failed to add subscription"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "Search plugins"
+msgstr "Search plugins"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "select"
+msgstr "select"
+
+#: src/components/sidebar/agenda/GetStartedState.tsx
+msgid "Connect a calendar"
+msgstr "Connect a calendar"
+
+#: src/components/ui/date-picker.tsx
+msgid "Select date"
+msgstr "Select date"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "{weeks, plural, one {# week} other {# weeks}}"
+msgstr "{weeks, plural, one {# week} other {# weeks}}"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "This plugin isn't listed in the renCal catalog."
+msgstr "This plugin isn't listed in the renCal catalog."
+
+#: src/components/sync/MassDeleteConfirmDialog.tsx
+msgid "Restore events"
+msgstr "Restore events"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Up"
+msgstr "Up"
+
+#: src/components/settings/plugins/plugin-list.ts
+msgctxt "plugin contribution kind"
+msgid "Theme"
+msgstr "Theme"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Save"
+msgstr "Save"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "Type a command…"
+msgstr "Type a command…"
+
+#: src/components/event-parts/inputs/CalendarSelect.tsx
+msgid "Select Calendar"
+msgstr "Select Calendar"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "{hours, plural, one {# hour} other {# hours}}"
+msgstr "{hours, plural, one {# hour} other {# hours}}"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Install"
+msgstr "Install"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Theme mode"
+msgstr "Theme mode"
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "No plugins installed yet."
+msgstr "No plugins installed yet."
+
+#: src/components/settings/accounts/CredentialsForm.tsx
+msgid "Connect {providerName}"
+msgstr "Connect {providerName}"
+
+#: src/components/settings/SettingsSidebar.tsx
+#: src/components/toolbar/SettingsButton.tsx
+msgid "Settings"
+msgstr "Settings"
+
+#: src/components/event-parts/inputs/ReminderSelect.tsx
+msgid "{months, plural, one {# month} other {# months}}"
+msgstr "{months, plural, one {# month} other {# months}}"
+
+#: src/components/main/MainHeader.tsx
+msgctxt "view switcher"
+msgid "View"
+msgstr "View"
+
+#: src/components/sidebar/agenda/GetStartedState.tsx
+msgid "Connect your calendar to get started."
+msgstr "Connect your calendar to get started."
+
+#: src/components/plugins/PluginInstallDialog.tsx
+msgid "Failed to load plugin details"
+msgstr "Failed to load plugin details"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Every day"
+msgstr "Every day"
+
+#: src/components/event-parts/inputs/AttendeesDisplay.tsx
+msgid "Organiser"
+msgstr "Organiser"
+
+#: src/components/main/board-view/BoardView.tsx
+msgctxt "board column"
+msgid "Today"
+msgstr "Today"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "Syncing..."
+msgstr "Syncing..."
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Start week on"
+msgstr "Start week on"
+
+#: src/components/event-parts/inputs/AllDayCheckbox.tsx
+msgid "All-day"
+msgstr "All-day"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "Show week numbers"
+msgstr "Show week numbers"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Calendar name"
+msgstr "Calendar name"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Details"
+msgstr "Details"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "Local-only calendar"
+msgstr "Local-only calendar"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgctxt "settings page"
+msgid "General"
+msgstr "General"
+
+#: src/components/EventContextMenu.tsx
+msgid "Edit event"
+msgstr "Edit event"
+
+#: src/components/settings/general/GeneralPage.tsx
+msgid "About"
+msgstr "About"
+
+#: src/lib/recurrence-text.ts
+msgid "{n, plural, one {Every month} other {Every # months}}"
+msgstr "{n, plural, one {Every month} other {Every # months}}"
+
+#: src/components/settings/reminders/RemindersPage.tsx
+msgid "Add reminder"
+msgstr "Add reminder"
+
+#: src/lib/shortcuts.ts
+msgid "Add event to selected day"
+msgstr "Add event to selected day"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Author"
+msgstr "Author"
+
+#: src/components/event-parts/inputs/RsvpSelect.tsx
+msgid "My status"
+msgstr "My status"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "{name}: {pullCount} to pull, {pushCount} to push"
+msgstr "{name}: {pullCount} to pull, {pushCount} to push"
+
+#: src/components/event-parts/DeleteConfirmDialog.tsx
+msgid "Are you sure you want to delete this event?"
+msgstr "Are you sure you want to delete this event?"
+
+#: src/components/event-parts/EditEvent.tsx
+#: src/components/EventContextMenu.tsx
+msgid "Duplicate event"
+msgstr "Duplicate event"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
+msgid "Please enter a calendar name"
+msgstr "Please enter a calendar name"
+
+#: src/lib/event-url.ts
+msgid "Linked in event notes"
+msgstr "Linked in event notes"
+
+#: src/components/event-parts/inputs/UrlInput.tsx
+msgid "Add link"
+msgstr "Add link"
+
+#: src/lib/recurrence-text.ts
+msgid "Every weekday"
+msgstr "Every weekday"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Theme slot"
+msgstr "Theme slot"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Group name"
+msgstr "Group name"
+
+#: src/contexts/RecurrenceEditContext.tsx
+#: src/lib/save-event.ts
+msgid "Failed to save event"
+msgstr "Failed to save event"
+
+#: src/components/event-parts/inputs/ConferenceDisplay.tsx
+msgid "Add {service}"
+msgstr "Add {service}"
+
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Backspace"
+msgstr "Backspace"
+
+#: src/components/event-parts/inputs/LocationInput.tsx
+msgid "Location"
+msgstr "Location"
+
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Choose a new display name for this calendar."
+msgstr "Choose a new display name for this calendar."
+
+#: src/components/settings/plugins/plugin-list.ts
+msgctxt "plugin contribution kind"
+msgid "Provider"
+msgstr "Provider"
+
+#: src/lib/shortcuts.ts
+msgid "Display month view"
+msgstr "Display month view"
+
+#: src/components/settings/accounts/CredentialsForm.tsx
+msgid "Please fill in all required fields"
+msgstr "Please fill in all required fields"
+
+#: src/lib/shortcuts.ts
+msgid "Duplicate selected event"
+msgstr "Duplicate selected event"
+
+#: src/components/event-parts/inputs/UrlInput.tsx
+msgid "Open link"
+msgstr "Open link"
+
+#: src/components/sidebar/header/compose-event/ComposeEventInput.tsx
+msgid "Clear"
+msgstr "Clear"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "Continue"
+msgstr "Continue"
+
+#: src/components/settings/themes/ThemesPage.tsx
+msgid "Sync with system"
+msgstr "Sync with system"
+
+#: src/lib/shortcuts.ts
+msgid "Next event"
+msgstr "Next event"
+
+#: src/contexts/DuplicateEventContext.tsx
+msgid "This event is part of a recurring series. Which events do you want to duplicate?"
+msgstr "This event is part of a recurring series. Which events do you want to duplicate?"
+
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+#: src/components/settings/calendars/RenameCalendarModal.tsx
+msgid "Saving..."
+msgstr "Saving..."
+
+#: src/components/event-parts/EventInfo.tsx
+msgid "Event Title"
+msgstr "Event Title"
+
+#: src/lib/shortcuts.ts
+msgid "Go to today"
+msgstr "Go to today"
+
+#: src/components/main/board-view/BoardView.tsx
+#: src/lib/event-time/display.ts
+msgid "Yesterday"
+msgstr "Yesterday"
+
+#: src/windows/SettingsWindow.tsx
+msgctxt "close settings window"
+msgid "Close"
+msgstr "Close"
+
+#: src/components/event-parts/inputs/AttendeesDisplay.tsx
+msgid "Add participant"
+msgstr "Add participant"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "Up-to-date"
+msgstr "Up-to-date"
+
+#: src/components/settings/plugins/PluginDetails.tsx
+msgid "Reinstall"
+msgstr "Reinstall"
+
+#: src/components/event-parts/inputs/TimeZoneSelect.tsx
+msgid "No timezones found."
+msgstr "No timezones found."
+
+#: src/components/loading-ui/orbit-ring.tsx
+msgid "Loading"
+msgstr "Loading"
+
+#: src/components/settings/calendars/ChangeCalendarColorModal.tsx
+msgid "Failed to change calendar color"
+msgstr "Failed to change calendar color"
+
+#: src/components/ui/dialog.tsx
+msgid "Close"
+msgstr "Close"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Connect new account"
+msgstr "Connect new account"
+
+#: src/lib/recurrence-text.ts
+msgctxt "monthly recurrence by day"
+msgid "{base} on the {days}"
+msgstr "{base} on the {days}"
+
+#: src/lib/recurrence-text.ts
+msgctxt "monthly recurrence"
+msgid "{base} on the last {weekdayName}"
+msgstr "{base} on the last {weekdayName}"
+
+#: src/components/toolbar/SyncStatus.tsx
+msgid "No internet connection"
+msgstr "No internet connection"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Every week"
+msgstr "Every week"
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "A group with this name already exists."
+msgstr "A group with this name already exists."
+
+#: src/components/settings/calendars/GroupsColumn.tsx
+msgid "Groups"
+msgstr "Groups"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "Command palette"
+msgstr "Command palette"
+
+#: src/components/settings/accounts/AddAccountModal.tsx
+msgid "New local-only calendar"
+msgstr "New local-only calendar"
+
+#: src/components/toolbar/InvitesBadge.tsx
+msgid "Invitations"
+msgstr "Invitations"
+
+#. Example of quick-add text the event parser understands
+#: src/components/sidebar/header/compose-event/ComposeEventInput.tsx
+msgid "Meeting at 3pm"
+msgstr "Meeting at 3pm"
+
+#: src/components/event-parts/inputs/RsvpSelect.tsx
+msgid "Declined"
+msgstr "Declined"
+
+#: src/components/shortcuts/CommandPalette.tsx
+msgid "No commands found."
+msgstr "No commands found."
+
+#: src/components/settings/plugins/PluginsPage.tsx
+msgid "{total, plural, one {# plugin} other {# plugins}}"
+msgstr "{total, plural, one {# plugin} other {# plugins}}"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Reconnect..."
+msgstr "Reconnect..."

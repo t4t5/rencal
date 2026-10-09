@@ -18,11 +18,13 @@ import { cn } from "@/lib/utils"
  * line, the bottom stops short of the end hour's, and a right gap keeps the column clickable.
  */
 export function weekEventBox(topPercent: number, heightPercent: number) {
+  /* eslint-disable lingui/no-unlocalized-strings -- CSS calc() values */
   return {
     top: `calc(${topPercent}% - 1px)`,
     height: `max(calc(${heightPercent}% - 3px), 1rem)`,
     right: 12,
   }
+  /* eslint-enable lingui/no-unlocalized-strings */
 }
 
 function WeekTimedEventImpl({

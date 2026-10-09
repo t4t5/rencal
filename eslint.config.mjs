@@ -1,3 +1,4 @@
+import pluginLingui from "eslint-plugin-lingui"
 import tseslint from "typescript-eslint"
 
 // Import boundaries. Rules do not merge, so every block restates the full list.
@@ -63,6 +64,86 @@ export default tseslint.config(
         paths: [rpcProxy],
         patterns: [parentImports, generatedTypes, nativeEvents, apiImplementations],
       }),
+    },
+  },
+  {
+    // User-visible text goes through Lingui (see docs/i18n.md). `t` must run at
+    // render time, after the locale is active; module-level text uses `msg`.
+    files: ["src/**/*.{ts,tsx}"],
+    ignores: [
+      "src/**/*.test.{ts,tsx}",
+      "src/test-setup/**",
+      "src/**/*.typecheck.ts",
+      // Tailwind class maps, no user-visible text
+      "src/**/*-styles.ts",
+    ],
+    plugins: { lingui: pluginLingui },
+    rules: {
+      "lingui/t-call-in-function": "error",
+      "lingui/no-unlocalized-strings": [
+        "error",
+        {
+          ignore: [
+            // identifiers, keys, CSS, paths, URLs, ids: no space and not capitalised
+            "^(?![A-Z])\\S+$",
+            // CONSTANT_CASE
+            "^[A-Z][A-Z0-9_]+$",
+          ],
+          ignoreNames: [
+            { regex: { pattern: "className", flags: "i" } },
+            { regex: { pattern: "^data-" } },
+            {
+              regex: { pattern: "^(aria-)?(role|key|id|type|name|variant|size|side|align|slot)$" },
+            },
+            "href",
+            "src",
+            "target",
+            "rel",
+            "inputMode",
+            "autoComplete",
+            "displayName",
+          ],
+          ignoreFunctions: [
+            "cn",
+            "cva",
+            "clsx",
+            "console.*",
+            "Error",
+            "*.debug",
+            "debug",
+            "debugMonthScroll",
+            "logState",
+            "logger.*",
+            "createStrictContext",
+            "emitAppEvent",
+            "*.listen",
+            "*.emit",
+            "querySelector",
+            "querySelectorAll",
+            "*.querySelector",
+            "*.querySelectorAll",
+            "*.closest",
+            "*.matches",
+            "*.setAttribute",
+            "*.getAttribute",
+            "*.addEventListener",
+            "*.removeEventListener",
+            "*.includes",
+            "*.startsWith",
+            "*.endsWith",
+            "*.split",
+            "*.replace",
+            "*.has",
+            "*.get",
+            "*.set",
+            "Temporal.*",
+            "*.from",
+            "RegExp",
+            "new URL",
+            "URL",
+          ],
+        },
+      ],
     },
   },
   {

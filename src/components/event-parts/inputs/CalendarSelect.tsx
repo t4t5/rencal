@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode } from "react"
 
 import {
@@ -49,7 +50,7 @@ export const CalendarSelect = ({
             )}
           </ItemMedia>
           <ItemContent className="truncate text-left text-foreground">
-            {calendar ? calendar.name || calendar.slug : "Select Calendar"}
+            {calendar ? calendar.name || calendar.slug : t`Select Calendar`}
           </ItemContent>
         </SelectMenuTrigger>
       </DropdownMenuTrigger>
