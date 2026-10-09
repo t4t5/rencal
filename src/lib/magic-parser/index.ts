@@ -13,7 +13,7 @@ import {
 import { jsDateToPlainDate } from "@/lib/event-time/js-date"
 import { GERMAN } from "@/lib/magic-parser/vocabularies/de"
 import { ENGLISH } from "@/lib/magic-parser/vocabularies/en"
-import type { ParserVocabulary } from "@/lib/magic-parser/vocabulary"
+import { type ParserVocabulary, type ReminderWords, words } from "@/lib/magic-parser/vocabulary"
 
 function currentViewerWallclockDate(): Date {
   const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
@@ -37,6 +37,8 @@ interface ParsedEventSegments {
   // Raw chrono match text from the input. Used by segmentEventText to locate
   // the time range in the original text without re-running chrono.
   chronoMatchText: string | null
+  // Minutes before the start, from "mit Erinnerung 1 Stunde vorher"; null if none.
+  reminders: number[] | null
   // A time found further on and merged into a time-less day ("Heute … um 19 Uhr").
   timeMatchText: string | null
 }
@@ -46,6 +48,61 @@ interface RecurrenceResult {
   textForChrono: string
   index: number
   length: number
+}
+
+interface ReminderResult {
+  minutes: number[]
+  index: number
+  length: number
+}
+
+const reminderPatternCache = new WeakMap<ReminderWords, { phrase: RegExp; amount: RegExp }>()
+
+function reminderPatterns(w: ReminderWords): { phrase: RegExp; amount: RegExp } {
+  let patterns = reminderPatternCache.get(w)
+  if (!patterns) {
+    const units = w.units.map(([source]) => source).join("|")
+    // A digit count may touch its unit ("10min"); a word count ("a", "einen") may not.
+    const amount = `(?<![\\p{L}\\p{N}])(?:(\\d+)\\s*|${w.one}\\s+)(${units})(?![\\p{L}])`
+    const amountNoGroups = amount.replace(/\((?!\?)/g, "(?:")
+    const list = `${amountNoGroups}(?:\\s*${w.and}\\s*${amountNoGroups})*`
+    patterns = {
+      phrase: words(`${w.intro}\\s+(${list})(?:\\s+${w.outro})?`),
+      amount: new RegExp(amount, "giu"),
+    }
+    reminderPatternCache.set(w, patterns)
+  }
+  return patterns
+}
+
+/** "mit Erinnerung 1 Woche und 2 Tage vorher" → [10080, 2880]. */
+function parseReminders(text: string, vocabulary: ParserVocabulary): ReminderResult | null {
+  const w = vocabulary.reminders
+  const { phrase, amount } = reminderPatterns(w)
+  const match = text.match(phrase)
+  if (match?.index === undefined) return null
+
+  const minutes = [...match[1].matchAll(amount)].map(([, digits, unit]) => {
+    const n = digits ? Number(digits) : 1
+    const perUnit = w.units.find(([source]) => new RegExp(`^(?:${source})$`, "iu").test(unit))
+    return n * (perUnit?.[1] ?? 0)
+  })
+  return { minutes, index: match.index, length: match[0].length }
+}
+
+/**
+ * Which reminders the draft should get after a parse: the ones written in the
+ * text; the defaults again once the text drops them; otherwise leave the draft's
+ * reminders alone (null), so a choice made by hand survives typing.
+ */
+export function remindersAfterParse(
+  parsed: number[] | null,
+  defaults: number[],
+  fromText: boolean,
+): { reminders: number[] | null; fromText: boolean } {
+  if (parsed) return { reminders: parsed, fromText: true }
+  if (fromText) return { reminders: defaults, fromText: false }
+  return { reminders: null, fromText: false }
 }
 
 /** The leftmost recurrence phrase of the vocabulary, if any. */
@@ -114,11 +171,16 @@ export function segmentEventText(
 
   const { parsed, vocabulary } = parseBest(text, referenceDate, vocabularies)
 
-  if (!parsed.start && !parsed.recurrence && !parsed.location) {
+  if (!parsed.start && !parsed.recurrence && !parsed.location && !parsed.reminders) {
     return [{ text, parsed: false }]
   }
 
   const ranges: Array<{ start: number; end: number }> = []
+
+  const reminderMatch = parseReminders(text, vocabulary)
+  if (reminderMatch) {
+    ranges.push({ start: reminderMatch.index, end: reminderMatch.index + reminderMatch.length })
+  }
 
   // Recurrence range
   const recMatch = parseRecurrence(text, vocabulary)
@@ -208,8 +270,19 @@ function parseWith(
   referenceDate: Date,
   vocabulary: ParserVocabulary,
 ): { parsed: ParsedEventSegments; recognised: number } {
+  // Reminders go first: chrono would read "1 Stunde vorher" as a point in time.
+  const reminderResult = parseReminders(text, vocabulary)
+  if (reminderResult) {
+    text = (
+      text.slice(0, reminderResult.index) + text.slice(reminderResult.index + reminderResult.length)
+    )
+      .replace(/\s{2,}/g, " ")
+      .trim()
+  }
+  const reminders = reminderResult?.minutes ?? null
+
   const recurrenceResult = parseRecurrence(text, vocabulary)
-  const recurrenceLength = recurrenceResult?.length ?? 0
+  const recurrenceLength = (recurrenceResult?.length ?? 0) + (reminderResult?.length ?? 0)
 
   const recurrence: Recurrence | null = recurrenceResult
     ? { rrule: recurrenceResult.rrule, exdates: [], rdates: [] }
@@ -228,6 +301,7 @@ function parseWith(
         end: null,
         recurrence,
         location,
+        reminders,
         chronoMatchText: null,
         timeMatchText: null,
       },
@@ -270,6 +344,7 @@ function parseWith(
       end,
       recurrence,
       location,
+      reminders,
       chronoMatchText: result.text,
       timeMatchText: time?.text ?? null,
     },
