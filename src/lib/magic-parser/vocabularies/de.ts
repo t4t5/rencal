@@ -30,6 +30,18 @@ export const GERMAN: ParserVocabulary = {
   language: "de",
   chrono: chrono.de.casual,
   recurrences,
+  reminders: {
+    intro: "(?:mit\\s+(?:(?:einer|der)\\s+)?)?(?:erinnerung(?:en)?|erinnere\\s+mich)",
+    outro: "(?:vorher|davor|zuvor|vor\\s+beginn)",
+    and: "(?:,|und)",
+    one: "(?:ein(?:e|en|em|er)?)",
+    units: [
+      ["minuten?|min\\.?|m", 1],
+      ["stunden?|std\\.?|h", 60],
+      ["tagen?|tage|tag", 1440],
+      ["wochen?", 10080],
+    ],
+  },
   location: /(?<![\p{L}\p{N}])(?:in|im|bei)\s+(.+)$/iu,
   connectorsBeforeDate: /(?<![\p{L}\p{N}])(?:um|am|ab|vom|von|für|zum)\s*$/iu,
 }
