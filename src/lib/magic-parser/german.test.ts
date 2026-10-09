@@ -75,4 +75,11 @@ describe("parseEventText in German", () => {
     const segments = segmentEventText("Standup jeden Montag im Raum 4", REF, DE_FIRST)
     expect(segments.filter((s) => s.parsed).map((s) => s.text)).toEqual(["jeden Montag", "Raum 4"])
   })
+
+  it.each(["Meeting morgen um 15 Uhr", "nächsten Sonntag", "5. Sep."])(
+    "understands the example shown in the German UI: %s",
+    (example) => {
+      expect(parseEventText(example, REF, DE_FIRST).start).not.toBeNull()
+    },
+  )
 })

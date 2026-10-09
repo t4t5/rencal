@@ -692,7 +692,7 @@ msgstr "Path"
 msgid "Enable notifications"
 msgstr "Enable notifications"
 
-#. The examples are fed to the date parser, which only understands English
+#. Example dates the parser understands in this language (see src/lib/magic-parser/vocabularies)
 #: src/components/shortcuts/CommandPalette.tsx
 msgid "e.g. \"5 Sep\", \"next sunday\"..."
 msgstr "e.g. \"5 Sep\", \"next sunday\"..."
@@ -1461,7 +1461,7 @@ msgstr "New local-only calendar"
 msgid "Invitations"
 msgstr "Invitations"
 
-#. Example of quick-add text the event parser understands
+#. Quick-add example the parser understands in this language (see src/lib/magic-parser/vocabularies)
 #: src/components/sidebar/header/compose-event/ComposeEventInput.tsx
 msgid "Meeting at 3pm"
 msgstr "Meeting at 3pm"
