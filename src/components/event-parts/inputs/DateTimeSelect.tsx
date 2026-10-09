@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -119,7 +120,7 @@ export const DateTimeSelect = ({
                 className="px-[var(--control-padding-inline)] text-muted-foreground"
                 onClick={() => setTimeZoneRequested(true)}
               >
-                Add timezone
+                {t`Add timezone`}
               </Button>
             )
           }
@@ -157,9 +158,9 @@ const ZoneSwitchButton = ({
 }) => {
   const label = locked
     ? readOnly
-      ? "Show in event's time zone"
-      : "Switch to event's time zone to edit"
-    : "Show in your time zone"
+      ? t`Show in event's time zone`
+      : t`Switch to event's time zone to edit`
+    : t`Show in your time zone`
 
   return (
     <Tooltip>

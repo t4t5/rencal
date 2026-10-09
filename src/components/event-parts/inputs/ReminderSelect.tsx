@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro"
 import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
@@ -53,7 +54,7 @@ function getQueryValues(query: string): number[] {
 }
 
 function humanDuration(mins: number): string {
-  if (mins === 0) return "At time of event"
+  if (mins === 0) return t`At time of event`
 
   if (mins < 0) {
     // Negative means "after event start" — used for all-day event reminders
@@ -63,7 +64,8 @@ function humanDuration(mins: number): string {
       .toString()
       .padStart(2, "0")
     const m = (afterMins % 60).toString().padStart(2, "0")
-    return `On day of event (${h}:${m})`
+    const time = `${h}:${m}`
+    return t`On day of event (${time})`
   }
 
   const months = Math.floor(mins / MONTH_MINUTES)
@@ -73,22 +75,25 @@ function humanDuration(mins: number): string {
   const minutes = mins % HOUR_MINUTES
 
   return [
-    { value: months, unit: "month" },
-    { value: weeks, unit: "week" },
-    { value: days, unit: "day" },
-    { value: hours, unit: "hour" },
-    { value: minutes, unit: "minute" },
+    months > 0 && plural(months, { one: "# month", other: "# months" }),
+    weeks > 0 && plural(weeks, { one: "# week", other: "# weeks" }),
+    days > 0 && plural(days, { one: "# day", other: "# days" }),
+    hours > 0 && plural(hours, { one: "# hour", other: "# hours" }),
+    minutes > 0 && plural(minutes, { one: "# minute", other: "# minutes" }),
   ]
-    .filter(({ value }) => value > 0)
-    .map(({ value, unit }) => `${value} ${unit}${value === 1 ? "" : "s"}`)
+    .filter((part) => part !== false)
     .join(", ")
 }
+
+// Stands in for the duration inside the translated "… before" phrase, so the
+// words around it can keep their muted style.
+const DURATION_SLOT = "\u0000duration\u0000"
 
 export function ReminderSelect({
   reminders,
   onSelect,
   onRemove,
-  placeholder = "Reminders",
+  placeholder,
   addon,
   variant,
   indentRows = true,
@@ -126,7 +131,7 @@ export function ReminderSelect({
   return (
     <div className="flex flex-col gap-1">
       <Combobox
-        placeholder={placeholder}
+        placeholder={placeholder ?? t`Reminders`}
         query={query}
         setQuery={handleQueryChange}
         open={open}
@@ -153,7 +158,7 @@ export function ReminderSelect({
             ))}
           </CommandGroup>
         ) : (
-          <CommandEmpty>No results found.</CommandEmpty>
+          <CommandEmpty>{t`No results found.`}</CommandEmpty>
         )}
       </Combobox>
 
@@ -200,10 +205,27 @@ const ReminderRow = ({
 }
 
 const HumanDuration = ({ mins }: { mins: number }) => {
+  if (mins <= 0) {
+    return (
+      <span className="flex gap-1.5 items-baseline">
+        <span>{humanDuration(mins)}</span>
+      </span>
+    )
+  }
+
+  const duration = DURATION_SLOT
+  const [prefix = "", suffix = ""] = t({
+    message: `${duration} before`,
+    context: "reminder offset",
+  })
+    .split(DURATION_SLOT)
+    .map((part) => part.trim())
+
   return (
     <span className="flex gap-1.5 items-baseline">
+      {prefix && <span className="text-muted-foreground">{prefix}</span>}
       <span>{humanDuration(mins)}</span>
-      {mins > 0 && <span className="text-muted-foreground">before</span>}
+      {suffix && <span className="text-muted-foreground">{suffix}</span>}
     </span>
   )
 }

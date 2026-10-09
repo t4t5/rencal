@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { type ReactNode, useState } from "react"
 
 import { Calendar } from "@/components/ui/calendar"
@@ -44,7 +45,7 @@ export const DatePicker = ({
           )}
         >
           {addon}
-          <ItemContent>{date ? formattedDate : "Select date"}</ItemContent>
+          <ItemContent>{date ? formattedDate : t`Select date`}</ItemContent>
           {/* Hidden by default to fit narrow forms; combo-box themes can show it. */}
           {!readOnly && <SelectIcon forceVisible={open} className="hidden" />}
         </button>

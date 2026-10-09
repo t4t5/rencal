@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
@@ -14,7 +15,7 @@ export function SearchButton() {
 
   return (
     <>
-      <CommandTooltip text="Search" action="search.open">
+      <CommandTooltip text={t`Search`} action="search.open">
         <Button
           id={SEARCH_BUTTON_EL_ID}
           size="icon"

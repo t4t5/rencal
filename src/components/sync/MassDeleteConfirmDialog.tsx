@@ -1,3 +1,5 @@
+import { plural, t } from "@lingui/core/macro"
+
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -18,6 +20,7 @@ export function MassDeleteConfirmDialog() {
   const open = pendingMassDelete !== null
   const items = pendingMassDelete ?? []
   const totalDeletes = items.reduce((acc, p) => acc + p.to_push_delete_count, 0)
+  const calendarCount = items.length
 
   const calendarLabel = (slug: string) => calendars.find((c) => c.slug === slug)?.name ?? slug
 
@@ -25,10 +28,9 @@ export function MassDeleteConfirmDialog() {
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && cancelMassDelete()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Confirm large deletion</DialogTitle>
+          <DialogTitle>{t`Confirm large deletion`}</DialogTitle>
           <DialogDescription>
-            Syncing would delete {totalDeletes} event{totalDeletes === 1 ? "" : "s"} from{" "}
-            {items.length} calendar{items.length === 1 ? "" : "s"}. Continue?
+            {t`Syncing would delete ${plural(totalDeletes, { one: "# event", other: "# events" })} from ${plural(calendarCount, { one: "# calendar", other: "# calendars" })}. Continue?`}
           </DialogDescription>
         </DialogHeader>
         <ul className="flex flex-col gap-1 text-sm">
@@ -44,13 +46,13 @@ export function MassDeleteConfirmDialog() {
         </ul>
         <DialogFooter className="flex gap-2">
           <Button variant="secondary" onClick={cancelMassDelete} autoFocus>
-            Cancel
+            {t`Cancel`}
           </Button>
           <Button variant="secondary" onClick={() => void discardMassDelete()}>
-            Restore events
+            {t`Restore events`}
           </Button>
           <Button variant="destructive" onClick={() => void confirmMassDelete()}>
-            Delete {totalDeletes} event{totalDeletes === 1 ? "" : "s"}
+            {plural(totalDeletes, { one: "Delete # event", other: "Delete # events" })}
           </Button>
         </DialogFooter>
       </DialogContent>

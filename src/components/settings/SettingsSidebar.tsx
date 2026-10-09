@@ -1,3 +1,5 @@
+import { i18n, type MessageDescriptor } from "@lingui/core"
+import { msg, plural, t } from "@lingui/core/macro"
 import { ComponentType } from "react"
 
 import { AccountsPage } from "@/components/settings/accounts/AccountsPage"
@@ -24,20 +26,30 @@ import { UserIcon } from "@/icons/user"
 
 interface NavItem {
   tab: string
-  label: string
+  label: MessageDescriptor
   icon: IconType
   page: ComponentType
 }
 
 export const NAV_ITEMS = [
-  { tab: "general" as const, label: "General", icon: SettingsIcon, page: GeneralPage },
-  { tab: "accounts" as const, label: "Accounts", icon: UserIcon, page: AccountsPage },
-  { tab: "calendars" as const, label: "Calendars", icon: CalendarIcon, page: CalendarsPage },
-  { tab: "reminders" as const, label: "Reminders", icon: BellIcon, page: RemindersPage },
-  { tab: "themes" as const, label: "Themes", icon: PaletteIcon, page: ThemesPage },
-  { tab: "shortcuts" as const, label: "Shortcuts", icon: KeyboardIcon, page: ShortcutsPage },
-  { tab: "plugins" as const, label: "Plugins", icon: PluginIcon, page: PluginsPage },
-  { tab: "agents" as const, label: "Agents", icon: AgentIcon, page: AgentsPage },
+  {
+    tab: "general" as const,
+    label: msg({ message: "General", context: "settings page" }),
+    icon: SettingsIcon,
+    page: GeneralPage,
+  },
+  { tab: "accounts" as const, label: msg`Accounts`, icon: UserIcon, page: AccountsPage },
+  { tab: "calendars" as const, label: msg`Calendars`, icon: CalendarIcon, page: CalendarsPage },
+  { tab: "reminders" as const, label: msg`Reminders`, icon: BellIcon, page: RemindersPage },
+  { tab: "themes" as const, label: msg`Themes`, icon: PaletteIcon, page: ThemesPage },
+  {
+    tab: "shortcuts" as const,
+    label: msg({ message: "Shortcuts", context: "settings page" }),
+    icon: KeyboardIcon,
+    page: ShortcutsPage,
+  },
+  { tab: "plugins" as const, label: msg`Plugins`, icon: PluginIcon, page: PluginsPage },
+  { tab: "agents" as const, label: msg`Agents`, icon: AgentIcon, page: AgentsPage },
 ] satisfies NavItem[]
 
 export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]
@@ -51,16 +63,19 @@ export function SettingsSidebar() {
     >
       <TabsList
         variant="navigation"
-        aria-label="Settings"
+        aria-label={t`Settings`}
         className="w-full justify-start rounded-none py-(--layout-padding) group-data-[orientation=vertical]/tabs:h-full"
       >
         {NAV_ITEMS.map(({ tab, label, icon: Icon }) => (
           <TabsTrigger key={tab} value={tab} data-page={tab}>
             <Icon className="size-4" />
-            {label}
+            {i18n._(label)}
             {tab === "plugins" && pluginUpdates > 0 && (
               <span
-                aria-label={`${pluginUpdates} plugin ${pluginUpdates === 1 ? "update" : "updates"} available`}
+                aria-label={plural(pluginUpdates, {
+                  one: "# plugin update available",
+                  other: "# plugin updates available",
+                })}
                 className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-medium text-brand-foreground"
               >
                 {pluginUpdates}

@@ -1,4 +1,5 @@
-import { useState } from "react"
+import { t } from "@lingui/core/macro"
+import { type ReactNode, useState } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,6 +13,21 @@ import {
 
 import type { CalendarEvent } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
+
+// Stands in for the styled event name inside a translated sentence, so the
+// whole sentence stays one message and the name keeps its markup.
+const NAME_SLOT = "\u0000name\u0000"
+
+function withName(text: string, name: ReactNode): ReactNode {
+  const [before, after = ""] = text.split(NAME_SLOT)
+  return (
+    <>
+      {before}
+      {name}
+      {after}
+    </>
+  )
+}
 
 type DeleteConfirmDialogProps = {
   /** The event to confirm deleting; null closes the dialog. */
@@ -37,39 +53,42 @@ export function DeleteConfirmDialog({
   const name = shown?.summary ? (
     <span className="font-medium text-foreground">“{shown.summary}”</span>
   ) : null
+  const eventName = NAME_SLOT
 
   return (
     <Dialog open={event !== null} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className={cn(isRecurring && "sm:max-w-xl")}>
         <DialogHeader>
-          <DialogTitle>{isRecurring ? "Delete recurring event" : "Delete event"}</DialogTitle>
+          <DialogTitle>{isRecurring ? t`Delete recurring event` : t`Delete event`}</DialogTitle>
           <DialogDescription>
-            {isRecurring ? (
-              <>
-                {name ? <>The event {name}</> : "This event"} is part of a recurring series. Which
-                events do you want to delete?
-              </>
-            ) : (
-              <>Are you sure you want to delete {name ? <>the event {name}</> : "this event"}?</>
-            )}
+            {isRecurring
+              ? name
+                ? withName(
+                    t`The event ${eventName} is part of a recurring series. Which events do you want to delete?`,
+                    name,
+                  )
+                : t`This event is part of a recurring series. Which events do you want to delete?`
+              : name
+                ? withName(t`Are you sure you want to delete the event ${eventName}?`, name)
+                : t`Are you sure you want to delete this event?`}
           </DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
           {isRecurring ? (
             <>
               <Button variant="secondary" onClick={onDeleteThis}>
-                Only this event
+                {t`Only this event`}
               </Button>
               <Button variant="destructive" onClick={onDeleteFuture}>
-                This and future events
+                {t`This and future events`}
               </Button>
               <Button variant="destructive" onClick={onDeleteAll}>
-                All events
+                {t`All events`}
               </Button>
             </>
           ) : (
             <Button variant="destructive" onClick={onDeleteThis}>
-              Delete
+              {t`Delete`}
             </Button>
           )}
         </DialogFooter>

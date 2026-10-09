@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -29,12 +30,12 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
 
     const trimmedUrl = url.trim()
     if (!trimmedUrl) {
-      setError("Please enter a calendar URL")
+      setError(t`Please enter a calendar URL`)
       return
     }
 
     if (!isSupportedCalendarUrl(trimmedUrl)) {
-      setError("Please enter a webcal, http, or https URL")
+      setError(t`Please enter a webcal, http, or https URL`)
       return
     }
 
@@ -42,16 +43,16 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
       await connectWithCredentials(WEBCAL_PROVIDER, [{ id: "url", value: trimmedUrl }])
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to add subscription"))
+      setError(getErrorMessage(err, t`Failed to add subscription`))
     }
   }
 
   return (
     <Modal onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Add subscription</DialogTitle>
+        <DialogTitle>{t`Add subscription`}</DialogTitle>
         <DialogDescription>
-          Paste a public .ics calendar feed URL (webcal or http)
+          {t`Paste a public .ics calendar feed URL (webcal or http)`}
         </DialogDescription>
       </DialogHeader>
 
@@ -70,7 +71,7 @@ export function AddSubscriptionModal({ onClose }: { onClose: () => void }) {
 
         <div className="flex justify-end">
           <Button type="submit" disabled={isConnecting || !url.trim()} className="mt-3">
-            {isConnecting ? "Adding..." : "Add subscription"}
+            {isConnecting ? t`Adding...` : t`Add subscription`}
           </Button>
         </div>
       </form>

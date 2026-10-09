@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { ReactNode } from "react"
 
@@ -84,7 +85,7 @@ function DialogContent({
               className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-accent-foreground absolute top-1 right-1 p-1 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4"
             >
               <CloseIcon />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t`Close`}</span>
             </DialogPrimitive.Close>
           )}
         </DialogPrimitive.Content>

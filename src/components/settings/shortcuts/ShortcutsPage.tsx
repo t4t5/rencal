@@ -18,8 +18,12 @@ import {
   type CommandDef,
   type CommandGroup,
   type CommandValues,
-  describeAction,
 } from "@/lib/commands"
+import {
+  commandGroupLabel,
+  describeCommandAction,
+  viewSwitchLabel,
+} from "@/lib/command-labels"
 import {
   type Binding,
   bindKeyEdits,
@@ -56,7 +60,7 @@ function actionRows(values: CommandValues, bindings: readonly Binding[]): Action
   })
   for (const { action } of bindings) if (!actions.includes(action)) actions.push(action)
   return actions.flatMap((action) => {
-    const described = describeAction(action, values)
+    const described = describeCommandAction(action, values)
     return described ? [{ action, ...described }] : []
   })
 }
@@ -93,7 +97,7 @@ function ShortcutsEditor() {
     () => ({
       "view.switch": [...BUILTIN_VIEWS, ...pluginViews].map((view) => ({
         value: view.id,
-        label: `Display ${view.name.toLowerCase()} view`,
+        label: viewSwitchLabel(view),
       })),
     }),
     [pluginViews],
@@ -121,7 +125,7 @@ function ShortcutsEditor() {
     }
   }
 
-  const label = (action: string) => describeAction(action, values)?.label ?? action
+  const label = (action: string) => describeCommandAction(action, values)?.label ?? action
 
   const bind = (action: string, keys: string) => {
     setCapturing(null)
@@ -161,7 +165,7 @@ function ShortcutsEditor() {
         if (groupRows.length === 0) return null
         return (
           <section key={group} className="flex flex-col">
-            <h3 className="text-foreground pb-1 text-sm font-semibold">{group}</h3>
+            <h3 className="text-foreground pb-1 text-sm font-semibold">{commandGroupLabel(group)}</h3>
             {groupRows.map((row) => (
               <ShortcutRow
                 key={row.action}

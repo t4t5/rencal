@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useEffect, useSyncExternalStore } from "react"
 
 import { api, getErrorMessage, type NotificationSubscription, type ProviderInfo } from "@/lib/api"
@@ -19,7 +20,7 @@ function load(): Promise<void> {
   loading = api.providers.list().then(
     (providers) => settle(request, { providers, error: null }),
     (error: unknown) =>
-      settle(request, { ...snapshot, error: getErrorMessage(error, "Failed to load providers") }),
+      settle(request, { ...snapshot, error: getErrorMessage(error, t`Failed to load providers`) }),
   )
   return loading
 }

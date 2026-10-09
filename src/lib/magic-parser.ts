@@ -52,6 +52,7 @@ const RECURRENCE_PATTERN = new RegExp(
   "i",
 )
 
+/* eslint-disable lingui/no-unlocalized-strings -- parser keywords and RRULE values, not UI text */
 function parseRecurrence(text: string): { rrule: string; textForChrono: string } | null {
   const match = text.match(RECURRENCE_PATTERN)
   if (!match) return null
@@ -98,6 +99,7 @@ function parseRecurrence(text: string): { rrule: string; textForChrono: string }
 
   return { rrule, textForChrono }
 }
+/* eslint-enable lingui/no-unlocalized-strings */
 
 function parseLocation(summary: string): { summary: string; location: string | null } {
   const match = summary.match(/\b(?:at|in)\s+(.+)$/i)

@@ -79,6 +79,7 @@ function varsFromColors(c: OmarchyColors): OmarchyVars {
     "--brand": c.red,
     "--brand-foreground": readableOn(c.red, c, fg),
     "--surface-tint": fg,
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS value
     "--muted-foreground": `color-mix(in srgb, ${fg} 55%, transparent)`,
     "--success": c.green,
     "--warning": c.yellow,
@@ -139,6 +140,7 @@ function applyOmarchyColors(c: OmarchyColors) {
   const declarations = Object.entries(vars)
     .map(([k, v]) => `  ${k}: ${v};`)
     .join("\n")
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS rule
   ensureStyleElement().textContent = `[data-theme="omarchy"] {\n${declarations}\n}`
   // index.html's flash-prevention sets some of these as inline body styles
   // before React mounts. Clear them so the stylesheet rule wins from now on.

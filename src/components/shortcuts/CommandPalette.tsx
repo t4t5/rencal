@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
@@ -31,6 +32,13 @@ import {
   type CommandValues,
   findCommand,
 } from "@/lib/commands"
+import {
+  commandGroupLabel,
+  commandLabel,
+  commandPaletteLabel,
+  commandPromptTexts,
+  commandValueLabel,
+} from "@/lib/command-labels"
 import { formatLongDate, dateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
 
@@ -58,7 +66,7 @@ function paletteEntries(values: CommandValues): PaletteEntry[] {
     if (command.palette === "values" && arg) {
       return argValues(command, arg, values).map((choice) => ({
         action: `${command.id}:${choice.value}`,
-        label: choice.label,
+        label: commandValueLabel(command, choice),
         group: command.group,
       }))
     }
@@ -71,15 +79,13 @@ function paletteEntries(values: CommandValues): PaletteEntry[] {
     return [
       {
         action: command.id,
-        label: command.paletteLabel ?? command.label,
+        label: commandPaletteLabel(command),
         group: command.group,
         prompt: prompt ? (command.id as CommandId) : undefined,
       },
     ]
   })
 }
-
-const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 export function CommandPalette({
   open,
@@ -159,15 +165,19 @@ export function CommandPalette({
         }}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Command palette</DialogTitle>
-          <DialogDescription>Search for a command to run</DialogDescription>
+          <DialogTitle>{t`Command palette`}</DialogTitle>
+          <DialogDescription>{t`Search for a command to run`}</DialogDescription>
         </DialogHeader>
 
         {/* cmdk's fuzzy filter would hide the date page's single dynamic result, so we disable it: */}
         <Command shouldFilter={!isDatePage} onKeyDown={handleKeyDown}>
           <CommandInput
             placeholder={
-              isDatePage ? "Type a date…" : prompt ? `Search ${prompt.name}s…` : "Type a command…"
+              isDatePage
+                ? t`Type a date…`
+                : prompt
+                  ? commandPromptTexts(prompt.name).placeholder
+                  : t`Type a command…`
             }
             value={search}
             onValueChange={setSearch}
@@ -177,21 +187,21 @@ export function CommandPalette({
             {command && isDatePage ? (
               <DatePage
                 search={search}
-                heading={command.label.replace(/…$/, "")}
+                heading={commandLabel(command).replace(/…$/, "")}
                 onSelect={(date) => run(`${command.id}:${date.toString()}`)}
               />
             ) : command && prompt && choices ? (
               <>
-                <CommandEmpty>No {prompt.name}s found.</CommandEmpty>
-                <CommandGroup heading={capitalize(prompt.name)}>
+                <CommandEmpty>{commandPromptTexts(prompt.name).empty}</CommandEmpty>
+                <CommandGroup heading={commandPromptTexts(prompt.name).heading}>
                   {choices.map((choice) => (
                     <CommandItem
                       key={choice.value}
-                      value={choice.label}
+                      value={commandValueLabel(command, choice)}
                       keywords={[prompt.name]}
                       onSelect={() => run(`${command.id}:${choice.value}`)}
                     >
-                      <span>{choice.label}</span>
+                      <span>{commandValueLabel(command, choice)}</span>
                       {choice.value === current[command.id as CommandId] && (
                         <CheckIcon className="ml-auto size-4" />
                       )}
@@ -201,7 +211,7 @@ export function CommandPalette({
               </>
             ) : (
               <>
-                <CommandEmpty>No commands found.</CommandEmpty>
+                <CommandEmpty>{t`No commands found.`}</CommandEmpty>
                 <RootCommands values={values} goToPage={goToPage} run={run} />
               </>
             )}
@@ -227,7 +237,7 @@ function RootCommands({
   const entries = paletteEntries(values)
 
   return COMMAND_GROUPS.map((group) => (
-    <CommandGroup key={group} heading={group}>
+    <CommandGroup key={group} heading={commandGroupLabel(group)}>
       {entries
         .filter((entry) => entry.group === group)
         .map((entry) => {
@@ -238,7 +248,7 @@ function RootCommands({
             <CommandItem
               key={entry.action}
               value={entry.label}
-              keywords={[group]}
+              keywords={[commandGroupLabel(group)]}
               onSelect={() => (prompt ? goToPage(prompt) : run(entry.action))}
             >
               <span>{entry.label}</span>
@@ -275,7 +285,12 @@ function DatePage({
   if (!date) {
     return (
       <div className="text-muted-foreground px-3 py-6 text-center text-sm">
-        {search ? "No matching date" : `e.g. "5 Sep", "next sunday"...`}
+        {search
+          ? t`No matching date`
+          : t({
+              message: `e.g. "5 Sep", "next sunday"...`,
+              comment: "The examples are fed to the date parser, which only understands English",
+            })}
       </div>
     )
   }
@@ -302,15 +317,17 @@ function PaletteFooter({ escAction }: { escAction: "close" | "back" }) {
             <ArrowRightIcon className="rotate-90" />
           </Kbd>
         </KbdGroup>
-        navigate
+        {t`navigate`}
       </span>
       <span className="flex items-center gap-1.5">
+        {/* eslint-disable-next-line lingui/no-unlocalized-strings -- key name */}
         <Kbd>Enter</Kbd>
-        select
+        {t`select`}
       </span>
       <span className="flex items-center gap-1.5">
+        {/* eslint-disable-next-line lingui/no-unlocalized-strings -- key name */}
         <Kbd>Esc</Kbd>
-        {escAction}
+        {escAction === "close" ? t`close` : t`back`}
       </span>
     </div>
   )

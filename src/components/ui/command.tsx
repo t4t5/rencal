@@ -1,5 +1,7 @@
+// eslint-disable-next-line lingui/no-unlocalized-strings -- React directive
 "use client"
 
+import { t } from "@lingui/core/macro"
 import { Command as CommandPrimitive } from "cmdk"
 import * as React from "react"
 
@@ -29,8 +31,8 @@ function Command({ className, ...props }: React.ComponentProps<typeof CommandPri
 }
 
 function CommandDialog({
-  title = "Command Palette",
-  description = "Search for a command to run...",
+  title = t`Command Palette`,
+  description = t`Search for a command to run...`,
   children,
   className,
   showCloseButton = true,

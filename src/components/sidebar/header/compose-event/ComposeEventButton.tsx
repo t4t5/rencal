@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, RefObject, useEffect, useRef } from "react"
 
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
@@ -49,7 +50,7 @@ export function ComposeEventButton() {
 
       <CommandTooltip
         open={expanded ? false : undefined}
-        text="Create new event"
+        text={t`Create new event`}
         action="event.new"
       >
         <ButtonContainer expanded={expanded} ref={containerRef}>

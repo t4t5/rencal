@@ -2,6 +2,7 @@ import { useEffect, type RefObject } from "react"
 
 // Mirrors the browser's own Tab order, so native Tab and the trap agree on
 // every stop. Controls opt out via `disabled` or tabIndex={-1}, not here.
+// eslint-disable-next-line lingui/no-unlocalized-strings -- CSS selector
 const TABBABLE_SELECTOR = "textarea, input, select, button, [tabindex]"
 
 const INTERACTIVE_FOCUS_SELECTOR = [

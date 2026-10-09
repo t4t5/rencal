@@ -42,6 +42,7 @@ import {
   parseAction,
   resolveInvocation,
 } from "@/lib/commands"
+import { viewSwitchLabel } from "@/lib/command-labels"
 import { largestDayElement } from "@/lib/day-grid"
 import { dateInViewerZone, today } from "@/lib/event-time"
 import { type Binding, isCharKey } from "@/lib/key-bindings"
@@ -92,7 +93,7 @@ export function GlobalShortcuts({
   const values: CommandValues = {
     "view.switch": views.map((view) => ({
       value: view.id,
-      label: `Display ${view.name.toLowerCase()} view`,
+      label: viewSwitchLabel(view),
     })),
     "group.switch": getGroupOptions(groups).map((name) => ({
       value: name,

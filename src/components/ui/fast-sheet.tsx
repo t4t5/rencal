@@ -64,9 +64,13 @@ function SheetContent({
   }[side]
 
   const position = {
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     right: "inset-y-0 right-0 h-full w-3/4 border-l sm:max-w-sm",
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     left: "inset-y-0 left-0 h-full w-3/4 border-r sm:max-w-sm",
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     top: "inset-x-0 top-0 h-auto border-b",
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS classes
     bottom: "inset-x-0 bottom-0 h-auto border-t",
   }[side]
 

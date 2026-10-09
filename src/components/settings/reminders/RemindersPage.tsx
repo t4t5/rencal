@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useId } from "react"
 
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
@@ -29,7 +30,7 @@ const NotificationsSection = () => {
           onCheckedChange={(checked) => void setNotificationsEnabled(checked === true)}
         />
         <Label htmlFor={id} className="text-sm">
-          Enable notifications
+          {t`Enable notifications`}
         </Label>
       </div>
     </div>
@@ -41,12 +42,12 @@ const DefaultRemindersSection = () => {
 
   return (
     <div className="flex flex-col gap-2 w-[300px]">
-      <label className="text-sm">Default reminders</label>
+      <label className="text-sm">{t`Default reminders`}</label>
       <ReminderSelect
         reminders={defaultReminders}
         onSelect={(mins) => setDefaultReminders([...defaultReminders, mins])}
         onRemove={(mins) => setDefaultReminders(defaultReminders.filter((m) => m !== mins))}
-        placeholder="Add reminder"
+        placeholder={t`Add reminder`}
         variant="default"
         indentRows={false}
         addon={null}

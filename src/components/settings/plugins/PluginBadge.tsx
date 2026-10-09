@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { t } from "@lingui/core/macro"
 import type { ReactNode } from "react"
 
 import { cn } from "@/lib/utils"
@@ -30,12 +32,16 @@ export function PluginBadges({ plugin }: { plugin: PluginListItem }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {plugin.contributions.map((kind) => (
-        <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
+        <PluginBadge key={kind}>{i18n._(CONTRIBUTION_LABELS[kind])}</PluginBadge>
       ))}
       {plugin.installed?.update_version ? (
-        <PluginBadge variant="success">Update available</PluginBadge>
+        <PluginBadge variant="success">{t`Update available`}</PluginBadge>
       ) : (
-        plugin.installed && <PluginBadge variant="solid">Installed</PluginBadge>
+        plugin.installed && (
+          <PluginBadge variant="solid">
+            {t({ message: "Installed", context: "plugin status badge" })}
+          </PluginBadge>
+        )
       )}
     </div>
   )

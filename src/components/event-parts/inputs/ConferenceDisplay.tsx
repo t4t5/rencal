@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { openUrl } from "@tauri-apps/plugin-opener"
 
 import { Button } from "@/components/ui/button"
@@ -74,11 +75,12 @@ export function ConferenceDisplay({
 }
 
 function ConferenceLink({ url, label }: { url: string; label: string }) {
+  const service = label
   return (
     <div className="flex flex-col gap-1 py-1">
       <Button data-popover-entry className="w-full cursor-pointer" onClick={() => openUrl(url)}>
         <VideoIcon />
-        Join {label}
+        {t`Join ${service}`}
       </Button>
       <span className="text-xs text-muted-foreground truncate">{url}</span>
     </div>
@@ -118,6 +120,7 @@ function ConferenceRequestButton({
   provider: ConferenceProvider
   onClick: () => void
 }) {
+  const service = conferenceLabel[provider]
   return (
     <Button
       type="button"
@@ -129,7 +132,7 @@ function ConferenceRequestButton({
       <ItemMedia>
         <VideoIcon />
       </ItemMedia>
-      <ItemContent className="text-left">Add {conferenceLabel[provider]}</ItemContent>
+      <ItemContent className="text-left">{t`Add ${service}`}</ItemContent>
     </Button>
   )
 }

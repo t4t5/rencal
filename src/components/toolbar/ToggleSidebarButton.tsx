@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { Button } from "@/components/ui/button"
 
@@ -11,9 +12,9 @@ export function ToggleSidebarButton() {
   if (!collapsed) return null
 
   return (
-    <CommandTooltip text="Show sidebar" action="sidebar.toggle">
+    <CommandTooltip text={t`Show sidebar`} action="sidebar.toggle">
       <Button
-        aria-label="Show sidebar"
+        aria-label={t`Show sidebar`}
         tabIndex={-1}
         size="icon"
         variant="ghost"

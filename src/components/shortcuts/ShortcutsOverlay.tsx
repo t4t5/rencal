@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useMemo, useState } from "react"
 
 import { ShortcutKeys } from "@/components/shortcuts/ShortcutKeys"
@@ -11,8 +12,8 @@ import {
   COMMAND_GROUPS,
   type CommandGroup,
   type CommandValues,
-  describeAction,
 } from "@/lib/commands"
+import { commandGroupLabel, describeCommandAction } from "@/lib/command-labels"
 import type { Binding } from "@/lib/key-bindings"
 
 import { CloseIcon } from "@/icons/close"
@@ -35,7 +36,7 @@ function shortcutRows(bindings: readonly Binding[], values: CommandValues): Shor
       row.keys.push(binding.keys)
       continue
     }
-    const described = describeAction(binding.action, values)
+    const described = describeCommandAction(binding.action, values)
     if (described)
       rows.set(binding.action, { action: binding.action, ...described, keys: [binding.keys] })
   }
@@ -61,7 +62,7 @@ export function ShortcutsOverlay({
         ? rows.filter(
             (row) =>
               row.label.toLowerCase().includes(normalizedQuery) ||
-              row.group.toLowerCase().includes(normalizedQuery) ||
+              commandGroupLabel(row.group).toLowerCase().includes(normalizedQuery) ||
               row.keys.some((keys) => keys.includes(normalizedQuery)),
           )
         : rows,
@@ -78,10 +79,10 @@ export function ShortcutsOverlay({
       <SheetContent className="w-full gap-0 p-0 sm:max-w-md">
         <SheetHeader className="shrink-0 gap-4 border-b p-5">
           <div className="flex items-center justify-between gap-4">
-            <SheetTitle className="text-lg">Keyboard shortcuts</SheetTitle>
+            <SheetTitle className="text-lg">{t`Keyboard shortcuts`}</SheetTitle>
 
             <SheetClose asChild>
-              <Button variant="ghost" size="icon-xs" aria-label="Close keyboard shortcuts">
+              <Button variant="ghost" size="icon-xs" aria-label={t`Close keyboard shortcuts`}>
                 <CloseIcon />
               </Button>
             </SheetClose>
@@ -94,8 +95,8 @@ export function ShortcutsOverlay({
               type="search"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Find keyboard shortcuts"
-              aria-label="Find keyboard shortcuts"
+              placeholder={t`Find keyboard shortcuts`}
+              aria-label={t`Find keyboard shortcuts`}
               variant="default"
               className="h-control-lg pr-3 pl-9"
             />
@@ -118,11 +119,11 @@ export function ShortcutsOverlay({
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground py-10 text-center text-sm">No shortcuts found</p>
+            <p className="text-muted-foreground py-10 text-center text-sm">{t`No shortcuts found`}</p>
           )}
 
           <p className="text-muted-foreground border-t pt-4 text-xs">
-            Change keys in <code>~/.config/rencal/keys.toml</code>.
+            {t`Change keys in`} <code>~/.config/rencal/keys.toml</code>
           </p>
         </div>
       </SheetContent>
@@ -142,7 +143,9 @@ function ShortcutGroupSection({
 
   return (
     <section className="flex flex-col gap-2">
-      <h3 className="text-foreground text-sm font-semibold">{group}</h3>
+      <h3 className="text-foreground text-sm font-semibold">
+        {commandGroupLabel(group)}
+      </h3>
 
       {groupRows.map((row) => (
         <ShortcutRow key={row.action} row={row} />
@@ -159,7 +162,11 @@ function ShortcutRow({ row }: { row: ShortcutRowData }) {
       <div className="flex shrink-0 items-center gap-1.5">
         {row.keys.map((keys, i) => (
           <span key={keys} className="flex items-center gap-1.5">
-            {i > 0 && <span className="text-muted-foreground text-xs">or</span>}
+            {i > 0 && (
+              <span className="text-muted-foreground text-xs">
+                {t({ message: "or", context: "alternative keyboard shortcuts" })}
+              </span>
+            )}
             <ShortcutKeys keys={keys} />
           </span>
         ))}

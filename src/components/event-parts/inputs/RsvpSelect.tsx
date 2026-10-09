@@ -1,13 +1,16 @@
+import { i18n, type MessageDescriptor } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
+
 import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/ui/select"
 import { StatusDot } from "@/components/ui/status-dot"
 
 import type { ResponseStatus } from "@/lib/cal-events"
 
-const statusOptions: { value: ResponseStatus; label: string }[] = [
-  { value: "accepted", label: "Accepted" },
-  { value: "declined", label: "Declined" },
-  { value: "tentative", label: "Maybe" },
+const statusOptions: { value: ResponseStatus; label: MessageDescriptor }[] = [
+  { value: "accepted", label: msg`Accepted` },
+  { value: "declined", label: msg`Declined` },
+  { value: "tentative", label: msg({ message: "Maybe", context: "rsvp" }) },
 ]
 
 export function RsvpSelect({
@@ -27,9 +30,9 @@ export function RsvpSelect({
         </ItemMedia>
         <ItemContent className="truncate text-left">
           {selected ? (
-            selected.label
+            i18n._(selected.label)
           ) : (
-            <span className="text-placeholder-foreground">My status</span>
+            <span className="text-placeholder-foreground">{t`My status`}</span>
           )}
         </ItemContent>
       </SelectTrigger>
@@ -37,7 +40,7 @@ export function RsvpSelect({
         {statusOptions.map((opt) => (
           <SelectItem key={opt.value} value={opt.value}>
             <StatusDot status={opt.value} />
-            {opt.label}
+            {i18n._(opt.label)}
           </SelectItem>
         ))}
       </SelectContent>
