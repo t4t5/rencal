@@ -21,6 +21,7 @@ import { useGhostSection } from "./useGhostSection"
 import { useInitialScrollToActiveDate } from "./useInitialScrollToActiveDate"
 import { usePreserveActiveDateOnRegroup } from "./usePreserveActiveDateOnRegroup"
 import { usePreserveScrollOnPrepend } from "./usePreserveScrollOnPrepend"
+import { usePreserveScrollOnReflow } from "./usePreserveScrollOnReflow"
 
 const debug = createDebugLogger("agenda")
 
@@ -55,6 +56,10 @@ export function Agenda() {
   })
 
   usePreserveScrollOnPrepend({ scrollContainerRef, sections: sectionsToRender })
+  usePreserveScrollOnReflow({
+    scrollContainerRef,
+    enabled: !isInitialLoading && !isLoadingCalendars && calendars.length > 0 && events.length > 0,
+  })
 
   const scrollToDate = useEffectEvent(
     (date: Temporal.PlainDate, behavior: ScrollBehavior = "smooth") => {
