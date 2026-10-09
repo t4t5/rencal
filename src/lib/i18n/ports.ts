@@ -12,6 +12,11 @@ export interface PreferredLocalesSource {
   preferredLocales(): readonly string[]
 }
 
+/** The user's explicit language choice (config.toml `language`), if any. */
+export interface ConfiguredLanguageSource {
+  configuredLanguage(): Promise<string | null>
+}
+
 /** Loads the compiled messages for one catalog language. */
 export interface CatalogLoader {
   load(language: string): Promise<Messages>

@@ -3,7 +3,12 @@ import { describe, expect, it, vi } from "vitest"
 
 import { activateUserLocale } from "./activate-user-locale"
 import { Locale } from "./locale"
-import type { CatalogLoader, LocaleActivator, PreferredLocalesSource } from "./ports"
+import type {
+  CatalogLoader,
+  ConfiguredLanguageSource,
+  LocaleActivator,
+  PreferredLocalesSource,
+} from "./ports"
 
 const CATALOG_LANGUAGES = ["en", "de"] as const
 const FALLBACK = Locale.parse("en-GB") as Locale
@@ -14,6 +19,17 @@ const ENGLISH_MESSAGES: Messages = { greeting: "Hello" }
 const preferredLocalesStub = (...raw: string[]): PreferredLocalesSource => ({
   preferredLocales: () => raw,
 })
+
+// Stubs for the config.toml override.
+const noConfiguredLanguage: ConfiguredLanguageSource = { configuredLanguage: async () => null }
+const configuredLanguageStub = (language: string): ConfiguredLanguageSource => ({
+  configuredLanguage: async () => language,
+})
+const unreadableConfigStub: ConfiguredLanguageSource = {
+  configuredLanguage: async () => {
+    throw new Error("config.toml is not valid TOML")
+  },
+}
 
 // Mock: the loader's expected calls are part of the assertion.
 const catalogLoaderMock = (catalogs: Record<string, Messages>) => ({
@@ -33,6 +49,7 @@ describe("activateUserLocale", () => {
     const activator = activatorSpy()
 
     const locale = await activateUserLocale({
+      configuredLanguage: noConfiguredLanguage,
       preferredLocales: preferredLocalesStub("de-DE"),
       catalogs,
       activator,
@@ -49,6 +66,7 @@ describe("activateUserLocale", () => {
     const activator = activatorSpy()
 
     const locale = await activateUserLocale({
+      configuredLanguage: noConfiguredLanguage,
       preferredLocales: preferredLocalesStub("C", "de_AT.UTF-8"),
       catalogs: catalogLoaderMock({ de: GERMAN_MESSAGES }),
       activator,
@@ -64,6 +82,7 @@ describe("activateUserLocale", () => {
     const activator = activatorSpy()
 
     const locale = await activateUserLocale({
+      configuredLanguage: noConfiguredLanguage,
       preferredLocales: preferredLocalesStub("de-DE"),
       catalogs,
       activator,
@@ -80,6 +99,7 @@ describe("activateUserLocale", () => {
     const activator = activatorSpy()
 
     await activateUserLocale({
+      configuredLanguage: noConfiguredLanguage,
       preferredLocales: preferredLocalesStub("de-DE"),
       catalogs: catalogLoaderMock({}),
       activator,
@@ -88,5 +108,44 @@ describe("activateUserLocale", () => {
     })
 
     expect(activator.activate).toHaveBeenCalledExactlyOnceWith(FALLBACK, {})
+  })
+
+  it("lets the configured language override the system locale", async () => {
+    const locale = await activateUserLocale({
+      configuredLanguage: configuredLanguageStub("en"),
+      preferredLocales: preferredLocalesStub("de-DE"),
+      catalogs: catalogLoaderMock({ en: ENGLISH_MESSAGES, de: GERMAN_MESSAGES }),
+      activator: activatorSpy(),
+      catalogLanguages: CATALOG_LANGUAGES,
+      fallback: FALLBACK,
+    })
+
+    expect(locale.language).toBe("en")
+  })
+
+  it("uses the system locale when the configured language has no catalog", async () => {
+    const locale = await activateUserLocale({
+      configuredLanguage: configuredLanguageStub("tlh"),
+      preferredLocales: preferredLocalesStub("de-DE"),
+      catalogs: catalogLoaderMock({ de: GERMAN_MESSAGES }),
+      activator: activatorSpy(),
+      catalogLanguages: CATALOG_LANGUAGES,
+      fallback: FALLBACK,
+    })
+
+    expect(locale.tag).toBe("de-DE")
+  })
+
+  it("uses the system locale when the config cannot be read", async () => {
+    const locale = await activateUserLocale({
+      configuredLanguage: unreadableConfigStub,
+      preferredLocales: preferredLocalesStub("de-DE"),
+      catalogs: catalogLoaderMock({ de: GERMAN_MESSAGES }),
+      activator: activatorSpy(),
+      catalogLanguages: CATALOG_LANGUAGES,
+      fallback: FALLBACK,
+    })
+
+    expect(locale.tag).toBe("de-DE")
   })
 })
