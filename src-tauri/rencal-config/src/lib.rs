@@ -118,6 +118,11 @@ pub struct RencalConfig {
     #[serde(default)]
     pub show_week_numbers: bool,
 
+    /// UI language override such as "de" or "de-AT". Unset means the system
+    /// locale decides; a language without a catalog falls back to English.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub language: Option<String>,
+
     /// Tables must come AFTER top-level configs since they add a header:
     #[serde(default, deserialize_with = "deserialize_theme")]
     pub theme: ThemeConfig,
@@ -133,6 +138,7 @@ impl Default for RencalConfig {
             auto_sync_enabled: default_auto_sync_enabled(),
             first_day_of_week: FirstDayOfWeek::default(),
             show_week_numbers: false,
+            language: None,
             theme: ThemeConfig::default(),
             groups: BTreeMap::new(),
         }
@@ -261,6 +267,25 @@ mod tests {
         assert!(toml_str.contains("first_day_of_week = \"sunday\""));
         let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
         assert_eq!(reparsed.first_day_of_week, FirstDayOfWeek::Sunday);
+    }
+
+    #[test]
+    fn language_is_unset_by_default_and_left_out_when_saving() {
+        let config: RencalConfig = toml::from_str("theme = \"ren\"").expect("parse");
+        assert_eq!(config.language, None);
+
+        let toml_str = toml::to_string_pretty(&RencalConfig::default()).expect("serialize");
+        assert!(!toml_str.contains("language"));
+    }
+
+    #[test]
+    fn language_override_round_trips() {
+        let config: RencalConfig = toml::from_str("language = \"de\"").expect("parse");
+        assert_eq!(config.language.as_deref(), Some("de"));
+
+        let toml_str = toml::to_string_pretty(&config).expect("serialize");
+        let reparsed: RencalConfig = toml::from_str(&toml_str).expect("re-parse");
+        assert_eq!(reparsed.language.as_deref(), Some("de"));
     }
 
     #[test]

@@ -64,6 +64,11 @@ export async function setShowWeekNumbers(show: boolean): Promise<void> {
   await rpc.config.set_show_week_numbers(show)
 }
 
+/** UI language override from config.toml (`language = "de"`), or null for the system locale. */
+export function getLanguage(): Promise<string | null> {
+  return rpc.config.get_language()
+}
+
 /** Named calendar groups from config.toml's `[groups]` table, with malformed entries dropped. */
 export async function getCalendarGroups(): Promise<CalendarGroups> {
   return normalizeCalendarGroups(await rpc.config.get_groups())
@@ -87,6 +92,7 @@ export const settings = {
   setFirstDayOfWeek,
   getShowWeekNumbers,
   setShowWeekNumbers,
+  getLanguage,
   getCalendarGroups,
   setCalendarGroups,
 } as const

@@ -1,6 +1,6 @@
 /*
  * Localization context. Domain: Locale and negotiateLocale. Use case:
- * activateUserLocale. Adapters plug the WebView, the compiled .po catalogs,
+ * activateUserLocale. Adapters plug config.toml, the WebView, the compiled .po catalogs,
  * Lingui and the date formatters into the ports. This module is the
  * composition root the app entry calls once before the first render.
  */
@@ -9,6 +9,7 @@ import { i18n } from "@lingui/core"
 import { setDisplayLocale } from "@/lib/event-time"
 
 import { activateUserLocale } from "./activate-user-locale"
+import { ConfigTomlLanguage } from "./adapters/config-toml-language"
 import { LinguiActivator } from "./adapters/lingui-activator"
 import { NavigatorPreferredLocales } from "./adapters/navigator-preferred-locales"
 import { PoCatalogLoader } from "./adapters/po-catalog-loader"
@@ -19,6 +20,7 @@ const FALLBACK_LOCALE = Locale.parse("en-GB") as Locale
 
 export function activateSystemLocale(): Promise<Locale> {
   return activateUserLocale({
+    configuredLanguage: new ConfigTomlLanguage(),
     preferredLocales: new NavigatorPreferredLocales(navigator),
     catalogs: new PoCatalogLoader(),
     activator: new LinguiActivator(i18n, setDisplayLocale, document.documentElement),
