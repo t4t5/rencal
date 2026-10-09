@@ -69,6 +69,11 @@ export function formatMonthYear(date: Temporal.PlainDate): string {
   return dateFormatter({ month: "long", year: "numeric" }).format(epochMilliseconds(date))
 }
 
+/** "Monday, Wednesday and Friday" / "Montag, Mittwoch und Freitag". */
+export function formatList(items: readonly string[]): string {
+  return new Intl.ListFormat(displayLocale, { type: "conjunction" }).format(items)
+}
+
 // 1 January 2024 was a Monday.
 const REFERENCE_MONDAY = Temporal.PlainDate.from("2024-01-01")
 

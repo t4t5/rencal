@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useEffect, useRef } from "react"
 
 import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
@@ -46,7 +47,14 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
         data-variant={showText ? "default" : "secondary"}
         data-size={showText ? undefined : "icon"}
         value={showText ? displayText : ""}
-        placeholder={isDrafting ? "Meeting at 3pm" : ""}
+        placeholder={
+          isDrafting
+            ? t({
+                message: "Meeting at 3pm",
+                comment: "Example of quick-add text the event parser understands",
+              })
+            : ""
+        }
         readOnly={!isDrafting}
         tabIndex={isDrafting ? 0 : -1}
         onChange={(e) => setText(e.target.value)}
@@ -88,7 +96,7 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
 
       {isDrafting && text && (
         <InputAction
-          aria-label="Clear"
+          aria-label={t`Clear`}
           tabIndex={-1}
           onMouseDown={(e) => e.preventDefault()}
           onClick={() => {

@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ComponentProps } from "react"
 
 import { MoreHorizIcon } from "@/icons/more-horiz"
@@ -8,7 +9,7 @@ export function MoreButton(
   props: Omit<ComponentProps<typeof Button>, "children" | "asChild" | "variant" | "size">,
 ) {
   return (
-    <Button aria-label="More options" {...props} variant="ghost" size="icon-xs">
+    <Button aria-label={t`More options`} {...props} variant="ghost" size="icon-xs">
       <MoreHorizIcon className="size-4" />
     </Button>
   )

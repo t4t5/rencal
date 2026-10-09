@@ -99,6 +99,7 @@ export function useJumpToScrolledDate({
       },
       {
         root: container,
+        // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS margin
         rootMargin: "0px 0px -90% 0px", // Only top 10% triggers
         threshold: 0,
       },

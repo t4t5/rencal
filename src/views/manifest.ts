@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from "@lingui/core"
+import { msg } from "@lingui/core/macro"
 import type { ComponentType } from "react"
 
 import { MonthView } from "@/components/main/month-view/MonthView"
@@ -32,17 +34,29 @@ export function resolveView(id: string, views: readonly ViewDescriptor[]): ViewD
   return view
 }
 
+// Built-in views get their own message; a plugin's view uses its own name in the template.
+const BUILTIN_VIEW_SHORTCUT_LABELS: Record<string, MessageDescriptor> = {
+  week: msg`Display week view`,
+  month: msg`Display month view`,
+  year: msg`Display year view`,
+}
+
 export function viewShortcuts(views: readonly ViewDescriptor[]): ShortcutDef[] {
   return views.flatMap(({ id, name, shortcut }) =>
     shortcut
       ? [
           {
             id,
-            group: "View",
-            label: `Display ${name.toLowerCase()} view`,
+            group: "view",
+            label: BUILTIN_VIEW_SHORTCUT_LABELS[id] ?? viewShortcutLabel(name),
             bindings: [{ keys: shortcut, type: "char" }],
           },
         ]
       : [],
   )
+}
+
+function viewShortcutLabel(name: string): MessageDescriptor {
+  const view = name.toLowerCase()
+  return msg`Display ${view} view`
 }

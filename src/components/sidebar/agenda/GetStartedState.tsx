@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { AddAccountModal } from "@/components/settings/accounts/AddAccountModal"
@@ -8,9 +9,9 @@ export function GetStartedState() {
 
   return (
     <div className="flex flex-col items-center text-center gap-2 p-6">
-      <p className="text-sm text-muted-foreground">Connect your calendar to get started.</p>
+      <p className="text-sm text-muted-foreground">{t`Connect your calendar to get started.`}</p>
       <Button size="sm" className="mt-2" onClick={() => setShowAddAccount(true)}>
-        Connect a calendar
+        {t`Connect a calendar`}
       </Button>
 
       {showAddAccount && (

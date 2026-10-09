@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
 import { useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -11,8 +13,9 @@ import {
 import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { SelectMenuTrigger } from "@/components/ui/select"
 
-import { describeRecurrence, ruleString } from "@/lib/custom-recurrence"
+import { describeRecurrence as describeInEnglish, ruleString } from "@/lib/custom-recurrence"
 import { type EventTime } from "@/lib/event-time"
+import { describeRecurrence } from "@/lib/recurrence-text"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -21,23 +24,23 @@ import { RepeatIcon } from "@/icons/repeat"
 const INTERVALS = [
   {
     rrule: new RRule({ freq: RRule.DAILY }),
-    label: "Every day",
+    label: msg`Every day`,
   },
   {
     rrule: new RRule({ freq: RRule.WEEKLY }),
-    label: "Every week",
+    label: msg`Every week`,
   },
   {
     rrule: new RRule({ freq: RRule.WEEKLY, interval: 2 }),
-    label: "Every 2 weeks",
+    label: msg`Every 2 weeks`,
   },
   {
     rrule: new RRule({ freq: RRule.MONTHLY }),
-    label: "Every month",
+    label: msg`Every month`,
   },
   {
     rrule: new RRule({ freq: RRule.YEARLY }),
-    label: "Every year",
+    label: msg`Every year`,
   },
 ]
 
@@ -75,9 +78,9 @@ export const RepeatSelect = ({
   }
 
   const options = [
-    { value: "none", label: "No repeat" },
-    ...INTERVALS.map((i) => ({ value: i.rrule.toString(), label: i.label })),
-    { value: CUSTOM, label: "Custom…" },
+    { value: "none", label: t`No repeat` },
+    ...INTERVALS.map((i) => ({ value: i.rrule.toString(), label: i18n._(i.label) })),
+    { value: CUSTOM, label: t`Custom…` },
   ]
 
   return (
@@ -98,7 +101,9 @@ export const RepeatSelect = ({
               {value ? (
                 <span className="block truncate">{getHumanInterval(value, start)}</span>
               ) : (
-                <span className="text-placeholder-foreground">Repeat</span>
+                <span className="text-placeholder-foreground">
+                  {t({ message: "Repeat", context: "recurrence placeholder" })}
+                </span>
               )}
             </ItemContent>
           </SelectMenuTrigger>
@@ -131,5 +136,14 @@ export const RepeatSelect = ({
 
 function getHumanInterval(recurrence: RRule | RRuleSet, start: EventTime): string {
   const interval = INTERVALS.find((i) => i.rrule.toString() === ruleString(recurrence))
-  return interval ? interval.label : describeRecurrence(recurrence, start)
+  if (interval) return i18n._(interval.label)
+
+  const rule = recurrence instanceof RRuleSet ? recurrence.rrules()[0] : recurrence
+  if (!rule) return t`Custom recurrence`
+
+  // The localized describer first; upstream's describer only speaks English, so it is the last resort there.
+  return (
+    describeRecurrence(rule) ??
+    (i18n.locale === "en" ? describeInEnglish(recurrence, start) : t`Custom recurrence`)
+  )
 }

@@ -203,6 +203,7 @@ export function WeekTimeGrid({
   }
 
   const totalContentWidth = GUTTER_WIDTH + N * dayWidth
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS custom property
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
 
   return (

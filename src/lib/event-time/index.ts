@@ -35,6 +35,7 @@ export {
 export {
   formatDateKey,
   formatDayMonth,
+  formatList,
   formatLongDate,
   formatMonth,
   formatMonthYear,

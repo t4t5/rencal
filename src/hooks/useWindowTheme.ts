@@ -5,6 +5,7 @@ import type { Appearance } from "@/themes/manifest"
 
 // The window is unforced at launch, so this is the OS appearance.
 function initialAppearance(): Appearance {
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- media query
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
 }
 

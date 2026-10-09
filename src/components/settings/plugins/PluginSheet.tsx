@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import { Button } from "@/components/ui/button"
 import {
   Sheet,
@@ -41,7 +43,7 @@ export function PluginSheet({
                   <Button
                     variant="ghost"
                     size="icon-xs"
-                    aria-label="Close plugin details"
+                    aria-label={t`Close plugin details`}
                     disabled={state.action !== null}
                   >
                     <CloseIcon />

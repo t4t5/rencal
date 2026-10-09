@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -37,7 +38,7 @@ export function RenameCalendarModal({
       await onSubmit(trimmedName)
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to rename calendar"))
+      setError(getErrorMessage(err, t`Failed to rename calendar`))
     } finally {
       setIsSaving(false)
     }
@@ -48,8 +49,8 @@ export function RenameCalendarModal({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <DialogHeader>
-            <DialogTitle>Rename calendar</DialogTitle>
-            <DialogDescription>Choose a new display name for this calendar.</DialogDescription>
+            <DialogTitle>{t`Rename calendar`}</DialogTitle>
+            <DialogDescription>{t`Choose a new display name for this calendar.`}</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-2">
@@ -58,19 +59,21 @@ export function RenameCalendarModal({
               value={name}
               disabled={isSaving}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Calendar name"
+              placeholder={t`Calendar name`}
               aria-invalid={!trimmedName || !!error}
             />
-            {!trimmedName && <p className="text-sm text-destructive">Enter a calendar name.</p>}
+            {!trimmedName && (
+              <p className="text-sm text-destructive">{t`Enter a calendar name.`}</p>
+            )}
             {error && <p className="text-sm text-destructive">{error}</p>}
           </div>
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
-              Cancel
+              {t`Cancel`}
             </Button>
             <Button type="submit" disabled={!trimmedName || isSaving}>
-              {isSaving ? "Saving..." : "Save"}
+              {isSaving ? t`Saving...` : t`Save`}
             </Button>
           </DialogFooter>
         </form>

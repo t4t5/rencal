@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useState } from "react"
 
 import { Input, InputAction } from "@/components/ui/input"
@@ -16,7 +17,7 @@ export function PasswordInput({ className, ...props }: PasswordInputProps) {
     <div className="relative">
       <Input {...props} type={visible ? "text" : "password"} className={cn("pr-9", className)} />
       <InputAction
-        aria-label={visible ? "Hide password" : "Show password"}
+        aria-label={visible ? t`Hide password` : t`Show password`}
         onClick={() => setVisible((prev) => !prev)}
       >
         {visible ? <EyeIcon className="size-4" /> : <EyeClosedIcon className="size-4" />}

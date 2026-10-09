@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { Dispatch, SetStateAction, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -41,7 +42,7 @@ export const ProviderList = ({
         onSetStep,
       })
     } catch (error) {
-      setError(getErrorMessage(error, "Failed to connect account"))
+      setError(getErrorMessage(error, t`Failed to connect account`))
     }
   }
 
@@ -50,7 +51,7 @@ export const ProviderList = ({
       {slugs.map((name) => {
         const isCaldav = name === "caldav"
         const info = findProvider(providers, name)
-        const displayName = isCaldav ? "Other CalDAV server" : getProviderDisplayName(name, info)
+        const displayName = isCaldav ? t`Other CalDAV server` : getProviderDisplayName(name, info)
 
         return (
           <Button

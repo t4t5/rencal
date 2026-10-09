@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import type { Dispatch, SetStateAction } from "react"
 import { toast } from "sonner"
 
@@ -40,8 +41,8 @@ export async function updateAndSyncEvent(
     // Roll back: the optimistic pass replaced the row with `current`, so find it
     // by `current`'s key and restore the original.
     setCalendarEvents((prev) => prev.map((e) => (eventKey(e) === eventKey(current) ? original : e)))
-    const message = getErrorMessage(err, "Failed to save event")
-    toast.error("Failed to save event", { description: message })
+    const message = getErrorMessage(err, t`Failed to save event`)
+    toast.error(t`Failed to save event`, { description: message })
     console.error("update_event failed:", err)
   }
 }

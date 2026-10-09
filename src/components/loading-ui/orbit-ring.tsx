@@ -1,8 +1,11 @@
+import { t } from "@lingui/core/macro"
+
 import { cn } from "@/lib/utils"
 
 function OrbitRing({ className, ...props }: React.ComponentProps<"span">) {
   return (
     <>
+      {/* eslint-disable-next-line lingui/no-unlocalized-strings -- CSS keyframes, not UI text */}
       <style>{`
         @keyframes loading-ui-orbit-ring-rotation {
           0% {
@@ -36,7 +39,7 @@ function OrbitRing({ className, ...props }: React.ComponentProps<"span">) {
             transform: "translate(-50%, -50%)",
           }}
         />
-        <span className="sr-only">Loading</span>
+        <span className="sr-only">{t`Loading`}</span>
       </span>
     </>
   )
