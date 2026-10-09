@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useEffect, useMemo, useRef, useState } from "react"
 
 import { SearchResultEventBlock } from "@/components/events-blocks/search-result/EventBlock"
@@ -119,8 +120,8 @@ export function SearchPalette({
         }}
       >
         <DialogHeader className="sr-only">
-          <DialogTitle>Search events</DialogTitle>
-          <DialogDescription>Search visible calendars for an event</DialogDescription>
+          <DialogTitle>{t`Search events`}</DialogTitle>
+          <DialogDescription>{t`Search visible calendars for an event`}</DialogDescription>
         </DialogHeader>
 
         <Command
@@ -128,7 +129,7 @@ export function SearchPalette({
           className="[&_[data-slot=command-input-wrapper]]:h-12 [&_[data-slot=command-input-wrapper]]:[--control-leading-size:20px] [&_[data-slot=command-input]]:text-base"
         >
           <CommandInput
-            placeholder="Search your events..."
+            placeholder={t`Search your events...`}
             value={query}
             onValueChange={handleQueryChange}
             wrapperClassName={query.length < 2 || isLoading ? "border-b-0" : undefined}
@@ -136,7 +137,7 @@ export function SearchPalette({
               isLoading ? (
                 <span
                   role="status"
-                  aria-label="Searching events"
+                  aria-label={t`Searching events`}
                   className="border-muted-foreground size-3.5 shrink-0 animate-spin rounded-full border-2 border-r-transparent"
                 />
               ) : null
@@ -145,7 +146,9 @@ export function SearchPalette({
 
           {query.length >= 2 && (
             <CommandList className="max-h-[400px]">
-              {!isLoading && results.length === 0 && <CommandEmpty>No events found.</CommandEmpty>}
+              {!isLoading && results.length === 0 && (
+                <CommandEmpty>{t`No events found.`}</CommandEmpty>
+              )}
               {results.map((event) => (
                 <CommandItem
                   key={eventKey(event)}

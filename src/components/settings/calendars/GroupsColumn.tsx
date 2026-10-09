@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useEffect, useMemo, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
@@ -68,7 +69,7 @@ export function GroupsColumn({
     <SettingsContent className="w-[220px] border-r border-border gap-2 py-[15px] grow-0 px-0">
       <div className="flex justify-between items-center w-full px-(--layout-padding)">
         <span data-typography="heading" className="text-sm text-muted-foreground">
-          Groups
+          {t`Groups`}
         </span>
 
         <Button size="icon-xs" variant="ghost" onClick={() => setModalState({ mode: "create" })}>
@@ -76,7 +77,7 @@ export function GroupsColumn({
         </Button>
       </div>
 
-      <TabsList variant="navigation" aria-label="Calendar groups" className="w-full">
+      <TabsList variant="navigation" aria-label={t`Calendar groups`} className="w-full">
         {groups.map((group) => {
           const isDefault = group === DEFAULT_GROUP
 
@@ -102,7 +103,7 @@ export function GroupsColumn({
         <GroupModal
           groups={groups}
           initialName={modalState.mode === "edit" ? modalState.group : ""}
-          title={modalState.mode === "edit" ? "Edit group" : "New group"}
+          title={modalState.mode === "edit" ? t`Edit group` : t`New group`}
           onClose={() => setModalState(null)}
           onSubmit={(name) =>
             modalState.mode === "edit" ? renameGroup(modalState.group, name) : createGroup(name)
@@ -162,7 +163,7 @@ function GroupModal({
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <DialogHeader>
             <DialogTitle>{title}</DialogTitle>
-            <DialogDescription>Choose a unique name for this calendar group.</DialogDescription>
+            <DialogDescription>{t`Choose a unique name for this calendar group.`}</DialogDescription>
           </DialogHeader>
 
           <div className="flex flex-col gap-2">
@@ -170,7 +171,7 @@ function GroupModal({
               autoFocus
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Group name"
+              placeholder={t`Group name`}
               aria-invalid={!!error}
             />
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -178,10 +179,10 @@ function GroupModal({
 
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={onClose} disabled={isSaving}>
-              Cancel
+              {t`Cancel`}
             </Button>
             <Button type="submit" disabled={!canSubmit}>
-              Save
+              {t`Save`}
             </Button>
           </DialogFooter>
         </form>
@@ -191,13 +192,13 @@ function GroupModal({
 }
 
 function getGroupNameError(normalizedName: string, existingNames: string[]) {
-  if (normalizedName === DEFAULT_GROUP) return "Default is reserved."
-  if (existingNames.includes(normalizedName)) return "A group with this name already exists."
+  if (normalizedName === DEFAULT_GROUP) return t`Default is reserved.`
+  if (existingNames.includes(normalizedName)) return t`A group with this name already exists.`
   return null
 }
 
 function formatGroupName(group: string) {
-  if (group === DEFAULT_GROUP) return "Default"
+  if (group === DEFAULT_GROUP) return t({ message: "Default", context: "calendar group name" })
   return group
 }
 
@@ -211,9 +212,11 @@ const MoreMenu = ({ onEdit, onDelete }: { onEdit: () => void; onDelete: () => vo
         />
       </DropdownMenuTrigger>
       <DropdownMenuContent>
-        <DropdownMenuItem onClick={onEdit}>Edit</DropdownMenuItem>
+        <DropdownMenuItem onClick={onEdit}>
+          {t({ message: "Edit", context: "calendar group menu" })}
+        </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={onDelete}>
-          Delete
+          {t({ message: "Delete", context: "calendar group menu" })}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

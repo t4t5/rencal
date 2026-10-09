@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -22,6 +23,7 @@ export function ChangeCalendarColorModal({
   onClose: () => void
   onSubmit: (color: string) => Promise<void>
 }) {
+  const calendarName = calendar.name || calendar.slug
   const initialHue = hexToHue(calendar.color)
   const [hue, setHue] = useState(initialHue)
   const [color, setColor] = useState(calendar.color ?? hueToHex(initialHue))
@@ -37,7 +39,7 @@ export function ChangeCalendarColorModal({
       await onSubmit(color)
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to change calendar color"))
+      setError(getErrorMessage(err, t`Failed to change calendar color`))
       setIsSaving(false)
     }
   }
@@ -52,10 +54,8 @@ export function ChangeCalendarColorModal({
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={submit} className="flex flex-col gap-6">
           <DialogHeader>
-            <DialogTitle>Change calendar color</DialogTitle>
-            <DialogDescription>
-              Choose a color for {calendar.name || calendar.slug}.
-            </DialogDescription>
+            <DialogTitle>{t`Change calendar color`}</DialogTitle>
+            <DialogDescription>{t`Choose a color for ${calendarName}.`}</DialogDescription>
           </DialogHeader>
 
           <div className="flex items-center gap-4">
@@ -66,7 +66,7 @@ export function ChangeCalendarColorModal({
               min="0"
               max="359"
               value={hue}
-              aria-label="Calendar color hue"
+              aria-label={t`Calendar color hue`}
               onChange={(event) => changeHue(Number(event.target.value))}
               className="h-3 w-full appearance-none rounded-full bg-[linear-gradient(to_right,#e05252,#e0e052,#52e052,#52e0e0,#5252e0,#e052e0,#e05252)] [&::-webkit-slider-thumb]:size-5 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:border-2 [&::-webkit-slider-thumb]:border-background [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-sm"
             />
@@ -76,10 +76,10 @@ export function ChangeCalendarColorModal({
 
           <DialogFooter className="flex gap-2">
             <Button type="button" variant="secondary" onClick={onClose} disabled={isSaving}>
-              Cancel
+              {t`Cancel`}
             </Button>
             <Button type="submit" disabled={isSaving}>
-              {isSaving ? "Saving..." : "Save color"}
+              {isSaving ? t`Saving...` : t`Save color`}
             </Button>
           </DialogFooter>
         </form>

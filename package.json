@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "test": "vitest run",
     "prepare": "husky",
-    "i18n:extract": "lingui extract --clean"
+    "i18n:extract": "lingui extract --clean",
+    "i18n:check": "lingui check sync && lingui check missing --mode catalog"
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",

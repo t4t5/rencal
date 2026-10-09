@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useEffect, useEffectEvent, useRef } from "react"
 import { flushSync } from "react-dom"
 
@@ -144,7 +145,7 @@ export function Agenda() {
   }
 
   if (events.length === 0) {
-    return <div className="p-2 text-sm text-muted-foreground">No events</div>
+    return <div className="p-2 text-sm text-muted-foreground">{t`No events`}</div>
   }
 
   return (

@@ -70,9 +70,10 @@ typecheck:
   pnpm lint
   pnpm find:unused-exports
 
-# Run frontend and Rust tests, and verify both generated IPC contracts are current
+# Run frontend and Rust tests, and verify both generated IPC contracts and the message catalogs are current
 test:
   pnpm test
+  pnpm i18n:check
   cargo test --workspace --manifest-path src-tauri/Cargo.toml
   bash scripts/check-generated-types.sh
 

@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import {
   detectConference,
   getMeetingUrl,
@@ -53,9 +55,14 @@ export type DetectedUrlSource = "location" | "description"
 /** A link found in an event's free-form text, unlike its explicit `url` field. */
 export type DetectedUrl = { url: string; source: DetectedUrlSource }
 
+// Getters translate at read time, so consumers keep reading plain strings.
 export const detectedUrlSourceLabel: Record<DetectedUrlSource, string> = {
-  location: "Linked in event location",
-  description: "Linked in event notes",
+  get location() {
+    return t`Linked in event location`
+  },
+  get description() {
+    return t`Linked in event notes`
+  },
 }
 
 /**

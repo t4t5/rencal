@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 
@@ -45,7 +46,10 @@ export function SettingsWindow() {
         })}
       />
 
-      <ShortcutTooltip text="Close" shortcut="escape">
+      <ShortcutTooltip
+        text={t({ message: "Close", context: "close settings window" })}
+        shortcut="escape"
+      >
         <button
           data-slot="settings-close"
           onClick={() =>
@@ -57,7 +61,7 @@ export function SettingsWindow() {
             "absolute top-[3px] right-2 z-50 rounded-sm p-1 text-muted-foreground opacity-70 transition-opacity hover:opacity-100 focus:outline-hidden focus:ring-2 focus:ring-ring",
             { hidden: isMacOS },
           )}
-          aria-label="Close"
+          aria-label={t({ message: "Close", context: "close settings window" })}
         >
           <CloseIcon className="size-4" />
         </button>

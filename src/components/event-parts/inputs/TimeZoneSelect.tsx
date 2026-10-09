@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useMemo, useState } from "react"
 
 import {
@@ -131,7 +132,7 @@ export const TimeZoneSelect = ({
       <PopoverContent className="p-0 w-(--radix-popover-trigger-width)" align="start">
         <Command shouldFilter={false} value={highlighted} onValueChange={setHighlighted}>
           <CommandInput
-            placeholder="Search timezones"
+            placeholder={t`Search timezones`}
             value={query}
             onValueChange={handleQueryChange}
           />
@@ -150,7 +151,7 @@ export const TimeZoneSelect = ({
                 ))}
               </CommandGroup>
             ) : (
-              <CommandEmpty>No timezones found.</CommandEmpty>
+              <CommandEmpty>{t`No timezones found.`}</CommandEmpty>
             )}
           </CommandList>
         </Command>

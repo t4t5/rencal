@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, useEffect, useLayoutEffect, useRef, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 import { toast } from "sonner"
@@ -155,8 +156,8 @@ export const EditEvent = ({
       void requestSync()
       setActiveEventKey(null)
     } catch (err) {
-      const message = getErrorMessage(err, "Failed to respond to invite")
-      toast.error("Failed to respond to invite", { description: message })
+      const message = getErrorMessage(err, t`Failed to respond to invite`)
+      toast.error(t`Failed to respond to invite`, { description: message })
       console.error("rsvp failed:", err)
     }
   }
@@ -260,11 +261,12 @@ const OverflowMenu = ({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuItem onClick={onDuplicate}>
-          Duplicate event
+          {t`Duplicate event`}
+          {/* eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard key */}
           <DropdownMenuShortcut>D</DropdownMenuShortcut>
         </DropdownMenuItem>
         <DropdownMenuItem variant="destructive" onClick={onDelete}>
-          Delete event
+          {t`Delete event`}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

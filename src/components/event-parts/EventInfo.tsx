@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { RRule, RRuleSet } from "rrule"
 
 import { AllDayCheckbox } from "@/components/event-parts/inputs/AllDayCheckbox"
@@ -198,7 +199,7 @@ export function EventInfo({
             <Textarea
               data-popover-entry
               ref={summaryRef}
-              placeholder="Event Title"
+              placeholder={t`Event Title`}
               value={summary ?? ""}
               className="text-base font-medium"
               readOnly={readonly}

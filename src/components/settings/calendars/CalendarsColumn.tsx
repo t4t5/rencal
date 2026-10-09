@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { CSSProperties, ReactNode, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
@@ -87,7 +88,7 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
 
           {localCalendars.length > 0 && (
             <CalendarAccount
-              title="Local-only"
+              title={t({ message: "Local-only", context: "calendar account heading" })}
               calendars={localCalendars}
               selectedCalendarSlugs={selectedCalendarSlugs}
               onCalendarEnabledChange={setCalendarEnabled}
@@ -96,7 +97,9 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
         </div>
       )}
 
-      {!calendars.length && <div className="text-sm text-muted-foreground">No calendars yet.</div>}
+      {!calendars.length && (
+        <div className="text-sm text-muted-foreground">{t`No calendars yet.`}</div>
+      )}
 
       <Button
         variant="secondary"
@@ -104,7 +107,7 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
         onClick={() => setShowAddSubscriptionModal(true)}
       >
         <RssIcon className="size-4" />
-        Add subscription
+        {t`Add subscription`}
       </Button>
 
       {showAddSubscriptionModal && (
@@ -209,7 +212,11 @@ function CalendarDropdownMenuWrapper({
     <div className="flex items-center gap-3">
       <div className="grow">{children}</div>
 
-      {isDefault && <span className="text-sm text-muted-foreground">Default</span>}
+      {isDefault && (
+        <span className="text-sm text-muted-foreground">
+          {t({ message: "Default", context: "default calendar badge" })}
+        </span>
+      )}
 
       <DropdownMenu modal={false}>
         <DropdownMenuTrigger asChild>
@@ -222,16 +229,16 @@ function CalendarDropdownMenuWrapper({
               if (!calendar.read_only) void setDefaultCalendar(calendar.slug)
             }}
           >
-            Set as default
+            {t`Set as default`}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowRenameModal(true)}>
-            Rename calendar
+            {t`Rename calendar`}
           </DropdownMenuItem>
           <DropdownMenuItem onClick={() => setShowColorModal(true)}>
-            Change calendar color
+            {t`Change calendar color`}
           </DropdownMenuItem>
           <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
-            {calendar.provider === null ? "Delete calendar" : "Disconnect calendar"}
+            {calendar.provider === null ? t`Delete calendar` : t`Disconnect calendar`}
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -286,7 +293,7 @@ function DeleteCalendarDialog({
       await onDeleted()
       onClose()
     } catch (err) {
-      setError(getErrorMessage(err, "Failed to delete calendar"))
+      setError(getErrorMessage(err, t`Failed to delete calendar`))
       setIsDeleting(false)
     }
   }
@@ -295,26 +302,26 @@ function DeleteCalendarDialog({
     <Dialog open onOpenChange={(isOpen) => !isOpen && !isDeleting && onClose()}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isLocal ? "Delete calendar" : "Disconnect calendar"}</DialogTitle>
+          <DialogTitle>{isLocal ? t`Delete calendar` : t`Disconnect calendar`}</DialogTitle>
           <DialogDescription>
             {isLocal
-              ? `Are you sure you want to delete "${calendarName}"? All events will be permanently deleted.`
-              : `Disconnect "${calendarName}"? This will delete the directory from this computer.`}
+              ? t`Are you sure you want to delete "${calendarName}"? All events will be permanently deleted.`
+              : t`Disconnect "${calendarName}"? This will delete the directory from this computer.`}
           </DialogDescription>
         </DialogHeader>
         {error && <p className="text-sm text-destructive">{error}</p>}
         <DialogFooter className="flex gap-2">
           <Button variant="secondary" onClick={onClose} disabled={isDeleting} autoFocus>
-            Cancel
+            {t`Cancel`}
           </Button>
           <Button variant="destructive" onClick={() => void handleDelete()} disabled={isDeleting}>
             {isDeleting
               ? isLocal
-                ? "Deleting..."
-                : "Disconnecting..."
+                ? t`Deleting...`
+                : t`Disconnecting...`
               : isLocal
-                ? "Delete calendar"
-                : "Disconnect calendar"}
+                ? t`Delete calendar`
+                : t`Disconnect calendar`}
           </Button>
         </DialogFooter>
       </DialogContent>

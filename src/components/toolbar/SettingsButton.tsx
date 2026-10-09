@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 
@@ -34,7 +35,7 @@ export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
 
   new WebviewWindow("settings", {
     url: `/?${params.toString()}`,
-    title: "Settings",
+    title: t`Settings`,
     titleBarStyle: isMacOS ? "overlay" : undefined,
     width,
     height,
@@ -51,7 +52,7 @@ export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
 
 export const SettingsButton = () => {
   return (
-    <ShortcutTooltip text="Settings" shortcut="mod+comma">
+    <ShortcutTooltip text={t`Settings`} shortcut="mod+comma">
       <Button tabIndex={-1} size="icon" variant="ghost" onClick={() => openSettingsWindow()}>
         <SettingsIcon className="size-4" />
       </Button>

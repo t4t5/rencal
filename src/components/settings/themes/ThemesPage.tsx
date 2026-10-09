@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useMemo, useState } from "react"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
@@ -20,6 +21,7 @@ import type { Appearance, ThemeDescriptor } from "@/themes/manifest"
 import { type ThemeSlot, themesFor } from "@/themes/theme-settings"
 
 // Default --control-height, fixed so themes that resize controls don't shift the grid.
+// eslint-disable-next-line lingui/no-unlocalized-strings -- CSS class list
 const CONTROL_SLOT = "flex h-[34px] items-center"
 
 export function ThemesPage() {
@@ -39,7 +41,7 @@ export function ThemesPage() {
     <SettingsContent className="w-full">
       <div className="flex flex-col gap-2 w-[180px]">
         <label htmlFor="theme-mode" className="text-sm leading-5">
-          Theme mode
+          {t`Theme mode`}
         </label>
         <div className={CONTROL_SLOT}>
           <Select
@@ -50,14 +52,14 @@ export function ThemesPage() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="single">Single theme</SelectItem>
-              <SelectItem value="system">Sync with system</SelectItem>
+              <SelectItem value="single">{t`Single theme`}</SelectItem>
+              <SelectItem value="system">{t`Sync with system`}</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
       {syncsWithSystem && onOmarchy ? (
-        <p className="text-sm text-muted-foreground">renCal follows your Omarchy theme.</p>
+        <p className="text-sm text-muted-foreground">{t`renCal follows your Omarchy theme.`}</p>
       ) : (
         <div className="flex flex-col gap-3">
           {syncsWithSystem && (
@@ -68,9 +70,9 @@ export function ThemesPage() {
                   if (next === "light" || next === "dark") setPairSlot(next)
                 }}
               >
-                <TabsList aria-label="Theme slot">
-                  <TabsTrigger value="dark">Dark theme</TabsTrigger>
-                  <TabsTrigger value="light">Light theme</TabsTrigger>
+                <TabsList aria-label={t`Theme slot`}>
+                  <TabsTrigger value="dark">{t`Dark theme`}</TabsTrigger>
+                  <TabsTrigger value="light">{t`Light theme`}</TabsTrigger>
                 </TabsList>
               </Tabs>
             </div>

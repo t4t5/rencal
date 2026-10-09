@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useMemo } from "react"
 
 import { BoardColumn } from "@/components/main/board-view/BoardColumn"
@@ -41,10 +42,14 @@ export function BoardView() {
     }
 
     const bucketDefs: Record<string, { title: string; showDate: boolean; isToday: boolean }> = {
-      yesterday: { title: "Yesterday", showDate: false, isToday: false },
-      today: { title: "Today", showDate: false, isToday: true },
-      tomorrow: { title: "Tomorrow", showDate: false, isToday: false },
-      "this-week": { title: "This Week", showDate: true, isToday: false },
+      yesterday: { title: t`Yesterday`, showDate: false, isToday: false },
+      today: {
+        title: t({ message: "Today", context: "board column" }),
+        showDate: false,
+        isToday: true,
+      },
+      tomorrow: { title: t`Tomorrow`, showDate: false, isToday: false },
+      "this-week": { title: t`This Week`, showDate: true, isToday: false },
     }
 
     const buckets = new Map<string, CalendarEvent[]>()

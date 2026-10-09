@@ -1,3 +1,6 @@
+import { i18n, type MessageDescriptor } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
+
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
@@ -38,9 +41,9 @@ export function MainHeader({
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 
-        <ShortcutTooltip text="Go to Today" shortcut="t">
+        <ShortcutTooltip text={t`Go to Today`} shortcut="t">
           <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
-            Today
+            {t({ message: "Today", context: "navigate to current date" })}
           </Button>
         </ShortcutTooltip>
 
@@ -63,10 +66,17 @@ export function MainHeader({
   )
 }
 
-const CALENDAR_VIEW_OPTIONS: { view: CalendarView; name: string; shortcut: string }[] = [
-  { view: "week", name: "Week", shortcut: "W" },
-  { view: "month", name: "Month", shortcut: "M" },
-  { view: "board", name: "Board", shortcut: "B" },
+const CALENDAR_VIEW_OPTIONS: {
+  view: CalendarView
+  name: MessageDescriptor
+  shortcut: string
+}[] = [
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard shortcut key
+  { view: "week", name: msg({ message: "Week", context: "view name" }), shortcut: "W" },
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard shortcut key
+  { view: "month", name: msg({ message: "Month", context: "view name" }), shortcut: "M" },
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard shortcut key
+  { view: "board", name: msg({ message: "Board", context: "view name" }), shortcut: "B" },
 ]
 
 const CalendarViewDropdown = ({
@@ -81,7 +91,11 @@ const CalendarViewDropdown = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <SelectButton tabIndex={-1}>{currentView?.name ?? "View"}</SelectButton>
+        <SelectButton tabIndex={-1}>
+          {currentView
+            ? i18n._(currentView.name)
+            : t({ message: "View", context: "view switcher" })}
+        </SelectButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {CALENDAR_VIEW_OPTIONS.map((option) => (
@@ -93,7 +107,7 @@ const CalendarViewDropdown = ({
             <span className="flex size-4 items-center justify-center">
               {calendarView === option.view && <CheckIcon className="size-4" />}
             </span>
-            <span>{option.name}</span>
+            <span>{i18n._(option.name)}</span>
             <DropdownMenuShortcut>{option.shortcut}</DropdownMenuShortcut>
           </DropdownMenuItem>
         ))}

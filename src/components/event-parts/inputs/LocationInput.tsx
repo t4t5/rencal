@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import { InputGroup, InputGroupAddon, InputGroupTextarea } from "@/components/ui/input-group"
 
 import { cn } from "@/lib/utils"
@@ -25,7 +27,7 @@ export const LocationInput = ({
         <PushpinIcon />
       </InputGroupAddon>
       <InputGroupTextarea
-        placeholder="Location"
+        placeholder={t`Location`}
         value={value ?? ""}
         readOnly={readOnly}
         onChange={(e) => onChange(e.target.value)}
