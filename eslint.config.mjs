@@ -76,6 +76,8 @@ export default tseslint.config(
       "src/**/*.typecheck.ts",
       // Tailwind class maps, no user-visible text
       "src/**/*-styles.ts",
+      // Parser input words per language, not UI text
+      "src/lib/magic-parser/vocabularies/**",
     ],
     plugins: { lingui: pluginLingui },
     rules: {
