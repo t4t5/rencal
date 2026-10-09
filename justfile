@@ -54,6 +54,10 @@ start:
   fi
   "${appimages[0]}"
 
+# Update the message catalogs in src/locales from the source code
+i18n-extract:
+  pnpm i18n:extract
+
 # Check Rust and TypeScript types
 check:
   cargo check --workspace --manifest-path src-tauri/Cargo.toml

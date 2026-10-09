@@ -1,33 +1,35 @@
 import { useSettings } from "@/contexts/SettingsContext"
 
-import type { FirstDayOfWeek } from "@/lib/event-time"
+import { weekdayNames } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-const WEEKDAY_LABELS: Record<FirstDayOfWeek, string[]> = {
-  monday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-  sunday: ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"],
-}
+// ISO weekday indices (0 = Monday … 6 = Sunday) in display order.
+const WEEKDAY_ORDER = {
+  monday: [0, 1, 2, 3, 4, 5, 6],
+  sunday: [6, 0, 1, 2, 3, 4, 5],
+} as const
 
-const isWeekendLabel = (label: string) => label === "Sat" || label === "Sun"
+const isWeekend = (isoIndex: number) => isoIndex >= 5
 
 export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
   const { firstDayOfWeek } = useSettings()
+  const names = weekdayNames("short")
 
   return (
     <div data-slot="month-weekdays" className="grid grid-cols-7 border-b border-border">
-      {WEEKDAY_LABELS[firstDayOfWeek].map((label) => (
+      {WEEKDAY_ORDER[firstDayOfWeek].map((isoIndex) => (
         <div
           data-slot="month-weekday"
           data-typography="numerical"
-          data-weekend={isWeekendLabel(label) || undefined}
-          key={label}
+          data-weekend={isWeekend(isoIndex) || undefined}
+          key={isoIndex}
           className={cn(
             "text-2xs text-muted-foreground py-2 text-center font-medium uppercase",
-            isWeekendLabel(label) && "bg-weekend",
+            isWeekend(isoIndex) && "bg-weekend",
             dimmed && "opacity-50",
           )}
         >
-          {label}
+          {names[isoIndex]}
         </div>
       ))}
     </div>
