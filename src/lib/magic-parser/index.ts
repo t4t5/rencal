@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import type { ParsedComponents, ParsedResult } from "chrono-node"
 
 import type { Recurrence } from "@/lib/cal-events"
 import {
@@ -36,6 +37,8 @@ interface ParsedEventSegments {
   // Raw chrono match text from the input. Used by segmentEventText to locate
   // the time range in the original text without re-running chrono.
   chronoMatchText: string | null
+  // A time found further on and merged into a time-less day ("Heute … um 19 Uhr").
+  timeMatchText: string | null
 }
 
 interface RecurrenceResult {
@@ -132,15 +135,15 @@ export function segmentEventText(
       ranges.push({ start: idx, end: idx + parsed.chronoMatchText.length })
     }
   }
+  if (parsed.timeMatchText) {
+    const idx = text.lastIndexOf(parsed.timeMatchText)
+    if (idx >= 0) ranges.push({ start: idx, end: idx + parsed.timeMatchText.length })
+  }
 
-  // Location range — find trailing "at/in {location}" in original text
+  // Location range: its last occurrence (a merged time may still follow it)
   if (parsed.location) {
-    const escaped = parsed.location.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
-    const locRegex = new RegExp(`${escaped}\\s*$`, "i")
-    const locMatch = text.match(locRegex)
-    if (locMatch && locMatch.index !== undefined) {
-      ranges.push({ start: locMatch.index, end: locMatch.index + locMatch[0].length })
-    }
+    const idx = text.lastIndexOf(parsed.location)
+    if (idx >= 0) ranges.push({ start: idx, end: idx + parsed.location.length })
   }
 
   // Sort and merge overlapping ranges
@@ -219,19 +222,29 @@ function parseWith(
   if (results.length === 0) {
     const { summary, location } = parseLocation(textForChrono.trim(), vocabulary)
     return {
-      parsed: { summary, start: null, end: null, recurrence, location, chronoMatchText: null },
+      parsed: {
+        summary,
+        start: null,
+        end: null,
+        recurrence,
+        location,
+        chronoMatchText: null,
+        timeMatchText: null,
+      },
       recognised: recurrenceLength,
     }
   }
 
   const result = results[0]
+  const time = findSeparateTime(result, results.slice(1))
 
-  let summary = removeMatchAndConnectors(textForChrono, result.index, result.text, vocabulary)
-  summary = summary.trim()
+  let summary = textForChrono
+  if (time) summary = removeMatchAndConnectors(summary, time.index, time.text, vocabulary)
+  summary = removeMatchAndConnectors(summary, result.index, result.text, vocabulary).trim()
 
   const { summary: finalSummary, location } = parseLocation(summary, vocabulary)
 
-  const allDay = !result.start.isCertain("hour")
+  const allDay = !time && !result.start.isCertain("hour")
   const tzid = getViewerTzid()
 
   let start: EventTime, end: EventTime
@@ -240,6 +253,11 @@ function parseWith(
     const endDate = (result.end ? jsDateToPlainDate(result.end.date()) : startDate).add({ days: 1 })
     start = allDayDate(startDate)
     end = allDayDate(endDate)
+  } else if (time) {
+    start = fromDate(onDayOf(result.start.date(), time.start), tzid)
+    end = time.end
+      ? fromDate(onDayOf(result.start.date(), time.end), tzid)
+      : addMinutes(start, DEFAULT_DURATION_MINS)
   } else {
     start = fromDate(result.start.date(), tzid)
     end = result.end ? fromDate(result.end.date(), tzid) : addMinutes(start, DEFAULT_DURATION_MINS)
@@ -253,9 +271,35 @@ function parseWith(
       recurrence,
       location,
       chronoMatchText: result.text,
+      timeMatchText: time?.text ?? null,
     },
-    recognised: recurrenceLength + result.text.length,
+    recognised: recurrenceLength + result.text.length + (time?.text.length ?? 0),
   }
+}
+
+/**
+ * chrono reads "Heute essen im Nanami um 19 Uhr" as two results: a day without
+ * a time, then a time without a day. Returns that later time so both can be
+ * merged; null when the first result already has a time.
+ */
+function findSeparateTime(first: ParsedResult, rest: ParsedResult[]): ParsedResult | null {
+  if (first.start.isCertain("hour")) return null
+  return (
+    rest.find(
+      (r) =>
+        r.start.isCertain("hour") &&
+        !r.start.isCertain("day") &&
+        !r.start.isCertain("weekday") &&
+        !r.start.isCertain("month"),
+    ) ?? null
+  )
+}
+
+/** The calendar day of `day` at the wall-clock time of `time`. */
+function onDayOf(day: Date, time: ParsedComponents): Date {
+  const merged = new Date(day)
+  merged.setHours(time.get("hour") ?? 0, time.get("minute") ?? 0, 0, 0)
+  return merged
 }
 
 const VOCABULARIES: readonly ParserVocabulary[] = [ENGLISH, GERMAN]
