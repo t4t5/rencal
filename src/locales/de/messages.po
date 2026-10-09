@@ -692,10 +692,10 @@ msgstr "Pfad"
 msgid "Enable notifications"
 msgstr "Benachrichtigungen aktivieren"
 
-#. The examples are fed to the date parser, which only understands English
+#. Example dates the parser understands in this language (see src/lib/magic-parser/vocabularies)
 #: src/components/shortcuts/CommandPalette.tsx
 msgid "e.g. \"5 Sep\", \"next sunday\"..."
-msgstr "z. B. „5 Sep“, „next sunday“ …"
+msgstr "z. B. „5. Sep.“, „nächsten Sonntag“ …"
 
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Failed to uninstall plugin"
@@ -1461,10 +1461,10 @@ msgstr "Neuer lokaler Kalender"
 msgid "Invitations"
 msgstr "Einladungen"
 
-#. Example of quick-add text the event parser understands
+#. Quick-add example the parser understands in this language (see src/lib/magic-parser/vocabularies)
 #: src/components/sidebar/header/compose-event/ComposeEventInput.tsx
 msgid "Meeting at 3pm"
-msgstr "Meeting at 3pm"
+msgstr "Meeting morgen um 15 Uhr"
 
 #: src/components/event-parts/inputs/RsvpSelect.tsx
 msgid "Declined"

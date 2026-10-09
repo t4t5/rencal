@@ -51,7 +51,8 @@ export const ComposeEventInput = ({ onExit }: { onExit: () => void }) => {
           isDrafting
             ? t({
                 message: "Meeting at 3pm",
-                comment: "Example of quick-add text the event parser understands",
+                comment:
+                  "Quick-add example the parser understands in this language (see src/lib/magic-parser/vocabularies)",
               })
             : ""
         }

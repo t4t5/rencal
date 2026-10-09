@@ -289,7 +289,8 @@ function DatePage({
           ? t`No matching date`
           : t({
               message: `e.g. "5 Sep", "next sunday"...`,
-              comment: "The examples are fed to the date parser, which only understands English",
+              comment:
+                "Example dates the parser understands in this language (see src/lib/magic-parser/vocabularies)",
             })}
       </div>
     )

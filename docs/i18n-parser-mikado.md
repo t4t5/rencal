@@ -8,7 +8,7 @@ GOAL  Quick-add and "Go to date" understand the user's language (German first)
 ├── [x] C  German vocabulary (chrono.de, jeden/jede/jedes …, montags, werktags, um/am/vom)
 ├── [x] D  Active language first, English as fallback (mixed input keeps working)
 │   └── [x] D1 locale activation tells the parser the language (activator followers)
-└── [ ] E  German examples in the catalog ("Meeting morgen um 15 Uhr", "nächsten Sonntag")
+└── [x] E  German examples in the catalog ("Meeting morgen um 15 Uhr", "nächsten Sonntag")
 
 Found on the way, not changed: "Party from 8pm to 11pm saturday" ends a week late;
 the time after a recurring weekday is not highlighted.
