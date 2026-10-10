@@ -50,7 +50,7 @@ export const RepeatSelect = ({
   readOnly,
 }: {
   value: RRule | RRuleSet | null
-  /** The event's start, whose weekday a custom weekly series always includes. */
+  /** The event's start, whose weekday a new custom weekly rule starts from. */
   start: EventTime
   onChange: (value: RRule | RRuleSet | null) => void
   readOnly?: boolean

@@ -28,17 +28,12 @@ describe("customRecurrenceToRule", () => {
 
   it("builds every n weeks", () => {
     const rule = customRecurrenceToRule({ freq: RRule.WEEKLY, interval: 3, weekdays: [MON] })
-    expect(stored(rule)).toBe("FREQ=WEEKLY;INTERVAL=3")
+    expect(stored(rule)).toBe("FREQ=WEEKLY;INTERVAL=3;BYDAY=MO")
   })
 
   it("combines an interval with several weekdays", () => {
     const rule = customRecurrenceToRule({ freq: RRule.WEEKLY, interval: 2, weekdays: [THU, TUE] })
     expect(stored(rule)).toBe("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH")
-  })
-
-  it("matches the presets for a lone weekday", () => {
-    const rule = customRecurrenceToRule({ freq: RRule.WEEKLY, interval: 2, weekdays: [TUE] })
-    expect(rule.toString()).toBe(new RRule({ freq: RRule.WEEKLY, interval: 2 }).toString())
   })
 
   it("ignores weekdays for non-weekly units", () => {
@@ -70,15 +65,19 @@ describe("customRecurrenceFromRule", () => {
     })
   })
 
-  it("always includes the event's own weekday", () => {
+  it("starts from the event's own weekday when the rule names none", () => {
     expect(customRecurrenceFromRule(null, THU)).toEqual({
       freq: RRule.WEEKLY,
       interval: 1,
       weekdays: [THU],
     })
-    expect(
-      customRecurrenceFromRule(rrulestr("FREQ=WEEKLY;BYDAY=MO") as RRule, FRI).weekdays,
-    ).toEqual([MON, FRI])
+    const everyOtherWeek = rrulestr("FREQ=WEEKLY;INTERVAL=2") as RRule
+    expect(customRecurrenceFromRule(everyOtherWeek, FRI).weekdays).toEqual([FRI])
+  })
+
+  it("doesn't add the event's own weekday to a rule that names others", () => {
+    const rule = rrulestr("FREQ=WEEKLY;BYDAY=MO,TU,WE,FR") as RRule
+    expect(customRecurrenceFromRule(rule, THU).weekdays).toEqual([MON, TUE, 2, FRI])
   })
 
   it("round-trips a stored rule unchanged", () => {
@@ -92,10 +91,10 @@ describe("customRecurrenceFromRule", () => {
 })
 
 describe("toggleWeekday", () => {
-  it("adds and removes days but never the event's own day", () => {
-    expect(toggleWeekday([MON], FRI, MON)).toEqual([MON, FRI])
-    expect(toggleWeekday([MON, FRI], FRI, MON)).toEqual([MON])
-    expect(toggleWeekday([MON, FRI], MON, MON)).toEqual([MON, FRI])
+  it("adds and removes any day but keeps at least one", () => {
+    expect(toggleWeekday([MON], FRI)).toEqual([MON, FRI])
+    expect(toggleWeekday([MON, FRI], MON)).toEqual([FRI])
+    expect(toggleWeekday([FRI], FRI)).toEqual([FRI])
   })
 })
 

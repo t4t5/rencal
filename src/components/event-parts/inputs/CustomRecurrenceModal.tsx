@@ -43,7 +43,7 @@ export function CustomRecurrenceModal({
   onClose,
 }: {
   value: RRule | RRuleSet | null
-  /** The event's own weekday (Monday = 0), which a weekly series always includes. */
+  /** The event's own weekday (Monday = 0), preselected for a new weekly rule. */
   startWeekday: number
   onSave: (rule: RRule) => void
   onClose: () => void
@@ -108,21 +108,18 @@ export function CustomRecurrenceModal({
             <div className="flex flex-wrap gap-1.5">
               {weekdayOrder.map((day) => {
                 const selected = weekdays.includes(day)
-                const locked = day === startWeekday
                 return (
                   <button
                     key={day}
                     type="button"
                     aria-label={WEEKDAYS[day].long}
                     aria-pressed={selected}
-                    title={locked ? "The event's own day is always included" : undefined}
-                    onClick={() => setWeekdays(toggleWeekday(weekdays, day, startWeekday))}
+                    onClick={() => setWeekdays(toggleWeekday(weekdays, day))}
                     className={cn(
                       "size-8 rounded-full text-xs font-medium transition-colors",
                       selected
                         ? "bg-primary text-primary-foreground"
                         : "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
-                      locked && "cursor-default",
                     )}
                   >
                     {WEEKDAYS[day].short}

@@ -9,7 +9,7 @@ import { useSync } from "@/contexts/SyncContext"
 
 import { getErrorMessage } from "@/lib/api"
 import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
-import type { CalendarEvent } from "@/lib/cal-events"
+import { type CalendarEvent, withDates } from "@/lib/cal-events"
 import { addDays } from "@/lib/event-time"
 import { isUserOrganizer } from "@/lib/event-utils"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
@@ -86,8 +86,14 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         new_recurrence: current.master_recurrence,
       })
 
+      // The split happens at this occurrence; if its day isn't in the new
+      // rule, the new series starts on the rule's first day after it.
+      const shift = current.master_recurrence
+        ? daysToFirstOccurrence(newMaster.start, current.master_recurrence.rrule)
+        : 0
+
       const updatedMaster: CalendarEvent = {
-        ...newMaster,
+        ...withDates(newMaster, addDays(newMaster.start, shift), addDays(newMaster.end, shift)),
         summary: current.summary,
         description: current.description,
         location: current.location,

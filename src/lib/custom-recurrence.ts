@@ -38,8 +38,8 @@ export function ruleString(value: RRule | RRuleSet): string {
 }
 
 /**
- * Seed the editor from an existing rule. `startWeekday` is the event's own
- * day, which is always part of a weekly series (see `toggleWeekday`).
+ * Seed the editor from an existing rule. Without explicit weekdays a weekly
+ * rule repeats on the event's own day, `startWeekday`.
  */
 export function customRecurrenceFromRule(
   value: RRule | RRuleSet | null,
@@ -53,15 +53,14 @@ export function customRecurrenceFromRule(
   return {
     freq: unit?.freq ?? Frequency.WEEKLY,
     interval: Math.max(options?.interval ?? 1, 1),
-    weekdays: sortWeekdays([startWeekday, ...days.map(weekdayIndex)]),
+    weekdays: days.length ? sortWeekdays(days.map(weekdayIndex)) : [startWeekday],
   }
 }
 
 /**
  * Build the RRULE for the editor state, keeping the end condition (COUNT/UNTIL)
- * and week start of the rule being replaced. Weekdays only apply to weekly
- * rules, and a lone start weekday is left implicit so plain weekly series
- * still match the "Every week" / "Every 2 weeks" presets.
+ * and week start of the rule being replaced. Weekly rules always spell out
+ * their weekdays, since they may not include the event's current day.
  */
 export function customRecurrenceToRule(
   recurrence: CustomRecurrence,
@@ -71,7 +70,7 @@ export function customRecurrenceToRule(
   const options: Partial<Options> = { freq: recurrence.freq }
 
   if (recurrence.interval > 1) options.interval = recurrence.interval
-  if (recurrence.freq === Frequency.WEEKLY && recurrence.weekdays.length > 1) {
+  if (recurrence.freq === Frequency.WEEKLY && recurrence.weekdays.length) {
     options.byweekday = sortWeekdays(recurrence.weekdays)
   }
   if (kept?.count != null) options.count = kept.count
@@ -81,12 +80,9 @@ export function customRecurrenceToRule(
   return new RRule(options)
 }
 
-/**
- * Toggle a weekday, never removing the event's own day: RFC 5545 leaves a
- * DTSTART that doesn't match its rule undefined.
- */
-export function toggleWeekday(weekdays: number[], day: number, startWeekday: number): number[] {
-  if (day === startWeekday) return weekdays
+/** Toggle a weekday, keeping at least one selected. */
+export function toggleWeekday(weekdays: number[], day: number): number[] {
+  if (weekdays.length === 1 && weekdays[0] === day) return weekdays
   return weekdays.includes(day)
     ? weekdays.filter((d) => d !== day)
     : sortWeekdays([...weekdays, day])

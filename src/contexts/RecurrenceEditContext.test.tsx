@@ -131,6 +131,18 @@ it("splits future events with the new rule", async () => {
   )
 })
 
+it("starts the split-off series on the new rule's first day", async () => {
+  vi.mocked(splitRecurringSeriesAt).mockResolvedValue(
+    event({ id: "series-2", start: date("2026-10-14"), end: date("2026-10-15") }),
+  )
+  await edit(rule("FREQ=WEEKLY;BYDAY=MO,TU"))
+  await act(async () => button("This and future events")!.click())
+
+  const [saved] = vi.mocked(updateAndSyncEvent).mock.calls[0]
+  expect(formatDateKey(saved.start)).toBe("2026-10-19")
+  expect(formatDateKey(saved.end)).toBe("2026-10-20")
+})
+
 it("stops repeating from an occurrence on", async () => {
   vi.mocked(splitRecurringSeriesAt).mockResolvedValue(occurrence)
   await edit(null)
