@@ -109,9 +109,16 @@ export const EditEvent = ({
     }
   }, [])
 
+  // An occurrence's rule lives on its series master, so edit the copy it
+  // carries; RecurrenceEditContext applies it to the series on save.
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
-    setDirtyEvent({ ...dirtyEvent, recurrence: rruleToRecurrence(rrule) })
+    const next = rruleToRecurrence(rrule)
+    setDirtyEvent(
+      dirtyEvent.recurring_event_id
+        ? { ...dirtyEvent, master_recurrence: next }
+        : { ...dirtyEvent, recurrence: next },
+    )
   }
 
   const handleReminderAdd = (mins: number) => {
@@ -138,7 +145,9 @@ export const EditEvent = ({
   const { summary, description, start, end, location, url, calendar_slug, recurrence } = dirtyEvent
   const all_day = isAllDay(start)
 
-  const effectiveRecurrence = recurrence ?? dirtyEvent.master_recurrence
+  const effectiveRecurrence = dirtyEvent.recurring_event_id
+    ? dirtyEvent.master_recurrence
+    : recurrence
   const recurrenceRRule = effectiveRecurrence ? recurrenceToRRuleSet(effectiveRecurrence) : null
   const calendar = calendars.find((c) => c.slug === calendar_slug)
 

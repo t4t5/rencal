@@ -4,7 +4,12 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import type { CalendarEvent } from "./cal-events"
 import { computeEventDateInfo, formatDateKey, type EventTime } from "./event-time"
 import { fromRpcEventTime } from "./event-time/rpc"
-import { recurrenceToRRuleSet, rruleToRecurrence, withNearestOccurrence } from "./rrule-utils"
+import {
+  daysToFirstOccurrence,
+  recurrenceToRRuleSet,
+  rruleToRecurrence,
+  withNearestOccurrence,
+} from "./rrule-utils"
 
 const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date: value })
 
@@ -125,5 +130,24 @@ describe("recurrence RRuleSet conversion", () => {
 
     expect(converted?.exdates.map(formatDateKey)).toEqual(["2026-08-03"])
     expect(converted?.rdates.map(formatDateKey)).toEqual(["2026-08-04"])
+  })
+})
+
+describe("daysToFirstOccurrence", () => {
+  // 2026-10-12 is a Monday.
+  const monday = date("2026-10-12")
+  const mondayAt9: EventTime = {
+    kind: "datetime_floating",
+    value: Temporal.PlainDateTime.from("2026-10-12T09:00"),
+  }
+
+  it("keeps a start that already matches the rule", () => {
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;BYDAY=MO,WE")).toBe(0)
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;INTERVAL=3")).toBe(0)
+  })
+
+  it("moves the start onto the rule's first day", () => {
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;BYDAY=TU,TH")).toBe(1)
+    expect(daysToFirstOccurrence(mondayAt9, "FREQ=WEEKLY;BYDAY=FR")).toBe(4)
   })
 })

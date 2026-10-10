@@ -10,12 +10,18 @@ import { useSync } from "@/contexts/SyncContext"
 import { getErrorMessage } from "@/lib/api"
 import { getStoredEvent, splitRecurringSeriesAt } from "@/lib/api/internal"
 import type { CalendarEvent } from "@/lib/cal-events"
+import { addDays } from "@/lib/event-time"
 import { isUserOrganizer } from "@/lib/event-utils"
 import { anchorRangeToRecurringMaster } from "@/lib/recurrence-edit"
+import { daysToFirstOccurrence } from "@/lib/rrule-utils"
 import { updateAndSyncEvent } from "@/lib/save-event"
 import { createStrictContext } from "@/lib/strict-context"
 
 type PendingEdit = { current: CalendarEvent; original: CalendarEvent }
+
+// The repeat field of an occurrence edits its copy of the series rule.
+const isRuleChanged = ({ current, original }: PendingEdit) =>
+  JSON.stringify(current.master_recurrence) !== JSON.stringify(original.master_recurrence)
 
 interface RecurrenceEditContextValue {
   // Non-recurring events save directly.
@@ -64,7 +70,8 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
   const handleApplyToFuture = async () => {
     if (!pendingEdit) return
     const { current } = pendingEdit
-    if (!current.recurring_event_id || !current.master_recurrence) {
+    // A null rule is fine here: the split-off part becomes a single event.
+    if (!current.recurring_event_id) {
       closeDialog()
       return
     }
@@ -113,10 +120,26 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
 
       // Apply the occurrence's edited range while retaining the master's anchor
       // date. This also preserves date-only values when toggling the series all-day.
-      const { start: newMasterStart, end: newMasterEnd } = anchorRangeToRecurringMaster(
+      let { start: newMasterStart, end: newMasterEnd } = anchorRangeToRecurringMaster(
         current,
         master.start,
       )
+
+      // A new rule replaces the old one but keeps its exceptions, and the
+      // series start moves onto the new rule's first day if needed.
+      let recurrence = master.recurrence
+      if (isRuleChanged(pendingEdit)) {
+        recurrence = current.master_recurrence && {
+          ...current.master_recurrence,
+          exdates: master.recurrence?.exdates ?? [],
+          rdates: master.recurrence?.rdates ?? [],
+        }
+        if (recurrence) {
+          const shift = daysToFirstOccurrence(newMasterStart, recurrence.rrule)
+          newMasterStart = addDays(newMasterStart, shift)
+          newMasterEnd = addDays(newMasterEnd, shift)
+        }
+      }
 
       const updatedMaster: CalendarEvent = {
         ...master,
@@ -126,6 +149,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         url: current.url,
         start: newMasterStart,
         end: newMasterEnd,
+        recurrence,
         reminders: current.reminders,
         conference: current.conference,
         calendar_slug: current.calendar_slug,
@@ -147,6 +171,8 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       {children}
       <RecurrenceConfirmDialog
         isOpen={pendingEdit !== null}
+        // A changed rule belongs to the series, not to a single occurrence.
+        canApplyToThis={!shownEdit || !isRuleChanged(shownEdit)}
         // Only the organizer can split a recurring series.
         canApplyToFuture={shownEdit ? isUserOrganizer(shownEdit.current, calendars) : true}
         onClose={closeDialog}
