@@ -142,7 +142,12 @@ export function EventInfo({
       )}
 
       {(canEdit || recurrence) && (
-        <RepeatSelect value={recurrence} onChange={onRecurrenceChange} readOnly={readonly} />
+        <RepeatSelect
+          value={recurrence}
+          start={start}
+          onChange={onRecurrenceChange}
+          readOnly={readonly}
+        />
       )}
 
       <ConferenceDisplay
