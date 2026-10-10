@@ -10,6 +10,7 @@ import {
 
 export function RecurrenceConfirmDialog({
   isOpen,
+  canApplyToThis = true,
   canApplyToFuture = true,
   title = "Edit recurring event",
   description = "This event is part of a recurring series.",
@@ -19,6 +20,7 @@ export function RecurrenceConfirmDialog({
   onApplyToThis,
 }: {
   isOpen: boolean
+  canApplyToThis?: boolean
   canApplyToFuture?: boolean
   title?: string
   description?: string
@@ -35,9 +37,11 @@ export function RecurrenceConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex gap-2">
-          <Button variant="secondary" onClick={onApplyToThis}>
-            Only this event
-          </Button>
+          {canApplyToThis && (
+            <Button variant="secondary" onClick={onApplyToThis}>
+              Only this event
+            </Button>
+          )}
           {canApplyToFuture && (
             <Button variant="secondary" onClick={onApplyToFuture}>
               This and future events

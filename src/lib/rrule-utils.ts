@@ -89,6 +89,19 @@ export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRul
   })
 }
 
+/**
+ * Days to move a series start forward so it lands on the rule's first
+ * occurrence, e.g. a Monday start for a Tuesday/Thursday rule → 1. RFC 5545
+ * leaves a DTSTART that doesn't match its own rule undefined.
+ */
+export function daysToFirstOccurrence(start: EventTime, rrule: string): number {
+  const dtstart = eventTimeToRRuleDate(start)
+  const first = createRRuleWithDtstart(rrule, dtstart).after(dtstart, true)
+  if (!first) return 0
+
+  return dateInEventZone(start).until(rruleDateToPlainDate(first)).days
+}
+
 /** For a recurring master, shift start/end to the occurrence nearest to now. */
 export function withNearestOccurrence(
   event: CalendarEvent,

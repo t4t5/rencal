@@ -12,13 +12,14 @@ import { conferenceForCalendar } from "@/lib/conference"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
+  addDays,
   type EventTime,
   isAllDay,
   normalizeAllDayRange,
   toAllDay,
   toTimedAtStartOfDay,
 } from "@/lib/event-time"
-import { rruleToRecurrence } from "@/lib/rrule-utils"
+import { daysToFirstOccurrence, rruleToRecurrence } from "@/lib/rrule-utils"
 
 export const ComposeEventInner = ({
   summaryRef,
@@ -116,7 +117,16 @@ export const ComposeEventInner = ({
           }}
           recurrence={recurrenceRRule}
           onRecurrenceChange={(rrule) => {
-            setDraftEvent({ ...draftEvent, recurrence: rruleToRecurrence(rrule) })
+            const next = rruleToRecurrence(rrule)
+            // Move the event onto the rule's first day, e.g. a Thursday draft
+            // set to repeat Mon–Wed starts next Monday.
+            const shift = next ? daysToFirstOccurrence(start, next.rrule) : 0
+            setDraftEvent({
+              ...draftEvent,
+              start: addDays(start, shift),
+              end: addDays(end, shift),
+              recurrence: next,
+            })
           }}
           reminders={draftReminders}
           onReminderAdd={(mins) => setDraftReminders([...draftReminders, mins])}
