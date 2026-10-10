@@ -25,6 +25,7 @@ afterEach(async () => {
   await act(async () => root.unmount())
   document.body.replaceChildren()
   vi.unstubAllGlobals()
+  vi.restoreAllMocks()
 })
 
 const at = (hour: number, minute: number): EventTime => ({
@@ -85,4 +86,24 @@ it("commits the row reached with the arrow keys after typing", async () => {
   await press("Enter")
 
   expect(onChange).toHaveBeenCalledWith(14, 15)
+})
+
+it("opens with the current time centered in the list", async () => {
+  // happy-dom has no layout: stack 32px rows in a 320px-tall list.
+  vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(320)
+  vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(32)
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (
+    this: HTMLElement,
+  ) {
+    const items = Array.from(document.querySelectorAll("[cmdk-item]"))
+    return DOMRect.fromRect({ y: Math.max(items.indexOf(this), 0) * 32, height: 32 })
+  })
+
+  await render(at(13, 0))
+
+  const list = document.querySelector<HTMLElement>("[cmdk-list]")!
+  const selected = document.querySelector<HTMLElement>("[cmdk-item][data-selected=true]")!
+  expect(selected.dataset.value).toBe("13:00")
+  // Row 52 (13:00) sits at 1664px; centering leaves (320 - 32) / 2 above it.
+  expect(list.scrollTop).toBe(52 * 32 - 144)
 })

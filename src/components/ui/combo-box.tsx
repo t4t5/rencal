@@ -46,7 +46,21 @@ export function Combobox({
   onHighlightChange?: (value: string) => void
 }) {
   const anchorRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
   const interactive = !readOnly && !disabled
+
+  // cmdk only scrolls its selection into view on its own keyboard moves, not
+  // when `value` is set from outside, so center the highlighted row on open.
+  const centerHighlighted = () => {
+    const list = listRef.current
+    const item = Array.from(list?.querySelectorAll<HTMLElement>("[cmdk-item]") ?? []).find(
+      (el) => el.dataset.value === highlightedValue,
+    )
+    if (!list || !item) return
+
+    const offset = item.getBoundingClientRect().top - list.getBoundingClientRect().top
+    list.scrollTop += offset - (list.clientHeight - item.offsetHeight) / 2
+  }
 
   const handleInputKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     onInputKeyDown?.(e)
@@ -113,14 +127,17 @@ export function Combobox({
         <PopoverContent
           className="overflow-hidden p-0 w-(--radix-popover-trigger-width)"
           align="start"
-          onOpenAutoFocus={(e) => e.preventDefault()}
+          onOpenAutoFocus={(e) => {
+            e.preventDefault()
+            centerHighlighted()
+          }}
           onInteractOutside={(e) => {
             if (anchorRef.current?.contains(e.target as Node)) {
               e.preventDefault()
             }
           }}
         >
-          <CommandList>{children}</CommandList>
+          <CommandList ref={listRef}>{children}</CommandList>
         </PopoverContent>
       </Popover>
     </Command>
