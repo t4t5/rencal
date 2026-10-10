@@ -1,6 +1,7 @@
 import { FormEvent, useState } from "react"
 
 import { Button } from "@/components/ui/button"
+import { DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
@@ -52,44 +53,53 @@ export const LocalCalendarForm = ({ onClose }: { onClose: () => void }) => {
   }
 
   return (
-    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 w-full">
-      <Input
-        variant="default"
-        type="text"
-        placeholder="Calendar name"
-        autoFocus
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
+    <>
+      <DialogHeader>
+        <DialogTitle>New local-only calendar</DialogTitle>
+        <DialogDescription>
+          This calendar will live on your computer only, and never be connected to the internet.
+        </DialogDescription>
+      </DialogHeader>
 
-      <div className="flex flex-wrap justify-center gap-2">
-        {COLOR_PALETTE.map((swatch) => {
-          const selected = swatch === color
-          return (
-            <button
-              key={swatch}
-              type="button"
-              aria-label={`Color ${swatch}`}
-              aria-pressed={selected}
-              onClick={() => setColor(swatch)}
-              className={cn(
-                "size-7 rounded-full transition-transform",
-                "ring-offset-2 ring-offset-background",
-                selected && "ring-2 ring-foreground",
-              )}
-              style={{ backgroundColor: swatch }}
-            />
-          )
-        })}
-      </div>
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 w-full">
+        <Input
+          variant="default"
+          type="text"
+          placeholder="Calendar name"
+          autoFocus
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
 
-      {error && <p className="text-sm text-destructive">{error}</p>}
+        <div className="flex flex-wrap justify-center gap-2">
+          {COLOR_PALETTE.map((swatch) => {
+            const selected = swatch === color
+            return (
+              <button
+                key={swatch}
+                type="button"
+                aria-label={`Color ${swatch}`}
+                aria-pressed={selected}
+                onClick={() => setColor(swatch)}
+                className={cn(
+                  "size-7 rounded-full transition-transform",
+                  "ring-offset-2 ring-offset-background",
+                  selected && "ring-2 ring-foreground",
+                )}
+                style={{ backgroundColor: swatch }}
+              />
+            )
+          })}
+        </div>
 
-      <div className="flex justify-end">
-        <Button type="submit" disabled={isCreating || !name.trim()}>
-          {isCreating ? "Creating..." : "Create calendar"}
-        </Button>
-      </div>
-    </form>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <div className="flex justify-end">
+          <Button type="submit" disabled={isCreating || !name.trim()}>
+            {isCreating ? "Creating..." : "Create calendar"}
+          </Button>
+        </div>
+      </form>
+    </>
   )
 }

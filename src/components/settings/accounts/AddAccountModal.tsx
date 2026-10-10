@@ -85,18 +85,7 @@ export function AddAccountModal({
         </>
       )}
 
-      {step.kind === "local-calendar" && (
-        <>
-          <DialogHeader>
-            <DialogTitle>New local-only calendar</DialogTitle>
-            <DialogDescription>
-              This calendar will live on your computer only, and never be connected to the internet.
-            </DialogDescription>
-          </DialogHeader>
-
-          <LocalCalendarForm onClose={onClose} />
-        </>
-      )}
+      {step.kind === "local-calendar" && <LocalCalendarForm onClose={onClose} />}
     </Modal>
   )
 }

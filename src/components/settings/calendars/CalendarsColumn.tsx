@@ -28,10 +28,12 @@ import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { findProvider, getProviderDisplayName } from "@/lib/providers"
 
+import { PlusIcon } from "@/icons/plus"
 import { RssIcon } from "@/icons/rss"
 
 import { AddSubscriptionModal } from "./AddSubscriptionModal"
 import { ChangeCalendarColorModal } from "./ChangeCalendarColorModal"
+import { NewCalendarModal } from "./NewCalendarModal"
 import { RenameCalendarModal } from "./RenameCalendarModal"
 
 const DEFAULT_GROUP = "default"
@@ -41,6 +43,7 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
   const { groups, setGroups } = useSettings()
   const { providers } = useProviders()
   const [showAddSubscriptionModal, setShowAddSubscriptionModal] = useState(false)
+  const [showNewCalendarModal, setShowNewCalendarModal] = useState(false)
 
   const allCalendarSlugs = calendars.map((calendar) => calendar.slug)
   const visibleCalendarSlugs = groups[selectedGroup]
@@ -98,14 +101,23 @@ export function CalendarsColumn({ selectedGroup }: { selectedGroup: string }) {
 
       {!calendars.length && <div className="text-sm text-muted-foreground">No calendars yet.</div>}
 
-      <Button
-        variant="secondary"
-        className="self-start gap-2"
-        onClick={() => setShowAddSubscriptionModal(true)}
-      >
-        <RssIcon className="size-4" />
-        Add subscription
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button variant="secondary" className="gap-2" onClick={() => setShowNewCalendarModal(true)}>
+          <PlusIcon className="size-4" />
+          New calendar
+        </Button>
+
+        <Button
+          variant="secondary"
+          className="gap-2"
+          onClick={() => setShowAddSubscriptionModal(true)}
+        >
+          <RssIcon className="size-4" />
+          Add subscription
+        </Button>
+      </div>
+
+      {showNewCalendarModal && <NewCalendarModal onClose={() => setShowNewCalendarModal(false)} />}
 
       {showAddSubscriptionModal && (
         <AddSubscriptionModal onClose={() => setShowAddSubscriptionModal(false)} />
