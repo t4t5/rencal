@@ -155,7 +155,7 @@ function CustomRecurrenceForm({
         <DialogTitle>Custom recurrence</DialogTitle>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-4 w-full">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6 w-full">
         <div className="flex items-center gap-2">
           <span className="text-sm">Every</span>
           <Input
@@ -273,7 +273,7 @@ function CustomRecurrenceForm({
 function EndOption({ value, label }: { value: RecurrenceEnd["kind"]; label: string }) {
   const id = useId()
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex h-control items-center gap-2">
       <RadioGroupItem value={value} id={id} />
       <label htmlFor={id} className="text-sm">
         {label}
