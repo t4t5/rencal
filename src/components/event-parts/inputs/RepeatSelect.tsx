@@ -11,7 +11,7 @@ import {
 import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { SelectMenuTrigger } from "@/components/ui/select"
 
-import { describeRecurrence, ruleString } from "@/lib/custom-recurrence"
+import { describeRecurrence, ruleString, withEndOf } from "@/lib/custom-recurrence"
 import { dateInEventZone, type EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
@@ -70,7 +70,7 @@ export const RepeatSelect = ({
     }
     const interval = INTERVALS.find((i) => i.rrule.toString() === next)
     if (interval) {
-      onChange(interval.rrule)
+      onChange(withEndOf(interval.rrule, value))
     }
   }
 

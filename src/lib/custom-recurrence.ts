@@ -32,9 +32,24 @@ function weekdayIndex(day: Weekday | number | string): number {
   return day.weekday
 }
 
-/** The rule's RRULE line, ignoring any EXDATE/RDATE lines of a set. */
+function withoutEnd(rule: RRule): RRule {
+  return new RRule({ ...rule.origOptions, count: null, until: null })
+}
+
+/**
+ * The rule's RRULE line without its end (COUNT/UNTIL), which has its own
+ * field, ignoring any EXDATE/RDATE lines of a set.
+ */
 export function ruleString(value: RRule | RRuleSet): string {
-  return firstRule(value)?.toString() ?? ""
+  const rule = firstRule(value)
+  return rule ? withoutEnd(rule).toString() : ""
+}
+
+/** `rule` with the end (COUNT/UNTIL) of the rule it replaces. */
+export function withEndOf(rule: RRule, previous: RRule | RRuleSet | null): RRule {
+  const kept = previous ? firstRule(previous)?.origOptions : undefined
+  if (kept?.count == null && kept?.until == null) return rule
+  return new RRule({ ...rule.origOptions, count: kept.count, until: kept.until })
 }
 
 /**
@@ -92,10 +107,11 @@ function sortWeekdays(days: number[]): number[] {
   return [...new Set(days)].sort((a, b) => a - b)
 }
 
-/** Short label for a rule that isn't one of the presets. */
+/** Short label for a rule that isn't one of the presets, without its end. */
 export function describeRecurrence(value: RRule | RRuleSet): string {
-  const rule = firstRule(value)
-  if (!rule) return "Custom recurrence"
+  const first = firstRule(value)
+  if (!first) return "Custom recurrence"
+  const rule = withoutEnd(first)
 
   const { freq, interval = 1, byweekday } = rule.origOptions
   const days = byweekday == null ? [] : Array.isArray(byweekday) ? byweekday : [byweekday]
@@ -103,9 +119,7 @@ export function describeRecurrence(value: RRule | RRuleSet): string {
   if (
     freq === Frequency.WEEKLY &&
     interval === 1 &&
-    indexes.join() === WEEKDAYS_MON_TO_FRI.join() &&
-    !rule.origOptions.count &&
-    !rule.origOptions.until
+    indexes.join() === WEEKDAYS_MON_TO_FRI.join()
   ) {
     return "Every weekday"
   }

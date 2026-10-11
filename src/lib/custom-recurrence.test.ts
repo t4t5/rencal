@@ -5,7 +5,9 @@ import {
   customRecurrenceFromRule,
   customRecurrenceToRule,
   describeRecurrence,
+  ruleString,
   toggleWeekday,
+  withEndOf,
 } from "./custom-recurrence"
 import { recurrenceToRRuleSet, rruleToRecurrence } from "./rrule-utils"
 
@@ -107,5 +109,29 @@ describe("describeRecurrence", () => {
     const set = new RRuleSet()
     set.rrule(rrulestr("FREQ=WEEKLY;INTERVAL=2;BYDAY=TU,TH") as RRule)
     expect(describeRecurrence(set)).toBe("Every 2 weeks on Tuesday, Thursday")
+  })
+
+  it("leaves out the end, which has its own field", () => {
+    const rule = rrulestr("FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR;UNTIL=20261031") as RRule
+    expect(describeRecurrence(rule)).toBe("Every weekday")
+    expect(describeRecurrence(rrulestr("FREQ=DAILY;COUNT=3") as RRule)).toBe("Every day")
+  })
+})
+
+describe("ruleString", () => {
+  it("matches a rule with an end to its endless preset", () => {
+    expect(ruleString(rrulestr("FREQ=WEEKLY;UNTIL=20261031") as RRule)).toBe(
+      new RRule({ freq: RRule.WEEKLY }).toString(),
+    )
+  })
+})
+
+describe("withEndOf", () => {
+  it("carries the previous rule's end over to a new rule", () => {
+    const daily = new RRule({ freq: RRule.DAILY })
+    expect(stored(withEndOf(daily, rrulestr("FREQ=WEEKLY;COUNT=4") as RRule))).toBe(
+      "FREQ=DAILY;COUNT=4",
+    )
+    expect(withEndOf(daily, null)).toBe(daily)
   })
 })

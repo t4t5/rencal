@@ -15,12 +15,17 @@ export const DatePicker = ({
   date,
   setDate,
   addon,
+  placeholder = "Select date",
+  minDate,
   className,
   readOnly,
 }: {
   date: Temporal.PlainDate | null
   setDate: (date: Temporal.PlainDate | null) => void
   addon?: ReactNode
+  placeholder?: ReactNode
+  /** Days before this can't be picked. */
+  minDate?: Temporal.PlainDate
   className?: string
   readOnly?: boolean
 }) => {
@@ -44,7 +49,7 @@ export const DatePicker = ({
           )}
         >
           {addon}
-          <ItemContent>{date ? formattedDate : "Select date"}</ItemContent>
+          <ItemContent>{date ? formattedDate : placeholder}</ItemContent>
           {/* Hidden by default to fit narrow forms; combo-box themes can show it. */}
           {!readOnly && <SelectIcon forceVisible={open} className="hidden" />}
         </button>
@@ -56,6 +61,7 @@ export const DatePicker = ({
           defaultMonth={date ? plainDateToJsDate(date) : undefined}
           captionLayout="dropdown"
           fixedWeeks
+          disabled={minDate ? { before: plainDateToJsDate(minDate) } : undefined}
           // With year dropdowns, RDP otherwise ends navigation at the current year.
           endMonth={plainDateToJsDate(today().add({ years: 100 }))}
           onSelect={(date) => {

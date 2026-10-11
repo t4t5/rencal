@@ -21,6 +21,7 @@ import {
 import { conferenceToRpc, type EventConference } from "@/lib/conference"
 import { getViewerTzid, type EventTime } from "@/lib/event-time"
 import { toRpcEventTime } from "@/lib/event-time/rpc"
+import { matchUntilToStart } from "@/lib/recurrence-end"
 
 /** A calendar-scoped event identity. Event ids are opaque. */
 export type EventRef = Pick<CalendarEvent, "calendar_slug" | "id">
@@ -97,6 +98,12 @@ export interface SplitRecurringSeriesInput {
   new_recurrence: Recurrence | null
 }
 
+/** The series rule on the wire, with UNTIL in the form its start requires. */
+function seriesRecurrenceToRpc(recurrence: Recurrence | null, start: EventTime) {
+  if (!recurrence) return null
+  return recurrenceToRpc({ ...recurrence, rrule: matchUntilToStart(recurrence.rrule, start) })
+}
+
 function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "calendar_slug"> {
   return {
     summary: input.summary,
@@ -105,7 +112,7 @@ function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "ca
     url: input.url,
     start: toRpcEventTime(input.start),
     end: toRpcEventTime(input.end),
-    recurrence: input.recurrence ? recurrenceToRpc(input.recurrence) : null,
+    recurrence: seriesRecurrenceToRpc(input.recurrence, input.start),
     reminders: input.reminders,
     attendees: input.attendees,
     conference: conferenceToRpc(input.conference),
@@ -203,7 +210,7 @@ export async function splitRecurringSeriesAt(
     master_uid: input.master_uid,
     split_start: toRpcEventTime(input.split_start),
     split_end: toRpcEventTime(input.split_end),
-    new_recurrence: input.new_recurrence ? recurrenceToRpc(input.new_recurrence) : null,
+    new_recurrence: seriesRecurrenceToRpc(input.new_recurrence, input.split_start),
   })
   return rpcToCalendarEvent(newMaster)
 }

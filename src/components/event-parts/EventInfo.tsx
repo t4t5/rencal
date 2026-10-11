@@ -6,6 +6,7 @@ import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceDisplay } from "@/components/event-parts/inputs/ConferenceDisplay"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
+import { RecurrenceEndSelect } from "@/components/event-parts/inputs/RecurrenceEndSelect"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
 import { UrlInput } from "@/components/event-parts/inputs/UrlInput"
@@ -143,6 +144,15 @@ export function EventInfo({
 
       {(canEdit || recurrence) && (
         <RepeatSelect
+          value={recurrence}
+          start={start}
+          onChange={onRecurrenceChange}
+          readOnly={readonly}
+        />
+      )}
+
+      {recurrence && (
+        <RecurrenceEndSelect
           value={recurrence}
           start={start}
           onChange={onRecurrenceChange}
