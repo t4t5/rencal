@@ -113,7 +113,7 @@ export const EditEvent = ({
   // carries; RecurrenceEditContext applies it to the series on save.
   const handleRecurrenceChange = (rrule: RRule | RRuleSet | null) => {
     if (!dirtyEvent) return
-    const next = rruleToRecurrence(rrule)
+    const next = rruleToRecurrence(rrule, dirtyEvent.start)
     setDirtyEvent(
       dirtyEvent.recurring_event_id
         ? { ...dirtyEvent, master_recurrence: next }

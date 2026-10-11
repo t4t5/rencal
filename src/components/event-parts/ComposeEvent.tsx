@@ -117,7 +117,7 @@ export const ComposeEventInner = ({
           }}
           recurrence={recurrenceRRule}
           onRecurrenceChange={(rrule) => {
-            const next = rruleToRecurrence(rrule)
+            const next = rruleToRecurrence(rrule, start)
             // Move the event onto the rule's first day, e.g. a Thursday draft
             // set to repeat Mon–Wed starts next Monday.
             const shift = next ? daysToFirstOccurrence(start, next.rrule) : 0

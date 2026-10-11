@@ -12,7 +12,7 @@ import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { SelectMenuTrigger } from "@/components/ui/select"
 
 import { describeRecurrence, ruleString } from "@/lib/custom-recurrence"
-import { dateInEventZone, type EventTime } from "@/lib/event-time"
+import { type EventTime } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -50,7 +50,7 @@ export const RepeatSelect = ({
   readOnly,
 }: {
   value: RRule | RRuleSet | null
-  /** The event's start, whose weekday a new custom weekly rule starts from. */
+  /** The event's start, which the custom recurrence editor builds its rule for. */
   start: EventTime
   onChange: (value: RRule | RRuleSet | null) => void
   readOnly?: boolean
@@ -96,7 +96,7 @@ export const RepeatSelect = ({
             </ItemMedia>
             <ItemContent className="overflow-hidden text-left">
               {value ? (
-                <span className="block truncate">{getHumanInterval(value)}</span>
+                <span className="block truncate">{getHumanInterval(value, start)}</span>
               ) : (
                 <span className="text-placeholder-foreground">Repeat</span>
               )}
@@ -120,8 +120,7 @@ export const RepeatSelect = ({
       {showCustomModal && (
         <CustomRecurrenceModal
           value={value}
-          // Temporal counts Monday = 1 … Sunday = 7; rrule.js Monday = 0.
-          startWeekday={dateInEventZone(start).dayOfWeek - 1}
+          start={start}
           onSave={onChange}
           onClose={() => setShowCustomModal(false)}
         />
@@ -130,7 +129,7 @@ export const RepeatSelect = ({
   )
 }
 
-function getHumanInterval(recurrence: RRule | RRuleSet): string {
+function getHumanInterval(recurrence: RRule | RRuleSet, start: EventTime): string {
   const interval = INTERVALS.find((i) => i.rrule.toString() === ruleString(recurrence))
-  return interval ? interval.label : describeRecurrence(recurrence)
+  return interval ? interval.label : describeRecurrence(recurrence, start)
 }

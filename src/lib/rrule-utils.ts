@@ -5,6 +5,7 @@ import { type CalendarEvent, type Recurrence, withDates } from "./cal-events"
 import {
   addDays,
   dateInEventZone,
+  eventTzid,
   fromDate,
   getViewerTzid,
   toViewerZonedDateTime,
@@ -102,6 +103,55 @@ export function daysToFirstOccurrence(start: EventTime, rrule: string): number {
   return dateInEventZone(start).until(rruleDateToPlainDate(first)).days
 }
 
+/**
+ * rrule.js reads every UNTIL as UTC fields. For zoned and UTC series that is
+ * the real instant; for all-day and floating series it's the wallclock.
+ */
+function untilWallclock(until: Date, start: EventTime): Temporal.PlainDateTime {
+  if (start.kind === "date" || start.kind === "datetime_floating") {
+    return new Temporal.PlainDateTime(
+      until.getUTCFullYear(),
+      until.getUTCMonth() + 1,
+      until.getUTCDate(),
+      until.getUTCHours(),
+      until.getUTCMinutes(),
+      until.getUTCSeconds(),
+    )
+  }
+  return Temporal.Instant.fromEpochMilliseconds(until.getTime())
+    .toZonedDateTimeISO(eventTzid(start))
+    .toPlainDateTime()
+}
+
+/** The last day a series starting at `start` can have an occurrence before UNTIL. */
+export function untilToLastDate(until: Date, start: EventTime): Temporal.PlainDate {
+  const wallclock = untilWallclock(until, start)
+  const { hour, minute } = wallclockTime(start)
+  // A split's UNTIL lands just before that day's occurrence.
+  const fits = wallclock.hour * 60 + wallclock.minute >= hour * 60 + minute
+  return fits ? wallclock.toPlainDate() : wallclock.toPlainDate().subtract({ days: 1 })
+}
+
+/** UNTIL that ends a series starting at `start` after its occurrence on `date`. */
+export function lastDateToUntil(date: Temporal.PlainDate, start: EventTime): Date {
+  if (start.kind === "date") return localDateToRRuleDate(date.toPlainDateTime())
+  const endOfDay = date.toPlainDateTime({ hour: 23, minute: 59, second: 59 })
+  if (start.kind === "datetime_floating") return localDateToRRuleDate(endOfDay)
+  return new Date(endOfDay.toZonedDateTime(eventTzid(start)).epochMilliseconds)
+}
+
+/**
+ * rrule.js always writes UTC datetimes for UNTIL, but RFC 5545 wants a DATE
+ * for all-day series and a local time for floating ones.
+ */
+function formatUntil(rrule: string, start: EventTime): string {
+  return rrule.replace(/UNTIL=(\d{8})(T\d{6})?Z?/, (match, date: string, time = "") => {
+    if (start.kind === "date") return `UNTIL=${date}`
+    if (start.kind === "datetime_floating") return `UNTIL=${date}${time}`
+    return match
+  })
+}
+
 /** For a recurring master, shift start/end to the occurrence nearest to now. */
 export function withNearestOccurrence(
   event: CalendarEvent,
@@ -183,10 +233,19 @@ function stripRRulePrefix(s: string): string {
 /**
  * Convert an RRule or RRuleSet back to a Recurrence object.
  * Exception and addition dates from rrule.js are JS Dates; we wrap them as
- * zoned EventTime in the viewer's local zone.
+ * zoned EventTime in the viewer's local zone. Pass the series `start` to
+ * write UNTIL in the form its kind needs.
  */
-export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | null {
+export function rruleToRecurrence(
+  rrule: RRule | RRuleSet | null,
+  start?: EventTime,
+): Recurrence | null {
   if (!rrule) return null
+
+  const ruleValue = (rule: RRule) => {
+    const value = stripRRulePrefix(rule.toString())
+    return start ? formatUntil(value, start) : value
+  }
 
   if (rrule instanceof RRuleSet) {
     const rrules = rrule.rrules()
@@ -194,14 +253,14 @@ export function rruleToRecurrence(rrule: RRule | RRuleSet | null): Recurrence | 
 
     const tzid = getViewerTzid()
     return {
-      rrule: stripRRulePrefix(rrules[0].toString()),
+      rrule: ruleValue(rrules[0]),
       exdates: rrule.exdates().map((d) => fromDate(d, tzid)),
       rdates: rrule.rdates().map((d) => fromDate(d, tzid)),
     }
   }
 
   return {
-    rrule: stripRRulePrefix(rrule.toString()),
+    rrule: ruleValue(rrule),
     exdates: [],
     rdates: [],
   }
