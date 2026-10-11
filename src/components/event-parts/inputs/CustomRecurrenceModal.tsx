@@ -84,7 +84,7 @@ function ReadOnlyRecurrence({
   return (
     <Modal onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Custom recurrence</DialogTitle>
+        <DialogTitle>Repeat</DialogTitle>
         <DialogDescription>
           This repeat rule can&apos;t be edited in renCal. Choose another option to replace it.
         </DialogDescription>
@@ -152,68 +152,73 @@ function CustomRecurrenceForm({
   return (
     <Modal onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Custom recurrence</DialogTitle>
+        <DialogTitle>Repeat</DialogTitle>
       </DialogHeader>
 
-      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-6 w-full">
-        <div className="flex items-center gap-2">
+      <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-8 w-full">
+        <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-8">
           <span className="text-sm">Every</span>
-          <Input
-            variant="default"
-            type="number"
-            inputMode="numeric"
-            aria-label="Interval"
-            min={1}
-            max={MAX_INTERVAL}
-            className="w-16"
-            value={intervalText}
-            aria-invalid={!isIntervalValid || undefined}
-            onChange={(e) => setIntervalText(e.target.value)}
-          />
-          <Select value={String(freq)} onValueChange={(v) => setFreq(Number(v) as RecurrenceUnit)}>
-            <SelectTrigger variant="default" aria-label="Unit" className="w-32">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {RECURRENCE_UNITS.map((unit) => (
-                <SelectItem key={unit.freq} value={String(unit.freq)}>
-                  {interval === 1 ? unit.singular : unit.plural}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center gap-2">
+            <Input
+              variant="default"
+              type="number"
+              inputMode="numeric"
+              aria-label="Interval"
+              min={1}
+              max={MAX_INTERVAL}
+              className="w-16"
+              value={intervalText}
+              aria-invalid={!isIntervalValid || undefined}
+              onChange={(e) => setIntervalText(e.target.value)}
+            />
+            <Select
+              value={String(freq)}
+              onValueChange={(v) => setFreq(Number(v) as RecurrenceUnit)}
+            >
+              <SelectTrigger variant="default" aria-label="Unit" className="w-32">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {RECURRENCE_UNITS.map((unit) => (
+                  <SelectItem key={unit.freq} value={String(unit.freq)}>
+                    {interval === 1 ? unit.singular : unit.plural}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {freq === RRule.WEEKLY && (
+            <>
+              <span className="text-sm">On</span>
+              <div className="flex flex-wrap gap-1.5">
+                {weekdayOrder.map((day) => {
+                  const selected = weekdays.includes(day)
+                  return (
+                    <button
+                      key={day}
+                      type="button"
+                      aria-label={WEEKDAYS[day].long}
+                      aria-pressed={selected}
+                      onClick={() => setWeekdays(toggleWeekday(weekdays, day))}
+                      className={cn(
+                        "size-8 rounded-full text-xs font-medium transition-colors",
+                        selected
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
+                      )}
+                    >
+                      {WEEKDAYS[day].short}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
         </div>
 
-        {freq === RRule.WEEKLY && (
-          <div className="flex flex-col gap-2">
-            <span className="text-sm text-muted-foreground">Repeat on</span>
-            <div className="flex flex-wrap gap-1.5">
-              {weekdayOrder.map((day) => {
-                const selected = weekdays.includes(day)
-                return (
-                  <button
-                    key={day}
-                    type="button"
-                    aria-label={WEEKDAYS[day].long}
-                    aria-pressed={selected}
-                    onClick={() => setWeekdays(toggleWeekday(weekdays, day))}
-                    className={cn(
-                      "size-8 rounded-full text-xs font-medium transition-colors",
-                      selected
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
-                    )}
-                  >
-                    {WEEKDAYS[day].short}
-                  </button>
-                )
-              })}
-            </div>
-          </div>
-        )}
-
         <div className="flex flex-col gap-2">
-          <span className="text-sm text-muted-foreground">Ends</span>
+          <span className="text-sm">Ends</span>
           <RadioGroup
             value={endKind}
             onValueChange={(kind) => setEndKind(kind as RecurrenceEnd["kind"])}
