@@ -5,7 +5,6 @@ import { AppleIcon } from "@/icons/providers/apple"
 import { EtesyncIcon } from "@/icons/providers/etesync"
 import { GoogleIcon } from "@/icons/providers/google"
 import { MicrosoftIcon } from "@/icons/providers/microsoft"
-import { ProtonIcon } from "@/icons/providers/proton"
 
 const providerDisplayName: Record<string, string> = {
   google: "Google",
@@ -31,7 +30,6 @@ const providerToIcon: Record<string, IconType> = {
   google: GoogleIcon,
   icloud: AppleIcon,
   outlook: MicrosoftIcon,
-  proton: ProtonIcon,
   etesync: EtesyncIcon,
 }
 
