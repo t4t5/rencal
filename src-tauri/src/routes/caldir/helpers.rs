@@ -68,6 +68,17 @@ pub fn tildify(path: &str) -> String {
     path.to_string()
 }
 
+/// Parses the fields of a provider's `Credentials` step.
+pub fn credential_fields(data: serde_json::Value) -> TauResult<Vec<ProviderField>> {
+    let data: caldir_core::rpc::CredentialsData = serde_json::from_value(data).map_err(|e| {
+        RpcError::new(
+            RpcErrorKind::ProviderFailure,
+            format!("Failed to parse credentials data: {e}"),
+        )
+    })?;
+    Ok(map_fields(data.fields))
+}
+
 pub fn map_fields(fields: Vec<caldir_core::rpc::CredentialField>) -> Vec<ProviderField> {
     use caldir_core::rpc::FieldType;
     fields

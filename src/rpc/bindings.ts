@@ -42,6 +42,12 @@ export type CreateEventInput = { calendar_slug: string; summary: string; descrip
 
 export type CredentialFieldInput = { id: string; value: string }
 
+/**
+ * Result of submitting a credentials form: the provider either finished
+ * connecting or asked for another form (e.g. a 2FA code).
+ */
+export type CredentialsConnectResult = { status: "done"; calendars: Calendar[] } | { status: "needs_credentials"; fields: ProviderField[] }
+
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
 
 export type EventConference = { status: "requested"; provider: ConferenceProvider } | { status: "live"; provider: ConferenceProvider; url: string }
@@ -233,7 +239,7 @@ new_calendar_slug: string | null; summary: string; description: string | null; l
 const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
-connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<Calendar[]>, 
+connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<CredentialsConnectResult>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
 create_local_calendar: (name: string, color: string | null) => Promise<Calendar>, 
 delete_calendar: (calendarSlug: string) => Promise<null>, 

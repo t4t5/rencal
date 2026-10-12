@@ -224,6 +224,15 @@ pub struct CredentialFieldInput {
     pub value: String,
 }
 
+/// Result of submitting a credentials form: the provider either finished
+/// connecting or asked for another form (e.g. a 2FA code).
+#[derive(Serialize, Deserialize, Type)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum CredentialsConnectResult {
+    Done { calendars: Vec<Calendar> },
+    NeedsCredentials { fields: Vec<ProviderField> },
+}
+
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub enum ProviderConnectStepKind {
     #[serde(rename = "oauth_redirect")]

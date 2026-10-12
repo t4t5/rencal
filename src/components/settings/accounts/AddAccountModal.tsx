@@ -78,8 +78,13 @@ export function AddAccountModal({
           </DialogHeader>
 
           <CredentialsForm
+            // A follow-up form (e.g. a 2FA code) starts with empty values.
+            key={step.fields.map((field) => field.id).join()}
             step={step}
             providerName={providerName(step.provider)}
+            onNextStep={(fields) =>
+              setStep({ kind: "credentials", provider: step.provider, fields })
+            }
             onClose={onClose}
           />
         </>

@@ -5,17 +5,19 @@ import { Input } from "@/components/ui/input"
 import { PasswordInput } from "@/components/ui/password-input"
 
 import { useConnectProvider } from "@/hooks/useConnectProvider"
-import { getErrorMessage } from "@/lib/api"
+import { getErrorMessage, type ProviderField } from "@/lib/api"
 
 import { ModalStep } from "./AddAccountModal"
 
 export const CredentialsForm = ({
   step,
   providerName,
+  onNextStep,
   onClose,
 }: {
   step: Extract<ModalStep, { kind: "credentials" }>
   providerName: string
+  onNextStep: (fields: ProviderField[]) => void
   onClose: () => void
 }) => {
   const [error, setError] = useState<string | null>(null)
@@ -37,11 +39,15 @@ export const CredentialsForm = ({
     }
 
     try {
-      await connectWithCredentials(
+      const nextFields = await connectWithCredentials(
         step.provider,
         Object.entries(fieldValues).map(([id, value]) => ({ id, value })),
       )
-      onClose()
+      if (nextFields) {
+        onNextStep(nextFields)
+      } else {
+        onClose()
+      }
     } catch (err) {
       setError(getErrorMessage(err, "Failed to connect account"))
     }

@@ -1,4 +1,4 @@
-use super::helpers::{build_connect_options, map_fields, provider};
+use super::helpers::{build_connect_options, credential_fields, map_fields, provider};
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -8,7 +8,7 @@ pub(super) async fn handler(
     state: &AppState,
     provider_name: String,
 ) -> TauResult<ProviderConnectInfo> {
-    use caldir_core::rpc::{ConnectResponse, ConnectStepKind, CredentialsData, SetupData};
+    use caldir_core::rpc::{ConnectResponse, ConnectStepKind, SetupData};
 
     let provider = provider(state, &provider_name)?;
 
@@ -29,15 +29,7 @@ pub(super) async fn handler(
             };
 
             let (fields, instructions) = match step {
-                ConnectStepKind::Credentials => {
-                    let cred_data: CredentialsData = serde_json::from_value(data).map_err(|e| {
-                        RpcError::new(
-                            RpcErrorKind::ProviderFailure,
-                            format!("Failed to parse credentials data: {e}"),
-                        )
-                    })?;
-                    (map_fields(cred_data.fields), None)
-                }
+                ConnectStepKind::Credentials => (credential_fields(data)?, None),
                 ConnectStepKind::NeedsSetup => {
                     let setup_data: SetupData = serde_json::from_value(data).map_err(|e| {
                         RpcError::new(

@@ -32,8 +32,8 @@ mod update_event;
 
 pub use types::{
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
-    ProviderConnectInfo, ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat,
-    UpdateEventInput,
+    CredentialsConnectResult, ProviderConnectInfo, ResponseStatus, SplitRecurringSeriesInput,
+    SyncPreview, TimeFormat, UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -97,7 +97,7 @@ pub trait CaldirApi {
         app_handle: AppHandle<R>,
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
-    ) -> TauResult<Vec<Calendar>>;
+    ) -> TauResult<CredentialsConnectResult>;
 
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
@@ -252,7 +252,7 @@ impl CaldirApi for CaldirApiImpl {
         app: AppHandle<R>,
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
-    ) -> TauResult<Vec<Calendar>> {
+    ) -> TauResult<CredentialsConnectResult> {
         connect_provider_with_credentials::handler(&self.state, app, provider_name, credentials)
             .await
     }

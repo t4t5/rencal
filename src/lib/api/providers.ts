@@ -1,6 +1,7 @@
 import { rpc } from "@/rpc"
 import type {
   CredentialFieldInput,
+  CredentialsConnectResult,
   ProviderConnectInfo,
   ProviderField,
   ProviderInfo,
@@ -27,10 +28,14 @@ export function connectProvider(providerName: string): Promise<Calendar[]> {
   return rpc.caldir.connect_provider(providerName)
 }
 
+/**
+ * Submits a credentials form. The provider either finishes connecting or asks
+ * for another form (e.g. a 2FA code), which is submitted the same way.
+ */
 export function connectProviderWithCredentials(
   providerName: string,
   credentials: CredentialFieldInput[],
-): Promise<Calendar[]> {
+): Promise<CredentialsConnectResult> {
   return rpc.caldir.connect_provider_with_credentials(providerName, credentials)
 }
 

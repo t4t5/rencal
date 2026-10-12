@@ -1,5 +1,7 @@
-use super::helpers::{build_connect_options, provider, save_connected_calendars};
-use super::types::Calendar;
+use super::helpers::{
+    build_connect_options, credential_fields, provider, save_connected_calendars,
+};
+use super::types::{Calendar, CredentialsConnectResult};
 use crate::oauth;
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -33,7 +35,7 @@ pub(super) async fn handler<R: Runtime>(
         .port();
     let redirect_uri = format!("http://localhost:{}/callback", port);
 
-    run_with_data(
+    let result = run_with_data(
         state,
         app,
         &provider,
@@ -42,7 +44,12 @@ pub(super) async fn handler<R: Runtime>(
         listener,
         redirect_uri,
     )
-    .await
+    .await?;
+
+    match result {
+        CredentialsConnectResult::Done { calendars } => Ok(calendars),
+        CredentialsConnectResult::NeedsCredentials { .. } => Err(credentials_required()),
+    }
 }
 
 pub(super) async fn run_with_data<R: Runtime>(
@@ -53,8 +60,8 @@ pub(super) async fn run_with_data<R: Runtime>(
     initial_data: serde_json::Map<String, serde_json::Value>,
     listener: tokio::net::TcpListener,
     redirect_uri: String,
-) -> TauResult<Vec<Calendar>> {
-    use caldir_core::rpc::ConnectResponse;
+) -> TauResult<CredentialsConnectResult> {
+    use caldir_core::rpc::{ConnectResponse, ConnectStepKind};
 
     let mut data = initial_data;
     let mut listener = Some(listener);
@@ -67,8 +74,21 @@ pub(super) async fn run_with_data<R: Runtime>(
                 account_identifier,
                 calendars,
             } => {
-                return save_connected_calendars(state, provider, account_identifier, calendars)
-                    .await;
+                let calendars =
+                    save_connected_calendars(state, provider, account_identifier, calendars)
+                        .await?;
+                return Ok(CredentialsConnectResult::Done { calendars });
+            }
+            // Follow-up forms (e.g. a 2FA code) go back to the webview. The
+            // provider keeps its in-progress login, so the next submission only
+            // needs the new fields.
+            ConnectResponse::NeedsInput {
+                step: ConnectStepKind::Credentials,
+                data: step_data,
+            } => {
+                return Ok(CredentialsConnectResult::NeedsCredentials {
+                    fields: credential_fields(step_data)?,
+                });
             }
             ConnectResponse::NeedsInput {
                 step,
@@ -219,13 +239,17 @@ async fn run_connect_step<R: Runtime>(
             }
             Ok(credentials)
         }
-        ConnectStepKind::Credentials => Err(RpcError::new(
-            RpcErrorKind::Configuration,
-            "Provider requires credentials before it can connect",
-        )),
+        ConnectStepKind::Credentials => Err(credentials_required()),
         ConnectStepKind::NeedsSetup => Err(RpcError::new(
             RpcErrorKind::Configuration,
             "Provider requires setup before it can connect",
         )),
     }
+}
+
+fn credentials_required() -> RpcError {
+    RpcError::new(
+        RpcErrorKind::Configuration,
+        "Provider requires credentials before it can connect",
+    )
 }

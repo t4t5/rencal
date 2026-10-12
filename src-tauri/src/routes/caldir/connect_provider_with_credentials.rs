@@ -1,6 +1,6 @@
 use super::connect_provider;
 use super::helpers::{build_connect_options, provider};
-use super::types::{Calendar, CredentialFieldInput};
+use super::types::{CredentialFieldInput, CredentialsConnectResult};
 use crate::oauth;
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -12,7 +12,7 @@ pub(super) async fn handler<R: Runtime>(
     app: AppHandle<R>,
     provider_name: String,
     credentials: Vec<CredentialFieldInput>,
-) -> TauResult<Vec<Calendar>> {
+) -> TauResult<CredentialsConnectResult> {
     let provider = provider(state, &provider_name)?;
 
     let mut cred_map = serde_json::Map::new();

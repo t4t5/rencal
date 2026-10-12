@@ -3,7 +3,7 @@ import { useCallback, useState } from "react"
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { api, type CredentialFieldInput } from "@/lib/api"
+import { api, type CredentialFieldInput, type ProviderField } from "@/lib/api"
 import { logger } from "@/lib/logger"
 
 export const useConnectProvider = () => {
@@ -28,13 +28,19 @@ export const useConnectProvider = () => {
     [reloadCalendars, reloadSettings],
   )
 
+  /** Resolves to the provider's next form (e.g. a 2FA code), or null once connected. */
   const connectWithCredentials = useCallback(
-    async (providerName: string, credentials: CredentialFieldInput[]) => {
+    async (
+      providerName: string,
+      credentials: CredentialFieldInput[],
+    ): Promise<ProviderField[] | null> => {
       setIsConnecting(true)
 
       try {
-        await api.providers.connectWithCredentials(providerName, credentials)
+        const result = await api.providers.connectWithCredentials(providerName, credentials)
+        if (result.status === "needs_credentials") return result.fields
         await Promise.all([reloadCalendars(), reloadSettings()])
+        return null
       } catch (error) {
         logger.error("Failed to connect provider:", error)
         throw error
