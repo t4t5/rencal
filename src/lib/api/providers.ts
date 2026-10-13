@@ -47,10 +47,16 @@ export async function checkProviderConnection(
   await rpc.caldir.check_provider_connection(providerName, account)
 }
 
+/** Deletes the account's calendars from this computer; the remote is untouched. */
+export async function removeProviderAccount(providerName: string, account: string): Promise<void> {
+  await rpc.caldir.delete_account(providerName, account)
+}
+
 export const providers = {
   list: listProviders,
   getConnectInfo: getProviderConnectInfo,
   connect: connectProvider,
   connectWithCredentials: connectProviderWithCredentials,
   checkConnection: checkProviderConnection,
+  removeAccount: removeProviderAccount,
 } as const

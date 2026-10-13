@@ -7,6 +7,7 @@ mod connect_provider;
 mod connect_provider_with_credentials;
 mod create_event;
 mod create_local_calendar;
+mod delete_account;
 mod delete_calendar;
 mod delete_event;
 mod delete_recurring_series;
@@ -103,6 +104,7 @@ pub trait CaldirApi {
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
     async fn set_calendar_color(calendar_slug: String, color: String) -> TauResult<()>;
     async fn delete_calendar(calendar_slug: String) -> TauResult<()>;
+    async fn delete_account(provider_name: String, account: String) -> TauResult<()>;
 
     async fn get_caldir_settings() -> TauResult<CaldirSettings>;
     async fn set_time_format(time_format: TimeFormat) -> TauResult<()>;
@@ -275,6 +277,10 @@ impl CaldirApi for CaldirApiImpl {
 
     async fn delete_calendar(self, calendar_slug: String) -> TauResult<()> {
         delete_calendar::handler(&self.state, calendar_slug)
+    }
+
+    async fn delete_account(self, provider_name: String, account: String) -> TauResult<()> {
+        delete_account::handler(&self.state, provider_name, account)
     }
 
     async fn get_caldir_settings(self) -> TauResult<CaldirSettings> {

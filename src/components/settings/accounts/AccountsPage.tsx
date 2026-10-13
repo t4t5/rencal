@@ -3,6 +3,14 @@ import { useEffect, useState } from "react"
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -27,7 +35,7 @@ import { ProviderIcon } from "./ProviderIcon"
 import { beginProviderConnection } from "./provider-connection"
 
 export function AccountsPage() {
-  const { calendars } = useCalendars()
+  const { calendars, reloadCalendars } = useCalendars()
   const { connect } = useConnectProvider()
   const { providers } = useProviders()
   const [showAddAccount, setShowAddAccount] = useState(false)
@@ -35,12 +43,17 @@ export function AccountsPage() {
   const [reconnectError, setReconnectError] = useState<string | null>(null)
 
   const calendarsWithAccount = calendars.filter((c) => c.account != null)
-  const calendarsByAccount = Object.groupBy(calendarsWithAccount, (c) => c.account!)
+  const calendarsByAccount = Object.groupBy(
+    calendarsWithAccount,
+    (c) => `${c.provider}/${c.account}`,
+  )
 
-  const accounts = Object.entries(calendarsByAccount).map(([account, cals]) => {
-    const provider = cals?.[0]?.provider ?? null
-    return { account, provider }
-  })
+  const accounts = Object.entries(calendarsByAccount).map(([key, cals = []]) => ({
+    key,
+    account: cals[0]!.account!,
+    provider: cals[0]!.provider,
+    calendarCount: cals.length,
+  }))
 
   function reconnect(provider: string | null) {
     if (provider == null) return
@@ -61,13 +74,15 @@ export function AccountsPage() {
     <SettingsContent className="w-[400px]">
       {!!accounts.length && (
         <div className="flex flex-col gap-4">
-          {accounts.map(({ account, provider }) => (
+          {accounts.map(({ key, account, provider, calendarCount }) => (
             <Account
-              key={account}
+              key={key}
               account={account}
               provider={provider}
+              calendarCount={calendarCount}
               info={findProvider(providers, provider)}
               onReconnect={() => reconnect(provider)}
+              onRemoved={reloadCalendars}
             />
           ))}
         </div>
@@ -114,14 +129,19 @@ const statusLabels: Record<AccountStatus, string> = {
 function Account({
   account,
   provider,
+  calendarCount,
   info,
   onReconnect,
+  onRemoved,
 }: {
   account: string
   provider: string | null
+  calendarCount: number
   info: ProviderInfo | undefined
   onReconnect: () => void
+  onRemoved: () => Promise<void>
 }) {
+  const [showRemoveDialog, setShowRemoveDialog] = useState(false)
   const [status, setStatus] = useState<AccountStatus>(provider == null ? "disconnected" : "pending")
 
   useEffect(() => {
@@ -184,20 +204,83 @@ function Account({
         </div>
       </div>
 
-      <MoreMenu onReconnect={onReconnect} />
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <MoreButton />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem onClick={onReconnect}>Reconnect...</DropdownMenuItem>
+          {provider != null && (
+            <DropdownMenuItem variant="destructive" onClick={() => setShowRemoveDialog(true)}>
+              Remove account...
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {showRemoveDialog && provider != null && (
+        <RemoveAccountDialog
+          account={account}
+          provider={provider}
+          calendarCount={calendarCount}
+          onClose={() => setShowRemoveDialog(false)}
+          onRemoved={onRemoved}
+        />
+      )}
     </div>
   )
 }
 
-const MoreMenu = ({ onReconnect }: { onReconnect: () => void }) => {
+function RemoveAccountDialog({
+  account,
+  provider,
+  calendarCount,
+  onClose,
+  onRemoved,
+}: {
+  account: string
+  provider: string
+  calendarCount: number
+  onClose: () => void
+  onRemoved: () => Promise<void>
+}) {
+  const [isRemoving, setIsRemoving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const calendarsLabel = calendarCount === 1 ? "its calendar" : `its ${calendarCount} calendars`
+
+  const handleRemove = async () => {
+    setIsRemoving(true)
+    setError(null)
+
+    try {
+      await api.providers.removeAccount(provider, account)
+      await onRemoved()
+      onClose()
+    } catch (err) {
+      setError(getErrorMessage(err, "Failed to remove account"))
+      setIsRemoving(false)
+    }
+  }
+
   return (
-    <DropdownMenu modal={false}>
-      <DropdownMenuTrigger asChild>
-        <MoreButton />
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={onReconnect}>Reconnect...</DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <Dialog open onOpenChange={(isOpen) => !isOpen && !isRemoving && onClose()}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Remove account</DialogTitle>
+          <DialogDescription>
+            {`Remove "${account}"? This will remove ${calendarsLabel} from this computer.`}
+          </DialogDescription>
+        </DialogHeader>
+        {error && <p className="text-sm text-destructive">{error}</p>}
+        <DialogFooter className="flex gap-2">
+          <Button variant="secondary" onClick={onClose} disabled={isRemoving} autoFocus>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={() => void handleRemove()} disabled={isRemoving}>
+            {isRemoving ? "Removing..." : "Remove account"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
