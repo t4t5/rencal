@@ -12,7 +12,11 @@ export type CaldirSettings = { time_format: TimeFormat; default_reminders: numbe
  */
 calendar_dir: string }
 
-export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; read_only: boolean | null }
+export type Calendar = { slug: string; name: string | null; color: string | null; provider: string | null; account: string | null; 
+/**
+ * The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
+ */
+email: string | null; read_only: boolean | null }
 
 export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: EventStatus; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**

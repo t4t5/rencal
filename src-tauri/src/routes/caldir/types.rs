@@ -20,6 +20,8 @@ pub struct Calendar {
     pub color: Option<String>,
     pub provider: Option<String>,
     pub account: Option<String>,
+    /// The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
+    pub email: Option<String>,
     pub read_only: Option<bool>,
 }
 
@@ -362,6 +364,7 @@ impl From<&caldir_core::Calendar> for Calendar {
             account: c
                 .remote_config()
                 .and_then(|r| r.account_identifier().map(String::from)),
+            email: c.remote_email().map(String::from),
             read_only: c.read_only_setting(),
         }
     }

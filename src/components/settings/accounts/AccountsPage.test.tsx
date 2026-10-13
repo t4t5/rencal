@@ -37,6 +37,7 @@ function account(provider: string): Calendar {
     color: null,
     provider,
     account: `me@${provider}.example`,
+    email: `me@${provider}.example`,
     read_only: null,
   }
 }

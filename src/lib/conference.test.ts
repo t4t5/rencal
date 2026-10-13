@@ -20,6 +20,7 @@ const calendar = (provider: string | null): Calendar => ({
   color: null,
   provider,
   account: null,
+  email: null,
   read_only: false,
 })
 

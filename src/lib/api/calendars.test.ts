@@ -13,6 +13,7 @@ it("returns the calendar stored by local creation", async () => {
     color: "#7986cb",
     provider: null,
     account: null,
+    email: null,
     read_only: false,
   }
   mockIPC((cmd, args) => {

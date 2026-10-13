@@ -15,11 +15,10 @@ export function getUserResponseStatus(
   calendars: Calendar[],
 ): ResponseStatus | null {
   const calendar = calendars.find((c) => c.slug === event.calendar_slug)
-  if (!calendar?.account) return null
+  const email = calendar?.email?.toLowerCase()
+  if (!email) return null
 
-  const attendee = event.attendees.find(
-    (a) => a.email.toLowerCase() === calendar.account!.toLowerCase(),
-  )
+  const attendee = event.attendees.find((a) => a.email.toLowerCase() === email)
   return attendee?.response_status ?? null
 }
 
@@ -27,8 +26,9 @@ export function isUserOrganizer(event: CalendarEvent, calendars: Calendar[]): bo
   if (!event.organizer) return true
   if (event.attendees.length === 0) return true
   const calendar = calendars.find((c) => c.slug === event.calendar_slug)
-  if (!calendar?.account) return true
-  return event.organizer.email.toLowerCase() === calendar.account.toLowerCase()
+  const email = calendar?.email?.toLowerCase()
+  if (!email) return true
+  return event.organizer.email.toLowerCase() === email
 }
 
 export function isEventReadonly(event: CalendarEvent, calendars: Calendar[]): boolean {
