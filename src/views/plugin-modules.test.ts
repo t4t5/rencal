@@ -2,17 +2,21 @@ import { describe, expect, it, vi } from "vitest"
 
 import { linkPluginScript, sharedModuleSource } from "@/views/plugin-modules"
 
-// The plugin API pulls in the Tauri RPC proxy, which needs a window.
-vi.mock("@/plugin-api", () => ({}))
+// The SDK pulls in the Tauri RPC proxy, which needs a window.
+vi.mock("@/sdk", () => ({}))
 
 const resolve = (specifier: string) =>
-  specifier === "react" ? "blob:react" : specifier === "@rencal/plugin-api" ? "blob:api" : undefined
+  specifier === "react"
+    ? "blob:react"
+    : specifier === "@rencomputer/rencal-sdk"
+      ? "blob:api"
+      : undefined
 
 describe("linkPluginScript", () => {
   it("points shared imports at their host modules", async () => {
     const source = [
       `import { useMemo } from "react";`,
-      `import * as api from '@rencal/plugin-api';`,
+      `import * as api from '@rencomputer/rencal-sdk';`,
       `export { memo } from "react";`,
       `const lazy = () => import("react");`,
       `const url = import.meta.url;`,

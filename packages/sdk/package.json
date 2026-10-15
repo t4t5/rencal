@@ -1,0 +1,48 @@
+{
+  "name": "@rencomputer/rencal-sdk",
+  "version": "0.1.0",
+  "description": "Build view plugins for renCal: the plugin API, design tokens and a zero-config build.",
+  "license": "MIT",
+  "homepage": "https://rencal.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/t4t5/rencal.git",
+    "directory": "packages/sdk"
+  },
+  "type": "module",
+  "types": "./index.d.ts",
+  "bin": {
+    "rencal-sdk": "./bin/rencal-sdk.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts"
+    },
+    "./tailwind.css": "./tailwind.css",
+    "./tsconfig.json": "./tsconfig.json"
+  },
+  "files": [
+    "bin",
+    "build.js",
+    "index.d.ts",
+    "shared-modules.js",
+    "shared-modules.d.ts",
+    "tailwind.css",
+    "theme.css",
+    "tsconfig.json"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
+    "@tailwindcss/vite": "^4.1.17",
+    "smol-toml": "^1.4.2",
+    "tailwindcss": "^4.1.17",
+    "typescript": "~5.8.3",
+    "vite": "^7.2.2"
+  },
+  "peerDependencies": {
+    "@types/react": "^19.2.0"
+  }
+}

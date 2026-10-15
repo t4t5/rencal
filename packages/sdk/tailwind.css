@@ -1,0 +1,6 @@
+/* Tailwind utilities for a view's classes, against renCal's design tokens.
+   renCal already provides the base styles and theme variables. `rencal-sdk`
+   adds this to every view that declares `css` in its manifest. */
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities);
+@import "./theme.css";

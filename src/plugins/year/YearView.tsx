@@ -10,7 +10,7 @@ import {
   useEventsInRange,
   useNavigation,
   useToday,
-} from "@/plugin-api"
+} from "@/sdk"
 
 import { YearMonth } from "./YearMonth"
 

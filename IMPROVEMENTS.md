@@ -1,21 +1,21 @@
 # View plugin improvements
 
-Follow-ups from a review of the `view-plugins` branch. The internal registry refactor is in good shape; most of these are about the public contract (`@rencal/plugin-api` and the manifest), which gets expensive to change once third-party plugins depend on it.
+Follow-ups from a review of the `view-plugins` branch. The internal registry refactor is in good shape; most of these are about the public contract (`@rencomputer/rencal-sdk` and the manifest), which gets expensive to change once third-party plugins depend on it.
 
 ## Before third-party plugins build on the API
 
 ### 1. Stop leaking internal types through the API
 
-The generated `packages/plugin-api/index.d.ts` exposes the raw RPC event shape (`RpcEventTime`, `calendar_slug`, `recurring_event_id`, `updated`) and the internal `EventDateInfo` projection (`startMs`, `firstDay`, `lastDay`, …). Any RPC or event-time refactor would then break plugins.
+The generated `packages/sdk/index.d.ts` exposes the raw RPC event shape (`RpcEventTime`, `calendar_slug`, `recurring_event_id`, `updated`) and the internal `EventDateInfo` projection (`startMs`, `firstDay`, `lastDay`, …). Any RPC or event-time refactor would then break plugins.
 
-- Define a curated plugin event type in `src/plugin-api/` with only the fields a view needs.
+- Define a curated plugin event type in `src/sdk/` with only the fields a view needs.
 - Convert to it at the API boundary instead of re-exporting `CalendarEvent` from `@/lib/cal-events`.
 
 ### 2. Drop `useEvents()`
 
 `useEvents()` returns whatever range the core views happened to load, which the plugin plan explicitly ruled out in favour of range-based access.
 
-- Remove it from `src/plugin-api/index.ts`.
+- Remove it from `src/sdk/index.ts`.
 - Move `rencal-view-board` to `useEventsInRange(yesterday, endOfWeek + 1)`.
 - Keep `useEventsInRange`'s signature; it can move to a selector-based events store later without an API change.
 
@@ -57,7 +57,7 @@ Update `Plugin system plan.md` to match whatever is decided.
 ## Smaller things
 
 - `goToDate` is typed `=> undefined` in the public `.d.ts` because it's a `void` expression arrow. Give it a block body so it reads as `void`.
-- `scripts/build-plugin-api.mjs` extracts the Tailwind token blocks from `global.css` by counting braces, which breaks on a `{` inside a comment or string. Low priority: CI diffs the output.
+- `scripts/build-sdk.mjs` extracts the Tailwind token blocks from `global.css` by counting braces, which breaks on a `{` inside a comment or string. Low priority: CI diffs the output.
 - Stop sending full scripts in the views snapshot. `ExternalView` carries up to 2 MiB per view, resent on every plugins-directory and theme change. Put a content hash in the snapshot and fetch the script when the view first renders, or serve files on the `rencal-plugin://` scheme from the plugin plan. This doesn't change the contract (one ESM file importing only shared modules), so it can happen any time. Meanwhile, append `//# sourceURL=rencal-plugin/<id>.js` to each script for readable stack traces.
 - Board is now an external plugin. Users whose stored view was `"board"` silently land on month after upgrading; decide whether that needs a notice. Also confirm whether year ships as a core view.
 - View plugins install committed `dist/` from the default branch, pinned by commit in the lock file. The plugin plan expects tagged releases; pick one for the long term.

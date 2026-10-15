@@ -9,7 +9,7 @@ import {
   startOfWeek,
   useDisplaySettings,
   useEventAppearance,
-} from "@/plugin-api"
+} from "@/sdk"
 
 const WEEKDAY_LETTERS = {
   monday: ["M", "T", "W", "T", "F", "S", "S"],

@@ -4,7 +4,7 @@ import * as React from "react"
 import * as ReactDOM from "react-dom"
 import * as jsxRuntime from "react/jsx-runtime"
 
-import * as pluginApi from "@/plugin-api"
+import * as sdk from "@/sdk"
 import { SHARED_MODULE_IDS, type SharedModuleId } from "@/views/shared-modules"
 
 // Modules plugins import from the host instead of bundling their own copy, so
@@ -15,7 +15,7 @@ const SHARED_MODULES: Record<SharedModuleId, object> = {
   "react-dom": ReactDOM,
   "react/jsx-runtime": jsxRuntime,
   "@js-temporal/polyfill": temporal,
-  "@rencal/plugin-api": pluginApi,
+  "@rencomputer/rencal-sdk": sdk,
 }
 
 const SHARED_KEY = "rencal.shared-modules"

@@ -92,15 +92,33 @@ css = "dist/board.css"
 shortcut = "b"
 ```
 
-- `script` is a relative `.js` path to a single-file ES module whose default export is the view's React component. The component takes no props and reads everything through `@rencal/plugin-api`.
-- The script may import only the modules renCal shares with it: `react`, `react-dom`, `react/jsx-runtime`, `@js-temporal/polyfill` and `@rencal/plugin-api`. `react-dom` is the shared entry only (`createPortal`, `flushSync`); views render inside renCal's root and never create their own. Build with those as externals (`@rencal/plugin-api/shared-modules` exports the list as `sharedModules`) and bundle everything else into the one file; relative imports (code-split chunks) fail to load.
-- `css` is optional and is injected while the plugin is installed. renCal only generates Tailwind utilities for its own source, so a view built with Tailwind compiles its own against `@rencal/plugin-api/theme.css`, which holds renCal's design tokens.
+- `script` is a relative `.js` path to a single-file ES module whose default export is the view's React component. The component takes no props and reads everything through `@rencomputer/rencal-sdk`.
+- The script may import only the modules renCal shares with it: `react`, `react-dom`, `react/jsx-runtime`, `@js-temporal/polyfill` and `@rencomputer/rencal-sdk`. `react-dom` is the shared entry only (`createPortal`, `flushSync`); views render inside renCal's root and never create their own. Everything else must be bundled into the one file; relative imports (code-split chunks) fail to load.
+- `css` is optional and is injected while the plugin is installed. renCal only generates Tailwind utilities for its own source, so a view compiles its own against renCal's design tokens.
 - `shortcut` is optional: one lowercase letter or digit. It is dropped when a built-in view, a command or an earlier plugin view already uses it.
 - The view's id is `<plugin-id>/<view-id>`, which is what the view dropdown, the command palette and the stored active view use.
 
 The script and CSS are committed to the repository like theme CSS, so a view plugin installs from the default branch without a release. Scripts may be up to 2 MiB.
 
-`packages/plugin-api` in this repository holds the type definitions and theme tokens (`just plugin-api` regenerates them from `src/plugin-api`). It is not on npm yet; a plugin depends on it with `"@rencal/plugin-api": "file:../rencal/packages/plugin-api"`. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a complete build setup.
+### Building views
+
+[`@rencomputer/rencal-sdk`](https://www.npmjs.com/package/@rencomputer/rencal-sdk) holds the plugin API's types and a build command that takes care of everything above, so a view plugin needs no build configuration:
+
+```json
+{
+  "scripts": { "build": "rencal-sdk build", "dev": "rencal-sdk dev" },
+  "devDependencies": { "@rencomputer/rencal-sdk": "^0.1.0", "@types/react": "^19.2.0" }
+}
+```
+
+```json
+// tsconfig.json
+{ "extends": "@rencomputer/rencal-sdk/tsconfig.json" }
+```
+
+`rencal-sdk build` type-checks the plugin and builds each view in `rencal-plugin.toml` from `src/<view-id>.tsx` (or `src/index.tsx` when there is one view) to the `script` and `css` paths it declares, leaving the shared modules out. When a view declares `css`, Tailwind utilities for its classes are generated against renCal's tokens; plain CSS files the view imports are added to the same stylesheet. `rencal-sdk dev` rebuilds on every change. A `vite.config.ts` in the plugin is merged in, for extra Vite plugins.
+
+The package lives in `packages/sdk` in this repository; `just sdk` regenerates its types and tokens from `src/sdk`, and `just publish-sdk` publishes it. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a complete plugin.
 
 ## Declaring plugins
 

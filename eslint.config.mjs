@@ -19,8 +19,8 @@ const nativeEvents = {
   message: "Use `api.notifications` from `@/lib/api` for app notifications.",
 }
 const pluginHost = {
-  group: ["@/*", "!@/plugin-api", "@tauri-apps/*"],
-  message: "Plugins reach the host only through `@/plugin-api`.",
+  group: ["@/*", "!@/sdk", "@tauri-apps/*"],
+  message: "Plugins reach the host only through `@/sdk`.",
 }
 const apiImplementations = {
   group: ["@/lib/api/*", "!@/lib/api/internal"],

@@ -1,10 +1,10 @@
 {
-  // Emits the `@rencal/plugin-api` type definitions (`just plugin-api`).
+  // Emits the `@rencomputer/rencal-sdk` type definitions (`just sdk`).
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "noEmit": false,
     "declaration": true,
     "emitDeclarationOnly": true
   },
-  "include": ["src/plugin-api", "src/vite-env.d.ts"]
+  "include": ["src/sdk", "src/vite-env.d.ts"]
 }

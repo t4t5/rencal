@@ -22,6 +22,7 @@ import { useViewHost } from "@/views/ViewHostContext"
 
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
+export { Temporal } from "@js-temporal/polyfill"
 export type { CalendarEvent } from "./events"
 export type { EventTime } from "@/lib/event-time"
 export {
