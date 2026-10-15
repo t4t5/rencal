@@ -28,13 +28,15 @@ use super::{
     Appearance, ContributionKind, FontStyle, LockedProviderAsset, MANIFEST_FILE, PluginDeclaration,
     PluginLockEntry, PluginLockFile, PluginManifest, PluginsFile, ProviderContribution,
     load_declared_plugins, load_plugin_lock_file, plugins_dir, plugins_file_path,
-    plugins_lock_path, provider_binary_path, release_asset_sha256, running_app_version, save_plugin_lock_file, save_plugins_file,
-    scan_packages, validate_manifest, validate_manifest_owner, validate_package_id,
+    plugins_lock_path, provider_binary_path, release_asset_sha256, running_app_version,
+    save_plugin_lock_file, save_plugins_file, scan_packages, validate_manifest,
+    validate_manifest_owner, validate_package_id,
 };
 
 const RELEASE_RESPONSE_LIMIT: usize = 1024 * 1024;
 const MANIFEST_LIMIT: usize = 128 * 1024;
 const CSS_FILE_LIMIT: usize = 1024 * 1024;
+const SCRIPT_FILE_LIMIT: usize = 2 * 1024 * 1024;
 pub(crate) const FONT_FILE_LIMIT: usize = 1024 * 1024;
 pub(super) const ICON_FILE_LIMIT: usize = 64 * 1024;
 /// Local previews travel inline on every plugin list, so stay well below the catalog's 10 MiB.
@@ -207,6 +209,12 @@ pub struct PluginProviderInspection {
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
+pub struct PluginViewInspection {
+    pub id: String,
+    pub name: String,
+}
+
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize, Type)]
 pub struct PluginInspection {
     pub id: String,
     pub name: String,
@@ -219,6 +227,7 @@ pub struct PluginInspection {
     pub themes: Vec<PluginThemeInspection>,
     pub fonts: Vec<PluginFontInspection>,
     pub providers: Vec<PluginProviderInspection>,
+    pub views: Vec<PluginViewInspection>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -322,6 +331,7 @@ impl ResolvedPackage {
 #[derive(Clone, Copy)]
 enum PackageFile {
     Css,
+    Script,
     Font,
     Icon,
 }
@@ -484,6 +494,7 @@ impl PluginManager {
             let contributions = [
                 (!package.themes.is_empty()).then_some(ContributionKind::Theme),
                 (!package.providers.is_empty()).then_some(ContributionKind::Provider),
+                (!package.views.is_empty()).then_some(ContributionKind::View),
             ]
             .into_iter()
             .flatten()
@@ -1386,6 +1397,15 @@ impl PluginManager {
                 })
                 .collect(),
             providers: Vec::new(),
+            views: manifest
+                .contributes
+                .views
+                .iter()
+                .map(|view| PluginViewInspection {
+                    id: view.id.clone(),
+                    name: view.name.clone(),
+                })
+                .collect(),
         };
         Ok(ResolvedPackage {
             inspection,
@@ -1414,6 +1434,7 @@ impl PluginManager {
     /// nothing to install.
     fn require_installable(&self, package: &ResolvedPackage) -> Result<(), PluginInstallError> {
         if !package.manifest.contributes.themes.is_empty()
+            || !package.manifest.contributes.views.is_empty()
             || package
                 .providers
                 .iter()
@@ -1424,7 +1445,7 @@ impl PluginManager {
         let provider = &package
             .providers
             .first()
-            .expect("validated manifests contribute a theme or provider")
+            .expect("validated manifests contribute a theme, view or provider")
             .contribution;
         let message = if self.inner.targets.is_empty() {
             "provider plugins are not supported on this platform".into()
@@ -1652,6 +1673,16 @@ impl PluginManager {
                 files.push((theme.css.as_str(), PackageFile::Css));
             }
         }
+        for view in &package.manifest.contributes.views {
+            if seen.insert(view.script.as_str()) {
+                files.push((view.script.as_str(), PackageFile::Script));
+            }
+            if let Some(css) = &view.css
+                && seen.insert(css.as_str())
+            {
+                files.push((css.as_str(), PackageFile::Css));
+            }
+        }
         for font in &package.manifest.contributes.fonts {
             if seen.insert(font.file.as_str()) {
                 files.push((font.file.as_str(), PackageFile::Font));
@@ -1668,6 +1699,7 @@ impl PluginManager {
         for (file, kind) in files {
             let limit = match kind {
                 PackageFile::Css => CSS_FILE_LIMIT,
+                PackageFile::Script => SCRIPT_FILE_LIMIT,
                 PackageFile::Font => FONT_FILE_LIMIT,
                 PackageFile::Icon => ICON_FILE_LIMIT,
             };
@@ -2815,6 +2847,67 @@ appearance = "dark"
         assert_eq!(inspection.version, &COMMIT_V1[..7]);
         let locks = load_plugin_lock_file(&temp.path().join("data/plugins.lock")).unwrap();
         assert_eq!(locks.plugins[0].commit, COMMIT_V1);
+    }
+
+    #[tokio::test]
+    async fn installs_view_scripts_and_styles() {
+        let manifest = r#"id = "alice.board"
+name = "Board"
+description = "A board view"
+min_rencal_version = "0.8.0"
+
+[[contributes.views]]
+id = "board"
+name = "Board"
+script = "dist/board.js"
+css = "dist/board.css"
+"#;
+        let downloader = Arc::new(FixtureDownloader::new());
+        downloader.set(
+            "/repos/Alice/rencal-board/commits?per_page=1",
+            200,
+            format!(r#"[{{"sha":"{COMMIT_V1}"}}]"#).into_bytes(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-board/{COMMIT_V1}/rencal-plugin.toml"),
+            200,
+            manifest.as_bytes().to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-board/{COMMIT_V1}/dist/board.js"),
+            200,
+            b"export default () => null".to_vec(),
+        );
+        downloader.set(
+            &format!("/Alice/rencal-board/{COMMIT_V1}/dist/board.css"),
+            200,
+            b".board {}".to_vec(),
+        );
+        let temp = tempfile::tempdir().unwrap();
+        let manager = manager(&temp, downloader);
+
+        let inspection = manager.install("Alice/rencal-board").await.unwrap();
+
+        assert_eq!(
+            inspection.views,
+            [PluginViewInspection {
+                id: "board".into(),
+                name: "Board".into(),
+            }]
+        );
+        let package = temp.path().join("data/plugins/alice.board");
+        assert_eq!(
+            std::fs::read_to_string(package.join("dist/board.js")).unwrap(),
+            "export default () => null"
+        );
+        assert_eq!(
+            std::fs::read_to_string(package.join("dist/board.css")).unwrap(),
+            ".board {}"
+        );
+        assert_eq!(
+            manager.list().await.plugins[0].contributions,
+            [ContributionKind::View]
+        );
     }
 
     #[tokio::test]

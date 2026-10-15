@@ -1,0 +1,10 @@
+{
+  // Emits the `@rencal/plugin-api` type definitions (`just plugin-api`).
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "emitDeclarationOnly": true
+  },
+  "include": ["src/plugin-api", "src/vite-env.d.ts"]
+}

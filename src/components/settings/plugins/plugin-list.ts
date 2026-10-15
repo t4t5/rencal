@@ -21,6 +21,7 @@ export type PluginSelection = { id: string | null; repo: string | null }
 export const CONTRIBUTION_LABELS = {
   theme: "Theme",
   provider: "Provider",
+  view: "View",
 } as const satisfies Record<ContributionKind, string>
 
 export function pluginOwner(plugin: PluginListItem): string {

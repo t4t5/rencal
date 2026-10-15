@@ -22,7 +22,7 @@ Everything goes through `scripts/shots.sh` (run it with no arguments for usage).
 
 | Scene                      | How                                                                                                                                                                                                                                                            |
 | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Week / month / board       | `key w`, `key m`, `key b`                                                                                                                                                                                                                                      |
+| Week / month / year        | `key w`, `key m`, `key y`                                                                                                                                                                                                                                      |
 | Event details popover      | `click <x> <y>` on an event (Tab does not open it)                                                                                                                                                                                                             |
 | Search                     | `key /` then `key lunch`                                                                                                                                                                                                                                       |
 | Command palette            | `combo ctrl+k`                                                                                                                                                                                                                                                 |
@@ -31,7 +31,7 @@ Everything goes through `scripts/shots.sh` (run it with no arguments for usage).
 | Connect calendar dialog    | Settings → Accounts → `click 320 77 Settings`                                                                                                                                                                                                                  |
 | Close popovers and dialogs | `key -k Escape`                                                                                                                                                                                                                                                |
 
-Good default set: month, week, event details, board, search, a light theme, another dark theme, a plugin theme, Settings → Themes, the connect dialog, Settings → Plugins.
+Good default set: month, week, event details, year, search, a light theme, another dark theme, a plugin theme, Settings → Themes, the connect dialog, Settings → Plugins.
 
 ## Gotchas
 

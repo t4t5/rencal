@@ -4,13 +4,15 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 snapshot=$(mktemp -d)
 trap 'rm -rf "$snapshot"' EXIT
-artifacts=(bindings.ts events.generated.ts)
+artifacts=(src/rpc/bindings.ts src/rpc/events.generated.ts packages/plugin-api/index.d.ts packages/plugin-api/theme.css)
 
 # Compare against the working tree so this also works before changes are committed.
 for artifact in "${artifacts[@]}"; do
-  cp "src/rpc/$artifact" "$snapshot/$artifact"
+  mkdir -p "$snapshot/$(dirname "$artifact")"
+  cp "$artifact" "$snapshot/$artifact"
 done
 just gen-types
+just plugin-api
 for artifact in "${artifacts[@]}"; do
-  diff -u "$snapshot/$artifact" "src/rpc/$artifact"
+  diff -u "$snapshot/$artifact" "$artifact"
 done

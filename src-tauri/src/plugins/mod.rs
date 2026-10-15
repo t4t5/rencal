@@ -10,8 +10,9 @@ use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
     Appearance, ContributionKind, Contributions, FontContribution, FontStyle, MANIFEST_FILE,
-    PluginError, PluginManifest, ProviderContribution, ThemeContribution, is_sha256_hex,
-    release_asset_sha256, validate_manifest, validate_manifest_owner, validate_package_id,
+    PluginError, PluginManifest, ProviderContribution, ThemeContribution, ViewContribution,
+    is_sha256_hex, release_asset_sha256, validate_manifest, validate_manifest_owner,
+    validate_package_id,
 };
 use semver::Version;
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,7 @@ pub(crate) mod installer;
 pub use installer::{
     InstalledPlugin, InstalledPlugins, PluginCatalog, PluginCatalogEntry, PluginFontInspection,
     PluginInspection, PluginInstallError, PluginInstallErrorKind, PluginManager,
-    PluginProviderInspection, PluginReconcileError, PluginThemeInspection,
+    PluginProviderInspection, PluginReconcileError, PluginThemeInspection, PluginViewInspection,
 };
 
 /// Validate a GitHub repository reference and return its canonical owner/name form.
@@ -521,12 +522,23 @@ pub struct ScannedProvider {
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
+pub struct ScannedView {
+    /// `<package-id>/<view-id>`.
+    pub id: String,
+    pub name: String,
+    pub shortcut: Option<String>,
+    pub script: String,
+    pub css: Option<String>,
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct ScannedPackage {
     pub id: String,
     pub name: String,
     pub description: String,
     pub themes: Vec<ScannedTheme>,
     pub providers: Vec<ScannedProvider>,
+    pub views: Vec<ScannedView>,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -602,12 +614,16 @@ fn scan_package(
         )));
     }
 
+    let read = |path: &str| {
+        let path = directory.join(path);
+        std::fs::read_to_string(&path).map_err(|error| {
+            PluginError::new(format!("could not read {}: {error}", path.display()))
+        })
+    };
+
     let mut themes = Vec::with_capacity(manifest.contributes.themes.len());
     for theme in manifest.contributes.themes {
-        let css_path = directory.join(&theme.css);
-        let css = std::fs::read_to_string(&css_path).map_err(|error| {
-            PluginError::new(format!("could not read {}: {error}", css_path.display()))
-        })?;
+        let css = read(&theme.css)?;
         themes.push(ScannedTheme {
             id: format!("{}/{}", manifest.id, theme.id),
             name: theme.name,
@@ -631,12 +647,24 @@ fn scan_package(
         })
         .collect();
 
+    let mut views = Vec::with_capacity(manifest.contributes.views.len());
+    for view in manifest.contributes.views {
+        views.push(ScannedView {
+            id: format!("{}/{}", manifest.id, view.id),
+            name: view.name,
+            shortcut: view.shortcut,
+            script: read(&view.script)?,
+            css: view.css.as_deref().map(read).transpose()?,
+        });
+    }
+
     Ok(ScannedPackage {
         id: manifest.id,
         name: manifest.name,
         description: manifest.description,
         themes,
         providers,
+        views,
     })
 }
 
@@ -1104,7 +1132,11 @@ bin = "caldir-provider-tuta-{target}.tar.gz"
         write_provider_package(root, "alice.tuta", &[("tuta", true)]);
         // Only declared, not shipped: the binary comes from PATH.
         write_provider_package(root, "bob.local", &[("local", false)]);
-        write_provider_package(root, "carol.partial", &[("partial", true), ("local", false)]);
+        write_provider_package(
+            root,
+            "carol.partial",
+            &[("partial", true), ("local", false)],
+        );
 
         let packages = scan_packages(root, None).packages;
         let dirs: Vec<_> = provider_dirs(root, &packages)

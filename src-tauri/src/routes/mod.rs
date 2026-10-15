@@ -5,5 +5,6 @@ pub mod omarchy;
 pub mod platform;
 pub mod plugins;
 pub mod themes;
+pub mod views;
 
 pub type TauResult<T> = Result<T, error::RpcError>;

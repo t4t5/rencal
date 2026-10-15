@@ -1,11 +1,12 @@
-import { useMemo } from "react"
+import { useContext, useMemo } from "react"
 
 import { SHORTCUTS, type ShortcutDef } from "@/lib/shortcuts"
 
-import { BUILTIN_VIEWS, viewShortcuts, type ViewDescriptor } from "@/views/manifest"
+import { ViewRegistryContext } from "@/views/ViewRegistry"
+import { viewShortcuts, type ViewDescriptor } from "@/views/manifest"
 
-// A hook so runtime-registered (plugin) views can later be subscribed to without touching callers.
-export const useViews = (): readonly ViewDescriptor[] => BUILTIN_VIEWS
+// Built-in views, then the views installed plugins contribute.
+export const useViews = (): readonly ViewDescriptor[] => useContext(ViewRegistryContext)
 
 // View shortcuts come first so they lead the View group.
 export function useShortcutDefs(): readonly ShortcutDef[] {

@@ -1,6 +1,6 @@
 # Plugins
 
-renCal plugins contribute CSS themes and calendar providers. Themes are data. A provider is a program: renCal downloads a `caldir-provider-<slug>` binary from the plugin's GitHub release and runs it to sync accounts, with the user's permissions.
+renCal plugins contribute CSS themes, calendar providers and views. Themes are data. A provider is a program: renCal downloads a `caldir-provider-<slug>` binary from the plugin's GitHub release and runs it to sync accounts, with the user's permissions. A view is a script that renCal runs inside the app window, with the same access as renCal's own code.
 
 A plugin is a GitHub repository with a `rencal-plugin.toml` manifest and its contributed files:
 
@@ -75,6 +75,34 @@ The binary is registered with renCal only, never put on `PATH`. When several bin
 In a local checkout, renCal runs `bin/caldir-provider-<slug>` from the checkout if it exists, so a developer can symlink their build output there. Without it, the plugin contributes only the name and icon, and the binary comes from `PATH`.
 
 The catalog only lists a provider when its release has at least one matching asset with a digest, and labels such plugins as calendar providers.
+
+## Views
+
+```toml
+id = "t4t5.board"
+name = "Board"
+description = "A board view with columns for yesterday, today, tomorrow and the rest of the week."
+min_rencal_version = "0.9.0"
+
+[[contributes.views]]
+id = "board"
+name = "Board"
+script = "dist/board.js"
+css = "dist/board.css"
+shortcut = "b"
+```
+
+- `script` is a relative `.js` path to a single-file ES module whose default export is the view's React component. The component takes no props and reads everything through `@rencal/plugin-api`.
+- The script may import only the modules renCal shares with it: `react`, `react/jsx-runtime`, `@js-temporal/polyfill` and `@rencal/plugin-api`. Build with those as externals and bundle everything else into the one file; relative imports (code-split chunks) fail to load.
+- `css` is optional and is injected while the plugin is installed. renCal only generates Tailwind utilities for its own source, so a view built with Tailwind compiles its own against `@rencal/plugin-api/theme.css`, which holds renCal's design tokens.
+- `shortcut` is optional: one lowercase letter or digit. It is dropped when a built-in view, a command or an earlier plugin view already uses it.
+- The view's id is `<plugin-id>/<view-id>`, which is what the view dropdown, the command palette and the stored active view use.
+
+The script and CSS are committed to the repository like theme CSS, so a view plugin installs from the default branch without a release. Scripts may be up to 2 MiB.
+
+`packages/plugin-api` in this repository holds the type definitions and theme tokens (`just plugin-api` regenerates them from `src/plugin-api`). It is not on npm yet; a plugin depends on it with `"@rencal/plugin-api": "file:../rencal/packages/plugin-api"`. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a complete build setup.
+
+## Declaring plugins
 
 Declare installed plugins by repository in `~/.config/rencal/plugins.toml`:
 

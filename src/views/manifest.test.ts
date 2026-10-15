@@ -5,6 +5,7 @@ import { SHORTCUTS } from "@/lib/shortcuts"
 
 import {
   BUILTIN_VIEWS,
+  claimShortcuts,
   DEFAULT_VIEW_ID,
   resolveView,
   viewShortcuts,
@@ -14,7 +15,6 @@ import {
 // The real views pull in the Tauri RPC proxy, which needs a window.
 vi.mock("@/components/main/week-view/WeekView", () => ({ WeekView: () => null }))
 vi.mock("@/components/main/month-view/MonthView", () => ({ MonthView: () => null }))
-vi.mock("@/plugins/board/BoardView", () => ({ BoardView: () => null }))
 vi.mock("@/plugins/year/YearView", () => ({ YearView: () => null }))
 
 const view = (id: string, shortcut?: string): ViewDescriptor => ({
@@ -50,6 +50,17 @@ describe("viewShortcuts", () => {
         bindings: [{ keys: "w", type: "char" }],
       },
     ])
+  })
+})
+
+describe("claimShortcuts", () => {
+  it("drops plugin shortcuts that are already bound", () => {
+    vi.spyOn(console, "warn").mockImplementation(() => {})
+    const plugins = [view("a.one/one", "w"), view("a.two/two", "t"), view("a.three/three", "x")]
+    const claimed = claimShortcuts([...plugins, view("a.four/four", "x")], [view("week", "w")])
+
+    // "w" is a built-in view's, "t" goes to today, and the second "x" lost to the first.
+    expect(claimed.map((v) => v.shortcut)).toEqual([undefined, undefined, "x", undefined])
   })
 })
 

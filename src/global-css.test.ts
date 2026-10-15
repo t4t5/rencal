@@ -108,7 +108,7 @@ describe("global CSS contract", () => {
     }
 
     expect(source).toMatch(
-      /:where\([\s\S]*?\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-view="agenda"\]\[data-kind="timed"\][\s\S]*?\[data-view="board"\][\s\S]*?\)\[data-selected\]\s*\{[^}]*background:\s*var\(--selected\);[^}]*color:\s*var\(--selected-foreground\);[^}]*\}/,
+      /:where\([\s\S]*?\[data-view="month"\]\[data-kind="timed"\][\s\S]*?\[data-view="agenda"\]\[data-kind="timed"\][\s\S]*?\)\[data-selected\]\s*\{[^}]*background:\s*var\(--selected\);[^}]*color:\s*var\(--selected-foreground\);[^}]*\}/,
     )
   })
 

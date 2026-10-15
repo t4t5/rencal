@@ -60,11 +60,8 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let month = MenuItemBuilder::with_id("month", "Month")
         .accelerator("CmdOrCtrl+2")
         .build(handle)?;
-    let board = MenuItemBuilder::with_id("board", "Board")
-        .accelerator("CmdOrCtrl+3")
-        .build(handle)?;
     let year = MenuItemBuilder::with_id("year", "Year")
-        .accelerator("CmdOrCtrl+4")
+        .accelerator("CmdOrCtrl+3")
         .build(handle)?;
     let today = MenuItemBuilder::with_id("today", "Go to Today")
         .accelerator("CmdOrCtrl+T")
@@ -75,7 +72,6 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
     let view_menu = SubmenuBuilder::new(handle, "View")
         .item(&week)
         .item(&month)
-        .item(&board)
         .item(&year)
         .separator()
         .item(&today)

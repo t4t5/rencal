@@ -14,6 +14,7 @@ import { setViewerTzid } from "@/lib/event-time"
 import { type Preload, preloadCalendarData } from "@/lib/preload-data"
 
 import { preloadExternalThemes, ThemeProvider } from "@/themes/ThemeRegistry"
+import { preloadExternalViews } from "@/views/ViewRegistry"
 import { AppWindow } from "@/windows/AppWindow"
 import { SettingsWindow } from "@/windows/SettingsWindow"
 
@@ -25,9 +26,10 @@ const appWindow = params.get("appWindow")
 void api.notifications.listen("system-tz-changed", (event) => setViewerTzid(event))
 
 async function bootstrap() {
-  const [preload, externalThemes] = await Promise.all([
+  const [preload, externalThemes, externalViews] = await Promise.all([
     appWindow === "settings" ? Promise.resolve<Preload>({}) : preloadCalendarData(),
     preloadExternalThemes(),
+    appWindow === "settings" ? Promise.resolve([]) : preloadExternalViews(),
   ])
 
   const rootEl = document.getElementById("root")
@@ -44,7 +46,11 @@ async function bootstrap() {
             initialCalendars={preload.initialCalendars}
             initialDate={preload.initialDate}
           >
-            {appWindow === "settings" ? <SettingsWindow /> : <AppWindow preload={preload} />}
+            {appWindow === "settings" ? (
+              <SettingsWindow />
+            ) : (
+              <AppWindow preload={preload} externalViews={externalViews} />
+            )}
           </CalendarStateProvider>
         </SettingsProvider>
       </ThemeProvider>

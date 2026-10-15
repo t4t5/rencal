@@ -84,6 +84,21 @@ impl ProviderContribution {
     }
 }
 
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct ViewContribution {
+    pub id: String,
+    pub name: String,
+    /// A single-file ES module whose default export is the view component.
+    pub script: String,
+    /// Styles the view needs, injected while the plugin is installed.
+    #[serde(default)]
+    pub css: Option<String>,
+    /// Single character that shows the view. Dropped if another view or
+    /// command already uses it.
+    #[serde(default)]
+    pub shortcut: Option<String>,
+}
+
 /// The hex sha256 in a GitHub release asset digest (`sha256:<hex>`). An asset
 /// without one cannot be verified, so it is never installable.
 pub fn release_asset_sha256(digest: &str) -> Option<String> {
@@ -108,6 +123,8 @@ pub enum ContributionKind {
     Theme,
     /// Runs a provider binary on the user's computer.
     Provider,
+    /// Runs a script inside renCal.
+    View,
 }
 
 #[derive(Clone, Debug, Default, Deserialize, Eq, PartialEq, Serialize)]
@@ -118,6 +135,8 @@ pub struct Contributions {
     pub fonts: Vec<FontContribution>,
     #[serde(default)]
     pub providers: Vec<ProviderContribution>,
+    #[serde(default)]
+    pub views: Vec<ViewContribution>,
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -172,9 +191,12 @@ pub fn validate_manifest(
         MAX_DESCRIPTION_LENGTH,
     )?;
 
-    if manifest.contributes.themes.is_empty() && manifest.contributes.providers.is_empty() {
+    if manifest.contributes.themes.is_empty()
+        && manifest.contributes.providers.is_empty()
+        && manifest.contributes.views.is_empty()
+    {
         return Err(PluginError::new(
-            "unsupported package: at least one theme or provider contribution is required",
+            "unsupported package: at least one theme, provider or view contribution is required",
         ));
     }
 
@@ -213,6 +235,29 @@ pub fn validate_manifest(
             validate_icon_path(icon)?;
         }
         validate_provider_bin(&provider.bin)?;
+    }
+
+    let mut view_ids = HashSet::new();
+    for view in &mut manifest.contributes.views {
+        validate_view_id(&view.id)?;
+        if !view_ids.insert(&view.id) {
+            return Err(PluginError::new(format!(
+                "duplicate view contribution id {:?}",
+                view.id
+            )));
+        }
+        view.name = validate_display_text(
+            &view.name,
+            &format!("view {:?} name", view.id),
+            MAX_NAME_LENGTH,
+        )?;
+        validate_script_path(&view.script)?;
+        if let Some(css) = &view.css {
+            validate_css_path(css)?;
+        }
+        if let Some(shortcut) = &view.shortcut {
+            validate_view_shortcut(&view.id, shortcut)?;
+        }
     }
 
     if manifest.contributes.fonts.len() > MAX_FONT_FACES {
@@ -323,7 +368,7 @@ fn reject_unsupported_contributions(value: &toml::Value) -> Result<(), PluginErr
     }
     if let Some(contributes) = table.get("contributes").and_then(toml::Value::as_table) {
         for key in contributes.keys() {
-            if !["themes", "fonts", "providers"].contains(&key.as_str()) {
+            if !["themes", "fonts", "providers", "views"].contains(&key.as_str()) {
                 return Err(PluginError::new(format!(
                     "unsupported package contribution {:?}",
                     format!("contributes.{key}")
@@ -367,6 +412,29 @@ fn validate_contribution_id(id: &str) -> Result<(), PluginError> {
     Ok(())
 }
 
+fn validate_view_id(id: &str) -> Result<(), PluginError> {
+    if !valid_slug(id) {
+        return Err(PluginError::new(format!(
+            "view contribution id {id:?} must use lowercase a-z, 0-9, and hyphens"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_view_shortcut(id: &str, shortcut: &str) -> Result<(), PluginError> {
+    let mut chars = shortcut.chars();
+    let valid = matches!(
+        (chars.next(), chars.next()),
+        (Some(c), None) if c.is_ascii_lowercase() || c.is_ascii_digit()
+    );
+    if !valid {
+        return Err(PluginError::new(format!(
+            "view {id:?} shortcut {shortcut:?} must be one lowercase letter or digit"
+        )));
+    }
+    Ok(())
+}
+
 #[doc(hidden)]
 pub fn validate_provider_slug(slug: &str) -> Result<(), PluginError> {
     if !valid_slug(slug) {
@@ -403,7 +471,16 @@ fn validate_css_path(path: &str) -> Result<(), PluginError> {
     let safe = !path.is_empty() && validate_safe_relative_path(path) && path.ends_with(".css");
     if !safe {
         return Err(PluginError::new(format!(
-            "theme CSS path {path:?} must be a relative .css path within the package"
+            "CSS path {path:?} must be a relative .css path within the package"
+        )));
+    }
+    Ok(())
+}
+
+fn validate_script_path(path: &str) -> Result<(), PluginError> {
+    if !validate_safe_relative_path(path) || !path.ends_with(".js") {
+        return Err(PluginError::new(format!(
+            "view script path {path:?} must be a relative .js path within the package"
         )));
     }
     Ok(())
@@ -733,6 +810,94 @@ bin = "caldir-provider-tuta-{target}.tar.gz"
         assert_eq!(manifest.contributes.providers[0].icon, None);
     }
 
+    const VIEW: &str = r#"
+[[contributes.views]]
+id = "board"
+name = "Board"
+script = "dist/board.js"
+css = "dist/board.css"
+shortcut = "b"
+"#;
+
+    fn view_error(from: &str, to: &str) -> String {
+        validate_manifest(&provider_only(&VIEW.replacen(from, to, 1)), None)
+            .unwrap_err()
+            .to_string()
+    }
+
+    #[test]
+    fn accepts_view_only_packages() {
+        let manifest = validate_manifest(&provider_only(VIEW), None).unwrap();
+        assert_eq!(
+            manifest.contributes.views,
+            [ViewContribution {
+                id: "board".into(),
+                name: "Board".into(),
+                script: "dist/board.js".into(),
+                css: Some("dist/board.css".into()),
+                shortcut: Some("b".into()),
+            }]
+        );
+
+        let minimal = VIEW.replacen("css = \"dist/board.css\"\n", "", 1).replacen(
+            "shortcut = \"b\"\n",
+            "",
+            1,
+        );
+        let manifest = validate_manifest(&provider_only(&minimal), None).unwrap();
+        assert_eq!(manifest.contributes.views[0].css, None);
+        assert_eq!(manifest.contributes.views[0].shortcut, None);
+    }
+
+    #[test]
+    fn validates_view_fields() {
+        for (from, to, expected) in [
+            ("id = \"board\"", "id = \"Board\"", "must use lowercase a-z"),
+            (
+                "name = \"Board\"",
+                "name = \" \"",
+                "view \"board\" name must not be empty",
+            ),
+            (
+                "dist/board.js",
+                "../board.js",
+                "must be a relative .js path",
+            ),
+            (
+                "dist/board.js",
+                "dist/board.mjs",
+                "must be a relative .js path",
+            ),
+            (
+                "dist/board.css",
+                "/board.css",
+                "must be a relative .css path",
+            ),
+            (
+                "shortcut = \"b\"",
+                "shortcut = \"B\"",
+                "one lowercase letter or digit",
+            ),
+            (
+                "shortcut = \"b\"",
+                "shortcut = \"bb\"",
+                "one lowercase letter or digit",
+            ),
+            (
+                "shortcut = \"b\"",
+                "shortcut = \"\"",
+                "one lowercase letter or digit",
+            ),
+        ] {
+            let error = view_error(from, to);
+            assert!(error.contains(expected), "{to}: {error}");
+        }
+
+        let duplicate = provider_only(&format!("{VIEW}{VIEW}"));
+        let error = validate_manifest(&duplicate, None).unwrap_err().to_string();
+        assert_eq!(error, "duplicate view contribution id \"board\"");
+    }
+
     #[test]
     fn requires_a_theme_or_provider_contribution() {
         let fonts_only = provider_only(
@@ -742,7 +907,7 @@ bin = "caldir-provider-tuta-{target}.tar.gz"
             let error = validate_manifest(&contents, None).unwrap_err().to_string();
             assert_eq!(
                 error,
-                "unsupported package: at least one theme or provider contribution is required"
+                "unsupported package: at least one theme, provider or view contribution is required"
             );
         }
     }

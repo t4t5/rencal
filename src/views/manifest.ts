@@ -3,9 +3,8 @@ import type { ComponentType } from "react"
 import { MonthView } from "@/components/main/month-view/MonthView"
 import { WeekView } from "@/components/main/week-view/WeekView"
 
-import type { ShortcutDef } from "@/lib/shortcuts"
+import { SHORTCUTS, type ShortcutDef } from "@/lib/shortcuts"
 
-import { BoardView } from "@/plugins/board/BoardView"
 import { YearView } from "@/plugins/year/YearView"
 
 export type ViewDescriptor = {
@@ -22,7 +21,6 @@ export const DEFAULT_VIEW_ID = "month"
 export const BUILTIN_VIEWS: ViewDescriptor[] = [
   { id: "week", name: "Week", component: WeekView, shortcut: "w" },
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
-  { id: "board", name: "Board", component: BoardView, shortcut: "b" },
   { id: "year", name: "Year", component: YearView, shortcut: "y" },
 ]
 
@@ -32,6 +30,26 @@ export function resolveView(id: string, views: readonly ViewDescriptor[]): ViewD
     views.find((v) => v.id === id) ?? views.find((v) => v.id === DEFAULT_VIEW_ID) ?? views[0]
   if (!view) throw new Error("No views registered")
   return view
+}
+
+// Plugin views lose a shortcut that a built-in view, a command or an earlier
+// plugin view already binds.
+export function claimShortcuts(
+  plugins: readonly ViewDescriptor[],
+  builtins: readonly ViewDescriptor[],
+): ViewDescriptor[] {
+  const taken = new Set(
+    [...viewShortcuts(builtins), ...SHORTCUTS].flatMap((def) => def.bindings.map((b) => b.keys)),
+  )
+  return plugins.map((view) => {
+    if (!view.shortcut) return view
+    if (!taken.has(view.shortcut)) {
+      taken.add(view.shortcut)
+      return view
+    }
+    console.warn(`View "${view.id}" can't use the "${view.shortcut}" shortcut; it's taken`)
+    return { ...view, shortcut: undefined }
+  })
 }
 
 export function viewShortcuts(views: readonly ViewDescriptor[]): ShortcutDef[] {

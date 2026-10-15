@@ -42,6 +42,10 @@ deploy-web:
 gen-types:
   cargo run --example gen_types
 
+# Generate the @rencal/plugin-api package (types and Tailwind tokens for view plugins)
+plugin-api:
+  node scripts/build-plugin-api.mjs
+
 # Test production version of app (needs build first)
 start:
   #!/usr/bin/env bash
@@ -66,7 +70,7 @@ typecheck:
   pnpm lint
   pnpm find:unused-exports
 
-# Run frontend and Rust tests, and verify both generated IPC contracts are current
+# Run frontend and Rust tests, and verify the generated IPC contracts and plugin API are current
 test:
   pnpm test
   cargo test --workspace --manifest-path src-tauri/Cargo.toml

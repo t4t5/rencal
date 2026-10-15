@@ -10,14 +10,25 @@ import { DragRegion } from "@/components/ui/drag-region"
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useCalendarView } from "@/hooks/useCalendarView"
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
+import type { ExternalView } from "@/lib/api"
 import type { Preload } from "@/lib/preload-data"
+
+import { ViewRegistryProvider } from "@/views/ViewRegistry"
 
 import { AppProviders } from "./AppProviders"
 
-export function AppWindow({ preload }: { preload: Preload }) {
+export function AppWindow({
+  preload,
+  externalViews,
+}: {
+  preload: Preload
+  externalViews: ExternalView[]
+}) {
   return (
     <AppProviders preload={preload}>
-      <App />
+      <ViewRegistryProvider initialExternalViews={externalViews}>
+        <App />
+      </ViewRegistryProvider>
     </AppProviders>
   )
 }

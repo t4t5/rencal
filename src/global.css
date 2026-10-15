@@ -534,16 +534,14 @@
 
   :where(
       [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
-      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
-      [data-slot="calendar-event"][data-view="board"]
+      [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
     ):not([data-selected]):hover {
     background: var(--hover);
   }
 
   :where(
     [data-slot="calendar-event"][data-view="month"][data-kind="timed"],
-    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"],
-    [data-slot="calendar-event"][data-view="board"]
+    [data-slot="calendar-event"][data-view="agenda"][data-kind="timed"]
   )[data-selected] {
     background: var(--selected);
     color: var(--selected-foreground);

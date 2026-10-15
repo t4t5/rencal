@@ -8,6 +8,7 @@ use specta::Type;
 use tauri::{Emitter, Runtime};
 
 use crate::external_themes::ExternalThemesSnapshot;
+use crate::external_views::ExternalViewsSnapshot;
 use crate::omarchy::OmarchyColors;
 use crate::routes::caldir::CaldirSettings;
 use crate::routes::config::ThemeSettings;
@@ -25,6 +26,7 @@ pub enum AppEvent {
     SystemTzChanged(String),
     OmarchyThemeChanged(OmarchyColors),
     ExternalThemesChanged(ExternalThemesSnapshot),
+    ExternalViewsChanged(ExternalViewsSnapshot),
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     MenuAction(String),
     #[allow(dead_code)] // Emitted by the frontend only; still part of the contract.
@@ -104,6 +106,7 @@ mod tests {
             blue: "#0000ff".into(),
         };
         let themes = ExternalThemesSnapshot::default();
+        let views = ExternalViewsSnapshot::default();
         let cases: Vec<(AppEvent, &str, Value)> = vec![
             (
                 AppEvent::CaldirConfigChanged(settings.clone()),
@@ -150,6 +153,11 @@ mod tests {
                 AppEvent::ExternalThemesChanged(themes.clone()),
                 "external-themes-changed",
                 serde_json::to_value(themes).unwrap(),
+            ),
+            (
+                AppEvent::ExternalViewsChanged(views.clone()),
+                "external-views-changed",
+                serde_json::to_value(views).unwrap(),
             ),
             (
                 AppEvent::MenuAction("compose-event".into()),

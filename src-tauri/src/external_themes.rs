@@ -376,7 +376,19 @@ fn load_fonts_from(
     Ok(ExternalThemeFonts { fonts })
 }
 
-/// Watches loose themes and installed plugin packages, then emits one combined snapshot.
+/// Local view checkouts carry dependencies and history that installs and git
+/// operations churn through; none of it is loaded, so it never triggers a rescan.
+fn is_package_change(event: &notify::Event) -> bool {
+    is_any_change(event)
+        && event.paths.iter().any(|path| {
+            !path
+                .components()
+                .any(|part| part.as_os_str() == "node_modules" || part.as_os_str() == ".git")
+        })
+}
+
+/// Watches loose themes and installed plugin packages, then emits snapshots of
+/// their themes and views.
 pub async fn run_watcher(app: AppHandle) {
     let (Some(themes_dir), Some(plugins_dir)) = (ensure_themes_dir(), ensure_plugins_dir()) else {
         return;
@@ -385,7 +397,7 @@ pub async fn run_watcher(app: AppHandle) {
     let mut watch = match watch_debounced(
         &[&themes_dir, &plugins_dir],
         RecursiveMode::Recursive,
-        is_any_change,
+        is_package_change,
     ) {
         Ok(watch) => watch,
         Err(err) => {
@@ -403,21 +415,22 @@ pub async fn run_watcher(app: AppHandle) {
             match watch_debounced(
                 &[&themes_dir, &plugins_dir],
                 RecursiveMode::Recursive,
-                is_any_change,
+                is_package_change,
             ) {
                 Ok(rebuilt) => watch = rebuilt,
                 Err(error) => log::warn!("theme watcher: failed to rebuild watch: {error}"),
             }
         }
         let _ = AppEvent::ExternalThemesChanged(scan()).emit(&app);
+        let _ = AppEvent::ExternalViewsChanged(crate::external_views::scan()).emit(&app);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::{
-        Appearance, ExternalThemeFontErrorKind, ExternalThemeSource, load_fonts_from,
-        parse_appearance, parse_name, scan_from, slugify,
+        Appearance, ExternalThemeFontErrorKind, ExternalThemeSource, is_package_change,
+        load_fonts_from, parse_appearance, parse_name, scan_from, slugify,
     };
     use base64::Engine;
 
@@ -452,6 +465,28 @@ name = "Dusk Dark"
 css = "theme.css"
 appearance = "dark"
 "#;
+
+    #[test]
+    fn ignores_changes_to_dependencies_and_git_history() {
+        use notify::event::{CreateKind, Event, EventKind};
+
+        let change = |paths: &[&str]| {
+            let mut event = Event::new(EventKind::Create(CreateKind::File));
+            for path in paths {
+                event = event.add_path(path.into());
+            }
+            is_package_change(&event)
+        };
+        assert!(change(&["/plugins/alice.board/dist/board.js"]));
+        assert!(!change(&[
+            "/plugins/alice.board/node_modules/react/index.js"
+        ]));
+        assert!(!change(&["/plugins/alice.board/.git/index"]));
+        assert!(change(&[
+            "/plugins/alice.board/.git/index",
+            "/plugins/alice.board/rencal-plugin.toml",
+        ]));
+    }
 
     #[test]
     fn slugify_lowercases_and_collapses() {

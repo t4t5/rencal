@@ -65,6 +65,7 @@ beforeEach(() => {
     themes: [],
     fonts: [],
     providers: [],
+    views: [],
   })
   vi.mocked(api.plugins.uninstall).mockResolvedValue(undefined)
 })

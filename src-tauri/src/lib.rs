@@ -2,6 +2,7 @@ mod deep_links;
 mod event_cache;
 mod events;
 mod external_themes;
+mod external_views;
 mod fs_watch;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
@@ -30,6 +31,7 @@ use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::plugins::{PluginsApi, PluginsApiImpl};
 use routes::themes::{ThemesApi, ThemesApiImpl};
+use routes::views::{ViewsApi, ViewsApiImpl};
 use state::{AppState, ProviderDirs};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -61,6 +63,7 @@ fn create_router_with_plugins(
         .merge(ConfigApiImpl.into_handler())
         .merge(PluginsApiImpl::new(plugins).into_handler())
         .merge(ThemesApiImpl.into_handler())
+        .merge(ViewsApiImpl.into_handler())
 }
 
 /// Directory of the providers bundled with this build (google, icloud,

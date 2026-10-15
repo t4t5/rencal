@@ -9,6 +9,7 @@ use tauri::AppHandle;
 
 use crate::events::AppEvent;
 use crate::external_themes;
+use crate::external_views;
 use crate::fs_watch::{is_any_change, watch_debounced};
 use crate::plugins::PluginManager;
 use crate::state::AppState;
@@ -59,6 +60,7 @@ async fn reconcile(app: &AppHandle, manager: &PluginManager, state: &AppState) {
     // This also refreshes Settings > Plugins, including parse or network
     // errors that did not result in a package-directory change.
     let _ = AppEvent::ExternalThemesChanged(external_themes::scan()).emit(app);
+    let _ = AppEvent::ExternalViewsChanged(external_views::scan()).emit(app);
 }
 
 pub async fn run_watcher(app: AppHandle, manager: PluginManager, state: Arc<AppState>) {

@@ -7,6 +7,9 @@ import { providers } from "@/lib/api/providers"
 import { settings } from "@/lib/api/settings"
 import { sync } from "@/lib/api/sync"
 import { themes } from "@/lib/api/themes"
+import { views } from "@/lib/api/views"
+
+export type { ExternalView, ExternalViewsSnapshot } from "@/lib/api/views"
 
 export const api = {
   events,
@@ -16,6 +19,7 @@ export const api = {
   sync,
   settings,
   themes,
+  views,
   notifications,
   plugins,
 } as const

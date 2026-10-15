@@ -1,0 +1,18 @@
+{
+  "name": "@rencal/plugin-api",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Types and Tailwind tokens for renCal view plugins. renCal provides the module at runtime.",
+  "type": "module",
+  "types": "./index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts"
+    },
+    "./theme.css": "./theme.css"
+  },
+  "peerDependencies": {
+    "@js-temporal/polyfill": "^0.5.1",
+    "react": "^19.2.0"
+  }
+}

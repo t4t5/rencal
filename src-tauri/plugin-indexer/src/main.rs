@@ -515,6 +515,9 @@ fn installable_contributions(
     if !manifest.contributes.themes.is_empty() {
         contributions.push(ContributionKind::Theme);
     }
+    if !manifest.contributes.views.is_empty() {
+        contributions.push(ContributionKind::View);
+    }
     let providers = &manifest.contributes.providers;
     if providers.is_empty() {
         return Ok(contributions);

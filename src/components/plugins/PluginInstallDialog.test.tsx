@@ -74,6 +74,7 @@ beforeEach(() => {
     themes: [],
     fonts: [],
     providers: [],
+    views: [],
   })
 })
 
