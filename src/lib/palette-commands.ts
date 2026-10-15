@@ -8,10 +8,11 @@ export type PaletteSubmenu = "themes" | "calendar-groups"
 // Special sub-pages that drive their own dynamic content (no static SubmenuConfig).
 export type PalettePage = "go-to-date"
 
-export type PaletteCommandId = ShortcutId | "toggle-week-numbers"
+// Palette-only commands with no keyboard shortcut.
+export type PaletteExtraId = "toggle-week-numbers"
 
 export interface PaletteCommand {
-  id: PaletteCommandId
+  id: string
   group: CommandGroup
   // Override of the shortcut's label in the palette:
   label?: string
@@ -30,13 +31,11 @@ export interface SubmenuConfig {
   onSelect: (id: string) => void
 }
 
-export const PALETTE_COMMANDS: readonly PaletteCommand[] = [
+// View commands are prepended from the view registry.
+export const PALETTE_COMMANDS: readonly (PaletteCommand & { id: ShortcutId | PaletteExtraId })[] = [
   { id: "add-event", group: "Calendar" },
   { id: "duplicate-event", group: "Calendar" },
   { id: "search", group: "Calendar", label: "Search events…" },
-  { id: "month", group: "View" },
-  { id: "week", group: "View" },
-  { id: "board", group: "View" },
   { id: "toggle-week-numbers", group: "View", label: "Toggle week numbers" },
   {
     id: "switch-group",

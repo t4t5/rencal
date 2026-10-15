@@ -5,29 +5,30 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Sheet, SheetClose, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 
-import { ShortcutDef, ShortcutGroup, SHORTCUT_GROUPS, SHORTCUTS } from "@/lib/shortcuts"
+import { ShortcutDef, ShortcutGroup, SHORTCUT_GROUPS } from "@/lib/shortcuts"
 
 import { CloseIcon } from "@/icons/close"
 import { SearchIcon } from "@/icons/search"
+import { useShortcutDefs } from "@/views/useViews"
 
 export function ShortcutsOverlay({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const shortcutDefs = useShortcutDefs()
   const [query, setQuery] = useState("")
   const normalizedQuery = query.trim().toLowerCase()
   const filteredShortcuts = useMemo(
     () =>
       normalizedQuery
-        ? SHORTCUTS.filter(
+        ? shortcutDefs.filter(
             (shortcut) =>
               shortcut.label.toLowerCase().includes(normalizedQuery) ||
               shortcut.group.toLowerCase().includes(normalizedQuery) ||
               shortcut.bindings.some(
                 (binding) =>
-                  !("hidden" in binding && binding.hidden) &&
-                  binding.keys.toLowerCase().includes(normalizedQuery),
+                  !binding.hidden && binding.keys.toLowerCase().includes(normalizedQuery),
               ),
           )
-        : SHORTCUTS,
-    [normalizedQuery],
+        : shortcutDefs,
+    [normalizedQuery, shortcutDefs],
   )
 
   return (

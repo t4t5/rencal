@@ -23,22 +23,18 @@ import { formatLongDate, dateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
 import {
   COMMAND_GROUPS,
-  PALETTE_COMMANDS,
-  type PaletteCommandId,
+  type PaletteCommand,
   type PalettePage,
   type PaletteSubmenu,
   type SubmenuConfig,
 } from "@/lib/palette-commands"
-import { ShortcutDef, SHORTCUTS } from "@/lib/shortcuts"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { CheckIcon } from "@/icons/check"
 import { ChevronRightIcon } from "@/icons/chevron-right"
+import { useShortcutDefs } from "@/views/useViews"
 
-const SHORTCUT_BY_ID = Object.fromEntries(SHORTCUTS.map((s) => [s.id, s])) as Record<
-  string,
-  ShortcutDef
->
+type PaletteHandlers = Record<string, (e?: KeyboardEvent) => void>
 
 type Page = "root" | PaletteSubmenu | PalettePage
 
@@ -46,6 +42,7 @@ export function CommandPalette({
   open,
   onOpenChange,
   requestedPage = "root",
+  commands,
   handlers,
   submenus,
   onGoToDate,
@@ -53,7 +50,8 @@ export function CommandPalette({
   open: boolean
   onOpenChange: (open: boolean) => void
   requestedPage?: "root" | PalettePage
-  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
+  commands: readonly PaletteCommand[]
+  handlers: PaletteHandlers
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   onGoToDate: (date: Temporal.PlainDate) => void
 }) {
@@ -140,6 +138,7 @@ export function CommandPalette({
               submenus={submenus}
               goToPage={goToPage}
               run={run}
+              commands={commands}
               handlers={handlers}
               onGoToDate={onGoToDate}
             />
@@ -159,6 +158,7 @@ function CommandListContent({
   submenus,
   goToPage,
   run,
+  commands,
   handlers,
   onGoToDate,
 }: {
@@ -168,7 +168,8 @@ function CommandListContent({
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   goToPage: (next: Page) => void
   run: (action: () => void) => void
-  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
+  commands: readonly PaletteCommand[]
+  handlers: PaletteHandlers
   onGoToDate: (date: Temporal.PlainDate) => void
 }) {
   if (isGoToDatePage) {
@@ -199,52 +200,68 @@ function CommandListContent({
   return (
     <>
       <CommandEmpty>No commands found.</CommandEmpty>
-      <RootCommands submenus={submenus} goToPage={goToPage} run={run} handlers={handlers} />
+      <RootCommands
+        commands={commands}
+        submenus={submenus}
+        goToPage={goToPage}
+        run={run}
+        handlers={handlers}
+      />
     </>
   )
 }
 
 function RootCommands({
+  commands,
   submenus,
   goToPage,
   run,
   handlers,
 }: {
+  commands: readonly PaletteCommand[]
   submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
   goToPage: (next: Page) => void
   run: (action: () => void) => void
-  handlers: Record<PaletteCommandId, (e?: KeyboardEvent) => void>
+  handlers: PaletteHandlers
 }) {
+  const shortcutDefs = useShortcutDefs()
+  const shortcutById = useMemo(
+    () => new Map(shortcutDefs.map((def) => [def.id, def])),
+    [shortcutDefs],
+  )
+
   return COMMAND_GROUPS.map((group) => (
     <CommandGroup key={group} heading={group}>
-      {PALETTE_COMMANDS.filter(
-        (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
-      ).map((command) => {
-        const def = SHORTCUT_BY_ID[command.id]
-        const label = command.label ?? def?.label ?? command.id
-        const binding = def?.bindings.find((b) => !b.hidden)
-        const drill = command.submenu ?? command.page
-
-        return (
-          <CommandItem
-            key={command.id}
-            value={label}
-            keywords={[group]}
-            onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]()))}
-          >
-            <span>{label}</span>
-            {drill ? (
-              <ChevronRightIcon className="ml-auto size-4 opacity-50" />
-            ) : (
-              binding && (
-                <span className="ml-auto">
-                  <ShortcutKeys keys={binding.keys} />
-                </span>
-              )
-            )}
-          </CommandItem>
+      {commands
+        .filter(
+          (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
         )
-      })}
+        .map((command) => {
+          const def = shortcutById.get(command.id)
+          const label = command.label ?? def?.label ?? command.id
+          const binding = def?.bindings.find((b) => !b.hidden)
+          const drill = command.submenu ?? command.page
+
+          return (
+            <CommandItem
+              key={command.id}
+              value={label}
+              keywords={[group]}
+              onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]?.()))}
+            >
+              <span>{label}</span>
+              {drill ? (
+                <ChevronRightIcon className="ml-auto size-4 opacity-50" />
+              ) : (
+                binding && (
+                  <span className="ml-auto">
+                    <ShortcutKeys keys={binding.keys} />
+                  </span>
+                )
+              )}
+            </CommandItem>
+          )
+        })}
     </CommandGroup>
   ))
 }

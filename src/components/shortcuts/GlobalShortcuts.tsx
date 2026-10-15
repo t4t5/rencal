@@ -29,33 +29,31 @@ import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
-import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
 import {
-  type PaletteCommandId,
+  PALETTE_COMMANDS,
+  type PaletteCommand,
+  type PaletteExtraId,
   type PalettePage,
   type PaletteSubmenu,
   type SubmenuConfig,
 } from "@/lib/palette-commands"
-import { ShortcutBinding, ShortcutId, SHORTCUTS } from "@/lib/shortcuts"
+import { ShortcutBinding, ShortcutDef, ShortcutId } from "@/lib/shortcuts"
 
 import { useTheme } from "@/themes/ThemeController"
 import { useThemeRegistry } from "@/themes/ThemeRegistry"
+import { useShortcutDefs, useViews } from "@/views/useViews"
 
 const NAV_THROTTLE_MS = 80
 
 type ShortcutHandler = (e?: KeyboardEvent) => void
-
-const LOCKED_WHILE_EVENT_OPEN = SHORTCUTS.filter(
-  (shortcut) => !("allowWhileEventOpen" in shortcut && shortcut.allowWhileEventOpen),
-).map((shortcut) => shortcut.id)
 
 // Isolated so context updates in the shortcut handlers don't re-render <App />.
 export function GlobalShortcuts({
   onChangeCalendarView,
   onToggleSidebar,
 }: {
-  onChangeCalendarView: (view: CalendarView) => void
+  onChangeCalendarView: (view: string) => void
   onToggleSidebar: () => void
 }) {
   const [overlayOpen, setOverlayOpen] = useState(false)
@@ -68,9 +66,12 @@ export function GlobalShortcuts({
   const { groups, showWeekNumbers, setShowWeekNumbers } = useSettings()
   const { activeGroup, setActiveGroup } = useCalendars()
   const { triggerDuplicate } = useDuplicateEvent()
+  const { activeEvent } = useCalEvents()
+  const { draftPopoverOpen } = useEventDraft()
+  const views = useViews()
+  const shortcutDefs = useShortcutDefs()
 
-  const handlers = useShortcutHandlers({
-    onChangeCalendarView,
+  const staticHandlers = useShortcutHandlers({
     onToggleSidebar,
     triggerDuplicate,
     openShortcutsOverlay: () => setOverlayOpen(true),
@@ -88,19 +89,31 @@ export function GlobalShortcuts({
     setActiveGroup,
   })
 
+  // A view's command id is the view id, which is also what the native menu sends.
+  const viewHandlers = Object.fromEntries(
+    views.map((view) => [view.id, () => onChangeCalendarView(view.id)]),
+  )
+  const allHandlers: Record<string, ShortcutHandler> = { ...viewHandlers, ...staticHandlers }
+  const eventOpen = !!activeEvent || draftPopoverOpen
+  const handlers = eventOpen ? lockBackground(allHandlers, shortcutDefs) : allHandlers
+
   // Native command IDs are open strings; unknown IDs are harmless.
   useEffect(() => {
     const unlisten = api.notifications.listen("menu-action", (id) => {
-      if (Object.hasOwn(handlers, id)) handlers[id as ShortcutId]()
+      if (Object.hasOwn(handlers, id)) handlers[id]()
     })
     return () => unlisten.unlisten()
   }, [handlers])
 
   const groupOptions = getGroupOptions(groups)
-  const paletteHandlers: Record<PaletteCommandId, ShortcutHandler> = {
-    ...handlers,
+  const paletteExtras: Record<PaletteExtraId, ShortcutHandler> = {
     "toggle-week-numbers": () => void setShowWeekNumbers(!showWeekNumbers),
   }
+  const paletteHandlers = { ...handlers, ...paletteExtras }
+  const paletteCommands: PaletteCommand[] = [
+    ...views.map((view) => ({ id: view.id, group: "View" as const })),
+    ...PALETTE_COMMANDS,
+  ]
 
   // Each maps a `submenu` id to the list its command drills into. Group is
   // omitted when there's nothing to switch between, hiding its root command.
@@ -127,7 +140,7 @@ export function GlobalShortcuts({
 
   return (
     <>
-      {SHORTCUTS.flatMap((shortcut) =>
+      {shortcutDefs.flatMap((shortcut) =>
         shortcut.bindings.map((binding: ShortcutBinding) =>
           binding.type === "char" ? (
             <CharBindingHost
@@ -152,6 +165,7 @@ export function GlobalShortcuts({
         open={paletteOpen}
         onOpenChange={setPaletteOpen}
         requestedPage={palettePage}
+        commands={paletteCommands}
         handlers={paletteHandlers}
         submenus={submenus}
         onGoToDate={(date) => void navigateToDate(date)}
@@ -161,7 +175,6 @@ export function GlobalShortcuts({
 }
 
 function useShortcutHandlers({
-  onChangeCalendarView,
   onToggleSidebar,
   triggerDuplicate,
   openShortcutsOverlay,
@@ -172,7 +185,6 @@ function useShortcutHandlers({
   activeGroup,
   setActiveGroup,
 }: {
-  onChangeCalendarView: (view: CalendarView) => void
   onToggleSidebar: () => void
   triggerDuplicate: (event: CalendarEvent) => void
   openShortcutsOverlay: () => void
@@ -192,7 +204,6 @@ function useShortcutHandlers({
   const openDayDraft = useOpenDayDraft()
 
   const lastNavRef = useRef(0)
-  const eventOpen = !!activeEvent || draftPopoverOpen
 
   // Tab / Shift-Tab drive event navigation.
   // Defer to the browser's native Tab handling ONLY when focus
@@ -303,9 +314,6 @@ function useShortcutHandlers({
       e?.preventDefault()
       focusAgendaItem(1, activeDate)
     },
-    month: () => onChangeCalendarView("month"),
-    week: () => onChangeCalendarView("week"),
-    board: () => onChangeCalendarView("board"),
     "switch-group": switchGroup,
     "toggle-sidebar": (e) => {
       e?.preventDefault()
@@ -338,16 +346,19 @@ function useShortcutHandlers({
     },
   }
 
-  return eventOpen ? lockBackground(handlers) : handlers
+  return handlers
 }
 
-// Unhandled keys keep their native behavior (Tab moves within the popover, arrows scroll it).
+// An open event locks every command except those that opt out. Unhandled keys
+// keep their native behavior (Tab moves within the popover, arrows scroll it).
 function lockBackground(
-  handlers: Record<ShortcutId, ShortcutHandler>,
-): Record<ShortcutId, ShortcutHandler> {
-  const locked = { ...handlers }
-  for (const id of LOCKED_WHILE_EVENT_OPEN) locked[id] = () => {}
-  return locked
+  handlers: Record<string, ShortcutHandler>,
+  defs: readonly ShortcutDef[],
+): Record<string, ShortcutHandler> {
+  const allowed = new Set(defs.filter((def) => def.allowWhileEventOpen).map((def) => def.id))
+  return Object.fromEntries(
+    Object.entries(handlers).map(([id, handler]) => [id, allowed.has(id) ? handler : () => {}]),
+  )
 }
 
 // The agenda row under keyboard focus, if any, resolved to its event.

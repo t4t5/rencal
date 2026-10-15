@@ -1,36 +1,33 @@
 import { MainHeader } from "@/components/main/MainHeader"
-import { BoardView } from "@/components/main/board-view/BoardView"
-import { MonthView } from "@/components/main/month-view/MonthView"
-import { WeekView } from "@/components/main/week-view/WeekView"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 
-import { CalendarView, calendarViewSchema } from "@/lib/calendar-view"
+import { resolveView } from "@/views/manifest"
+import { useViews } from "@/views/useViews"
 
 export function Main({
   calendarView,
   onChangeCalendarView,
 }: {
-  calendarView: CalendarView
-  onChangeCalendarView: (view: CalendarView) => void
+  calendarView: string
+  onChangeCalendarView: (view: string) => void
 }) {
+  const views = useViews()
+  const active = resolveView(calendarView, views)
+
   return (
     <Tabs
-      value={calendarView}
-      onValueChange={(v) => onChangeCalendarView(calendarViewSchema.parse(v))}
+      value={active.id}
+      onValueChange={onChangeCalendarView}
       className="hidden sm:flex flex-col grow min-w-0"
     >
-      <MainHeader calendarView={calendarView} onChangeCalendarView={onChangeCalendarView} />
+      <MainHeader activeView={active} onChangeCalendarView={onChangeCalendarView} />
 
       <div data-slot="main-viewport" className="flex-1 min-h-0 select-none">
-        <TabsContent value="week" className="h-full">
-          <WeekView />
-        </TabsContent>
-        <TabsContent value="month" className="h-full">
-          <MonthView />
-        </TabsContent>
-        <TabsContent value="board" className="h-full">
-          <BoardView />
-        </TabsContent>
+        {views.map(({ id, component: View }) => (
+          <TabsContent key={id} value={id} className="h-full">
+            <View />
+          </TabsContent>
+        ))}
       </div>
     </Tabs>
   )

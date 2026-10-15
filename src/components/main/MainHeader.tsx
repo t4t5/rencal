@@ -19,17 +19,18 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
-import { CalendarView } from "@/lib/calendar-view"
 import { today } from "@/lib/event-time"
 
 import { CheckIcon } from "@/icons/check"
+import type { ViewDescriptor } from "@/views/manifest"
+import { useViews } from "@/views/useViews"
 
 export function MainHeader({
-  calendarView,
+  activeView,
   onChangeCalendarView,
 }: {
-  calendarView: CalendarView
-  onChangeCalendarView: (view: CalendarView) => void
+  activeView: ViewDescriptor
+  onChangeCalendarView: (view: string) => void
 }) {
   const { navigateToDate } = useCalendarNavigation()
 
@@ -53,48 +54,39 @@ export function MainHeader({
 
       <GroupSwitcher />
 
-      <CalendarViewDropdown
-        calendarView={calendarView}
-        onChangeCalendarView={onChangeCalendarView}
-      />
+      <CalendarViewDropdown activeView={activeView} onChangeCalendarView={onChangeCalendarView} />
 
       <SearchButton />
     </div>
   )
 }
 
-const CALENDAR_VIEW_OPTIONS: { view: CalendarView; name: string; shortcut: string }[] = [
-  { view: "week", name: "Week", shortcut: "W" },
-  { view: "month", name: "Month", shortcut: "M" },
-  { view: "board", name: "Board", shortcut: "B" },
-]
-
 const CalendarViewDropdown = ({
-  calendarView,
+  activeView,
   onChangeCalendarView,
 }: {
-  calendarView: CalendarView
-  onChangeCalendarView: (view: CalendarView) => void
+  activeView: ViewDescriptor
+  onChangeCalendarView: (view: string) => void
 }) => {
-  const currentView = CALENDAR_VIEW_OPTIONS.find((option) => option.view === calendarView)
+  const views = useViews()
 
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <SelectButton tabIndex={-1}>{currentView?.name ?? "View"}</SelectButton>
+        <SelectButton tabIndex={-1}>{activeView.name}</SelectButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
-        {CALENDAR_VIEW_OPTIONS.map((option) => (
+        {views.map((view) => (
           <DropdownMenuItem
-            key={option.view}
-            onSelect={() => onChangeCalendarView(option.view)}
+            key={view.id}
+            onSelect={() => onChangeCalendarView(view.id)}
             className="gap-3"
           >
             <span className="flex size-4 items-center justify-center">
-              {calendarView === option.view && <CheckIcon className="size-4" />}
+              {activeView.id === view.id && <CheckIcon className="size-4" />}
             </span>
-            <span>{option.name}</span>
-            <DropdownMenuShortcut>{option.shortcut}</DropdownMenuShortcut>
+            <span>{view.name}</span>
+            <DropdownMenuShortcut>{view.shortcut?.toUpperCase()}</DropdownMenuShortcut>
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

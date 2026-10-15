@@ -1,4 +1,5 @@
-// Single source of truth for keyboard shortcuts.
+// Static keyboard shortcuts. View shortcuts are derived from the view registry
+// (`viewShortcuts` in `@/views/manifest`); `useShortcutDefs` returns both.
 
 export interface ShortcutBinding {
   keys: string
@@ -93,24 +94,6 @@ export const SHORTCUTS = [
     group: "Navigation",
     label: "Go to date...",
     bindings: [{ keys: ".", type: "char" }],
-  },
-  {
-    id: "month",
-    group: "View",
-    label: "Display month view",
-    bindings: [{ keys: "m", type: "char" }],
-  },
-  {
-    id: "board",
-    group: "View",
-    label: "Display board view",
-    bindings: [{ keys: "b", type: "char" }],
-  },
-  {
-    id: "week",
-    group: "View",
-    label: "Display week view",
-    bindings: [{ keys: "w", type: "char" }],
   },
   {
     id: "switch-group",
