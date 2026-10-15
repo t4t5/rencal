@@ -6,6 +6,7 @@ import { WeekView } from "@/components/main/week-view/WeekView"
 import type { ShortcutDef } from "@/lib/shortcuts"
 
 import { BoardView } from "@/plugins/board/BoardView"
+import { YearView } from "@/plugins/year/YearView"
 
 export type ViewDescriptor = {
   id: string
@@ -22,6 +23,7 @@ export const BUILTIN_VIEWS: ViewDescriptor[] = [
   { id: "week", name: "Week", component: WeekView, shortcut: "w" },
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
   { id: "board", name: "Board", component: BoardView, shortcut: "b" },
+  { id: "year", name: "Year", component: YearView, shortcut: "y" },
 ]
 
 // Unknown ids (a removed view, a plugin view not loaded yet) fall back to the default.

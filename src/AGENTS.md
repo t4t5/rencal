@@ -19,7 +19,7 @@
 ## Plugins
 
 - Views are registered in `src/views/manifest.ts` and read through `useViews()`; never hardcode the view list.
-- Built-in plugins live in `src/plugins/<id>/` (board is the first). They import the host only through `@/plugin-api`, plus `./Sibling` files; ESLint enforces this. Grow `src/plugin-api/` deliberately: every export is a contract third-party plugins will rely on.
+- Built-in plugins live in `src/plugins/<id>/` (board and year). They import the host only through `@/plugin-api`, plus `./Sibling` files; ESLint enforces this. Grow `src/plugin-api/` deliberately: every export is a contract third-party plugins will rely on.
 
 ## Event date/time
 

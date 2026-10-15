@@ -408,6 +408,11 @@ Calendar chrome exposes these slots for scoped theme rules:
 - `week-create-selection` for the range drawn while creating a timed event;
 - `board-column` and `board-column-header`; today's header exposes
   `data-today`;
+- `year`, `year-header`, `year-title`, `year-navigation`, `year-scroll`,
+  `year-month`, `year-month-title`, `year-weekday`, `year-day`,
+  `year-day-number`, and `year-event-dots`; days expose `data-selected` and
+  `data-weekend`, day numbers `data-today`, and the navigation buttons
+  `data-direction="previous"` / `"next"`;
 - `calendar-event`, `calendar-event-title`, `calendar-event-time`, and
   `calendar-event-color-marker` for events in every view;
 - `select-icon` on select triggers, comboboxes, date pickers, and the toolbar's
