@@ -1,14 +1,17 @@
 import * as temporal from "@js-temporal/polyfill"
 import { init, parse } from "es-module-lexer"
 import * as React from "react"
+import * as ReactDOM from "react-dom"
 import * as jsxRuntime from "react/jsx-runtime"
 
 import * as pluginApi from "@/plugin-api"
 
 // Modules plugins import from the host instead of bundling their own copy, so
-// hooks, contexts and Temporal values are shared with the app.
+// hooks, contexts and Temporal values are shared with the app. A bundled
+// react-dom's flushSync wouldn't reach the host renderer.
 const SHARED_MODULES: Record<string, object> = {
   react: React,
+  "react-dom": ReactDOM,
   "react/jsx-runtime": jsxRuntime,
   "@js-temporal/polyfill": temporal,
   "@rencal/plugin-api": pluginApi,
