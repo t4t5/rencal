@@ -1,7 +1,6 @@
-import { BoardCard } from "@/components/main/board-view/BoardCard"
+import { type CalendarEvent, cn } from "@/plugin-api"
 
-import { CalendarEvent } from "@/lib/cal-events"
-import { cn } from "@/lib/utils"
+import { BoardCard } from "./BoardCard"
 
 export function BoardColumn({
   title,

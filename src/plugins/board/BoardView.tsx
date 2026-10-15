@@ -1,14 +1,16 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useMemo } from "react"
 
-import { BoardColumn } from "@/components/main/board-view/BoardColumn"
+import {
+  type CalendarEvent,
+  dateInViewerZone,
+  startOfWeek,
+  useDisplaySettings,
+  useEvents,
+  useToday,
+} from "@/plugin-api"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useSettings } from "@/contexts/SettingsContext"
-
-import { useToday } from "@/hooks/useToday"
-import { type CalendarEvent } from "@/lib/cal-events"
-import { dateInViewerZone, startOfWeek } from "@/lib/event-time"
+import { BoardColumn } from "./BoardColumn"
 
 interface Bucket {
   id: string
@@ -19,8 +21,8 @@ interface Bucket {
 }
 
 export function BoardView() {
-  const { calendarEvents } = useCalEvents()
-  const { firstDayOfWeek } = useSettings()
+  const calendarEvents = useEvents()
+  const { firstDayOfWeek } = useDisplaySettings()
   const today = useToday()
 
   const columns = useMemo(() => {

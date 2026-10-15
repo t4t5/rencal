@@ -16,6 +16,11 @@
 - Supported DTOs and domain types are exported from `@/lib/api`; add a new alias next to its operation module and re-export it from the public entry point rather than importing generated bindings.
 - Facade modules never import UI or contexts. Recurrence-scope decisions, optimistic updates, toasts and dialogs stay with their current owners; the facade only does transport and conversion and leaves caught failures as `unknown`.
 
+## Plugins
+
+- Views are registered in `src/views/manifest.ts` and read through `useViews()`; never hardcode the view list.
+- Built-in plugins live in `src/plugins/<id>/` (board is the first). They import the host only through `@/plugin-api`, plus `./Sibling` files; ESLint enforces this. Grow `src/plugin-api/` deliberately: every export is a contract third-party plugins will rely on.
+
 ## Event date/time
 
 - Read `docs/event-time-system.md` before changing event date/time logic.

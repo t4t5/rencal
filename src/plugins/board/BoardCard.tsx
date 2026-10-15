@@ -1,24 +1,18 @@
 import type { MouseEvent } from "react"
-import { memo, useMemo } from "react"
+import { memo } from "react"
 
-import { UntitledEventText } from "@/components/ui/untitled-event-text"
-
-import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendars } from "@/contexts/CalendarStateContext"
-import { useSettings } from "@/contexts/SettingsContext"
-
-import { CalendarEvent, eventKey } from "@/lib/cal-events"
-import { getCalendarColor } from "@/lib/calendar-styles"
-import { setEventAnchor } from "@/lib/event-anchor"
-import { getCalendarEventStyle } from "@/lib/event-styles"
 import {
+  type CalendarEvent,
   dateInViewerZone,
   formatMonth,
   formatShortDate,
   formatTime,
   isSameDay,
-} from "@/lib/event-time"
-import { getUserResponseStatus } from "@/lib/event-utils"
+  UntitledEventText,
+  useDisplaySettings,
+  useEventAppearance,
+  useEventSelection,
+} from "@/plugin-api"
 
 export const BoardCard = memo(function BoardCard({
   event,
@@ -27,13 +21,10 @@ export const BoardCard = memo(function BoardCard({
   event: CalendarEvent
   showDate?: boolean
 }) {
-  const { timeFormat } = useSettings()
-  const { calendars } = useCalendars()
-  const calendarBySlug = useMemo(() => new Map(calendars.map((c) => [c.slug, c])), [calendars])
-  const calendarColor = getCalendarColor(calendarBySlug.get(event.calendar_slug))
-  const rsvp = getUserResponseStatus(event, calendars)
-  const { activeEvent, toggleActiveEventKey } = useCalEvents()
-  const highlighted = activeEvent ? eventKey(activeEvent) === eventKey(event) : false
+  const { timeFormat } = useDisplaySettings()
+  const { style, rsvp } = useEventAppearance(event)
+  const selection = useEventSelection()
+  const highlighted = selection.isSelected(event)
 
   const formatRangeDate = (date: CalendarEvent["start"]): string => {
     const plainDate = dateInViewerZone(date)
@@ -42,8 +33,7 @@ export const BoardCard = memo(function BoardCard({
 
   const handleClick = (e: MouseEvent<HTMLDivElement>) => {
     e.stopPropagation()
-    setEventAnchor(e.currentTarget)
-    toggleActiveEventKey(eventKey(event))
+    selection.toggle(event, e.currentTarget)
   }
 
   return (
@@ -55,7 +45,7 @@ export const BoardCard = memo(function BoardCard({
       data-rsvp={rsvp ?? undefined}
       className="cursor-default py-1.5 border-b border-border last:border-b-0 outline-none"
       data-event-clickable
-      style={getCalendarEventStyle({ calendarColor, eventColor: event.color })}
+      style={style}
       onClick={handleClick}
     >
       <div className="flex gap-3 pl-3 pr-2">

@@ -18,12 +18,18 @@ const nativeEvents = {
   group: ["@tauri-apps/api/event"],
   message: "Use `api.notifications` from `@/lib/api` for app notifications.",
 }
+const pluginHost = {
+  group: ["@/*", "!@/plugin-api", "@tauri-apps/*"],
+  message: "Plugins reach the host only through `@/plugin-api`.",
+}
 const apiImplementations = {
   group: ["@/lib/api/*", "!@/lib/api/internal"],
   message:
     "Use the public `@/lib/api` entry point. Host orchestration may use `@/lib/api/internal`.",
 }
 
+// Built-in plugins are written against the same API as third-party ones.
+const plugins = ["src/plugins/**"]
 // The transport and the app API facade may use the generated proxy directly.
 const rpcBoundary = ["src/rpc/**", "src/lib/api/**"]
 // Pure conversion modules translate generated types into app types.
@@ -76,5 +82,9 @@ export default tseslint.config(
   {
     files: appEventTransport,
     rules: restrictImports({ patterns: [parentImports] }),
+  },
+  {
+    files: plugins,
+    rules: restrictImports({ patterns: [parentImports, pluginHost] }),
   },
 )

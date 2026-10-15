@@ -1,10 +1,11 @@
 import type { ComponentType } from "react"
 
-import { BoardView } from "@/components/main/board-view/BoardView"
 import { MonthView } from "@/components/main/month-view/MonthView"
 import { WeekView } from "@/components/main/week-view/WeekView"
 
 import type { ShortcutDef } from "@/lib/shortcuts"
+
+import { BoardView } from "@/plugins/board/BoardView"
 
 export type ViewDescriptor = {
   id: string
