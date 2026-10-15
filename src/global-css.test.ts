@@ -136,6 +136,10 @@ describe("global CSS contract", () => {
     expect(css).toContain("@layer theme, base, components, utilities")
   })
 
+  it("orders plugin view CSS below host utilities", () => {
+    expect(source).toMatch(/^@layer theme, base, components, plugins, utilities;$/m)
+  })
+
   it("uses explicit typography roles instead of generic global classes", () => {
     expect(source).not.toMatch(/^\s*\.(?:button|heading|numerical|field-action)\s*\{/m)
 

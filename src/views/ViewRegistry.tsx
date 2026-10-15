@@ -22,7 +22,10 @@ export async function preloadExternalViews(): Promise<ExternalView[]> {
 }
 
 function applyPluginStyles(views: readonly ExternalView[]) {
-  const styles = new Map(views.flatMap((view) => (view.css ? [[view.id, view.css]] : [])))
+  // Ordered below host utilities in global.css, so plugin classes can't override host layout.
+  const styles = new Map(
+    views.flatMap((view) => (view.css ? [[view.id, `@layer plugins {\n${view.css}\n}`]] : [])),
+  )
   for (const element of document.head.querySelectorAll<HTMLStyleElement>(`style[${STYLE_ATTR}]`)) {
     if (!styles.has(element.getAttribute(STYLE_ATTR) ?? "")) element.remove()
   }

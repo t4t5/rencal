@@ -1,3 +1,6 @@
+/* Plugin view CSS goes in `plugins` (src/views/ViewRegistry.tsx), below host utilities. */
+@layer theme, base, components, plugins, utilities;
+
 @import "tailwindcss";
 @import "tw-animate-css";
 
