@@ -8,7 +8,7 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
-import { type CalendarEvent, eventKey } from "@/lib/cal-events"
+import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
@@ -17,7 +17,10 @@ import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { useViewHost } from "@/views/ViewHostContext"
 
-export type { CalendarEvent } from "@/lib/cal-events"
+import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
+
+export type { CalendarEvent } from "./events"
+export type { EventTime } from "@/lib/event-time"
 export {
   dateInViewerZone,
   epochDay,
@@ -34,12 +37,14 @@ export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 
-// Events in the loaded range, filtered to the visible calendars.
+// Events in the loaded range, filtered to the visible calendars, in start order.
 export function useEvents(): readonly CalendarEvent[] {
-  return useCalEvents().calendarEvents
+  const { calendarEvents } = useCalEvents()
+  return useMemo(() => toPluginEvents(calendarEvents), [calendarEvents])
 }
 
-// Events overlapping [start, end), filtered to the visible calendars. Widens the
+// Events overlapping [start, end), filtered to the visible calendars, in start
+// order. Widens the
 // loaded range to cover it, for views that show more than the default window.
 export function useEventsInRange(
   start: Temporal.PlainDate,
@@ -56,7 +61,10 @@ export function useEventsInRange(
   }, [first, last, visibleCalendarKey, ensureRangeLoaded])
 
   return useMemo(
-    () => calendarEvents.filter((e) => e.dateInfo.lastDay >= first && e.dateInfo.firstDay < last),
+    () =>
+      toPluginEvents(
+        calendarEvents.filter((e) => e.dateInfo.lastDay >= first && e.dateInfo.firstDay < last),
+      ),
     [calendarEvents, first, last],
   )
 }
@@ -94,10 +102,10 @@ export function useEventSelection() {
   const activeKey = activeEvent ? eventKey(activeEvent) : null
 
   return {
-    isSelected: (event: CalendarEvent) => eventKey(event) === activeKey,
+    isSelected: (event: CalendarEvent) => event.key === activeKey,
     toggle: (event: CalendarEvent, anchor: HTMLElement) => {
       setEventAnchor(anchor)
-      toggleActiveEventKey(eventKey(event))
+      toggleActiveEventKey(event.key)
     },
   }
 }
@@ -108,13 +116,14 @@ export function useEventAppearance(event: CalendarEvent) {
   const { calendars } = useCalendars()
 
   return useMemo(() => {
-    const calendar = calendars.find((c) => c.slug === event.calendar_slug)
+    const appEvent = toAppEvent(event)
+    const calendar = calendars.find((c) => c.slug === appEvent.calendar_slug)
     return {
       style: getCalendarEventStyle({
         calendarColor: getCalendarColor(calendar),
-        eventColor: event.color,
+        eventColor: appEvent.color,
       }),
-      rsvp: getUserResponseStatus(event, calendars),
+      rsvp: getUserResponseStatus(appEvent, calendars),
     }
   }, [calendars, event])
 }

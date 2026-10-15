@@ -2,82 +2,8 @@
 import { Temporal } from '@js-temporal/polyfill';
 import * as React$1 from 'react';
 
-type CalendarEvent = {
-	id: string;
-	recurring_event_id: string | null;
-	summary: string;
-	description: string | null;
-	location: string | null;
-	url: string | null;
-	start: RpcEventTime;
-	end: RpcEventTime;
-	status: EventStatus;
-	recurrence: RpcRecurrence | null;
-	master_recurrence: RpcRecurrence | null;
-	reminders: number[];
-	organizer: EventAttendee | null;
-	attendees: EventAttendee[];
-	conference: EventConference | null;
-	calendar_slug: string;
-	color: string | null;
-	/**
-	 * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
-	 * Used by the frontend to cheaply detect content changes for reload dedup.
-	 */
-	updated: string | null;
-};
-type ConferenceProvider = "google" | "outlook" | "proton";
-type EventAttendee = {
-	name: string | null;
-	email: string;
-	response_status: ResponseStatus | null;
-};
-type EventConference = {
-	status: "requested";
-	provider: ConferenceProvider;
-} | {
-	status: "live";
-	provider: ConferenceProvider;
-	url: string;
-};
-type EventStatus = "confirmed" | "tentative" | "cancelled";
 type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
-type RpcEventTime = 
-/**
- * All-day event. ISO date "YYYY-MM-DD".
- */
-{
-	kind: "date";
-	date: string;
-} | 
-/**
- * Genuine UTC instant. ISO 8601 with Z suffix.
- */
-{
-	kind: "datetime_utc";
-	instant: string;
-} | 
-/**
- * Floating local time (no zone). ISO 8601 wall-clock without offset.
- */
-{
-	kind: "datetime_floating";
-	wallclock: string;
-} | 
-/**
- * Wall-clock + IANA zone — the canonical shape for authored timed events.
- */
-{
-	kind: "datetime_zoned";
-	wallclock: string;
-	tzid: string;
-};
-type RpcRecurrence = {
-	rrule: string;
-	exdates: RpcEventTime[];
-	rdates: RpcEventTime[];
-};
-type EventTime = {
+export type EventTime = {
 	kind: "date";
 	value: Temporal.PlainDate;
 } | {
@@ -89,22 +15,6 @@ type EventTime = {
 } | {
 	kind: "datetime_zoned";
 	value: Temporal.ZonedDateTime;
-};
-type EventDateInfo = {
-	/** Start projection in epoch ms; used as a sort key. */
-	startMs: number;
-	/** End projection in epoch ms; used with `startMs` to check if an event is ongoing. */
-	endMs: number;
-	/** Epoch-day key for the start's day in the viewer's zone. */
-	firstDay: number;
-	/** Epoch-day key for the last occupied day, iCal-end-exclusive aware. */
-	lastDay: number;
-	/** Epoch-day key for the end's day, before iCal adjustment. */
-	endDay: number;
-	/** Wallclock minutes-of-day at start, in the viewer's zone. */
-	startLocalMinutes: number;
-	/** Wallclock minutes-of-day at end, in the viewer's zone. */
-	endLocalMinutes: number;
 };
 /**
  * A timezone-independent integer key for a calendar day. Pure integer arithmetic
@@ -126,27 +36,20 @@ export declare function formatShortDate(value: EventTime | Temporal.PlainDate): 
  */
 export declare function dateInViewerZone(et: EventTime): Temporal.PlainDate;
 export declare function isSameDay(a: EventTime, b: EventTime): boolean;
-type ConferenceProvider$1 = ConferenceProvider;
-type EventConference$1 = {
-	status: "requested";
-	provider: ConferenceProvider$1;
-} | {
-	status: "live";
-	provider: ConferenceProvider$1;
-	url: string;
-};
-interface Recurrence {
-	rrule: string;
-	exdates: EventTime[];
-	rdates: EventTime[];
-}
-interface CalendarEvent$1 extends Omit<CalendarEvent, "start" | "end" | "recurrence" | "master_recurrence" | "conference"> {
-	start: EventTime;
-	end: EventTime;
-	dateInfo: EventDateInfo;
-	recurrence: Recurrence | null;
-	master_recurrence: Recurrence | null;
-	conference: EventConference$1 | null;
+export interface CalendarEvent {
+	/** Unique across calendars and recurrence instances; use it as a React key. */
+	readonly key: string;
+	readonly calendarId: string;
+	readonly summary: string;
+	readonly description: string | null;
+	readonly location: string | null;
+	readonly url: string | null;
+	/** `kind: "date"` for all-day events. */
+	readonly start: EventTime;
+	readonly end: EventTime;
+	/** First and last day the event occupies in the viewer's zone, inclusive. */
+	readonly firstDay: Temporal.PlainDate;
+	readonly lastDay: Temporal.PlainDate;
 }
 type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
 type ClassDictionary = Record<string, any>;
@@ -190,8 +93,8 @@ export declare const ChevronLeftIcon: ({ className }: {
 export declare const ChevronRightIcon: ({ className }: {
 	className?: string;
 }) => import("react/jsx-runtime").JSX.Element;
-export declare function useEvents(): readonly CalendarEvent$1[];
-export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent$1[];
+export declare function useEvents(): readonly CalendarEvent[];
+export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent[];
 export declare function useNavigation(): {
 	goToDate: (date: Temporal.PlainDate) => undefined;
 	openView: (viewId: string, date: Temporal.PlainDate) => void;
@@ -202,18 +105,14 @@ export declare function useDisplaySettings(): {
 	firstDayOfWeek: FirstDayOfWeek;
 };
 export declare function useEventSelection(): {
-	isSelected: (event: CalendarEvent$1) => boolean;
-	toggle: (event: CalendarEvent$1, anchor: HTMLElement) => void;
+	isSelected: (event: CalendarEvent) => boolean;
+	toggle: (event: CalendarEvent, anchor: HTMLElement) => void;
 };
-export declare function useEventAppearance(event: CalendarEvent$1): {
+export declare function useEventAppearance(event: CalendarEvent): {
 	style: import("react").CSSProperties & {
 		"--calendar-event-color": string;
 	};
 	rsvp: ResponseStatus | null;
-};
-
-export {
-	CalendarEvent$1 as CalendarEvent,
 };
 
 export {};

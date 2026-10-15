@@ -148,7 +148,7 @@ function YearDay({
           className="pointer-events-none absolute bottom-0.5 left-1/2 flex -translate-x-1/2 gap-[3px]"
         >
           {dots.map((event) => (
-            <EventDot key={`${event.calendar_slug}::${event.id}`} event={event} />
+            <EventDot key={event.key} event={event} />
           ))}
         </div>
       )}

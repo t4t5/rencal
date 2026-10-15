@@ -99,8 +99,8 @@ function dotsByDay(
   const byDay = new Map<number, CalendarEvent[]>()
 
   for (const event of events) {
-    const from = Math.max(event.dateInfo.firstDay, firstDay)
-    const to = Math.min(event.dateInfo.lastDay, lastDay)
+    const from = Math.max(epochDay(event.firstDay), firstDay)
+    const to = Math.min(epochDay(event.lastDay), lastDay)
 
     for (let day = from; day <= to; day++) {
       const dayDots = byDay.get(day)
@@ -108,7 +108,7 @@ function dotsByDay(
         byDay.set(day, [event])
       } else if (
         dayDots.length < MAX_DOTS &&
-        !dayDots.some((dot) => dot.calendar_slug === event.calendar_slug)
+        !dayDots.some((dot) => dot.calendarId === event.calendarId)
       ) {
         dayDots.push(event)
       }
