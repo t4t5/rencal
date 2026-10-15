@@ -1,8 +1,9 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
 import { rpcToCalendarEvent } from "@/lib/cal-events"
 
-import { toAppEvent, toPluginEvents } from "./events"
+import { eventsByDay, toAppEvent, toPluginEvents } from "./events"
 
 function event(id: string, start: string, end: string) {
   return rpcToCalendarEvent({
@@ -60,5 +61,29 @@ describe("toPluginEvents", () => {
     const [pluginEvent] = toPluginEvents([trip])
 
     expect(() => toAppEvent({ ...pluginEvent })).toThrow()
+  })
+})
+
+describe("eventsByDay", () => {
+  const date = (value: string) => Temporal.PlainDate.from(value)
+  const [trip, later] = toPluginEvents([
+    event("trip", "2026-09-15", "2026-09-18"),
+    event("later", "2026-09-20", "2026-09-21"),
+  ])
+
+  it("lists every day in the range with the events covering it", () => {
+    const days = eventsByDay([trip, later], date("2026-09-16"), date("2026-09-21"))
+
+    expect(days.map((day) => [day.date.toString(), day.events.map((e) => e.summary)])).toEqual([
+      ["2026-09-16", ["trip"]],
+      ["2026-09-17", ["trip"]],
+      ["2026-09-18", []],
+      ["2026-09-19", []],
+      ["2026-09-20", ["later"]],
+    ])
+  })
+
+  it("returns nothing for an empty range", () => {
+    expect(eventsByDay([trip], date("2026-09-16"), date("2026-09-16"))).toEqual([])
   })
 })

@@ -29,10 +29,22 @@ export declare function startOfWeek(date: Temporal.PlainDate, firstDay: FirstDay
 /** App-level mirror of the RPC `TimeFormat` type. */
 export type TimeFormat = "24h" | "12h";
 type DatePartStyle = "short" | "long";
+export declare function formatWeekday(date: Temporal.PlainDate, style: DatePartStyle): string;
 export declare function formatMonth(date: Temporal.PlainDate, style: DatePartStyle): string;
 export declare function formatTime(et: EventTime, timeFormat: TimeFormat): string;
+/**
+ * Format a wallclock hour (0–23) and minute per the 12h/24h setting,
+ * e.g. "15:30" (24h) or "3:30 PM" (12h). Zone-agnostic — it formats a
+ * time-of-day rather than an instant, so it's safe for time-picker option
+ * labels where there is no underlying EventTime.
+ */
+export declare function formatWallclockTime(hour: number, minute: number, timeFormat: TimeFormat): string;
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
 export declare function formatShortDate(value: EventTime | Temporal.PlainDate): string;
+/** "Thursday, 5 November" (adds the year when not the current year). */
+export declare function formatLongDate(value: EventTime | Temporal.PlainDate): string;
+/** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
+export declare function getRelativeDayLabel(value: EventTime | Temporal.PlainDate): string;
 export declare function isAllDay(et: EventTime): boolean;
 /**
  * Convert to a ZonedDateTime in the viewer's local zone. Used for rendering and
@@ -61,6 +73,13 @@ export interface CalendarEvent {
 	readonly firstDay: Temporal.PlainDate;
 	readonly lastDay: Temporal.PlainDate;
 }
+export interface EventDay {
+	readonly date: Temporal.PlainDate;
+	/** Events covering the day, in the order given; multi-day events repeat on each day. */
+	readonly events: readonly CalendarEvent[];
+}
+/** One entry for each day in [start, end), including days without events. */
+export declare function eventsByDay(events: readonly CalendarEvent[], start: Temporal.PlainDate, end: Temporal.PlainDate): EventDay[];
 type ClassValue = ClassArray | ClassDictionary | string | number | bigint | null | boolean | undefined;
 type ClassDictionary = Record<string, any>;
 type ClassArray = ClassValue[];
@@ -74,6 +93,11 @@ export declare function cn(...inputs: ClassValue[]): string;
  * - when the OS timezone changes
  */
 export declare function useToday(): Temporal.PlainDate;
+/**
+ * The viewer's IANA timezone as reactive state. Re-renders the component when
+ * the OS timezone changes, so anything derived from getViewerTzid recomputes.
+ */
+export declare function useViewerTzid(): string;
 type ClassValue$1 = ClassValue;
 type ClassProp = {
 	class: ClassValue$1;
@@ -122,6 +146,8 @@ export interface Calendar {
 	/** Matches `CalendarEvent.calendarId`. */
 	readonly id: string;
 	readonly name: string;
+	/** A CSS colour for inline styles. Themes can override it, so don't parse it. */
+	readonly color: string;
 	/** In the active calendar group; only visible calendars' events are returned. */
 	readonly visible: boolean;
 }

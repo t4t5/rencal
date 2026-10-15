@@ -23,15 +23,19 @@ import { useViewHost } from "@/views/ViewHostContext"
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
 export { Temporal } from "@js-temporal/polyfill"
-export type { CalendarEvent } from "./events"
+export { type CalendarEvent, type EventDay, eventsByDay } from "./events"
 export type { ResponseStatus } from "@/lib/cal-events"
 export type { EventTime, FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
 export {
   dateInViewerZone,
   epochDay,
+  formatLongDate,
   formatMonth,
   formatShortDate,
   formatTime,
+  formatWallclockTime,
+  formatWeekday,
+  getRelativeDayLabel,
   isAllDay,
   isSameDay,
   startOfWeek,
@@ -39,6 +43,7 @@ export {
 } from "@/lib/event-time"
 export { cn } from "@/lib/utils"
 export { useToday } from "@/hooks/useToday"
+export { useViewerTzid } from "@/hooks/useViewerTzid"
 export { Button } from "@/components/ui/button"
 export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
@@ -97,6 +102,8 @@ export interface Calendar {
   /** Matches `CalendarEvent.calendarId`. */
   readonly id: string
   readonly name: string
+  /** A CSS colour for inline styles. Themes can override it, so don't parse it. */
+  readonly color: string
   /** In the active calendar group; only visible calendars' events are returned. */
   readonly visible: boolean
 }
@@ -111,6 +118,7 @@ export function useCalendars(): readonly Calendar[] {
     return calendars.map((calendar) => ({
       id: calendar.slug,
       name: calendar.name || calendar.slug,
+      color: getCalendarColor(calendar),
       visible: visible.has(calendar.slug),
     }))
   }, [calendars, visibleIds])
