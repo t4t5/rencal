@@ -5,5 +5,5 @@ export const sharedModules = [
   "react-dom",
   "react/jsx-runtime",
   "@js-temporal/polyfill",
-  "@rencal/plugin-api",
+  "@rencal/plugin-api"
 ]

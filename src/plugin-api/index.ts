@@ -1,7 +1,7 @@
 // The host surface plugins may import. ESLint bans every other `@/` import under
 // src/plugins/**, so anything exported here is a contract plugins depend on.
 import { Temporal } from "@js-temporal/polyfill"
-import { useMemo } from "react"
+import { type MouseEvent, useMemo } from "react"
 
 import { useCalEvents, useHoldRange } from "@/contexts/CalEventsContext"
 import {
@@ -15,7 +15,7 @@ import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
-import { epochDay } from "@/lib/event-time"
+import { epochDay, isAllDay } from "@/lib/event-time"
 import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { useViewHost } from "@/views/ViewHostContext"
@@ -131,8 +131,8 @@ export function useEventSelection() {
   )
 }
 
-// Inline style (the source colour themes paint from) and the user's RSVP, for
-// `data-slot="calendar-event"` elements.
+// Inline style (the source colour themes paint from) and the user's RSVP. Event
+// elements get both from `useEventProps`; this is for marks that aren't events.
 export function useEventAppearance(event: CalendarEvent) {
   const { calendars } = useAppCalendars()
 
@@ -147,4 +147,25 @@ export function useEventAppearance(event: CalendarEvent) {
       rsvp: getUserResponseStatus(appEvent, calendars),
     }
   }, [calendars, event])
+}
+
+// Props to spread on an event element: the calendar-event attributes themes
+// style, its colour, and a click that toggles the event popover next to it.
+export function useEventProps(event: CalendarEvent) {
+  const { style, rsvp } = useEventAppearance(event)
+  const { isSelected, toggle } = useEventSelection()
+
+  return {
+    "data-slot": "calendar-event",
+    "data-kind": isAllDay(event.start) ? "all-day" : "timed",
+    "data-selected": isSelected(event) || undefined,
+    "data-rsvp": rsvp ?? undefined,
+    // Open popovers let clicks on these through instead of dismissing and swallowing them.
+    "data-event-clickable": true,
+    style,
+    onClick: (e: MouseEvent<HTMLElement>) => {
+      e.stopPropagation()
+      toggle(event, e.currentTarget)
+    },
+  } as const
 }

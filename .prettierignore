@@ -3,3 +3,5 @@ src/rpc/events.generated.ts
 pnpm-lock.yaml
 packages/plugin-api/index.d.ts
 packages/plugin-api/theme.css
+packages/plugin-api/shared-modules.js
+packages/plugin-api/shared-modules.d.ts
