@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 snapshot=$(mktemp -d)
 trap 'rm -rf "$snapshot"' EXIT
-artifacts=(src/rpc/bindings.ts src/rpc/events.generated.ts packages/plugin-api/index.d.ts packages/plugin-api/theme.css)
+artifacts=(src/rpc/bindings.ts src/rpc/events.generated.ts packages/plugin-api/index.d.ts packages/plugin-api/theme.css packages/plugin-api/shared-modules.js packages/plugin-api/shared-modules.d.ts)
 
 # Compare against the working tree so this also works before changes are committed.
 for artifact in "${artifacts[@]}"; do

@@ -93,7 +93,7 @@ shortcut = "b"
 ```
 
 - `script` is a relative `.js` path to a single-file ES module whose default export is the view's React component. The component takes no props and reads everything through `@rencal/plugin-api`.
-- The script may import only the modules renCal shares with it: `react`, `react-dom`, `react/jsx-runtime`, `@js-temporal/polyfill` and `@rencal/plugin-api`. `react-dom` is the shared entry only (`createPortal`, `flushSync`); views render inside renCal's root and never create their own. Build with those as externals and bundle everything else into the one file; relative imports (code-split chunks) fail to load.
+- The script may import only the modules renCal shares with it: `react`, `react-dom`, `react/jsx-runtime`, `@js-temporal/polyfill` and `@rencal/plugin-api`. `react-dom` is the shared entry only (`createPortal`, `flushSync`); views render inside renCal's root and never create their own. Build with those as externals (`@rencal/plugin-api/shared-modules` exports the list as `sharedModules`) and bundle everything else into the one file; relative imports (code-split chunks) fail to load.
 - `css` is optional and is injected while the plugin is installed. renCal only generates Tailwind utilities for its own source, so a view built with Tailwind compiles its own against `@rencal/plugin-api/theme.css`, which holds renCal's design tokens.
 - `shortcut` is optional: one lowercase letter or digit. It is dropped when a built-in view, a command or an earlier plugin view already uses it.
 - The view's id is `<plugin-id>/<view-id>`, which is what the view dropdown, the command palette and the stored active view use.

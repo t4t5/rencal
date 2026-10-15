@@ -30,6 +30,12 @@ export declare function formatMonth(date: Temporal.PlainDate, style: DatePartSty
 export declare function formatTime(et: EventTime, timeFormat: TimeFormat): string;
 /** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
 export declare function formatShortDate(value: EventTime | Temporal.PlainDate): string;
+export declare function isAllDay(et: EventTime): boolean;
+/**
+ * Convert to a ZonedDateTime in the viewer's local zone. Used for rendering and
+ * calculations expressed in the viewer's clock.
+ */
+export declare function toViewerZonedDateTime(et: EventTime): Temporal.ZonedDateTime;
 /**
  * The viewer-local calendar date this event sits on. For all-day events, this
  * is the date itself; for timed events, it is the date in the viewer's zone.
@@ -95,10 +101,18 @@ export declare const ChevronRightIcon: ({ className }: {
 }) => import("react/jsx-runtime").JSX.Element;
 export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent[];
 export declare function useNavigation(): {
-	goToDate: (date: Temporal.PlainDate) => undefined;
+	goToDate: (date: Temporal.PlainDate) => void;
 	openView: (viewId: string, date: Temporal.PlainDate) => void;
 	activeDate: Temporal.PlainDate;
 };
+export interface Calendar {
+	/** Matches `CalendarEvent.calendarId`. */
+	readonly id: string;
+	readonly name: string;
+	/** In the active calendar group; only visible calendars' events are returned. */
+	readonly visible: boolean;
+}
+export declare function useCalendars(): readonly Calendar[];
 export declare function useDisplaySettings(): {
 	timeFormat: TimeFormat;
 	firstDayOfWeek: FirstDayOfWeek;

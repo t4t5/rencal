@@ -4,6 +4,8 @@ import { execFileSync } from "node:child_process"
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises"
 import { join } from "node:path"
 
+import { SHARED_MODULE_IDS } from "../src/views/shared-modules.ts"
+
 const root = new URL("..", import.meta.url).pathname
 const work = join(root, "target/plugin-api")
 const out = join(root, "packages/plugin-api")
@@ -73,6 +75,17 @@ function tailwindTokens(css) {
 
 await mkdir(out, { recursive: true })
 await writeFile(join(out, "index.d.ts"), header("//") + (await readFile(types, "utf8")))
+// Plugin builds mark these external, so the list can't drift from the host's.
+await writeFile(
+  join(out, "shared-modules.js"),
+  header("//") +
+    "// Modules renCal provides to view plugins at runtime; leave them out of the bundle.\n" +
+    `export const sharedModules = ${JSON.stringify(SHARED_MODULE_IDS, null, 2)}\n`,
+)
+await writeFile(
+  join(out, "shared-modules.d.ts"),
+  header("//") + "export declare const sharedModules: readonly string[]\n",
+)
 await writeFile(
   join(out, "theme.css"),
   header("/*").replace("\n", " */\n") +
