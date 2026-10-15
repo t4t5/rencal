@@ -93,7 +93,6 @@ export declare const ChevronLeftIcon: ({ className }: {
 export declare const ChevronRightIcon: ({ className }: {
 	className?: string;
 }) => import("react/jsx-runtime").JSX.Element;
-export declare function useEvents(): readonly CalendarEvent[];
 export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent[];
 export declare function useNavigation(): {
 	goToDate: (date: Temporal.PlainDate) => undefined;

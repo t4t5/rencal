@@ -55,6 +55,6 @@ export function toPluginEvents(events: readonly AppEvent[]): CalendarEvent[] {
 
 export function toAppEvent(event: CalendarEvent): AppEvent {
   const appEvent = appEvents.get(event)
-  if (!appEvent) throw new Error("Expected an event from useEvents or useEventsInRange")
+  if (!appEvent) throw new Error("Expected an event from useEventsInRange")
   return appEvent
 }

@@ -37,15 +37,8 @@ export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 
-// Events in the loaded range, filtered to the visible calendars, in start order.
-export function useEvents(): readonly CalendarEvent[] {
-  const { calendarEvents } = useCalEvents()
-  return useMemo(() => toPluginEvents(calendarEvents), [calendarEvents])
-}
-
 // Events overlapping [start, end), filtered to the visible calendars, in start
-// order. Widens the
-// loaded range to cover it, for views that show more than the default window.
+// order. Widens the loaded range to cover it.
 export function useEventsInRange(
   start: Temporal.PlainDate,
   end: Temporal.PlainDate,
