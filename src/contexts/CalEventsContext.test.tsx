@@ -7,7 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { api } from "@/lib/api"
 import { rpcToCalendarEvent, type CalendarEvent } from "@/lib/cal-events"
 
-import { CalEventsProvider, useCalEvents } from "./CalEventsContext"
+import { CalEventsProvider, useCalEvents, useHoldRange } from "./CalEventsContext"
 
 const selection = vi.hoisted(() => ({ ids: ["work"] }))
 const registerLoadEventsForDate = vi.hoisted(() => vi.fn())
@@ -35,13 +35,13 @@ vi.mock("@/lib/api", () => ({
   },
 }))
 
-function event(id: string, calendarSlug: string): CalendarEvent {
+function event(id: string, calendarSlug: string, date = "2026-09-18"): CalendarEvent {
   return rpcToCalendarEvent({
     id,
     calendar_slug: calendarSlug,
     summary: id,
-    start: { kind: "date", date: "2026-09-18" },
-    end: { kind: "date", date: "2026-09-19" },
+    start: { kind: "date", date },
+    end: { kind: "date", date: Temporal.PlainDate.from(date).add({ days: 1 }).toString() },
     status: "confirmed",
     recurring_event_id: null,
     description: null,
@@ -77,15 +77,31 @@ function Consumer() {
   return null
 }
 
-async function render() {
+function Holder({ range }: { range: { start: Temporal.PlainDate; end: Temporal.PlainDate } }) {
+  useHoldRange(range.start, range.end)
+  return null
+}
+
+async function render(held: { start: Temporal.PlainDate; end: Temporal.PlainDate }[] = []) {
   await act(async () => {
     root.render(
       <CalEventsProvider initialEvents={initialEvents} initialRange={initialRange}>
         <Consumer />
+        {held.map((range) => (
+          <Holder key={range.start.toString()} range={range} />
+        ))}
       </CalEventsProvider>,
     )
   })
 }
+
+const range = (start: string, end: string) => ({
+  start: Temporal.PlainDate.from(start),
+  end: Temporal.PlainDate.from(end),
+})
+
+const fetchedRanges = () =>
+  fetchEvents.mock.calls.map(([{ range }]) => `${range.start}..${range.end}`)
 
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
@@ -107,9 +123,7 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
   }
 
   function load() {
-    return mode === "reload"
-      ? context.reloadEvents()
-      : context.ensureRangeLoaded(desired.start, desired.end)
+    return mode === "reload" ? context.reloadEvents() : context.extendActiveRange(() => desired)
   }
 
   it("discards the old response and refetches the whole range for the latest calendars", async () => {
@@ -140,7 +154,7 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
     })
     expect(context.calendarEvents.map((event) => event.id)).toEqual(["latest"])
     expect(committedEvents).toEqual([["initial"], ["latest"]])
-    expect(context.loadedRangeRef.current).toEqual(desired)
+    expect(context.activeRange).toEqual(desired)
   })
 
   it("keeps an empty selection empty when the old response arrives", async () => {
@@ -170,5 +184,74 @@ describe.each(["reload", "prepend", "append"] as const)("calendar changes during
       range: desired,
     })
     expect(context.calendarEvents.map((event) => event.id)).toEqual(["restored"])
+  })
+})
+
+describe("held ranges", () => {
+  const far = range("2020-01-01", "2021-01-01")
+
+  it("loads a far range without the months in between", async () => {
+    fetchEvents.mockResolvedValue([])
+    await render([far])
+    expect(fetchedRanges()).toEqual(["2020-01-01..2021-01-01"])
+  })
+
+  it("loads only the part of a held range that isn't covered yet", async () => {
+    fetchEvents.mockResolvedValue([])
+    await render([range("2026-09-15", "2026-10-15")])
+    expect(fetchedRanges()).toEqual(["2026-10-01..2026-10-15"])
+  })
+
+  it("reloads only what's still held, dropping released ranges", async () => {
+    fetchEvents.mockResolvedValueOnce([event("old", "work", "2020-06-01")])
+    await render([far])
+    expect(context.calendarEvents.map((event) => event.id)).toEqual(["old", "initial"])
+
+    await render()
+    // Released ranges stay cached until the next reload.
+    expect(context.calendarEvents.map((event) => event.id)).toEqual(["old", "initial"])
+
+    fetchEvents.mockClear()
+    fetchEvents.mockResolvedValueOnce([event("initial", "work")])
+    await act(() => context.reloadEvents())
+    expect(fetchedRanges()).toEqual(["2026-09-01..2026-10-01"])
+    expect(context.calendarEvents.map((event) => event.id)).toEqual(["initial"])
+  })
+
+  it("reloads every held range", async () => {
+    fetchEvents.mockResolvedValue([])
+    await render([far])
+    fetchEvents.mockClear()
+    await act(() => context.reloadEvents())
+    expect(fetchedRanges()).toEqual(["2020-01-01..2021-01-01", "2026-09-01..2026-10-01"])
+  })
+})
+
+describe("jump navigation", () => {
+  const loadEventsForDate = (date: string) => {
+    const load = registerLoadEventsForDate.mock.calls.at(-1)![0]
+    return act(() => load(Temporal.PlainDate.from(date)))
+  }
+
+  it("extends the active range for a nearby date", async () => {
+    fetchEvents.mockResolvedValue([])
+    await render()
+    await loadEventsForDate("2026-11-10")
+    expect(fetchedRanges()).toEqual(["2026-10-01..2027-02-01"])
+    expect(context.activeRange).toEqual(range("2026-09-01", "2027-02-01"))
+  })
+
+  it("moves the active range for a far date and lists only its events", async () => {
+    fetchEvents.mockResolvedValue([event("far", "work", "2020-06-01")])
+    await render()
+    await loadEventsForDate("2020-06-01")
+    expect(fetchedRanges()).toEqual(["2020-04-01..2020-09-01"])
+    expect(context.activeRange).toEqual(range("2020-04-01", "2020-09-01"))
+
+    fetchEvents.mockClear()
+    fetchEvents.mockResolvedValueOnce([event("far", "work", "2020-06-01")])
+    await act(() => context.reloadEvents())
+    expect(fetchedRanges()).toEqual(["2020-04-01..2020-09-01"])
+    expect(context.calendarEvents.map((event) => event.id)).toEqual(["far"])
   })
 })

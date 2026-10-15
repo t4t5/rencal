@@ -10,7 +10,6 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useMonthEventLayout } from "@/hooks/cal-events/useMonthEventLayout"
 import { useMonthGrid } from "@/hooks/cal-events/useMonthGrid"
-import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { eventKey } from "@/lib/cal-events"
 
@@ -23,14 +22,11 @@ export function MonthView() {
   const { calendarEvents, toggleActiveEventKey, activeEvent } = useCalEvents()
   const { selectedEventKey } = useAgendaSelection()
 
-  const visibleCalendarIds = useVisibleCalendarIds()
-
   const scrollRef = useRef<HTMLDivElement | null>(null)
 
   const { rangeStart, rangeEnd } = useInfiniteMonths({
     scrollContainerRef: scrollRef,
     activeDate,
-    visibleCalendarIds,
   })
 
   const weeks = useMonthGrid(rangeStart, rangeEnd)

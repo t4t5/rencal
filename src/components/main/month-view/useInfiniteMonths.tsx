@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { RefObject, useCallback, useEffect, useState } from "react"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useHoldRange } from "@/contexts/CalEventsContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { monthGridBounds } from "@/hooks/cal-events/useMonthGrid"
@@ -17,19 +17,16 @@ const rangeEndFor = (date: Temporal.PlainDate) =>
 
 /**
  * Owns the growing month range rendered by the infinite month grid. The grid is the source
- * of truth for what's visible; event loading just follows it via `ensureRangeLoaded` and
+ * of truth for what's visible; event loading just follows it via `useHoldRange` and
  * never blocks scrolling (see docs/scroll-behaviour.md).
  */
 export function useInfiniteMonths({
   scrollContainerRef,
   activeDate,
-  visibleCalendarIds,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   activeDate: Temporal.PlainDate
-  visibleCalendarIds: string[]
 }) {
-  const { ensureRangeLoaded } = useCalEvents()
   const { firstDayOfWeek } = useSettings()
 
   const [rangeStart, setRangeStart] = useState(() => rangeStartFor(activeDate))
@@ -45,11 +42,8 @@ export function useInfiniteMonths({
   }, [activeDate, rangeStart, rangeEnd])
 
   // Keep loaded events in step with the rendered weeks.
-  const visibleCalendarKey = visibleCalendarIds.join("|")
-  useEffect(() => {
-    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
-    void ensureRangeLoaded(gridStart, gridEnd)
-  }, [rangeStart, rangeEnd, visibleCalendarKey, ensureRangeLoaded, firstDayOfWeek])
+  const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
+  useHoldRange(gridStart, gridEnd)
 
   useScrollBoundary({
     scrollContainerRef,

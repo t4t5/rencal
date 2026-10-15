@@ -1,18 +1,17 @@
 // The host surface plugins may import. ESLint bans every other `@/` import under
 // src/plugins/**, so anything exported here is a contract plugins depend on.
 import { Temporal } from "@js-temporal/polyfill"
-import { useEffect, useMemo } from "react"
+import { useMemo } from "react"
 
-import { useCalEvents } from "@/contexts/CalEventsContext"
+import { useCalEvents, useHoldRange } from "@/contexts/CalEventsContext"
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
-import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
-import { epochDay, plainDateFromEpochDay } from "@/lib/event-time"
+import { epochDay } from "@/lib/event-time"
 import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { useViewHost } from "@/views/ViewHostContext"
@@ -38,20 +37,15 @@ export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 
 // Events overlapping [start, end), filtered to the visible calendars, in start
-// order. Widens the loaded range to cover it.
+// order. Keeps the range loaded while the caller is mounted.
 export function useEventsInRange(
   start: Temporal.PlainDate,
   end: Temporal.PlainDate,
 ): readonly CalendarEvent[] {
-  const { calendarEvents, ensureRangeLoaded } = useCalEvents()
-  // A load requested before any calendar is visible is dropped, so retry once they are.
-  const visibleCalendarKey = useVisibleCalendarIds().join("|")
+  const { calendarEvents } = useCalEvents()
+  useHoldRange(start, end)
   const first = epochDay(start)
   const last = epochDay(end)
-
-  useEffect(() => {
-    void ensureRangeLoaded(plainDateFromEpochDay(first), plainDateFromEpochDay(last))
-  }, [first, last, visibleCalendarKey, ensureRangeLoaded])
 
   return useMemo(
     () =>

@@ -6,8 +6,8 @@ import { useScrollBoundary } from "@/hooks/useScrollBoundary"
 import { MONTHS_TO_LOAD } from "@/lib/cal-events-range"
 
 /**
- * Extends the loaded event range as the agenda is scrolled near either end. Fetching,
- * dedup, and single-flight all live in CalEventsContext (ensureRangeLoaded); this hook
+ * Extends the active range as the agenda is scrolled near either end. Fetching, dedup,
+ * and single-flight all live in CalEventsContext (extendActiveRange); this hook
  * only decides when to ask for more. A prepend bumps scrollTop away from the top
  * (usePreserveScrollOnPrepend), so onNearTop fires once per approach rather than looping.
  */
@@ -16,26 +16,22 @@ export const useCalEventsInfiniteScroll = ({
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }) => {
-  const { loadedRangeRef, ensureRangeLoaded } = useCalEvents()
+  const { extendActiveRange } = useCalEvents()
 
   useScrollBoundary({
     scrollContainerRef,
     threshold: 200,
     onNearTop: useCallback(() => {
-      const range = loadedRangeRef.current
-      if (!range) return
-      void ensureRangeLoaded(
-        range.start.subtract({ months: MONTHS_TO_LOAD }).with({ day: 1 }),
-        range.end,
-      )
-    }, [loadedRangeRef, ensureRangeLoaded]),
+      void extendActiveRange(({ start, end }) => ({
+        start: start.subtract({ months: MONTHS_TO_LOAD }).with({ day: 1 }),
+        end,
+      }))
+    }, [extendActiveRange]),
     onNearBottom: useCallback(() => {
-      const range = loadedRangeRef.current
-      if (!range) return
-      void ensureRangeLoaded(
-        range.start,
-        range.end.with({ day: 1 }).add({ months: MONTHS_TO_LOAD }),
-      )
-    }, [loadedRangeRef, ensureRangeLoaded]),
+      void extendActiveRange(({ start, end }) => ({
+        start,
+        end: end.with({ day: 1 }).add({ months: MONTHS_TO_LOAD }),
+      }))
+    }, [extendActiveRange]),
   })
 }

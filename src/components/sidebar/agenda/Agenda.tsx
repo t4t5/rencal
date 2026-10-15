@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { useEffect, useEffectEvent, useRef } from "react"
+import { useEffect, useEffectEvent, useMemo, useRef } from "react"
 import { flushSync } from "react-dom"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -10,6 +10,7 @@ import { useCalEventsInfiniteScroll } from "@/hooks/cal-events/useCalEventsInfin
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useGroupedEvents } from "@/hooks/cal-events/useGroupedEvents"
 import { useJumpToScrolledDate } from "@/hooks/cal-events/useJumpToScrolledDate"
+import { eventOverlapsRange } from "@/lib/cal-events-range"
 import { createDebugLogger } from "@/lib/debug"
 import { formatDateKey } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -31,7 +32,12 @@ export function Agenda() {
   const { activeDate, setActiveDate, registerScrollToDate, isNavigating, setIsNavigating } =
     useCalendarNavigation()
 
-  const { calendarEvents: events, isInitialLoading } = useCalEvents()
+  const { calendarEvents, activeRange, isInitialLoading } = useCalEvents()
+  // Other views' ranges can be loaded too; listing them would leave gaps in the agenda.
+  const events = useMemo(
+    () => calendarEvents.filter((event) => eventOverlapsRange(event, activeRange)),
+    [calendarEvents, activeRange],
+  )
   const { triggerDelete } = useDeleteEvent()
   const { events: eventsWithDraft, draftCalEvent } = useEventsWithDraft(events)
   const { eventsByDate, datesWithEvents } = useGroupedEvents({ events: eventsWithDraft })
