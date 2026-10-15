@@ -5,8 +5,12 @@ use std::path::{Path, PathBuf};
 use std::io::ErrorKind;
 
 #[cfg(unix)]
-const FILES: [(&str, &str); 3] = [
+const FILES: [(&str, &str); 4] = [
     ("SKILL.md", include_str!("../../skills/rencal/SKILL.md")),
+    (
+        "references/views.md",
+        include_str!("../../skills/rencal/references/views.md"),
+    ),
     (
         "references/themes.md",
         include_str!("../../skills/rencal/references/themes.md"),

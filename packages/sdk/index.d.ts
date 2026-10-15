@@ -3,7 +3,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import * as React$1 from 'react';
 import { MouseEvent as MouseEvent$1 } from 'react';
 
-type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
+export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
 export type EventTime = {
 	kind: "date";
 	value: Temporal.PlainDate;
@@ -22,10 +22,12 @@ export type EventTime = {
  * (days-from-civil) so the hot per-event paths never touch the polyfill's zone code.
  */
 export declare function epochDay(date: Temporal.PlainDate): number;
-type FirstDayOfWeek = "monday" | "sunday";
+/** App-level mirror of the RPC `FirstDayOfWeek` type. */
+export type FirstDayOfWeek = "monday" | "sunday";
 /** The day that begins the week containing the given date, per `firstDay`. */
 export declare function startOfWeek(date: Temporal.PlainDate, firstDay: FirstDayOfWeek): Temporal.PlainDate;
-type TimeFormat = "24h" | "12h";
+/** App-level mirror of the RPC `TimeFormat` type. */
+export type TimeFormat = "24h" | "12h";
 type DatePartStyle = "short" | "long";
 export declare function formatMonth(date: Temporal.PlainDate, style: DatePartStyle): string;
 export declare function formatTime(et: EventTime, timeFormat: TimeFormat): string;
@@ -53,6 +55,7 @@ export interface CalendarEvent {
 	readonly url: string | null;
 	/** `kind: "date"` for all-day events. */
 	readonly start: EventTime;
+	/** Exclusive: an all-day event on 3 May ends on 4 May. */
 	readonly end: EventTime;
 	/** First and last day the event occupies in the viewer's zone, inclusive. */
 	readonly firstDay: Temporal.PlainDate;
@@ -100,7 +103,16 @@ export declare const ChevronLeftIcon: ({ className }: {
 export declare const ChevronRightIcon: ({ className }: {
 	className?: string;
 }) => import("react/jsx-runtime").JSX.Element;
+/**
+ * Events overlapping [start, end), filtered to the visible calendars, in start
+ * order. Keeps the range loaded while the caller is mounted.
+ */
 export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent[];
+/**
+ * The selected date, which renCal's Today button and other navigation move.
+ * `goToDate` selects another one; `openView` switches to the view with that id,
+ * showing `date`.
+ */
 export declare function useNavigation(): {
 	goToDate: (date: Temporal.PlainDate) => void;
 	openView: (viewId: string, date: Temporal.PlainDate) => void;
@@ -113,21 +125,32 @@ export interface Calendar {
 	/** In the active calendar group; only visible calendars' events are returned. */
 	readonly visible: boolean;
 }
+/** Every calendar, in the user's order. */
 export declare function useCalendars(): readonly Calendar[];
+/** The user's time format and first day of the week. */
 export declare function useDisplaySettings(): {
 	timeFormat: TimeFormat;
 	firstDayOfWeek: FirstDayOfWeek;
 };
+/** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
 export declare function useEventSelection(): {
 	isSelected: (event: CalendarEvent) => boolean;
 	toggle: (event: CalendarEvent, anchor: HTMLElement) => void;
 };
+/**
+ * Inline style (the source colour themes paint from) and the user's RSVP. Event
+ * elements get both from `useEventProps`; this is for marks that aren't events.
+ */
 export declare function useEventAppearance(event: CalendarEvent): {
 	style: import("react").CSSProperties & {
 		"--calendar-event-color": string;
 	};
 	rsvp: ResponseStatus | null;
 };
+/**
+ * Props to spread on an event element: the calendar-event attributes themes
+ * style, its colour, and a click that toggles the event popover next to it.
+ */
 export declare function useEventProps(event: CalendarEvent): {
 	readonly "data-slot": "calendar-event";
 	readonly "data-kind": "all-day" | "timed";

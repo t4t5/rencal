@@ -15,6 +15,7 @@ export interface CalendarEvent {
   readonly url: string | null
   /** `kind: "date"` for all-day events. */
   readonly start: EventTime
+  /** Exclusive: an all-day event on 3 May ends on 4 May. */
   readonly end: EventTime
   /** First and last day the event occupies in the viewer's zone, inclusive. */
   readonly firstDay: Temporal.PlainDate

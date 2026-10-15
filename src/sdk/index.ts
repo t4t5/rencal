@@ -24,7 +24,8 @@ import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
 export { Temporal } from "@js-temporal/polyfill"
 export type { CalendarEvent } from "./events"
-export type { EventTime } from "@/lib/event-time"
+export type { ResponseStatus } from "@/lib/cal-events"
+export type { EventTime, FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
 export {
   dateInViewerZone,
   epochDay,
@@ -43,8 +44,10 @@ export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 
-// Events overlapping [start, end), filtered to the visible calendars, in start
-// order. Keeps the range loaded while the caller is mounted.
+/**
+ * Events overlapping [start, end), filtered to the visible calendars, in start
+ * order. Keeps the range loaded while the caller is mounted.
+ */
 export function useEventsInRange(
   start: Temporal.PlainDate,
   end: Temporal.PlainDate,
@@ -63,8 +66,11 @@ export function useEventsInRange(
   )
 }
 
-// The selected date. `goToDate` selects another one; `openView` switches to the
-// view with that id, showing `date`.
+/**
+ * The selected date, which renCal's Today button and other navigation move.
+ * `goToDate` selects another one; `openView` switches to the view with that id,
+ * showing `date`.
+ */
 export function useNavigation() {
   const { activeDate, setActiveDate, navigateToDate } = useCalendarNavigation()
   const { showView } = useViewHost()
@@ -95,7 +101,7 @@ export interface Calendar {
   readonly visible: boolean
 }
 
-// Every calendar, in the user's order.
+/** Every calendar, in the user's order. */
 export function useCalendars(): readonly Calendar[] {
   const { calendars } = useAppCalendars()
   const visibleIds = useVisibleCalendarIds()
@@ -110,12 +116,13 @@ export function useCalendars(): readonly Calendar[] {
   }, [calendars, visibleIds])
 }
 
+/** The user's time format and first day of the week. */
 export function useDisplaySettings() {
   const { timeFormat, firstDayOfWeek } = useSettings()
   return { timeFormat, firstDayOfWeek }
 }
 
-// The open event. `toggle` opens the event popover next to `anchor`, or closes it.
+/** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
 export function useEventSelection() {
   const { activeEvent, toggleActiveEventKey } = useCalEvents()
   const activeKey = activeEvent ? eventKey(activeEvent) : null
@@ -132,8 +139,10 @@ export function useEventSelection() {
   )
 }
 
-// Inline style (the source colour themes paint from) and the user's RSVP. Event
-// elements get both from `useEventProps`; this is for marks that aren't events.
+/**
+ * Inline style (the source colour themes paint from) and the user's RSVP. Event
+ * elements get both from `useEventProps`; this is for marks that aren't events.
+ */
 export function useEventAppearance(event: CalendarEvent) {
   const { calendars } = useAppCalendars()
 
@@ -150,8 +159,10 @@ export function useEventAppearance(event: CalendarEvent) {
   }, [calendars, event])
 }
 
-// Props to spread on an event element: the calendar-event attributes themes
-// style, its colour, and a click that toggles the event popover next to it.
+/**
+ * Props to spread on an event element: the calendar-event attributes themes
+ * style, its colour, and a click that toggles the event popover next to it.
+ */
 export function useEventProps(event: CalendarEvent) {
   const { style, rsvp } = useEventAppearance(event)
   const { isSelected, toggle } = useEventSelection()
