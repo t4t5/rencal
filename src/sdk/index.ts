@@ -1,7 +1,7 @@
 // The host surface plugins may import. ESLint bans every other `@/` import under
 // src/plugins/**, so anything exported here is a contract plugins depend on.
 import { Temporal } from "@js-temporal/polyfill"
-import { type MouseEvent, useMemo } from "react"
+import { type MouseEvent, useCallback, useMemo } from "react"
 
 import { useCalEvents, useHoldRange } from "@/contexts/CalEventsContext"
 import {
@@ -16,8 +16,6 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { epochDay, isAllDay } from "@/lib/event-time"
-
-import { useViewHost } from "@/views/ViewHostContext"
 
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
@@ -74,29 +72,19 @@ export function useEventsInRange(
 
 /**
  * The selected date, which renCal's Today button and other navigation move.
- * `goToDate` selects another one; `openView` switches to the view with that id,
- * showing `date`.
+ * `goToDate` selects another one.
  */
 export function useNavigation() {
-  const { activeDate, setActiveDate, navigateToDate } = useCalendarNavigation()
-  const { showView } = useViewHost()
+  const { activeDate, navigateToDate } = useCalendarNavigation()
 
-  const actions = useMemo(
-    () => ({
-      goToDate: (date: Temporal.PlainDate) => {
-        void navigateToDate(date)
-      },
-      openView: (viewId: string, date: Temporal.PlainDate) => {
-        // Select the date first so the new view mounts there instead of scrolling to it.
-        setActiveDate(date)
-        showView(viewId)
-        void navigateToDate(date)
-      },
-    }),
-    [setActiveDate, navigateToDate, showView],
+  const goToDate = useCallback(
+    (date: Temporal.PlainDate) => {
+      void navigateToDate(date)
+    },
+    [navigateToDate],
   )
 
-  return { activeDate, ...actions }
+  return { activeDate, goToDate }
 }
 
 export interface Calendar {

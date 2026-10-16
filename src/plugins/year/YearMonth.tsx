@@ -27,8 +27,6 @@ export const YearMonth = memo(function YearMonth({
   todayDay,
   dots,
   onSelectDay,
-  onOpenDay,
-  onOpenMonth,
 }: {
   year: number
   month: number
@@ -37,8 +35,6 @@ export const YearMonth = memo(function YearMonth({
   todayDay: number | null
   dots: Map<number, CalendarEvent[]>
   onSelectDay: (date: Temporal.PlainDate) => void
-  onOpenDay: (date: Temporal.PlainDate) => void
-  onOpenMonth: (date: Temporal.PlainDate) => void
 }) {
   const { firstDayOfWeek } = useDisplaySettings()
   const monthStart = Temporal.PlainDate.from({ year, month, day: 1 })
@@ -50,8 +46,7 @@ export const YearMonth = memo(function YearMonth({
     <section data-slot="year-month" className="flex flex-col gap-1 min-w-0">
       <div
         data-slot="year-month-title"
-        className="self-start px-1 text-sm font-medium cursor-default hover:text-brand"
-        onClick={() => onOpenMonth(monthStart)}
+        className="self-start px-1 text-sm font-medium cursor-default"
       >
         {formatMonth(monthStart, "long")}
       </div>
@@ -90,7 +85,6 @@ export const YearMonth = memo(function YearMonth({
               isWeekend={weekend}
               dots={dots.get(gridStartDay + i)}
               onSelect={onSelectDay}
-              onOpen={onOpenDay}
             />
           )
         })}
@@ -106,7 +100,6 @@ function YearDay({
   isWeekend,
   dots,
   onSelect,
-  onOpen,
 }: {
   date: Temporal.PlainDate
   isSelected: boolean
@@ -114,7 +107,6 @@ function YearDay({
   isWeekend: boolean
   dots: CalendarEvent[] | undefined
   onSelect: (date: Temporal.PlainDate) => void
-  onOpen: (date: Temporal.PlainDate) => void
 }) {
   return (
     <div
@@ -126,7 +118,6 @@ function YearDay({
         isWeekend && "bg-weekend",
       )}
       onClick={() => onSelect(date)}
-      onDoubleClick={() => onOpen(date)}
     >
       <span
         data-slot="year-day-number"

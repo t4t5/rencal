@@ -144,13 +144,11 @@ export declare const ChevronRightIcon: ({ className }: {
 export declare function useEventsInRange(start: Temporal.PlainDate, end: Temporal.PlainDate): readonly CalendarEvent[];
 /**
  * The selected date, which renCal's Today button and other navigation move.
- * `goToDate` selects another one; `openView` switches to the view with that id,
- * showing `date`.
+ * `goToDate` selects another one.
  */
 export declare function useNavigation(): {
-	goToDate: (date: Temporal.PlainDate) => void;
-	openView: (viewId: string, date: Temporal.PlainDate) => void;
 	activeDate: Temporal.PlainDate;
+	goToDate: (date: Temporal.PlainDate) => void;
 };
 export interface Calendar {
 	/** Matches `CalendarEvent.calendarId`. */

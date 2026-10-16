@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { useCallback, useMemo } from "react"
+import { useMemo } from "react"
 
 import {
   Button,
@@ -18,7 +18,7 @@ const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
 const MAX_DOTS = 3
 
 export function YearView() {
-  const { activeDate, goToDate, openView } = useNavigation()
+  const { activeDate, goToDate } = useNavigation()
   const today = useToday()
 
   const { year } = activeDate
@@ -29,9 +29,6 @@ export function YearView() {
   const firstDay = epochDay(yearStart)
   const lastDay = epochDay(nextYearStart) - 1
   const dots = useMemo(() => dotsByDay(events, firstDay, lastDay), [events, firstDay, lastDay])
-
-  const openWeek = useCallback((date: Temporal.PlainDate) => openView("week", date), [openView])
-  const openMonth = useCallback((date: Temporal.PlainDate) => openView("month", date), [openView])
 
   return (
     <div data-slot="year" className="flex flex-col h-full">
@@ -80,8 +77,6 @@ export function YearView() {
               todayDay={today.year === year && today.month === month ? today.day : null}
               dots={dots}
               onSelectDay={goToDate}
-              onOpenDay={openWeek}
-              onOpenMonth={openMonth}
             />
           ))}
         </div>
