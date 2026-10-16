@@ -1,6 +1,6 @@
 {
   "name": "@rencomputer/rencal-sdk",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Build view plugins for renCal: the plugin API, design tokens and a zero-config build.",
   "license": "MIT",
   "homepage": "https://rencal.org",
