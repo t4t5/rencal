@@ -88,7 +88,7 @@ export type ExternalView = {
 /**
  * `<plugin-id>/<view-id>`.
  */
-id: string; plugin_id: string; name: string; shortcut: string | null; script: string; css: string | null }
+id: string; plugin_id: string; name: string; script: string; css: string | null }
 
 export type ExternalViewsSnapshot = { views: ExternalView[] }
 

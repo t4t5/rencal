@@ -12,7 +12,6 @@ pub struct ExternalView {
     pub id: String,
     pub plugin_id: String,
     pub name: String,
-    pub shortcut: Option<String>,
     pub script: String,
     pub css: Option<String>,
 }
@@ -33,7 +32,6 @@ fn scan_from(plugins_dir: &std::path::Path) -> ExternalViewsSnapshot {
                 id: view.id,
                 plugin_id: package.id.clone(),
                 name: view.name,
-                shortcut: view.shortcut,
                 script: view.script,
                 css: view.css,
             })
@@ -63,7 +61,6 @@ id = "board"
 name = "Board"
 script = "dist/board.js"
 css = "dist/board.css"
-shortcut = "b"
 "#;
 
     #[test]
@@ -81,7 +78,6 @@ shortcut = "b"
         let view = &snapshot.views[0];
         assert_eq!(view.id, "alice.board/board");
         assert_eq!(view.plugin_id, "alice.board");
-        assert_eq!(view.shortcut.as_deref(), Some("b"));
         assert_eq!(view.script, "export default () => null");
         assert_eq!(view.css.as_deref(), Some(".board {}"));
     }

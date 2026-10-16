@@ -32,26 +32,6 @@ export function resolveView(id: string, views: readonly ViewDescriptor[]): ViewD
   return view
 }
 
-// Plugin views lose a shortcut that a built-in view, a command or an earlier
-// plugin view already binds.
-export function claimShortcuts(
-  plugins: readonly ViewDescriptor[],
-  builtins: readonly ViewDescriptor[],
-): ViewDescriptor[] {
-  const taken = new Set(
-    [...viewShortcuts(builtins), ...SHORTCUTS].flatMap((def) => def.bindings.map((b) => b.keys)),
-  )
-  return plugins.map((view) => {
-    if (!view.shortcut) return view
-    if (!taken.has(view.shortcut)) {
-      taken.add(view.shortcut)
-      return view
-    }
-    console.warn(`View "${view.id}" can't use the "${view.shortcut}" shortcut; it's taken`)
-    return { ...view, shortcut: undefined }
-  })
-}
-
 export function viewShortcuts(views: readonly ViewDescriptor[]): ShortcutDef[] {
   return views.flatMap(({ id, name, shortcut }) =>
     shortcut

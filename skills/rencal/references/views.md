@@ -23,7 +23,7 @@ script = "dist/agenda-grid.js"
 css = "dist/agenda-grid.css"
 ```
 
-Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise. Add `shortcut = "<key>"`, one lowercase letter or digit, only when the user asks for a shortcut; one that a built-in view or command already uses is dropped.
+Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise.
 
 `package.json`:
 

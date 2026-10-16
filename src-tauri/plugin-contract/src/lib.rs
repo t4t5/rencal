@@ -93,10 +93,6 @@ pub struct ViewContribution {
     /// Styles the view needs, injected while the plugin is installed.
     #[serde(default)]
     pub css: Option<String>,
-    /// Single character that shows the view. Dropped if another view or
-    /// command already uses it.
-    #[serde(default)]
-    pub shortcut: Option<String>,
 }
 
 /// The hex sha256 in a GitHub release asset digest (`sha256:<hex>`). An asset
@@ -254,9 +250,6 @@ pub fn validate_manifest(
         validate_script_path(&view.script)?;
         if let Some(css) = &view.css {
             validate_css_path(css)?;
-        }
-        if let Some(shortcut) = &view.shortcut {
-            validate_view_shortcut(&view.id, shortcut)?;
         }
     }
 
@@ -416,20 +409,6 @@ fn validate_view_id(id: &str) -> Result<(), PluginError> {
     if !valid_slug(id) {
         return Err(PluginError::new(format!(
             "view contribution id {id:?} must use lowercase a-z, 0-9, and hyphens"
-        )));
-    }
-    Ok(())
-}
-
-fn validate_view_shortcut(id: &str, shortcut: &str) -> Result<(), PluginError> {
-    let mut chars = shortcut.chars();
-    let valid = matches!(
-        (chars.next(), chars.next()),
-        (Some(c), None) if c.is_ascii_lowercase() || c.is_ascii_digit()
-    );
-    if !valid {
-        return Err(PluginError::new(format!(
-            "view {id:?} shortcut {shortcut:?} must be one lowercase letter or digit"
         )));
     }
     Ok(())
@@ -816,7 +795,6 @@ id = "board"
 name = "Board"
 script = "dist/board.js"
 css = "dist/board.css"
-shortcut = "b"
 "#;
 
     fn view_error(from: &str, to: &str) -> String {
@@ -835,18 +813,12 @@ shortcut = "b"
                 name: "Board".into(),
                 script: "dist/board.js".into(),
                 css: Some("dist/board.css".into()),
-                shortcut: Some("b".into()),
             }]
         );
 
-        let minimal = VIEW.replacen("css = \"dist/board.css\"\n", "", 1).replacen(
-            "shortcut = \"b\"\n",
-            "",
-            1,
-        );
+        let minimal = VIEW.replacen("css = \"dist/board.css\"\n", "", 1);
         let manifest = validate_manifest(&provider_only(&minimal), None).unwrap();
         assert_eq!(manifest.contributes.views[0].css, None);
-        assert_eq!(manifest.contributes.views[0].shortcut, None);
     }
 
     #[test]
@@ -872,21 +844,6 @@ shortcut = "b"
                 "dist/board.css",
                 "/board.css",
                 "must be a relative .css path",
-            ),
-            (
-                "shortcut = \"b\"",
-                "shortcut = \"B\"",
-                "one lowercase letter or digit",
-            ),
-            (
-                "shortcut = \"b\"",
-                "shortcut = \"bb\"",
-                "one lowercase letter or digit",
-            ),
-            (
-                "shortcut = \"b\"",
-                "shortcut = \"\"",
-                "one lowercase letter or digit",
             ),
         ] {
             let error = view_error(from, to);

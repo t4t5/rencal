@@ -5,7 +5,6 @@ import { SHORTCUTS } from "@/lib/shortcuts"
 
 import {
   BUILTIN_VIEWS,
-  claimShortcuts,
   DEFAULT_VIEW_ID,
   resolveView,
   viewShortcuts,
@@ -50,17 +49,6 @@ describe("viewShortcuts", () => {
         bindings: [{ keys: "w", type: "char" }],
       },
     ])
-  })
-})
-
-describe("claimShortcuts", () => {
-  it("drops plugin shortcuts that are already bound", () => {
-    vi.spyOn(console, "warn").mockImplementation(() => {})
-    const plugins = [view("a.one/one", "w"), view("a.two/two", "t"), view("a.three/three", "x")]
-    const claimed = claimShortcuts([...plugins, view("a.four/four", "x")], [view("week", "w")])
-
-    // "w" is a built-in view's, "t" goes to today, and the second "x" lost to the first.
-    expect(claimed.map((v) => v.shortcut)).toEqual([undefined, undefined, "x", undefined])
   })
 })
 

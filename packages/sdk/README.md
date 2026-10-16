@@ -40,10 +40,9 @@ id = "upcoming"
 name = "Upcoming"
 script = "dist/upcoming.js"
 css = "dist/upcoming.css"
-shortcut = "u"
 ```
 
-`css` is optional; leave it out if the view has no styles. `shortcut` is an optional single letter or digit that opens the view. See [Create a plugin](https://rencal.org/docs/plugins/create/) for the rest of the manifest.
+`css` is optional; leave it out if the view has no styles. See [Create a plugin](https://rencal.org/docs/plugins/create/) for the rest of the manifest.
 
 ## Write the view
 

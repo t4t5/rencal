@@ -4,7 +4,7 @@ import { api, type ExternalView } from "@/lib/api"
 import { logger } from "@/lib/logger"
 
 import { pluginViewComponent } from "@/views/PluginView"
-import { BUILTIN_VIEWS, claimShortcuts, type ViewDescriptor } from "@/views/manifest"
+import { BUILTIN_VIEWS, type ViewDescriptor } from "@/views/manifest"
 
 const STYLE_ATTR = "data-plugin-view"
 
@@ -77,10 +77,9 @@ export function ViewRegistryProvider({
         id: view.id,
         name: view.name,
         component: cached.component,
-        shortcut: view.shortcut ?? undefined,
       }
     })
-    return [...BUILTIN_VIEWS, ...claimShortcuts(plugins, BUILTIN_VIEWS)]
+    return [...BUILTIN_VIEWS, ...plugins]
   }, [externalViews])
 
   return <ViewRegistryContext.Provider value={views}>{children}</ViewRegistryContext.Provider>

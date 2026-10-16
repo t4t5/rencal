@@ -526,7 +526,6 @@ pub struct ScannedView {
     /// `<package-id>/<view-id>`.
     pub id: String,
     pub name: String,
-    pub shortcut: Option<String>,
     pub script: String,
     pub css: Option<String>,
 }
@@ -652,7 +651,6 @@ fn scan_package(
         views.push(ScannedView {
             id: format!("{}/{}", manifest.id, view.id),
             name: view.name,
-            shortcut: view.shortcut,
             script: read(&view.script)?,
             css: view.css.as_deref().map(read).transpose()?,
         });
