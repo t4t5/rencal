@@ -20,6 +20,7 @@ it("creates an event through the public resource client", async () => {
       start: { kind: "date", date: "2026-09-18" },
       end: { kind: "date", date: "2026-09-19" },
       status: "confirmed",
+      availability: "busy",
       recurrence: null,
       master_recurrence: null,
       reminders: [],

@@ -1,7 +1,15 @@
 import type { Temporal } from "@js-temporal/polyfill"
 
-import { type CalendarEvent as AppEvent, eventKey } from "@/lib/cal-events"
+import type { Calendar } from "@/lib/api"
+import {
+  type CalendarEvent as AppEvent,
+  type EventAvailability,
+  type EventStatus,
+  eventKey,
+  type ResponseStatus,
+} from "@/lib/cal-events"
 import { epochDay, type EventTime, plainDateFromEpochDay } from "@/lib/event-time"
+import { getUserResponseStatus } from "@/lib/event-utils"
 
 // The event shape plugins see. A curated subset of the app's event, so RPC and
 // event-time refactors don't break plugins. Add fields deliberately.
@@ -20,6 +28,11 @@ export interface CalendarEvent {
   /** First and last day the event occupies in the viewer's zone, inclusive. */
   readonly firstDay: Temporal.PlainDate
   readonly lastDay: Temporal.PlainDate
+  readonly status: EventStatus
+  /** `"free"` for events that don't block time (TRANSP:TRANSPARENT). */
+  readonly availability: EventAvailability
+  /** The user's response when they're an attendee, otherwise null. */
+  readonly rsvp: ResponseStatus | null
 }
 
 // Cached both ways so a plugin event keeps its identity across renders and the
@@ -27,9 +40,11 @@ export interface CalendarEvent {
 const pluginEvents = new WeakMap<AppEvent, CalendarEvent>()
 const appEvents = new WeakMap<CalendarEvent, AppEvent>()
 
-function toPluginEvent(event: AppEvent): CalendarEvent {
+function toPluginEvent(event: AppEvent, calendars: Calendar[]): CalendarEvent {
+  const rsvp = getUserResponseStatus(event, calendars)
   let pluginEvent = pluginEvents.get(event)
-  if (!pluginEvent) {
+  // The RSVP depends on the calendar's email too, so rebuild when that changes it.
+  if (!pluginEvent || pluginEvent.rsvp !== rsvp) {
     const { firstDay, lastDay } = event.dateInfo
     pluginEvent = {
       key: eventKey(event),
@@ -42,6 +57,9 @@ function toPluginEvent(event: AppEvent): CalendarEvent {
       end: event.end,
       firstDay: plainDateFromEpochDay(firstDay),
       lastDay: plainDateFromEpochDay(Math.max(firstDay, lastDay)),
+      status: event.status,
+      availability: event.availability,
+      rsvp,
     }
     pluginEvents.set(event, pluginEvent)
     appEvents.set(pluginEvent, event)
@@ -50,8 +68,13 @@ function toPluginEvent(event: AppEvent): CalendarEvent {
 }
 
 // Plugin events in start order.
-export function toPluginEvents(events: readonly AppEvent[]): CalendarEvent[] {
-  return [...events].sort((a, b) => a.dateInfo.startMs - b.dateInfo.startMs).map(toPluginEvent)
+export function toPluginEvents(
+  events: readonly AppEvent[],
+  calendars: Calendar[],
+): CalendarEvent[] {
+  return [...events]
+    .sort((a, b) => a.dateInfo.startMs - b.dateInfo.startMs)
+    .map((event) => toPluginEvent(event, calendars))
 }
 
 export function toAppEvent(event: CalendarEvent): AppEvent {

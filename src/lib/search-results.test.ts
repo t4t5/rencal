@@ -22,6 +22,7 @@ function event(id: string, startDate: string, recurrence: Recurrence | null = nu
     start,
     end,
     status: "confirmed",
+    availability: "busy",
     recurrence,
     master_recurrence: null,
     reminders: [],

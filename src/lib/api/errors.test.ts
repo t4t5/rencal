@@ -64,6 +64,7 @@ describe("renCal errors", () => {
       start: { kind: "date", date: "2026-09-18" },
       end: { kind: "date", date: "2026-09-19" },
       status: "confirmed",
+      availability: "busy",
       recurring_event_id: null,
       description: null,
       location: null,

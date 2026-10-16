@@ -41,6 +41,7 @@ function event(overrides: Partial<CalendarEvent>): CalendarEvent {
     location: null,
     url: null,
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

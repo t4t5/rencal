@@ -1,11 +1,22 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
-import { rpcToCalendarEvent } from "@/lib/cal-events"
+import type { Calendar } from "@/lib/api"
+import { type EventAttendee, rpcToCalendarEvent } from "@/lib/cal-events"
 
 import { eventsByDay, toAppEvent, toPluginEvents } from "./events"
 
-function event(id: string, start: string, end: string) {
+const work: Calendar = {
+  slug: "work",
+  name: null,
+  color: null,
+  provider: null,
+  account: null,
+  email: "me@example.com",
+  read_only: false,
+}
+
+function event(id: string, start: string, end: string, attendees: EventAttendee[] = []) {
   return rpcToCalendarEvent({
     id,
     recurring_event_id: null,
@@ -16,11 +27,12 @@ function event(id: string, start: string, end: string) {
     start: { kind: "date", date: start },
     end: { kind: "date", date: end },
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],
     organizer: null,
-    attendees: [],
+    attendees,
     conference: null,
     calendar_slug: "work",
     color: "#ff0000",
@@ -33,7 +45,7 @@ describe("toPluginEvents", () => {
   const trip = event("trip", "2026-09-15", "2026-09-18")
 
   it("returns curated events in start order", () => {
-    const [first, second] = toPluginEvents([later, trip])
+    const [first, second] = toPluginEvents([later, trip], [work])
 
     expect(first).toEqual({
       key: "work::trip",
@@ -46,19 +58,31 @@ describe("toPluginEvents", () => {
       end: trip.end,
       firstDay: expect.objectContaining({ year: 2026, month: 9, day: 15 }),
       lastDay: expect.objectContaining({ year: 2026, month: 9, day: 17 }),
+      status: "confirmed",
+      availability: "busy",
+      rsvp: null,
     })
     expect(second.key).toBe("work::later")
   })
 
   it("keeps each event's identity and maps it back to the app event", () => {
-    const [pluginEvent] = toPluginEvents([trip])
+    const [pluginEvent] = toPluginEvents([trip], [work])
 
-    expect(toPluginEvents([trip])[0]).toBe(pluginEvent)
+    expect(toPluginEvents([trip], [work])[0]).toBe(pluginEvent)
     expect(toAppEvent(pluginEvent)).toBe(trip)
   })
 
+  it("reads the user's RSVP from the attendee matching the calendar's email", () => {
+    const invite = event("invite", "2026-09-15", "2026-09-16", [
+      { name: null, email: "Me@Example.com", response_status: "declined" },
+    ])
+
+    expect(toPluginEvents([invite], [work])[0].rsvp).toBe("declined")
+    expect(toPluginEvents([invite], [{ ...work, email: null }])[0].rsvp).toBeNull()
+  })
+
   it("rejects events the host didn't hand out", () => {
-    const [pluginEvent] = toPluginEvents([trip])
+    const [pluginEvent] = toPluginEvents([trip], [work])
 
     expect(() => toAppEvent({ ...pluginEvent })).toThrow()
   })
@@ -66,10 +90,10 @@ describe("toPluginEvents", () => {
 
 describe("eventsByDay", () => {
   const date = (value: string) => Temporal.PlainDate.from(value)
-  const [trip, later] = toPluginEvents([
-    event("trip", "2026-09-15", "2026-09-18"),
-    event("later", "2026-09-20", "2026-09-21"),
-  ])
+  const [trip, later] = toPluginEvents(
+    [event("trip", "2026-09-15", "2026-09-18"), event("later", "2026-09-20", "2026-09-21")],
+    [work],
+  )
 
   it("lists every day in the range with the events covering it", () => {
     const days = eventsByDay([trip, later], date("2026-09-16"), date("2026-09-21"))

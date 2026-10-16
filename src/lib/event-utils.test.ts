@@ -34,6 +34,7 @@ function invite(): CalendarEvent {
     start,
     end,
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

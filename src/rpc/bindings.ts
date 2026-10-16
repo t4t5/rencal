@@ -18,7 +18,7 @@ export type Calendar = { slug: string; name: string | null; color: string | null
  */
 email: string | null; read_only: boolean | null }
 
-export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: EventStatus; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
+export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: EventStatus; availability: EventAvailability; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**
  * RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
  * Used by the frontend to cheaply detect content changes for reload dedup.
@@ -57,6 +57,11 @@ export type CredentialFieldInput = { id: string; value: string }
 export type CredentialsConnectResult = { status: "done"; calendars: Calendar[] } | { status: "needs_credentials"; fields: ProviderField[] }
 
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
+
+/**
+ * Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
+ */
+export type EventAvailability = "busy" | "free"
 
 export type EventConference = { status: "requested"; provider: ConferenceProvider } | { status: "live"; provider: ConferenceProvider; url: string }
 

@@ -3,6 +3,11 @@ import { Temporal } from '@js-temporal/polyfill';
 import * as React$1 from 'react';
 import { MouseEvent as MouseEvent$1 } from 'react';
 
+/**
+ * Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
+ */
+export type EventAvailability = "busy" | "free";
+export type EventStatus = "confirmed" | "tentative" | "cancelled";
 export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
 export type EventTime = {
 	kind: "date";
@@ -72,6 +77,11 @@ export interface CalendarEvent {
 	/** First and last day the event occupies in the viewer's zone, inclusive. */
 	readonly firstDay: Temporal.PlainDate;
 	readonly lastDay: Temporal.PlainDate;
+	readonly status: EventStatus;
+	/** `"free"` for events that don't block time (TRANSP:TRANSPARENT). */
+	readonly availability: EventAvailability;
+	/** The user's response when they're an attendee, otherwise null. */
+	readonly rsvp: ResponseStatus | null;
 }
 export interface EventDay {
 	readonly date: Temporal.PlainDate;

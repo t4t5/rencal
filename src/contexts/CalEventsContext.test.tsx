@@ -43,6 +43,7 @@ function event(id: string, calendarSlug: string, date = "2026-09-18"): CalendarE
     start: { kind: "date", date },
     end: { kind: "date", date: Temporal.PlainDate.from(date).add({ days: 1 }).toString() },
     status: "confirmed",
+    availability: "busy",
     recurring_event_id: null,
     description: null,
     location: null,

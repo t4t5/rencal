@@ -195,6 +195,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       end: draftEvent.end,
       dateInfo: computeEventDateInfo(draftEvent.start, draftEvent.end),
       status: "confirmed",
+      availability: "busy",
       recurrence: draftEvent.recurrence,
       master_recurrence: null,
       reminders: draftReminders,

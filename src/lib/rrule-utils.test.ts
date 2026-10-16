@@ -37,6 +37,7 @@ function recurringEvent({
     start,
     end,
     status: "confirmed",
+    availability: "busy",
     recurrence: { rrule, exdates, rdates },
     master_recurrence: null,
     reminders: [],

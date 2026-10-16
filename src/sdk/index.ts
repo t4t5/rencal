@@ -16,7 +16,6 @@ import { getCalendarColor } from "@/lib/calendar-styles"
 import { setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
 import { epochDay, isAllDay } from "@/lib/event-time"
-import { getUserResponseStatus } from "@/lib/event-utils"
 
 import { useViewHost } from "@/views/ViewHostContext"
 
@@ -24,7 +23,7 @@ import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
 export { Temporal } from "@js-temporal/polyfill"
 export { type CalendarEvent, type EventDay, eventsByDay } from "./events"
-export type { ResponseStatus } from "@/lib/cal-events"
+export type { EventAvailability, EventStatus, ResponseStatus } from "@/lib/cal-events"
 export type { EventTime, FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
 export {
   dateInViewerZone,
@@ -58,6 +57,7 @@ export function useEventsInRange(
   end: Temporal.PlainDate,
 ): readonly CalendarEvent[] {
   const { calendarEvents } = useCalEvents()
+  const { calendars } = useAppCalendars()
   useHoldRange(start, end)
   const first = epochDay(start)
   const last = epochDay(end)
@@ -66,8 +66,9 @@ export function useEventsInRange(
     () =>
       toPluginEvents(
         calendarEvents.filter((e) => e.dateInfo.lastDay >= first && e.dateInfo.firstDay < last),
+        calendars,
       ),
-    [calendarEvents, first, last],
+    [calendarEvents, calendars, first, last],
   )
 }
 
@@ -162,7 +163,7 @@ export function useEventAppearance(event: CalendarEvent) {
         calendarColor: getCalendarColor(calendar),
         eventColor: appEvent.color,
       }),
-      rsvp: getUserResponseStatus(appEvent, calendars),
+      rsvp: event.rsvp,
     }
   }, [calendars, event])
 }

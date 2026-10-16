@@ -71,6 +71,7 @@ describe("mergeEvents", () => {
       start: { kind: "date", date },
       end: { kind: "date", date: Temporal.PlainDate.from(date).add({ days: 1 }).toString() },
       status: "confirmed",
+      availability: "busy",
       recurring_event_id: null,
       description: null,
       location: null,

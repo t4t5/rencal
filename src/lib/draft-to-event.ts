@@ -16,6 +16,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     end: draft.end,
     dateInfo: computeEventDateInfo(draft.start, draft.end),
     status: "confirmed",
+    availability: "busy",
     recurrence: draft.recurrence,
     master_recurrence: null,
     reminders: [],

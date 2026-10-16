@@ -25,6 +25,7 @@ function makeEvent(start: EventTime, end: EventTime): CalendarEvent {
     start,
     end,
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

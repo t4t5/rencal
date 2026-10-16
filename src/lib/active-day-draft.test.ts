@@ -26,6 +26,7 @@ function eventBetween(startDate: Date, endDate: Date): CalendarEvent {
     start,
     end,
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

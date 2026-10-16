@@ -21,6 +21,7 @@ function event(id: string, summary: string, calendarSlug = "calendar") {
     start: { kind: "date", date: "2026-09-15" },
     end: { kind: "date", date: "2026-09-16" },
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

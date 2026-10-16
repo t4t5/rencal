@@ -24,6 +24,7 @@ function rpcEvent(overrides: Partial<RpcCalendarEvent> = {}): RpcCalendarEvent {
     start: { kind: "datetime_zoned", wallclock: "2026-09-18T09:00:00", tzid: "Europe/Berlin" },
     end: { kind: "datetime_zoned", wallclock: "2026-09-18T09:30:00", tzid: "Europe/Berlin" },
     status: "confirmed",
+    availability: "busy",
     recurrence: null,
     master_recurrence: null,
     reminders: [],

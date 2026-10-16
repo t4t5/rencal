@@ -11,6 +11,8 @@
  */
 import type {
   EventAttendee,
+  EventAvailability,
+  EventStatus,
   CalendarEvent as RpcCalendarEvent,
   ResponseStatus,
   RpcRecurrence,
@@ -21,7 +23,7 @@ import { computeEventDateInfo, type EventDateInfo, type EventTime } from "./even
 import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
 
 // Identical on the wire and in the app; re-exported so UI code never reads bindings.
-export type { EventAttendee, ResponseStatus }
+export type { EventAttendee, EventAvailability, EventStatus, ResponseStatus }
 
 export interface Recurrence {
   rrule: string

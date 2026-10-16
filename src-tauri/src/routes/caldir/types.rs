@@ -3,7 +3,7 @@ use crate::routes::{
     error::{RpcError, RpcErrorKind},
 };
 use caldir_core::{
-    Attendee, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
+    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
     TimeFormat as CoreTimeFormat,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
@@ -147,6 +147,23 @@ impl From<Status> for EventStatus {
     }
 }
 
+/// Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum EventAvailability {
+    Busy,
+    Free,
+}
+
+impl From<Availability> for EventAvailability {
+    fn from(availability: Availability) -> Self {
+        match availability {
+            Availability::Busy => Self::Busy,
+            Availability::Free => Self::Free,
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct EventAttendee {
     pub name: Option<String>,
@@ -185,6 +202,7 @@ pub struct CalendarEvent {
     pub start: RpcEventTime,
     pub end: RpcEventTime,
     pub status: EventStatus,
+    pub availability: EventAvailability,
     pub recurrence: Option<RpcRecurrence>,
     pub master_recurrence: Option<RpcRecurrence>,
     pub reminders: Vec<i32>,
@@ -498,6 +516,7 @@ impl CalendarEvent {
             start: core_time_to_rpc(&e.start),
             end: end_rpc,
             status: e.status.into(),
+            availability: e.availability.into(),
             recurrence: e.recurrence.as_ref().map(core_recurrence_to_rpc),
             master_recurrence,
             reminders: e
@@ -586,6 +605,21 @@ mod tests {
             );
         }
         assert!(serde_json::from_value::<EventStatus>(serde_json::json!("unknown")).is_err());
+    }
+
+    #[test]
+    fn all_availability_values_preserve_the_wire_representation() {
+        for (core, availability, wire) in [
+            (Availability::Busy, EventAvailability::Busy, "busy"),
+            (Availability::Free, EventAvailability::Free, "free"),
+        ] {
+            assert_eq!(EventAvailability::from(core), availability);
+            assert_eq!(serde_json::to_value(availability).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<EventAvailability>(serde_json::json!(wire)).unwrap(),
+                availability
+            );
+        }
     }
 
     #[test]
