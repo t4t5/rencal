@@ -45,3 +45,8 @@ result
 
 # just readme-preview output
 .readme-preview.html
+
+# just sdk output (index.d.ts stays tracked so plugin API changes show in review)
+packages/sdk/theme.css
+packages/sdk/shared-modules.js
+packages/sdk/shared-modules.d.ts
