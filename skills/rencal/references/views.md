@@ -1,6 +1,6 @@
 # View plugins
 
-A view is a React component that renCal shows in the main area, alongside its month and week views. It lives in a plugin checkout with a `rencal-plugin.toml`, is built with [`@rencomputer/rencal-sdk`](https://www.npmjs.com/package/@rencomputer/rencal-sdk), and loads straight from the checkout.
+A view is a React component that renCal shows in the main area, alongside its built-in views. It lives in a plugin checkout with a `rencal-plugin.toml`, is built with [`@rencomputer/rencal-sdk`](https://www.npmjs.com/package/@rencomputer/rencal-sdk), and loads straight from the checkout.
 
 ## Location
 
@@ -32,8 +32,7 @@ Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID
   "name": "rencal-view-agenda-grid",
   "private": true,
   "type": "module",
-  "scripts": { "build": "rencal-sdk build", "dev": "rencal-sdk dev" },
-  "devDependencies": { "@rencomputer/rencal-sdk": "^0.1.0", "@types/react": "^19.2.0" }
+  "scripts": { "build": "rencal-sdk build", "dev": "rencal-sdk dev" }
 }
 ```
 
@@ -49,10 +48,10 @@ Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID
 
 ## Writing the view
 
-The SDK's types are its documentation. After installing, read `node_modules/@rencomputer/rencal-sdk/index.d.ts` before writing the component, and `theme.css` in the same package for the design tokens.
+The SDK documents itself. After installing, read `README.md` and `index.d.ts` in `node_modules/@rencomputer/rencal-sdk/` before writing the component, and `theme.css` there for the design tokens.
 
-- Fetch events with `useEventsInRange(start, end)`. It returns events overlapping `[start, end)`, sorted by start. Ask only for the dates the view shows.
-- Use the SDK's `Temporal` for dates, `useToday()` for today, and `useDisplaySettings()` for the user's time format and week start. An event's `firstDay` and `lastDay` are the days it covers in the user's time zone; prefer them, and `eventsByDay` for grouping, over computing day boundaries from `start` and `end`. Format dates and times with the SDK's `format*` helpers so they follow the user's settings.
+- Ask `useEventsInRange` only for the dates the view shows.
+- Prefer the SDK's date, grouping and formatting helpers over your own date arithmetic, so the view follows the user's time zone and settings.
 - A view tied to a date, rather than to today, shows `activeDate` from `useNavigation()`, which follows renCal's Today button and other navigation. Paging controls inside the view call `goToDate`.
 - Render each event in its own component and call the `useEventProps(event)` hook there, spreading its result on the event's element. That makes clicks open renCal's event popover, marks the selected event with `data-selected`, and sets theme colours as CSS variables without painting anything: use `bg-(--calendar-event-fill) text-(--calendar-event-foreground) data-selected:bg-(--calendar-event-selected-fill)` for a filled event, or give a child `data-slot="calendar-event-color-marker"` for a bar or dot in the calendar colour.
 - Fill the main area: give the root element `h-full` and let it scroll with `overflow-auto` where content can overflow. Sticky elements need a background such as `bg-background`.
@@ -63,7 +62,7 @@ Views can read events and calendars, but cannot create or edit events, make netw
 
 ## Building and loading
 
-1. Run `npm install`, or the user's package manager. If it finds no versions of `@rencomputer/rencal-sdk`, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release; tell the user rather than changing their configuration.
+1. Install the SDK and React types as dev dependencies with the user's package manager, e.g. `npm install -D @rencomputer/rencal-sdk @types/react @types/react-dom`. If it finds no versions of `@rencomputer/rencal-sdk`, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release; tell the user rather than changing their configuration.
 2. Run `npm run build`. It type-checks the view and writes the files the manifest names. Fix every error it reports.
 3. Add the checkout's path to the `plugins` array in `~/.config/rencal/plugins.toml`, e.g. `"~/.config/rencal/views/agenda-grid"`, keeping existing entries. Create the file with only that array if it does not exist. A running renCal loads the view immediately.
 

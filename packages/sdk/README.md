@@ -5,7 +5,7 @@ Build view plugins for [renCal](https://rencal.org). A view is a React component
 ## Setup
 
 ```sh
-pnpm add -D @rencomputer/rencal-sdk @types/react
+pnpm add -D @rencomputer/rencal-sdk @types/react @types/react-dom
 ```
 
 Add the scripts to `package.json`:

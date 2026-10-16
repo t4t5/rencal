@@ -43,6 +43,7 @@
     "vite": "^7.2.2"
   },
   "peerDependencies": {
-    "@types/react": "^19.2.0"
+    "@types/react": "^19.2.0",
+    "@types/react-dom": "^19.2.0"
   }
 }
