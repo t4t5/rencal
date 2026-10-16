@@ -82,19 +82,21 @@ Tailwind classes work out of the box and use renCal's theme, so views match what
 
 ## API
 
-| Export                                                                                          |                                                                                                                |
-| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `useEventsInRange(start, end)`                                                                  | Events in visible calendars from `start` up to, not including, `end`                                           |
-| `useEventProps(event)`                                                                          | Props that make an element behave like a renCal event: calendar color, selection, RSVP state and click to open |
-| `useToday()`                                                                                    | Today's date, kept current across midnight and timezone changes                                                |
-| `useNavigation()`                                                                               | The active date, and a function to go to another date                                                          |
-| `useCalendars()`                                                                                | The user's calendars                                                                                           |
-| `useDisplaySettings()`                                                                          | The user's time format and first day of the week                                                               |
-| `useEventSelection()`, `useEventAppearance(event)`                                              | The parts of `useEventProps` on their own                                                                      |
-| `Temporal`                                                                                      | The Temporal API renCal uses for dates and times                                                               |
-| `dateInViewerZone`, `toViewerZonedDateTime`, `isAllDay`, `isSameDay`, `startOfWeek`, `epochDay` | Date helpers                                                                                                   |
-| `formatTime`, `formatShortDate`, `formatMonth`                                                  | Formatting that follows renCal's                                                                               |
-| `Button`, `cn`, `ChevronLeftIcon`, `ChevronRightIcon`, `UntitledEventText`                      | Components and utilities from renCal's UI                                                                      |
+| Export                                                                                                                          |                                                                                                                |
+| ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `useEventsInRange(start, end)`                                                                                                  | Events in visible calendars from `start` up to, not including, `end`                                           |
+| `useEventProps(event)`                                                                                                          | Props that make an element behave like a renCal event: calendar color, selection, RSVP state and click to open |
+| `useToday()`                                                                                                                    | Today's date, kept current across midnight and timezone changes                                                |
+| `useViewerTzid()`                                                                                                               | The user's timezone, kept current when it changes                                                              |
+| `useNavigation()`                                                                                                               | The active date, and a function to go to another date                                                          |
+| `useCalendars()`                                                                                                                | The user's calendars                                                                                           |
+| `useDisplaySettings()`                                                                                                          | The user's time format and first day of the week                                                               |
+| `useEventSelection()`, `useEventAppearance(event)`                                                                              | The parts of `useEventProps` on their own                                                                      |
+| `Temporal`                                                                                                                      | The Temporal API renCal uses for dates and times                                                               |
+| `eventsByDay(events, start, end)`                                                                                               | Events grouped into one entry per day from `start` up to, not including, `end`, empty days included            |
+| `dateInViewerZone`, `toViewerZonedDateTime`, `isAllDay`, `isSameDay`, `startOfWeek`, `epochDay`                                 | Date helpers                                                                                                   |
+| `formatTime`, `formatWallclockTime`, `formatShortDate`, `formatLongDate`, `formatWeekday`, `formatMonth`, `getRelativeDayLabel` | Formatting that follows renCal's                                                                               |
+| `Button`, `cn`, `ChevronLeftIcon`, `ChevronRightIcon`, `UntitledEventText`                                                      | Components and utilities from renCal's UI                                                                      |
 
 React, Temporal and this package are provided by renCal at runtime. Other dependencies are bundled into the view.
 
