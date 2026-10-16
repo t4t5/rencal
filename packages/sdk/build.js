@@ -20,8 +20,11 @@ const tailwindCss = fileURLToPath(new URL("./tailwind.css", import.meta.url))
  */
 export async function buildViews(root, { watch = false } = {}) {
   const views = await readViews(root)
+  // Tailwind watches the files it scans, built views included, so each
+  // rebuild would otherwise trigger the next.
+  const outputs = views.map((view) => join(root, dirname(view.script), "**"))
   for (const view of views) {
-    await build(viewConfig(root, view, views.length === 1, watch))
+    await build(viewConfig(root, view, views.length === 1, watch ? { exclude: outputs } : null))
   }
 }
 
@@ -58,7 +61,6 @@ function viewConfig(root, view, only, watch) {
   return {
     root,
     plugins: [tailwindcss(), viewStyles(view, entry)],
-    esbuild: { jsx: "automatic" },
     // Library builds leave this in bundled dependencies, and the webview has no `process`.
     define: { "process.env.NODE_ENV": JSON.stringify("production") },
     build: {
@@ -74,13 +76,13 @@ function viewConfig(root, view, only, watch) {
         fileName: () => basename(view.script),
         cssFileName: view.css ? basename(view.css, ".css") : undefined,
       },
-      rollupOptions: {
+      rolldownOptions: {
         // renCal provides these at runtime; everything else is bundled in.
         external: [...sharedModules],
         // renCal loads one file per view, so code-split chunks would fail to load.
-        output: { inlineDynamicImports: true },
+        output: { codeSplitting: false },
       },
-      watch: watch ? {} : null,
+      watch,
     },
   }
 }

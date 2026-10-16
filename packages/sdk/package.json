@@ -36,11 +36,11 @@
   },
   "dependencies": {
     "@js-temporal/polyfill": "^0.5.1",
-    "@tailwindcss/vite": "^4.1.17",
+    "@tailwindcss/vite": "^4.3.3",
     "smol-toml": "^1.4.2",
     "tailwindcss": "^4.1.17",
     "typescript": "~5.8.3",
-    "vite": "^7.2.2"
+    "vite": "^8.3.4"
   },
   "peerDependencies": {
     "@types/react": "^19.2.0",
