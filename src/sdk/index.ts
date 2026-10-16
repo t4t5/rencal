@@ -127,7 +127,7 @@ export function useEventSelection() {
   return useMemo(
     () => ({
       isSelected: (event: CalendarEvent) => event.key === activeKey,
-      toggle: (event: CalendarEvent, anchor: HTMLElement) => {
+      toggle: (event: CalendarEvent, anchor: Element) => {
         setEventAnchor(anchor)
         toggleActiveEventKey(event.key)
       },
@@ -172,7 +172,7 @@ export function useEventProps(event: CalendarEvent) {
     // Open popovers let clicks on these through instead of dismissing and swallowing them.
     "data-event-clickable": true,
     style,
-    onClick: (e: MouseEvent<HTMLElement>) => {
+    onClick: (e: MouseEvent<Element>) => {
       e.stopPropagation()
       toggle(event, e.currentTarget)
     },

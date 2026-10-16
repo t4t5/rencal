@@ -169,7 +169,7 @@ export declare function useDisplaySettings(): {
 /** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
 export declare function useEventSelection(): {
 	isSelected: (event: CalendarEvent) => boolean;
-	toggle: (event: CalendarEvent, anchor: HTMLElement) => void;
+	toggle: (event: CalendarEvent, anchor: Element) => void;
 };
 /**
  * Inline style (the source colour themes paint from) and the user's RSVP. Event
@@ -194,7 +194,7 @@ export declare function useEventProps(event: CalendarEvent): {
 	readonly style: import("react").CSSProperties & {
 		"--calendar-event-color": string;
 	};
-	readonly onClick: (e: React$1.MouseEvent<HTMLElement>) => void;
+	readonly onClick: (e: React$1.MouseEvent<Element>) => void;
 };
 
 export {
