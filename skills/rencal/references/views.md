@@ -42,7 +42,7 @@ Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID
 { "extends": "@rencomputer/rencal-sdk/tsconfig.json" }
 ```
 
-`.gitignore` holds `node_modules`. Keep `dist/` out of it: renCal loads the built files, and a published view ships them in the repository.
+`.gitignore` holds `node_modules` and `dist`. renCal loads the built files straight from a local checkout, and a published view ships them as release assets.
 
 `src/index.tsx` default-exports the view component, which takes no props. A plugin with several views uses `src/<view-id>.tsx` for each.
 
@@ -74,4 +74,4 @@ The view appears in the view menu and the command palette under its `name`. Mani
 
 ## Publishing
 
-Only when the user wants to share the view: move it to a GitHub repository, change the ID's owner to the repository owner, commit `dist/`, and add the `rencal-plugin` topic. A view plugin installs from the default branch without a release.
+Only when the user wants to share the view: move it to a GitHub repository, change the ID's owner to the repository owner, and add the `rencal-plugin` topic. renCal installs a view from the latest stable release, downloading each `script` and `css` file from the release asset with the same file name, so view files need distinct file names. Add the release workflow from the **Publish** section of the SDK's `README.md` as `.github/workflows/release.yml`, adapting its install and build commands to the user's package manager. Pushing a `v*` tag then creates a draft release with `dist/*` attached, which the user publishes on GitHub. The tag is the version renCal shows.

@@ -91,6 +91,9 @@ pub struct PluginLockEntry {
     /// Provider binaries installed from `tag`'s release assets.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub providers: Vec<LockedProviderAsset>,
+    /// View files installed from `tag`'s release assets instead of `commit`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub views: Vec<LockedViewAsset>,
 }
 
 impl PluginLockEntry {
@@ -107,6 +110,26 @@ pub struct LockedProviderAsset {
     pub target: String,
     pub asset: String,
     pub sha256: String,
+}
+
+/// Pins a view's `script` or `css` file to the release asset of the same name.
+#[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
+pub struct LockedViewAsset {
+    /// The manifest path the asset is installed at.
+    pub file: String,
+    pub sha256: String,
+}
+
+impl LockedViewAsset {
+    /// The release asset's name: the file name without its directories.
+    pub fn asset(&self) -> &str {
+        view_asset_name(&self.file)
+    }
+}
+
+/// The release asset a view file is published as.
+pub fn view_asset_name(file: &str) -> &str {
+    file.rsplit('/').next().unwrap_or(file)
 }
 
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
@@ -342,6 +365,22 @@ fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {
                 )));
             }
         }
+        if !entry.views.is_empty() && entry.tag.is_none() {
+            return Err(PluginError::new(format!(
+                "plugin {:?} locks view files without a release tag",
+                entry.id
+            )));
+        }
+        let mut view_files = HashSet::new();
+        for view in &entry.views {
+            validate_locked_view(view)?;
+            if !view_files.insert(view.file.as_str()) {
+                return Err(PluginError::new(format!(
+                    "duplicate locked view file {:?}",
+                    view.file
+                )));
+            }
+        }
         if !ids.insert(entry.id.to_ascii_lowercase()) {
             return Err(PluginError::new(format!(
                 "duplicate locked plugin id {:?}",
@@ -396,6 +435,26 @@ fn validate_locked_provider(provider: &LockedProviderAsset) -> Result<(), Plugin
         return Err(PluginError::new(format!(
             "locked provider digest {:?} must be a lowercase sha256",
             provider.sha256
+        )));
+    }
+    Ok(())
+}
+
+fn validate_locked_view(view: &LockedViewAsset) -> Result<(), PluginError> {
+    let relative = view
+        .file
+        .split('/')
+        .all(|part| !part.is_empty() && part != "." && part != ".." && !part.contains('\\'));
+    if !relative || !(view.file.ends_with(".js") || view.file.ends_with(".css")) {
+        return Err(PluginError::new(format!(
+            "locked view file {:?} must be a relative .js or .css path",
+            view.file
+        )));
+    }
+    if !is_sha256_hex(&view.sha256) {
+        return Err(PluginError::new(format!(
+            "locked view digest {:?} must be a lowercase sha256",
+            view.sha256
         )));
     }
     Ok(())
@@ -960,6 +1019,10 @@ machine = 'laptop' # Future top-level metadata
                     asset: "caldir-provider-tuta-x86_64-unknown-linux-gnu.tar.gz".into(),
                     sha256: "a".repeat(64),
                 }],
+                views: vec![LockedViewAsset {
+                    file: "dist/board.js".into(),
+                    sha256: "b".repeat(64),
+                }],
             }],
             local: vec![LocalLockEntry {
                 id: "alice.dusk".into(),
@@ -976,12 +1039,20 @@ machine = 'laptop' # Future top-level metadata
         duplicate.local.push(expected.local[0].clone());
         assert!(save_plugin_lock_file(&path, &duplicate).is_err());
 
-        let invalid_providers: [fn(&mut PluginLockEntry); 5] = [
+        let invalid_providers: [fn(&mut PluginLockEntry); 10] = [
             |entry| entry.tag = None,
             |entry| entry.providers[0].sha256 = "A".repeat(64),
             |entry| entry.providers[0].asset = "../caldir-provider-tuta.tar.gz".into(),
             |entry| entry.providers[0].target = "x86_64/../linux".into(),
             |entry| entry.providers.push(entry.providers[0].clone()),
+            |entry| {
+                entry.tag = None;
+                entry.providers.clear();
+            },
+            |entry| entry.views[0].sha256 = "B".repeat(64),
+            |entry| entry.views[0].file = "dist/../board.js".into(),
+            |entry| entry.views[0].file = "dist/board.png".into(),
+            |entry| entry.views.push(entry.views[0].clone()),
         ];
         for invalidate in invalid_providers {
             let mut invalid = expected.clone();

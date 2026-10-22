@@ -96,7 +96,13 @@ css = "dist/board.css"
 - `css` is optional and is injected while the plugin is installed. renCal only generates Tailwind utilities for its own source, so a view compiles its own against renCal's design tokens.
 - The view's id is `<plugin-id>/<view-id>`, which is what the view dropdown, the command palette and the stored active view use.
 
-The script and CSS are committed to the repository like theme CSS, so a view plugin installs from the default branch without a release. Scripts may be up to 2 MiB.
+The script and CSS are build output, so they stay out of git and ship as assets of a stable GitHub release, as Obsidian plugins do. renCal matches each `script` and `css` path to the release asset with the same file name (`dist/board.js` to `board.js`), verifies it against GitHub's `sha256` digest and records the digest in `plugins.lock`, so a restore installs the same bytes or fails. Two view files with the same file name cannot both come from a release. A file the release does not attach comes from the release commit, and a plugin without a release installs from the default branch, so committing the built files still works. Scripts may be up to 2 MiB.
+
+A local checkout loads its built files from disk, so a personal view needs no repository or release.
+
+#### Releasing views
+
+[rencal-view-board's release workflow](https://github.com/t4t5/rencal-view-board/blob/main/.github/workflows/release.yml) shows the setup: pushing a `v*` tag builds the plugin, attests the build's provenance and creates a draft release with `dist/*` attached. Publishing the draft ships the update; renCal ignores drafts.
 
 ### Building views
 

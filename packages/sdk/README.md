@@ -110,7 +110,51 @@ To try the plugin, add its directory to `~/.config/rencal/plugins.toml`. renCal 
 plugins = ["~/dev/rencal-upcoming"]
 ```
 
-renCal installs plugins straight from their GitHub repository, so commit the built files along with the source. See [Publish a plugin](https://rencal.org/docs/plugins/publish/) to list it in the plugin directory.
+A local plugin needs nothing else. Keep `dist/` out of git: it is build output.
+
+## Publish
+
+renCal installs a view plugin from its latest GitHub release, downloading each `script` and `css` file from the release asset with the same file name. Add a workflow that builds the plugin and attaches `dist/*` to a release whenever you push a version tag, as `.github/workflows/release.yml`:
+
+```yaml
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Build
+        run: |
+          npm ci
+          npm run build
+
+      - name: Attest build provenance
+        uses: actions/attest@v4
+        with:
+          subject-path: dist/*
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" --draft --title "$GITHUB_REF_NAME" --generate-notes dist/*
+```
+
+Then push a tag such as `v0.1.0`, check the draft release on GitHub and publish it. The tag is the version renCal shows. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a plugin set up with pnpm, and [Publish a plugin](https://rencal.org/docs/plugins/publish/) to list yours in the plugin directory.
 
 ## Source
 
