@@ -148,13 +148,13 @@ jobs:
         with:
           subject-path: dist/*
 
-      - name: Create draft release
+      - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" --draft --title "$GITHUB_REF_NAME" --generate-notes dist/*
+        run: gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --generate-notes dist/*
 ```
 
-Then push a tag such as `v0.1.0`, check the draft release on GitHub and publish it. The tag is the version renCal shows. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a plugin set up with pnpm, and [Publish a plugin](https://rencal.org/docs/plugins/publish/) to list yours in the plugin directory.
+Then push a tag such as `v0.1.0` to publish a release. The tag is the version renCal shows. See [rencal-view-board](https://github.com/t4t5/rencal-view-board) for a plugin set up with pnpm, and [Publish a plugin](https://rencal.org/docs/plugins/publish/) to list yours in the plugin directory.
 
 ## Source
 

@@ -102,7 +102,7 @@ A local checkout loads its built files from disk, so a personal view needs no re
 
 #### Releasing views
 
-[rencal-view-board's release workflow](https://github.com/t4t5/rencal-view-board/blob/main/.github/workflows/release.yml) shows the setup: pushing a `v*` tag builds the plugin, attests the build's provenance and creates a draft release with `dist/*` attached. Publishing the draft ships the update; renCal ignores drafts.
+[rencal-view-board's release workflow](https://github.com/t4t5/rencal-view-board/blob/main/.github/workflows/release.yml) shows the setup: pushing a `v*` tag builds the plugin, attests the build's provenance and publishes a release with `dist/*` attached, which ships the update.
 
 ### Building views
 
