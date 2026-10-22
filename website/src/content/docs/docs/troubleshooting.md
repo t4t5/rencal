@@ -17,6 +17,23 @@ If you installed from the AUR, make sure your system packages are up to date:
 yay -Syu
 ```
 
+## Flickering or blank window
+
+Some GPU setups, especially laptops with an Nvidia card, have rendering glitches in renCal. Try launching it with WebKit's DMA-BUF renderer turned off:
+
+```bash
+WEBKIT_DISABLE_DMABUF_RENDERER=1 rencal
+```
+
+If that fixes it, make it permanent:
+
+```bash
+cp /usr/share/applications/renCal.desktop ~/.local/share/applications/
+sed -i 's/^Exec=rencal/Exec=env WEBKIT_DISABLE_DMABUF_RENDERER=1 rencal/' ~/.local/share/applications/renCal.desktop
+```
+
+Scrolling may feel less smooth with this setting.
+
 ## Events are not syncing
 
 Check your internet connection, then hover over the warning icon to read the sync error. Keep a copy of the message for a bug report.

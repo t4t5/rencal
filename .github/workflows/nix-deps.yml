@@ -1,0 +1,29 @@
+name: Nix deps
+
+# The pnpmDeps hash in flake.nix must change whenever the fetched deps do.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - pnpm-lock.yaml
+      - pnpm-workspace.yaml
+      - flake.nix
+      - flake.lock
+
+jobs:
+  pnpm-hash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v16
+      - uses: DeterminateSystems/magic-nix-cache-action@v9
+      - name: Check pnpmDeps hash
+        run: |
+          if ! nix build .#rencal.pnpmDeps --no-link > build.log 2>&1; then
+            cat build.log
+            got=$(grep -oP 'got:\s+\Ksha256-\S+' build.log || true)
+            if [ -n "$got" ]; then
+              echo "::error file=flake.nix::Stale pnpmDeps hash. Set it to $got"
+            fi
+            exit 1
+          fi

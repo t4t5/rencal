@@ -32,8 +32,19 @@ jobs:
             echo "should_release=true" >> "$GITHUB_OUTPUT"
           fi
 
-  build:
+  # Fails when pnpm-lock.yaml changed without updating the pnpmDeps hash in flake.nix.
+  nix-deps:
     needs: check-version
+    if: needs.check-version.outputs.should_release == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@v16
+      - uses: DeterminateSystems/magic-nix-cache-action@v9
+      - run: nix build .#rencal.pnpmDeps --no-link
+
+  build:
+    needs: [check-version, nix-deps]
     if: needs.check-version.outputs.should_release == 'true'
     strategy:
       fail-fast: false
