@@ -29,4 +29,4 @@ renCal derives most surface and border colours from these values. The [theme bui
 
 Fonts are optional and shared by all themes in the package. Declare each WOFF2 face with `[[contributes.fonts]]`, `family`, and `file`; optional `weight` defaults to 400 and `style` to `normal`. Use a fallback font in the CSS.
 
-To list a published plugin in the directory, add the `rencal-plugin` GitHub topic. A theme plugin can ship from the default branch without a release. If it has a stable release, renCal uses the latest release instead. A root-level `preview.png` is optional for the directory.
+A theme plugin can ship from the default branch without a release. If it has a stable release, renCal uses the latest release instead.
