@@ -19,3 +19,19 @@ export const pointAnchorFromClick = (e: MouseEvent<HTMLElement>): EventAnchor =>
     getBoundingClientRect: () => new DOMRect(x, top, 0, height),
   }
 }
+
+export const EVENT_POPOVER_WIDTH = 350
+export const EVENT_POPOVER_GAP = 8
+export const EVENT_POPOVER_PADDING = 16
+
+// Anchors too wide for the popover to fit on either side (e.g. multi-day
+// events) push it off-screen, so collapse them to a point it fits next to
+export const fitPopoverAnchor = (rect: DOMRect, viewportWidth = window.innerWidth): DOMRect => {
+  const needed = EVENT_POPOVER_GAP + EVENT_POPOVER_WIDTH + EVENT_POPOVER_PADDING
+  const fitsRight = rect.right + needed <= viewportWidth
+  const fitsLeft = rect.left - needed >= 0
+  if (fitsRight || fitsLeft) return rect
+
+  const x = Math.min(Math.max(viewportWidth - needed, rect.left), rect.right)
+  return new DOMRect(x, rect.top, 0, rect.height)
+}

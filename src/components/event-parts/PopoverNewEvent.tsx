@@ -6,6 +6,12 @@ import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { getDraftAnchor } from "@/lib/draft-anchor"
+import {
+  EVENT_POPOVER_GAP,
+  EVENT_POPOVER_PADDING,
+  EVENT_POPOVER_WIDTH,
+  fitPopoverAnchor,
+} from "@/lib/event-anchor"
 
 import { ComposeEventInner } from "./ComposeEvent"
 import { useEventPopoverTabTrap } from "./useEventPopoverTabTrap"
@@ -24,7 +30,7 @@ export function PopoverNewEvent() {
     const anchor = getDraftAnchor()
     if (!anchor) return
 
-    const rect = anchor.getBoundingClientRect()
+    const rect = fitPopoverAnchor(anchor.getBoundingClientRect())
     setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
   }, [draftPopoverOpen])
 
@@ -60,11 +66,12 @@ export function PopoverNewEvent() {
       />
       <PopoverContent
         ref={contentRef}
-        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+        className="max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+        style={{ width: EVENT_POPOVER_WIDTH }}
         side="right"
         align="center"
-        sideOffset={8}
-        collisionPadding={16}
+        sideOffset={EVENT_POPOVER_GAP}
+        collisionPadding={EVENT_POPOVER_PADDING}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => {
           const target = e.target as HTMLElement

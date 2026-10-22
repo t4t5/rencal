@@ -5,7 +5,13 @@ import { Popover, PopoverAnchor, PopoverContent } from "@/components/ui/popover"
 import { useCalEvents } from "@/contexts/CalEventsContext"
 import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 
-import { getEventAnchor } from "@/lib/event-anchor"
+import {
+  EVENT_POPOVER_GAP,
+  EVENT_POPOVER_PADDING,
+  EVENT_POPOVER_WIDTH,
+  fitPopoverAnchor,
+  getEventAnchor,
+} from "@/lib/event-anchor"
 
 import { EditEvent } from "./EditEvent"
 import { useEventPopoverTabTrap } from "./useEventPopoverTabTrap"
@@ -27,7 +33,8 @@ export function PopoverEditEvent() {
 
     const rect = getEventAnchor()?.getBoundingClientRect()
     if (rect) {
-      setAnchorRect(new DOMRect(rect.left, rect.top + rect.height / 2, rect.width, 0))
+      const fitted = fitPopoverAnchor(rect)
+      setAnchorRect(new DOMRect(fitted.left, fitted.top + fitted.height / 2, fitted.width, 0))
     }
   }, [activeEvent])
 
@@ -43,11 +50,12 @@ export function PopoverEditEvent() {
       <PopoverAnchor virtualRef={anchorRef} />
       <PopoverContent
         ref={contentRef}
-        className="w-[350px] max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+        className="max-h-[80vh] overflow-y-auto p-0 shadow-2xl"
+        style={{ width: EVENT_POPOVER_WIDTH }}
         side="right"
         align="center"
-        sideOffset={8}
-        collisionPadding={16}
+        sideOffset={EVENT_POPOVER_GAP}
+        collisionPadding={EVENT_POPOVER_PADDING}
         onOpenAutoFocus={(e) => e.preventDefault()}
         onPointerDownOutside={(e) => {
           // If the click landed on an event element, let that element's
