@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, RefObject, useEffect, useRef } from "react"
 
 import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
@@ -47,7 +48,7 @@ export function ComposeEventButton() {
     <SidebarOverlay expanded={expanded}>
       {isMd && <Spacer grow={!expanded} />}
 
-      <ShortcutTooltip open={expanded ? false : undefined} text="Create new event" shortcut="c">
+      <ShortcutTooltip open={expanded ? false : undefined} text={t`Create new event`} shortcut="c">
         <ButtonContainer expanded={expanded} ref={containerRef}>
           <ComposeEventInput onExit={exitDraft} />
           <PlusButtonOverlay show={!expanded} />

@@ -104,6 +104,8 @@ pub trait ConfigApi {
     async fn set_first_day_of_week(day: FirstDayOfWeek) -> TauResult<()>;
     async fn get_show_week_numbers() -> TauResult<bool>;
     async fn set_show_week_numbers(show: bool) -> TauResult<()>;
+    // UI language override from config.toml; None lets the system locale decide.
+    async fn get_language() -> TauResult<Option<String>>;
     async fn get_groups() -> TauResult<BTreeMap<String, Vec<String>>>;
     async fn set_groups(groups: BTreeMap<String, Vec<String>>) -> TauResult<()>;
 }
@@ -161,6 +163,10 @@ impl ConfigApi for ConfigApiImpl {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
         config.save().map_err(RpcError::from)
+    }
+
+    async fn get_language(self) -> TauResult<Option<String>> {
+        Ok(RencalConfig::load()?.language)
     }
 
     async fn get_groups(self) -> TauResult<BTreeMap<String, Vec<String>>> {

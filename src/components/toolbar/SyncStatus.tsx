@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { type ReactNode } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -28,7 +29,7 @@ export const SyncStatus = () => {
 
   let icon = <CloudCheckIcon className="size-5 text-muted-foreground pointer-events-none" />
 
-  let tooltipContent: ReactNode = <>Up-to-date</>
+  let tooltipContent: ReactNode = <>{t`Up-to-date`}</>
 
   if (pendingCount) {
     icon = <CloudIcon className="size-5 text-muted-foreground pointer-events-none" />
@@ -37,12 +38,12 @@ export const SyncStatus = () => {
 
   if (syncStatus === "checking") {
     icon = <CloudIcon className="size-5 text-muted-foreground pointer-events-none" isLoading />
-    tooltipContent = <>Checking for changes...</>
+    tooltipContent = <>{t`Checking for changes...`}</>
   }
 
   if (syncStatus === "syncing") {
     icon = <SyncingIcon className="size-4 text-muted-foreground animate-spin pointer-events-none" />
-    tooltipContent = <>Syncing...</>
+    tooltipContent = <>{t`Syncing...`}</>
   }
 
   if (syncError) {
@@ -52,7 +53,7 @@ export const SyncStatus = () => {
 
   if (!isOnline) {
     icon = <CloudOffIcon className="size-4 text-destructive pointer-events-none" />
-    tooltipContent = <>No internet connection</>
+    tooltipContent = <>{t`No internet connection`}</>
   }
 
   const button = (
@@ -104,17 +105,24 @@ const ChangesPreview = ({ pendingPreviews }: { pendingPreviews: SyncPreview[] })
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="font-medium">Click to sync</div>
+      <div className="font-medium">{t`Click to sync`}</div>
 
       {pendingPreviews.map((p) => {
-        const parts: string[] = []
-
-        if (p.to_pull_count > 0) parts.push(`${p.to_pull_count} to pull`)
-        if (p.to_push_count > 0) parts.push(`${p.to_push_count} to push`)
+        const name = calendarName(p.calendar_slug)
+        const pullCount = p.to_pull_count
+        const pushCount = p.to_push_count
+        let summary = `${name}: `
+        if (pullCount > 0 && pushCount > 0) {
+          summary = t`${name}: ${pullCount} to pull, ${pushCount} to push`
+        } else if (pullCount > 0) {
+          summary = t`${name}: ${pullCount} to pull`
+        } else if (pushCount > 0) {
+          summary = t`${name}: ${pushCount} to push`
+        }
 
         return (
           <div key={p.calendar_slug} className="text-xs text-muted-foreground">
-            {calendarName(p.calendar_slug)}: {parts.join(", ")}
+            {summary}
           </div>
         )
       })}

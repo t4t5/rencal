@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { forwardRef, type FocusEvent, type KeyboardEvent, type ReactNode, useMemo } from "react"
 
 import { focusEventPopoverField } from "@/components/event-parts/useEventPopoverTabTrap"
@@ -135,7 +136,7 @@ export const DaySection = forwardRef<
       <div className="flex flex-col gap-1 pb-2">
         {!events.length && (
           <div data-slot="agenda-empty" className="py-1 text-sm text-muted-foreground">
-            No events
+            {t`No events`}
           </div>
         )}
 

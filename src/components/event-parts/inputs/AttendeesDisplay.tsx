@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useMemo, useState } from "react"
 import type { KeyboardEvent } from "react"
 
@@ -142,7 +143,7 @@ export function AttendeesDisplay({
 
   return (
     <div className="flex flex-col">
-      {organizerAttendee && <AttendeeRow attendee={organizerAttendee} label="Organiser" />}
+      {organizerAttendee && <AttendeeRow attendee={organizerAttendee} label={t`Organiser`} />}
 
       {attendeeList
         .filter((a) => attendeeKey(a.email) !== (organizer ? attendeeKey(organizer.email) : null))
@@ -167,7 +168,7 @@ export function AttendeesDisplay({
               <InputGroupInput
                 data-typography="field"
                 value={inputValue}
-                placeholder={"Add participant"}
+                placeholder={t`Add participant`}
                 className="min-w-0"
                 aria-invalid={hasInvalidEmail}
                 onChange={(e) => {

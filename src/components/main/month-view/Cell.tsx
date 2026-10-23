@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import {
   useRef,
   useState,
@@ -158,7 +159,7 @@ export function MonthDayCell({
             })
           }}
         >
-          Create event
+          {t`Create event`}
         </ContextMenuItem>
       </ContextMenuContent>
     </ContextMenu>

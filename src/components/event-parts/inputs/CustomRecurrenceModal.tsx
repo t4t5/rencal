@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { plural, t } from "@lingui/core/macro"
 import { FormEvent, useId, useState } from "react"
 import { RRule, RRuleSet } from "rrule"
 
@@ -27,25 +28,30 @@ import {
   RECURRENCE_UNITS,
   customRecurrenceFromRule,
   customRecurrenceToRule,
-  describeRecurrence,
   isEditableRecurrence,
   toggleWeekday,
   type RecurrenceEnd,
   type RecurrenceUnit,
 } from "@/lib/custom-recurrence"
-import { dateInEventZone, type EventTime } from "@/lib/event-time"
+import { dateInEventZone, weekdayNames, type EventTime } from "@/lib/event-time"
+import { describeForDisplay } from "@/lib/recurrence-text"
 import { cn } from "@/lib/utils"
 
-// Indexed Monday = 0 … Sunday = 6, like rrule.js.
-const WEEKDAYS = [
-  { short: "Mo", long: "Monday" },
-  { short: "Tu", long: "Tuesday" },
-  { short: "We", long: "Wednesday" },
-  { short: "Th", long: "Thursday" },
-  { short: "Fr", long: "Friday" },
-  { short: "Sa", long: "Saturday" },
-  { short: "Su", long: "Sunday" },
-]
+// Weekday names in the display locale, indexed Monday = 0 … Sunday = 6 like rrule.js.
+const localizedWeekdayNames = () => ({ short: weekdayNames("short"), long: weekdayNames("long") })
+
+function unitLabel(freq: RecurrenceUnit, count: number): string {
+  switch (freq) {
+    case RRule.DAILY:
+      return plural(count, { one: "day", other: "days" })
+    case RRule.WEEKLY:
+      return plural(count, { one: "week", other: "weeks" })
+    case RRule.MONTHLY:
+      return plural(count, { one: "month", other: "months" })
+    default:
+      return plural(count, { one: "year", other: "years" })
+  }
+}
 
 const MAX_INTERVAL = 999
 const MAX_COUNT = 999
@@ -84,15 +90,15 @@ function ReadOnlyRecurrence({
   return (
     <Modal onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Repeat</DialogTitle>
+        <DialogTitle>{t({ message: "Repeat", context: "recurrence dialog title" })}</DialogTitle>
         <DialogDescription>
-          This repeat rule can&apos;t be edited in renCal. Choose another option to replace it.
+          {t`This repeat rule can't be edited in renCal. Choose another option to replace it.`}
         </DialogDescription>
       </DialogHeader>
-      <p className="text-sm">{describeRecurrence(value, start)}</p>
+      <p className="text-sm">{describeForDisplay(value, start)}</p>
       <DialogFooter>
         <Button type="button" variant="secondary" onClick={onClose}>
-          Close
+          {t`Close`}
         </Button>
       </DialogFooter>
     </Modal>
@@ -149,21 +155,23 @@ function CustomRecurrenceForm({
     onClose()
   }
 
+  const dayNames = localizedWeekdayNames()
+
   return (
     <Modal onClose={onClose}>
       <DialogHeader>
-        <DialogTitle>Repeat</DialogTitle>
+        <DialogTitle>{t({ message: "Repeat", context: "recurrence dialog title" })}</DialogTitle>
       </DialogHeader>
 
       <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-8 w-full">
         <div className="grid grid-cols-[auto_1fr] items-center gap-x-4 gap-y-8">
-          <span className="text-sm">Every</span>
+          <span className="text-sm">{t({ message: "Every", context: "recurrence interval" })}</span>
           <div className="flex items-center gap-2">
             <Input
               variant="default"
               type="number"
               inputMode="numeric"
-              aria-label="Interval"
+              aria-label={t`Interval`}
               min={1}
               max={MAX_INTERVAL}
               className="w-16"
@@ -175,13 +183,13 @@ function CustomRecurrenceForm({
               value={String(freq)}
               onValueChange={(v) => setFreq(Number(v) as RecurrenceUnit)}
             >
-              <SelectTrigger variant="default" aria-label="Unit" className="w-32">
+              <SelectTrigger variant="default" aria-label={t`Unit`} className="w-32">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 {RECURRENCE_UNITS.map((unit) => (
                   <SelectItem key={unit.freq} value={String(unit.freq)}>
-                    {interval === 1 ? unit.singular : unit.plural}
+                    {unitLabel(unit.freq, interval)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -190,7 +198,9 @@ function CustomRecurrenceForm({
 
           {freq === RRule.WEEKLY && (
             <>
-              <span className="text-sm">On</span>
+              <span className="text-sm">
+                {t({ message: "On", context: "recurrence weekdays" })}
+              </span>
               <div className="flex flex-wrap gap-1.5">
                 {weekdayOrder.map((day) => {
                   const selected = weekdays.includes(day)
@@ -198,7 +208,7 @@ function CustomRecurrenceForm({
                     <button
                       key={day}
                       type="button"
-                      aria-label={WEEKDAYS[day].long}
+                      aria-label={dayNames.long[day]}
                       aria-pressed={selected}
                       onClick={() => setWeekdays(toggleWeekday(weekdays, day))}
                       className={cn(
@@ -208,7 +218,7 @@ function CustomRecurrenceForm({
                           : "bg-secondary text-secondary-foreground hover:bg-secondary-hover",
                       )}
                     >
-                      {WEEKDAYS[day].short}
+                      {dayNames.short[day]}
                     </button>
                   )
                 })}
@@ -218,17 +228,17 @@ function CustomRecurrenceForm({
         </div>
 
         <div className="flex flex-col gap-2">
-          <span className="text-sm">Ends</span>
+          <span className="text-sm">{t({ message: "Ends", context: "recurrence end" })}</span>
           <RadioGroup
             value={endKind}
             onValueChange={(kind) => setEndKind(kind as RecurrenceEnd["kind"])}
-            aria-label="Ends"
+            aria-label={t({ message: "Ends", context: "recurrence end" })}
             className="grid-cols-[auto_1fr] items-center gap-x-6 gap-y-2"
           >
-            <EndOption value="never" label="Never" />
+            <EndOption value="never" label={t({ message: "Never", context: "recurrence end" })} />
             <span />
 
-            <EndOption value="on" label="On" />
+            <EndOption value="on" label={t({ message: "On", context: "recurrence end date" })} />
             <DatePicker
               date={endDate}
               setDate={(date) => date && setEndDate(date)}
@@ -240,13 +250,16 @@ function CustomRecurrenceForm({
               )}
             />
 
-            <EndOption value="after" label="After" />
+            <EndOption
+              value="after"
+              label={t({ message: "After", context: "recurrence end count" })}
+            />
             <div className={cn("flex items-center gap-2", endKind !== "after" && "opacity-50")}>
               <Input
                 variant="default"
                 type="number"
                 inputMode="numeric"
-                aria-label="Occurrences"
+                aria-label={t`Occurrences`}
                 min={1}
                 max={MAX_COUNT}
                 className="w-16"
@@ -256,7 +269,7 @@ function CustomRecurrenceForm({
                 onChange={(e) => setCountText(e.target.value)}
               />
               <span className="text-sm text-muted-foreground">
-                {count === 1 ? "time" : "times"}
+                {plural(count, { one: "time", other: "times" })}
               </span>
             </div>
           </RadioGroup>
@@ -264,10 +277,10 @@ function CustomRecurrenceForm({
 
         <DialogFooter className="flex gap-2">
           <Button type="button" variant="secondary" onClick={onClose}>
-            Cancel
+            {t`Cancel`}
           </Button>
           <Button type="submit" disabled={!isValid}>
-            Done
+            {t`Done`}
           </Button>
         </DialogFooter>
       </form>
