@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { Component, type ComponentType, lazy, type ReactNode, Suspense } from "react"
 
 import type { ExternalView } from "@/lib/api"
@@ -22,12 +23,13 @@ class PluginErrorBoundary extends Component<
   render() {
     const { error } = this.state as { error: Error | null }
     if (!error) return this.props.children
+    const { name } = this.props
     return (
       <div
         data-slot="plugin-view-error"
         className="flex flex-col items-center justify-center gap-1 h-full p-6 text-center"
       >
-        <p className="text-sm font-medium">The {this.props.name} view failed to load</p>
+        <p className="text-sm font-medium">{t`The ${name} view failed to load`}</p>
         <p className="text-xs text-muted-foreground max-w-md">{error.message}</p>
       </div>
     )
@@ -53,6 +55,7 @@ export function pluginViewComponent(view: ExternalView): ComponentType {
       </PluginErrorBoundary>
     )
   }
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- React DevTools name, not UI text
   PluginView.displayName = `PluginView(${view.id})`
   return PluginView
 }

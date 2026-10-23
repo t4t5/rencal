@@ -50,6 +50,10 @@ msgstr "Choose a unique name for this calendar group."
 msgid "Edit recurring event"
 msgstr "Edit recurring event"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "Interval"
+msgstr "Interval"
+
 #: src/components/toolbar/ToggleSidebarButton.tsx
 msgid "Show sidebar"
 msgstr "Show sidebar"
@@ -58,10 +62,6 @@ msgstr "Show sidebar"
 msgid "Notes"
 msgstr "Notes"
 
-#: src/components/main/board-view/BoardCard.tsx
-msgid "All day"
-msgstr "All day"
-
 #: src/components/toolbar/SyncStatus.tsx
 msgid "{name}: {pullCount} to pull"
 msgstr "{name}: {pullCount} to pull"
@@ -69,6 +69,10 @@ msgstr "{name}: {pullCount} to pull"
 #: src/components/event-parts/inputs/ConferenceDisplay.tsx
 msgid "Join {service}"
 msgstr "Join {service}"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Remove account"
+msgstr "Remove account"
 
 #: src/components/event-parts/inputs/RepeatSelect.tsx
 msgid "Every 2 weeks"
@@ -97,6 +101,10 @@ msgctxt "calendar group name"
 msgid "Default"
 msgstr "Default"
 
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "{calendarCount, plural, one {its calendar} other {its # calendars}}"
+msgstr "{calendarCount, plural, one {its calendar} other {its # calendars}}"
+
 #: src/lib/palette-commands.ts
 msgid "Search events…"
 msgstr "Search events…"
@@ -121,6 +129,10 @@ msgstr "Failed to sync calendars"
 msgctxt "calendar account heading"
 msgid "Local-only"
 msgstr "Local-only"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Remove account..."
+msgstr "Remove account..."
 
 #: src/components/event-parts/ComposeEvent.tsx
 msgid "Add Event"
@@ -155,11 +167,15 @@ msgstr "Open command palette"
 msgid "Edit group"
 msgstr "Edit group"
 
+#: src/views/manifest.ts
+msgid "Display year view"
+msgstr "Display year view"
+
 #: src/hooks/useProviders.ts
 msgid "Failed to load providers"
 msgstr "Failed to load providers"
 
-#: src/components/event-parts/inputs/RepeatSelect.tsx
+#: src/lib/recurrence-text.ts
 msgid "Custom recurrence"
 msgstr "Custom recurrence"
 
@@ -203,9 +219,18 @@ msgstr "Retry"
 msgid "Create calendar"
 msgstr "Create calendar"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "{count, plural, one {year} other {years}}"
+msgstr "{count, plural, one {year} other {years}}"
+
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "No calendars yet."
 msgstr "No calendars yet."
+
+#: src/components/main/MainHeader.tsx
+msgctxt "view name"
+msgid "Year"
+msgstr "Year"
 
 #: src/components/events-blocks/agenda/TimedEventBlock.tsx
 msgid "Starts at {time}"
@@ -244,6 +269,10 @@ msgstr "Month"
 #: src/components/settings/calendars/AddSubscriptionModal.tsx
 msgid "Please enter a calendar URL"
 msgstr "Please enter a calendar URL"
+
+#: src/views/manifest.ts
+msgid "Display {view} view"
+msgstr "Display {view} view"
 
 #: src/components/event-parts/inputs/DateTimeSelect.tsx
 msgid "Show in event's time zone"
@@ -288,6 +317,10 @@ msgctxt "keyboard key"
 msgid "Down"
 msgstr "Down"
 
+#: src/components/settings/calendars/CalendarsColumn.tsx
+msgid "New calendar"
+msgstr "New calendar"
+
 #: src/components/settings/accounts/AccountsPage.tsx
 msgid "No accounts connected yet."
 msgstr "No accounts connected yet."
@@ -295,6 +328,10 @@ msgstr "No accounts connected yet."
 #: src/components/toolbar/SyncStatus.tsx
 msgid "Click to sync"
 msgstr "Click to sync"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "Unit"
+msgstr "Unit"
 
 #: src/components/shortcuts/ShortcutsOverlay.tsx
 msgid "Close keyboard shortcuts"
@@ -325,7 +362,6 @@ msgstr "Search themes…"
 msgid "Accounts"
 msgstr "Accounts"
 
-#: src/components/main/board-view/BoardView.tsx
 #: src/lib/event-time/display.ts
 msgid "Tomorrow"
 msgstr "Tomorrow"
@@ -337,6 +373,10 @@ msgstr "Compose new event"
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "Loading plugins…"
 msgstr "Loading plugins…"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "Occurrences"
+msgstr "Occurrences"
 
 #: src/components/event-parts/inputs/RsvpSelect.tsx
 msgid "Accepted"
@@ -415,6 +455,8 @@ msgstr "Color {swatch}"
 msgid "Set theme…"
 msgstr "Set theme…"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+#: src/components/settings/accounts/AccountsPage.tsx
 #: src/components/settings/calendars/CalendarsColumn.tsx
 #: src/components/settings/calendars/ChangeCalendarColorModal.tsx
 #: src/components/settings/calendars/GroupsColumn.tsx
@@ -439,6 +481,10 @@ msgstr "Type a date…"
 #: src/components/toolbar/SyncStatus.tsx
 msgid "{name}: {pushCount} to push"
 msgstr "{name}: {pushCount} to push"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "Done"
+msgstr "Done"
 
 #: src/components/settings/themes/ThemesPage.tsx
 msgid "Light theme"
@@ -543,10 +589,6 @@ msgstr "Themes"
 msgid "by {owner}"
 msgstr "by {owner}"
 
-#: src/components/main/board-view/BoardView.tsx
-msgid "This Week"
-msgstr "This Week"
-
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Uninstall"
 msgstr "Uninstall"
@@ -586,7 +628,7 @@ msgctxt "command group"
 msgid "View"
 msgstr "View"
 
-#: src/lib/shortcuts.ts
+#: src/views/manifest.ts
 msgid "Display week view"
 msgstr "Display week view"
 
@@ -598,6 +640,10 @@ msgstr "Accept"
 #: src/lib/shortcuts.ts
 msgid "Next month"
 msgstr "Next month"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "{count, plural, one {time} other {times}}"
+msgstr "{count, plural, one {time} other {times}}"
 
 #: src/components/ui/shortcut-tooltip.tsx
 msgctxt "keyboard key"
@@ -728,6 +774,11 @@ msgctxt "keyboard key"
 msgid "Right"
 msgstr "Right"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence interval"
+msgid "Every"
+msgstr "Every"
+
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Uninstalled {name}"
 msgstr "Uninstalled {name}"
@@ -777,6 +828,11 @@ msgstr "Meeting"
 msgid "Updating…"
 msgstr "Updating…"
 
+#: src/components/settings/plugins/plugin-list.ts
+msgctxt "plugin contribution kind"
+msgid "View"
+msgstr "View"
+
 #: src/components/toolbar/InvitesBadge.tsx
 msgid "From: {organizerEmail}"
 msgstr "From: {organizerEmail}"
@@ -794,10 +850,14 @@ msgctxt "update dialog button"
 msgid "Later"
 msgstr "Later"
 
-#: src/components/main/MainHeader.tsx
-msgctxt "view name"
-msgid "Board"
-msgstr "Board"
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "{count, plural, one {week} other {weeks}}"
+msgstr "{count, plural, one {week} other {weeks}}"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence weekdays"
+msgid "On"
+msgstr "On"
 
 #: src/components/event-parts/inputs/RepeatSelect.tsx
 msgid "Every month"
@@ -814,6 +874,10 @@ msgstr "Sync now"
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Disconnect \"{calendarName}\"? This will delete the directory from this computer."
 msgstr "Disconnect \"{calendarName}\"? This will delete the directory from this computer."
+
+#: src/views/PluginView.tsx
+msgid "The {name} view failed to load"
+msgstr "The {name} view failed to load"
 
 #: src/lib/recurrence-text.ts
 msgctxt "monthly recurrence"
@@ -836,6 +900,10 @@ msgstr "Search events"
 msgid "Toggle week numbers"
 msgstr "Toggle week numbers"
 
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Remove \"{account}\"? This will remove {calendarsLabel} from this computer."
+msgstr "Remove \"{account}\"? This will remove {calendarsLabel} from this computer."
+
 #: src/lib/shortcuts.ts
 msgid "Previous day"
 msgstr "Previous day"
@@ -850,9 +918,9 @@ msgstr "Repeat"
 msgid "Rename calendar"
 msgstr "Rename calendar"
 
-#: src/lib/shortcuts.ts
-msgid "Display board view"
-msgstr "Display board view"
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Removing..."
+msgstr "Removing..."
 
 #: src/components/settings/calendars/AddSubscriptionModal.tsx
 #: src/components/settings/calendars/CalendarsColumn.tsx
@@ -977,6 +1045,11 @@ msgstr "Failed to rename calendar"
 msgid "renCal follows your Omarchy theme."
 msgstr "renCal follows your Omarchy theme."
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence end"
+msgid "Never"
+msgstr "Never"
+
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Disconnecting..."
 msgstr "Disconnecting..."
@@ -991,6 +1064,10 @@ msgid "Search for a command to run"
 msgstr "Search for a command to run"
 
 #: src/components/event-parts/inputs/RepeatSelect.tsx
+msgid "Custom…"
+msgstr "Custom…"
+
+#: src/components/event-parts/inputs/RepeatSelect.tsx
 msgid "Every year"
 msgstr "Every year"
 
@@ -1001,6 +1078,10 @@ msgstr "{minutes, plural, one {# minute} other {# minutes}}"
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "Failed to load installed plugins"
 msgstr "Failed to load installed plugins"
+
+#: src/plugins/year/YearView.tsx
+msgid "Previous year"
+msgstr "Previous year"
 
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Set as default"
@@ -1034,7 +1115,11 @@ msgstr "No events found."
 msgid "Create event"
 msgstr "Create event"
 
-#: src/components/settings/accounts/AddAccountModal.tsx
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "{count, plural, one {month} other {months}}"
+msgstr "{count, plural, one {month} other {months}}"
+
+#: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "This calendar will live on your computer only, and never be connected to the internet."
 msgstr "This calendar will live on your computer only, and never be connected to the internet."
 
@@ -1050,6 +1135,11 @@ msgstr "Connected"
 msgid "Toggle invitations"
 msgstr "Toggle invitations"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence end date"
+msgid "On"
+msgstr "On"
+
 #: src/components/shortcuts/CommandPalette.tsx
 msgid "navigate"
 msgstr "navigate"
@@ -1058,6 +1148,10 @@ msgstr "navigate"
 msgctxt "keyboard key"
 msgid "Left"
 msgstr "Left"
+
+#: src/components/settings/accounts/AccountsPage.tsx
+msgid "Failed to remove account"
+msgstr "Failed to remove account"
 
 #: src/components/settings/themes/ThemesPage.tsx
 msgid "Single theme"
@@ -1071,6 +1165,11 @@ msgstr "Connect calendar"
 msgctxt "keyboard key"
 msgid "Space"
 msgstr "Space"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence dialog title"
+msgid "Repeat"
+msgstr "Repeat"
 
 #: src/components/shortcuts/CommandPalette.tsx
 msgid "close"
@@ -1099,6 +1198,11 @@ msgstr "The event {eventName} is part of a recurring series. Which events do you
 #: src/components/settings/calendars/AddSubscriptionModal.tsx
 msgid "Failed to add subscription"
 msgstr "Failed to add subscription"
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence end"
+msgid "Ends"
+msgstr "Ends"
 
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "Search plugins"
@@ -1180,11 +1284,6 @@ msgstr "Settings"
 msgid "{months, plural, one {# month} other {# months}}"
 msgstr "{months, plural, one {# month} other {# months}}"
 
-#: src/components/main/MainHeader.tsx
-msgctxt "view switcher"
-msgid "View"
-msgstr "View"
-
 #: src/components/sidebar/agenda/GetStartedState.tsx
 msgid "Connect your calendar to get started."
 msgstr "Connect your calendar to get started."
@@ -1200,11 +1299,6 @@ msgstr "Every day"
 #: src/components/event-parts/inputs/AttendeesDisplay.tsx
 msgid "Organiser"
 msgstr "Organiser"
-
-#: src/components/main/board-view/BoardView.tsx
-msgctxt "board column"
-msgid "Today"
-msgstr "Today"
 
 #: src/components/toolbar/SyncStatus.tsx
 msgid "Syncing..."
@@ -1226,6 +1320,10 @@ msgstr "Show week numbers"
 #: src/components/settings/calendars/RenameCalendarModal.tsx
 msgid "Calendar name"
 msgstr "Calendar name"
+
+#: src/plugins/year/YearView.tsx
+msgid "Next year"
+msgstr "Next year"
 
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Details"
@@ -1285,6 +1383,10 @@ msgstr "Duplicate event"
 msgid "Please enter a calendar name"
 msgstr "Please enter a calendar name"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "{count, plural, one {day} other {days}}"
+msgstr "{count, plural, one {day} other {days}}"
+
 #: src/lib/event-url.ts
 msgid "Linked in event notes"
 msgstr "Linked in event notes"
@@ -1332,7 +1434,7 @@ msgctxt "plugin contribution kind"
 msgid "Provider"
 msgstr "Provider"
 
-#: src/lib/shortcuts.ts
+#: src/views/manifest.ts
 msgid "Display month view"
 msgstr "Display month view"
 
@@ -1360,6 +1462,10 @@ msgstr "Continue"
 msgid "Sync with system"
 msgstr "Sync with system"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgid "This repeat rule can't be edited in renCal. Choose another option to replace it."
+msgstr "This repeat rule can't be edited in renCal. Choose another option to replace it."
+
 #: src/lib/shortcuts.ts
 msgid "Next event"
 msgstr "Next event"
@@ -1381,7 +1487,6 @@ msgstr "Event Title"
 msgid "Go to today"
 msgstr "Go to today"
 
-#: src/components/main/board-view/BoardView.tsx
 #: src/lib/event-time/display.ts
 msgid "Yesterday"
 msgstr "Yesterday"
@@ -1415,6 +1520,7 @@ msgstr "Loading"
 msgid "Failed to change calendar color"
 msgstr "Failed to change calendar color"
 
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
 #: src/components/ui/dialog.tsx
 msgid "Close"
 msgstr "Close"
@@ -1453,7 +1559,7 @@ msgstr "Groups"
 msgid "Command palette"
 msgstr "Command palette"
 
-#: src/components/settings/accounts/AddAccountModal.tsx
+#: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "New local-only calendar"
 msgstr "New local-only calendar"
 
@@ -1481,3 +1587,8 @@ msgstr "{total, plural, one {# plugin} other {# plugins}}"
 #: src/components/settings/accounts/AccountsPage.tsx
 msgid "Reconnect..."
 msgstr "Reconnect..."
+
+#: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+msgctxt "recurrence end count"
+msgid "After"
+msgstr "After"

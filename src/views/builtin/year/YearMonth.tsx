@@ -3,17 +3,23 @@ import { memo } from "react"
 
 import {
   type CalendarEvent,
+  type FirstDayOfWeek,
   cn,
   epochDay,
   formatMonth,
+  formatWeekday,
   startOfWeek,
   useDisplaySettings,
   useEventAppearance,
 } from "@/sdk"
 
-const WEEKDAY_LETTERS = {
-  monday: ["M", "T", "W", "T", "F", "S", "S"],
-  sunday: ["S", "M", "T", "W", "T", "F", "S"],
+// One letter per weekday in the display language, starting on the configured first day.
+// 7 January 2024 was a Sunday, 1 January 2024 a Monday.
+const weekdayLetters = (firstDayOfWeek: FirstDayOfWeek): string[] => {
+  const first = Temporal.PlainDate.from(firstDayOfWeek === "monday" ? "2024-01-01" : "2024-01-07")
+  return Array.from({ length: 7 }, (_, i) =>
+    formatWeekday(first.add({ days: i }), "short").charAt(0),
+  )
 }
 // Every month gets six rows so the months line up across the grid.
 const GRID_DAYS = 42
@@ -52,7 +58,7 @@ export const YearMonth = memo(function YearMonth({
       </div>
 
       <div className="grid grid-cols-7">
-        {WEEKDAY_LETTERS[firstDayOfWeek].map((letter, i) => {
+        {weekdayLetters(firstDayOfWeek).map((letter, i) => {
           const weekend = isWeekend(gridStart.add({ days: i }))
           return (
             <div

@@ -1,4 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { t } from "@lingui/core/macro"
 import { useMemo } from "react"
 
 import {
@@ -43,7 +44,7 @@ export function YearView() {
         <div data-slot="year-navigation" className="flex items-center gap-1">
           <Button
             data-direction="previous"
-            aria-label="Previous year"
+            aria-label={t`Previous year`}
             variant="ghost"
             size="icon-xs"
             round
@@ -54,7 +55,7 @@ export function YearView() {
           </Button>
           <Button
             data-direction="next"
-            aria-label="Next year"
+            aria-label={t`Next year`}
             variant="ghost"
             size="icon-xs"
             round
