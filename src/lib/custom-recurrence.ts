@@ -151,6 +151,7 @@ function sortWeekdays(days: number[]): number[] {
 /** Short label for a rule that isn't one of the presets. */
 export function describeRecurrence(value: RRule | RRuleSet, start: EventTime): string {
   const rule = firstRule(value)
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- English-only fallback; the UI goes through describeForDisplay
   if (!rule) return "Custom recurrence"
 
   const { freq, interval = 1, byweekday } = rule.origOptions
@@ -162,6 +163,7 @@ export function describeRecurrence(value: RRule | RRuleSet, start: EventTime): s
     !rule.origOptions.count &&
     !rule.origOptions.until
   ) {
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- English-only fallback; the UI goes through describeForDisplay
     return "Every weekday"
   }
 

@@ -1,8 +1,23 @@
 import { Temporal } from "@js-temporal/polyfill"
+import { i18n } from "@lingui/core"
 import { plural, selectOrdinal, t } from "@lingui/core/macro"
-import { Frequency, type Options, RRule, Weekday } from "rrule"
+import { Frequency, type Options, RRule, RRuleSet, Weekday } from "rrule"
 
-import { formatDayMonth, formatList, weekdayNames } from "@/lib/event-time"
+import { describeRecurrence as describeInEnglish } from "@/lib/custom-recurrence"
+import { formatDayMonth, formatList, weekdayNames, type EventTime } from "@/lib/event-time"
+
+/**
+ * What the UI shows for a rule that isn't a preset: the localized description where it covers the rule;
+ * otherwise upstream's describer, which only speaks English, so other languages say "Custom recurrence".
+ */
+export function describeForDisplay(value: RRule | RRuleSet, start: EventTime): string {
+  const rule = value instanceof RRuleSet ? value.rrules()[0] : value
+  if (!rule) return t`Custom recurrence`
+  return (
+    describeRecurrence(rule) ??
+    (i18n.locale === "en" ? describeInEnglish(value, start) : t`Custom recurrence`)
+  )
+}
 
 /**
  * Describes a recurrence rule in the active UI language, e.g. "Every 2 weeks

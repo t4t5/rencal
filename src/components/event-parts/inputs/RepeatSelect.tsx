@@ -13,9 +13,9 @@ import {
 import { ItemContent, ItemMedia } from "@/components/ui/item"
 import { SelectMenuTrigger } from "@/components/ui/select"
 
-import { describeRecurrence as describeInEnglish, ruleString } from "@/lib/custom-recurrence"
+import { ruleString } from "@/lib/custom-recurrence"
 import { type EventTime } from "@/lib/event-time"
-import { describeRecurrence } from "@/lib/recurrence-text"
+import { describeForDisplay } from "@/lib/recurrence-text"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -136,14 +136,5 @@ export const RepeatSelect = ({
 
 function getHumanInterval(recurrence: RRule | RRuleSet, start: EventTime): string {
   const interval = INTERVALS.find((i) => i.rrule.toString() === ruleString(recurrence))
-  if (interval) return i18n._(interval.label)
-
-  const rule = recurrence instanceof RRuleSet ? recurrence.rrules()[0] : recurrence
-  if (!rule) return t`Custom recurrence`
-
-  // The localized describer first; upstream's describer only speaks English, so it is the last resort there.
-  return (
-    describeRecurrence(rule) ??
-    (i18n.locale === "en" ? describeInEnglish(recurrence, start) : t`Custom recurrence`)
-  )
+  return interval ? i18n._(interval.label) : describeForDisplay(recurrence, start)
 }

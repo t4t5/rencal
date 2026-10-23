@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { i18n } from "@lingui/core"
 import { RRule } from "rrule"
 import { afterAll, beforeAll, describe, expect, it } from "vitest"
@@ -6,7 +7,7 @@ import { setDisplayLocale } from "@/lib/event-time"
 
 import { loadCatalog } from "@/locales/load-catalog"
 
-import { describeRecurrence } from "./recurrence-text"
+import { describeForDisplay, describeRecurrence } from "./recurrence-text"
 
 const rule = (options: ConstructorParameters<typeof RRule>[0]) => new RRule(options)
 
@@ -61,5 +62,32 @@ describe("describeRecurrence (German catalog)", () => {
     [{ freq: RRule.WEEKLY, until: new Date(Date.UTC(2030, 0, 5)) }, "Jede Woche bis 5. Jan. 2030"],
   ])("%o → %s", (options, expected) => {
     expect(describeRecurrence(rule(options))).toBe(expected)
+  })
+})
+
+describe("describeForDisplay", () => {
+  const start = { kind: "date", value: Temporal.PlainDate.from("2026-10-23") } as const
+  // BYSETPOS is outside what the localized describer covers.
+  const unsupported = rule({ freq: RRule.MONTHLY, byweekday: [RRule.MO], bysetpos: [1] })
+
+  it("uses the localized description when the rule is covered", () => {
+    expect(describeForDisplay(rule({ freq: RRule.DAILY, interval: 3 }), start)).toBe("Every 3 days")
+  })
+
+  it("falls back to the English description in English", () => {
+    expect(describeForDisplay(unsupported, start)).toBe("Every month on Monday")
+  })
+
+  describe("in another language", () => {
+    beforeAll(async () => {
+      i18n.loadAndActivate({ locale: "de", messages: await loadCatalog("de") })
+    })
+    afterAll(() => {
+      i18n.activate("en")
+    })
+
+    it("says it is a custom recurrence instead of showing English", () => {
+      expect(describeForDisplay(unsupported, start)).toBe("Eigene Wiederholung")
+    })
   })
 })

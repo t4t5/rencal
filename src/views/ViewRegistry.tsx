@@ -24,6 +24,7 @@ export async function preloadExternalViews(): Promise<ExternalView[]> {
 function applyPluginStyles(views: readonly ExternalView[]) {
   // Ordered below host utilities in global.css, so plugin classes can't override host layout.
   const styles = new Map(
+    // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS, not UI text
     views.flatMap((view) => (view.css ? [[view.id, `@layer plugins {\n${view.css}\n}`]] : [])),
   )
   for (const element of document.head.querySelectorAll<HTMLStyleElement>(`style[${STYLE_ATTR}]`)) {

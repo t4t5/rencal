@@ -44,9 +44,9 @@ export declare function formatTime(et: EventTime, timeFormat: TimeFormat): strin
  * labels where there is no underlying EventTime.
  */
 export declare function formatWallclockTime(hour: number, minute: number, timeFormat: TimeFormat): string;
-/** "Mon, 28 Apr" or "Mon, 28 Apr 2027" if not the current year. */
+/** "Mon, 28 Apr" / "So., 28. Apr.", with the year when not the current year. */
 export declare function formatShortDate(value: EventTime | Temporal.PlainDate): string;
-/** "Thursday, 5 November" (adds the year when not the current year). */
+/** "Thursday, 5 November" / "Donnerstag, 5. November", with the year when not the current year. */
 export declare function formatLongDate(value: EventTime | Temporal.PlainDate): string;
 /** "Today" / "Tomorrow" / "Yesterday" / weekday name. */
 export declare function getRelativeDayLabel(value: EventTime | Temporal.PlainDate): string;

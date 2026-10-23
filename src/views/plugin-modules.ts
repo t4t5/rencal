@@ -23,6 +23,7 @@ const IDENTIFIER = /^[A-Za-z_$][\w$]*$/
 
 // A module re-exporting a shared module's live namespace, read from a global
 // because a blob module can't close over values.
+/* eslint-disable lingui/no-unlocalized-strings -- generated JavaScript source, not UI text */
 export function sharedModuleSource(specifier: string, namespace: object): string {
   const names = Object.keys(namespace).filter((name) => name !== "default" && IDENTIFIER.test(name))
   return [
@@ -31,6 +32,7 @@ export function sharedModuleSource(specifier: string, namespace: object): string
     ...names.map((name) => `export const ${name} = m.${name};`),
   ].join("\n")
 }
+/* eslint-enable lingui/no-unlocalized-strings */
 
 const moduleUrl = (source: string) =>
   URL.createObjectURL(new Blob([source], { type: "text/javascript" }))
