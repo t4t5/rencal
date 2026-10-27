@@ -20,6 +20,8 @@ mod routes;
 mod signal;
 #[cfg(target_os = "linux")]
 mod single_instance;
+#[cfg(target_os = "linux")]
+mod skia_compositor_workaround;
 pub mod state;
 mod state_bridge;
 mod tasks;
@@ -221,6 +223,10 @@ pub async fn run() {
     // session (see issues #45 and #102).
     #[cfg(target_os = "linux")]
     nvidia_workaround::apply_if_needed();
+
+    // Avoid stale frames from WebKitGTK 2.54's Skia compositor.
+    #[cfg(target_os = "linux")]
+    skia_compositor_workaround::apply();
 
     // Single-instance: on Linux we use a Unix socket because
     // `tauri-plugin-single-instance` panics under our runtime config (zbus
