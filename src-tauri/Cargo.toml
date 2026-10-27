@@ -8,10 +8,10 @@ members = [
 ]
 
 [workspace.dependencies]
-caldir-core = "0.17.3"
+caldir-core = "0.17.4"
 
 [workspace.metadata.caldir]
-provider-tag = "v0.14.8"
+provider-tag = "v0.14.9"
 
 [package]
 name = "rencal"
