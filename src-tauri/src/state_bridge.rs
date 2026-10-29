@@ -14,11 +14,13 @@ pub async fn run(app: AppHandle, state: Arc<AppState>) {
     let mut config = state.subscribe_caldir_config();
     let mut calendars = state.subscribe_calendars_changed();
     let mut events = state.subscribe_events_changed();
+    let mut availabilities = state.subscribe_availabilities_changed();
     let mut providers = state.subscribe_providers_changed();
 
     config.borrow_and_update();
     calendars.borrow_and_update();
     events.borrow_and_update();
+    availabilities.borrow_and_update();
     providers.borrow_and_update();
 
     loop {
@@ -43,6 +45,13 @@ pub async fn run(app: AppHandle, state: Arc<AppState>) {
                 }
                 events.borrow_and_update();
                 let _ = AppEvent::EventsChanged(()).emit(&app);
+            }
+            changed = availabilities.changed() => {
+                if changed.is_err() {
+                    return;
+                }
+                availabilities.borrow_and_update();
+                let _ = AppEvent::AvailabilitiesChanged(()).emit(&app);
             }
             changed = providers.changed() => {
                 if changed.is_err() {

@@ -22,6 +22,8 @@ const calendar = (provider: string | null): Calendar => ({
   account: null,
   email: null,
   read_only: false,
+  busy: true,
+  busy_is_default: true,
 })
 
 describe("calendarConferenceProvider", () => {

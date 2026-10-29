@@ -3,6 +3,7 @@ import type { RpcError, RpcErrorKind } from "@/rpc/bindings"
 const errorKinds = {
   calendar_not_found: true,
   event_not_found: true,
+  availability_not_found: true,
   provider_not_found: true,
   provider_failure: true,
   invalid_input: true,

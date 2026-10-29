@@ -8,12 +8,17 @@ import {
 type AllDayContextMenuProps = {
   children: React.ReactNode
   onCreateEvent: () => void
+  disabled?: boolean
 }
 
-export function AllDayContextMenu({ children, onCreateEvent }: AllDayContextMenuProps) {
+export function AllDayContextMenu({ children, onCreateEvent, disabled }: AllDayContextMenuProps) {
   return (
     <ContextMenu modal={false}>
-      <ContextMenuTrigger asChild onDoubleClick={onCreateEvent}>
+      <ContextMenuTrigger
+        asChild
+        disabled={disabled}
+        onDoubleClick={disabled ? undefined : onCreateEvent}
+      >
         {children}
       </ContextMenuTrigger>
       <ContextMenuContent>

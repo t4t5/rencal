@@ -15,6 +15,9 @@ import {
 vi.mock("@/components/main/week-view/WeekView", () => ({ WeekView: () => null }))
 vi.mock("@/components/main/month-view/MonthView", () => ({ MonthView: () => null }))
 vi.mock("@/plugins/year/YearView", () => ({ YearView: () => null }))
+vi.mock("@/components/main/availability-view/AvailabilityView", () => ({
+  AvailabilityView: () => null,
+}))
 
 const view = (id: string, shortcut?: string): ViewDescriptor => ({
   id,

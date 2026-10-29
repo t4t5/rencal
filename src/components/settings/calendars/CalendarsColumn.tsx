@@ -1,4 +1,5 @@
 import { CSSProperties, ReactNode, useState } from "react"
+import { toast } from "sonner"
 
 import { SettingsContent } from "@/components/settings/SettingsContent"
 import { Button } from "@/components/ui/button"
@@ -13,8 +14,10 @@ import {
 } from "@/components/ui/dialog"
 import {
   DropdownMenu,
+  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
@@ -217,6 +220,17 @@ function CalendarDropdownMenuWrapper({
     await reloadCalendars()
   }
 
+  const setBusy = async (busy: boolean) => {
+    try {
+      await api.calendars.setBusy(calendar.slug, busy)
+      await reloadCalendars()
+    } catch (err) {
+      toast.error("Couldn't update calendar", {
+        description: getErrorMessage(err, "Failed to save the setting"),
+      })
+    }
+  }
+
   return (
     <div className="flex items-center gap-3">
       <div className="grow">{children}</div>
@@ -242,6 +256,13 @@ function CalendarDropdownMenuWrapper({
           <DropdownMenuItem onClick={() => setShowColorModal(true)}>
             Change calendar color
           </DropdownMenuItem>
+          <DropdownMenuCheckboxItem
+            checked={calendar.busy}
+            onCheckedChange={(checked) => void setBusy(checked === true)}
+          >
+            Counts as busy
+          </DropdownMenuCheckboxItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem variant="destructive" onClick={() => setShowDeleteDialog(true)}>
             {calendar.provider === null ? "Delete calendar" : "Disconnect calendar"}
           </DropdownMenuItem>

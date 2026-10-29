@@ -3,8 +3,8 @@ use crate::routes::{
     error::{RpcError, RpcErrorKind},
 };
 use caldir_core::{
-    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
-    TimeFormat as CoreTimeFormat,
+    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence,
+    Status, TimeFormat as CoreTimeFormat,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -24,6 +24,10 @@ pub struct Calendar {
     /// The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
     pub email: Option<String>,
     pub read_only: Option<bool>,
+    /// Whether events here block availability.
+    pub busy: bool,
+    /// `busy` follows the default (on unless read-only) rather than the config.
+    pub busy_is_default: bool,
 }
 
 /// JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
@@ -358,6 +362,109 @@ pub struct SyncPreview {
     pub to_pull_count: u32,
 }
 
+#[derive(
+    Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, Type,
+)]
+pub enum Weekday {
+    #[serde(rename = "mo")]
+    Mo,
+    #[serde(rename = "tu")]
+    Tu,
+    #[serde(rename = "we")]
+    We,
+    #[serde(rename = "th")]
+    Th,
+    #[serde(rename = "fr")]
+    Fr,
+    #[serde(rename = "sa")]
+    Sa,
+    #[serde(rename = "su")]
+    Su,
+}
+
+/// Wall-clock `HH:MM` times; `end` is after `start` on the same day.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Type)]
+pub struct TimeRange {
+    pub start: String,
+    pub end: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Type)]
+pub struct DayHours {
+    pub day: Weekday,
+    pub ranges: Vec<TimeRange>,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct AvailabilitySummary {
+    /// `dir/slug`, stable while another directory gains the same slug.
+    pub id: String,
+    /// What `caldir free` accepts: the slug when unique, else `dir/slug`.
+    pub reference: String,
+    pub name: String,
+    pub duration_minutes: u32,
+    pub tzid: Option<String>,
+}
+
+/// The parts of an availability the editor understands.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct AvailabilityDraft {
+    pub name: String,
+    pub tzid: String,
+    pub hours: Vec<DayHours>,
+    pub duration_minutes: u32,
+    pub buffer_before_minutes: u32,
+    pub buffer_after_minutes: u32,
+    pub notice_minutes: u32,
+    pub horizon_days: u32,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct AvailabilityDetails {
+    pub id: String,
+    pub reference: String,
+    pub draft: AvailabilityDraft,
+    /// False when the blocks aren't plain weekly hours; `draft.hours` is then
+    /// empty and saving leaves the blocks alone.
+    pub hours_editable: bool,
+    pub override_count: u32,
+}
+
+/// UTC RFC 3339 instants, `[start, end)`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct Span {
+    pub start: String,
+    pub end: String,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum PreviewSource {
+    Saved {
+        id: String,
+    },
+    /// An edited draft; with `id`, the file's overrides still apply.
+    Draft {
+        id: Option<String>,
+        draft: AvailabilityDraft,
+    },
+    /// Times picked by hand. `tzid` resolves all-day busy events.
+    Ranges {
+        ranges: Vec<Span>,
+        tzid: String,
+    },
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct AvailabilityPreview {
+    /// Your hours, before busy.
+    pub available: Vec<Span>,
+    /// Busy time, padded by the buffers, where it falls inside `available`.
+    pub busy: Vec<Span>,
+    /// Bookable windows.
+    pub free: Vec<Span>,
+}
+
 impl From<&caldir_core::Calendar> for Calendar {
     fn from(c: &caldir_core::Calendar) -> Self {
         Calendar {
@@ -370,6 +477,8 @@ impl From<&caldir_core::Calendar> for Calendar {
                 .and_then(|r| r.account_identifier().map(String::from)),
             email: c.remote_email().map(String::from),
             read_only: c.read_only_setting(),
+            busy: c.is_busy_source(),
+            busy_is_default: c.config().and_then(|config| config.busy()).is_none(),
         }
     }
 }

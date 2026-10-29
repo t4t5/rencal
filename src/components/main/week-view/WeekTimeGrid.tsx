@@ -1,5 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { RefObject, useLayoutEffect, useRef, useState } from "react"
+import {
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  RefObject,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react"
 
 import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
 import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventBlock"
@@ -60,6 +67,14 @@ type WeekTimeGridProps = {
   onEventClick: (eventKey: string) => void
   draftEvent: CalendarEvent | null
   dimmed: boolean
+  /** Drawn under the events of each day column. */
+  dayBackground?: (day: MonthDay) => ReactNode
+  /** Drawn over the events of each day column. */
+  dayOverlay?: (day: MonthDay) => ReactNode
+  /** Replaces drag-to-create on the day columns. */
+  onDayPointerDown?: (day: MonthDay, event: ReactPointerEvent<HTMLElement>) => void
+  /** False dims events and stops them (and empty slots) from opening or creating anything. */
+  eventsInteractive?: boolean
 }
 
 export function WeekTimeGrid({
@@ -75,6 +90,10 @@ export function WeekTimeGrid({
   onEventClick,
   draftEvent,
   dimmed,
+  dayBackground,
+  dayOverlay,
+  onDayPointerDown,
+  eventsInteractive = true,
 }: WeekTimeGridProps) {
   const { calendars } = useCalendars()
   const { navigationVersion } = useCalendarNavigation()
@@ -245,6 +264,7 @@ export function WeekTimeGrid({
               {days.map((day, i) => (
                 <AllDayContextMenu
                   key={`${day.dateKey}-allday-bg`}
+                  disabled={!eventsInteractive}
                   onCreateEvent={() =>
                     openDayDraft(day.date, contextTargetRef.current!, { allDay: true })
                   }
@@ -268,23 +288,25 @@ export function WeekTimeGrid({
                   />
                 </AllDayContextMenu>
               ))}
-              {allDayItems.map((item) => {
-                const key = eventKey(item.event)
+              <div className={cn("contents", !eventsInteractive && "pointer-events-none")}>
+                {allDayItems.map((item) => {
+                  const key = eventKey(item.event)
 
-                return (
-                  <WeekAllDayBar
-                    key={key}
-                    item={item}
-                    colOffset={1}
-                    rowOffset={2}
-                    highlighted={key === activeEventKey || key === selectedEventKey}
-                    rsvp={getUserResponseStatus(item.event, calendars)}
-                    isDraft={item.event === draftEvent}
-                    dimmed={dimmed}
-                    onClick={() => onEventClick(key)}
-                  />
-                )
-              })}
+                  return (
+                    <WeekAllDayBar
+                      key={key}
+                      item={item}
+                      colOffset={1}
+                      rowOffset={2}
+                      highlighted={key === activeEventKey || key === selectedEventKey}
+                      rsvp={getUserResponseStatus(item.event, calendars)}
+                      isDraft={item.event === draftEvent}
+                      dimmed={dimmed || !eventsInteractive}
+                      onClick={() => onEventClick(key)}
+                    />
+                  )
+                })}
+              </div>
             </>
           )}
         </div>
@@ -304,6 +326,7 @@ export function WeekTimeGrid({
           {days.map((day) => (
             <ScheduledDayContextMenu
               key={day.dateKey}
+              disabled={!eventsInteractive}
               onCreateEvent={(el, anchorY) => {
                 const startHour = getHourFromClickY(el, anchorY)
                 const start = atTime(day.date, startHour)
@@ -328,24 +351,33 @@ export function WeekTimeGrid({
                 data-slot="week-day"
                 data-selected={day.dateKey === activeDateKey || undefined}
                 data-weekend={day.isWeekend || undefined}
-                onPointerDown={(event) => startCreateDrag(day.date, event)}
+                onPointerDown={(event) => {
+                  if (onDayPointerDown) onDayPointerDown(day, event)
+                  else if (eventsInteractive) startCreateDrag(day.date, event)
+                }}
                 onClick={() => onDayClick(day.date)}
               >
-                {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
-                  const key = eventKey(layout.event)
+                {dayBackground?.(day)}
 
-                  return (
-                    <WeekTimedEvent
-                      key={key}
-                      layout={layout}
-                      highlighted={key === activeEventKey || key === selectedEventKey}
-                      rsvp={getUserResponseStatus(layout.event, calendars)}
-                      isDraft={layout.event === draftEvent}
-                      dimmed={dimmed}
-                      onEventClick={onEventClick}
-                    />
-                  )
-                })}
+                <div className={cn("contents", !eventsInteractive && "pointer-events-none")}>
+                  {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
+                    const key = eventKey(layout.event)
+
+                    return (
+                      <WeekTimedEvent
+                        key={key}
+                        layout={layout}
+                        highlighted={key === activeEventKey || key === selectedEventKey}
+                        rsvp={getUserResponseStatus(layout.event, calendars)}
+                        isDraft={layout.event === draftEvent}
+                        dimmed={dimmed || !eventsInteractive}
+                        onEventClick={onEventClick}
+                      />
+                    )
+                  })}
+                </div>
+
+                {dayOverlay?.(day)}
 
                 {selection?.dayKey === day.dateKey && (
                   <DragToCreateSelection

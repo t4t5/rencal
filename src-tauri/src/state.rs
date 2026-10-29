@@ -133,6 +133,7 @@ pub struct AppState {
     events: EventCache,
     calendars_changed: Signal,
     events_changed: Signal,
+    availabilities_changed: Signal,
     providers_changed: Signal,
     pub deep_links: DeepLinkInbox,
 }
@@ -162,6 +163,7 @@ impl AppState {
             events: EventCache::default(),
             calendars_changed: Signal::new(),
             events_changed: Signal::new(),
+            availabilities_changed: Signal::new(),
             providers_changed: Signal::new(),
             deep_links: DeepLinkInbox::default(),
         })
@@ -234,6 +236,16 @@ impl AppState {
         self.events_changed.subscribe()
     }
 
+    /// An availability file or directory changed (in-app edits and the caldir
+    /// watcher alike).
+    pub fn notify_availabilities_changed(&self) {
+        self.availabilities_changed.notify();
+    }
+
+    pub fn subscribe_availabilities_changed(&self) -> watch::Receiver<u64> {
+        self.availabilities_changed.subscribe()
+    }
+
     /// Not called by `rescan_providers`: `list_providers` rescans on every
     /// call, so a listener that refetches would wake itself forever.
     pub fn notify_providers_changed(&self) {
@@ -281,6 +293,7 @@ impl AppState {
         });
         if data_dir_moved {
             self.notify_calendars_changed();
+            self.notify_availabilities_changed();
         }
     }
 }

@@ -1,3 +1,5 @@
+mod availability;
+mod availability_draft;
 mod conference;
 mod event_color;
 mod helpers;
@@ -6,36 +8,46 @@ mod types;
 mod check_provider_connection;
 mod connect_provider;
 mod connect_provider_with_credentials;
+mod create_availability;
 mod create_event;
 mod create_local_calendar;
 mod delete_account;
+mod delete_availability;
 mod delete_calendar;
 mod delete_event;
 mod delete_recurring_series;
 mod discard;
 mod find_event;
+mod free_times_text;
+mod get_availability;
 mod get_config;
 mod get_event;
 mod get_provider_connect_info;
+mod list_availabilities;
+mod list_availability_dirs;
 mod list_calendars;
 mod list_contacts;
 mod list_events;
 mod list_invites;
 mod list_providers;
+mod preview_availability;
 mod rename_calendar;
 mod rsvp;
 mod search_events;
+mod set_calendar_busy;
 mod set_calendar_color;
 mod set_config;
 mod split_recurring_series_at;
 mod sync;
 mod sync_preview;
+mod update_availability;
 mod update_event;
 
 pub use types::{
+    AvailabilityDetails, AvailabilityDraft, AvailabilityPreview, AvailabilitySummary,
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
-    CredentialsConnectResult, ProviderConnectInfo, ResponseStatus, SplitRecurringSeriesInput,
-    SyncPreview, TimeFormat, UpdateEventInput,
+    CredentialsConnectResult, PreviewSource, ProviderConnectInfo, ResponseStatus,
+    SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -104,6 +116,7 @@ pub trait CaldirApi {
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
     async fn set_calendar_color(calendar_slug: String, color: String) -> TauResult<()>;
+    async fn set_calendar_busy(calendar_slug: String, busy: bool) -> TauResult<()>;
     async fn delete_calendar(calendar_slug: String) -> TauResult<()>;
     async fn delete_account(provider_name: String, account: String) -> TauResult<()>;
 
@@ -115,6 +128,22 @@ pub trait CaldirApi {
     async fn set_default_calendar(slug: Option<String>) -> TauResult<()>;
 
     async fn set_calendar_dir(path: String) -> TauResult<()>;
+
+    async fn list_availabilities() -> TauResult<Vec<AvailabilitySummary>>;
+    async fn list_availability_dirs() -> TauResult<Vec<String>>;
+    async fn get_availability(id: String) -> TauResult<AvailabilityDetails>;
+    async fn create_availability(
+        draft: AvailabilityDraft,
+        dir: Option<String>,
+    ) -> TauResult<String>;
+    async fn update_availability(id: String, draft: AvailabilityDraft) -> TauResult<()>;
+    async fn delete_availability(id: String) -> TauResult<()>;
+    async fn preview_availability(
+        source: PreviewSource,
+        from: String,
+        to: String,
+    ) -> TauResult<AvailabilityPreview>;
+    async fn free_times_text(source: PreviewSource, tzid: Option<String>) -> TauResult<String>;
 }
 
 #[derive(Clone)]
@@ -276,6 +305,10 @@ impl CaldirApi for CaldirApiImpl {
         set_calendar_color::handler(&self.state, calendar_slug, color)
     }
 
+    async fn set_calendar_busy(self, calendar_slug: String, busy: bool) -> TauResult<()> {
+        set_calendar_busy::handler(&self.state, calendar_slug, busy)
+    }
+
     async fn delete_calendar(self, calendar_slug: String) -> TauResult<()> {
         delete_calendar::handler(&self.state, calendar_slug)
     }
@@ -301,5 +334,50 @@ impl CaldirApi for CaldirApiImpl {
 
     async fn set_calendar_dir(self, path: String) -> TauResult<()> {
         set_config::set_calendar_dir(&self.state, path)
+    }
+
+    async fn list_availabilities(self) -> TauResult<Vec<AvailabilitySummary>> {
+        list_availabilities::handler(&self.state)
+    }
+
+    async fn list_availability_dirs(self) -> TauResult<Vec<String>> {
+        list_availability_dirs::handler(&self.state)
+    }
+
+    async fn get_availability(self, id: String) -> TauResult<AvailabilityDetails> {
+        get_availability::handler(&self.state, id)
+    }
+
+    async fn create_availability(
+        self,
+        draft: AvailabilityDraft,
+        dir: Option<String>,
+    ) -> TauResult<String> {
+        create_availability::handler(&self.state, draft, dir)
+    }
+
+    async fn update_availability(self, id: String, draft: AvailabilityDraft) -> TauResult<()> {
+        update_availability::handler(&self.state, id, draft)
+    }
+
+    async fn delete_availability(self, id: String) -> TauResult<()> {
+        delete_availability::handler(&self.state, id)
+    }
+
+    async fn preview_availability(
+        self,
+        source: PreviewSource,
+        from: String,
+        to: String,
+    ) -> TauResult<AvailabilityPreview> {
+        preview_availability::handler(self.state, source, from, to).await
+    }
+
+    async fn free_times_text(
+        self,
+        source: PreviewSource,
+        tzid: Option<String>,
+    ) -> TauResult<String> {
+        free_times_text::handler(self.state, source, tzid).await
     }
 }
