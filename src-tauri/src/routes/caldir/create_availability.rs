@@ -1,6 +1,6 @@
 use caldir_core::availability::Availability;
 
-use super::availability::apply_draft;
+use super::availability_draft::apply;
 use super::types::AvailabilityDraft;
 use crate::routes::TauResult;
 use crate::state::AppState;
@@ -13,7 +13,7 @@ pub(super) fn handler(
     draft: AvailabilityDraft,
     dir: Option<String>,
 ) -> TauResult<String> {
-    let availability = apply_draft(&Availability::new(Vec::new()), &draft)?;
+    let availability = apply(&Availability::new(Vec::new()), &draft)?;
     let id = state
         .caldir()
         .availability_dir_for_new(dir.as_deref())?

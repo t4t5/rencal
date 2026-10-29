@@ -455,8 +455,6 @@ pub struct AvailabilityPreview {
     pub available: Vec<Span>,
     /// Busy time where it falls inside `available`.
     pub busy: Vec<Span>,
-    /// Bookable windows.
-    pub free: Vec<Span>,
 }
 
 impl From<&caldir_core::Calendar> for Calendar {

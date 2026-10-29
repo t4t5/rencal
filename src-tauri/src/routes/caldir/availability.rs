@@ -85,15 +85,6 @@ pub(super) fn display_name(file: &AvailabilityFile) -> String {
         .unwrap_or_else(|| file.slug().unwrap_or_default().to_string())
 }
 
-/// Apply a draft as of today in its own zone.
-pub(super) fn apply_draft(
-    base: &Availability,
-    draft: &super::types::AvailabilityDraft,
-) -> TauResult<Availability> {
-    let now = Utc::now();
-    apply(base, draft, |tz| now.with_timezone(&tz).date_naive())
-}
-
 /// A preview source, resolved to what core evaluates.
 pub(super) enum Resolved {
     Availability {
@@ -121,7 +112,7 @@ pub(super) fn resolve(caldir: &Caldir, source: PreviewSource) -> TauResult<Resol
                 Some(id) => find(caldir, id)?.availability().clone(),
                 None => Availability::new(Vec::new()),
             };
-            let availability = apply_draft(&base, &draft)?;
+            let availability = apply(&base, &draft)?;
             let name = availability
                 .summary
                 .clone()

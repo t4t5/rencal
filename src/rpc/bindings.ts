@@ -26,11 +26,7 @@ available: Span[];
 /**
  * Busy time where it falls inside `available`.
  */
-busy: Span[]; 
-/**
- * Bookable windows.
- */
-free: Span[] }
+busy: Span[] }
 
 export type AvailabilitySummary = { 
 /**

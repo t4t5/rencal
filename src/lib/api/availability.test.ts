@@ -25,7 +25,6 @@ it("sends picked ranges as UTC strings and returns preview spans as instants", a
     return {
       available: [{ start: "2026-11-02T09:00:00Z", end: "2026-11-02T10:00:00Z" }],
       busy: [],
-      free: [{ start: "2026-11-02T09:00:00Z", end: "2026-11-02T10:00:00Z" }],
     }
   })
 
@@ -40,7 +39,7 @@ it("sends picked ranges as UTC strings and returns preview spans as instants", a
     at("2026-11-08T23:00:00Z"),
   )
 
-  expect(preview.free[0].start.equals(at("2026-11-02T09:00:00Z"))).toBe(true)
+  expect(preview.available[0].start.equals(at("2026-11-02T09:00:00Z"))).toBe(true)
   expect(preview.busy).toEqual([])
 })
 

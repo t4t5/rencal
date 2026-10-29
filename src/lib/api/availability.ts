@@ -34,12 +34,10 @@ export type AvailabilitySource =
   | { kind: "ranges"; ranges: InstantSpan[]; tzid: string }
 
 export type AvailabilityPreview = {
-  /** Your hours from the notice cutoff on, before busy. */
+  /** Your hours, before busy. */
   available: InstantSpan[]
   /** Busy time where it falls inside your hours. */
   busy: InstantSpan[]
-  /** Bookable windows. */
-  free: InstantSpan[]
 }
 
 const toSpan = ({ start, end }: InstantSpan): Span => ({
@@ -87,7 +85,7 @@ export async function deleteAvailability(id: string): Promise<void> {
   await rpc.caldir.delete_availability(id)
 }
 
-/** Hours, busy and bookable windows in `[from, to)`; busy comes from `calendarSlugs`. */
+/** Hours and the busy time inside them in `[from, to)`; busy comes from `calendarSlugs`. */
 export async function previewAvailability(
   source: AvailabilitySource,
   calendarSlugs: string[],
@@ -103,7 +101,6 @@ export async function previewAvailability(
   return {
     available: preview.available.map(fromSpan),
     busy: preview.busy.map(fromSpan),
-    free: preview.free.map(fromSpan),
   }
 }
 

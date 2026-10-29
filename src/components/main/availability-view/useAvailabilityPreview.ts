@@ -8,14 +8,12 @@ import { api, getErrorMessage, type AvailabilityPreview, type AvailabilitySource
 import { daysRange } from "./day-segments"
 
 const DEBOUNCE_MS = 16
-// Notice moves with the clock.
-const REFRESH_MS = 5 * 60_000
 
 /**
  * What core makes of `source` over the loaded days, with busy time from the
  * calendars the active group shows. Null `source` keeps the last preview
  * (e.g. while the draft is invalid). Refreshes when events, calendars or
- * availabilities change, and every few minutes.
+ * availabilities change.
  */
 export function useAvailabilityPreview(
   source: AvailabilitySource | null,
@@ -33,11 +31,7 @@ export function useAvailabilityPreview(
     const subscriptions = (
       ["events-changed", "calendars-changed", "availabilities-changed"] as const
     ).map((name) => api.notifications.listen(name, bump))
-    const interval = setInterval(bump, REFRESH_MS)
-    return () => {
-      subscriptions.forEach((subscription) => subscription.unlisten())
-      clearInterval(interval)
-    }
+    return () => subscriptions.forEach((subscription) => subscription.unlisten())
   }, [])
 
   const first = days[0]?.date

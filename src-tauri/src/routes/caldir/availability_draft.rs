@@ -3,38 +3,24 @@
 //! in the file (UID, overrides, `X-*`, description, URL, organizer, window)
 //! is left as loaded.
 
-use std::collections::{BTreeMap, BTreeSet};
-
-use caldir_core::availability::{Availability, AvailableBlock, BookingRules};
-use caldir_core::{EventTime, Interval};
-use chrono::{DateTime, Datelike, Duration, NaiveDate, NaiveTime, SecondsFormat, Timelike, Utc};
+use caldir_core::Interval;
+use caldir_core::availability::{Availability, BookingRules, WeeklyHours};
+use chrono::{DateTime, Duration, NaiveTime, SecondsFormat, Timelike, Utc};
 use chrono_tz::Tz;
 
 use super::types::{AvailabilityDraft, DayHours, Span, TimeRange, Weekday};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
-const WEEKDAYS: [(Weekday, chrono::Weekday, &str); 7] = [
-    (Weekday::Mo, chrono::Weekday::Mon, "MO"),
-    (Weekday::Tu, chrono::Weekday::Tue, "TU"),
-    (Weekday::We, chrono::Weekday::Wed, "WE"),
-    (Weekday::Th, chrono::Weekday::Thu, "TH"),
-    (Weekday::Fr, chrono::Weekday::Fri, "FR"),
-    (Weekday::Sa, chrono::Weekday::Sat, "SA"),
-    (Weekday::Su, chrono::Weekday::Sun, "SU"),
+const WEEKDAYS: [(Weekday, chrono::Weekday); 7] = [
+    (Weekday::Mo, chrono::Weekday::Mon),
+    (Weekday::Tu, chrono::Weekday::Tue),
+    (Weekday::We, chrono::Weekday::Wed),
+    (Weekday::Th, chrono::Weekday::Thu),
+    (Weekday::Fr, chrono::Weekday::Fri),
+    (Weekday::Sa, chrono::Weekday::Sat),
+    (Weekday::Su, chrono::Weekday::Sun),
 ];
-
-/// A weekly block as the editor sees it.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct WeeklyBlock {
-    days: BTreeSet<Weekday>,
-    start: NaiveTime,
-    end: NaiveTime,
-    tzid: String,
-}
-
-/// What a draft says about the hours, normalised: sorted, merged ranges per day.
-type Hours = BTreeMap<Weekday, Vec<(NaiveTime, NaiveTime)>>;
 
 pub(super) struct Decomposed {
     pub draft: AvailabilityDraft,
@@ -43,20 +29,12 @@ pub(super) struct Decomposed {
 
 /// `fallback_tzid` names the zone when the blocks don't carry one.
 pub(super) fn decompose(availability: &Availability, fallback_tzid: &str) -> Decomposed {
-    let weekly = weekly_blocks(availability);
+    let weekly = editable_hours(availability);
     let hours_editable = weekly.is_some();
-    let weekly = weekly.unwrap_or_default();
-
-    let tzid = weekly
-        .first()
-        .map(|block| block.tzid.clone())
-        .or_else(|| availability.tzid().map(str::to_string))
-        .unwrap_or_else(|| fallback_tzid.to_string());
-
-    let hours = match hours_editable {
-        true => hours_to_dto(&hours_of(&weekly)),
-        false => Vec::new(),
-    };
+    let tzid = availability
+        .tzid()
+        .map_or_else(|| fallback_tzid.to_string(), str::to_string);
+    let hours = weekly.as_ref().map(hours_to_dto).unwrap_or_default();
     let rules = &availability.rules;
 
     Decomposed {
@@ -72,12 +50,8 @@ pub(super) fn decompose(availability: &Availability, fallback_tzid: &str) -> Dec
     }
 }
 
-/// Apply `draft` onto `base`. `today` anchors new blocks.
-pub(super) fn apply(
-    base: &Availability,
-    draft: &AvailabilityDraft,
-    today: impl Fn(Tz) -> NaiveDate,
-) -> TauResult<Availability> {
+/// Apply `draft` onto `base`.
+pub(super) fn apply(base: &Availability, draft: &AvailabilityDraft) -> TauResult<Availability> {
     let original = decompose(base, &draft.tzid);
     let rules = validate_rules(draft)?;
     let mut availability = base.clone();
@@ -90,9 +64,9 @@ pub(super) fn apply(
         let tz = parse_tz(&draft.tzid)?;
         let hours = parse_hours(&draft.hours)?;
         let unchanged =
-            draft.tzid == original.draft.tzid && hours == parse_hours(&original.draft.hours)?;
+            draft.tzid == original.draft.tzid && base.weekly_hours().as_ref() == Some(&hours);
         if !unchanged {
-            availability.blocks = build_blocks(&base.blocks, &hours, tz, today(tz));
+            availability.set_weekly_hours(&hours, tz);
         }
     }
 
@@ -145,158 +119,26 @@ fn keep_unchanged_rules(
     }
 }
 
-/// One block per distinct range, covering every day that has it, so Mon–Fri
-/// 09–17 stays one `RRULE`. A block that already says exactly that is reused,
-/// UID and `DTSTART` included.
-fn build_blocks(
-    existing: &[AvailableBlock],
-    hours: &Hours,
-    tz: Tz,
-    today: NaiveDate,
-) -> Vec<AvailableBlock> {
-    let mut by_range: BTreeMap<(NaiveTime, NaiveTime), BTreeSet<Weekday>> = BTreeMap::new();
-    for (day, ranges) in hours {
-        for range in ranges {
-            by_range.entry(*range).or_default().insert(*day);
-        }
-    }
-
-    by_range
-        .into_iter()
-        .filter_map(|((start, end), days)| {
-            let wanted = WeeklyBlock {
-                days: days.clone(),
-                start,
-                end,
-                tzid: tz.name().to_string(),
-            };
-            if let Some(block) = existing
-                .iter()
-                .find(|block| weekly_block(block).as_ref() == Some(&wanted))
-            {
-                return Some(block.clone());
-            }
-            let days: Vec<chrono::Weekday> = days.iter().map(|day| chrono_weekday(*day)).collect();
-            AvailableBlock::weekly(&days, start, end, tz, today)
-        })
-        .collect()
-}
-
-/// Every block as a plain weekly series in one zone, or `None` when the file
-/// says something the hours editor can't show.
-fn weekly_blocks(availability: &Availability) -> Option<Vec<WeeklyBlock>> {
-    if availability.start.is_some() || availability.end.is_some() {
-        return None;
-    }
-    let blocks: Vec<WeeklyBlock> = availability
-        .blocks
+/// Core's weekly hours, when the editor can show them: it edits whole minutes.
+fn editable_hours(availability: &Availability) -> Option<WeeklyHours> {
+    let hours = availability.weekly_hours()?;
+    let whole_minutes = |time: &NaiveTime| time.second() == 0 && time.nanosecond() == 0;
+    WEEKDAYS
         .iter()
-        .map(weekly_block)
-        .collect::<Option<_>>()?;
-    let one_zone = blocks.windows(2).all(|pair| pair[0].tzid == pair[1].tzid);
-    one_zone.then_some(blocks)
-}
-
-/// `FREQ=WEEKLY;BYDAY=…` only, zoned, starting and ending on the same day on
-/// one of its weekdays, with nothing on the block the editor would drop.
-fn weekly_block(block: &AvailableBlock) -> Option<WeeklyBlock> {
-    let (
-        EventTime::DateTimeZoned {
-            datetime: start,
-            tzid,
-        },
-        EventTime::DateTimeZoned {
-            datetime: end,
-            tzid: end_tzid,
-        },
-    ) = (&block.start, &block.end)
-    else {
-        return None;
-    };
-    let recurrence = block.recurrence.as_ref()?;
-    if tzid != end_tzid
-        || start.date() != end.date()
-        || end <= start
-        || start.time().second() != 0
-        || end.time().second() != 0
-        || !recurrence.exdates.is_empty()
-        || !recurrence.rdates.is_empty()
-        || block.summary.is_some()
-        || !block.x_properties.is_empty()
-    {
-        return None;
-    }
-
-    let days = weekly_byday(&recurrence.rrule)?;
-    let first_day = WEEKDAYS
-        .iter()
-        .find(|(_, weekday, _)| *weekday == start.weekday())
-        .map(|(day, _, _)| *day)?;
-    if !days.contains(&first_day) {
-        return None;
-    }
-
-    Some(WeeklyBlock {
-        days,
-        start: start.time(),
-        end: end.time(),
-        tzid: tzid.clone(),
-    })
-}
-
-/// The days of an `RRULE` that has exactly `FREQ=WEEKLY` and a plain `BYDAY`.
-fn weekly_byday(rrule: &str) -> Option<BTreeSet<Weekday>> {
-    let mut freq = None;
-    let mut byday = None;
-    for part in rrule.split(';').filter(|part| !part.is_empty()) {
-        let (key, value) = part.split_once('=')?;
-        match key.to_ascii_uppercase().as_str() {
-            "FREQ" if freq.is_none() => freq = Some(value.to_ascii_uppercase()),
-            "BYDAY" if byday.is_none() => byday = Some(value.to_ascii_uppercase()),
-            _ => return None,
-        }
-    }
-    if freq.as_deref() != Some("WEEKLY") {
-        return None;
-    }
-    byday?
-        .split(',')
-        .map(|code| {
-            WEEKDAYS
-                .iter()
-                .find(|(_, _, c)| *c == code)
-                .map(|(day, _, _)| *day)
-        })
-        .collect::<Option<BTreeSet<_>>>()
-        .filter(|days| !days.is_empty())
-}
-
-fn hours_of(blocks: &[WeeklyBlock]) -> Hours {
-    let mut hours = Hours::new();
-    for block in blocks {
-        for day in &block.days {
-            hours
-                .entry(*day)
-                .or_default()
-                .push((block.start, block.end));
-        }
-    }
-    for ranges in hours.values_mut() {
-        *ranges = merge_ranges(std::mem::take(ranges));
-    }
-    hours
+        .flat_map(|(_, day)| hours.ranges(*day))
+        .all(|(start, end)| whole_minutes(start) && whole_minutes(end))
+        .then_some(hours)
 }
 
 /// Every weekday in Monday-first order, empty when unavailable.
-fn hours_to_dto(hours: &Hours) -> Vec<DayHours> {
+fn hours_to_dto(hours: &WeeklyHours) -> Vec<DayHours> {
     WEEKDAYS
         .iter()
-        .map(|(day, _, _)| DayHours {
+        .map(|(day, weekday)| DayHours {
             day: *day,
             ranges: hours
-                .get(day)
-                .into_iter()
-                .flatten()
+                .ranges(*weekday)
+                .iter()
                 .map(|(start, end)| TimeRange {
                     start: format_time(*start),
                     end: format_time(*end),
@@ -306,8 +148,8 @@ fn hours_to_dto(hours: &Hours) -> Vec<DayHours> {
         .collect()
 }
 
-fn parse_hours(days: &[DayHours]) -> TauResult<Hours> {
-    let mut hours = Hours::new();
+fn parse_hours(days: &[DayHours]) -> TauResult<WeeklyHours> {
+    let mut hours = WeeklyHours::new();
     for day in days {
         for range in &day.ranges {
             let start = parse_time(&range.start)?;
@@ -320,27 +162,10 @@ fn parse_hours(days: &[DayHours]) -> TauResult<Hours> {
                     range.end
                 )));
             }
-            hours.entry(day.day).or_default().push((start, end));
+            hours.add(chrono_weekday(day.day), start, end);
         }
     }
-    for ranges in hours.values_mut() {
-        *ranges = merge_ranges(std::mem::take(ranges));
-    }
-    hours.retain(|_, ranges| !ranges.is_empty());
     Ok(hours)
-}
-
-/// Sort and coalesce overlapping or touching ranges.
-fn merge_ranges(mut ranges: Vec<(NaiveTime, NaiveTime)>) -> Vec<(NaiveTime, NaiveTime)> {
-    ranges.sort();
-    let mut merged: Vec<(NaiveTime, NaiveTime)> = Vec::with_capacity(ranges.len());
-    for (start, end) in ranges {
-        match merged.last_mut() {
-            Some(last) if start <= last.1 => last.1 = last.1.max(end),
-            _ => merged.push((start, end)),
-        }
-    }
-    merged
 }
 
 pub(super) fn parse_tz(tzid: &str) -> TauResult<Tz> {
@@ -372,8 +197,8 @@ fn day_label(day: Weekday) -> &'static str {
 fn chrono_weekday(day: Weekday) -> chrono::Weekday {
     WEEKDAYS
         .iter()
-        .find(|(d, _, _)| *d == day)
-        .map(|(_, weekday, _)| *weekday)
+        .find(|(d, _)| *d == day)
+        .map(|(_, weekday)| *weekday)
         .expect("every weekday is listed")
 }
 
@@ -410,15 +235,11 @@ pub(super) fn from_span(span: &Span) -> TauResult<Interval> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use caldir_core::Recurrence;
-    use caldir_core::availability::AvailabilityOverride;
+    use caldir_core::availability::{AvailabilityOverride, AvailableBlock};
+    use caldir_core::{EventTime, Recurrence};
+    use chrono::NaiveDate;
 
     const STOCKHOLM: &str = "Europe/Stockholm";
-
-    // A Wednesday.
-    fn today(_: Tz) -> NaiveDate {
-        NaiveDate::from_ymd_opt(2026, 10, 28).unwrap()
-    }
 
     fn time(h: u32, m: u32) -> NaiveTime {
         NaiveTime::from_hms_opt(h, m, 0).unwrap()
@@ -441,7 +262,7 @@ mod tests {
     fn weekdays(ranges: &[(&str, &str)]) -> Vec<DayHours> {
         WEEKDAYS
             .iter()
-            .map(|(d, _, _)| match d {
+            .map(|(d, _)| match d {
                 Weekday::Sa | Weekday::Su => day(*d, &[]),
                 _ => day(*d, ranges),
             })
@@ -460,46 +281,11 @@ mod tests {
     }
 
     fn weekly(days: &[chrono::Weekday], start: NaiveTime, end: NaiveTime) -> AvailableBlock {
-        AvailableBlock::weekly(
-            days,
-            start,
-            end,
-            chrono_tz::Europe::Stockholm,
-            today(chrono_tz::UTC),
-        )
-        .unwrap()
+        AvailableBlock::weekly(days, start, end, chrono_tz::Europe::Stockholm).unwrap()
     }
 
     fn new_from(draft: &AvailabilityDraft) -> Availability {
-        apply(&Availability::new(Vec::new()), draft, today).unwrap()
-    }
-
-    fn rrules(availability: &Availability) -> Vec<&str> {
-        availability
-            .blocks
-            .iter()
-            .map(|block| block.recurrence.as_ref().unwrap().rrule.as_str())
-            .collect()
-    }
-
-    #[test]
-    fn identical_days_share_one_block_per_range() {
-        let availability = new_from(&draft(weekdays(&[("09:00", "12:00"), ("13:00", "17:00")])));
-
-        assert_eq!(
-            rrules(&availability),
-            [
-                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR",
-                "FREQ=WEEKLY;BYDAY=MO,TU,WE,TH,FR"
-            ]
-        );
-        assert_eq!(
-            availability.blocks[0].start,
-            EventTime::DateTimeZoned {
-                datetime: today(chrono_tz::UTC).and_time(time(9, 0)),
-                tzid: STOCKHOLM.into(),
-            }
-        );
+        apply(&Availability::new(Vec::new()), draft).unwrap()
     }
 
     #[test]
@@ -565,7 +351,7 @@ mod tests {
         let mut edited = decompose(&base, "UTC").draft;
         edited.name = "Renamed".into();
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
 
         assert_eq!(applied.blocks, base.blocks);
         assert_eq!(applied.summary.as_deref(), Some("Renamed"));
@@ -580,7 +366,7 @@ mod tests {
             day.ranges[1] = range("13:00", "16:00");
         }
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
 
         assert_eq!(applied.blocks.len(), 2);
         assert_eq!(applied.blocks[0], base.blocks[0]);
@@ -593,7 +379,7 @@ mod tests {
         let mut edited = decompose(&base, "UTC").draft;
         edited.tzid = "America/New_York".into();
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
         let decomposed = decompose(&applied, "UTC");
 
         assert_eq!(applied.tzid(), Some("America/New_York"));
@@ -638,7 +424,7 @@ END:VCALENDAR\r\n";
         edited.name = "Meetings".into();
         edited.hours[0].ranges[0] = range("10:00", "17:00");
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
 
         assert_eq!(applied.overrides, base.overrides);
         assert_eq!(applied.x_properties, base.x_properties);
@@ -656,7 +442,7 @@ END:VCALENDAR\r\n";
         let base = new_from(&draft(weekdays(&[("09:00", "17:00")])));
         let edited = decompose(&base, "UTC").draft;
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
 
         assert_eq!(applied.to_ics_string(), base.to_ics_string());
     }
@@ -669,7 +455,7 @@ END:VCALENDAR\r\n";
         assert_eq!(edited.horizon_days, 2);
         edited.duration_minutes = 60;
 
-        let applied = apply(&base, &edited, today).unwrap();
+        let applied = apply(&base, &edited).unwrap();
 
         assert_eq!(applied.rules.horizon, Duration::hours(36));
         assert_eq!(applied.rules.duration, Duration::minutes(60));
@@ -677,22 +463,28 @@ END:VCALENDAR\r\n";
 
     #[test]
     fn non_weekly_blocks_are_read_only_and_survive_a_save() {
-        let one_off = AvailableBlock::new(
-            EventTime::DateTimeZoned {
-                datetime: today(chrono_tz::UTC).and_time(time(9, 0)),
-                tzid: STOCKHOLM.into(),
-            },
-            EventTime::DateTimeZoned {
-                datetime: today(chrono_tz::UTC).and_time(time(10, 0)),
-                tzid: STOCKHOLM.into(),
-            },
-        );
+        let at = |time: NaiveTime| EventTime::DateTimeZoned {
+            datetime: NaiveDate::from_ymd_opt(2026, 10, 28)
+                .unwrap()
+                .and_time(time),
+            tzid: STOCKHOLM.into(),
+        };
+        let one_off = AvailableBlock::new(at(time(9, 0)), at(time(10, 0)));
+        let mut with_seconds = weekly(&[chrono::Weekday::Mon], time(9, 0), time(17, 0));
+        with_seconds.start = at(NaiveTime::from_hms_opt(9, 0, 30).unwrap());
+        with_seconds.end = at(time(17, 0));
+        with_seconds.recurrence = Some(Recurrence::new("FREQ=WEEKLY;BYDAY=WE"));
         let mut daily = weekly(&[chrono::Weekday::Mon], time(9, 0), time(17, 0));
         daily.recurrence = Some(Recurrence::new("FREQ=DAILY"));
         let mut counted = weekly(&[chrono::Weekday::Mon], time(9, 0), time(17, 0));
         counted.recurrence = Some(Recurrence::new("FREQ=WEEKLY;BYDAY=MO;COUNT=3"));
 
-        for blocks in [vec![one_off], vec![daily], vec![counted]] {
+        for blocks in [
+            vec![one_off],
+            vec![daily],
+            vec![counted],
+            vec![with_seconds],
+        ] {
             let base = Availability::new(blocks);
             let decomposed = decompose(&base, "UTC");
             assert!(!decomposed.hours_editable);
@@ -701,7 +493,7 @@ END:VCALENDAR\r\n";
 
             let mut edited = decomposed.draft;
             edited.name = "Renamed".into();
-            let applied = apply(&base, &edited, today).unwrap();
+            let applied = apply(&base, &edited).unwrap();
             assert_eq!(applied.blocks, base.blocks);
         }
     }
@@ -719,7 +511,6 @@ END:VCALENDAR\r\n";
                 time(9, 0),
                 time(17, 0),
                 chrono_tz::UTC,
-                today(chrono_tz::UTC),
             )
             .unwrap(),
         ]);
@@ -783,7 +574,7 @@ END:VCALENDAR\r\n";
         ];
 
         for case in cases {
-            let error = apply(&base, &case, today).unwrap_err();
+            let error = apply(&base, &case).unwrap_err();
             assert_eq!(error.kind, RpcErrorKind::InvalidInput, "{error}");
         }
     }

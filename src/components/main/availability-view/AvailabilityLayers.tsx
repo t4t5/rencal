@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill"
 import type { CSSProperties } from "react"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
@@ -61,19 +60,13 @@ type ScheduleLayerProps = {
   day: MonthDay
   preview: AvailabilityPreview | null
   tzid: string
-  horizonEnd: Temporal.Instant | null
 }
 
-// Nothing past the booking window is bookable, so it stays hatched.
 function scheduleSegments(
-  { day, preview, tzid, horizonEnd }: ScheduleLayerProps,
+  { day, preview, tzid }: ScheduleLayerProps,
   pick: (preview: AvailabilityPreview) => readonly InstantSpan[],
 ): DaySegment[] {
-  if (!preview) return []
-  const beyondHorizon =
-    horizonEnd !== null &&
-    Temporal.Instant.compare(day.date.toZonedDateTime(tzid).toInstant(), horizonEnd) >= 0
-  return beyondHorizon ? [] : daySegments(pick(preview), day.date, tzid)
+  return preview ? daySegments(pick(preview), day.date, tzid) : []
 }
 
 /** Schedules mode, under the events: everything outside your hours hatched. */

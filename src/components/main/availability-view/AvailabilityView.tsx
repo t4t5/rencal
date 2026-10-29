@@ -1,4 +1,3 @@
-import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useRef } from "react"
 
 import { WeekTimeGrid } from "@/components/main/week-view/WeekTimeGrid"
@@ -9,7 +8,6 @@ import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateCon
 import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
 import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
 import { getPreviousCalendarView, useCalendarView } from "@/hooks/useCalendarView"
-import { useNow } from "@/hooks/useNow"
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import type { AvailabilitySource } from "@/lib/api"
 import { formatDateKey } from "@/lib/event-time"
@@ -47,7 +45,6 @@ function AvailabilityViewContent() {
   const { calendarEvents } = useCalEvents()
   const { mode, editor, dirty, selections, addSelection, removeSelection } = useAvailability()
   const tzid = useViewerTzid()
-  const now = useNow()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { days } = useInfiniteDays({ scrollContainerRef, activeDate })
@@ -68,12 +65,7 @@ function AvailabilityViewContent() {
   draggingRef.current = dragging
   useBackOnEscape(draggingRef)
 
-  const horizonEnd =
-    editor && mode === "schedules"
-      ? Temporal.Instant.fromEpochMilliseconds(now).add({ hours: 24 * editor.draft.horizon_days })
-      : null
-  const scheduleLayers =
-    mode === "schedules" && editor ? { preview: schedule.preview, tzid, horizonEnd } : null
+  const scheduleLayers = mode === "schedules" && editor ? { preview: schedule.preview, tzid } : null
 
   return (
     <div className="flex h-full w-full min-w-0">

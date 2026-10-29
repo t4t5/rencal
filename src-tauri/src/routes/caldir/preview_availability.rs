@@ -1,18 +1,13 @@
 use std::sync::Arc;
 
 use caldir_core::Interval;
-use chrono::{DateTime, Duration, Utc};
 
-use super::availability::{Resolved, intersect, now, resolve};
+use super::availability::{Resolved, intersect, resolve};
 use super::availability_draft::{from_span, to_span};
 use super::types::{AvailabilityPreview, PreviewSource, Span};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
-
-/// Busy outside the visible range only matters through windows that cross its
-/// edges; a day either side covers them.
-const EDGE_MARGIN: Duration = Duration::days(1);
 
 /// What the grid draws for `[from, to)`, with busy time from `calendar_slugs`.
 pub(super) async fn handler(
@@ -26,7 +21,7 @@ pub(super) async fn handler(
         start: from,
         end: to,
     })?;
-    tokio::task::spawn_blocking(move || preview(&state, source, &calendar_slugs, range, now()))
+    tokio::task::spawn_blocking(move || preview(&state, source, &calendar_slugs, range))
         .await
         .map_err(|err| RpcError::new(RpcErrorKind::Internal, err.to_string()))?
 }
@@ -36,49 +31,22 @@ fn preview(
     source: PreviewSource,
     calendar_slugs: &[String],
     range: Interval,
-    now: DateTime<Utc>,
 ) -> TauResult<AvailabilityPreview> {
     let resolved = resolve(&state.caldir(), source)?;
     let tz = resolved.tz();
 
-    let (available, busy, free) = match resolved {
+    let available = match resolved {
         Resolved::Availability { availability, .. } => {
-            let rules = availability.rules;
-            // Hours before notice can't be booked, so they aren't drawn.
-            let bookable_from = rules.range(now).start.max(range.start);
-            let available = if bookable_from < range.end {
-                availability.available_intervals(bookable_from, range.end)
-            } else {
-                Vec::new()
-            };
-            let free = match rules.range(now).intersect(&range) {
-                None => Vec::new(),
-                Some(_) => {
-                    let wanted =
-                        Interval::new(range.start - EDGE_MARGIN, range.end + EDGE_MARGIN);
-                    let busy = match rules.range(now).intersect(&wanted) {
-                        Some(fetch) => state.busy_intervals(calendar_slugs, fetch, tz)?,
-                        None => Vec::new(),
-                    };
-                    intersect(&availability.free_windows(&busy, now), &[range])
-                }
-            };
-
-            let busy = state.busy_intervals(calendar_slugs, range, tz)?;
-            (available.clone(), intersect(&available, &busy), free)
+            availability.available_intervals(range.start, range.end)
         }
-        Resolved::Ranges { ranges, tz } => {
-            let picked = intersect(&ranges, &[range]);
-            let busy = state.busy_intervals(calendar_slugs, range, tz)?;
-            (picked.clone(), intersect(&picked, &busy), picked)
-        }
+        Resolved::Ranges { ranges, .. } => intersect(&ranges, &[range]),
     };
+    let busy = state.busy_intervals(calendar_slugs, range, tz)?;
 
     let spans = |intervals: &[Interval]| intervals.iter().map(to_span).collect();
     Ok(AvailabilityPreview {
         available: spans(&available),
-        busy: spans(&busy),
-        free: spans(&free),
+        busy: spans(&intersect(&available, &busy)),
     })
 }
 
@@ -90,7 +58,7 @@ mod tests {
     use caldir_core::{
         Attendee, CaldirConfig, Calendar, CalendarConfig, Event, EventTime, ParticipationStatus,
     };
-    use chrono::{NaiveDate, TimeZone};
+    use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 
     fn stockholm(d: u32, h: u32, m: u32) -> EventTime {
         EventTime::DateTimeZoned {
@@ -197,16 +165,8 @@ mod tests {
     #[test]
     fn declined_or_read_only_events_dont_block() {
         let fixture = fixture();
-        let now = utc(1, 23, 0);
 
-        let preview = preview(
-            &fixture.state,
-            draft(weekdays_9_to_17()),
-            &all(),
-            week(),
-            now,
-        )
-        .unwrap();
+        let preview = preview(&fixture.state, draft(weekdays_9_to_17()), &all(), week()).unwrap();
 
         assert_eq!(
             preview.available,
@@ -216,28 +176,6 @@ mod tests {
             ]
         );
         assert_eq!(preview.busy, [span(utc(2, 9, 0), utc(2, 10, 0))]);
-        // The one-day horizon ends at Monday midnight: Tuesday is out.
-        assert_eq!(
-            preview.free,
-            [
-                span(utc(2, 8, 0), utc(2, 9, 0)),
-                span(utc(2, 10, 0), utc(2, 16, 0))
-            ]
-        );
-    }
-
-    #[test]
-    fn nothing_is_free_before_notice() {
-        let fixture = fixture();
-        let mut rules = weekdays_9_to_17();
-        rules.notice_minutes = 4 * 60;
-        // Mon 09:30 Stockholm.
-        let now = utc(2, 8, 30);
-
-        let preview = preview(&fixture.state, draft(rules), &all(), week(), now).unwrap();
-
-        assert_eq!(preview.available[0], span(utc(2, 12, 30), utc(2, 16, 0)));
-        assert_eq!(preview.free[0], span(utc(2, 12, 30), utc(2, 16, 0)));
     }
 
     #[test]
@@ -248,14 +186,7 @@ mod tests {
         config.set_busy(Some(true));
         config.write(&feed.config_path()).unwrap();
 
-        let preview = preview(
-            &fixture.state,
-            draft(weekdays_9_to_17()),
-            &all(),
-            week(),
-            utc(1, 23, 0),
-        )
-        .unwrap();
+        let preview = preview(&fixture.state, draft(weekdays_9_to_17()), &all(), week()).unwrap();
 
         assert_eq!(
             preview.busy,
@@ -275,7 +206,6 @@ mod tests {
             draft(weekdays_9_to_17()),
             &["feed".to_string()],
             week(),
-            utc(1, 23, 0),
         )
         .unwrap();
 
@@ -283,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn ranges_are_free_as_picked_and_flag_busy_overlap() {
+    fn ranges_are_available_as_picked_and_flag_busy_overlap() {
         let fixture = fixture();
         let source = PreviewSource::Ranges {
             ranges: vec![
@@ -293,9 +223,9 @@ mod tests {
             tzid: "Europe/Stockholm".into(),
         };
 
-        let preview = preview(&fixture.state, source, &all(), week(), utc(1, 23, 0)).unwrap();
+        let preview = preview(&fixture.state, source, &all(), week()).unwrap();
 
-        assert_eq!(preview.free, [span(utc(2, 9, 30), utc(2, 11, 30))]);
+        assert_eq!(preview.available, [span(utc(2, 9, 30), utc(2, 11, 30))]);
         assert_eq!(preview.busy, [span(utc(2, 9, 30), utc(2, 10, 0))]);
     }
 }
