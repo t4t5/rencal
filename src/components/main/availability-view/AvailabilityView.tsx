@@ -86,7 +86,7 @@ function AvailabilityViewContent() {
           dimmed={false}
           eventsInteractive={false}
           onDayPointerDown={mode === "share" ? startDrag : undefined}
-          dayBackground={
+          dayOverlay={
             mode === "schedules" && editor
               ? (day) => (
                   <ScheduleLayers
@@ -96,21 +96,18 @@ function AvailabilityViewContent() {
                     horizonEnd={horizonEnd}
                   />
                 )
-              : undefined
-          }
-          dayOverlay={
-            mode === "share"
-              ? (day) => (
-                  <ShareLayers
-                    day={day}
-                    selections={selections}
-                    busy={share.preview?.busy ?? []}
-                    tzid={tzid}
-                    dragging={dragging?.dayKey === day.dateKey ? dragging : null}
-                    onRemove={removeSelection}
-                  />
-                )
-              : undefined
+              : mode === "share"
+                ? (day) => (
+                    <ShareLayers
+                      day={day}
+                      selections={selections}
+                      busy={share.preview?.busy ?? []}
+                      tzid={tzid}
+                      dragging={dragging?.dayKey === day.dateKey ? dragging : null}
+                      onRemove={removeSelection}
+                    />
+                  )
+                : undefined
           }
         />
         {mode === "schedules" && schedule.error && (

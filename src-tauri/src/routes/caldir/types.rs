@@ -24,10 +24,6 @@ pub struct Calendar {
     /// The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
     pub email: Option<String>,
     pub read_only: Option<bool>,
-    /// Whether events here block availability.
-    pub busy: bool,
-    /// `busy` follows the default (on unless read-only) rather than the config.
-    pub busy_is_default: bool,
 }
 
 /// JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
@@ -477,8 +473,6 @@ impl From<&caldir_core::Calendar> for Calendar {
                 .and_then(|r| r.account_identifier().map(String::from)),
             email: c.remote_email().map(String::from),
             read_only: c.read_only_setting(),
-            busy: c.is_busy_source(),
-            busy_is_default: c.config().and_then(|config| config.busy()).is_none(),
         }
     }
 }

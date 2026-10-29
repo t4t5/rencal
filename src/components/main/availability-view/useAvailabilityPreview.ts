@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react"
 
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
+import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { api, getErrorMessage, type AvailabilityPreview, type AvailabilitySource } from "@/lib/api"
 
@@ -11,15 +12,17 @@ const DEBOUNCE_MS = 100
 const REFRESH_MS = 5 * 60_000
 
 /**
- * What core makes of `source` over the loaded days. Null `source` keeps the
- * last preview (e.g. while the draft is invalid). Refreshes when events,
- * calendars or availabilities change, and every few minutes.
+ * What core makes of `source` over the loaded days, with busy time from the
+ * calendars the active group shows. Null `source` keeps the last preview
+ * (e.g. while the draft is invalid). Refreshes when events, calendars or
+ * availabilities change, and every few minutes.
  */
 export function useAvailabilityPreview(
   source: AvailabilitySource | null,
   days: readonly MonthDay[],
 ): { preview: AvailabilityPreview | null; error: string | null } {
   const tzid = useViewerTzid()
+  const calendarSlugs = useVisibleCalendarIds()
   const [preview, setPreview] = useState<AvailabilityPreview | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [tick, setTick] = useState(0)
@@ -40,7 +43,8 @@ export function useAvailabilityPreview(
   const first = days[0]?.date
   const last = days.at(-1)?.date
   // Instants serialize as ISO strings, so the key changes exactly when the request would.
-  const key = source && first && last ? JSON.stringify([source, first, last, tzid]) : null
+  const key =
+    source && first && last ? JSON.stringify([source, calendarSlugs, first, last, tzid]) : null
 
   useEffect(() => {
     if (!key || !source || !first || !last) return
@@ -48,7 +52,7 @@ export function useAvailabilityPreview(
     const timeout = setTimeout(() => {
       const { from, to } = daysRange(first, last, tzid)
       api.availability
-        .preview(source, from, to)
+        .preview(source, calendarSlugs, from, to)
         .then((next) => {
           if (request !== requestRef.current) return
           setPreview(next)
@@ -60,7 +64,7 @@ export function useAvailabilityPreview(
         })
     }, DEBOUNCE_MS)
     return () => clearTimeout(timeout)
-    // `key` covers source and range.
+    // `key` covers source, calendars and range.
   }, [key, tick])
 
   return { preview, error }

@@ -14,8 +14,6 @@ const work: Calendar = {
   account: null,
   email: "me@example.com",
   read_only: false,
-  busy: true,
-  busy_is_default: true,
 }
 
 function event(id: string, start: string, end: string, attendees: EventAttendee[] = []) {

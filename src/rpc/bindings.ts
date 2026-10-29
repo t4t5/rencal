@@ -52,15 +52,7 @@ export type Calendar = { slug: string; name: string | null; color: string | null
 /**
  * The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
  */
-email: string | null; read_only: boolean | null; 
-/**
- * Whether events here block availability.
- */
-busy: boolean; 
-/**
- * `busy` follows the default (on unless read-only) rather than the config.
- */
-busy_is_default: boolean }
+email: string | null; read_only: boolean | null }
 
 export type CalendarEvent = { id: string; recurring_event_id: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; status: EventStatus; availability: EventAvailability; recurrence: RpcRecurrence | null; master_recurrence: RpcRecurrence | null; reminders: number[]; organizer: EventAttendee | null; attendees: EventAttendee[]; conference: EventConference | null; calendar_slug: string; color: string | null; 
 /**
@@ -335,7 +327,7 @@ color: string | null }
 
 export type Weekday = "mo" | "tu" | "we" | "th" | "fr" | "sa" | "su"
 
-const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_availability":["draft","dir"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_availability":["id"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"free_times_text":["source","tzid"],"get_availability":["id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_availabilities":[],"list_availability_dirs":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_availability":["source","from","to"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_busy":["calendar_slug","busy"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_availability":["id","draft"],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
+const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_availability":["draft","dir"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_availability":["id"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"free_times_text":["source","calendar_slugs","tzid"],"get_availability":["id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_availabilities":[],"list_availability_dirs":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_availability":["source","calendar_slugs","from","to"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_availability":["id","draft"],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<CredentialsConnectResult>, 
@@ -349,7 +341,7 @@ delete_event: (calendarSlug: string, eventId: string) => Promise<null>,
 delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
 discard: () => Promise<null>, 
 find_event: (uid: string, recurrenceId: string | null) => Promise<CalendarEvent | null>, 
-free_times_text: (source: PreviewSource, tzid: string | null) => Promise<string>, 
+free_times_text: (source: PreviewSource, calendarSlugs: string[], tzid: string | null) => Promise<string>, 
 get_availability: (id: string) => Promise<AvailabilityDetails>, 
 get_caldir_settings: () => Promise<CaldirSettings>, 
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
@@ -361,11 +353,10 @@ list_contacts: () => Promise<Contact[]>,
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<ProviderInfo[]>, 
-preview_availability: (source: PreviewSource, from: string, to: string) => Promise<AvailabilityPreview>, 
+preview_availability: (source: PreviewSource, calendarSlugs: string[], from: string, to: string) => Promise<AvailabilityPreview>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
 rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
-set_calendar_busy: (calendarSlug: string, busy: boolean) => Promise<null>, 
 set_calendar_color: (calendarSlug: string, color: string) => Promise<null>, 
 set_calendar_dir: (path: string) => Promise<null>, 
 set_default_calendar: (slug: string | null) => Promise<null>, 

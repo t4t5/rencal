@@ -8,32 +8,20 @@ import { cn } from "@/lib/utils"
 
 import { type DaySegment, daySegments } from "./day-segments"
 
-const OUTSIDE_HOURS: CSSProperties = {
-  backgroundColor: "color-mix(in oklab, var(--foreground) 5%, transparent)",
-}
+const OUTLINE: CSSProperties = { borderColor: "var(--primary)" }
 
-const HOURS: CSSProperties = {
-  borderColor: "color-mix(in oklab, var(--primary) 45%, transparent)",
-}
-
-// Opaque, so it reads the same over the dimmed column.
-const BOOKABLE: CSSProperties = {
-  backgroundColor: "var(--background)",
-  backgroundImage:
-    "linear-gradient(color-mix(in oklab, var(--primary) 18%, transparent), color-mix(in oklab, var(--primary) 18%, transparent))",
+const DRAFT: CSSProperties = {
+  ...OUTLINE,
+  backgroundColor: "color-mix(in oklab, var(--primary) 14%, transparent)",
 }
 
 // Red rather than the warning tint: several themes' primary is orange, and
 // blocked must not read as bookable.
-const BUSY: CSSProperties = {
+const CONFLICT: CSSProperties = {
+  borderColor: "var(--destructive)",
   backgroundColor: "color-mix(in oklab, var(--destructive) 8%, transparent)",
   backgroundImage:
     "repeating-linear-gradient(135deg, color-mix(in oklab, var(--destructive) 45%, transparent) 0 1.5px, transparent 1.5px 6px)",
-}
-
-const FREE: CSSProperties = {
-  backgroundColor: "color-mix(in oklab, var(--primary) 14%, transparent)",
-  borderColor: "color-mix(in oklab, var(--primary) 55%, transparent)",
 }
 
 function segmentBox({ startMinutes, endMinutes }: DaySegment): CSSProperties {
@@ -45,10 +33,20 @@ function segmentBox({ startMinutes, endMinutes }: DaySegment): CSSProperties {
 
 const segmentKey = (s: DaySegment) => `${s.startMinutes}-${s.endMinutes}`
 
+function Conflicts({ segments }: { segments: readonly DaySegment[] }) {
+  return segments.map((segment) => (
+    <div
+      key={`conflict-${segmentKey(segment)}`}
+      data-slot="availability-conflict"
+      className="absolute inset-x-0.5 z-10 rounded-sm border-l-2 pointer-events-none"
+      style={{ ...segmentBox(segment), ...CONFLICT }}
+    />
+  ))
+}
+
 /**
- * Schedules mode, under the events: the column dims outside your hours, your
- * hours are outlined, and the bookable windows left fill in. Busy time inside
- * your hours shows as a gap. Days past the booking window fade.
+ * Schedules mode, over the events: your hours outlined, with the busy time
+ * inside them hatched. Days past the booking window fade.
  */
 export function ScheduleLayers({
   day,
@@ -72,32 +70,23 @@ export function ScheduleLayers({
       data-beyond-horizon={beyondHorizon || undefined}
       className={cn("absolute inset-0 pointer-events-none", beyondHorizon && "opacity-50")}
     >
-      <div data-slot="availability-outside" className="absolute inset-0" style={OUTSIDE_HOURS} />
       {preview &&
         segments(preview.available).map((segment) => (
           <div
             key={`available-${segmentKey(segment)}`}
             data-slot="availability-hours"
-            className="absolute inset-x-0.5 rounded-sm border border-dashed"
-            style={{ ...segmentBox(segment), ...HOURS }}
+            className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed"
+            style={{ ...segmentBox(segment), ...OUTLINE }}
           />
         ))}
-      {preview &&
-        segments(preview.free).map((segment) => (
-          <div
-            key={`free-${segmentKey(segment)}`}
-            data-slot="availability-free"
-            className="absolute inset-x-1 rounded-sm"
-            style={{ ...segmentBox(segment), ...BOOKABLE }}
-          />
-        ))}
+      {preview && <Conflicts segments={segments(preview.busy)} />}
     </div>
   )
 }
 
 /**
- * Share mode, over the events: the picked times, removable by click, with
- * the parts that overlap busy time hatched as a warning.
+ * Share mode, over the events: the picked times outlined and removable by
+ * click, with the busy time inside them hatched.
  */
 export function ShareLayers({
   day,
@@ -124,8 +113,8 @@ export function ShareLayers({
             tabIndex={-1}
             title="Remove"
             data-slot="availability-selection"
-            className="absolute inset-x-0.5 z-10 rounded-sm border cursor-pointer hover:brightness-110"
-            style={{ ...segmentBox(segment), ...FREE }}
+            className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
+            style={{ ...segmentBox(segment), ...OUTLINE }}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation()
@@ -134,19 +123,12 @@ export function ShareLayers({
           />
         )),
       )}
-      {daySegments(busy, day.date, tzid).map((segment) => (
-        <div
-          key={`busy-${segmentKey(segment)}`}
-          data-slot="availability-selection-busy"
-          className="absolute inset-x-0.5 z-10 rounded-sm border-l-2 pointer-events-none"
-          style={{ ...segmentBox(segment), ...BUSY, borderColor: "var(--destructive)" }}
-        />
-      ))}
+      <Conflicts segments={daySegments(busy, day.date, tzid)} />
       {dragging && (
         <div
           data-slot="availability-selection-draft"
           className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed pointer-events-none"
-          style={{ ...segmentBox(dragging), ...FREE }}
+          style={{ ...segmentBox(dragging), ...DRAFT }}
         />
       )}
     </>

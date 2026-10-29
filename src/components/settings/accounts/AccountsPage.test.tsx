@@ -39,8 +39,6 @@ function account(provider: string): Calendar {
     account: `me@${provider}.example`,
     email: `me@${provider}.example`,
     read_only: null,
-    busy: true,
-    busy_is_default: true,
   }
 }
 

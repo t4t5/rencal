@@ -18,8 +18,6 @@ const calendar: Calendar = {
   account: "AB12345@sync.infomaniak.com",
   email: "first.last@company.ch",
   read_only: false,
-  busy: true,
-  busy_is_default: true,
 }
 
 function invite(): CalendarEvent {

@@ -6,6 +6,7 @@ import { TimeZoneSelect } from "@/components/event-parts/inputs/TimeZoneSelect"
 import { Button } from "@/components/ui/button"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
+import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { api, getErrorMessage, type AvailabilitySource } from "@/lib/api"
 
 /**
@@ -27,14 +28,15 @@ export function CopyFreeTimesPopover({
   const [tzid, setTzid] = useState(defaultTzid)
   const [text, setText] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const calendarSlugs = useVisibleCalendarIds()
 
-  const sourceKey = JSON.stringify(source)
+  const sourceKey = JSON.stringify([source, calendarSlugs])
   useEffect(() => {
     if (!open || !source) return
     let cancelled = false
     setError(null)
     api.availability
-      .freeTimesText(source, tzid)
+      .freeTimesText(source, calendarSlugs, tzid)
       .then((next) => !cancelled && setText(next))
       .catch((err: unknown) => {
         if (cancelled) return
@@ -44,7 +46,7 @@ export function CopyFreeTimesPopover({
     return () => {
       cancelled = true
     }
-    // `sourceKey` stands in for `source`.
+    // `sourceKey` stands in for `source` and `calendarSlugs`.
   }, [open, sourceKey, tzid])
 
   const copy = async () => {

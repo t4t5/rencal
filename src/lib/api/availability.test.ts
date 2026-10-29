@@ -18,6 +18,7 @@ it("sends picked ranges as UTC strings and returns preview spans as instants", a
         ranges: [{ start: "2026-11-02T09:00:00Z", end: "2026-11-02T10:00:00Z" }],
         tzid: "Europe/Stockholm",
       },
+      calendar_slugs: ["personal"],
       from: "2026-11-01T23:00:00Z",
       to: "2026-11-08T23:00:00Z",
     })
@@ -34,6 +35,7 @@ it("sends picked ranges as UTC strings and returns preview spans as instants", a
       ranges: [{ start: at("2026-11-02T10:00:00+01:00"), end: at("2026-11-02T10:00:00Z") }],
       tzid: "Europe/Stockholm",
     },
+    ["personal"],
     at("2026-11-01T23:00:00Z"),
     at("2026-11-08T23:00:00Z"),
   )
@@ -55,11 +57,15 @@ it("passes saved and draft sources through unchanged", async () => {
   }
   mockIPC((cmd, args) => {
     if (cmd !== "TauRPC__caldir.free_times_text") throw new Error(`Unexpected ${cmd}`)
-    expect(args).toEqual({ source: { kind: "draft", id: "availability/calls", draft }, tzid: null })
+    expect(args).toEqual({
+      source: { kind: "draft", id: "availability/calls", draft },
+      calendar_slugs: [],
+      tzid: null,
+    })
     return "Calls:\nNo free times (Europe/Stockholm)"
   })
 
   await expect(
-    api.availability.freeTimesText({ kind: "draft", id: "availability/calls", draft }, null),
+    api.availability.freeTimesText({ kind: "draft", id: "availability/calls", draft }, [], null),
   ).resolves.toBe("Calls:\nNo free times (Europe/Stockholm)")
 })

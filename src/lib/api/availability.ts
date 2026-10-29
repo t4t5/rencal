@@ -34,7 +34,7 @@ export type AvailabilitySource =
   | { kind: "ranges"; ranges: InstantSpan[]; tzid: string }
 
 export type AvailabilityPreview = {
-  /** Your hours, before busy. */
+  /** Your hours from the notice cutoff on, before busy. */
   available: InstantSpan[]
   /** Busy time padded by the buffers, where it falls inside your hours. */
   busy: InstantSpan[]
@@ -87,14 +87,16 @@ export async function deleteAvailability(id: string): Promise<void> {
   await rpc.caldir.delete_availability(id)
 }
 
-/** Hours, busy and bookable windows in `[from, to)`. */
+/** Hours, busy and bookable windows in `[from, to)`; busy comes from `calendarSlugs`. */
 export async function previewAvailability(
   source: AvailabilitySource,
+  calendarSlugs: string[],
   from: Temporal.Instant,
   to: Temporal.Instant,
 ): Promise<AvailabilityPreview> {
   const preview = await rpc.caldir.preview_availability(
     toRpcSource(source),
+    calendarSlugs,
     from.toString(),
     to.toString(),
   )
@@ -105,9 +107,13 @@ export async function previewAvailability(
   }
 }
 
-/** The text `caldir free` prints, in `tzid` (the availability's own zone when null). */
-export function freeTimesText(source: AvailabilitySource, tzid: string | null): Promise<string> {
-  return rpc.caldir.free_times_text(toRpcSource(source), tzid)
+/** Free times as `caldir free` formats them, in `tzid` (the availability's own zone when null). */
+export function freeTimesText(
+  source: AvailabilitySource,
+  calendarSlugs: string[],
+  tzid: string | null,
+): Promise<string> {
+  return rpc.caldir.free_times_text(toRpcSource(source), calendarSlugs, tzid)
 }
 
 export const availability = {

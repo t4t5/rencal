@@ -34,7 +34,6 @@ mod preview_availability;
 mod rename_calendar;
 mod rsvp;
 mod search_events;
-mod set_calendar_busy;
 mod set_calendar_color;
 mod set_config;
 mod split_recurring_series_at;
@@ -116,7 +115,6 @@ pub trait CaldirApi {
     async fn create_local_calendar(name: String, color: Option<String>) -> TauResult<Calendar>;
     async fn rename_calendar(calendar_slug: String, name: String) -> TauResult<()>;
     async fn set_calendar_color(calendar_slug: String, color: String) -> TauResult<()>;
-    async fn set_calendar_busy(calendar_slug: String, busy: bool) -> TauResult<()>;
     async fn delete_calendar(calendar_slug: String) -> TauResult<()>;
     async fn delete_account(provider_name: String, account: String) -> TauResult<()>;
 
@@ -140,10 +138,15 @@ pub trait CaldirApi {
     async fn delete_availability(id: String) -> TauResult<()>;
     async fn preview_availability(
         source: PreviewSource,
+        calendar_slugs: Vec<String>,
         from: String,
         to: String,
     ) -> TauResult<AvailabilityPreview>;
-    async fn free_times_text(source: PreviewSource, tzid: Option<String>) -> TauResult<String>;
+    async fn free_times_text(
+        source: PreviewSource,
+        calendar_slugs: Vec<String>,
+        tzid: Option<String>,
+    ) -> TauResult<String>;
 }
 
 #[derive(Clone)]
@@ -305,10 +308,6 @@ impl CaldirApi for CaldirApiImpl {
         set_calendar_color::handler(&self.state, calendar_slug, color)
     }
 
-    async fn set_calendar_busy(self, calendar_slug: String, busy: bool) -> TauResult<()> {
-        set_calendar_busy::handler(&self.state, calendar_slug, busy)
-    }
-
     async fn delete_calendar(self, calendar_slug: String) -> TauResult<()> {
         delete_calendar::handler(&self.state, calendar_slug)
     }
@@ -367,17 +366,19 @@ impl CaldirApi for CaldirApiImpl {
     async fn preview_availability(
         self,
         source: PreviewSource,
+        calendar_slugs: Vec<String>,
         from: String,
         to: String,
     ) -> TauResult<AvailabilityPreview> {
-        preview_availability::handler(self.state, source, from, to).await
+        preview_availability::handler(self.state, source, calendar_slugs, from, to).await
     }
 
     async fn free_times_text(
         self,
         source: PreviewSource,
+        calendar_slugs: Vec<String>,
         tzid: Option<String>,
     ) -> TauResult<String> {
-        free_times_text::handler(self.state, source, tzid).await
+        free_times_text::handler(self.state, source, calendar_slugs, tzid).await
     }
 }

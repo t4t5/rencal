@@ -11,14 +11,16 @@ use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
-/// Shareable text, as `caldir free <ref> [--tz]` prints it: an availability's
-/// free windows over its booking range, or picked ranges as they are.
+/// Shareable text, formatted as `caldir free <ref> [--tz]` prints it: an
+/// availability's free windows over its booking range, with busy time from
+/// `calendar_slugs`, or picked ranges as they are.
 pub(super) async fn handler(
     state: Arc<AppState>,
     source: PreviewSource,
+    calendar_slugs: Vec<String>,
     tzid: Option<String>,
 ) -> TauResult<String> {
-    tokio::task::spawn_blocking(move || text(&state.caldir(), source, tzid, now()))
+    tokio::task::spawn_blocking(move || text(&state.caldir(), source, &calendar_slugs, tzid, now()))
         .await
         .map_err(|err| RpcError::new(RpcErrorKind::Internal, err.to_string()))?
 }
@@ -26,6 +28,7 @@ pub(super) async fn handler(
 fn text(
     caldir: &Caldir,
     source: PreviewSource,
+    calendar_slugs: &[String],
     tzid: Option<String>,
     now: DateTime<Utc>,
 ) -> TauResult<String> {
@@ -41,7 +44,12 @@ fn text(
                 true => Vec::new(),
                 false => {
                     let busy_range = availability.rules.busy_range(now);
-                    let busy = caldir.busy_intervals(busy_range.start, busy_range.end, tz)?;
+                    let busy = caldir.busy_intervals_in(
+                        calendar_slugs,
+                        busy_range.start,
+                        busy_range.end,
+                        tz,
+                    )?;
                     availability.free_windows(&busy, now)
                 }
             };
@@ -86,6 +94,7 @@ mod tests {
         let text = text(
             &caldir,
             source,
+            &[],
             Some("America/New_York".into()),
             utc(1, 0, 0),
         )
@@ -108,7 +117,7 @@ mod tests {
             id: file.qualified_reference(),
         };
 
-        let text = text(&caldir, source, Some("UTC".into()), utc(1, 0, 0)).unwrap();
+        let text = text(&caldir, source, &[], Some("UTC".into()), utc(1, 0, 0)).unwrap();
 
         assert_eq!(text, "Calls:\nNo free times (UTC)");
     }

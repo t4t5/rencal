@@ -19,11 +19,6 @@ export async function setCalendarColor(calendarSlug: string, color: string): Pro
   await rpc.caldir.set_calendar_color(calendarSlug, color)
 }
 
-/** Whether the calendar's events block availability. */
-export async function setCalendarBusy(calendarSlug: string, busy: boolean): Promise<void> {
-  await rpc.caldir.set_calendar_busy(calendarSlug, busy)
-}
-
 export async function deleteCalendar(calendarSlug: string): Promise<void> {
   await rpc.caldir.delete_calendar(calendarSlug)
 }
@@ -33,6 +28,5 @@ export const calendars = {
   create: createLocalCalendar,
   rename: renameCalendar,
   setColor: setCalendarColor,
-  setBusy: setCalendarBusy,
   delete: deleteCalendar,
 } as const
