@@ -45,12 +45,13 @@ function Unavailable({ open }: { open: readonly DaySegment[] }) {
   ))
 }
 
+// Overlays sit at z-1: above events (z-auto), under the sticky time gutter (z-10).
 function Conflicts({ segments }: { segments: readonly DaySegment[] }) {
   return segments.map((segment) => (
     <div
       key={`conflict-${segmentKey(segment)}`}
       data-slot="availability-conflict"
-      className="absolute inset-x-0.5 z-10 rounded-sm border-l-2 pointer-events-none"
+      className="absolute inset-x-0.5 z-1 rounded-sm border-l-2 pointer-events-none"
       style={{ ...segmentBox(segment), ...CONFLICT }}
     />
   ))
@@ -126,7 +127,7 @@ export function ShareOverlay({
             tabIndex={-1}
             title="Remove"
             data-slot="availability-selection"
-            className="absolute inset-x-0 z-10 cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
+            className="absolute inset-x-0 z-1 cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
             style={segmentBox(segment)}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
@@ -140,7 +141,7 @@ export function ShareOverlay({
       {dragging && (
         <div
           data-slot="availability-selection-draft"
-          className="absolute inset-x-0 z-10 pointer-events-none"
+          className="absolute inset-x-0 z-1 pointer-events-none"
           style={{ ...segmentBox(dragging), ...DRAFT }}
         />
       )}
