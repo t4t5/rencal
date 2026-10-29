@@ -7,7 +7,7 @@ import { api, getErrorMessage, type AvailabilityPreview, type AvailabilitySource
 
 import { daysRange } from "./day-segments"
 
-const DEBOUNCE_MS = 100
+const DEBOUNCE_MS = 16
 // Notice moves with the clock.
 const REFRESH_MS = 5 * 60_000
 

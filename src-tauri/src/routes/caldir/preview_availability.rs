@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use caldir_core::{Caldir, Interval};
+use caldir_core::Interval;
 use chrono::{DateTime, Duration, Utc};
 
 use super::availability::{Resolved, intersect, merge, now, resolve};
@@ -26,21 +26,19 @@ pub(super) async fn handler(
         start: from,
         end: to,
     })?;
-    tokio::task::spawn_blocking(move || {
-        preview(&state.caldir(), source, &calendar_slugs, range, now())
-    })
-    .await
-    .map_err(|err| RpcError::new(RpcErrorKind::Internal, err.to_string()))?
+    tokio::task::spawn_blocking(move || preview(&state, source, &calendar_slugs, range, now()))
+        .await
+        .map_err(|err| RpcError::new(RpcErrorKind::Internal, err.to_string()))?
 }
 
 fn preview(
-    caldir: &Caldir,
+    state: &AppState,
     source: PreviewSource,
     calendar_slugs: &[String],
     range: Interval,
     now: DateTime<Utc>,
 ) -> TauResult<AvailabilityPreview> {
-    let resolved = resolve(caldir, source)?;
+    let resolved = resolve(&state.caldir(), source)?;
     let tz = resolved.tz();
 
     let (available, busy, free) = match resolved {
@@ -62,19 +60,19 @@ fn preview(
                     );
                     let busy_range = rules.busy_range(now);
                     let busy = match busy_range.intersect(&wanted) {
-                        Some(fetch) => {
-                            caldir.busy_intervals_in(calendar_slugs, fetch.start, fetch.end, tz)?
-                        }
+                        Some(fetch) => state.busy_intervals(calendar_slugs, fetch, tz)?,
                         None => Vec::new(),
                     };
                     intersect(&availability.free_windows(&busy, now), &[range])
                 }
             };
 
-            let busy = caldir.busy_intervals_in(
+            let busy = state.busy_intervals(
                 calendar_slugs,
-                range.start - rules.buffer_after,
-                range.end + rules.buffer_before,
+                Interval::new(
+                    range.start - rules.buffer_after,
+                    range.end + rules.buffer_before,
+                ),
                 tz,
             )?;
             let padded = merge(
@@ -88,7 +86,7 @@ fn preview(
         }
         Resolved::Ranges { ranges, tz } => {
             let picked = intersect(&ranges, &[range]);
-            let busy = caldir.busy_intervals_in(calendar_slugs, range.start, range.end, tz)?;
+            let busy = state.busy_intervals(calendar_slugs, range, tz)?;
             (picked.clone(), intersect(&picked, &busy), picked)
         }
     };
@@ -105,6 +103,7 @@ fn preview(
 mod tests {
     use super::*;
     use crate::routes::caldir::types::{AvailabilityDraft, DayHours, TimeRange, Weekday};
+    use crate::state::ProviderDirs;
     use caldir_core::{
         Attendee, CaldirConfig, Calendar, CalendarConfig, Event, EventTime, ParticipationStatus,
     };
@@ -137,7 +136,7 @@ mod tests {
 
     struct Fixture {
         _tmp: tempfile::TempDir,
-        caldir: Caldir,
+        state: AppState,
     }
 
     /// `work` (Google, me@example.com) and a read-only `feed`.
@@ -174,7 +173,7 @@ mod tests {
             .unwrap();
 
         Fixture {
-            caldir: Caldir::load_from(&config_path).unwrap(),
+            state: AppState::load_from(config_path, ProviderDirs::default()).unwrap(),
             _tmp: tmp,
         }
     }
@@ -220,7 +219,7 @@ mod tests {
         let now = utc(1, 23, 0);
 
         let preview = preview(
-            &fixture.caldir,
+            &fixture.state,
             draft(weekdays_9_to_17()),
             &all(),
             week(),
@@ -254,7 +253,7 @@ mod tests {
         // Mon 09:30 Stockholm.
         let now = utc(2, 8, 30);
 
-        let preview = preview(&fixture.caldir, draft(rules), &all(), week(), now).unwrap();
+        let preview = preview(&fixture.state, draft(rules), &all(), week(), now).unwrap();
 
         assert_eq!(preview.available[0], span(utc(2, 12, 30), utc(2, 16, 0)));
         assert_eq!(preview.free[0], span(utc(2, 12, 30), utc(2, 16, 0)));
@@ -263,13 +262,13 @@ mod tests {
     #[test]
     fn a_read_only_calendar_counting_as_busy_blocks() {
         let fixture = fixture();
-        let feed = fixture.caldir.calendar("feed").unwrap();
+        let feed = fixture.state.caldir().calendar("feed").unwrap();
         let mut config = feed.config().cloned().unwrap();
         config.set_busy(Some(true));
         config.write(&feed.config_path()).unwrap();
 
         let preview = preview(
-            &fixture.caldir,
+            &fixture.state,
             draft(weekdays_9_to_17()),
             &all(),
             week(),
@@ -291,7 +290,7 @@ mod tests {
         let fixture = fixture();
 
         let preview = preview(
-            &fixture.caldir,
+            &fixture.state,
             draft(weekdays_9_to_17()),
             &["feed".to_string()],
             week(),
@@ -313,7 +312,7 @@ mod tests {
             tzid: "Europe/Stockholm".into(),
         };
 
-        let preview = preview(&fixture.caldir, source, &all(), week(), utc(1, 23, 0)).unwrap();
+        let preview = preview(&fixture.state, source, &all(), week(), utc(1, 23, 0)).unwrap();
 
         assert_eq!(preview.free, [span(utc(2, 9, 30), utc(2, 11, 30))]);
         assert_eq!(preview.busy, [span(utc(2, 9, 30), utc(2, 10, 0))]);

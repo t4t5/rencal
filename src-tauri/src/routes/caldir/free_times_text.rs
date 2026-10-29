@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use caldir_core::Caldir;
 use caldir_core::availability::format_free_windows;
 use chrono::{DateTime, Utc};
 
@@ -20,19 +19,19 @@ pub(super) async fn handler(
     calendar_slugs: Vec<String>,
     tzid: Option<String>,
 ) -> TauResult<String> {
-    tokio::task::spawn_blocking(move || text(&state.caldir(), source, &calendar_slugs, tzid, now()))
+    tokio::task::spawn_blocking(move || text(&state, source, &calendar_slugs, tzid, now()))
         .await
         .map_err(|err| RpcError::new(RpcErrorKind::Internal, err.to_string()))?
 }
 
 fn text(
-    caldir: &Caldir,
+    state: &AppState,
     source: PreviewSource,
     calendar_slugs: &[String],
     tzid: Option<String>,
     now: DateTime<Utc>,
 ) -> TauResult<String> {
-    let resolved = resolve(caldir, source)?;
+    let resolved = resolve(&state.caldir(), source)?;
     let tz = match tzid {
         Some(tzid) => parse_tz(&tzid)?,
         None => resolved.tz(),
@@ -44,12 +43,7 @@ fn text(
                 true => Vec::new(),
                 false => {
                     let busy_range = availability.rules.busy_range(now);
-                    let busy = caldir.busy_intervals_in(
-                        calendar_slugs,
-                        busy_range.start,
-                        busy_range.end,
-                        tz,
-                    )?;
+                    let busy = state.busy_intervals(calendar_slugs, busy_range, tz)?;
                     availability.free_windows(&busy, now)
                 }
             };
@@ -63,17 +57,18 @@ fn text(
 mod tests {
     use super::*;
     use crate::routes::caldir::availability_draft::to_span;
+    use crate::state::ProviderDirs;
     use caldir_core::{CaldirConfig, Interval};
     use chrono::TimeZone;
 
-    fn caldir() -> (tempfile::TempDir, Caldir) {
+    fn state() -> (tempfile::TempDir, AppState) {
         let tmp = tempfile::tempdir().unwrap();
         let mut config = CaldirConfig::default();
         config.set_data_dir(tmp.path().join("calendars"));
         let config_path = tmp.path().join("config.toml");
         config.write(&config_path).unwrap();
-        let caldir = Caldir::load_from(&config_path).unwrap();
-        (tmp, caldir)
+        let state = AppState::load_from(config_path, ProviderDirs::default()).unwrap();
+        (tmp, state)
     }
 
     fn utc(d: u32, h: u32, m: u32) -> DateTime<Utc> {
@@ -82,7 +77,7 @@ mod tests {
 
     #[test]
     fn ranges_format_in_the_requested_zone_without_a_header() {
-        let (_tmp, caldir) = caldir();
+        let (_tmp, state) = state();
         let source = PreviewSource::Ranges {
             ranges: vec![
                 to_span(&Interval::new(utc(3, 9, 0), utc(3, 10, 0))),
@@ -92,7 +87,7 @@ mod tests {
         };
 
         let text = text(
-            &caldir,
+            &state,
             source,
             &[],
             Some("America/New_York".into()),
@@ -108,8 +103,8 @@ mod tests {
 
     #[test]
     fn an_availability_is_headed_by_its_name() {
-        let (_tmp, caldir) = caldir();
-        let dir = caldir.availability_dir_for_new(None).unwrap();
+        let (_tmp, state) = state();
+        let dir = state.caldir().availability_dir_for_new(None).unwrap();
         let mut availability = caldir_core::availability::Availability::new(Vec::new());
         availability.summary = Some("Calls".into());
         let file = dir.create(availability).unwrap();
@@ -117,7 +112,7 @@ mod tests {
             id: file.qualified_reference(),
         };
 
-        let text = text(&caldir, source, &[], Some("UTC".into()), utc(1, 0, 0)).unwrap();
+        let text = text(&state, source, &[], Some("UTC".into()), utc(1, 0, 0)).unwrap();
 
         assert_eq!(text, "Calls:\nNo free times (UTC)");
     }

@@ -11,12 +11,14 @@ use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
-use caldir_core::{Caldir, CaldirConfig, CaldirError, Event, ProviderRegistry};
+use caldir_core::{Caldir, CaldirConfig, CaldirError, Event, Interval, ProviderRegistry};
+use chrono_tz::Tz;
 use parking_lot::{RwLock, RwLockReadGuard};
 use serde::Serialize;
 use specta::Type;
 use tokio::sync::watch;
 
+use crate::busy_cache::BusyCache;
 use crate::deep_links::DeepLinkInbox;
 use crate::event_cache::EventCache;
 use crate::plugins;
@@ -131,6 +133,7 @@ pub struct AppState {
     caldir_config_path: PathBuf,
     provider_dirs: ProviderDirs,
     events: EventCache,
+    busy: BusyCache,
     calendars_changed: Signal,
     events_changed: Signal,
     availabilities_changed: Signal,
@@ -161,6 +164,7 @@ impl AppState {
             caldir_config_path: config_path,
             provider_dirs,
             events: EventCache::default(),
+            busy: BusyCache::default(),
             calendars_changed: Signal::new(),
             events_changed: Signal::new(),
             availabilities_changed: Signal::new(),
@@ -188,6 +192,19 @@ impl AppState {
                 .map(|ce| ce.event().clone())
                 .collect();
             Ok(events)
+        })
+    }
+
+    /// Merged busy time from `slugs` within `window`, served from the cache.
+    pub fn busy_intervals(
+        &self,
+        slugs: &[String],
+        window: Interval,
+        tz: Tz,
+    ) -> Result<Vec<Interval>, CaldirError> {
+        self.busy.get_or_fetch(slugs, window, tz, |wanted| {
+            self.caldir()
+                .busy_intervals_in(slugs, wanted.start, wanted.end, tz)
         })
     }
 
@@ -224,7 +241,10 @@ impl AppState {
         self.caldir_config.subscribe()
     }
 
+    /// Also drops cached busy time: a calendar's busy flag or account email
+    /// may have changed.
     pub fn notify_calendars_changed(&self) {
+        self.busy.invalidate();
         self.calendars_changed.notify();
     }
 
@@ -264,10 +284,12 @@ impl AppState {
 
     pub fn invalidate_events(&self, slug: &str) {
         self.events.invalidate(slug);
+        self.busy.invalidate();
     }
 
     pub fn invalidate_all_events(&self) {
         self.events.invalidate_all();
+        self.busy.invalidate();
     }
 
     pub fn caldir_config_path(&self) -> &Path {
@@ -383,6 +405,45 @@ mod tests {
         state.notify_calendars_changed();
 
         assert!(subscriber.has_changed().unwrap());
+    }
+
+    #[test]
+    fn busy_time_is_cached_until_events_or_calendars_change() {
+        let caldir = TestCaldir::new();
+        let state = caldir.state();
+        let work = state
+            .caldir()
+            .create_calendar("work", Some(CalendarConfig::new(None, None, None, None)))
+            .unwrap();
+        let at = |hour| {
+            NaiveDate::from_ymd_opt(2026, 9, 15)
+                .unwrap()
+                .and_hms_opt(hour, 0, 0)
+                .unwrap()
+                .and_utc()
+        };
+        let busy = |state: &AppState| {
+            state
+                .busy_intervals(
+                    &["work".to_string()],
+                    Interval::new(at(0), at(23)),
+                    chrono_tz::UTC,
+                )
+                .unwrap()
+        };
+        assert!(busy(&state).is_empty());
+
+        // A write the cache was not told about is invisible until invalidated.
+        let mut meeting = Event::new("meeting", EventTime::DateTimeUtc(at(9)));
+        meeting.end = Some(EventTime::DateTimeUtc(at(10)));
+        let meeting = work.create_event(meeting).unwrap();
+        assert!(busy(&state).is_empty());
+        state.invalidate_events("work");
+        assert_eq!(busy(&state), [Interval::new(at(9), at(10))]);
+
+        meeting.delete().unwrap();
+        state.notify_calendars_changed();
+        assert!(busy(&state).is_empty());
     }
 
     #[test]
