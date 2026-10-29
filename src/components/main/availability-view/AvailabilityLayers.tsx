@@ -9,9 +9,18 @@ import { cn } from "@/lib/utils"
 import { type DaySegment, daySegments } from "./day-segments"
 
 const OUTSIDE_HOURS: CSSProperties = {
-  backgroundColor: "color-mix(in oklab, var(--foreground) 4%, transparent)",
+  backgroundColor: "color-mix(in oklab, var(--foreground) 5%, transparent)",
+}
+
+const HOURS: CSSProperties = {
+  borderColor: "color-mix(in oklab, var(--primary) 45%, transparent)",
+}
+
+// Opaque, so it reads the same over the dimmed column.
+const BOOKABLE: CSSProperties = {
+  backgroundColor: "var(--background)",
   backgroundImage:
-    "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 9%, transparent) 0 1px, transparent 1px 7px)",
+    "linear-gradient(color-mix(in oklab, var(--primary) 18%, transparent), color-mix(in oklab, var(--primary) 18%, transparent))",
 }
 
 // Red rather than the warning tint: several themes' primary is orange, and
@@ -37,8 +46,9 @@ function segmentBox({ startMinutes, endMinutes }: DaySegment): CSSProperties {
 const segmentKey = (s: DaySegment) => `${s.startMinutes}-${s.endMinutes}`
 
 /**
- * Schedules mode, under the events: outside your hours, your hours, what
- * blocks them, and the bookable windows left. Days past the booking window fade.
+ * Schedules mode, under the events: the column dims outside your hours, your
+ * hours are outlined, and the bookable windows left fill in. Busy time inside
+ * your hours shows as a gap. Days past the booking window fade.
  */
 export function ScheduleLayers({
   day,
@@ -68,17 +78,8 @@ export function ScheduleLayers({
           <div
             key={`available-${segmentKey(segment)}`}
             data-slot="availability-hours"
-            className="absolute inset-x-0 bg-background"
-            style={segmentBox(segment)}
-          />
-        ))}
-      {preview &&
-        segments(preview.busy).map((segment) => (
-          <div
-            key={`busy-${segmentKey(segment)}`}
-            data-slot="availability-busy"
-            className="absolute inset-x-0"
-            style={{ ...segmentBox(segment), ...BUSY }}
+            className="absolute inset-x-0.5 rounded-sm border border-dashed"
+            style={{ ...segmentBox(segment), ...HOURS }}
           />
         ))}
       {preview &&
@@ -86,8 +87,8 @@ export function ScheduleLayers({
           <div
             key={`free-${segmentKey(segment)}`}
             data-slot="availability-free"
-            className="absolute inset-x-0.5 rounded-sm border"
-            style={{ ...segmentBox(segment), ...FREE }}
+            className="absolute inset-x-1 rounded-sm"
+            style={{ ...segmentBox(segment), ...BOOKABLE }}
           />
         ))}
     </div>
