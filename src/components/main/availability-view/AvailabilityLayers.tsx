@@ -4,15 +4,16 @@ import type { CSSProperties } from "react"
 import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { AvailabilityPreview, InstantSpan } from "@/lib/api"
 import { DAY_MINUTES } from "@/lib/event-time"
-import { cn } from "@/lib/utils"
 
-import { type DaySegment, daySegments } from "./day-segments"
+import { type DaySegment, dayGaps, daySegments } from "./day-segments"
 
-const OUTLINE: CSSProperties = { borderColor: "var(--primary)" }
+const UNAVAILABLE: CSSProperties = {
+  backgroundImage:
+    "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 8%, transparent) 0 1.5px, transparent 1.5px 7px)",
+}
 
 const DRAFT: CSSProperties = {
-  ...OUTLINE,
-  backgroundColor: "color-mix(in oklab, var(--primary) 14%, transparent)",
+  backgroundColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
 }
 
 // Red rather than the warning tint: several themes' primary is orange, and
@@ -33,6 +34,18 @@ function segmentBox({ startMinutes, endMinutes }: DaySegment): CSSProperties {
 
 const segmentKey = (s: DaySegment) => `${s.startMinutes}-${s.endMinutes}`
 
+/** Hatches the whole day except `open`. */
+function Unavailable({ open }: { open: readonly DaySegment[] }) {
+  return dayGaps(open).map((segment) => (
+    <div
+      key={`unavailable-${segmentKey(segment)}`}
+      data-slot="availability-unavailable"
+      className="absolute inset-x-0 pointer-events-none"
+      style={{ ...segmentBox(segment), ...UNAVAILABLE }}
+    />
+  ))
+}
+
 function Conflicts({ segments }: { segments: readonly DaySegment[] }) {
   return segments.map((segment) => (
     <div
@@ -44,51 +57,58 @@ function Conflicts({ segments }: { segments: readonly DaySegment[] }) {
   ))
 }
 
-/**
- * Schedules mode, over the events: your hours outlined, with the busy time
- * inside them hatched. Days past the booking window fade.
- */
-export function ScheduleLayers({
-  day,
-  preview,
-  tzid,
-  horizonEnd,
-}: {
+type ScheduleLayerProps = {
   day: MonthDay
   preview: AvailabilityPreview | null
   tzid: string
   horizonEnd: Temporal.Instant | null
-}) {
-  const segments = (spans: readonly InstantSpan[]) => daySegments(spans, day.date, tzid)
+}
+
+// Nothing past the booking window is bookable, so it stays hatched.
+function scheduleSegments(
+  { day, preview, tzid, horizonEnd }: ScheduleLayerProps,
+  pick: (preview: AvailabilityPreview) => readonly InstantSpan[],
+): DaySegment[] {
+  if (!preview) return []
   const beyondHorizon =
     horizonEnd !== null &&
     Temporal.Instant.compare(day.date.toZonedDateTime(tzid).toInstant(), horizonEnd) >= 0
+  return beyondHorizon ? [] : daySegments(pick(preview), day.date, tzid)
+}
 
-  return (
-    <div
-      data-slot="availability-layers"
-      data-beyond-horizon={beyondHorizon || undefined}
-      className={cn("absolute inset-0 pointer-events-none", beyondHorizon && "opacity-50")}
-    >
-      {preview &&
-        segments(preview.available).map((segment) => (
-          <div
-            key={`available-${segmentKey(segment)}`}
-            data-slot="availability-hours"
-            className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed"
-            style={{ ...segmentBox(segment), ...OUTLINE }}
-          />
-        ))}
-      {preview && <Conflicts segments={segments(preview.busy)} />}
-    </div>
-  )
+/** Schedules mode, under the events: everything outside your hours hatched. */
+export function ScheduleBackground(props: ScheduleLayerProps) {
+  // Before the first preview arrives, don't flash a fully hatched week.
+  if (!props.preview) return null
+  return <Unavailable open={scheduleSegments(props, (p) => p.available)} />
+}
+
+/** Schedules mode, over the events: busy time inside your hours. */
+export function ScheduleOverlay(props: ScheduleLayerProps) {
+  return <Conflicts segments={scheduleSegments(props, (p) => p.busy)} />
+}
+
+/** Share mode, under the events: everything outside the picked times hatched. */
+export function ShareBackground({
+  day,
+  selections,
+  tzid,
+  dragging,
+}: {
+  day: MonthDay
+  selections: readonly InstantSpan[]
+  tzid: string
+  dragging: DaySegment | null
+}) {
+  const open = daySegments(selections, day.date, tzid)
+  return <Unavailable open={dragging ? [...open, dragging] : open} />
 }
 
 /**
- * Share mode, over the events: the picked times outlined and removable by
- * click, with the busy time inside them hatched.
+ * Share mode, over the events: the picked times, removable by click, with the
+ * busy time inside them hatched.
  */
-export function ShareLayers({
+export function ShareOverlay({
   day,
   selections,
   busy,
@@ -113,8 +133,8 @@ export function ShareLayers({
             tabIndex={-1}
             title="Remove"
             data-slot="availability-selection"
-            className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
-            style={{ ...segmentBox(segment), ...OUTLINE }}
+            className="absolute inset-x-0 z-10 cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
+            style={segmentBox(segment)}
             onPointerDown={(event) => event.stopPropagation()}
             onClick={(event) => {
               event.stopPropagation()
@@ -127,7 +147,7 @@ export function ShareLayers({
       {dragging && (
         <div
           data-slot="availability-selection-draft"
-          className="absolute inset-x-0.5 z-10 rounded-sm border border-dashed pointer-events-none"
+          className="absolute inset-x-0 z-10 pointer-events-none"
           style={{ ...segmentBox(dragging), ...DRAFT }}
         />
       )}

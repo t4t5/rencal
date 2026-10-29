@@ -58,3 +58,18 @@ export function daysRange(
 ): { from: Temporal.Instant; to: Temporal.Instant } {
   return { from: startOfDay(first, tzid), to: startOfDay(last.add({ days: 1 }), tzid) }
 }
+
+/** The parts of the day not covered by `segments`. */
+export function dayGaps(segments: readonly DaySegment[]): DaySegment[] {
+  const sorted = [...segments].sort((a, b) => a.startMinutes - b.startMinutes)
+  const gaps: DaySegment[] = []
+  let cursor = 0
+
+  for (const { startMinutes, endMinutes } of sorted) {
+    if (startMinutes > cursor) gaps.push({ startMinutes: cursor, endMinutes: startMinutes })
+    cursor = Math.max(cursor, endMinutes)
+  }
+  if (cursor < DAY_MINUTES) gaps.push({ startMinutes: cursor, endMinutes: DAY_MINUTES })
+
+  return gaps
+}

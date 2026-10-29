@@ -15,7 +15,12 @@ import type { AvailabilitySource } from "@/lib/api"
 import { formatDateKey } from "@/lib/event-time"
 
 import { AvailabilityProvider, useAvailability } from "./AvailabilityContext"
-import { ScheduleLayers, ShareLayers } from "./AvailabilityLayers"
+import {
+  ScheduleBackground,
+  ScheduleOverlay,
+  ShareBackground,
+  ShareOverlay,
+} from "./AvailabilityLayers"
 import { AvailabilityPanel } from "./AvailabilityPanel"
 import { scheduleSource } from "./SchedulesPanel"
 import { invalidRange } from "./hours-reducer"
@@ -67,6 +72,8 @@ function AvailabilityViewContent() {
     editor && mode === "schedules"
       ? Temporal.Instant.fromEpochMilliseconds(now).add({ hours: 24 * editor.draft.horizon_days })
       : null
+  const scheduleLayers =
+    mode === "schedules" && editor ? { preview: schedule.preview, tzid, horizonEnd } : null
 
   return (
     <div className="flex h-full w-full min-w-0">
@@ -86,19 +93,26 @@ function AvailabilityViewContent() {
           dimmed={false}
           eventsInteractive={false}
           onDayPointerDown={mode === "share" ? startDrag : undefined}
-          dayOverlay={
-            mode === "schedules" && editor
-              ? (day) => (
-                  <ScheduleLayers
-                    day={day}
-                    preview={schedule.preview}
-                    tzid={tzid}
-                    horizonEnd={horizonEnd}
-                  />
-                )
+          dayBackground={
+            scheduleLayers
+              ? (day) => <ScheduleBackground day={day} {...scheduleLayers} />
               : mode === "share"
                 ? (day) => (
-                    <ShareLayers
+                    <ShareBackground
+                      day={day}
+                      selections={selections}
+                      tzid={tzid}
+                      dragging={dragging?.dayKey === day.dateKey ? dragging : null}
+                    />
+                  )
+                : undefined
+          }
+          dayOverlay={
+            scheduleLayers
+              ? (day) => <ScheduleOverlay day={day} {...scheduleLayers} />
+              : mode === "share"
+                ? (day) => (
+                    <ShareOverlay
                       day={day}
                       selections={selections}
                       busy={share.preview?.busy ?? []}
