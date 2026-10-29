@@ -25,7 +25,7 @@ export const BUILTIN_VIEWS: ViewDescriptor[] = [
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
   { id: "year", name: "Year", component: YearView, shortcut: "y" },
   // `f` as in `caldir free`; `a` adds an event.
-  { id: "availability", name: "Availability", component: AvailabilityView, shortcut: "f" },
+  { id: "availability", name: "Scheduling", component: AvailabilityView, shortcut: "f" },
 ]
 
 // Unknown ids (a removed view, a plugin view not loaded yet) fall back to the default.

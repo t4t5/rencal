@@ -23,10 +23,10 @@ export function AvailabilityPanel() {
       >
         <TabsList className="w-full">
           <TabsTrigger value="schedules" className="grow">
-            Schedules
+            Recurring
           </TabsTrigger>
           <TabsTrigger value="share" className="grow">
-            Share
+            One-off
           </TabsTrigger>
         </TabsList>
       </Tabs>

@@ -65,7 +65,7 @@ export function SchedulesPanel() {
         </p>
         <Button className="gap-2" onClick={() => void startNew()}>
           <PlusIcon className="size-4" />
-          Create availability
+          New
         </Button>
       </div>
     )
