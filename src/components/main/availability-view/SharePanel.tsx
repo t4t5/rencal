@@ -1,5 +1,6 @@
 import { RemoveItemButton } from "@/components/event-parts/inputs/RemoveItemButton"
 import { Button } from "@/components/ui/button"
+import { Item, ItemActions, ItemContent } from "@/components/ui/item"
 
 import { useSettings } from "@/contexts/SettingsContext"
 
@@ -11,7 +12,7 @@ import { useAvailability } from "./AvailabilityContext"
 import { CopyFreeTimesPopover } from "./CopyFreeTimesPopover"
 
 export function SharePanel() {
-  const { selections, removeSelection, clearSelections } = useAvailability()
+  const { selections, removeSelection, clearSelections, setHoveredSelection } = useAvailability()
   const { timeFormat } = useSettings()
   const tzid = useViewerTzid()
 
@@ -25,26 +26,35 @@ export function SharePanel() {
 
   return (
     <div className="flex flex-col min-h-0 grow">
-      <div className="flex flex-col gap-4 overflow-y-auto p-4 grow min-h-0">
-        <p className="text-sm text-muted-foreground">
-          Drag on the calendar to pick times. Click a picked time to remove it.
+      <div className="flex flex-col gap-4 overflow-y-auto px-2 py-4 grow min-h-0">
+        <p className="px-(--control-padding-inline) text-sm text-muted-foreground">
+          Drag on the calendar to pick times.
         </p>
 
         {[...byDay.values()].map((spans) => {
           const date = spans[0].start.toZonedDateTimeISO(tzid).toPlainDate()
           return (
             <section key={formatDateKey(date)} className="flex flex-col gap-1">
-              <span className="text-sm font-medium">{formatShortDate(date)}</span>
+              <span className="px-(--control-padding-inline) text-sm font-medium">
+                {formatShortDate(date)}
+              </span>
               {spans.map((span) => (
-                <div
+                <Item
                   key={span.start.toString()}
-                  className="group flex items-center justify-between gap-2 text-sm tabular-nums"
+                  variant="accent"
+                  className="cursor-default"
+                  onPointerEnter={() => setHoveredSelection(span)}
+                  onPointerLeave={() => setHoveredSelection(null)}
+                  onFocus={() => setHoveredSelection(span)}
+                  onBlur={() => setHoveredSelection(null)}
                 >
-                  <span>
+                  <ItemContent className="tabular-nums">
                     {time(span.start)} – {time(span.end)}
-                  </span>
-                  <RemoveItemButton onClick={() => removeSelection(span)} />
-                </div>
+                  </ItemContent>
+                  <ItemActions>
+                    <RemoveItemButton onClick={() => removeSelection(span)} />
+                  </ItemActions>
+                </Item>
               ))}
             </section>
           )

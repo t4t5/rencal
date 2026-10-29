@@ -67,6 +67,9 @@ type AvailabilityContextValue = {
   addSelection: (span: InstantSpan) => void
   removeSelection: (span: InstantSpan) => void
   clearSelections: () => void
+  /** The picked time hovered in the panel, highlighted on the calendar. */
+  hoveredSelection: InstantSpan | null
+  setHoveredSelection: (span: InstantSpan | null) => void
 }
 
 const [Provider, useAvailability] =
@@ -153,6 +156,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
   const [editor, setEditor] = useState<AvailabilityEditor | null>(null)
   const [pendingConfirm, setPendingConfirm] = useState<((ok: boolean) => void) | null>(null)
   const shared = useSyncExternalStore(subscribeSelections, () => selections)
+  const [hoveredSelection, setHoveredSelection] = useState<InstantSpan | null>(null)
 
   const editorRef = useRef(editor)
   editorRef.current = editor
@@ -311,8 +315,17 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
       confirmDiscard,
       selections: shared,
       addSelection: (span) => setSelections(addSpan(selections, span)),
-      removeSelection: (span) => setSelections(selections.filter((s) => s !== span)),
-      clearSelections: () => setSelections([]),
+      removeSelection: (span) => {
+        // The removed row unmounts before it can report the pointer leaving.
+        setHoveredSelection(null)
+        setSelections(selections.filter((s) => s !== span))
+      },
+      clearSelections: () => {
+        setHoveredSelection(null)
+        setSelections([])
+      },
+      hoveredSelection,
+      setHoveredSelection,
     }),
     [
       mode,
@@ -329,6 +342,7 @@ export function AvailabilityProvider({ children }: { children: ReactNode }) {
       keepMine,
       confirmDiscard,
       shared,
+      hoveredSelection,
     ],
   )
 

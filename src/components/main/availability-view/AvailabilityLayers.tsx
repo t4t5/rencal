@@ -101,44 +101,33 @@ export function ShareBackground({
 }
 
 /**
- * Share mode, over the events: the picked times, removable by click, with the
- * busy time inside them hatched.
+ * Share mode, over the events: the picked time hovered in the panel, busy time
+ * inside the picked times, and the drag in progress.
  */
 export function ShareOverlay({
   day,
-  selections,
+  hovered,
   busy,
   tzid,
   dragging,
-  onRemove,
 }: {
   day: MonthDay
-  selections: readonly InstantSpan[]
+  hovered: InstantSpan | null
   busy: readonly InstantSpan[]
   tzid: string
   dragging: DaySegment | null
-  onRemove: (span: InstantSpan) => void
 }) {
   return (
     <>
-      {selections.flatMap((span) =>
-        daySegments([span], day.date, tzid).map((segment) => (
-          <button
-            key={`${span.start.toString()}-${segmentKey(segment)}`}
-            type="button"
-            tabIndex={-1}
-            title="Remove"
-            data-slot="availability-selection"
-            className="absolute inset-x-0 z-1 cursor-pointer hover:bg-[color-mix(in_oklab,var(--primary)_10%,transparent)]"
-            style={segmentBox(segment)}
-            onPointerDown={(event) => event.stopPropagation()}
-            onClick={(event) => {
-              event.stopPropagation()
-              onRemove(span)
-            }}
+      {hovered &&
+        daySegments([hovered], day.date, tzid).map((segment) => (
+          <div
+            key={`hovered-${segmentKey(segment)}`}
+            data-slot="availability-selection-hovered"
+            className="absolute inset-x-0 z-1 pointer-events-none"
+            style={{ ...segmentBox(segment), ...DRAFT }}
           />
-        )),
-      )}
+        ))}
       <Conflicts segments={daySegments(busy, day.date, tzid)} />
       {dragging && (
         <div

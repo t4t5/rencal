@@ -43,7 +43,7 @@ function AvailabilityViewContent() {
   const { calendars } = useCalendars()
   const { activeDate, navigateToDate } = useCalendarNavigation()
   const { calendarEvents } = useCalEvents()
-  const { mode, editor, dirty, selections, addSelection, removeSelection } = useAvailability()
+  const { mode, editor, dirty, selections, addSelection, hoveredSelection } = useAvailability()
   const tzid = useViewerTzid()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
@@ -106,11 +106,10 @@ function AvailabilityViewContent() {
                 ? (day) => (
                     <ShareOverlay
                       day={day}
-                      selections={selections}
+                      hovered={hoveredSelection}
                       busy={share.preview?.busy ?? []}
                       tzid={tzid}
                       dragging={dragging?.dayKey === day.dateKey ? dragging : null}
-                      onRemove={removeSelection}
                     />
                   )
                 : undefined
