@@ -100,6 +100,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         url: current.url,
         reminders: current.reminders,
         conference: current.conference,
+        color: current.color,
       }
 
       await updateAndSyncEvent(updatedMaster, newMaster, setCalendarEvents, requestSync)
@@ -158,6 +159,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
         recurrence,
         reminders: current.reminders,
         conference: current.conference,
+        color: current.color,
         calendar_slug: current.calendar_slug,
       }
 

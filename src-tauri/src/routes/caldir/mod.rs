@@ -1,4 +1,5 @@
 mod conference;
+mod event_color;
 mod helpers;
 mod types;
 

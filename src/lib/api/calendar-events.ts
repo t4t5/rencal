@@ -57,6 +57,8 @@ export interface EventReplacement {
   reminders: number[]
   attendees: EventAttendee[]
   conference: EventConference | null
+  /** The event's own color as hex; `null` uses the calendar's. */
+  color: string | null
 }
 
 /**
@@ -75,6 +77,7 @@ export interface CreateEventParams {
   reminders?: number[]
   attendees?: EventAttendee[]
   conference?: EventConference | null
+  color?: string | null
 }
 
 export interface ReplaceEventInput extends EventReplacement {
@@ -109,6 +112,7 @@ function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "ca
     reminders: input.reminders,
     attendees: input.attendees,
     conference: conferenceToRpc(input.conference),
+    color: input.color,
   }
 }
 
@@ -170,6 +174,7 @@ export async function createEvent(input: CreateEventParams): Promise<CalendarEve
     reminders: input.reminders ?? [],
     attendees: input.attendees ?? [],
     conference: input.conference ?? null,
+    color: input.color ?? null,
   }
   const created = await rpc.caldir.create_event({
     calendar_slug: input.calendar_slug,

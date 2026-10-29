@@ -5,6 +5,7 @@ import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDispl
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceDisplay } from "@/components/event-parts/inputs/ConferenceDisplay"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
+import { EventColorSelect } from "@/components/event-parts/inputs/EventColorSelect"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
@@ -14,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea"
 import type { Calendar } from "@/lib/api"
 import type { EventAttendee, ResponseStatus } from "@/lib/cal-events"
 import type { EventConference } from "@/lib/conference"
+import { supportsEventColor } from "@/lib/event-colors"
 import type { EventTime } from "@/lib/event-time"
 import { detectEventUrl } from "@/lib/event-url"
 import { cn } from "@/lib/utils"
@@ -62,6 +64,8 @@ export function EventInfo({
   onUrlChange,
   calendar,
   onCalendarChange,
+  color,
+  onColorChange,
   recurrence,
   onRecurrenceChange,
   description,
@@ -97,6 +101,8 @@ export function EventInfo({
   onRecurrenceChange: (recurrence: RRule | RRuleSet | null) => void
   calendar?: Calendar
   onCalendarChange: (calendarId: string) => void
+  color?: string | null
+  onColorChange?: (color: string | null) => void
   description?: string | null
   onDescriptionChange: (description: string) => void
   organizer?: EventAttendee | null
@@ -187,7 +193,14 @@ export function EventInfo({
         onRemove={onReminderRemove}
       />
 
-      <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
+      {canEdit && onColorChange && supportsEventColor(calendar) ? (
+        <div className="flex gap-1">
+          <CalendarSelect calendar={calendar} onChange={onCalendarChange} className="min-w-0" />
+          <EventColorSelect color={color ?? null} calendar={calendar} onChange={onColorChange} />
+        </div>
+      ) : (
+        <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
+      )}
 
       {(canEdit || !!description?.trim()) && (
         <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />

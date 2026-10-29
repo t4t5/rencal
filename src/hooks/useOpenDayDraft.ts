@@ -66,6 +66,7 @@ export function useOpenDayDraft() {
       recurrence: null,
       attendees: [],
       conference: null,
+      color: null,
     })
 
     if (opts.anchorY != null) {

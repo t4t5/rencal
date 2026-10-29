@@ -157,6 +157,7 @@ describe("calendar event writes", () => {
         reminders: [],
         attendees: [],
         conference: null,
+        color: null,
       }),
     )
   })
@@ -179,6 +180,7 @@ describe("calendar event writes", () => {
       reminders: [10],
       attendees: [{ name: null, email: "a@example.com", response_status: "needs-action" }],
       conference: { status: "requested", provider: "google" },
+      color: "#f6bf26",
     })
     expect(calls).toEqual([
       {
@@ -210,6 +212,7 @@ describe("calendar event writes", () => {
             reminders: [10],
             attendees: [{ name: null, email: "a@example.com", response_status: "needs-action" }],
             conference: { status: "requested", provider: "google" },
+            color: "#f6bf26",
           },
         },
       },
@@ -236,6 +239,7 @@ describe("calendar event writes", () => {
         reminders: [],
         attendees: [],
         conference: null,
+        color: "#d50000",
       }),
     ).resolves.toBeUndefined()
     expect(calls[0].args).toEqual({
@@ -245,6 +249,7 @@ describe("calendar event writes", () => {
         end: { kind: "date", date: "2026-09-19" },
         recurrence: null,
         conference: null,
+        color: "#d50000",
       }),
     })
   })

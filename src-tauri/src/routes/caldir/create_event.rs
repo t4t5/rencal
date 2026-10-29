@@ -1,4 +1,5 @@
 use super::conference::apply_conference;
+use super::event_color::{apply_color_id, color_id};
 use super::types::{CalendarEvent, CreateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::routes::TauResult;
 use crate::state::AppState;
@@ -9,6 +10,7 @@ pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<Ca
 
     let start = rpc_time_to_core(&input.start)?;
     let end = rpc_time_to_core(&input.end)?;
+    let color_id = color_id(input.color.as_deref())?;
     let recurrence = input
         .recurrence
         .as_ref()
@@ -31,6 +33,7 @@ pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<Ca
     event.reminders = reminders;
     event.attendees = input.attendees.iter().map(|a| a.to_core()).collect();
     apply_conference(&mut event, &calendar, input.conference.as_ref());
+    apply_color_id(&mut event, color_id);
 
     let cal_event = calendar.create_event(event)?;
     state.invalidate_events(&input.calendar_slug);

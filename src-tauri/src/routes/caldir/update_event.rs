@@ -1,4 +1,5 @@
 use super::conference::apply_conference;
+use super::event_color::{apply_color_id, color_id};
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
 use crate::routes::TauResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
@@ -13,6 +14,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
 
     let start = rpc_time_to_core(&input.start)?;
     let end = rpc_time_to_core(&input.end)?;
+    let color_id = color_id(input.color.as_deref())?;
 
     let input_reminders: Vec<Reminder> = input
         .reminders
@@ -47,6 +49,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
             event.end = Some(end);
             event.reminders = input_reminders;
             event.attendees = input_attendees;
+            apply_color_id(event, color_id);
             apply_conference(event, &calendar, input.conference.as_ref());
         })?;
 
@@ -78,6 +81,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
         updated_event.recurrence = input_recurrence;
         updated_event.reminders = input_reminders;
         updated_event.attendees = input_attendees;
+        apply_color_id(&mut updated_event, color_id);
         updated_event.last_modified = Some(Utc::now());
         updated_event.sequence += 1;
 

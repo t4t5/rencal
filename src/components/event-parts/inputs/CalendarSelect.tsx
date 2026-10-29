@@ -21,10 +21,12 @@ export const CalendarSelect = ({
   calendar,
   onChange,
   readOnly,
+  className,
 }: {
   calendar?: Calendar
   onChange: (calendarId: string) => void
   readOnly?: boolean
+  className?: string
 }) => {
   const { calendars } = useCalendars()
 
@@ -38,6 +40,7 @@ export const CalendarSelect = ({
           className={cn(
             "w-full",
             readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
+            className,
           )}
         >
           <ItemMedia>

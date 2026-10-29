@@ -45,6 +45,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
         recurrence: draftEvent.recurrence,
         attendees: draftEvent.attendees,
         conference: draftEvent.conference,
+        color: draftEvent.color,
       })
     }
     if (!isDrafting || !deferredText) return null
@@ -57,6 +58,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
     draftEvent.recurrence,
     draftEvent.attendees,
     draftEvent.conference,
+    draftEvent.color,
     deferredSummary,
     deferredDescription,
     deferredLocation,

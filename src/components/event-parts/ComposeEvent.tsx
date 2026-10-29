@@ -9,6 +9,7 @@ import { useEventDraft } from "@/contexts/EventDraftContext"
 
 import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { conferenceForCalendar } from "@/lib/conference"
+import { eventColorForCalendar } from "@/lib/event-colors"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -109,7 +110,12 @@ export const ComposeEventInner = ({
               ...draftEvent,
               calendarId: newCalendarId,
               conference: conferenceForCalendar(draftEvent.conference, newCalendar),
+              color: eventColorForCalendar(draftEvent.color, newCalendar),
             })
+          }}
+          color={draftEvent.color}
+          onColorChange={(color) => {
+            setDraftEvent({ ...draftEvent, color })
           }}
           attendees={draftEvent.attendees}
           onAttendeesChange={(newAttendees) => {

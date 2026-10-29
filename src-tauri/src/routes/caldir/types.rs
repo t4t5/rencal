@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 use specta::Type;
 
 use super::conference::conference_from_event;
+use super::event_color::event_color;
 use super::helpers::tildify;
 
 #[derive(Serialize, Deserialize, Type)]
@@ -305,6 +306,8 @@ pub struct CreateEventInput {
     pub reminders: Vec<i32>,
     pub attendees: Vec<EventAttendee>,
     pub conference: Option<EventConference>,
+    /// The event's own color as hex; `None` uses the calendar's.
+    pub color: Option<String>,
 }
 
 /// Input for updating an event
@@ -324,6 +327,8 @@ pub struct UpdateEventInput {
     pub reminders: Vec<i32>,
     pub attendees: Vec<EventAttendee>,
     pub conference: Option<EventConference>,
+    /// The event's own color as hex; `None` uses the calendar's.
+    pub color: Option<String>,
 }
 
 /// Input for splitting a recurring series at a given instance.
@@ -351,25 +356,6 @@ pub struct SyncPreview {
     pub to_push_count: u32,
     pub to_push_delete_count: u32,
     pub to_pull_count: u32,
-}
-
-/// Map a Google Calendar event color ID (1–11) to its canonical hex color.
-/// Source: Google Calendar API `colors.get`.
-pub fn google_color_id_to_hex(id: &str) -> Option<&'static str> {
-    match id {
-        "1" => Some("#7986cb"),
-        "2" => Some("#33b679"),
-        "3" => Some("#8e24aa"),
-        "4" => Some("#e67c73"),
-        "5" => Some("#f6bf26"),
-        "6" => Some("#f4511e"),
-        "7" => Some("#039be5"),
-        "8" => Some("#616161"),
-        "9" => Some("#3f51b5"),
-        "10" => Some("#0b8043"),
-        "11" => Some("#d50000"),
-        _ => None,
-    }
 }
 
 impl From<&caldir_core::Calendar> for Calendar {
@@ -532,10 +518,7 @@ impl CalendarEvent {
             attendees: e.attendees.iter().map(EventAttendee::from).collect(),
             conference: conference_from_event(e),
             calendar_slug: calendar_slug.to_string(),
-            color: e
-                .x_property("X-GOOGLE-COLOR-ID")
-                .and_then(google_color_id_to_hex)
-                .map(String::from),
+            color: event_color(e),
             updated: e.last_modified.map(|dt| dt.to_rfc3339()),
         }
     }

@@ -46,7 +46,11 @@ export type ContributionKind = "theme" |
 /**
  * Input for creating an event
  */
-export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
+export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null; 
+/**
+ * The event's own color as hex; `None` uses the calendar's.
+ */
+color: string | null }
 
 export type CredentialFieldInput = { id: string; value: string }
 
@@ -257,7 +261,11 @@ export type UpdateEventInput = { id: string; calendar_slug: string;
 /**
  * If set and different from calendar_slug, moves the event to this calendar
  */
-new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null }
+new_calendar_slug: string | null; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null; 
+/**
+ * The event's own color as hex; `None` uses the calendar's.
+ */
+color: string | null }
 
 const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
 export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 

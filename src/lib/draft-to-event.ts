@@ -24,7 +24,7 @@ export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
     attendees: draft.attendees,
     conference: draft.conference,
     calendar_slug: draft.calendarId,
-    color: null,
+    color: draft.color,
     updated: null,
   }
 }

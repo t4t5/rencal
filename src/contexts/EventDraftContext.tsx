@@ -37,6 +37,7 @@ export interface DraftEvent {
   recurrence: Recurrence | null
   attendees: EventAttendee[]
   conference: EventConference | null
+  color: string | null
 }
 
 interface EventTextContextType {
@@ -121,6 +122,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       recurrence: null,
       attendees: [],
       conference: null,
+      color: null,
     }
   }, [defaultCalendarId])
 
@@ -203,7 +205,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       attendees: draftEvent.attendees,
       conference: draftEvent.conference,
       calendar_slug: draftEvent.calendarId,
-      color: null,
+      color: draftEvent.color,
       updated: null,
     }
     setCalendarEvents((prev) => [...prev, optimisticEvent])
@@ -226,6 +228,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
         reminders: draftReminders,
         attendees: draftEvent.attendees,
         conference: draftEvent.conference,
+        color: draftEvent.color,
       })
     } catch (err) {
       setCalendarEvents((prev) => rollbackOptimisticCreate(prev, optimisticEvent))

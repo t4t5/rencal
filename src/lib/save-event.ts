@@ -34,6 +34,7 @@ export async function updateAndSyncEvent(
       reminders: current.reminders,
       attendees: current.attendees,
       conference: current.conference,
+      color: current.color,
     })
     await requestSync()
   } catch (err) {

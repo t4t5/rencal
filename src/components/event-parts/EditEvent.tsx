@@ -22,6 +22,7 @@ import { useLastTimedRange } from "@/hooks/useLastTimedRange"
 import { getErrorMessage, api } from "@/lib/api"
 import { withDates, type CalendarEvent, type ResponseStatus } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
+import { eventColorForCalendar } from "@/lib/event-colors"
 import {
   addMinutes,
   DEFAULT_DURATION_MINS,
@@ -230,7 +231,12 @@ export const EditEvent = ({
             ...dirtyEvent,
             calendar_slug: newCalendarId,
             conference: conferenceForCalendar(dirtyEvent.conference, newCalendar),
+            color: eventColorForCalendar(dirtyEvent.color, newCalendar),
           })
+        }}
+        color={dirtyEvent.color}
+        onColorChange={(color) => {
+          setDirtyEvent({ ...dirtyEvent, color })
         }}
         organizer={dirtyEvent.organizer}
         attendees={dirtyEvent.attendees}

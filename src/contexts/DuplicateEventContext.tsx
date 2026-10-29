@@ -13,6 +13,7 @@ import { type CalendarEvent, type Recurrence } from "@/lib/cal-events"
 import { conferenceForCalendar } from "@/lib/conference"
 import { setDraftAnchor, type DraftAnchor } from "@/lib/draft-anchor"
 import { getEventAnchor } from "@/lib/event-anchor"
+import { eventColorForCalendar } from "@/lib/event-colors"
 import { isEventReadonly } from "@/lib/event-utils"
 import { createStrictContext } from "@/lib/strict-context"
 
@@ -69,6 +70,7 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
         recurrence,
         attendees: [...source.attendees],
         conference: conferenceForCalendar(source.conference, targetCalendar),
+        color: eventColorForCalendar(source.color, targetCalendar),
       }
 
       setActiveEventKey(null)
