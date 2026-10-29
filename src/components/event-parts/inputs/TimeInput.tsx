@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ReactNode, useState } from "react"
 
 import { Combobox } from "@/components/ui/combo-box"
@@ -19,8 +20,8 @@ const ALL_SLOTS: TimeOfDay[] = Array.from({ length: 24 }, (_, hour) =>
 
 const quarterSlots = (hour: number): TimeOfDay[] => SLOT_MINUTES.map((minute) => ({ hour, minute }))
 
-const slotKey = (t: TimeOfDay) =>
-  `${String(t.hour).padStart(2, "0")}:${String(t.minute).padStart(2, "0")}`
+const slotKey = (time: TimeOfDay) =>
+  `${String(time.hour).padStart(2, "0")}:${String(time.minute).padStart(2, "0")}`
 
 const LAST_SLOT = 23 * 60 + 45
 
@@ -123,8 +124,8 @@ export const TimeInput = ({
     setHighlighted(next.trim() ? best && slotKey(best) : currentSlotKey)
   }
 
-  const commit = (t: TimeOfDay) => {
-    onChange(t.hour, t.minute)
+  const commit = (time: TimeOfDay) => {
+    onChange(time.hour, time.minute)
     setOpen(false)
     setQuery("")
   }
@@ -156,22 +157,22 @@ export const TimeInput = ({
     >
       {options.length ? (
         <CommandGroup>
-          {options.map((t) => {
-            const key = slotKey(t)
+          {options.map((time) => {
+            const key = slotKey(time)
             return (
               <CommandItem
                 key={key}
                 value={key}
-                onSelect={() => commit(t)}
+                onSelect={() => commit(time)}
                 className={cn(key === currentSlotKey && "font-medium")}
               >
-                {formatWallclockTime(t.hour, t.minute, timeFormat)}
+                {formatWallclockTime(time.hour, time.minute, timeFormat)}
               </CommandItem>
             )
           })}
         </CommandGroup>
       ) : (
-        <CommandEmpty>No results found.</CommandEmpty>
+        <CommandEmpty>{t`No results found.`}</CommandEmpty>
       )}
     </Combobox>
   )

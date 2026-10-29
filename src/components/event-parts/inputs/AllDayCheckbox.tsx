@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useId } from "react"
 
 import { Checkbox } from "@/components/ui/checkbox"
@@ -43,7 +44,7 @@ export const AllDayCheckbox = ({
           "text-sidebar-primary-foreground": checked,
         })}
       >
-        All-day
+        {t`All-day`}
       </ItemContent>
     </Label>
   )

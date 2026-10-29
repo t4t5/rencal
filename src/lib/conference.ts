@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import type {
   ConferenceProvider as RpcConferenceProvider,
   EventConference as RpcEventConference,
@@ -13,15 +15,22 @@ export type EventConference =
   | { status: "requested"; provider: ConferenceProvider }
   | { status: "live"; provider: ConferenceProvider; url: string }
 
+// Getters translate at read time, so consumers keep reading plain strings.
 export const conferenceLabel: Record<ConferenceProvider, string> = {
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- product name
   google: "Google Meet",
-  outlook: "Meeting",
-  proton: "Meeting",
+  get outlook() {
+    return t({ message: "Meeting", context: "video meeting" })
+  },
+  get proton() {
+    return t({ message: "Meeting", context: "video meeting" })
+  },
 }
 
 /** A meeting link found in free-form event text, unlike a stored `EventConference`. */
 export type DetectedConference = { url: string; label: string }
 
+/* eslint-disable lingui/no-unlocalized-strings -- product names */
 const meetingUrlPatterns: [label: string, pattern: RegExp][] = [
   ["Zoom", /https?:\/\/(?:[\w-]+\.)*(?:zoom\.us|zoomgov\.com)\/(?:j|my|s|w|wc)\/[^\s<>"']+/i],
   ["Google Meet", /https?:\/\/meet\.google\.com\/[^\s<>"']+/i],
@@ -31,6 +40,7 @@ const meetingUrlPatterns: [label: string, pattern: RegExp][] = [
   ["Whereby", /https?:\/\/(?:www\.)?whereby\.com\/[^\s<>"']+/i],
   ["Proton Meet", /https?:\/\/meet\.proton\.me\/[^\s<>"']+/i],
 ]
+/* eslint-enable lingui/no-unlocalized-strings */
 
 /** Find a known meeting link in free-form text, e.g. an event location holding a Zoom URL. */
 export const detectConference = (text: string | null | undefined): DetectedConference | null => {

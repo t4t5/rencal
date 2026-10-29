@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useEffect } from "react"
 import { toast } from "sonner"
 
@@ -12,8 +13,8 @@ export function useEventDeepLinks(): void {
   useEffect(() => {
     const showError = (error: unknown) => {
       console.error("Failed to open event deep link:", error)
-      toast.error("Couldn’t open event", {
-        description: getErrorMessage(error, "Failed to load the linked event"),
+      toast.error(t`Couldn’t open event`, {
+        description: getErrorMessage(error, t`Failed to load the linked event`),
       })
     }
 
@@ -28,7 +29,7 @@ export function useEventDeepLinks(): void {
             if (event) {
               eventToOpen = event
             } else {
-              toast.error("Event not found", { description: "No matching local event." })
+              toast.error(t`Event not found`, { description: t`No matching local event.` })
             }
           } catch (error) {
             showError(error)

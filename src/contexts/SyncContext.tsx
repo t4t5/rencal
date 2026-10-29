@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react"
 
@@ -87,7 +88,7 @@ export function SyncProvider({ children }: { children: ReactNode }) {
 
         setPendingPreviews([])
       } catch (e) {
-        setSyncError(getErrorMessage(e, "Failed to sync calendars"))
+        setSyncError(getErrorMessage(e, t`Failed to sync calendars`))
       }
       syncLockRef.current = false
       setSyncStatus("idle")
@@ -108,11 +109,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncStatus("syncing")
     setSyncError(null)
     try {
-      const slugs = tripped.map((t) => t.calendar_slug)
+      const slugs = tripped.map((entry) => entry.calendar_slug)
       await api.sync.run(slugs)
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
-      setSyncError(getErrorMessage(e, "Failed to sync calendars"))
+      setSyncError(getErrorMessage(e, t`Failed to sync calendars`))
     } finally {
       syncLockRef.current = false
       setSyncStatus("idle")
@@ -127,11 +128,11 @@ export function SyncProvider({ children }: { children: ReactNode }) {
     setSyncStatus("syncing")
     setSyncError(null)
     try {
-      const slugs = tripped.map((t) => t.calendar_slug)
+      const slugs = tripped.map((entry) => entry.calendar_slug)
       await api.sync.discardPendingChanges()
       setPendingPreviews((prev) => prev.filter((p) => !slugs.includes(p.calendar_slug)))
     } catch (e) {
-      setSyncError(getErrorMessage(e, "Failed to sync calendars"))
+      setSyncError(getErrorMessage(e, t`Failed to sync calendars`))
     } finally {
       syncLockRef.current = false
       setSyncStatus("idle")

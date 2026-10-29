@@ -1,3 +1,5 @@
+import { i18n } from "@lingui/core"
+import { t } from "@lingui/core/macro"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -23,15 +25,16 @@ export function usePluginAction(plugin: PluginListItem, onChanged: () => void) {
     setError(null)
     try {
       await perform()
-      if (next === "install") toast.success(`Installed ${plugin.name}`)
-      if (next === "uninstall") toast.success(`Uninstalled ${plugin.name}`)
+      const name = plugin.name
+      if (next === "install") toast.success(t`Installed ${name}`)
+      if (next === "uninstall") toast.success(t`Uninstalled ${name}`)
       setAction(null)
       onChanged()
     } catch (error) {
       setError(
         getErrorMessage(
           error,
-          next === "uninstall" ? "Failed to uninstall plugin" : "Failed to install plugin",
+          next === "uninstall" ? t`Failed to uninstall plugin` : t`Failed to install plugin`,
         ),
       )
       setAction(null)
@@ -46,9 +49,13 @@ export function PluginBadges({ plugin }: { plugin: PluginListItem }) {
   return (
     <div className="flex flex-wrap gap-1.5">
       {plugin.contributions.map((kind) => (
-        <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
+        <PluginBadge key={kind}>{i18n._(CONTRIBUTION_LABELS[kind])}</PluginBadge>
       ))}
-      {plugin.installed && <PluginBadge solid>Installed</PluginBadge>}
+      {plugin.installed && (
+        <PluginBadge solid>
+          {t({ message: "Installed", context: "plugin status badge" })}
+        </PluginBadge>
+      )}
     </div>
   )
 }
@@ -66,6 +73,7 @@ export function PluginDetails({
   const repository = installed?.local_dir ? null : plugin.repo
   const version = installed?.version ?? plugin.version
   const repairable = !installed?.update_version && installed?.error
+  const updateVersion = installed?.update_version
 
   return (
     <>
@@ -79,10 +87,10 @@ export function PluginDetails({
                   onClick={() => void run("update", () => api.plugins.install(repository))}
                 >
                   {action === "update"
-                    ? "Updating…"
-                    : installed.update_version
-                      ? `Update to ${installed.update_version}`
-                      : "Reinstall"}
+                    ? t`Updating…`
+                    : updateVersion
+                      ? t`Update to ${updateVersion}`
+                      : t`Reinstall`}
                 </Button>
               )}
               <Button
@@ -90,7 +98,7 @@ export function PluginDetails({
                 disabled={action !== null}
                 onClick={() => void run("uninstall", () => api.plugins.uninstall(installed.id))}
               >
-                {action === "uninstall" ? "Uninstalling…" : "Uninstall"}
+                {action === "uninstall" ? t`Uninstalling…` : t`Uninstall`}
               </Button>
             </>
           ) : (
@@ -99,7 +107,7 @@ export function PluginDetails({
                 disabled={action !== null}
                 onClick={() => void run("install", () => api.plugins.install(repository))}
               >
-                {action === "install" ? "Installing…" : "Install"}
+                {action === "install" ? t`Installing…` : t`Install`}
               </Button>
             )
           )}
@@ -108,13 +116,13 @@ export function PluginDetails({
               variant="secondary"
               onClick={() => void openUrl(`https://github.com/${plugin.repo}`)}
             >
-              View on GitHub
+              {t`View on GitHub`}
             </Button>
           )}
         </div>
         {!plugin.listed && (
           <p className="text-xs text-muted-foreground">
-            This plugin isn't listed in the renCal catalog.
+            {t`This plugin isn't listed in the renCal catalog.`}
           </p>
         )}
         {[installed?.error, actionError].map(
@@ -131,29 +139,29 @@ export function PluginDetails({
       )}
       <div className="flex flex-col gap-3 border-t border-border pt-6">
         <h3 data-typography="heading" className="text-sm">
-          Details
+          {t`Details`}
         </h3>
         <dl className="grid grid-cols-[auto_1fr] gap-x-6 gap-y-2">
-          <dt className="text-muted-foreground">Author</dt>
+          <dt className="text-muted-foreground">{t`Author`}</dt>
           <dd className="break-all">{pluginOwner(plugin)}</dd>
           {plugin.repo && (
             <>
-              <dt className="text-muted-foreground">Repository</dt>
+              <dt className="text-muted-foreground">{t`Repository`}</dt>
               <dd className="break-all">{plugin.repo}</dd>
             </>
           )}
           {installed?.local_dir && (
             <>
-              <dt className="text-muted-foreground">Path</dt>
+              <dt className="text-muted-foreground">{t`Path`}</dt>
               <dd className="break-all">{installed.local_dir}</dd>
             </>
           )}
           {version && (
             <>
-              <dt className="text-muted-foreground">Version</dt>
+              <dt className="text-muted-foreground">{t`Version`}</dt>
               <dd>
                 {version}
-                {installed?.update_version && ` · ${installed.update_version} available`}
+                {updateVersion && <> · {t`${updateVersion} available`}</>}
               </dd>
             </>
           )}

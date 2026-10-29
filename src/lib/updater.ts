@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { ask } from "@tauri-apps/plugin-dialog"
 import { relaunch } from "@tauri-apps/plugin-process"
 import { check, type Update } from "@tauri-apps/plugin-updater"
@@ -19,15 +20,13 @@ export async function checkForUpdate(): Promise<Update | null> {
 }
 
 export async function promptAndInstall(update: Update): Promise<void> {
-  const confirmed = await ask(
-    `renCal v${update.version} is available. Download and install it now?`,
-    {
-      title: "Update available",
-      kind: "info",
-      okLabel: "Download",
-      cancelLabel: "Later",
-    },
-  )
+  const version = update.version
+  const confirmed = await ask(t`renCal v${version} is available. Download and install it now?`, {
+    title: t`Update available`,
+    kind: "info",
+    okLabel: t({ message: "Download", context: "update dialog button" }),
+    cancelLabel: t({ message: "Later", context: "update dialog button" }),
+  })
 
   if (!confirmed) return
 

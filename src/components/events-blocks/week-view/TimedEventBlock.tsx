@@ -21,6 +21,7 @@ const WEEK_EVENT_RIGHT_GAP = 12
  * line, the bottom stops short of the end hour's, and a right gap keeps the column clickable.
  */
 export function weekEventBox(topPercent: number, heightPercent: number) {
+  /* eslint-disable lingui/no-unlocalized-strings -- CSS calc() values */
   return {
     top: `calc(${topPercent}% - 1px)`,
     height: `max(calc(${heightPercent}% - 3px), 1rem)`,
@@ -40,6 +41,7 @@ function overlapBox({ left, width, coveredWidth }: WeekTimedEventLayout) {
       ? `calc(${area} * ${coveredWidth} + var(--event-padding-inline))`
       : undefined,
   }
+  /* eslint-enable lingui/no-unlocalized-strings */
 }
 
 function WeekTimedEventImpl({

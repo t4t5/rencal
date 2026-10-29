@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { type Ref, useCallback } from "react"
 import { rrulestr } from "rrule"
 
@@ -150,7 +151,7 @@ export const ComposeEventInner = ({
           }}
           className="w-full"
         >
-          Add Event
+          {t`Add Event`}
         </Button>
       </div>
     </div>

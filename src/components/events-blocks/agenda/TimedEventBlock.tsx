@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { memo, type MouseEvent } from "react"
 
@@ -72,7 +73,7 @@ function JoinMeetingButton({ url, dateInfo }: { url: string; dateInfo: EventDate
       onMouseDown={(e) => e.preventDefault()}
       onClick={handleClick}
     >
-      Join
+      {t({ message: "Join", context: "video call" })}
     </Button>
   )
 }
@@ -89,7 +90,10 @@ function getTimeLabel(event: CalendarEvent, dateKey: string, timeFormat: TimeFor
     return `${formatTime(start, timeFormat)} - ${formatTime(end, timeFormat)}`
   }
 
-  return formatDateKey(start) === dateKey
-    ? `Starts at ${formatTime(start, timeFormat)}`
-    : `Ends at ${formatTime(end, timeFormat)}`
+  if (formatDateKey(start) === dateKey) {
+    const time = formatTime(start, timeFormat)
+    return t`Starts at ${time}`
+  }
+  const time = formatTime(end, timeFormat)
+  return t`Ends at ${time}`
 }

@@ -44,11 +44,18 @@ describe("viewShortcuts", () => {
     expect(viewShortcuts([view("week", "w"), view("board")])).toEqual([
       {
         id: "week",
-        group: "View",
-        label: "Display week view",
+        group: "view",
+        label: expect.objectContaining({ message: "Display week view" }),
         bindings: [{ keys: "w", type: "char" }],
       },
     ])
+  })
+
+  it("labels a plugin's view with its own name in a translatable template", () => {
+    const [shortcut] = viewShortcuts([view("board", "b")])
+    expect(shortcut?.label).toEqual(
+      expect.objectContaining({ message: "Display {view} view", values: { view: "board" } }),
+    )
   })
 })
 

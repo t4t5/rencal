@@ -1,3 +1,6 @@
+import { i18n, type MessageDescriptor } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
+
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
@@ -39,9 +42,9 @@ export function MainHeader({
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 
-        <ShortcutTooltip text="Go to Today" shortcut="t">
+        <ShortcutTooltip text={t`Go to Today`} shortcut="t">
           <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
-            Today
+            {t({ message: "Today", context: "navigate to current date" })}
           </Button>
         </ShortcutTooltip>
 
@@ -61,6 +64,18 @@ export function MainHeader({
   )
 }
 
+// Built-in views are translated; plugins bring their own name.
+const BUILTIN_VIEW_NAMES: Record<string, MessageDescriptor> = {
+  week: msg({ message: "Week", context: "view name" }),
+  month: msg({ message: "Month", context: "view name" }),
+  year: msg({ message: "Year", context: "view name" }),
+}
+
+const viewName = (view: ViewDescriptor): string => {
+  const builtin = BUILTIN_VIEW_NAMES[view.id]
+  return builtin ? i18n._(builtin) : view.name
+}
+
 const CalendarViewDropdown = ({
   activeView,
   onChangeCalendarView,
@@ -73,7 +88,7 @@ const CalendarViewDropdown = ({
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <SelectButton tabIndex={-1}>{activeView.name}</SelectButton>
+        <SelectButton tabIndex={-1}>{viewName(activeView)}</SelectButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-48">
         {views.map((view) => (
@@ -85,7 +100,7 @@ const CalendarViewDropdown = ({
             <span className="flex size-4 items-center justify-center">
               {activeView.id === view.id && <CheckIcon className="size-4" />}
             </span>
-            <span>{view.name}</span>
+            <span>{viewName(view)}</span>
             <DropdownMenuShortcut>{view.shortcut?.toUpperCase()}</DropdownMenuShortcut>
           </DropdownMenuItem>
         ))}
