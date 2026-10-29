@@ -6,9 +6,11 @@ import { DAY_MINUTES } from "@/lib/event-time"
 
 import { type DaySegment, dayGaps, daySegments } from "./day-segments"
 
+// Fixed so stripes line up across blocks instead of restarting in each one.
 const UNAVAILABLE: CSSProperties = {
   backgroundImage:
-    "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 8%, transparent) 0 1.5px, transparent 1.5px 7px)",
+    "repeating-linear-gradient(135deg, color-mix(in oklab, var(--foreground) 8%, transparent) 0 3px, transparent 3px 7px)",
+  backgroundAttachment: "fixed",
 }
 
 const DRAFT: CSSProperties = {
