@@ -5,7 +5,7 @@ import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDispl
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceDisplay } from "@/components/event-parts/inputs/ConferenceDisplay"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
-import { EventColorSelect } from "@/components/event-parts/inputs/EventColorSelect"
+import { EventColorPicker } from "@/components/event-parts/inputs/EventColorPicker"
 import { LocationInput } from "@/components/event-parts/inputs/LocationInput"
 import { ReminderSelect } from "@/components/event-parts/inputs/ReminderSelect"
 import { RepeatSelect } from "@/components/event-parts/inputs/RepeatSelect"
@@ -195,8 +195,10 @@ export function EventInfo({
 
       {canEdit && onColorChange && supportsEventColor(calendar) ? (
         <div className="flex gap-1">
-          <CalendarSelect calendar={calendar} onChange={onCalendarChange} className="min-w-0" />
-          <EventColorSelect color={color ?? null} calendar={calendar} onChange={onColorChange} />
+          <div className="min-w-0 flex-1">
+            <CalendarSelect calendar={calendar} onChange={onCalendarChange} />
+          </div>
+          <EventColorPicker color={color ?? null} calendar={calendar} onChange={onColorChange} />
         </div>
       ) : (
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
