@@ -65,22 +65,6 @@ describe("hoursReducer", () => {
     expect(rangesOf(hours, "we")).toEqual([r("09:00", "14:00")])
   })
 
-  it("copies a day's times to other days", () => {
-    const hours = hoursReducer(
-      hoursReducer(weekdays([]), { type: "set", day: "mo", index: 0, range: {} }),
-      { type: "copy", from: "mo", to: ["sa", "su"] },
-    )
-    expect(rangesOf(hours, "sa")).toEqual([])
-
-    const copied = hoursReducer(weekdays([r("08:00", "10:00")]), {
-      type: "copy",
-      from: "mo",
-      to: ["sa", "su"],
-    })
-    expect(rangesOf(copied, "sa")).toEqual([r("08:00", "10:00")])
-    expect(rangesOf(copied, "su")).toEqual([r("08:00", "10:00")])
-  })
-
   it("finds the first inverted range", () => {
     const hours = hoursReducer(weekdays([r("09:00", "17:00")]), {
       type: "set",

@@ -10,7 +10,6 @@ export type HoursAction =
   | { type: "remove"; day: Weekday; index: number }
   | { type: "set"; day: Weekday; index: number; range: Partial<TimeRange> }
   | { type: "merge"; day: Weekday }
-  | { type: "copy"; from: Weekday; to: readonly Weekday[] }
 
 // "HH:MM" strings compare correctly as strings; minutes are for arithmetic.
 const toMinutes = (time: string) => {
@@ -78,10 +77,6 @@ export function hoursReducer(hours: DayHours[], action: HoursAction): DayHours[]
       )
     case "merge":
       return update(action.day, mergeRanges)
-    case "copy": {
-      const source = hours.find((h) => h.day === action.from)?.ranges ?? []
-      return hours.map((h) => (action.to.includes(h.day) ? { ...h, ranges: [...source] } : h))
-    }
   }
 }
 

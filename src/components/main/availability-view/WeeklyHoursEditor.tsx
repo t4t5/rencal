@@ -1,11 +1,15 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { useState } from "react"
+import type { ReactNode } from "react"
 
-import { RemoveItemButton } from "@/components/event-parts/inputs/RemoveItemButton"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import {
   Select,
   SelectContent,
@@ -20,7 +24,8 @@ import type { DayHours, Weekday } from "@/lib/api"
 import { formatWallclockTime, formatWeekday, type TimeFormat } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
-import { CopyIcon } from "@/icons/copy"
+import { CloseIcon } from "@/icons/close"
+import { MoreHorizIcon } from "@/icons/more-horiz"
 import { PlusIcon } from "@/icons/plus"
 
 import { type HoursAction, invalidRange, WEEKDAYS } from "./hours-reducer"
@@ -79,12 +84,17 @@ export function WeeklyHoursEditor({
 
             <div className="flex flex-col gap-1 grow min-w-0">
               {!on && (
-                <span className="h-control flex items-center text-sm text-muted-foreground">
-                  Unavailable
-                </span>
+                <div className="flex items-center gap-1">
+                  <span className="h-control flex items-center grow text-sm text-muted-foreground">
+                    Unavailable
+                  </span>
+                  <RowActions>
+                    <AddButton onClick={() => dispatch({ type: "add", day })} />
+                  </RowActions>
+                </div>
               )}
               {ranges.map((range, index) => (
-                <div key={index} className="group flex items-center gap-1">
+                <div key={index} className="flex items-center gap-1">
                   <TimeSelect
                     value={range.start}
                     timeFormat={timeFormat}
@@ -104,26 +114,29 @@ export function WeeklyHoursEditor({
                       dispatch({ type: "merge", day })
                     }}
                   />
-                  <RemoveItemButton onClick={() => dispatch({ type: "remove", day, index })} />
+                  <RowActions>
+                    {index === 0 ? (
+                      <>
+                        <AddButton onClick={() => dispatch({ type: "add", day })} />
+                        <DayMenu
+                          multiple={ranges.length > 1}
+                          onClearDay={() => dispatch({ type: "toggle", day, on: false })}
+                          onClearFirst={() => dispatch({ type: "remove", day, index: 0 })}
+                        />
+                      </>
+                    ) : (
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        title="Remove times"
+                        onClick={() => dispatch({ type: "remove", day, index })}
+                      >
+                        <CloseIcon className="size-4" />
+                      </Button>
+                    )}
+                  </RowActions>
                 </div>
               ))}
-            </div>
-
-            <div className="flex items-center h-control shrink-0">
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Add times"
-                onClick={() => dispatch({ type: "add", day })}
-              >
-                <PlusIcon className="size-4" />
-              </Button>
-              {on && (
-                <CopyTimesPopover
-                  from={day}
-                  onCopy={(to) => dispatch({ type: "copy", from: day, to })}
-                />
-              )}
             </div>
           </div>
         )
@@ -176,56 +189,45 @@ function TimeSelect({
   )
 }
 
-/** cal.com-style "Copy times to…". */
-function CopyTimesPopover({ from, onCopy }: { from: Weekday; onCopy: (to: Weekday[]) => void }) {
-  const { firstDayOfWeek } = useSettings()
-  const [open, setOpen] = useState(false)
-  const [targets, setTargets] = useState<Weekday[]>([])
-
-  const toggle = (day: Weekday, checked: boolean) =>
-    setTargets((current) => (checked ? [...current, day] : current.filter((d) => d !== day)))
-
+// Fixed width so a later row's remove button lines up under the first row's add button.
+function RowActions({ children }: { children: ReactNode }) {
   return (
-    <Popover
-      open={open}
-      onOpenChange={(next) => {
-        setOpen(next)
-        if (next) setTargets([])
-      }}
-    >
-      <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon-sm" title="Copy times to…">
-          <CopyIcon className="size-4" />
+    <div className="flex items-center ml-auto shrink-0 w-[calc(var(--spacing-control-sm)*2)]">
+      {children}
+    </div>
+  )
+}
+
+function AddButton({ onClick }: { onClick: () => void }) {
+  return (
+    <Button variant="ghost" size="icon-sm" title="Add times" onClick={onClick}>
+      <PlusIcon className="size-4" />
+    </Button>
+  )
+}
+
+function DayMenu({
+  multiple,
+  onClearDay,
+  onClearFirst,
+}: {
+  multiple: boolean
+  onClearDay: () => void
+  onClearFirst: () => void
+}) {
+  return (
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon-sm" aria-label="More options">
+          <MoreHorizIcon className="size-4" />
         </Button>
-      </PopoverTrigger>
-      <PopoverContent align="end" className="w-48 flex flex-col gap-2">
-        <span className="text-xs text-muted-foreground uppercase">Copy times to</span>
-        {orderedWeekdays(firstDayOfWeek).map((day) => {
-          const id = `availability-copy-${from}-${day}`
-          return (
-            <div key={day} className="flex items-center gap-2">
-              <Checkbox
-                id={id}
-                disabled={day === from}
-                checked={day === from || targets.includes(day)}
-                onCheckedChange={(checked) => toggle(day, checked === true)}
-              />
-              <Label htmlFor={id} className="text-sm">
-                {formatWeekday(weekdayDate(day), "long")}
-              </Label>
-            </div>
-          )
-        })}
-        <Button
-          disabled={targets.length === 0}
-          onClick={() => {
-            onCopy(targets)
-            setOpen(false)
-          }}
-        >
-          Apply
-        </Button>
-      </PopoverContent>
-    </Popover>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onSelect={onClearDay}>Clear day</DropdownMenuItem>
+        {multiple && (
+          <DropdownMenuItem onSelect={onClearFirst}>Clear first time range</DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
