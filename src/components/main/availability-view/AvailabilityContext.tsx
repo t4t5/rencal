@@ -102,8 +102,6 @@ export function newDraft(): AvailabilityDraft {
       ranges: day === "sa" || day === "su" ? [] : [{ start: "09:00", end: "17:00" }],
     })),
     duration_minutes: 30,
-    buffer_before_minutes: 0,
-    buffer_after_minutes: 0,
     notice_minutes: 0,
     horizon_days: 14,
   }

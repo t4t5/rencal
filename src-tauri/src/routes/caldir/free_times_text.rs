@@ -39,11 +39,11 @@ fn text(
 
     Ok(match resolved {
         Resolved::Availability { availability, name } => {
-            let windows = match availability.rules.range(now).is_empty() {
+            let range = availability.rules.range(now);
+            let windows = match range.is_empty() {
                 true => Vec::new(),
                 false => {
-                    let busy_range = availability.rules.busy_range(now);
-                    let busy = state.busy_intervals(calendar_slugs, busy_range, tz)?;
+                    let busy = state.busy_intervals(calendar_slugs, range, tz)?;
                     availability.free_windows(&busy, now)
                 }
             };

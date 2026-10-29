@@ -50,8 +50,6 @@ it("passes saved and draft sources through unchanged", async () => {
     tzid: "Europe/Stockholm",
     hours: [],
     duration_minutes: 30,
-    buffer_before_minutes: 0,
-    buffer_after_minutes: 0,
     notice_minutes: 0,
     horizon_days: 14,
   }

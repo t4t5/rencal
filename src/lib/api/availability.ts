@@ -36,7 +36,7 @@ export type AvailabilitySource =
 export type AvailabilityPreview = {
   /** Your hours from the notice cutoff on, before busy. */
   available: InstantSpan[]
-  /** Busy time padded by the buffers, where it falls inside your hours. */
+  /** Busy time where it falls inside your hours. */
   busy: InstantSpan[]
   /** Bookable windows. */
   free: InstantSpan[]

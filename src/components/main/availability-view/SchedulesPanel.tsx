@@ -37,7 +37,7 @@ import { CheckIcon } from "@/icons/check"
 import { PlusIcon } from "@/icons/plus"
 
 import { type AvailabilityEditor, useAvailability } from "./AvailabilityContext"
-import { BookingRules, formatMinutes } from "./BookingRules"
+import { BookingWindow, formatMinutes } from "./BookingWindow"
 import { CopyFreeTimesPopover } from "./CopyFreeTimesPopover"
 import { WeeklyHoursEditor } from "./WeeklyHoursEditor"
 import { hoursReducer, invalidRange } from "./hours-reducer"
@@ -156,7 +156,7 @@ function ScheduleEditor({ editor }: { editor: AvailabilityEditor }) {
           </section>
         )}
 
-        <BookingRules draft={draft} onChange={patch} />
+        <BookingWindow draft={draft} onChange={patch} />
 
         {details && details.override_count > 0 && (
           <p className="text-sm text-muted-foreground">

@@ -65,8 +65,6 @@ pub(super) fn decompose(availability: &Availability, fallback_tzid: &str) -> Dec
             tzid,
             hours,
             duration_minutes: minutes(rules.duration),
-            buffer_before_minutes: minutes(rules.buffer_before),
-            buffer_after_minutes: minutes(rules.buffer_after),
             notice_minutes: minutes(rules.notice),
             horizon_days: days_ceil(rules.horizon),
         },
@@ -111,8 +109,6 @@ fn validate_rules(draft: &AvailabilityDraft) -> TauResult<BookingRules> {
     }
     Ok(BookingRules {
         duration: Duration::minutes(draft.duration_minutes.into()),
-        buffer_before: Duration::minutes(draft.buffer_before_minutes.into()),
-        buffer_after: Duration::minutes(draft.buffer_after_minutes.into()),
         notice: Duration::minutes(draft.notice_minutes.into()),
         horizon: Duration::days(draft.horizon_days.into()),
     })
@@ -135,16 +131,6 @@ fn keep_unchanged_rules(
             draft.duration_minutes == original.duration_minutes,
             base.duration,
             next.duration,
-        ),
-        buffer_before: pick(
-            draft.buffer_before_minutes == original.buffer_before_minutes,
-            base.buffer_before,
-            next.buffer_before,
-        ),
-        buffer_after: pick(
-            draft.buffer_after_minutes == original.buffer_after_minutes,
-            base.buffer_after,
-            next.buffer_after,
         ),
         notice: pick(
             draft.notice_minutes == original.notice_minutes,
@@ -468,8 +454,6 @@ mod tests {
             tzid: STOCKHOLM.into(),
             hours,
             duration_minutes: 30,
-            buffer_before_minutes: 0,
-            buffer_after_minutes: 0,
             notice_minutes: 0,
             horizon_days: 14,
         }
@@ -546,7 +530,6 @@ mod tests {
         let mut hours = weekdays(&[("09:00", "12:00"), ("13:00", "17:00")]);
         hours[5] = day(Weekday::Sa, &[("10:00", "11:30")]);
         let mut original = draft(hours);
-        original.buffer_after_minutes = 10;
         original.notice_minutes = 24 * 60;
         original.horizon_days = 60;
 

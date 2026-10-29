@@ -3,7 +3,7 @@ use std::sync::Arc;
 use caldir_core::Interval;
 use chrono::{DateTime, Duration, Utc};
 
-use super::availability::{Resolved, intersect, merge, now, resolve};
+use super::availability::{Resolved, intersect, now, resolve};
 use super::availability_draft::{from_span, to_span};
 use super::types::{AvailabilityPreview, PreviewSource, Span};
 use crate::routes::TauResult;
@@ -54,12 +54,9 @@ fn preview(
             let free = match rules.range(now).intersect(&range) {
                 None => Vec::new(),
                 Some(_) => {
-                    let wanted = Interval::new(
-                        range.start - rules.buffer_after - EDGE_MARGIN,
-                        range.end + rules.buffer_before + EDGE_MARGIN,
-                    );
-                    let busy_range = rules.busy_range(now);
-                    let busy = match busy_range.intersect(&wanted) {
+                    let wanted =
+                        Interval::new(range.start - EDGE_MARGIN, range.end + EDGE_MARGIN);
+                    let busy = match rules.range(now).intersect(&wanted) {
                         Some(fetch) => state.busy_intervals(calendar_slugs, fetch, tz)?,
                         None => Vec::new(),
                     };
@@ -67,22 +64,8 @@ fn preview(
                 }
             };
 
-            let busy = state.busy_intervals(
-                calendar_slugs,
-                Interval::new(
-                    range.start - rules.buffer_after,
-                    range.end + rules.buffer_before,
-                ),
-                tz,
-            )?;
-            let padded = merge(
-                busy.iter()
-                    .map(|b| {
-                        Interval::new(b.start - rules.buffer_before, b.end + rules.buffer_after)
-                    })
-                    .collect(),
-            );
-            (available.clone(), intersect(&available, &padded), free)
+            let busy = state.busy_intervals(calendar_slugs, range, tz)?;
+            (available.clone(), intersect(&available, &busy), free)
         }
         Resolved::Ranges { ranges, tz } => {
             let picked = intersect(&ranges, &[range]);
@@ -193,8 +176,6 @@ mod tests {
                 })
                 .collect(),
             duration_minutes: 30,
-            buffer_before_minutes: 0,
-            buffer_after_minutes: 15,
             notice_minutes: 0,
             horizon_days: 1,
         }
@@ -214,7 +195,7 @@ mod tests {
     }
 
     #[test]
-    fn buffers_widen_busy_and_declined_or_read_only_events_dont_block() {
+    fn declined_or_read_only_events_dont_block() {
         let fixture = fixture();
         let now = utc(1, 23, 0);
 
@@ -234,13 +215,13 @@ mod tests {
                 span(utc(3, 8, 0), utc(3, 16, 0))
             ]
         );
-        assert_eq!(preview.busy, [span(utc(2, 9, 0), utc(2, 10, 15))]);
+        assert_eq!(preview.busy, [span(utc(2, 9, 0), utc(2, 10, 0))]);
         // The one-day horizon ends at Monday midnight: Tuesday is out.
         assert_eq!(
             preview.free,
             [
                 span(utc(2, 8, 0), utc(2, 9, 0)),
-                span(utc(2, 10, 15), utc(2, 16, 0))
+                span(utc(2, 10, 0), utc(2, 16, 0))
             ]
         );
     }
@@ -279,8 +260,8 @@ mod tests {
         assert_eq!(
             preview.busy,
             [
-                span(utc(2, 9, 0), utc(2, 10, 15)),
-                span(utc(2, 11, 0), utc(2, 12, 15))
+                span(utc(2, 9, 0), utc(2, 10, 0)),
+                span(utc(2, 11, 0), utc(2, 12, 0))
             ]
         );
     }

@@ -16,7 +16,7 @@ hours_editable: boolean; override_count: number }
 /**
  * The parts of an availability the editor understands.
  */
-export type AvailabilityDraft = { name: string; tzid: string; hours: DayHours[]; duration_minutes: number; buffer_before_minutes: number; buffer_after_minutes: number; notice_minutes: number; horizon_days: number }
+export type AvailabilityDraft = { name: string; tzid: string; hours: DayHours[]; duration_minutes: number; notice_minutes: number; horizon_days: number }
 
 export type AvailabilityPreview = { 
 /**
@@ -24,7 +24,7 @@ export type AvailabilityPreview = {
  */
 available: Span[]; 
 /**
- * Busy time, padded by the buffers, where it falls inside `available`.
+ * Busy time where it falls inside `available`.
  */
 busy: Span[]; 
 /**

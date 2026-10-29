@@ -409,8 +409,6 @@ pub struct AvailabilityDraft {
     pub tzid: String,
     pub hours: Vec<DayHours>,
     pub duration_minutes: u32,
-    pub buffer_before_minutes: u32,
-    pub buffer_after_minutes: u32,
     pub notice_minutes: u32,
     pub horizon_days: u32,
 }
@@ -455,7 +453,7 @@ pub enum PreviewSource {
 pub struct AvailabilityPreview {
     /// Your hours, before busy.
     pub available: Vec<Span>,
-    /// Busy time, padded by the buffers, where it falls inside `available`.
+    /// Busy time where it falls inside `available`.
     pub busy: Vec<Span>,
     /// Bookable windows.
     pub free: Vec<Span>,
