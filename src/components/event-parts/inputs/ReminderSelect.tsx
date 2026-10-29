@@ -4,7 +4,7 @@ import { Combobox } from "@/components/ui/combo-box"
 import { CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command"
 import { Item, ItemActions, ItemContent, ItemMedia } from "@/components/ui/item"
 
-import { DAY_MINUTES, HOUR_MINUTES, MONTH_MINUTES, WEEK_MINUTES } from "@/lib/event-time"
+import { durationQueryValues, formatDuration, MINUTE_UNITS } from "@/lib/duration-query"
 import { cn } from "@/lib/utils"
 
 import { BellIcon } from "@/icons/bell"
@@ -17,40 +17,6 @@ const DEFAULT_REMINDER_VALUES = [
   30, // 30 mins before
   60, // 1 hour before
 ]
-
-const REMINDER_UNITS = [
-  { pattern: /^(m|min|mins|minute|minutes)$/i, toMinutes: (num: number) => num },
-  { pattern: /^(h|hr|hrs|hour|hours)$/i, toMinutes: (num: number) => num * HOUR_MINUTES },
-  { pattern: /^(d|day|days)$/i, toMinutes: (num: number) => num * DAY_MINUTES },
-  { pattern: /^(w|wk|wks|week|weeks)$/i, toMinutes: (num: number) => num * WEEK_MINUTES },
-  { pattern: /^(mo|mon|month|months)$/i, toMinutes: (num: number) => num * MONTH_MINUTES },
-]
-
-function uniqueValues(values: number[]): number[] {
-  return [...new Set(values)]
-}
-
-function getQueryValues(query: string): number[] {
-  const match = query.trim().match(/^(\d+)\s*([a-z]*)/i)
-  if (!match) return []
-
-  const num = parseInt(match[1], 10)
-  if (num <= 0) return []
-
-  const unitQuery = match[2]
-  if (unitQuery) {
-    const unit = REMINDER_UNITS.find(({ pattern }) => pattern.test(unitQuery))
-    return unit ? [unit.toMinutes(num)] : []
-  }
-
-  return uniqueValues([
-    num, // minutes
-    num * HOUR_MINUTES, // hours
-    num * DAY_MINUTES, // days
-    num * WEEK_MINUTES, // weeks
-    num * MONTH_MINUTES, // months
-  ])
-}
 
 function humanDuration(mins: number): string {
   if (mins === 0) return "At time of event"
@@ -66,22 +32,7 @@ function humanDuration(mins: number): string {
     return `On day of event (${h}:${m})`
   }
 
-  const months = Math.floor(mins / MONTH_MINUTES)
-  const weeks = Math.floor((mins % MONTH_MINUTES) / WEEK_MINUTES)
-  const days = Math.floor((mins % WEEK_MINUTES) / DAY_MINUTES)
-  const hours = Math.floor((mins % DAY_MINUTES) / HOUR_MINUTES)
-  const minutes = mins % HOUR_MINUTES
-
-  return [
-    { value: months, unit: "month" },
-    { value: weeks, unit: "week" },
-    { value: days, unit: "day" },
-    { value: hours, unit: "hour" },
-    { value: minutes, unit: "minute" },
-  ]
-    .filter(({ value }) => value > 0)
-    .map(({ value, unit }) => `${value} ${unit}${value === 1 ? "" : "s"}`)
-    .join(", ")
+  return formatDuration(mins, MINUTE_UNITS)
 }
 
 export function ReminderSelect({
@@ -105,13 +56,13 @@ export function ReminderSelect({
   const [query, setQuery] = useState("")
   const [highlighted, setHighlighted] = useState(String(DEFAULT_REMINDER_VALUES[0]))
 
-  const values = query ? getQueryValues(query) : DEFAULT_REMINDER_VALUES
+  const values = query ? durationQueryValues(query, MINUTE_UNITS) : DEFAULT_REMINDER_VALUES
 
   // cmdk drops the highlight when its row disappears; re-pin it to the first
   // option so Enter always has something to pick.
   const handleQueryChange = (next: string) => {
     setQuery(next)
-    const [first] = next ? getQueryValues(next) : DEFAULT_REMINDER_VALUES
+    const [first] = next ? durationQueryValues(next, MINUTE_UNITS) : DEFAULT_REMINDER_VALUES
     if (first !== undefined) setHighlighted(String(first))
   }
   const resolvedAddon =
