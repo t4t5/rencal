@@ -138,6 +138,8 @@ export function WeekTimeGrid({
 
   const trackWidth = GUTTER_WIDTH + TRACK_DAYS * dayWidth
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
+  // The rendered days, at their own offset on the track.
+  const windowBox = { marginLeft: startIndex * dayWidth, width: GUTTER_WIDTH + N * dayWidth }
 
   return (
     <div
@@ -148,14 +150,17 @@ export function WeekTimeGrid({
       className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
     >
       <div style={{ width: trackWidth, minHeight: "100%" }}>
-        {/* The rendered days, at their own offset on the track */}
-        <div style={{ marginLeft: startIndex * dayWidth, width: GUTTER_WIDTH + N * dayWidth }}>
+        {/* The sticky header spans the whole track, so loading more days changes only
+            what it draws, never where it sits: WebKitGTK can show a sticky layer at
+            its new position a frame before its new content. */}
+        <div className="sticky top-0 z-20">
           {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
             line up exactly with the time grid below. */}
           <div
             data-slot="week-header"
-            className="sticky top-0 z-20 bg-background grid"
+            className="bg-background grid"
             style={{
+              ...windowBox,
               gridTemplateColumns: dayGridCols,
               gridTemplateRows: hasAllDay
                 ? // Edge tracks pad the lanes to match the 2px gap between them (bottom loses 1px to the border):
@@ -214,67 +219,65 @@ export function WeekTimeGrid({
               </>
             )}
           </div>
+        </div>
 
-          {/* Zone 3: Time grid (horizontally and vertically scrollable) */}
+        {/* Zone 3: Time grid (horizontally and vertically scrollable) */}
+        <div
+          data-slot="week-time-grid"
+          className="grid relative"
+          style={{ ...windowBox, gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
+        >
           <div
-            data-slot="week-time-grid"
-            className="grid relative"
-            style={{ gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
+            data-slot="week-time-gutter"
+            className="sticky left-0 z-10 bg-background border-r border-border"
           >
-            <div
-              data-slot="week-time-gutter"
-              className="sticky left-0 z-10 bg-background border-r border-border"
-            >
-              <TimeGutter timeFormat={timeFormat} />
-            </div>
-            {days.map((day) => (
-              <ContextMenu
-                key={day.dateKey}
-                items={[
-                  {
-                    label: "Create event",
-                    onSelect: () => createTimedEvent(day, timedTargetRef.current!),
-                  },
-                ]}
-              >
-                <div
-                  className={cn(
-                    "relative border-r border-border cursor-default",
-                    day.dateKey === activeDateKey
-                      ? "bg-selected text-selected-foreground"
-                      : day.isWeekend && "bg-weekend",
-                  )}
-                  style={{
-                    backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
-                  }}
-                  id={day.dateKey === activeDateKey ? ACTIVE_DAY_ID : undefined}
-                  {...dropZoneProps(day.date, "timed")}
-                  data-slot="week-day"
-                  data-selected={day.dateKey === activeDateKey || undefined}
-                  data-weekend={day.isWeekend || undefined}
-                  onPointerDown={(event) => startCreateDrag(day.date, event)}
-                  onClick={() => goToDate(day.date)}
-                  onContextMenu={(e) => {
-                    timedTargetRef.current = { el: e.currentTarget, y: e.clientY }
-                  }}
-                  onDoubleClick={(e) => {
-                    if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
-                    createTimedEvent(day, { el: e.currentTarget, y: e.clientY })
-                  }}
-                >
-                  {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
-                    <WeekTimedEvent key={layout.event.key} layout={layout} />
-                  ))}
-
-                  {selection?.day.equals(day.date) && (
-                    <DragToCreateSelection selection={selection} />
-                  )}
-
-                  {day.isToday && <CurrentTimeIndicator />}
-                </div>
-              </ContextMenu>
-            ))}
+            <TimeGutter timeFormat={timeFormat} />
           </div>
+          {days.map((day) => (
+            <ContextMenu
+              key={day.dateKey}
+              items={[
+                {
+                  label: "Create event",
+                  onSelect: () => createTimedEvent(day, timedTargetRef.current!),
+                },
+              ]}
+            >
+              <div
+                className={cn(
+                  "relative border-r border-border cursor-default",
+                  day.dateKey === activeDateKey
+                    ? "bg-selected text-selected-foreground"
+                    : day.isWeekend && "bg-weekend",
+                )}
+                style={{
+                  backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
+                }}
+                id={day.dateKey === activeDateKey ? ACTIVE_DAY_ID : undefined}
+                {...dropZoneProps(day.date, "timed")}
+                data-slot="week-day"
+                data-selected={day.dateKey === activeDateKey || undefined}
+                data-weekend={day.isWeekend || undefined}
+                onPointerDown={(event) => startCreateDrag(day.date, event)}
+                onClick={() => goToDate(day.date)}
+                onContextMenu={(e) => {
+                  timedTargetRef.current = { el: e.currentTarget, y: e.clientY }
+                }}
+                onDoubleClick={(e) => {
+                  if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
+                  createTimedEvent(day, { el: e.currentTarget, y: e.clientY })
+                }}
+              >
+                {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
+                  <WeekTimedEvent key={layout.event.key} layout={layout} />
+                ))}
+
+                {selection?.day.equals(day.date) && <DragToCreateSelection selection={selection} />}
+
+                {day.isToday && <CurrentTimeIndicator />}
+              </div>
+            </ContextMenu>
+          ))}
         </div>
       </div>
     </div>
