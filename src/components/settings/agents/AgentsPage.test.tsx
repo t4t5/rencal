@@ -83,7 +83,6 @@ it("adds and removes a skill with its checkbox", async () => {
   await toggle("renCal")
   expect(api.agents.installSkill).toHaveBeenCalledWith("rencal")
   expect(checkbox("renCal").getAttribute("aria-checked")).toBe("true")
-  expect(document.body.textContent).toContain("Installed for Claude Code and Codex.")
 
   await toggle("renCal")
   expect(api.agents.uninstallSkill).toHaveBeenCalledWith("rencal")

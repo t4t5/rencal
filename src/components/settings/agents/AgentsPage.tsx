@@ -14,12 +14,12 @@ const SKILLS: { skill: Skill; label: string; description: string }[] = [
   {
     skill: "caldir",
     label: "caldir",
-    description: "Lets agents read, create and edit your events with the caldir CLI.",
+    description: "Read, create and edit your events with the caldir CLI.",
   },
   {
     skill: "rencal",
     label: "renCal",
-    description: "Lets agents build your own views, themes and calendar providers.",
+    description: "Build your own renCal views, themes and providers.",
   },
 ]
 
@@ -62,9 +62,7 @@ export function AgentsPage() {
 
   return (
     <SettingsContent>
-      <p className="text-xs text-muted-foreground w-[400px]">
-        Tick a skill to install it for your coding agents.
-      </p>
+      <p className="text-sm w-[400px]">Tick a skill to install it for your coding agents.</p>
       {noAgents && (
         <p className="text-sm w-[400px]">
           No supported coding agent was found in your home folder.
@@ -105,9 +103,8 @@ function SkillRow({
 
   const agentsWith = (link: SkillState["agents"][number]["link"]) =>
     state.agents.filter((agent) => agent.link === link).map((agent) => agent.name)
-  const linked = agentsWith("linked")
   const missing = agentsWith("missing")
-  const installed = linked.length > 0
+  const installed = agentsWith("linked").length > 0
 
   const run = async (install: boolean) => {
     setBusy(true)
@@ -128,19 +125,18 @@ function SkillRow({
   }
 
   return (
-    <div className="flex flex-col gap-1 w-[400px]">
-      <div className="flex items-center gap-2">
-        <Checkbox
-          id={id}
-          checked={installed}
-          disabled={busy || !state.available || state.agents.length === 0}
-          onCheckedChange={(checked) => void run(checked === true)}
-        />
-        <Label htmlFor={id} className="text-sm">
-          {label}
-        </Label>
-      </div>
-      <div className="flex flex-col gap-1 pl-7 text-xs text-muted-foreground">
+    // A grid keeps the text under the label whatever size the theme draws the checkbox.
+    <div className="grid w-[400px] grid-cols-[auto_1fr] items-center gap-x-2 gap-y-1">
+      <Checkbox
+        id={id}
+        checked={installed}
+        disabled={busy || !state.available || state.agents.length === 0}
+        onCheckedChange={(checked) => void run(checked === true)}
+      />
+      <Label htmlFor={id} className="text-sm">
+        {label}
+      </Label>
+      <div className="col-start-2 flex flex-col gap-1 text-xs text-muted-foreground">
         <p>{description}</p>
         {!state.available && (
           <p>
@@ -154,23 +150,15 @@ function SkillRow({
             </button>
           </p>
         )}
-        {installed && (
-          <p>
-            Installed for {listFormat.format(linked)}.
-            {missing.length > 0 && (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  disabled={busy}
-                  onClick={() => void run(true)}
-                  className="text-primary hover:underline cursor-pointer"
-                >
-                  Add to {listFormat.format(missing)}
-                </button>
-              </>
-            )}
-          </p>
+        {installed && missing.length > 0 && (
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => void run(true)}
+            className="w-fit text-primary hover:underline cursor-pointer"
+          >
+            Add to {listFormat.format(missing)}
+          </button>
         )}
         {error && (
           <p role="alert" className="text-destructive break-words">
