@@ -450,7 +450,7 @@ highlight with `data-selected="true"`, so style it like `data-highlighted`.
 Every rendered event uses `data-slot="calendar-event"`. The `data-view` values
 are `week`, `month`, `agenda`, `board`, and `search` (the drag overlay has none;
 match it with `data-drag-state="overlay"`); the
-`data-kind` values are `timed` and `all-day`. The stable child slots are
+`data-kind` values are `timed` and `all-day`; views that draw timed events crossing midnight as bars across days, like week and month, mark those `all-day` too. The stable child slots are
 `calendar-event-title`, `calendar-event-time`, and
 `calendar-event-color-marker`; a part is omitted when that rendering does not
 need it.

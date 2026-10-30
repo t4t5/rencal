@@ -6,12 +6,11 @@ import {
   dayProps,
   Tooltip,
   UntitledEventText,
+  isSpanning,
   useEventProps,
-  useEventSelection,
 } from "@/sdk"
 
 import { MonthTimedEvent, MonthTimedEventContent } from "./TimedEventBlock"
-import { type AllDayLaneItem, isSpanning } from "./useMonthEventLayout"
 import type { MonthDay } from "./useMonthGrid"
 
 const MAX_TIMED_VISIBLE = 4
@@ -21,7 +20,7 @@ const MAX_TOOLTIP_ROWS = 12
 type MonthDayCellProps = {
   day: MonthDay
   timedEvents: CalendarEvent[]
-  hiddenAllDayItems: AllDayLaneItem[]
+  hiddenAllDayEvents: CalendarEvent[]
   reservedAllDayHeight: string | null
   isActiveDay: boolean
   onClick: () => void
@@ -30,16 +29,13 @@ type MonthDayCellProps = {
 export function MonthDayCell({
   day,
   timedEvents,
-  hiddenAllDayItems,
+  hiddenAllDayEvents,
   reservedAllDayHeight,
   isActiveDay,
   onClick,
 }: MonthDayCellProps) {
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
-  const hiddenEvents = [
-    ...hiddenAllDayItems.map((item) => item.event),
-    ...timedEvents.slice(MAX_TIMED_VISIBLE),
-  ]
+  const hiddenEvents = [...hiddenAllDayEvents, ...timedEvents.slice(MAX_TIMED_VISIBLE)]
 
   return (
     <div
@@ -118,16 +114,15 @@ function HiddenEventRow({
   labelRef: RefObject<HTMLDivElement | null>
   onOpen: () => void
 }) {
-  const eventProps = useEventProps(event)
-  const { toggle } = useEventSelection()
+  // Anchor to the label: the row unmounts once the tooltip closes.
+  const eventProps = useEventProps(event, { anchor: labelRef })
+  const { onClick } = eventProps
   const spanning = isSpanning(event)
 
   return (
     <div
       {...eventProps}
       data-view="month"
-      // Multi-day timed events sit in the all-day lanes too.
-      data-kind={spanning ? "all-day" : "timed"}
       className={cn(
         "text-xs truncate cursor-default rounded-xs shrink-0",
         spanning
@@ -135,12 +130,10 @@ function HiddenEventRow({
           : "flex items-center gap-(--event-padding-inline) pr-(--event-padding-inline)",
       )}
       onClick={
-        eventProps.onClick &&
+        onClick &&
         ((e) => {
-          e.stopPropagation()
+          onClick(e)
           onOpen()
-          // Anchor to the label: the row unmounts once the tooltip closes.
-          if (labelRef.current) toggle(event, labelRef.current)
         })
       }
     >

@@ -1,6 +1,7 @@
 import { memo } from "react"
 
 import {
+  type CalendarEvent,
   cn,
   formatTime,
   Tooltip,
@@ -8,19 +9,31 @@ import {
   useDisplaySettings,
   useEventProps,
   useEventState,
+  type TimedBlock,
 } from "@/sdk"
 
-import { overlapBox, weekEventBox } from "./grid"
-import type { WeekTimedEventLayout } from "./useDayRangeLayout"
+import { DAY_MINUTES, overlapBox, weekEventBox } from "./grid"
 
-function WeekTimedEventImpl({ layout }: { layout: WeekTimedEventLayout }) {
-  const { event } = layout
+type DisplayMode = "xs" | "sm" | "md" | "lg"
+
+// Thresholds are the shortest durations whose block fits each mode's lines at 48px per hour.
+function displayModeFor(event: CalendarEvent): DisplayMode {
+  // An event ending at midnight ends at the bottom of its day.
+  const minutes = Math.min(event.endMinutes, DAY_MINUTES) - event.startMinutes
+  if (minutes < 45) return "xs"
+  if (minutes < 60) return "sm"
+  if (minutes < 75) return "md"
+  return "lg"
+}
+
+function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
+  const event = block.item
   const { timeFormat } = useDisplaySettings()
   // The floating copy keeps this block's size so it reads as the block being lifted.
   const eventProps = useEventProps(event, { drag: "block" })
   const { draft, drag, menuOpen } = useEventState(event)
 
-  const mode = layout.displayMode
+  const mode = displayModeFor(event)
   const isDashed = event.rsvp === "needs-action" || event.rsvp === "declined"
   const hasStripe = !isDashed && !draft
 
@@ -52,8 +65,8 @@ function WeekTimedEventImpl({ layout }: { layout: WeekTimedEventLayout }) {
           hasStripe && "pl-[calc(var(--event-padding-inline)+4px)]",
         )}
         style={{
-          ...weekEventBox(layout.top, layout.height),
-          ...overlapBox(layout),
+          ...weekEventBox(block.top, block.height),
+          ...overlapBox(block),
           // Overlaps paint in layout order; lift the preview above them so its ring stays visible.
           zIndex: drag === "preview" ? 10 : undefined,
           ...eventProps.style,

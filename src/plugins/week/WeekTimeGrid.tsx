@@ -21,7 +21,7 @@ import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
 import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
-import type { AllDayLaneItem, WeekTimedEventLayout } from "./useDayRangeLayout"
+import type { DayRangeLayout } from "./useDayRangeLayout"
 import { TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
 
 type WeekTimeGridProps = {
@@ -31,9 +31,7 @@ type WeekTimeGridProps = {
   days: WeekDay[]
   dayWidth: number
   dayWidthMeasured: boolean
-  timedByDay: Map<string, WeekTimedEventLayout[]>
-  allDayItems: AllDayLaneItem[]
-  maxAllDayLane: number
+  layout: DayRangeLayout
   scrollContainerRef: RefObject<HTMLDivElement | null>
 }
 
@@ -43,9 +41,7 @@ export function WeekTimeGrid({
   days,
   dayWidth,
   dayWidthMeasured,
-  timedByDay,
-  allDayItems,
-  maxAllDayLane,
+  layout: { allDayBars, allDayLaneCount, timedByDay },
   scrollContainerRef,
 }: WeekTimeGridProps) {
   const { activeDate, goToDate, navigationVersion } = useNavigation()
@@ -56,7 +52,7 @@ export function WeekTimeGrid({
 
   const activeDateKey = activeDate.toString()
   const N = days.length
-  const hasAllDay = allDayItems.length > 0
+  const hasAllDay = allDayBars.length > 0
 
   // scrollLeft that puts the first day of `date`'s week right of the gutter.
   const weekScrollLeft = (date: Temporal.PlainDate, width: number) =>
@@ -145,7 +141,7 @@ export function WeekTimeGrid({
               gridTemplateColumns: dayGridCols,
               gridTemplateRows: hasAllDay
                 ? // Edge tracks pad the lanes to match the 2px gap between them (bottom loses 1px to the border):
-                  `auto 1px repeat(${maxAllDayLane + 1}, minmax(18px, auto)) 2px`
+                  `auto 1px repeat(${allDayLaneCount}, minmax(18px, auto)) 2px`
                 : "auto",
             }}
           >
@@ -180,8 +176,8 @@ export function WeekTimeGrid({
                     {...dayProps(day.date, "all-day")}
                   />
                 ))}
-                {allDayItems.map((item) => (
-                  <WeekAllDayBar key={item.event.key} item={item} colOffset={1} rowOffset={2} />
+                {allDayBars.map((bar) => (
+                  <WeekAllDayBar key={bar.item.key} bar={bar} colOffset={1} rowOffset={2} />
                 ))}
               </>
             )}
@@ -218,8 +214,8 @@ export function WeekTimeGrid({
               data-weekend={day.isWeekend || undefined}
               onClick={() => goToDate(day.date)}
             >
-              {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
-                <WeekTimedEvent key={layout.event.key} layout={layout} />
+              {(timedByDay.get(day.dateKey) ?? []).map((block) => (
+                <WeekTimedEvent key={block.item.key} block={block} />
               ))}
 
               {selection?.kind === "timed" && selection.day.equals(day.date) && (

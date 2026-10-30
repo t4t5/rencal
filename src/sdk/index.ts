@@ -1,7 +1,7 @@
 // The host surface plugins may import. ESLint bans every other `@/` import under
 // src/plugins/**, so anything exported here is a contract plugins depend on.
 import { Temporal } from "@js-temporal/polyfill"
-import { type MouseEvent, useCallback, useMemo } from "react"
+import { type MouseEvent, type RefObject, useCallback, useMemo } from "react"
 
 import { useAgendaSelection } from "@/contexts/AgendaFocusContext"
 import { useCalEvents, useHoldRange } from "@/contexts/CalEventsContext"
@@ -19,12 +19,13 @@ import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { type OpenDayDraftOptions, useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
+import { isDraftEvent } from "@/lib/draft-to-event"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
 import { getCalendarEventStyle } from "@/lib/event-styles"
-import { epochDay, isAllDay } from "@/lib/event-time"
+import { epochDay } from "@/lib/event-time"
+import { isSpanning } from "@/lib/event-utils"
 import { useMenuOpen } from "@/lib/menu-event"
 
-import { isDraft, markDraft } from "./event-state"
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
 export { Temporal } from "@js-temporal/polyfill"
@@ -53,11 +54,14 @@ export { useToday } from "@/hooks/useToday"
 export { useViewerTzid } from "@/hooks/useViewerTzid"
 export { useIsDimmed } from "@/hooks/useIsDimmed"
 export {
-  type AllDaySpan,
-  assignAllDayLanes,
-  clipSpanToRange,
-} from "@/hooks/cal-events/all-day-lanes"
-export { layoutTimedOverlaps, type TimedBox } from "@/hooks/cal-events/timed-overlaps"
+  type AllDayBar,
+  type DayRange,
+  isSpanning,
+  layoutAllDay,
+  layoutTimed,
+  type TimedBlock,
+  type TimedRange,
+} from "./layout"
 export { Button } from "@/components/ui/button"
 export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
@@ -77,19 +81,20 @@ export function useEventsInRange(
 ): readonly CalendarEvent[] {
   const { calendarEvents } = useCalEvents()
   const { calendars } = useAppCalendars()
-  const { events: withDraft, draftCalEvent } = useEventsWithDraft(calendarEvents)
+  const { events: withDraft } = useEventsWithDraft(calendarEvents)
   const events = useEventsWithDrag(withDraft)
   useHoldRange(start, end)
   const first = epochDay(start)
   const last = epochDay(end)
 
-  return useMemo(() => {
-    if (draftCalEvent) markDraft(draftCalEvent)
-    return toPluginEvents(
-      events.filter((e) => e.dateInfo.lastDay >= first && e.dateInfo.firstDay < last),
-      calendars,
-    )
-  }, [events, draftCalEvent, calendars, first, last])
+  return useMemo(
+    () =>
+      toPluginEvents(
+        events.filter((e) => e.dateInfo.lastDay >= first && e.dateInfo.firstDay < last),
+        calendars,
+      ),
+    [events, calendars, first, last],
+  )
 }
 
 /**
@@ -150,23 +155,6 @@ export function useDisplaySettings() {
   return { timeFormat, firstDayOfWeek, showWeekNumbers, loaded: settingsLoaded }
 }
 
-/** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
-export function useEventSelection() {
-  const { activeEvent, toggleActiveEventKey } = useCalEvents()
-  const activeKey = activeEvent ? eventKey(activeEvent) : null
-
-  return useMemo(
-    () => ({
-      isSelected: (event: CalendarEvent) => event.key === activeKey,
-      toggle: (event: CalendarEvent, anchor: Element) => {
-        setEventAnchor(anchor)
-        toggleActiveEventKey(event.key)
-      },
-    }),
-    [activeKey, toggleActiveEventKey],
-  )
-}
-
 /**
  * Inline style (the source colour themes paint from) and the user's RSVP. Event
  * elements get both from `useEventProps`; this is for marks that aren't events.
@@ -195,8 +183,6 @@ export interface EventState {
   /** `"source"` while this event is dragged, `"preview"` for its copy at the drop position. */
   readonly drag: "source" | "preview" | null
   readonly menuOpen: boolean
-  /** Faded while the user types a new event in the header; never drafts or drag previews. */
-  readonly dimmed: boolean
 }
 
 /**
@@ -209,16 +195,13 @@ export function useEventState(event: CalendarEvent): EventState {
   const appEvent = toAppEvent(event)
   const drag = useEventDragRole(appEvent)
   const menuOpen = useMenuOpen(event.key)
-  const dimmed = useIsDimmed()
-  const draft = isDraft(appEvent)
   const activeKey = activeEvent ? eventKey(activeEvent) : null
 
   return {
     selected: event.key === activeKey || event.key === selectedEventKey || menuOpen,
-    draft,
+    draft: isDraftEvent(appEvent),
     drag,
     menuOpen,
-    dimmed: dimmed && !draft && drag !== "preview",
   }
 }
 
@@ -230,16 +213,19 @@ export interface EventPropsOptions {
    */
   drag?: "pill" | "block"
   /**
-   * Where the popover opens: beside the element, or at the click for elements
-   * too wide for it to fit beside, like an event spanning a week.
+   * Where the popover opens: beside the element, at the click for elements too
+   * wide for it to fit beside, like an event spanning a week, or beside the
+   * element in a ref, for elements that are gone once clicked, like rows in a
+   * tooltip.
    */
-  anchor?: "element" | "pointer"
+  anchor?: "element" | "pointer" | RefObject<Element | null>
 }
 
 /**
  * Props to spread on an event element: the calendar-event attributes themes
- * style (including `useEventState` as `data-selected`, `data-draft`,
- * `data-drag-state` and `data-dimmed`), its colour, a click that toggles the
+ * style (including `useEventState` as `data-selected`, `data-draft` and
+ * `data-drag-state`, and `data-dimmed` while the user types a new event in the
+ * header), its colour, a click that toggles the
  * event popover next to it, renCal's context menu for the event, and with
  * `drag`, a press that drags it. Drafts and drag previews ignore clicks and
  * have no menu.
@@ -249,7 +235,10 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
   const state = useEventState(event)
   const { toggleActiveEventKey } = useCalEvents()
   const isStatic = state.draft || state.drag === "preview"
-  const onPointerDown = useEventDragHandle(toAppEvent(event), {
+  const dimmed = useIsDimmed() && !isStatic
+  const appEvent = toAppEvent(event)
+  const { anchor = "element" } = options
+  const onPointerDown = useEventDragHandle(appEvent, {
     disabled: isStatic || !options.drag,
     float: options.drag,
   })
@@ -258,11 +247,12 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
     "data-slot": "calendar-event",
     // Finds the event for the context menu, which the viewport opens.
     "data-event-key": event.key,
-    "data-kind": isAllDay(event.start) ? "all-day" : "timed",
+    // Drawn as a bar across days, like multi-day timed events, or at its time.
+    "data-kind": isSpanning(appEvent) ? "all-day" : "timed",
     "data-selected": state.selected || undefined,
     "data-rsvp": rsvp ?? undefined,
     "data-draft": state.draft || undefined,
-    "data-dimmed": state.dimmed || undefined,
+    "data-dimmed": dimmed || undefined,
     "data-drag-state": state.drag ?? undefined,
     // Open popovers let clicks on these through instead of dismissing and swallowing them.
     "data-event-clickable": !isStatic || undefined,
@@ -272,7 +262,13 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
       ? undefined
       : (e: MouseEvent<Element>) => {
           e.stopPropagation()
-          setEventAnchor(options.anchor === "pointer" ? pointAnchorFromClick(e) : e.currentTarget)
+          setEventAnchor(
+            anchor === "pointer"
+              ? pointAnchorFromClick(e)
+              : anchor === "element"
+                ? e.currentTarget
+                : (anchor.current ?? e.currentTarget),
+          )
           toggleActiveEventKey(event.key)
         },
   } as const

@@ -1,21 +1,27 @@
-import { cn, UntitledEventText, useEventProps, useEventState } from "@/sdk"
+import {
+  type AllDayBar,
+  type CalendarEvent,
+  cn,
+  UntitledEventText,
+  useEventProps,
+  useEventState,
+} from "@/sdk"
 
 import { GUTTER_WIDTH } from "./grid"
-import type { AllDayLaneItem } from "./useDayRangeLayout"
 
 export function WeekAllDayBar({
-  item,
+  bar,
   colOffset,
   rowOffset,
 }: {
-  item: AllDayLaneItem
-  // Added to item.startCol/endCol so bar aligns with the parent grid's day columns:
+  bar: AllDayBar<CalendarEvent>
+  // Grid columns before the first day's, so the bar aligns with the parent grid's day columns:
   colOffset: number
-  // Added to item.lane so bar lands on the right row in the parent grid:
+  // Grid rows before the first lane's, so the bar lands on the right row in the parent grid:
   rowOffset: number
 }) {
-  const { event } = item
-  const fillsRow = item.endCol - item.startCol >= 7
+  const event = bar.item
+  const fillsRow = bar.span >= 7
   const eventProps = useEventProps(event, {
     drag: "pill",
     anchor: fillsRow ? "pointer" : "element",
@@ -27,15 +33,13 @@ export function WeekAllDayBar({
       data-slot="week-all-day-lane"
       className={cn("p-0.5 py-px pr-[3px]", drag === "preview" && "pointer-events-none")}
       style={{
-        gridColumn: `${item.startCol + colOffset} / ${item.endCol + colOffset}`,
-        gridRow: item.lane + 1 + rowOffset,
+        gridColumn: `${bar.column + 1 + colOffset} / span ${bar.span}`,
+        gridRow: bar.lane + 1 + rowOffset,
       }}
     >
       <div
         {...eventProps}
         data-view="week"
-        // Multi-day timed events sit in the all-day lane too.
-        data-kind="all-day"
         className="flex items-center px-(--event-padding-inline) py-px leading-4 rounded-xs text-xs cursor-default"
       >
         {/* Make title in multi-day event sticky so it stays visible when user scrolls: */}

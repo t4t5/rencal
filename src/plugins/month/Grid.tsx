@@ -11,7 +11,6 @@ import {
 } from "react"
 
 import {
-  clipSpanToRange,
   cn,
   epochDay,
   type FirstDayOfWeek,
@@ -32,8 +31,8 @@ import { attachWeekSnapSession } from "./weekSnapSession"
 // How long snapping stays off after a navigation, while its scroll lands.
 const NAVIGATION_SETTLE_MS = 500
 const EMPTY_LAYOUT: WeekLayout = {
-  allDayItems: [],
-  maxLane: -1,
+  allDayEvents: [],
+  allDayBars: [],
   timedByCol: Array.from({ length: 7 }, () => []),
 }
 
@@ -222,13 +221,10 @@ export function MonthGrid({
           const inRange = loaded >= 0 && loaded < weeks.length
           const weekDays = inRange ? weeks[loaded] : buildWeek(origin, virtualRow.index, today)
           const createSelection =
-            selection?.kind === "days"
-              ? clipSpanToRange(
-                  epochDay(selection.start),
-                  epochDay(selection.end),
-                  epochDay(weekDays[0].date),
-                  epochDay(weekDays[6].date),
-                )
+            selection?.kind === "days" &&
+            epochDay(selection.start) <= epochDay(weekDays[6].date) &&
+            epochDay(selection.end) >= epochDay(weekDays[0].date)
+              ? { firstDay: selection.start, lastDay: selection.end }
               : null
 
           return (

@@ -26,9 +26,7 @@ export function WeekView() {
         days={days}
         dayWidth={dayWidth}
         dayWidthMeasured={measured}
-        timedByDay={layout.timedByDay}
-        allDayItems={layout.allDayItems}
-        maxAllDayLane={layout.maxAllDayLane}
+        layout={layout}
         scrollContainerRef={scrollContainerRef}
       />
     </div>

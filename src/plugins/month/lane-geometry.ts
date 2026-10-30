@@ -1,17 +1,17 @@
 import type { CSSProperties } from "react"
 
-import type { AllDaySpan } from "@/sdk"
+import type { AllDayBar } from "@/sdk"
 
 export const LANE_GAP = 3
 
 const INSET = "var(--month-padding-inline)"
 
-export function allDayBarStyle(span: AllDaySpan, lane: number): CSSProperties {
+export function allDayBarStyle(bar: AllDayBar<unknown>): CSSProperties {
   return {
-    top: `calc(var(--lane-height) * ${lane})`,
+    top: `calc(var(--lane-height) * ${bar.lane})`,
     height: `calc(var(--lane-height) - ${LANE_GAP}px)`,
-    left: `calc(${((span.startCol - 1) / 7) * 100}% + ${span.isStart ? INSET : "-2px"})`,
-    right: `calc(${((7 - (span.endCol - 1)) / 7) * 100}% + ${span.isEnd ? INSET : "-2px"})`,
+    left: `calc(${(bar.column / 7) * 100}% + ${bar.isStart ? INSET : "-2px"})`,
+    right: `calc(${((7 - bar.column - bar.span) / 7) * 100}% + ${bar.isEnd ? INSET : "-2px"})`,
   }
 }
 
