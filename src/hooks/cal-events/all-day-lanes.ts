@@ -1,16 +1,8 @@
-import type { CalendarEvent } from "@/lib/cal-events"
-
 export type AllDaySpan = {
   startCol: number // 1-based CSS grid-column-start
   endCol: number // 1-based CSS grid-column-end (exclusive)
   isStart: boolean
   isEnd: boolean
-}
-
-export type AllDayLaneItem = AllDaySpan & {
-  event: CalendarEvent
-  calendarColor: string | null
-  lane: number
 }
 
 export function clipSpanToRange(
@@ -29,28 +21,6 @@ export function clipSpanToRange(
     endCol: clampedLastDay - rangeFirstDay + 2,
     isStart: firstDay >= rangeFirstDay,
     isEnd: lastDay <= rangeLastDay,
-  }
-}
-
-export function buildAllDaySpan(
-  event: CalendarEvent,
-  rangeFirstDay: number,
-  rangeLastDay: number,
-  calendarColor: string | null,
-): AllDayLaneItem | null {
-  const span = clipSpanToRange(
-    event.dateInfo.firstDay,
-    event.dateInfo.lastDay,
-    rangeFirstDay,
-    rangeLastDay,
-  )
-  if (!span) return null
-
-  return {
-    ...span,
-    event,
-    calendarColor,
-    lane: 0,
   }
 }
 

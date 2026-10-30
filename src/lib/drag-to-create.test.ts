@@ -91,22 +91,22 @@ describe("daySelectionForPointer", () => {
 
   it("grows after, before, and equal to the anchor", () => {
     expect(daySelectionForPointer(anchor, Temporal.PlainDate.from("2026-09-12"))).toEqual({
-      start: anchor,
-      end: Temporal.PlainDate.from("2026-09-12"),
+      firstDay: anchor,
+      lastDay: Temporal.PlainDate.from("2026-09-12"),
     })
     expect(daySelectionForPointer(anchor, Temporal.PlainDate.from("2026-09-06"))).toEqual({
-      start: Temporal.PlainDate.from("2026-09-06"),
-      end: anchor,
+      firstDay: Temporal.PlainDate.from("2026-09-06"),
+      lastDay: anchor,
     })
-    expect(daySelectionForPointer(anchor, anchor)).toEqual({ start: anchor, end: anchor })
+    expect(daySelectionForPointer(anchor, anchor)).toEqual({ firstDay: anchor, lastDay: anchor })
   })
 })
 
 describe("daySelectionRange", () => {
   it("creates an all-day range with an exclusive end", () => {
     const range = daySelectionRange({
-      start: Temporal.PlainDate.from("2026-09-09"),
-      end: Temporal.PlainDate.from("2026-09-12"),
+      firstDay: Temporal.PlainDate.from("2026-09-09"),
+      lastDay: Temporal.PlainDate.from("2026-09-12"),
     })
 
     expect(range.start).toEqual({

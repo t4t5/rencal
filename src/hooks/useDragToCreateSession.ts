@@ -1,23 +1,17 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type PointerEvent as ReactPointerEvent,
-  type RefObject,
-} from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 
 import { suppressNextClick } from "@/contexts/EventDragContext"
 
+import { scrollParent } from "@/lib/day-grid"
 import { createDebugLogger } from "@/lib/debug"
 import { DRAG_THRESHOLD_PX, edgeScrollDelta } from "@/lib/event-drag"
 
 const debugCreateDrag = createDebugLogger("drag-to-create")
 
 type Pointer = { x: number; y: number }
+type Press = Pick<PointerEvent, "button" | "clientX" | "clientY">
 
 type Config<TAnchor, TSelection> = {
-  scrollContainerRef: RefObject<HTMLElement | null>
   /** Selection for the pointer, or null to keep the previous one. */
   selectionAt: (anchor: TAnchor, originEl: HTMLElement, pointer: Pointer) => TSelection | null
   isSameSelection: (a: TSelection, b: TSelection) => boolean
@@ -47,7 +41,8 @@ export function useDragToCreateSession<TAnchor, TSelection>(
   config: Config<TAnchor, TSelection>,
 ): {
   selection: TSelection | null
-  startCreateDrag: (anchor: TAnchor, event: ReactPointerEvent<HTMLElement>) => void
+  /** Starts a session for a left-button press on `originEl`. */
+  startCreateDrag: (anchor: TAnchor, originEl: HTMLElement, press: Press) => void
 } {
   const [selection, setSelection] = useState<TSelection | null>(null)
   const configRef = useRef(config)
@@ -165,19 +160,16 @@ export function useDragToCreateSession<TAnchor, TSelection>(
       cancel(session)
     }
 
-    const start = (anchor: TAnchor, event: ReactPointerEvent<HTMLElement>) => {
-      if (event.button !== 0 || event.target !== event.currentTarget || sessionRef.current) return
-      const originEl = event.currentTarget
+    const start = (anchor: TAnchor, originEl: HTMLElement, press: Press) => {
+      if (press.button !== 0 || sessionRef.current) return
       sessionRef.current = {
         anchor,
         originEl,
-        scrollEl:
-          originEl.closest<HTMLElement>("[data-drag-scroll]") ??
-          configRef.current.scrollContainerRef.current,
-        startX: event.clientX,
-        startY: event.clientY,
-        lastX: event.clientX,
-        lastY: event.clientY,
+        scrollEl: scrollParent(originEl),
+        startX: press.clientX,
+        startY: press.clientY,
+        lastX: press.clientX,
+        lastY: press.clientY,
         activated: false,
         cancelled: false,
         selection: null,

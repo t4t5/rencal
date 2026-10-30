@@ -1,41 +1,38 @@
 import { describe, expect, it } from "vitest"
 
-import type { CalendarEvent } from "@/lib/cal-events"
 import { DAY_MINUTES } from "@/lib/event-time"
 
-import { layoutTimedOverlaps } from "./timed-overlaps"
-import type { WeekTimedEventLayout } from "./useDayRangeLayout"
+import { layoutTimedOverlaps, type TimedBox } from "./timed-overlaps"
+
+type Layout = TimedBox & { id: string }
 
 /** An event from `start` to `end`, given as "HH:MM". */
-function layout(id: string, start: string, end: string): WeekTimedEventLayout {
+function layout(id: string, start: string, end: string): Layout {
   const minutes = (time: string) => {
     const [h, m] = time.split(":").map(Number)
     return h * 60 + m
   }
   const top = (minutes(start) / DAY_MINUTES) * 100
   return {
-    event: { id } as CalendarEvent,
-    calendarColor: null,
+    id,
     top,
     height: (minutes(end) / DAY_MINUTES) * 100 - top,
     left: 0,
     width: 1,
     coveredWidth: 0,
-    durationMinutes: 0,
-    displayMode: "lg",
   }
 }
 
 const round = (n: number) => Math.round(n * 1000) / 1000
 
 /** [left, width, coveredWidth] by id. */
-function boxesById(layouts: WeekTimedEventLayout[]) {
+function boxesById(layouts: Layout[]) {
   return Object.fromEntries(
-    layouts.map((l) => [l.event.id, [round(l.left), round(l.width), round(l.coveredWidth)]]),
+    layouts.map((l) => [l.id, [round(l.left), round(l.width), round(l.coveredWidth)]]),
   )
 }
 
-const paintOrder = (layouts: WeekTimedEventLayout[]) => layouts.map((l) => l.event.id)
+const paintOrder = (layouts: Layout[]) => layouts.map((l) => l.id)
 
 describe("layoutTimedOverlaps", () => {
   it("places events starting together side by side, each under its right neighbour", () => {
