@@ -4,16 +4,17 @@
 use std::ffi::{OsStr, OsString};
 use std::process::ExitCode;
 
-mod skill_install;
+use rencal_lib::skill_install;
 
 const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
-const SKILL_INSTALL_USAGE: &str = "usage: rencal skill install";
+const SKILL_USAGE: &str = "usage: rencal skill <install|show>";
 
 #[derive(Debug, Eq, PartialEq)]
 enum Command {
     LaunchApp,
     InstallPlugin(String),
     InstallSkill,
+    ShowSkill,
 }
 
 fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command, &'static str> {
@@ -23,7 +24,8 @@ fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command
     if command == "skill" {
         return match (args.next(), args.next()) {
             (Some(action), None) if action == "install" => Ok(Command::InstallSkill),
-            _ => Err(SKILL_INSTALL_USAGE),
+            (Some(action), None) if action == "show" => Ok(Command::ShowSkill),
+            _ => Err(SKILL_USAGE),
         };
     }
     if command != "plugin" {
@@ -90,6 +92,10 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
+        Ok(Command::ShowSkill) => {
+            print!("{}", skill_install::show());
+            ExitCode::SUCCESS
+        }
         Err(usage) => {
             eprintln!("{usage}");
             ExitCode::from(2)
@@ -131,18 +137,23 @@ mod tests {
     }
 
     #[test]
-    fn skill_install_requires_no_other_arguments() {
+    fn skill_commands_take_no_other_arguments() {
         assert_eq!(
             command_from_args(args(&["skill", "install"])),
             Ok(Command::InstallSkill)
         );
         assert_eq!(
-            command_from_args(args(&["skill"])),
-            Err(SKILL_INSTALL_USAGE)
+            command_from_args(args(&["skill", "show"])),
+            Ok(Command::ShowSkill)
         );
+        assert_eq!(command_from_args(args(&["skill"])), Err(SKILL_USAGE));
         assert_eq!(
             command_from_args(args(&["skill", "install", "extra"])),
-            Err(SKILL_INSTALL_USAGE)
+            Err(SKILL_USAGE)
+        );
+        assert_eq!(
+            command_from_args(args(&["skill", "unknown"])),
+            Err(SKILL_USAGE)
         );
     }
 

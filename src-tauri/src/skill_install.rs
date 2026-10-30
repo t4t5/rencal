@@ -4,7 +4,7 @@ use std::path::{Path, PathBuf};
 #[cfg(unix)]
 use std::io::ErrorKind;
 
-#[cfg(unix)]
+// Built into the binary, so an installed skill describes the running version.
 const FILES: [(&str, &str); 4] = [
     ("SKILL.md", include_str!("../../skills/rencal/SKILL.md")),
     (
@@ -20,7 +20,6 @@ const FILES: [(&str, &str); 4] = [
         include_str!("../../skills/rencal/references/providers.md"),
     ),
 ];
-#[cfg(unix)]
 const MARKER: &str = ".rencal-managed";
 #[cfg(unix)]
 const AGENTS: [(&str, &str); 5] = [
@@ -44,11 +43,52 @@ pub fn install() -> Result<InstallReport, String> {
     install_at(&home, &data)
 }
 
+/// Rewrites a skill installed by `rencal skill install` from this build, so it
+/// follows app updates. Does nothing when no skill is installed.
+pub fn refresh() -> Result<(), String> {
+    let data = dirs::data_local_dir().ok_or("Could not find your local data directory")?;
+    refresh_at(&skill_dir(&data))
+}
+
+/// The whole skill as one document, for `rencal skill show`.
+pub fn show() -> String {
+    FILES
+        .iter()
+        .map(|(name, contents)| format!("==> {name} <==\n{contents}"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn skill_dir(data: &Path) -> PathBuf {
+    data.join("rencal/agent-skills/rencal")
+}
+
+fn refresh_at(source: &Path) -> Result<(), String> {
+    if !source.join(MARKER).is_file() {
+        return Ok(());
+    }
+    write_files(source)
+}
+
+fn write_files(source: &Path) -> Result<(), String> {
+    fs::create_dir_all(source.join("references"))
+        .map_err(|error| format!("Could not create {}: {error}", source.display()))?;
+    for (name, contents) in FILES {
+        let path = source.join(name);
+        if fs::read_to_string(&path).is_ok_and(|current| current == contents) {
+            continue;
+        }
+        fs::write(&path, contents)
+            .map_err(|error| format!("Could not write {}: {error}", path.display()))?;
+    }
+    Ok(())
+}
+
 #[cfg(unix)]
 fn install_at(home: &Path, data: &Path) -> Result<InstallReport, String> {
     use std::os::unix::fs::symlink;
 
-    let source = data.join("rencal/agent-skills/rencal");
+    let source = skill_dir(data);
     let mut report = InstallReport {
         source: source.clone(),
         linked: Vec::new(),
@@ -99,18 +139,14 @@ fn install_at(home: &Path, data: &Path) -> Result<InstallReport, String> {
         return Err("Every supported agent already has a different rencal skill".into());
     }
 
-    fs::create_dir_all(source.join("references"))
+    fs::create_dir_all(&source)
         .map_err(|error| format!("Could not create {}: {error}", source.display()))?;
     fs::write(
         source.join(MARKER),
-        "Installed by `rencal skill install`.\n",
+        "Installed by `rencal skill install`. renCal rewrites this skill on every start.\n",
     )
     .map_err(|error| format!("Could not mark {} as managed: {error}", source.display()))?;
-    for (name, contents) in FILES {
-        let path = source.join(name);
-        fs::write(&path, contents)
-            .map_err(|error| format!("Could not write {}: {error}", path.display()))?;
-    }
+    write_files(&source)?;
     let pending = std::mem::take(&mut report.linked);
     for target in pending {
         let parent = target.parent().expect("skill path has a parent");
@@ -207,5 +243,56 @@ mod tests {
         assert_eq!(report.linked.len(), 1);
         assert_eq!(report.already_linked.len(), 1);
         assert_eq!(fs::read_link(shared.join("rencal")).unwrap(), report.source);
+    }
+
+    #[test]
+    fn refresh_rewrites_only_a_managed_skill() {
+        let temp = tempfile::tempdir().unwrap();
+        let home = temp.path().join("home");
+        let data = temp.path().join("data");
+        fs::create_dir_all(home.join(".claude")).unwrap();
+        let source = install_at(&home, &data).unwrap().source;
+        fs::write(source.join("SKILL.md"), "from an older renCal").unwrap();
+
+        refresh_at(&source).unwrap();
+        assert_eq!(
+            fs::read_to_string(source.join("SKILL.md")).unwrap(),
+            FILES[0].1
+        );
+
+        let unmanaged = temp.path().join("unmanaged");
+        refresh_at(&unmanaged).unwrap();
+        assert!(!unmanaged.exists());
+    }
+
+    #[test]
+    fn views_guide_pins_the_bundled_sdk() {
+        let package: serde_json::Value =
+            serde_json::from_str(include_str!("../../packages/sdk/package.json")).unwrap();
+        let sdk = package["version"].as_str().unwrap();
+        let minimum = package["engines"]["rencal"]
+            .as_str()
+            .and_then(|range| range.strip_prefix(">="))
+            .expect("packages/sdk/package.json sets engines.rencal to \">=<version>\"");
+
+        let views = FILES
+            .iter()
+            .find_map(|(name, contents)| (*name == "references/views.md").then_some(*contents))
+            .unwrap();
+        assert!(views.contains(&format!("@rencomputer/rencal-sdk@{sdk}")));
+
+        let readme = include_str!("../../packages/sdk/README.md");
+        for (name, guide) in [("views.md", views), ("SDK README", readme)] {
+            let versions: Vec<_> = guide
+                .split("min_rencal_version")
+                .skip(1)
+                .filter_map(|rest| rest.split('"').nth(1))
+                .collect();
+            assert!(!versions.is_empty(), "{name} names no min_rencal_version");
+            assert!(
+                versions.iter().all(|version| *version == minimum),
+                "{name} should require renCal {minimum}, the first release with this SDK: {versions:?}"
+            );
+        }
     }
 }

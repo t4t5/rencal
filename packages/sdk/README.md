@@ -33,7 +33,7 @@ Views are declared in the plugin's `rencal-plugin.toml`:
 id = "alice.upcoming"
 name = "Upcoming"
 description = "The next seven days as a list."
-min_rencal_version = "0.9.0"
+min_rencal_version = "0.9.1"
 
 [[contributes.views]]
 id = "upcoming"

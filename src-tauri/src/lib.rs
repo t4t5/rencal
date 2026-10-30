@@ -22,6 +22,7 @@ mod signal;
 mod single_instance;
 #[cfg(target_os = "linux")]
 mod skia_compositor_workaround;
+pub mod skill_install;
 pub mod state;
 mod state_bridge;
 mod tasks;
@@ -347,6 +348,11 @@ pub async fn run() {
             macos_notifications::init(app.handle().clone(), state.clone());
 
             spawn_reminder_loop_if_needed(app);
+
+            // Keep an installed agent skill in step with this version.
+            if let Err(error) = skill_install::refresh() {
+                log::warn!("Could not refresh the renCal agent skill: {error}");
+            }
 
             // AppState notifications → webview events:
             spawn_task(

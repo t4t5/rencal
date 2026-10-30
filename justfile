@@ -54,6 +54,12 @@ publish-sdk: sdk
     echo "packages/sdk has uncommitted or regenerated changes; commit them first." >&2
     exit 1
   fi
+  # Views built with this SDK need the renCal release in engines.rencal; publish only once it's out.
+  min=$(node -p 'require("./packages/sdk/package.json").engines.rencal.replace(/^>=/, "")')
+  if ! git rev-parse -q --verify "refs/tags/v$min" >/dev/null; then
+    echo "This SDK needs renCal $min, which isn't released yet (no tag v$min); release it first." >&2
+    exit 1
+  fi
   cd packages/sdk && npm publish
 
 # Test production version of app (needs build first)
