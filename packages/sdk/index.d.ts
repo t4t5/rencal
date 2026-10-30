@@ -3,6 +3,12 @@ import { Temporal } from '@js-temporal/polyfill';
 import * as React$1 from 'react';
 import { MouseEvent as MouseEvent$1, ReactElement, ReactNode, RefObject } from 'react';
 
+/**
+ * Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
+ */
+export type EventAvailability = "busy" | "free";
+export type EventStatus = "confirmed" | "tentative" | "cancelled";
+export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
 export type EventTime = {
 	kind: "date";
 	value: Temporal.PlainDate;
@@ -16,8 +22,6 @@ export type EventTime = {
 	kind: "datetime_zoned";
 	value: Temporal.ZonedDateTime;
 };
-/** A timed event on a calendar day in the viewer's timezone. */
-export declare function atTime(date: Temporal.PlainDate, hour: number, minute?: number): EventTime;
 /**
  * A timezone-independent integer key for a calendar day. Pure integer arithmetic
  * (days-from-civil) so the hot per-event paths never touch the polyfill's zone code.
@@ -66,21 +70,6 @@ export declare function toViewerZonedDateTime(et: EventTime): Temporal.ZonedDate
  */
 export declare function dateInViewerZone(et: EventTime): Temporal.PlainDate;
 export declare function isSameDay(a: EventTime, b: EventTime): boolean;
-interface OpenDayDraftOptions {
-	allDay?: boolean;
-	/** Draft start; defaults to `day` for all-day or the current hour for timed drafts. */
-	start?: EventTime | null;
-	/** Draft end; defaults to one day/hour after `start`, according to draft kind. */
-	end?: EventTime | null;
-	/** Anchor the popover at this viewport Y instead of the element's center. */
-	anchorY?: number;
-}
-/**
- * Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
- */
-export type EventAvailability = "busy" | "free";
-export type EventStatus = "confirmed" | "tentative" | "cancelled";
-export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-action";
 export interface CalendarEvent {
 	/** Unique across calendars and recurrence instances; use it as a React key. */
 	readonly key: string;
@@ -399,13 +388,6 @@ export declare function useEventProps(event: CalendarEvent, options?: EventProps
 	readonly onPointerDown: ((e: import("react").PointerEvent<Element>) => void) | undefined;
 	readonly onClick: ((e: React$1.MouseEvent<Element>) => void) | undefined;
 };
-/**
- * Opens the new-event popover for `day` next to `anchor`. Timed drafts start at
- * `start`, by default the current hour, and last an hour unless `end` is given.
- * Asks the user to connect an account first when no calendar can take events.
- */
-export declare function useOpenDraft(): (day: Temporal.PlainDate, anchor: Element, options?: OpenDraftOptions) => void;
-export type OpenDraftOptions = OpenDayDraftOptions;
 
 export {
 	Temporal,

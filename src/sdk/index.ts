@@ -16,7 +16,6 @@ import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
-import { type OpenDayDraftOptions, useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { isDraftEvent } from "@/lib/draft-to-event"
@@ -49,7 +48,6 @@ export {
   toViewerZonedDateTime,
 } from "@/lib/event-time"
 export { cn } from "@/lib/utils"
-export { atTime } from "@/lib/event-time"
 export { useToday } from "@/hooks/useToday"
 export { useViewerTzid } from "@/hooks/useViewerTzid"
 export { useIsDimmed } from "@/hooks/useIsDimmed"
@@ -273,18 +271,3 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
         },
   } as const
 }
-
-/**
- * Opens the new-event popover for `day` next to `anchor`. Timed drafts start at
- * `start`, by default the current hour, and last an hour unless `end` is given.
- * Asks the user to connect an account first when no calendar can take events.
- */
-export function useOpenDraft(): (
-  day: Temporal.PlainDate,
-  anchor: Element,
-  options?: OpenDraftOptions,
-) => void {
-  return useOpenDayDraft()
-}
-
-export type OpenDraftOptions = OpenDayDraftOptions
