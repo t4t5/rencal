@@ -28,6 +28,7 @@ mod state_bridge;
 mod tasks;
 mod watchers;
 
+use routes::agents::{AgentsApi, AgentsApiImpl};
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
@@ -67,6 +68,7 @@ fn create_router_with_plugins(
         .merge(PluginsApiImpl::new(plugins).into_handler())
         .merge(ThemesApiImpl.into_handler())
         .merge(ViewsApiImpl.into_handler())
+        .merge(AgentsApiImpl.into_handler())
 }
 
 /// Directory of the providers bundled with this build (google, icloud,
@@ -349,10 +351,8 @@ pub async fn run() {
 
             spawn_reminder_loop_if_needed(app);
 
-            // Keep an installed agent skill in step with this version.
-            if let Err(error) = skill_install::refresh() {
-                log::warn!("Could not refresh the renCal agent skill: {error}");
-            }
+            // Keep installed agent skills in step with renCal and caldir.
+            spawn_task("agent skills", skill_install::refresh());
 
             // AppState notifications → webview events:
             spawn_task(

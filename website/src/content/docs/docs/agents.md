@@ -5,8 +5,8 @@ description: Use agents like Claude Code and Codex to automate your calendar wor
 
 renCal stores events as plain `.ics` files through Caldir, so agents and scripts can work with your calendar locally without an API.
 
-You can use the [caldir skill](https://caldir.org/skill.md) to make it easier for agents like Claude Code and OpenCode to create and edit events for you (requires [`caldir-cli`](https://caldir.org/quickstart/))
+The [caldir skill](https://caldir.org/skill.md) makes it easier for agents like Claude Code and Codex to create and edit events for you. It needs the [caldir CLI](https://caldir.org/quickstart/). Once that's installed, tick **caldir** in **Settings → Agents** to add the skill to every supported agent renCal finds. renCal keeps it up to date and removes it when you untick it.
 
 <video src="/docs/agent.mp4" autoplay loop muted playsinline></video>
 
-To have an agent build themes or providers for renCal, install the [renCal skill](/docs/plugins/create/#build-it-with-an-agent).
+To have an agent build views, themes or providers for renCal, tick **renCal** in the same place. See [Build it with an agent](/docs/plugins/create/#build-it-with-an-agent).

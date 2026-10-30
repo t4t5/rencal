@@ -19,6 +19,7 @@ vi.mock("@/components/settings/plugins/PluginsPage", () => ({
   PluginsPage: () => <div>Plugin settings</div>,
 }))
 vi.mock("@/components/settings/accounts/AccountsPage", () => ({ AccountsPage: () => null }))
+vi.mock("@/components/settings/agents/AgentsPage", () => ({ AgentsPage: () => null }))
 vi.mock("@/components/settings/calendars/CalendarsPage", () => ({ CalendarsPage: () => null }))
 vi.mock("@/components/settings/reminders/RemindersPage", () => ({ RemindersPage: () => null }))
 vi.mock("@/components/settings/themes/ThemesPage", () => ({ ThemesPage: () => null }))
@@ -59,7 +60,7 @@ it("falls back to General for an unknown tab", async () => {
 it("links the selected settings tab to its panel and switches on click", async () => {
   await renderAt("?appWindow=settings&tab=plugins")
   const tabs = Array.from(document.querySelectorAll<HTMLButtonElement>('[role="tab"]'))
-  expect(tabs).toHaveLength(6)
+  expect(tabs).toHaveLength(7)
   expect(document.querySelector('[role="tablist"]')?.getAttribute("aria-orientation")).toBe(
     "vertical",
   )
