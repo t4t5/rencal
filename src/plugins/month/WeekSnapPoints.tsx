@@ -17,8 +17,9 @@ export const nativeWeekSnap =
 export const isMonthStartWeek = (week: MonthDay[]) => week.some((day) => day.date.day === 1)
 
 /**
- * Hide the snap areas while the sentinels move, and bring them back next frame. Without
- * this, WebKit re-snaps to whichever sentinel lands nearest after the layout change.
+ * Hide the snap areas while the sentinels move (a row-height change), and bring them back
+ * next frame. Without this, WebKit re-snaps to whichever sentinel lands nearest after the
+ * layout change.
  */
 export function suppressSnapPointsForFrame(
   layer: Pick<HTMLElement, "dataset" | "clientWidth"> | null,
@@ -33,16 +34,18 @@ export function suppressSnapPointsForFrame(
 }
 
 /**
- * Invisible 1px snap targets, one per loaded week. The week rows themselves are
- * virtualized, so they cannot be the snap areas: a fling needs targets ahead of the
- * rendered window to land on.
+ * Invisible 1px snap targets, one per loaded week, `firstIndex` rows down the track. The
+ * week rows themselves are virtualized, so they cannot be the snap areas: a fling needs
+ * targets ahead of the rendered window to land on.
  */
 export function WeekSnapPoints({
   weeks,
+  firstIndex,
   rowHeight,
   ref,
 }: {
   weeks: MonthDay[][]
+  firstIndex: number
   rowHeight: number
   ref?: Ref<HTMLDivElement>
 }) {
@@ -59,7 +62,7 @@ export function WeekSnapPoints({
             "absolute inset-x-0 h-px snap-start",
             isMonthStartWeek(week) && "snap-always",
           )}
-          style={{ top: `${index * rowHeight}px` }}
+          style={{ top: `${(firstIndex + index) * rowHeight}px` }}
         />
       ))}
     </div>

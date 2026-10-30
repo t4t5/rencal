@@ -1,3 +1,4 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { useVirtualizer } from "@tanstack/react-virtual"
 import {
   RefObject,
@@ -14,39 +15,56 @@ import {
   cn,
   dragScrollProps,
   epochDay,
+  type FirstDayOfWeek,
+  startOfWeek,
   useDayDragToCreate,
+  useDisplaySettings,
   useIsDraggingEvent,
   useNavigation,
+  useToday,
 } from "@/sdk"
 
 import { MonthWeekRow } from "./Row"
 import { nativeWeekSnap, suppressSnapPointsForFrame, WeekSnapPoints } from "./WeekSnapPoints"
+import { TRACK_WEEKS } from "./useInfiniteMonths"
 import type { WeekLayout } from "./useMonthEventLayout"
-import type { MonthDay } from "./useMonthGrid"
+import { buildWeek, type MonthDay } from "./useMonthGrid"
 import { attachWeekSnapSession } from "./weekSnapSession"
 
-const DEFAULT_ROW_HEIGHT = 150
 // How long snapping stays off after a navigation, while its scroll lands.
 const NAVIGATION_SETTLE_MS = 500
+const EMPTY_LAYOUT: WeekLayout = {
+  allDayItems: [],
+  maxLane: -1,
+  timedByCol: Array.from({ length: 7 }, () => []),
+}
+
+/** The track row holding `date`'s week. */
+const trackIndex = (date: Temporal.PlainDate, origin: Temporal.PlainDate, first: FirstDayOfWeek) =>
+  (epochDay(startOfWeek(date, first)) - epochDay(origin)) / 7
 
 export function MonthGrid({
+  origin,
+  startIndex,
   weeks,
   weekLayouts,
-  anchorWeekIndex,
+  rowHeight,
   scrollRef,
 }: {
+  /** The first week of the scroll track; `weeks` start `startIndex` weeks after it. */
+  origin: Temporal.PlainDate
+  startIndex: number
   weeks: MonthDay[][]
   weekLayouts: WeekLayout[]
-  anchorWeekIndex: number
+  rowHeight: number
   scrollRef: RefObject<HTMLDivElement | null>
 }) {
   const { activeDate, goToDate, navigationVersion } = useNavigation()
+  const { firstDayOfWeek } = useDisplaySettings()
+  const today = useToday()
   const activeDateKey = activeDate.toString()
   const { selection, startCreateDrag } = useDayDragToCreate(scrollRef)
   const isDraggingEvent = useIsDraggingEvent()
-
-  // Each day cell is a square: row height tracks the column width
-  const [rowHeight, setRowHeight] = useState(DEFAULT_ROW_HEIGHT)
   const prevRowHeightRef = useRef(rowHeight)
 
   // Hide the grid until the initial anchor scroll lands, so the user never sees the
@@ -55,38 +73,12 @@ export function MonthGrid({
   const snapSessionRef = useRef<ReturnType<typeof attachWeekSnapSession> | null>(null)
   const snapPointsRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const el = scrollRef.current
-    if (!el) return
-    const update = () => {
-      if (el.clientWidth > 0) setRowHeight(Math.round(el.clientWidth / 7))
-    }
-    update()
-    const observer = new ResizeObserver(update)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [scrollRef])
-
-  const prevRef = useRef({ firstKey: weeks[0]?.[0]?.dateKey, count: weeks.length })
-  const curFirstKey = weeks[0]?.[0]?.dateKey
-  const isPrepending =
-    curFirstKey !== prevRef.current.firstKey && weeks.length > prevRef.current.count
-  const nativeSnapRestorePendingRef = useRef(false)
-  const nativeSnapRestoreTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined)
-  const nativeSnapRestoreCleanupRef = useRef<(() => void) | undefined>(undefined)
-  const [, setSnapRestoreVersion] = useState(0)
-
   const estimateSize = useCallback(() => rowHeight, [rowHeight])
-  const getItemKey = useCallback((index: number) => weeks[index][0].dateKey, [weeks])
 
   const virtualizer = useVirtualizer({
-    count: weeks.length,
+    count: TRACK_WEEKS,
     getScrollElement: () => scrollRef.current,
     estimateSize,
-    getItemKey,
-    // Preserve the visible week when older weeks are prepended. TanStack updates its
-    // tracked offset and rendered window in the same pass, avoiding a blank frame.
-    anchorTo: "end",
     overscan: 3,
   })
 
@@ -110,78 +102,20 @@ export function MonthGrid({
     virtualizer.measure()
   }, [rowHeight, virtualizer, scrollRef, hasInitiallyScrolled])
 
-  // anchorWeekIndex shifts when weeks are prepended/appended; keep it in a ref so the
-  // one-time initial scroll can read the latest value without re-running on every shift.
-  const anchorWeekIndexRef = useRef(anchorWeekIndex)
-  anchorWeekIndexRef.current = anchorWeekIndex
+  // The initial scroll reads the latest track without re-running when it changes.
+  const anchorIndexRef = useRef(0)
+  anchorIndexRef.current = trackIndex(activeDate.with({ day: 1 }), origin, firstDayOfWeek)
 
-  // TanStack keeps the viewport in place when weeks are prepended. The remaining
-  // bookkeeping restores native snapping after the snap-free prepend commit and carries
-  // the Linux JS fling across the shifted coordinate space.
-
-  useLayoutEffect(() => {
-    const { firstKey: prevFirstKey, count: prevCount } = prevRef.current
-
-    prevRef.current = { firstKey: curFirstKey, count: weeks.length }
-
-    if (curFirstKey === prevFirstKey || weeks.length <= prevCount) return
-
-    const added = weeks.length - prevCount
-    const delta = added * rowHeight
-
-    snapSessionRef.current?.shift(delta)
-
-    // The prepend render removes native scroll snapping before the changed snap-point
-    // geometry is committed. Keep it off until WebKit declares scrolling finished: restoring
-    // it on the next frame can resume the fling toward its stale, pre-prepend snap target.
-    if (nativeWeekSnap) {
-      const el = scrollRef.current
-      nativeSnapRestorePendingRef.current = true
-      nativeSnapRestoreCleanupRef.current?.()
-      clearTimeout(nativeSnapRestoreTimerRef.current)
-
-      let restored = false
-      const restore = () => {
-        if (restored) return
-        restored = true
-        el?.removeEventListener("scrollend", restore)
-        clearTimeout(nativeSnapRestoreTimerRef.current)
-        nativeSnapRestoreTimerRef.current = undefined
-        nativeSnapRestoreCleanupRef.current = undefined
-        nativeSnapRestorePendingRef.current = false
-        setSnapRestoreVersion((version) => version + 1)
-      }
-
-      el?.addEventListener("scrollend", restore, { once: true })
-      nativeSnapRestoreTimerRef.current = setTimeout(restore, 300)
-      nativeSnapRestoreCleanupRef.current = () => {
-        restored = true
-        el?.removeEventListener("scrollend", restore)
-      }
-    }
-  })
-
-  // Scroll to the initial anchor once. anchorWeekIndex is NOT a dep — it shifts when
-  // weeks are prepended/appended and we don't want to jump back then. Still call
-  // measure() on rowHeight/virtualizer changes because tanstack-virtual memoizes item sizes.
+  // Scroll to the initial anchor once. Still call measure() on rowHeight/virtualizer
+  // changes because tanstack-virtual memoizes item sizes.
   const hasInitialized = useRef(false)
   const ignoreScrollUntil = useRef(0)
   const navigatingUntil = useRef(0)
 
-  useEffect(
-    () => () => {
-      nativeSnapRestoreCleanupRef.current?.()
-      clearTimeout(nativeSnapRestoreTimerRef.current)
-    },
-    [],
-  )
-
   // Native CSS snapping on macOS; the JS fling session elsewhere (see WeekSnapPoints.tsx).
   // Both autoscrollers move the container with per-frame scrollBy calls, which a mandatory
   // snap would clamp back to the current row, so snapping is off while dragging.
-  const nativeSnapSuspended =
-    nativeWeekSnap && (isPrepending || nativeSnapRestorePendingRef.current)
-  const snapEnabled = hasInitiallyScrolled && !selection && !isDraggingEvent && !nativeSnapSuspended
+  const snapEnabled = hasInitiallyScrolled && !selection && !isDraggingEvent
   const getSnapState = useEffectEvent(() => ({
     enabled: snapEnabled && Date.now() >= navigatingUntil.current,
     rowHeight,
@@ -202,14 +136,6 @@ export function MonthGrid({
 
     if (hasInitialized.current) return
 
-    const idx = anchorWeekIndexRef.current
-
-    if (idx < 0) {
-      // No anchor to position to — reveal as-is rather than stay hidden.
-      setHasInitiallyScrolled(true)
-      return
-    }
-
     // `measure()` invalidates TanStack's item cache and schedules a render. Wait until
     // that render has rebuilt the sizer before scrolling; scrollToIndex is a no-op while
     // the cache is empty in TanStack Virtual 3.14.x. A row offset is exact for this grid.
@@ -221,8 +147,7 @@ export function MonthGrid({
       hasInitialized.current = true
       ignoreScrollUntil.current = Date.now() + 200
 
-      const target = idx * rowHeight
-      virtualizer.scrollToOffset(target, { align: "start" })
+      virtualizer.scrollToOffset(anchorIndexRef.current * rowHeight, { align: "start" })
 
       // Reveal only after the scroll has actually painted, so the user never sees the
       // pre-scroll frame or a mid-scroll empty grid. Mirrors the agenda's reveal timing.
@@ -238,49 +163,34 @@ export function MonthGrid({
     }
   }, [virtualizer, rowHeight])
 
-  // A deliberate navigation not yet brought into view: the weeks may first have to grow
-  // to reach its date. Scrolls that only move the active date (the agenda's) never set it.
-  const pendingNavigation = useRef(false)
+  // Scrolls that only move the active date (the agenda's) don't change the version.
   const seenNavigationVersion = useRef(navigationVersion)
 
-  // During explicit navigation, scroll the active week fully into view if needed.
+  // During explicit navigation, scroll the active week fully into view if needed. A jump
+  // off the track starts a new one, so this also runs when the origin changes.
   useEffect(() => {
-    if (navigationVersion !== seenNavigationVersion.current) {
-      seenNavigationVersion.current = navigationVersion
-      pendingNavigation.current = true
-      navigatingUntil.current = Date.now() + NAVIGATION_SETTLE_MS
-      snapSessionRef.current?.cancel()
-    }
-    if (!pendingNavigation.current) return
+    if (navigationVersion === seenNavigationVersion.current) return
+    seenNavigationVersion.current = navigationVersion
+    navigatingUntil.current = Date.now() + NAVIGATION_SETTLE_MS
+    snapSessionRef.current?.cancel()
 
     // Don't override the initial anchor scroll while it's still settling: the anchor has
     // just put the active month's first week at the top, and we must not pull the
     // viewport to the active *day*'s week instead (docs/scroll-behaviour.md).
-    if (!hasInitialized.current || Date.now() < ignoreScrollUntil.current) {
-      pendingNavigation.current = false
-      return
-    }
+    if (!hasInitialized.current || Date.now() < ignoreScrollUntil.current) return
 
     const el = scrollRef.current
 
     if (!el) return
 
-    const weekIndex = weeks.findIndex((week) => week.some((d) => d.dateKey === activeDateKey))
-
-    if (weekIndex < 0) return
-
-    pendingNavigation.current = false
-
-    const item = virtualizer.getVirtualItems().find((v) => v.index === weekIndex)
-
-    if (item) {
-      const viewStart = el.scrollTop
-      const viewEnd = viewStart + el.clientHeight
-      if (item.start >= viewStart && item.end <= viewEnd) return
+    const weekIndex = trackIndex(activeDate, origin, firstDayOfWeek)
+    const weekStart = weekIndex * rowHeight
+    if (weekStart >= el.scrollTop && weekStart + rowHeight <= el.scrollTop + el.clientHeight) {
+      return
     }
 
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
-  }, [activeDateKey, navigationVersion, weeks, virtualizer, scrollRef])
+  }, [navigationVersion, activeDate, origin, firstDayOfWeek, rowHeight, virtualizer, scrollRef])
 
   return (
     <div
@@ -303,10 +213,18 @@ export function MonthGrid({
         }}
       >
         {nativeWeekSnap && (
-          <WeekSnapPoints ref={snapPointsRef} weeks={weeks} rowHeight={rowHeight} />
+          <WeekSnapPoints
+            ref={snapPointsRef}
+            weeks={weeks}
+            firstIndex={startIndex}
+            rowHeight={rowHeight}
+          />
         )}
         {virtualizer.getVirtualItems().map((virtualRow) => {
-          const weekDays = weeks[virtualRow.index]
+          // Rows past the loaded weeks render without events until loading reaches them.
+          const loaded = virtualRow.index - startIndex
+          const inRange = loaded >= 0 && loaded < weeks.length
+          const weekDays = inRange ? weeks[loaded] : buildWeek(origin, virtualRow.index, today)
           const createSelection = selection
             ? clipSpanToRange(
                 epochDay(selection.start),
@@ -332,7 +250,7 @@ export function MonthGrid({
             >
               <MonthWeekRow
                 weekDays={weekDays}
-                layout={weekLayouts[virtualRow.index]}
+                layout={inRange ? weekLayouts[loaded] : EMPTY_LAYOUT}
                 activeDateKey={activeDateKey}
                 onDayClick={goToDate}
                 createSelection={createSelection}

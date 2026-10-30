@@ -4,7 +4,7 @@ import { useEventsInRange, useNavigation } from "@/sdk"
 
 import { MonthGrid } from "./Grid"
 import { WeekDayLabels } from "./WeekDayLabels"
-import { useInfiniteMonths } from "./useInfiniteMonths"
+import { useInfiniteMonths, useRowHeight } from "./useInfiniteMonths"
 import { useMonthEventLayout } from "./useMonthEventLayout"
 import { useMonthGrid } from "./useMonthGrid"
 
@@ -12,31 +12,29 @@ export function MonthView() {
   const { activeDate } = useNavigation()
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
+  const rowHeight = useRowHeight(scrollRef)
 
-  const { rangeStart, rangeEnd, gridStart, gridEnd } = useInfiniteMonths({
+  const { origin, startIndex, endIndex, start, end } = useInfiniteMonths({
     scrollContainerRef: scrollRef,
     activeDate,
+    rowHeight,
   })
 
-  const weeks = useMonthGrid(rangeStart, rangeEnd)
-  // Loading follows the rendered weeks and never blocks scrolling.
-  const events = useEventsInRange(gridStart, gridEnd)
+  const weeks = useMonthGrid(origin, startIndex, endIndex)
+  // Loading follows the loaded weeks and never blocks scrolling.
+  const events = useEventsInRange(start, end)
   const weekLayouts = useMonthEventLayout(weeks, events)
-
-  // Compute initial anchor week (the week containing the 1st of activeDate's month)
-  const initialAnchorRef = useRef(activeDate.with({ day: 1 }))
-  const anchorWeekIndex = weeks.findIndex((week) =>
-    week.some((d) => d.date.equals(initialAnchorRef.current)),
-  )
 
   return (
     <div className="flex flex-col grow w-full h-full">
       <WeekDayLabels />
 
       <MonthGrid
+        origin={origin}
+        startIndex={startIndex}
         weeks={weeks}
         weekLayouts={weekLayouts}
-        anchorWeekIndex={anchorWeekIndex}
+        rowHeight={rowHeight}
         scrollRef={scrollRef}
       />
     </div>

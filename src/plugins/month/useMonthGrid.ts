@@ -1,7 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useMemo } from "react"
 
-import { type FirstDayOfWeek, startOfWeek, useDisplaySettings, useToday } from "@/sdk"
+import { useToday } from "@/sdk"
 
 export type MonthDay = {
   date: Temporal.PlainDate
@@ -10,7 +10,7 @@ export type MonthDay = {
   isWeekend: boolean
 }
 
-export function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): MonthDay {
+function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): MonthDay {
   return {
     date,
     dateKey: date.toString(),
@@ -19,41 +19,22 @@ export function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): M
   }
 }
 
-export function monthGridBounds(
-  rangeStart: Temporal.PlainDate,
-  rangeEnd: Temporal.PlainDate,
-  firstDayOfWeek: FirstDayOfWeek,
-): { gridStart: Temporal.PlainDate; gridEnd: Temporal.PlainDate } {
-  return {
-    gridStart: startOfWeek(rangeStart, firstDayOfWeek),
-    gridEnd: startOfWeek(rangeEnd, firstDayOfWeek),
-  }
+/** The seven days of the week `index` weeks after `origin`. */
+export function buildWeek(
+  origin: Temporal.PlainDate,
+  index: number,
+  today: Temporal.PlainDate,
+): MonthDay[] {
+  const weekStart = origin.add({ weeks: index })
+  return Array.from({ length: 7 }, (_, d) => buildDay(weekStart.add({ days: d }), today))
 }
 
-/**
- * Generates weeks covering the range [rangeStart, rangeEnd).
- * Both should be the 1st of a month (i.e. `.with({ day: 1 })`).
- */
-export function useMonthGrid(rangeStart: Temporal.PlainDate, rangeEnd: Temporal.PlainDate) {
+/** The weeks [start, end) on the track that begins at `origin`. */
+export function useMonthGrid(origin: Temporal.PlainDate, start: number, end: number) {
   const today = useToday()
-  const { firstDayOfWeek } = useDisplaySettings()
 
-  return useMemo(() => {
-    const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)
-
-    const weeks: MonthDay[][] = []
-    let current = gridStart
-
-    while (Temporal.PlainDate.compare(current, gridEnd) < 0) {
-      const week: MonthDay[] = []
-      for (let d = 0; d < 7; d++) {
-        const date = current.add({ days: d })
-        week.push(buildDay(date, today))
-      }
-      weeks.push(week)
-      current = current.add({ days: 7 })
-    }
-
-    return weeks
-  }, [rangeStart, rangeEnd, today, firstDayOfWeek])
+  return useMemo(
+    () => Array.from({ length: end - start }, (_, i) => buildWeek(origin, start + i, today)),
+    [origin, start, end, today],
+  )
 }

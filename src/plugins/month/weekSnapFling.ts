@@ -74,7 +74,6 @@ export function startSnapFling(
   const duration = Math.max(0, Math.log((rate * Math.abs(distance)) / LANDING_END_VELOCITY) / rate)
   const scale = -Math.expm1(-rate * duration)
   const started = clock.now()
-  let shifted = 0
   let cancelled = false
   let frame: number
 
@@ -84,7 +83,7 @@ export function startSnapFling(
     const done = elapsed >= duration * 1000 || elapsed >= FLING_MAX_MS
     const current = done ? to : from + distance * (-Math.expm1((-rate * elapsed) / 1000) / scale)
     // Keep the fractional offset in JS: integer scrollTop readback can stall the tail.
-    el.scrollTo({ top: current + shifted, behavior: "instant" })
+    el.scrollTo({ top: current, behavior: "instant" })
     if (cancelled) return
     if (done) onDone()
     else frame = clock.requestFrame(tick)
@@ -95,9 +94,6 @@ export function startSnapFling(
     cancel() {
       cancelled = true
       clock.cancelFrame(frame)
-    },
-    shift(delta: number) {
-      shifted += delta
     },
   }
 }

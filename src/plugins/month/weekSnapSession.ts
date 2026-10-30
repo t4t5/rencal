@@ -174,22 +174,6 @@ export function attachWeekSnapSession(
     takeover((delta / dt) * 1000)
   }
 
-  /** A prepend moved the content; carry the session across it instead of tearing it down. */
-  const shift = (delta: number) => {
-    if (phase === "idle" || delta === 0) return
-    if (animator) {
-      animator.shift(delta)
-      return
-    }
-    if (prev) prev = { t: prev.t, y: prev.y + delta }
-    suspendUntilFrame()
-    // The correction's instant write has stopped WebKit's kinetic animation, so a
-    // coasting trackpad fling would otherwise fall silent. Adopt it now.
-    if (coasting && lastCoast && lastCoast.dt > 0) {
-      takeover((lastCoast.delta / lastCoast.dt) * 1000)
-    }
-  }
-
   const onScroll = (event: Event) => {
     if (phase === "idle" || resumeFrame !== undefined) return
     if (phase === "fling" || phase === "settle") return
@@ -262,7 +246,6 @@ export function attachWeekSnapSession(
 
   return {
     pause,
-    shift,
     cancel,
     cleanup() {
       onBlur()

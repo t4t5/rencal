@@ -31,18 +31,18 @@ describe("isMonthStartWeek", () => {
 })
 
 describe("WeekSnapPoints", () => {
-  it("renders one snap-start sentinel per week, one row height apart", () => {
+  it("renders one snap-start sentinel per week, one row height apart from its track row", () => {
     const html = renderToStaticMarkup(
-      <WeekSnapPoints weeks={weeksFrom("2026-09-07", 3)} rowHeight={120} />,
+      <WeekSnapPoints weeks={weeksFrom("2026-09-07", 3)} firstIndex={10} rowHeight={120} />,
     )
     const sentinels = html.match(/<div[^>]*snap-start[^>]*><\/div>/g) ?? []
     expect(sentinels).toHaveLength(3)
-    expect(sentinels.map((s) => s.match(/top:(\d+)px/)?.[1])).toEqual(["0", "120", "240"])
+    expect(sentinels.map((s) => s.match(/top:(\d+)px/)?.[1])).toEqual(["1200", "1320", "1440"])
   })
 
   it("makes month boundary weeks hard stops", () => {
     const html = renderToStaticMarkup(
-      <WeekSnapPoints weeks={weeksFrom("2026-08-24", 3)} rowHeight={100} />,
+      <WeekSnapPoints weeks={weeksFrom("2026-08-24", 3)} firstIndex={0} rowHeight={100} />,
     )
     const sentinels = html.match(/<div[^>]*snap-start[^>]*><\/div>/g) ?? []
     expect(sentinels.map((s) => s.includes("snap-always"))).toEqual([false, true, false])
@@ -50,7 +50,7 @@ describe("WeekSnapPoints", () => {
 
   it("never takes part in hit testing or layout of the rows", () => {
     const html = renderToStaticMarkup(
-      <WeekSnapPoints weeks={weeksFrom("2026-09-07", 1)} rowHeight={100} />,
+      <WeekSnapPoints weeks={weeksFrom("2026-09-07", 1)} firstIndex={0} rowHeight={100} />,
     )
     expect(html).toContain("pointer-events-none")
     expect(html).toContain("invisible")
