@@ -29,23 +29,25 @@ export function dayProps(date: Temporal.PlainDate, zone: DayZone) {
 }
 
 /**
+ * Props for an element that draws part of the `useDayGrid` selection: the
+ * new-event popover opens beside the part nearest the pointer.
+ */
+export function selectionProps() {
+  return createSelectionAttributes()
+}
+
+/**
  * The day grid's drag state. `selection` is the range being drawn to create an
- * event, for the view to render with `selectionProps()` on what draws it: the
- * new-event popover opens beside the part nearest the pointer. `isDragging` is
- * true while an event is moved or drawn, for holding off what would fight the
- * drag's autoscroll, like scroll snapping.
+ * event, for the view to render with `selectionProps()` on what draws it.
+ * `isDragging` is true while an event is moved or drawn, for holding off what
+ * would fight the drag's autoscroll, like scroll snapping.
  */
 export function useDayGrid(): {
   selection: CreateSelection | null
-  selectionProps: () => { "data-create-selection": true }
   isDragging: boolean
 } {
   const selection = useCreateSelection()
   const draggingEvent = useEventDrag().drag !== null
 
-  return {
-    selection,
-    selectionProps: createSelectionAttributes,
-    isDragging: draggingEvent || selection !== null,
-  }
+  return { selection, isDragging: draggingEvent || selection !== null }
 }

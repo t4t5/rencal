@@ -4,7 +4,7 @@ import { DRAG_SNAP_MINUTES } from "@/lib/event-drag"
 import { allDayDate, atTime, DAY_MINUTES, type EventTimeRange } from "@/lib/event-time"
 
 type MinuteRange = { startMinutes: number; endMinutes: number }
-type DayRange = { start: Temporal.PlainDate; end: Temporal.PlainDate }
+type DayRange = { firstDay: Temporal.PlainDate; lastDay: Temporal.PlainDate }
 
 /**
  * A range being drawn to create an event: wallclock minutes in one day column,
@@ -17,7 +17,11 @@ export type CreateSelection =
       readonly startMinutes: number
       readonly endMinutes: number
     }
-  | { readonly kind: "days"; readonly start: Temporal.PlainDate; readonly end: Temporal.PlainDate }
+  | {
+      readonly kind: "days"
+      readonly firstDay: Temporal.PlainDate
+      readonly lastDay: Temporal.PlainDate
+    }
 
 /** Inclusive day range that always contains the anchor and grows toward the pointer. */
 export function daySelectionForPointer(
@@ -25,15 +29,15 @@ export function daySelectionForPointer(
   pointer: Temporal.PlainDate,
 ): DayRange {
   return Temporal.PlainDate.compare(anchor, pointer) <= 0
-    ? { start: anchor, end: pointer }
-    : { start: pointer, end: anchor }
+    ? { firstDay: anchor, lastDay: pointer }
+    : { firstDay: pointer, lastDay: anchor }
 }
 
 /** All-day [start, end) range for a selection. */
 export function daySelectionRange(selection: DayRange): EventTimeRange {
   return {
-    start: allDayDate(selection.start),
-    end: allDayDate(selection.end.add({ days: 1 })),
+    start: allDayDate(selection.firstDay),
+    end: allDayDate(selection.lastDay.add({ days: 1 })),
   }
 }
 

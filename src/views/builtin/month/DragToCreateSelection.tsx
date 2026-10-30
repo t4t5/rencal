@@ -1,10 +1,8 @@
-import { type AllDayBar, cn, useDayGrid } from "@/sdk"
+import { type AllDayBar, cn, selectionProps } from "@/sdk"
 
 import { allDayBarStyle } from "./lane-geometry"
 
 export function MonthDragToCreateSelection({ bar }: { bar: AllDayBar<unknown> }) {
-  const { selectionProps } = useDayGrid()
-
   return (
     <div
       data-slot="month-create-selection"

@@ -218,9 +218,9 @@ export function MonthGrid({
           const weekDays = inRange ? weeks[loaded] : buildWeek(origin, virtualRow.index, today)
           const createSelection =
             selection?.kind === "days" &&
-            epochDay(selection.start) <= epochDay(weekDays[6].date) &&
-            epochDay(selection.end) >= epochDay(weekDays[0].date)
-              ? { firstDay: selection.start, lastDay: selection.end }
+            epochDay(selection.firstDay) <= epochDay(weekDays[6].date) &&
+            epochDay(selection.lastDay) >= epochDay(weekDays[0].date)
+              ? selection
               : null
 
           return (

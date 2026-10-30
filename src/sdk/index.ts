@@ -71,7 +71,13 @@ export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 export { Tooltip } from "./components"
-export { type CreateSelection, dayProps, type DayZone, useDayGrid } from "./day-grid"
+export {
+  type CreateSelection,
+  dayProps,
+  type DayZone,
+  selectionProps,
+  useDayGrid,
+} from "./day-grid"
 
 /**
  * Events overlapping [start, end), filtered to the visible calendars, in start

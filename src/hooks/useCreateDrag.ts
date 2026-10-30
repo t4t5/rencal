@@ -35,7 +35,9 @@ function isSameSelection(a: CreateSelection, b: CreateSelection): boolean {
   if (a.kind === "timed" && b.kind === "timed") {
     return a.day.equals(b.day) && a.startMinutes === b.startMinutes && a.endMinutes === b.endMinutes
   }
-  if (a.kind === "days" && b.kind === "days") return a.start.equals(b.start) && a.end.equals(b.end)
+  if (a.kind === "days" && b.kind === "days") {
+    return a.firstDay.equals(b.firstDay) && a.lastDay.equals(b.lastDay)
+  }
   return false
 }
 
@@ -107,7 +109,7 @@ export function useCreateDrag(): {
       const range = daySelectionRange(selection)
 
       openDayDraft(
-        selection.start,
+        selection.firstDay,
         { getBoundingClientRect: () => anchorRect, pointerX: pointer.x },
         { allDay: true, start: range.start, end: range.end },
       )

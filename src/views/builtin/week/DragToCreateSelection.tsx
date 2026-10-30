@@ -1,4 +1,4 @@
-import { type CreateSelection, useDayGrid } from "@/sdk"
+import { type CreateSelection, selectionProps } from "@/sdk"
 
 import { DAY_MINUTES, weekEventBox } from "./grid"
 
@@ -7,8 +7,6 @@ export function DragToCreateSelection({
 }: {
   selection: Extract<CreateSelection, { kind: "timed" }>
 }) {
-  const { selectionProps } = useDayGrid()
-
   return (
     <div
       data-slot="week-create-selection"
