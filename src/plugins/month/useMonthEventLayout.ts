@@ -27,39 +27,55 @@ export function isSpanning(event: CalendarEvent): boolean {
   return isAllDay(event.start) || !event.lastDay.equals(event.firstDay)
 }
 
+/**
+ * Lays out the events of the consecutive `weeks`. Each event is visited once and placed in
+ * the weeks it covers: reading a Temporal date's fields is slow enough that doing it per
+ * event per week stalled scrolling once a few months were loaded.
+ */
 export function useMonthEventLayout(
   weeks: MonthDay[][],
   events: readonly CalendarEvent[],
 ): WeekLayout[] {
   return useMemo(() => {
-    return weeks.map((weekDays) => {
-      const weekStartDay = epochDay(weekDays[0].date)
-      const weekEndDay = epochDay(weekDays[6].date)
+    const layouts: WeekLayout[] = weeks.map(() => ({
+      allDayItems: [],
+      maxLane: -1,
+      timedByCol: Array.from({ length: 7 }, () => []),
+    }))
+    if (layouts.length === 0) return layouts
 
-      const allDayItems: AllDayLaneItem[] = []
-      const timedByCol: CalendarEvent[][] = Array.from({ length: 7 }, () => [])
+    const rangeFirstDay = epochDay(weeks[0][0].date)
+    const rangeDays = layouts.length * 7
 
-      for (const event of events) {
-        const firstDay = epochDay(event.firstDay)
+    for (const event of events) {
+      const firstDay = epochDay(event.firstDay)
 
-        if (isSpanning(event)) {
-          const span = clipSpanToRange(firstDay, epochDay(event.lastDay), weekStartDay, weekEndDay)
-          if (span) allDayItems.push({ ...span, event, lane: 0 })
-        } else {
-          // Single-day timed event
-          const colIndex = firstDay - weekStartDay
-          if (colIndex >= 0 && colIndex < 7) timedByCol[colIndex].push(event)
+      if (isSpanning(event)) {
+        const lastDay = epochDay(event.lastDay)
+        const fromWeek = Math.max(0, Math.floor((firstDay - rangeFirstDay) / 7))
+        const toWeek = Math.min(layouts.length - 1, Math.floor((lastDay - rangeFirstDay) / 7))
+        for (let week = fromWeek; week <= toWeek; week++) {
+          const weekFirstDay = rangeFirstDay + week * 7
+          const span = clipSpanToRange(firstDay, lastDay, weekFirstDay, weekFirstDay + 6)
+          if (span) layouts[week].allDayItems.push({ ...span, event, lane: 0 })
+        }
+      } else {
+        // Single-day timed event
+        const offset = firstDay - rangeFirstDay
+        if (offset >= 0 && offset < rangeDays) {
+          layouts[Math.floor(offset / 7)].timedByCol[offset % 7].push(event)
         }
       }
+    }
 
+    for (const layout of layouts) {
       // A drag preview is appended after the sorted events.
-      for (const col of timedByCol) {
+      for (const col of layout.timedByCol) {
         col.sort((a, b) => a.startMinutes - b.startMinutes)
       }
+      layout.maxLane = assignAllDayLanes(layout.allDayItems, 7)
+    }
 
-      const maxLane = assignAllDayLanes(allDayItems, 7)
-
-      return { allDayItems, maxLane, timedByCol }
-    })
+    return layouts
   }, [weeks, events])
 }
