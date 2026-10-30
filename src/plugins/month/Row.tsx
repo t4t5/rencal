@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { memo, type PointerEvent as ReactPointerEvent } from "react"
+import { memo } from "react"
 
 import { type AllDaySpan, assignAllDayLanes, isoWeekNumber, useDisplaySettings } from "@/sdk"
 
@@ -42,14 +42,12 @@ export const MonthWeekRow = memo(function MonthWeekRow({
   activeDateKey,
   onDayClick,
   createSelection,
-  startCreateDrag,
 }: {
   weekDays: MonthDay[]
   layout: WeekLayout
   activeDateKey: string
   onDayClick: (date: Temporal.PlainDate) => void
   createSelection: AllDaySpan | null
-  startCreateDrag: (day: Temporal.PlainDate, event: ReactPointerEvent<HTMLElement>) => void
 }) {
   const { showWeekNumbers, firstDayOfWeek } = useDisplaySettings()
 
@@ -103,7 +101,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             day={day}
             isActive={day.dateKey === activeDateKey}
             onClick={() => onDayClick(day.date)}
-            startCreateDrag={startCreateDrag}
           />
         ))}
       </div>
@@ -144,7 +141,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               reservedAllDayHeight={reservedAllDayHeight(reservedLanes[colIndex])}
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
-              startCreateDrag={startCreateDrag}
             />
           )
         })}

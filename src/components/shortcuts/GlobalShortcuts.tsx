@@ -25,10 +25,11 @@ import { useSettings } from "@/contexts/SettingsContext"
 import { useSync } from "@/contexts/SyncContext"
 
 import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
-import { ACTIVE_DAY_EL_ID, getLastEventEndTime } from "@/lib/active-day-draft"
+import { getLastEventEndTime } from "@/lib/active-day-draft"
 import { api } from "@/lib/api"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { type CalendarGroups, formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
+import { largestDayElement } from "@/lib/day-grid"
 import { today } from "@/lib/event-time"
 import {
   PALETTE_COMMANDS,
@@ -263,7 +264,7 @@ function useShortcutHandlers({
 
   const handleAddEventToActiveDay = (e?: KeyboardEvent) => {
     e?.preventDefault()
-    const el = document.getElementById(ACTIVE_DAY_EL_ID)
+    const el = largestDayElement(activeDate)
     if (!el) return
     openDayDraft(activeDate, el, { start: getLastEventEndTime(activeDate, calendarEvents) })
   }

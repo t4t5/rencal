@@ -638,7 +638,9 @@
     color: inherit;
   }
 
-  :where([data-slot="month-create-selection"], [data-slot="week-create-selection"]) {
+  /* The viewport sets the default calendar's colour (`DayGridProvider`). */
+  :where([data-create-selection]) {
+    --calendar-event-color: var(--create-selection-color);
     background: color-mix(
       in srgb,
       oklch(from var(--calendar-event-color) l calc(c * 1.4) h) 20%,

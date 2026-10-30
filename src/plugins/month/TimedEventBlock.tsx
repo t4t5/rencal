@@ -1,6 +1,5 @@
 import {
   type CalendarEvent,
-  EventMenu,
   formatTime,
   UntitledEventText,
   useDisplaySettings,
@@ -11,15 +10,13 @@ export function MonthTimedEvent({ event }: { event: CalendarEvent }) {
   const eventProps = useEventProps(event, { drag: "pill" })
 
   return (
-    <EventMenu event={event}>
-      <div
-        {...eventProps}
-        data-view="month"
-        className="flex items-center gap-(--event-padding-inline) pr-(--event-padding-inline) text-xs truncate cursor-default rounded-xs shrink-0"
-      >
-        <MonthTimedEventContent event={event} />
-      </div>
-    </EventMenu>
+    <div
+      {...eventProps}
+      data-view="month"
+      className="flex items-center gap-(--event-padding-inline) pr-(--event-padding-inline) text-xs truncate cursor-default rounded-xs shrink-0"
+    >
+      <MonthTimedEventContent event={event} />
+    </div>
   )
 }
 

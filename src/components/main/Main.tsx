@@ -1,6 +1,8 @@
 import { MainHeader } from "@/components/main/MainHeader"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 
+import { DayGridProvider } from "@/contexts/DayGridContext"
+
 import { resolveView } from "@/views/manifest"
 import { useViews } from "@/views/useViews"
 
@@ -22,13 +24,15 @@ export function Main({
     >
       <MainHeader activeView={active} onChangeCalendarView={onChangeCalendarView} />
 
-      <div data-slot="main-viewport" className="flex-1 min-h-0 select-none">
-        {views.map(({ id, component: View }) => (
-          <TabsContent key={id} value={id} className="h-full">
-            <View />
-          </TabsContent>
-        ))}
-      </div>
+      <DayGridProvider>
+        <div data-slot="main-viewport" className="flex-1 min-h-0 select-none">
+          {views.map(({ id, component: View }) => (
+            <TabsContent key={id} value={id} className="h-full">
+              <View />
+            </TabsContent>
+          ))}
+        </div>
+      </DayGridProvider>
     </Tabs>
   )
 }

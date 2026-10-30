@@ -1,19 +1,13 @@
-import { Temporal } from "@js-temporal/polyfill"
-import { type PointerEvent as ReactPointerEvent, type RefObject, useRef, useState } from "react"
+import { type RefObject, useRef, useState } from "react"
 
 import {
-  ACTIVE_DAY_ID,
-  atTime,
   type CalendarEvent,
   cn,
-  ContextMenu,
-  dropZoneProps,
-  type EventTime,
+  dayProps,
   Tooltip,
   UntitledEventText,
   useEventProps,
   useEventSelection,
-  useOpenDraft,
 } from "@/sdk"
 
 import { MonthTimedEvent, MonthTimedEventContent } from "./TimedEventBlock"
@@ -23,7 +17,6 @@ import type { MonthDay } from "./useMonthGrid"
 const MAX_TIMED_VISIBLE = 4
 // Past this, the "+n more" tooltip summarises the rest instead of growing off-screen.
 const MAX_TOOLTIP_ROWS = 12
-const DAY_MINUTES = 24 * 60
 
 type MonthDayCellProps = {
   day: MonthDay
@@ -32,17 +25,6 @@ type MonthDayCellProps = {
   reservedAllDayHeight: string | null
   isActiveDay: boolean
   onClick: () => void
-  startCreateDrag: (day: Temporal.PlainDate, event: ReactPointerEvent<HTMLElement>) => void
-}
-
-/**
- * Where a new event on `date` starts: when its last timed event ends, so it
- * follows the day's events, or 08:00 when that is midnight. Null for a free day.
- */
-function afterLastEvent(date: Temporal.PlainDate, timedEvents: CalendarEvent[]): EventTime | null {
-  const last = timedEvents.at(-1)
-  if (!last) return null
-  return last.endMinutes < DAY_MINUTES ? last.end : atTime(date, 8)
 }
 
 export function MonthDayCell({
@@ -52,62 +34,39 @@ export function MonthDayCell({
   reservedAllDayHeight,
   isActiveDay,
   onClick,
-  startCreateDrag,
 }: MonthDayCellProps) {
-  const openDraft = useOpenDraft()
-  const contextTargetRef = useRef<HTMLElement | null>(null)
-
   const visibleTimed = timedEvents.slice(0, MAX_TIMED_VISIBLE)
   const hiddenEvents = [
     ...hiddenAllDayItems.map((item) => item.event),
     ...timedEvents.slice(MAX_TIMED_VISIBLE),
   ]
 
-  const handleCreateEvent = (el: HTMLElement) => {
-    openDraft(day.date, el, { start: afterLastEvent(day.date, timedEvents) })
-  }
-
   return (
-    <ContextMenu
-      items={[
-        { label: "Create event", onSelect: () => handleCreateEvent(contextTargetRef.current!) },
-      ]}
+    <div
+      data-slot="month-day"
+      data-selected={isActiveDay || undefined}
+      data-weekend={day.isWeekend || undefined}
+      className={cn(
+        // The divider is an inset shadow so it takes no width; all-day bars assume none.
+        "flex flex-col gap-1 px-(--month-padding-inline) pb-1 min-h-0 overflow-hidden cursor-default shadow-[inset_-1px_0_var(--border)] last:shadow-none",
+        day.isWeekend && "bg-weekend",
+        isActiveDay && "bg-selected text-selected-foreground",
+      )}
+      {...dayProps(day.date, "day")}
+      onClick={onClick}
     >
-      <div
-        data-slot="month-day"
-        data-selected={isActiveDay || undefined}
-        data-weekend={day.isWeekend || undefined}
-        className={cn(
-          // The divider is an inset shadow so it takes no width; all-day bars assume none.
-          "flex flex-col gap-1 px-(--month-padding-inline) pb-1 min-h-0 overflow-hidden cursor-default shadow-[inset_-1px_0_var(--border)] last:shadow-none",
-          day.isWeekend && "bg-weekend",
-          isActiveDay && "bg-selected text-selected-foreground",
-        )}
-        id={isActiveDay ? ACTIVE_DAY_ID : undefined}
-        {...dropZoneProps(day.date, "day")}
-        onClick={onClick}
-        onPointerDown={(event) => startCreateDrag(day.date, event)}
-        onContextMenu={(e) => {
-          contextTargetRef.current = e.currentTarget
-        }}
-        onDoubleClick={(e) => {
-          if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
-          handleCreateEvent(e.currentTarget)
-        }}
-      >
-        {reservedAllDayHeight && (
-          <div
-            className="pointer-events-none"
-            style={{ height: reservedAllDayHeight, flexShrink: 0 }}
-          />
-        )}
-        {visibleTimed.map((event) => (
-          <MonthTimedEvent key={event.key} event={event} />
-        ))}
+      {reservedAllDayHeight && (
+        <div
+          className="pointer-events-none"
+          style={{ height: reservedAllDayHeight, flexShrink: 0 }}
+        />
+      )}
+      {visibleTimed.map((event) => (
+        <MonthTimedEvent key={event.key} event={event} />
+      ))}
 
-        {hiddenEvents.length > 0 && <HiddenEventsLabel events={hiddenEvents} />}
-      </div>
-    </ContextMenu>
+      {hiddenEvents.length > 0 && <HiddenEventsLabel events={hiddenEvents} />}
+    </div>
   )
 }
 

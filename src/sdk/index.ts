@@ -9,23 +9,22 @@ import {
   useCalendars as useAppCalendars,
   useCalendarNavigation,
 } from "@/contexts/CalendarStateContext"
-import { useEventDrag, useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
+import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
 import { useEventsWithDrag } from "@/hooks/cal-events/useEventsWithDrag"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
-import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
 import { useIsDimmed } from "@/hooks/useIsDimmed"
 import { type OpenDayDraftOptions, useOpenDayDraft } from "@/hooks/useOpenDayDraft"
 import { eventKey } from "@/lib/cal-events"
 import { getCalendarColor } from "@/lib/calendar-styles"
 import { pointAnchorFromClick, setEventAnchor } from "@/lib/event-anchor"
-import type { DropZone } from "@/lib/event-drag"
-import { getCalendarEventStyle, getCreateSelectionStyle } from "@/lib/event-styles"
-import { epochDay, formatDateKey, isAllDay } from "@/lib/event-time"
+import { getCalendarEventStyle } from "@/lib/event-styles"
+import { epochDay, isAllDay } from "@/lib/event-time"
+import { useMenuOpen } from "@/lib/menu-event"
 
-import { isDraft, markDraft, useMenuOpen } from "./event-state"
+import { isDraft, markDraft } from "./event-state"
 import { type CalendarEvent, toAppEvent, toPluginEvents } from "./events"
 
 export { Temporal } from "@js-temporal/polyfill"
@@ -59,20 +58,12 @@ export {
   clipSpanToRange,
 } from "@/hooks/cal-events/all-day-lanes"
 export { layoutTimedOverlaps, type TimedBox } from "@/hooks/cal-events/timed-overlaps"
-export { ACTIVE_DAY_EL_ID as ACTIVE_DAY_ID } from "@/lib/active-day-draft"
-export type { DropZone } from "@/lib/event-drag"
 export { Button } from "@/components/ui/button"
 export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
-export { ContextMenu, EventMenu, type MenuItem, Tooltip } from "./components"
-export {
-  createSelectionProps,
-  type DaySelection,
-  type TimedSelection,
-  useDayDragToCreate,
-  useTimedDragToCreate,
-} from "./drag-to-create"
+export { Tooltip } from "./components"
+export { type CreateSelection, dayProps, type DayZone, useDayGrid } from "./day-grid"
 
 /**
  * Events overlapping [start, end), filtered to the visible calendars, in start
@@ -234,7 +225,7 @@ export function useEventState(event: CalendarEvent): EventState {
 export interface EventPropsOptions {
   /**
    * Lets the user drag the event to reschedule it, onto the drop zones of the
-   * view (`dropZoneProps`). The copy under the pointer is a title `"pill"` or
+   * view (`dayProps`). The copy under the pointer is a title `"pill"` or
    * the `"block"` itself at its size. Read-only events never drag.
    */
   drag?: "pill" | "block"
@@ -249,8 +240,9 @@ export interface EventPropsOptions {
  * Props to spread on an event element: the calendar-event attributes themes
  * style (including `useEventState` as `data-selected`, `data-draft`,
  * `data-drag-state` and `data-dimmed`), its colour, a click that toggles the
- * event popover next to it, and with `drag`, a press that drags it. Drafts and
- * drag previews ignore clicks.
+ * event popover next to it, renCal's context menu for the event, and with
+ * `drag`, a press that drags it. Drafts and drag previews ignore clicks and
+ * have no menu.
  */
 export function useEventProps(event: CalendarEvent, options: EventPropsOptions = {}) {
   const { style, rsvp } = useEventAppearance(event)
@@ -264,6 +256,8 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
 
   return {
     "data-slot": "calendar-event",
+    // Finds the event for the context menu, which the viewport opens.
+    "data-event-key": event.key,
     "data-kind": isAllDay(event.start) ? "all-day" : "timed",
     "data-selected": state.selected || undefined,
     "data-rsvp": rsvp ?? undefined,
@@ -285,28 +279,6 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
 }
 
 /**
- * Makes an element a place events can be dropped on `date`:
- * - `"day"`: any event moves to the day, keeping its time.
- * - `"all-day"`: all-day and multi-day events only.
- * - `"timed"`: single-day timed events, at the time under the pointer. The
- *   element must span the whole day, 00:00 at its top to 24:00 at its bottom.
- */
-export function dropZoneProps(date: Temporal.PlainDate, zone: DropZone) {
-  return { "data-drop-day": formatDateKey(date), "data-drop-zone": zone } as const
-}
-
-/**
- * Whether the user is dragging an event, so a view can hold off behaviour that
- * would fight the drag's autoscroll, like scroll snapping.
- */
-export function useIsDraggingEvent(): boolean {
-  return useEventDrag().drag !== null
-}
-
-/** Put on a view's scroll container so dragging an event near its edges scrolls it. */
-export const dragScrollProps = { "data-drag-scroll": true } as const
-
-/**
  * Opens the new-event popover for `day` next to `anchor`. Timed drafts start at
  * `start`, by default the current hour, and last an hour unless `end` is given.
  * Asks the user to connect an account first when no calendar can take events.
@@ -320,8 +292,3 @@ export function useOpenDraft(): (
 }
 
 export type OpenDraftOptions = OpenDayDraftOptions
-
-/** Style for a range being drawn to create an event, in the default calendar's colour. */
-export function useCreateSelectionStyle() {
-  return getCreateSelectionStyle(useCreateSelectionColor())
-}

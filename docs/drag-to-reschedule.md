@@ -29,7 +29,7 @@ Drops only ever shift an event: a whole-day delta, plus a wallclock-minute delta
 in the week time grid, applied to both start and end. Duration, kind (all-day vs
 timed), and the event's own timezone are all preserved.
 
-- Month cells (`data-drop-zone="day"`): any event, time of day unchanged.
+- Month cells (`"day"`, see `DayZone` in `src/lib/day-grid.ts`): any event, time of day unchanged.
 - Week all-day lane and day headers (`"all-day"`): all-day and multi-day events
   only.
 - Week day columns (`"timed"`): single-day timed events only, snapped to
@@ -41,15 +41,13 @@ organise can't be dragged (same rule as the edit popover).
 
 ## Extending
 
-- A new droppable region needs `data-drop-day="YYYY-MM-DD"` and a
-  `data-drop-zone`; the pointer is resolved with `elementsFromPoint`, so blocks
-  layered over a cell don't hide it.
-- A new scrollable view opts into edge auto-scroll with `data-drag-scroll` on
-  its scroll container.
+- A new droppable region is a day element marked with `dayAttributes(date, zone)`
+  (`src/lib/day-grid.ts`); the pointer is resolved with `elementsFromPoint`, so
+  blocks layered over a cell don't hide it.
+- Edge auto-scroll moves the nearest scrolling ancestor of the dragged block.
 - Blocks read their role through `useEventDragRole` and attach
   `useEventDragHandle` as `onPointerDown`. The preview is a copy of the event
   with a distinct id, injected into the grid layouts by `useEventsWithDrag`.
 - Plugin views get the same through the SDK: `useEventProps(event, { drag })`
-  attaches the handle and the role, `dropZoneProps` and `dragScrollProps` mark
-  drop zones and the scroll container, and `useEventsInRange` includes the
-  preview.
+  attaches the handle and the role, `dayProps` marks the days, and
+  `useEventsInRange` includes the preview.

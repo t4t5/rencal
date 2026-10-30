@@ -3,21 +3,34 @@ import { Temporal } from "@js-temporal/polyfill"
 import { DRAG_SNAP_MINUTES } from "@/lib/event-drag"
 import { allDayDate, atTime, DAY_MINUTES, type EventTimeRange } from "@/lib/event-time"
 
-export type CreateSelection = { startMinutes: number; endMinutes: number }
-export type DaySelection = { start: Temporal.PlainDate; end: Temporal.PlainDate }
+type MinuteRange = { startMinutes: number; endMinutes: number }
+type DayRange = { start: Temporal.PlainDate; end: Temporal.PlainDate }
+
+/**
+ * A range being drawn to create an event: wallclock minutes in one day column,
+ * snapped to 15, or an inclusive range of days.
+ */
+export type CreateSelection =
+  | {
+      readonly kind: "timed"
+      readonly day: Temporal.PlainDate
+      readonly startMinutes: number
+      readonly endMinutes: number
+    }
+  | { readonly kind: "days"; readonly start: Temporal.PlainDate; readonly end: Temporal.PlainDate }
 
 /** Inclusive day range that always contains the anchor and grows toward the pointer. */
 export function daySelectionForPointer(
   anchor: Temporal.PlainDate,
   pointer: Temporal.PlainDate,
-): DaySelection {
+): DayRange {
   return Temporal.PlainDate.compare(anchor, pointer) <= 0
     ? { start: anchor, end: pointer }
     : { start: pointer, end: anchor }
 }
 
 /** All-day [start, end) range for a selection. */
-export function daySelectionRange(selection: DaySelection): EventTimeRange {
+export function daySelectionRange(selection: DayRange): EventTimeRange {
   return {
     start: allDayDate(selection.start),
     end: allDayDate(selection.end.add({ days: 1 })),
@@ -42,10 +55,7 @@ export function minutesAtY(rect: { top: number; height: number }, y: number): nu
 }
 
 /** Snapped selection that always contains the anchor's slot and grows toward the pointer. */
-export function selectionForPointer(
-  anchorMinutes: number,
-  pointerMinutes: number,
-): CreateSelection {
+export function selectionForPointer(anchorMinutes: number, pointerMinutes: number): MinuteRange {
   // Keep even an anchor on the exact bottom edge inside the final slot of the day.
   const anchor = Math.max(0, Math.min(DAY_MINUTES - 1e-9, anchorMinutes))
   const slotStart = Math.floor(anchor / DRAG_SNAP_MINUTES) * DRAG_SNAP_MINUTES
@@ -68,10 +78,7 @@ export function selectionForPointer(
 }
 
 /** Build the wallclock range for a selection, treating 24:00 as next-day midnight. */
-export function selectionRange(
-  day: Temporal.PlainDate,
-  selection: CreateSelection,
-): EventTimeRange {
+export function selectionRange(day: Temporal.PlainDate, selection: MinuteRange): EventTimeRange {
   const timeAtMinutes = (minutes: number) => {
     if (minutes === DAY_MINUTES) return atTime(day.add({ days: 1 }), 0)
     return atTime(day, Math.floor(minutes / 60), minutes % 60)

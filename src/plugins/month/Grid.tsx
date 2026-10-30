@@ -13,13 +13,11 @@ import {
 import {
   clipSpanToRange,
   cn,
-  dragScrollProps,
   epochDay,
   type FirstDayOfWeek,
   startOfWeek,
-  useDayDragToCreate,
+  useDayGrid,
   useDisplaySettings,
-  useIsDraggingEvent,
   useNavigation,
   useToday,
 } from "@/sdk"
@@ -63,8 +61,7 @@ export function MonthGrid({
   const { firstDayOfWeek } = useDisplaySettings()
   const today = useToday()
   const activeDateKey = activeDate.toString()
-  const { selection, startCreateDrag } = useDayDragToCreate(scrollRef)
-  const isDraggingEvent = useIsDraggingEvent()
+  const { selection, isDragging } = useDayGrid()
   const prevRowHeightRef = useRef(rowHeight)
 
   // Hide the grid until the initial anchor scroll lands, so the user never sees the
@@ -115,7 +112,7 @@ export function MonthGrid({
   // Native CSS snapping on macOS; the JS fling session elsewhere (see WeekSnapPoints.tsx).
   // Both autoscrollers move the container with per-frame scrollBy calls, which a mandatory
   // snap would clamp back to the current row, so snapping is off while dragging.
-  const snapEnabled = hasInitiallyScrolled && !selection && !isDraggingEvent
+  const snapEnabled = hasInitiallyScrolled && !isDragging
   const getSnapState = useEffectEvent(() => ({
     enabled: snapEnabled && Date.now() >= navigatingUntil.current,
     rowHeight,
@@ -195,7 +192,6 @@ export function MonthGrid({
   return (
     <div
       ref={scrollRef}
-      {...dragScrollProps}
       data-slot="month-scroll"
       style={{ overflowAnchor: "none" }}
       className={cn(
@@ -225,14 +221,15 @@ export function MonthGrid({
           const loaded = virtualRow.index - startIndex
           const inRange = loaded >= 0 && loaded < weeks.length
           const weekDays = inRange ? weeks[loaded] : buildWeek(origin, virtualRow.index, today)
-          const createSelection = selection
-            ? clipSpanToRange(
-                epochDay(selection.start),
-                epochDay(selection.end),
-                epochDay(weekDays[0].date),
-                epochDay(weekDays[6].date),
-              )
-            : null
+          const createSelection =
+            selection?.kind === "days"
+              ? clipSpanToRange(
+                  epochDay(selection.start),
+                  epochDay(selection.end),
+                  epochDay(weekDays[0].date),
+                  epochDay(weekDays[6].date),
+                )
+              : null
 
           return (
             <div
@@ -254,7 +251,6 @@ export function MonthGrid({
                 activeDateKey={activeDateKey}
                 onDayClick={goToDate}
                 createSelection={createSelection}
-                startCreateDrag={startCreateDrag}
               />
             </div>
           )
