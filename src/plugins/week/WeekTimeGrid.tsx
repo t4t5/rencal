@@ -1,65 +1,54 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { RefObject, useLayoutEffect, useRef, useState } from "react"
+import { type CSSProperties, type RefObject, useLayoutEffect, useRef, useState } from "react"
 
-import { WeekAllDayBar } from "@/components/events-blocks/week-view/AllDayEventBlock"
-import { WeekTimedEvent } from "@/components/events-blocks/week-view/TimedEventBlock"
-
-import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
-import { useSettings } from "@/contexts/SettingsContext"
-
-import type { AllDayLaneItem } from "@/hooks/cal-events/all-day-lanes"
-import type { WeekTimedEventLayout } from "@/hooks/cal-events/useDayRangeLayout"
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { useCreateSelectionColor } from "@/hooks/useCreateSelectionColor"
-import { useOpenDayDraft } from "@/hooks/useOpenDayDraft"
-import { ACTIVE_DAY_EL_ID } from "@/lib/active-day-draft"
-import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { minutesAtY } from "@/lib/drag-to-create"
-import type { TimeFormat } from "@/lib/event-time"
 import {
+  ACTIVE_DAY_ID,
   atTime,
+  cn,
+  ContextMenu,
+  dragScrollProps,
+  dropZoneProps,
+  type FirstDayOfWeek,
   formatWallclockTime,
   formatWeekday,
-  getViewerTzid,
   startOfWeek,
-  type FirstDayOfWeek,
-} from "@/lib/event-time"
-import { getUserResponseStatus } from "@/lib/event-utils"
-import { cn } from "@/lib/utils"
+  type TimeFormat,
+  useDisplaySettings,
+  useIsDimmed,
+  useNavigation,
+  useOpenDraft,
+  useTimedDragToCreate,
+  useViewerTzid,
+} from "@/sdk"
 
-import { AllDayContextMenu } from "./AllDayContextMenu"
+import { WeekAllDayBar } from "./AllDayEventBlock"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { DragToCreateSelection } from "./DragToCreateSelection"
-import { ScheduledDayContextMenu } from "./ScheduledDayContextMenu"
-import { useDragToCreate } from "./useDragToCreate"
+import { WeekTimedEvent } from "./TimedEventBlock"
+import { DAY_MINUTES, GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
+import type { AllDayLaneItem, WeekTimedEventLayout } from "./useDayRangeLayout"
+import type { WeekDay } from "./useInfiniteDays"
 
-const HOUR_HEIGHT = 48
-const GRID_HEIGHT = 24 * HOUR_HEIGHT
-export const GUTTER_WIDTH = 48
 const DAY_WIDTH_MIN = 100
 
 function weekStartIndex(
-  days: MonthDay[],
-  activeDay: MonthDay,
+  days: WeekDay[],
+  activeDay: WeekDay,
   firstDayOfWeek: FirstDayOfWeek,
 ): number {
   const weekStart = startOfWeek(activeDay.date, firstDayOfWeek)
   return days.findIndex((day) => day.date.equals(weekStart))
 }
 
+/** Where a timed draft opens: the element and the viewport Y it was asked for at. */
+type CreateTarget = { el: HTMLElement; y: number }
+
 type WeekTimeGridProps = {
-  days: MonthDay[]
+  days: WeekDay[]
   timedByDay: Map<string, WeekTimedEventLayout[]>
   allDayItems: AllDayLaneItem[]
   maxAllDayLane: number
-  activeEventKey: string | null
-  selectedEventKey: string | null
-  activeDateKey: string
   scrollContainerRef: RefObject<HTMLDivElement | null>
-  onDayClick: (date: Temporal.PlainDate) => void
-  onEventClick: (eventKey: string) => void
-  draftEvent: CalendarEvent | null
-  dimmed: boolean
 }
 
 export function WeekTimeGrid({
@@ -67,25 +56,20 @@ export function WeekTimeGrid({
   timedByDay,
   allDayItems,
   maxAllDayLane,
-  activeEventKey,
-  selectedEventKey,
-  activeDateKey,
   scrollContainerRef,
-  onDayClick,
-  onEventClick,
-  draftEvent,
-  dimmed,
 }: WeekTimeGridProps) {
-  const { calendars } = useCalendars()
-  const { navigationVersion } = useCalendarNavigation()
-  const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
-  const openDayDraft = useOpenDayDraft()
-  const { selection, startCreateDrag } = useDragToCreate(scrollContainerRef)
-  const createSelectionColor = useCreateSelectionColor()
+  const { activeDate, goToDate, navigationVersion } = useNavigation()
+  const { timeFormat, firstDayOfWeek, loaded: settingsLoaded } = useDisplaySettings()
+  const tzid = useViewerTzid()
+  const openDraft = useOpenDraft()
+  const { selection, startCreateDrag } = useTimedDragToCreate(scrollContainerRef)
+  const dimmed = useIsDimmed()
 
+  const activeDateKey = activeDate.toString()
   const N = days.length
   const hasAllDay = allDayItems.length > 0
-  const contextTargetRef = useRef<HTMLElement | null>(null)
+  const allDayTargetRef = useRef<HTMLElement | null>(null)
+  const timedTargetRef = useRef<CreateTarget | null>(null)
 
   // Day width is computed so 7 days fit in the viewport (min-floored).
   // The `ready` flag gates the initial-scroll effect until the width is measured against the real container.
@@ -146,7 +130,7 @@ export function WeekTimeGrid({
     if (!el) return
 
     const hasToday = days.some((d) => d.isToday)
-    const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
+    const now = Temporal.Now.zonedDateTimeISO(tzid)
     const targetHour = hasToday ? now.hour + now.minute / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
 
@@ -165,6 +149,7 @@ export function WeekTimeGrid({
     activeDateKey,
     firstDayOfWeek,
     scrollContainerRef,
+    tzid,
   ])
 
   // Recheck visibility on date changes and deliberate jumps, including to the same date.
@@ -197,9 +182,11 @@ export function WeekTimeGrid({
     }
   }, [activeDateKey, navigationVersion, scrollContainerRef])
 
-  const getHourFromClickY = (el: HTMLElement, clientY: number) => {
-    const minutes = minutesAtY(el.getBoundingClientRect(), clientY)
-    return Math.max(0, Math.min(23, Math.floor(minutes / 60)))
+  const createTimedEvent = (day: WeekDay, { el, y }: CreateTarget) => {
+    const { top, height } = el.getBoundingClientRect()
+    const minutes = ((y - top) / height) * DAY_MINUTES
+    const startHour = Math.max(0, Math.min(23, Math.floor(minutes / 60)))
+    openDraft(day.date, el, { allDay: false, start: atTime(day.date, startHour), anchorY: y })
   }
 
   const totalContentWidth = GUTTER_WIDTH + N * dayWidth
@@ -208,9 +195,9 @@ export function WeekTimeGrid({
   return (
     <div
       ref={scrollContainerRef}
-      data-drag-scroll
+      {...dragScrollProps}
       data-slot="week-scroll"
-      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as React.CSSProperties}
+      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as CSSProperties}
       className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
     >
       <div style={{ width: totalContentWidth, minHeight: "100%" }}>
@@ -237,17 +224,21 @@ export function WeekTimeGrid({
             days={days}
             activeDateKey={activeDateKey}
             dimmed={dimmed}
-            onDayClick={onDayClick}
+            onDayClick={goToDate}
           />
           {hasAllDay && (
             <>
               {/* Per-day backgrounds for the all-day region */}
               {days.map((day, i) => (
-                <AllDayContextMenu
+                <ContextMenu
                   key={`${day.dateKey}-allday-bg`}
-                  onCreateEvent={() =>
-                    openDayDraft(day.date, contextTargetRef.current!, { allDay: true })
-                  }
+                  items={[
+                    {
+                      label: "Create event",
+                      onSelect: () =>
+                        openDraft(day.date, allDayTargetRef.current!, { allDay: true }),
+                    },
+                  ]}
                 >
                   <div
                     className={cn(
@@ -260,31 +251,17 @@ export function WeekTimeGrid({
                     data-slot="week-all-day"
                     data-selected={day.dateKey === activeDateKey || undefined}
                     data-weekend={day.isWeekend || undefined}
-                    data-drop-day={day.dateKey}
-                    data-drop-zone="all-day"
+                    {...dropZoneProps(day.date, "all-day")}
                     onContextMenu={(e) => {
-                      contextTargetRef.current = e.currentTarget
+                      allDayTargetRef.current = e.currentTarget
                     }}
+                    onDoubleClick={(e) => openDraft(day.date, e.currentTarget, { allDay: true })}
                   />
-                </AllDayContextMenu>
+                </ContextMenu>
               ))}
-              {allDayItems.map((item) => {
-                const key = eventKey(item.event)
-
-                return (
-                  <WeekAllDayBar
-                    key={key}
-                    item={item}
-                    colOffset={1}
-                    rowOffset={2}
-                    highlighted={key === activeEventKey || key === selectedEventKey}
-                    rsvp={getUserResponseStatus(item.event, calendars)}
-                    isDraft={item.event === draftEvent}
-                    dimmed={dimmed}
-                    onClick={() => onEventClick(key)}
-                  />
-                )
-              })}
+              {allDayItems.map((item) => (
+                <WeekAllDayBar key={item.event.key} item={item} colOffset={1} rowOffset={2} />
+              ))}
             </>
           )}
         </div>
@@ -302,13 +279,14 @@ export function WeekTimeGrid({
             <TimeGutter timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
-            <ScheduledDayContextMenu
+            <ContextMenu
               key={day.dateKey}
-              onCreateEvent={(el, anchorY) => {
-                const startHour = getHourFromClickY(el, anchorY)
-                const start = atTime(day.date, startHour)
-                openDayDraft(day.date, el, { allDay: false, start, anchorY })
-              }}
+              items={[
+                {
+                  label: "Create event",
+                  onSelect: () => createTimedEvent(day, timedTargetRef.current!),
+                },
+              ]}
             >
               <div
                 className={cn(
@@ -317,46 +295,33 @@ export function WeekTimeGrid({
                     ? "bg-selected text-selected-foreground"
                     : day.isWeekend && "bg-weekend",
                 )}
-                style={
-                  {
-                    backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
-                  } as React.CSSProperties
-                }
-                id={day.dateKey === activeDateKey ? ACTIVE_DAY_EL_ID : undefined}
-                data-drop-day={day.dateKey}
-                data-drop-zone="timed"
+                style={{
+                  backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
+                }}
+                id={day.dateKey === activeDateKey ? ACTIVE_DAY_ID : undefined}
+                {...dropZoneProps(day.date, "timed")}
                 data-slot="week-day"
                 data-selected={day.dateKey === activeDateKey || undefined}
                 data-weekend={day.isWeekend || undefined}
                 onPointerDown={(event) => startCreateDrag(day.date, event)}
-                onClick={() => onDayClick(day.date)}
+                onClick={() => goToDate(day.date)}
+                onContextMenu={(e) => {
+                  timedTargetRef.current = { el: e.currentTarget, y: e.clientY }
+                }}
+                onDoubleClick={(e) => {
+                  if ((e.target as HTMLElement).closest("[data-event-clickable]")) return
+                  createTimedEvent(day, { el: e.currentTarget, y: e.clientY })
+                }}
               >
-                {(timedByDay.get(day.dateKey) ?? []).map((layout) => {
-                  const key = eventKey(layout.event)
+                {(timedByDay.get(day.dateKey) ?? []).map((layout) => (
+                  <WeekTimedEvent key={layout.event.key} layout={layout} />
+                ))}
 
-                  return (
-                    <WeekTimedEvent
-                      key={key}
-                      layout={layout}
-                      highlighted={key === activeEventKey || key === selectedEventKey}
-                      rsvp={getUserResponseStatus(layout.event, calendars)}
-                      isDraft={layout.event === draftEvent}
-                      dimmed={dimmed}
-                      onEventClick={onEventClick}
-                    />
-                  )
-                })}
-
-                {selection?.dayKey === day.dateKey && (
-                  <DragToCreateSelection
-                    selection={selection}
-                    calendarColor={createSelectionColor}
-                  />
-                )}
+                {selection?.day.equals(day.date) && <DragToCreateSelection selection={selection} />}
 
                 {day.isToday && <CurrentTimeIndicator />}
               </div>
-            </ScheduledDayContextMenu>
+            </ContextMenu>
           ))}
         </div>
       </div>
@@ -390,7 +355,7 @@ const DayHeaders = ({
   dimmed,
   onDayClick,
 }: {
-  days: MonthDay[]
+  days: WeekDay[]
   activeDateKey: string
   dimmed: boolean
   onDayClick: (date: Temporal.PlainDate) => void
@@ -411,8 +376,7 @@ const DayHeaders = ({
       style={{ gridRow: 1 }}
       // Headers double as an all-day drop zone so multi-day bars can land here
       // even when no all-day lane is rendered yet.
-      data-drop-day={day.dateKey}
-      data-drop-zone="all-day"
+      {...dropZoneProps(day.date, "all-day")}
       onClick={() => onDayClick(day.date)}
     >
       <span data-slot="week-weekday" className="text-2xs text-muted-foreground uppercase">

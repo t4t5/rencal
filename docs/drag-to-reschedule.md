@@ -49,3 +49,7 @@ organise can't be dragged (same rule as the edit popover).
 - Blocks read their role through `useEventDragRole` and attach
   `useEventDragHandle` as `onPointerDown`. The preview is a copy of the event
   with a distinct id, injected into the grid layouts by `useEventsWithDrag`.
+- Plugin views get the same through the SDK: `useEventProps(event, { drag })`
+  attaches the handle and the role, `dropZoneProps` and `dragScrollProps` mark
+  drop zones and the scroll container, and `useEventsInRange` includes the
+  preview.

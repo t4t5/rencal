@@ -25,10 +25,10 @@ dashed draft block.
 
 ## Week time grid
 
-`src/components/main/week-view/useDragToCreate.ts` anchors the press to one day
+`useTimedDragToCreate` in `src/sdk/drag-to-create.ts` anchors the press to one day
 and one wallclock minute. The selection remains in that day, snaps to 15-minute
 slots, includes the pressed slot, grows up or down, and clamps to
-00:00–24:00. Its flat block is rendered by `DragToCreateSelection.tsx`.
+00:00–24:00. The week plugin draws its flat block (`src/plugins/week/DragToCreateSelection.tsx`).
 
 The anchor minute is captured at press time because auto-scroll moves the
 column's viewport rectangle. On release, the selected minutes become exact

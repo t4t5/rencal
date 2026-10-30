@@ -1,4 +1,4 @@
-import type { ReactNode, RefObject } from "react"
+import { type ReactNode, type RefObject, useRef } from "react"
 
 import {
   ContextMenu,
@@ -20,17 +20,20 @@ import { isEventReadonly } from "@/lib/event-utils"
 
 type EventContextMenuProps = {
   event: CalendarEvent
-  anchorRef: RefObject<HTMLElement | null>
+  /** Where the popover opens; defaults to the element that was right-clicked. */
+  anchorRef?: RefObject<HTMLElement | null>
   onOpenChange: (open: boolean) => void
   children: ReactNode
 }
 
 export function EventContextMenu({
   event,
-  anchorRef,
+  anchorRef: anchorRefProp,
   onOpenChange,
   children,
 }: EventContextMenuProps) {
+  const triggerRef = useRef<HTMLElement | null>(null)
+  const anchorRef = anchorRefProp ?? triggerRef
   const { setActiveEventKey } = useCalEvents()
   const { calendars } = useCalendars()
   const { canCreate } = useCreateEventGate()
@@ -42,7 +45,14 @@ export function EventContextMenu({
 
   return (
     <ContextMenu onOpenChange={onOpenChange} modal={false}>
-      <ContextMenuTrigger asChild>{children}</ContextMenuTrigger>
+      <ContextMenuTrigger
+        asChild
+        onContextMenu={(e) => {
+          triggerRef.current = e.currentTarget as HTMLElement
+        }}
+      >
+        {children}
+      </ContextMenuTrigger>
       <ContextMenuContent>
         <ContextMenuItem
           onClick={() => {

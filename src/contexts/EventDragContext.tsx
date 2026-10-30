@@ -74,7 +74,7 @@ export interface ActiveEventDrag {
 
 type StartDrag = (
   event: CalendarEvent,
-  e: ReactPointerEvent<HTMLElement>,
+  e: ReactPointerEvent<Element>,
   opts: { float: DragFloatKind },
 ) => void
 
@@ -340,7 +340,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
 export function useEventDragHandle(
   event: CalendarEvent,
   { disabled = false, float = "pill" }: { disabled?: boolean; float?: DragFloatKind } = {},
-): ((e: ReactPointerEvent<HTMLElement>) => void) | undefined {
+): ((e: ReactPointerEvent<Element>) => void) | undefined {
   const { startDrag } = useEventDrag()
   const { calendars } = useCalendars()
 

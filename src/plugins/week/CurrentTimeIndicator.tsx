@@ -1,15 +1,13 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useState } from "react"
 
-import { useSettings } from "@/contexts/SettingsContext"
+import { useDisplaySettings, useViewerTzid } from "@/sdk"
 
-import { useViewerTzid } from "@/hooks/useViewerTzid"
-import { DAY_MINUTES, getViewerTzid } from "@/lib/event-time"
+import { DAY_MINUTES } from "./grid"
 
 export function CurrentTimeIndicator() {
-  const { timeFormat } = useSettings()
-
-  useViewerTzid()
+  const { timeFormat } = useDisplaySettings()
+  const tzid = useViewerTzid()
   const [, tick] = useState(0)
 
   // The colon blinks via CSS, so we only need to tick state once per minute to
@@ -19,7 +17,7 @@ export function CurrentTimeIndicator() {
     return () => clearInterval(interval)
   }, [])
 
-  const now = Temporal.Now.zonedDateTimeISO(getViewerTzid())
+  const now = Temporal.Now.zonedDateTimeISO(tzid)
 
   const currentMinutes = now.hour * 60 + now.minute
   const timeIndicatorTopPercent = (currentMinutes / DAY_MINUTES) * 100

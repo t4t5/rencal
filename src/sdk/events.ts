@@ -8,7 +8,7 @@ import {
   eventKey,
   type ResponseStatus,
 } from "@/lib/cal-events"
-import { epochDay, type EventTime, plainDateFromEpochDay } from "@/lib/event-time"
+import { DAY_MINUTES, epochDay, type EventTime, plainDateFromEpochDay } from "@/lib/event-time"
 import { getUserResponseStatus } from "@/lib/event-utils"
 
 // The event shape plugins see. A curated subset of the app's event, so RPC and
@@ -28,6 +28,10 @@ export interface CalendarEvent {
   /** First and last day the event occupies in the viewer's zone, inclusive. */
   readonly firstDay: Temporal.PlainDate
   readonly lastDay: Temporal.PlainDate
+  /** Wallclock minutes from the midnight that begins `firstDay` to the start, in the viewer's zone. */
+  readonly startMinutes: number
+  /** Wallclock minutes from that same midnight to the end: past 1440 when it ends on a later day. */
+  readonly endMinutes: number
   readonly status: EventStatus
   /** `"free"` for events that don't block time (TRANSP:TRANSPARENT). */
   readonly availability: EventAvailability
@@ -45,7 +49,7 @@ function toPluginEvent(event: AppEvent, calendars: Calendar[]): CalendarEvent {
   let pluginEvent = pluginEvents.get(event)
   // The RSVP depends on the calendar's email too, so rebuild when that changes it.
   if (!pluginEvent || pluginEvent.rsvp !== rsvp) {
-    const { firstDay, lastDay } = event.dateInfo
+    const { firstDay, lastDay, endDay, startLocalMinutes, endLocalMinutes } = event.dateInfo
     pluginEvent = {
       key: eventKey(event),
       calendarId: event.calendar_slug,
@@ -57,6 +61,8 @@ function toPluginEvent(event: AppEvent, calendars: Calendar[]): CalendarEvent {
       end: event.end,
       firstDay: plainDateFromEpochDay(firstDay),
       lastDay: plainDateFromEpochDay(Math.max(firstDay, lastDay)),
+      startMinutes: startLocalMinutes,
+      endMinutes: (endDay - firstDay) * DAY_MINUTES + endLocalMinutes,
       status: event.status,
       availability: event.availability,
       rsvp,

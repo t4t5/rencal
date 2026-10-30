@@ -1,17 +1,32 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { RefObject, useCallback, useMemo, useState } from "react"
+import { type RefObject, useCallback, useMemo, useState } from "react"
 
-import { useHoldRange } from "@/contexts/CalEventsContext"
-import { useSettings } from "@/contexts/SettingsContext"
-
-import { useScrollBoundary } from "@/hooks/useScrollBoundary"
-import { useToday } from "@/hooks/useToday"
-import { startOfWeek, type FirstDayOfWeek } from "@/lib/event-time"
-
-import { buildDay, type MonthDay } from "./useMonthGrid"
+import {
+  type FirstDayOfWeek,
+  startOfWeek,
+  useDisplaySettings,
+  useScrollBoundary,
+  useToday,
+} from "@/sdk"
 
 const BUFFER_DAYS = 7
 const INITIAL_RANGE_DAYS = 21
+
+export type WeekDay = {
+  date: Temporal.PlainDate
+  dateKey: string
+  isToday: boolean
+  isWeekend: boolean
+}
+
+function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): WeekDay {
+  return {
+    date,
+    dateKey: date.toString(),
+    isToday: date.equals(today),
+    isWeekend: date.dayOfWeek === 6 || date.dayOfWeek === 7,
+  }
+}
 
 /** Seed the day range: activeDate's week, with BUFFER_DAYS extra on each side. */
 function initialRangeStart(
@@ -23,8 +38,7 @@ function initialRangeStart(
 
 /**
  * Manages a growing range of days for the continuously-scrollable week view. The day range
- * is the source of truth for what's rendered; event loading just follows it via
- * `useHoldRange` and never blocks scrolling (mirrors useInfiniteMonths).
+ * is the source of truth for what's rendered; the caller loads events for [start, end).
  * Start is aligned to the first day of activeDate's week (minus one buffer week); new
  * weeks are prepended/appended when the user scrolls within `threshold` px of either edge.
  */
@@ -34,8 +48,8 @@ export function useInfiniteDays({
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   activeDate: Temporal.PlainDate
-}): { days: MonthDay[] } {
-  const { firstDayOfWeek } = useSettings()
+}): { days: WeekDay[]; start: Temporal.PlainDate; end: Temporal.PlainDate } {
+  const { firstDayOfWeek } = useDisplaySettings()
   const today = useToday()
 
   const [rangeStart, setRangeStart] = useState(() => initialRangeStart(activeDate, firstDayOfWeek))
@@ -58,11 +72,6 @@ export function useInfiniteDays({
     return Array.from({ length: count }, (_, i) => buildDay(rangeStart.add({ days: i }), today))
   }, [rangeStart, count, today])
 
-  // Keep loaded events in step with the rendered days. The end is exclusive (start of the
-  // day after the last rendered day) so the final day's events are covered, matching the
-  // [gridStart, gridEnd) convention the month grid loads with.
-  useHoldRange(rangeStart, rangeEnd.add({ days: 1 }))
-
   useScrollBoundary({
     scrollContainerRef,
     axis: "x",
@@ -80,5 +89,7 @@ export function useInfiniteDays({
     }, []),
   })
 
-  return { days }
+  // The end is exclusive (the day after the last rendered day) so the final day's
+  // events are covered, matching the [gridStart, gridEnd) convention of the month grid.
+  return { days, start: rangeStart, end: rangeEnd.add({ days: 1 }) }
 }

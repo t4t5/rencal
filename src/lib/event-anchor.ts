@@ -12,7 +12,7 @@ export const getEventAnchor = () => _anchor
 
 // Events that fill the whole row (>= 1 week long) push the popover
 // off-screen, so we anchor them at the clicking point
-export const pointAnchorFromClick = (e: MouseEvent<HTMLElement>): EventAnchor => {
+export const pointAnchorFromClick = (e: MouseEvent<Element>): EventAnchor => {
   const { top, height } = e.currentTarget.getBoundingClientRect()
   const x = e.clientX
   return {
