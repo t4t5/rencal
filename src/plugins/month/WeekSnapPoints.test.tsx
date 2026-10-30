@@ -2,9 +2,13 @@ import { Temporal } from "@js-temporal/polyfill"
 import { renderToStaticMarkup } from "react-dom/server"
 import { afterEach, describe, expect, it, vi } from "vitest"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-
 import { isMonthStartWeek, suppressSnapPointsForFrame, WeekSnapPoints } from "./WeekSnapPoints"
+import type { MonthDay } from "./useMonthGrid"
+
+// The real SDK pulls in the Tauri RPC proxy, which needs a window.
+vi.mock("@/sdk", () => ({
+  cn: (...classes: unknown[]) => classes.filter(Boolean).join(" "),
+}))
 
 function weeksFrom(start: string, count: number): MonthDay[][] {
   const first = Temporal.PlainDate.from(start)

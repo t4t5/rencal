@@ -1,7 +1,8 @@
 import type { Ref } from "react"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { cn, isMacOS } from "@/lib/utils"
+import { cn } from "@/sdk"
+
+import type { MonthDay } from "./useMonthGrid"
 
 /**
  * WebKit's Mac port folds CSS scroll snapping into trackpad momentum itself, so on macOS
@@ -9,7 +10,8 @@ import { cn, isMacOS } from "@/lib/utils"
  * scrolling as soon as snap points exist (https://bugs.webkit.org/show_bug.cgi?id=229037),
  * which is why Linux runs the JS fling in `weekSnapSession.ts`.
  */
-export const nativeWeekSnap = isMacOS
+export const nativeWeekSnap =
+  typeof navigator !== "undefined" && navigator.platform.startsWith("Mac")
 
 /** Weeks containing the 1st are hard stops, so a fling never skips past a month. */
 export const isMonthStartWeek = (week: MonthDay[]) => week.some((day) => day.date.day === 1)

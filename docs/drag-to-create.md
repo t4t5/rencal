@@ -37,7 +37,7 @@ midpoint of the selection.
 
 ## Month grid
 
-`src/components/main/month-view/useDragToCreateDays.ts` anchors the press to a
+`useDayDragToCreate` in `src/sdk/drag-to-create.ts` anchors the press to a
 `Temporal.PlainDate`. It clamps pointer coordinates into the scroll container
 and finds the current cell through its `data-drop-day` attribute, so the
 inclusive range can grow in either direction across rows and month boundaries.
@@ -51,7 +51,8 @@ event. Overlapping bars therefore move to their eventual positions during the
 drag and stay there after release. Only the true range ends are rounded. On
 release, the popover receives an all-day `[start, end)` range whose end is the
 day after the last selected date, and anchors to a snapshot of the segment
-nearest the pointer.
+nearest the pointer. The month plugin marks its segments with
+`createSelectionProps` (`src/plugins/month/DragToCreateSelection.tsx`).
 
 The week all-day lane could reuse this date-range controller in the future; its
 cells and headers already expose `data-drop-day`. It would need to opt its

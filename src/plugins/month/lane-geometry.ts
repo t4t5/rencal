@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react"
 
-import type { AllDaySpan } from "@/hooks/cal-events/all-day-lanes"
+import type { AllDaySpan } from "@/sdk"
 
 export const LANE_GAP = 3
 

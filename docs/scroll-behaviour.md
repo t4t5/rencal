@@ -27,7 +27,7 @@ resize, and the prepend correction) always target a row multiple, so they never
 fight the snap. There are two implementations, chosen once at startup by platform:
 
 **macOS: native CSS scroll snap.** The scroller gets `scroll-snap-type: y mandatory`
-and `src/components/main/month-view/WeekSnapPoints.tsx` renders an invisible 1px
+and `src/plugins/month/WeekSnapPoints.tsx` renders an invisible 1px
 `scroll-snap-align: start` sentinel per loaded week. The week rows are virtualized,
 so they cannot be the snap areas: a fling needs targets ahead of the rendered
 window. Weeks containing the 1st are `scroll-snap-stop: always`, so a fling never
@@ -56,7 +56,7 @@ so CSS snapping would kill every trackpad fling at finger lift.
 - Prepending months preserves the ongoing gesture or animation. Resizing cancels
   the animation and lets an active session settle using the new row height.
 
-Implementation: `src/components/main/month-view/weekSnapSession.ts` manages input
+Implementation: `src/plugins/month/weekSnapSession.ts` manages input
 and sessions; `weekSnapFling.ts` owns animation and tuning. Device detection and
 native fling takeover still need physical trackpad/mouse verification.
 

@@ -1,22 +1,15 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { memo, type PointerEvent as ReactPointerEvent } from "react"
 
-import { MonthAllDayEvent } from "@/components/events-blocks/month-view/AllDayEventBlock"
-import { MonthDayCell } from "@/components/main/month-view/Cell"
+import { type AllDaySpan, assignAllDayLanes, isoWeekNumber, useDisplaySettings } from "@/sdk"
 
-import { useCalendars } from "@/contexts/CalendarStateContext"
-import { useSettings } from "@/contexts/SettingsContext"
-
-import { assignAllDayLanes, type AllDaySpan } from "@/hooks/cal-events/all-day-lanes"
-import type { WeekLayout } from "@/hooks/cal-events/useMonthEventLayout"
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { isoWeekNumber } from "@/lib/event-time"
-import { getUserResponseStatus } from "@/lib/event-utils"
-
+import { MonthAllDayEvent } from "./AllDayEventBlock"
+import { MonthDayCell } from "./Cell"
 import { MonthDragToCreateSelection } from "./DragToCreateSelection"
 import { TopLeftDate } from "./TopLeftDate"
 import { reservedAllDayHeight } from "./lane-geometry"
+import type { WeekLayout } from "./useMonthEventLayout"
+import type { MonthDay } from "./useMonthGrid"
 
 const MAX_ALL_DAY_LANES = 3
 
@@ -46,32 +39,19 @@ function MonthBoundary({ col, showHorizontal = true }: { col: number; showHorizo
 export const MonthWeekRow = memo(function MonthWeekRow({
   weekDays,
   layout,
-  activeEventKey,
-  selectedEventKey,
   activeDateKey,
   onDayClick,
-  onEventClick,
-  draftEvent,
-  dimmed,
   createSelection,
-  createSelectionColor,
   startCreateDrag,
 }: {
   weekDays: MonthDay[]
   layout: WeekLayout
-  activeEventKey: string | null
-  selectedEventKey: string | null
   activeDateKey: string
   onDayClick: (date: Temporal.PlainDate) => void
-  onEventClick: (eventKey: string) => void
-  draftEvent: CalendarEvent | null
-  dimmed: boolean
   createSelection: AllDaySpan | null
-  createSelectionColor: string | null
   startCreateDrag: (day: Temporal.PlainDate, event: ReactPointerEvent<HTMLElement>) => void
 }) {
-  const { calendars } = useCalendars()
-  const { showWeekNumbers, firstDayOfWeek } = useSettings()
+  const { showWeekNumbers, firstDayOfWeek } = useDisplaySettings()
 
   // Pack the temporary selection exactly where the appended draft event will
   // be packed on release. Clone real items because lane assignment mutates.
@@ -122,7 +102,6 @@ export const MonthWeekRow = memo(function MonthWeekRow({
             key={day.dateKey}
             day={day}
             isActive={day.dateKey === activeDateKey}
-            dimmed={dimmed}
             onClick={() => onDayClick(day.date)}
             startCreateDrag={startCreateDrag}
           />
@@ -134,27 +113,14 @@ export const MonthWeekRow = memo(function MonthWeekRow({
         <MonthBoundary col={monthStartCol} showHorizontal={false} />
 
         {/* All-day events */}
-        {allDayEvents.map((item) => {
-          const key = eventKey(item.event)
-
-          return (
-            <MonthAllDayEvent
-              key={key}
-              item={item}
-              highlighted={key === activeEventKey || key === selectedEventKey}
-              rsvp={getUserResponseStatus(item.event, calendars)}
-              isDraft={item.event === draftEvent}
-              dimmed={dimmed}
-              onClick={() => onEventClick(key)}
-            />
-          )
-        })}
+        {allDayEvents.map((item) => (
+          <MonthAllDayEvent key={item.event.key} item={item} />
+        ))}
 
         {visibleCreateSelection && (
           <MonthDragToCreateSelection
             span={visibleCreateSelection}
             lane={visibleCreateSelection.lane}
-            calendarColor={createSelectionColor}
           />
         )}
 
@@ -176,13 +142,8 @@ export const MonthWeekRow = memo(function MonthWeekRow({
               timedEvents={layout.timedByCol[colIndex]}
               hiddenAllDayItems={hiddenAllDay}
               reservedAllDayHeight={reservedAllDayHeight(reservedLanes[colIndex])}
-              activeEventKey={activeEventKey}
-              selectedEventKey={selectedEventKey}
               isActiveDay={day.dateKey === activeDateKey}
               onClick={() => onDayClick(day.date)}
-              onEventClick={onEventClick}
-              draftEvent={draftEvent}
-              dimmed={dimmed}
               startCreateDrag={startCreateDrag}
             />
           )

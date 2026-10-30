@@ -1,7 +1,4 @@
-import { useSettings } from "@/contexts/SettingsContext"
-
-import type { FirstDayOfWeek } from "@/lib/event-time"
-import { cn } from "@/lib/utils"
+import { cn, type FirstDayOfWeek, useDisplaySettings, useIsDimmed } from "@/sdk"
 
 const WEEKDAY_LABELS: Record<FirstDayOfWeek, string[]> = {
   monday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -10,8 +7,9 @@ const WEEKDAY_LABELS: Record<FirstDayOfWeek, string[]> = {
 
 const isWeekendLabel = (label: string) => label === "Sat" || label === "Sun"
 
-export const WeekDayLabels = ({ dimmed }: { dimmed: boolean }) => {
-  const { firstDayOfWeek } = useSettings()
+export const WeekDayLabels = () => {
+  const { firstDayOfWeek } = useDisplaySettings()
+  const dimmed = useIsDimmed()
 
   return (
     <div data-slot="month-weekdays" className="grid grid-cols-7 border-b border-border">

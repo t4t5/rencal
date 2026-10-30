@@ -1,23 +1,23 @@
 import { Temporal } from "@js-temporal/polyfill"
 import type { PointerEvent as ReactPointerEvent } from "react"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
-import { formatMonth } from "@/lib/event-time"
-import { cn } from "@/lib/utils"
+import { cn, dropZoneProps, formatMonth, useIsDimmed } from "@/sdk"
+
+import type { MonthDay } from "./useMonthGrid"
 
 export function TopLeftDate({
   day,
   isActive,
-  dimmed,
   onClick,
   startCreateDrag,
 }: {
   day: MonthDay
   isActive: boolean
-  dimmed: boolean
   onClick: () => void
   startCreateDrag: (day: Temporal.PlainDate, event: ReactPointerEvent<HTMLElement>) => void
 }) {
+  const dimmed = useIsDimmed()
+
   return (
     <div
       data-slot="month-day-header"
@@ -30,8 +30,7 @@ export function TopLeftDate({
         day.isWeekend && "bg-weekend",
         isActive && "bg-selected text-selected-foreground",
       )}
-      data-drop-day={day.dateKey}
-      data-drop-zone="day"
+      {...dropZoneProps(day.date, "day")}
       onClick={onClick}
       onPointerDown={(event) => startCreateDrag(day.date, event)}
     >

@@ -13,8 +13,8 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
   //
   // 1. Header natural-language input (`isDrafting` + `text`): `setDraftEvent`
   //    fires on every keystroke. Defer the whole draft so the layout
-  //    pipelines downstream (useDayRangeLayout, useMonthEventLayout,
-  //    useGroupedEvents) don't recompute per keystroke and block the input.
+  //    pipelines downstream (the views' layouts, useGroupedEvents) don't
+  //    recompute per keystroke and block the input.
   //
   // 2. Popover open (`draftPopoverOpen`): the caller sets `draftEvent` and
   //    flips `draftPopoverOpen` in the same React batch. Deferring the whole

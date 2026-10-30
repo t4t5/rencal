@@ -1,9 +1,8 @@
 import type { ComponentType } from "react"
 
-import { MonthView } from "@/components/main/month-view/MonthView"
-
 import { SHORTCUTS, type ShortcutDef } from "@/lib/shortcuts"
 
+import { MonthView } from "@/plugins/month/MonthView"
 import { WeekView } from "@/plugins/week/WeekView"
 import { YearView } from "@/plugins/year/YearView"
 

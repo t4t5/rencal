@@ -9,7 +9,7 @@ import {
   useCalendars as useAppCalendars,
   useCalendarNavigation,
 } from "@/contexts/CalendarStateContext"
-import { useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
+import { useEventDrag, useEventDragHandle, useEventDragRole } from "@/contexts/EventDragContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { useEventsWithDraft } from "@/hooks/cal-events/useEventsWithDraft"
@@ -43,6 +43,7 @@ export {
   formatWeekday,
   getRelativeDayLabel,
   isAllDay,
+  isoWeekNumber,
   isSameDay,
   startOfWeek,
   toViewerZonedDateTime,
@@ -65,7 +66,13 @@ export { UntitledEventText } from "@/components/ui/untitled-event-text"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 export { ContextMenu, EventMenu, type MenuItem, Tooltip } from "./components"
-export { type TimedSelection, useTimedDragToCreate } from "./drag-to-create"
+export {
+  createSelectionProps,
+  type DaySelection,
+  type TimedSelection,
+  useDayDragToCreate,
+  useTimedDragToCreate,
+} from "./drag-to-create"
 
 /**
  * Events overlapping [start, end), filtered to the visible calendars, in start
@@ -143,12 +150,13 @@ export function useCalendars(): readonly Calendar[] {
 }
 
 /**
- * The user's time format and first day of the week. `loaded` is false until
- * renCal has read them at startup; until then they are the defaults.
+ * The user's time format, first day of the week and whether to number weeks
+ * (`isoWeekNumber`). `loaded` is false until renCal has read them at startup;
+ * until then they are the defaults.
  */
 export function useDisplaySettings() {
-  const { timeFormat, firstDayOfWeek, settingsLoaded } = useSettings()
-  return { timeFormat, firstDayOfWeek, loaded: settingsLoaded }
+  const { timeFormat, firstDayOfWeek, showWeekNumbers, settingsLoaded } = useSettings()
+  return { timeFormat, firstDayOfWeek, showWeekNumbers, loaded: settingsLoaded }
 }
 
 /** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
@@ -285,6 +293,14 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
  */
 export function dropZoneProps(date: Temporal.PlainDate, zone: DropZone) {
   return { "data-drop-day": formatDateKey(date), "data-drop-zone": zone } as const
+}
+
+/**
+ * Whether the user is dragging an event, so a view can hold off behaviour that
+ * would fight the drag's autoscroll, like scroll snapping.
+ */
+export function useIsDraggingEvent(): boolean {
+  return useEventDrag().drag !== null
 }
 
 /** Put on a view's scroll container so dragging an event near its edges scrolls it. */

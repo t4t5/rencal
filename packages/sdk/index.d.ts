@@ -27,6 +27,14 @@ export declare function epochDay(date: Temporal.PlainDate): number;
 export type FirstDayOfWeek = "monday" | "sunday";
 /** The day that begins the week containing the given date, per `firstDay`. */
 export declare function startOfWeek(date: Temporal.PlainDate, firstDay: FirstDayOfWeek): Temporal.PlainDate;
+/**
+ * ISO 8601 week number of the displayed week row containing the given date.
+ *
+ * ISO weeks run Monday–Sunday, so a Sunday-first row straddles two ISO weeks;
+ * number the row by its Thursday, which is ISO-correct for Monday-first rows
+ * and matches how other calendars label Sunday-first rows.
+ */
+export declare function isoWeekNumber(date: Temporal.PlainDate, firstDay: FirstDayOfWeek): number;
 /** App-level mirror of the RPC `TimeFormat` type. */
 export type TimeFormat = "24h" | "12h";
 type DatePartStyle = "short" | "long";
@@ -218,14 +226,18 @@ export declare function ContextMenu({ items, children, ...props }: ForwardedProp
 }): import("react/jsx-runtime").JSX.Element;
 /**
  * A tooltip on its only child, which must accept a ref and props. `disabled`
- * hides it, e.g. while the event is dragged or its menu is open.
+ * hides it, e.g. while the event is dragged or its menu is open. Pass `open`
+ * and `onOpenChange` to control it, e.g. to close it from a click inside.
+ * Clicks inside never reach the elements around the child.
  */
-export declare function Tooltip({ content, side, delay, disabled, className, children, ...props }: ForwardedProps & {
+export declare function Tooltip({ content, side, delay, disabled, open: openProp, onOpenChange, className, children, ...props }: ForwardedProps & {
 	content: React$1.ReactNode;
 	side?: "top" | "right" | "bottom" | "left";
 	/** Milliseconds the pointer rests on the child before the tooltip shows. */
 	delay?: number;
 	disabled?: boolean;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 	className?: string;
 	children: React$1.ReactElement;
 }): import("react/jsx-runtime").JSX.Element;
@@ -245,6 +257,33 @@ export interface TimedSelection {
  */
 export declare function useTimedDragToCreate(scrollContainerRef: React$1.RefObject<HTMLElement | null>): {
 	selection: TimedSelection | null;
+	startCreateDrag: (day: Temporal.PlainDate, event: React$1.ReactPointerEvent<HTMLElement>) => void;
+};
+/** An inclusive range of days being drawn to create an all-day event. */
+export interface DaySelection {
+	readonly start: Temporal.PlainDate;
+	readonly end: Temporal.PlainDate;
+}
+/**
+ * Marks an element that draws part of a `DaySelection`; releasing the drag opens
+ * the new-event popover beside the part nearest the pointer, or at the pointer
+ * for parts too wide for it to fit beside, like a whole week.
+ */
+export declare function createSelectionProps({ anchor }: {
+	anchor: "element" | "pointer";
+}): {
+	readonly "data-create-selection": "pointer" | "element";
+};
+/**
+ * Drag-to-create across the days of a grid, which may span several rows. Days
+ * are found by their `dropZoneProps`. Call `startCreateDrag` from a day's
+ * `onPointerDown`: only presses on the day itself start a drag, so events keep
+ * their own. `selection` is the range to draw while dragging, with
+ * `createSelectionProps` on what draws it; releasing opens the new-event
+ * popover for it. Dragging near an edge scrolls `scrollContainerRef`.
+ */
+export declare function useDayDragToCreate(scrollContainerRef: React$1.RefObject<HTMLElement | null>): {
+	selection: DaySelection | null;
 	startCreateDrag: (day: Temporal.PlainDate, event: React$1.ReactPointerEvent<HTMLElement>) => void;
 };
 /**
@@ -276,12 +315,14 @@ export interface Calendar {
 /** Every calendar, in the user's order. */
 export declare function useCalendars(): readonly Calendar[];
 /**
- * The user's time format and first day of the week. `loaded` is false until
- * renCal has read them at startup; until then they are the defaults.
+ * The user's time format, first day of the week and whether to number weeks
+ * (`isoWeekNumber`). `loaded` is false until renCal has read them at startup;
+ * until then they are the defaults.
  */
 export declare function useDisplaySettings(): {
 	timeFormat: TimeFormat;
 	firstDayOfWeek: FirstDayOfWeek;
+	showWeekNumbers: boolean;
 	loaded: boolean;
 };
 /** The open event. `toggle` opens the event popover next to `anchor`, or closes it. */
@@ -361,6 +402,11 @@ export declare function dropZoneProps(date: Temporal.PlainDate, zone: DropZone):
 	readonly "data-drop-day": string;
 	readonly "data-drop-zone": DropZone;
 };
+/**
+ * Whether the user is dragging an event, so a view can hold off behaviour that
+ * would fight the drag's autoscroll, like scroll snapping.
+ */
+export declare function useIsDraggingEvent(): boolean;
 /** Put on a view's scroll container so dragging an event near its edges scrolls it. */
 export declare const dragScrollProps: {
 	readonly "data-drag-scroll": true;

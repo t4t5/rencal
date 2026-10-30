@@ -13,7 +13,7 @@ import {
 
 // The real views pull in the Tauri RPC proxy, which needs a window.
 vi.mock("@/plugins/week/WeekView", () => ({ WeekView: () => null }))
-vi.mock("@/components/main/month-view/MonthView", () => ({ MonthView: () => null }))
+vi.mock("@/plugins/month/MonthView", () => ({ MonthView: () => null }))
 vi.mock("@/plugins/year/YearView", () => ({ YearView: () => null }))
 
 const view = (id: string, shortcut?: string): ViewDescriptor => ({

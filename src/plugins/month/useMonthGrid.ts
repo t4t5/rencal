@@ -1,10 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useMemo } from "react"
 
-import { useSettings } from "@/contexts/SettingsContext"
-
-import { useToday } from "@/hooks/useToday"
-import { formatDateKey, startOfWeek, type FirstDayOfWeek } from "@/lib/event-time"
+import { type FirstDayOfWeek, startOfWeek, useDisplaySettings, useToday } from "@/sdk"
 
 export type MonthDay = {
   date: Temporal.PlainDate
@@ -16,7 +13,7 @@ export type MonthDay = {
 export function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): MonthDay {
   return {
     date,
-    dateKey: formatDateKey(date),
+    dateKey: date.toString(),
     isToday: date.equals(today),
     isWeekend: date.dayOfWeek === 6 || date.dayOfWeek === 7,
   }
@@ -39,7 +36,7 @@ export function monthGridBounds(
  */
 export function useMonthGrid(rangeStart: Temporal.PlainDate, rangeEnd: Temporal.PlainDate) {
   const today = useToday()
-  const { firstDayOfWeek } = useSettings()
+  const { firstDayOfWeek } = useDisplaySettings()
 
   return useMemo(() => {
     const { gridStart, gridEnd } = monthGridBounds(rangeStart, rangeEnd, firstDayOfWeek)

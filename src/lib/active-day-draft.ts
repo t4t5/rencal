@@ -11,8 +11,8 @@ export const ACTIVE_DAY_EL_ID = "active-day"
  * The end time of `date`'s last timed event, or null if it has none. A new event
  * on that day starts here so it follows the day's existing events. If that end
  * is midnight on the next day, fall back to 08:00 on the selected day instead.
- * Shared by the month "Create event" action and the "add event on active day"
- * shortcut.
+ * Used by the "add event on active day" shortcut; the month view does the
+ * same for its "Create event" action.
  */
 export function getLastEventEndTime(
   date: Temporal.PlainDate,
