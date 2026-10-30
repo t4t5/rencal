@@ -1,5 +1,5 @@
 // The host surface plugins may import. ESLint bans every other `@/` import under
-// src/plugins/**, so anything exported here is a contract plugins depend on.
+// src/views/builtin/**, so anything exported here is a contract plugins depend on.
 import { Temporal } from "@js-temporal/polyfill"
 import { type MouseEvent, type RefObject, useCallback, useMemo } from "react"
 

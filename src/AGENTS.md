@@ -19,7 +19,7 @@
 ## Plugins
 
 - Views are registered in `src/views/manifest.ts` and read through `useViews()`; never hardcode the view list.
-- Built-in plugins live in `src/plugins/<id>/` (week, month, year). They import the host only through `@/sdk`, plus `./Sibling` files; ESLint enforces this. Grow `src/sdk/` deliberately: every export is a contract third-party plugins will rely on.
+- Built-in plugins live in `src/views/builtin/<id>/` (week, month, year). They import the host only through `@/sdk`, plus `./Sibling` files; ESLint enforces this. Grow `src/sdk/` deliberately: every export is a contract third-party plugins will rely on.
 - Installed view plugins are registered by `src/views/ViewRegistry.tsx`. Their scripts import `@rencomputer/rencal-sdk`, `react`, `react-dom`, `react/jsx-runtime` and `@js-temporal/polyfill`, which `src/views/plugin-modules.ts` links to the host's own modules. The list lives in `src/views/shared-modules.ts`; `packages/sdk/build.js` (the `rencal-sdk` build command) leaves those modules out of plugin bundles. Run `just sdk` after changing `src/sdk/` to regenerate the types in `packages/sdk/`, and bump `packages/sdk/package.json` before `just publish-sdk`. Board lives in its own repository (`rencal-view-board`) as the reference view plugin.
 
 ## Event date/time

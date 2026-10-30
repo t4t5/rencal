@@ -16,7 +16,7 @@ Two things move independently and must never be confused:
   at must not jump.
 - The scroll container holds a fixed track of about ten years of week rows either side
   of the date the grid opened on, virtualized so only the rows near the viewport render
-  (`src/plugins/month/useInfiniteMonths.tsx`). Loading more weeks therefore never changes
+  (`src/views/builtin/month/useInfiniteMonths.tsx`). Loading more weeks therefore never changes
   the scroll position. Prepending rows and correcting `scrollTop` instead lost the
   correction while WebKitGTK was still animating a wheel scroll, showing the grid two
   months away (or blank) for several frames.
@@ -32,7 +32,7 @@ Programmatic scrolls (the initial anchor, jump navigation and the row-height res
 resize) always target a row multiple, so they never fight the snap. There are two implementations, chosen once at startup by platform:
 
 **macOS: native CSS scroll snap.** The scroller gets `scroll-snap-type: y mandatory`
-and `src/plugins/month/WeekSnapPoints.tsx` renders an invisible 1px
+and `src/views/builtin/month/WeekSnapPoints.tsx` renders an invisible 1px
 `scroll-snap-align: start` sentinel per loaded week. The week rows are virtualized,
 so they cannot be the snap areas: a fling needs targets ahead of the rendered
 window. Weeks containing the 1st are `scroll-snap-stop: always`, so a fling never
@@ -58,7 +58,7 @@ so CSS snapping would kill every trackpad fling at finger lift.
   animation alone. Resizing cancels the animation and lets an active session settle
   using the new row height.
 
-Implementation: `src/plugins/month/weekSnapSession.ts` manages input
+Implementation: `src/views/builtin/month/weekSnapSession.ts` manages input
 and sessions; `weekSnapFling.ts` owns animation and tuning. Device detection and
 native fling takeover still need physical trackpad/mouse verification.
 
@@ -95,7 +95,7 @@ user scrolls.
   content the user was looking at must not jump.
 - The scroll container holds a fixed track of about ten years either side of the date
   the view opened on, and the rendered days sit at their own offset on it
-  (`src/plugins/week/useInfiniteDays.ts`). Prepending days therefore never changes the
+  (`src/views/builtin/week/useInfiniteDays.ts`). Prepending days therefore never changes the
   scroll position. Correcting `scrollLeft` after a prepend let WebKitGTK show the old
   content at the new offset for a frame or two, a week away from where the user was.
 - Event loading follows the visible day range but is best-effort: it must never block
