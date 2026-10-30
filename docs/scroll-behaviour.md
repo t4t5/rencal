@@ -91,6 +91,11 @@ user scrolls.
   left or right edge, earlier/later days are added.
 - When earlier days are prepended at the left, the viewport stays visually fixed — the
   content the user was looking at must not jump.
+- The scroll container holds a fixed track of about ten years either side of the date
+  the view opened on, and the rendered days sit at their own offset on it
+  (`src/plugins/week/useInfiniteDays.ts`). Prepending days therefore never changes the
+  scroll position. Correcting `scrollLeft` after a prepend let WebKitGTK show the old
+  content at the new offset for a frame or two, a week away from where the user was.
 - Event loading follows the visible day range but is best-effort: it must never block
   scrolling. The strip stays fully scrollable while events load, when no calendars are
   visible, and when the calendar is empty.
@@ -107,7 +112,8 @@ user scrolls.
 
 - Deliberately jumping to a date sets the active date and, if that day's column is not
   already fully visible, smooth-scrolls it into view. If it is already visible, the
-  viewport does not move.
+  viewport does not move. A target more than three viewports away, or off the track,
+  is jumped to without animation.
 - This visibility check also runs when the target date is already active, so "t"
   brings today back into view after scrolling away without changing the selection.
 - A jump changes the active date directly; scrolling into view does not select a day.

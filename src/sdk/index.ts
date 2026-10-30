@@ -52,7 +52,6 @@ export { atTime } from "@/lib/event-time"
 export { useToday } from "@/hooks/useToday"
 export { useViewerTzid } from "@/hooks/useViewerTzid"
 export { useIsDimmed } from "@/hooks/useIsDimmed"
-export { useScrollBoundary } from "@/hooks/useScrollBoundary"
 export {
   type AllDaySpan,
   assignAllDayLanes,

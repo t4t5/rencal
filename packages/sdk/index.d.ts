@@ -137,21 +137,6 @@ export declare function useViewerTzid(): string;
  * Consumers use it to fade the main view so the draft stands out.
  */
 export declare function useIsDimmed(): boolean;
-type Axis = "x" | "y" | "both";
-type UseScrollBoundaryProps = {
-	scrollContainerRef: React$1.RefObject<HTMLDivElement | null>;
-	threshold?: number;
-	scrollAwayThreshold?: number;
-	throttleMs?: number;
-	axis?: Axis;
-	onNearTop?: () => void;
-	onNearBottom?: () => void;
-	onNearLeft?: () => void;
-	onNearRight?: () => void;
-	checkOnMount?: boolean;
-	requireScrollAwayBeforeBoundary?: boolean;
-};
-export declare const useScrollBoundary: ({ scrollContainerRef, threshold, scrollAwayThreshold, throttleMs, axis, onNearTop, onNearBottom, onNearLeft, onNearRight, checkOnMount, requireScrollAwayBeforeBoundary, }: UseScrollBoundaryProps) => void;
 export type AllDaySpan = {
 	startCol: number;
 	endCol: number;
