@@ -11,8 +11,8 @@ import {
   type TimeFormat,
   useDayGrid,
   useDisplaySettings,
-  useIsDimmed,
   useNavigation,
+  useOnNavigate,
   useViewerTzid,
 } from "@/sdk"
 
@@ -44,11 +44,10 @@ export function WeekTimeGrid({
   layout: { allDayBars, allDayLaneCount, timedByDay },
   scrollContainerRef,
 }: WeekTimeGridProps) {
-  const { activeDate, goToDate, navigationVersion } = useNavigation()
-  const { timeFormat, firstDayOfWeek, loaded: settingsLoaded } = useDisplaySettings()
+  const { activeDate, goToDate } = useNavigation()
+  const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
-  const dimmed = useIsDimmed()
 
   const activeDateKey = activeDate.toString()
   const N = days.length
@@ -71,11 +70,10 @@ export function WeekTimeGrid({
     }
   }, [dayWidth, scrollContainerRef])
 
-  // Initial scroll (once dayWidth is measured and settings are loaded, since week
-  // alignment depends on firstDayOfWeek): scrollTop to current time / 08:00,
+  // Initial scroll (once dayWidth is measured): scrollTop to current time / 08:00,
   // scrollLeft to the first day of activeDate's week.
   useLayoutEffect(() => {
-    if (!dayWidthMeasured || !settingsLoaded || didInitialScrollRef.current) return
+    if (!dayWidthMeasured || didInitialScrollRef.current) return
     const el = scrollContainerRef.current
     if (!el) return
 
@@ -88,31 +86,38 @@ export function WeekTimeGrid({
     didInitialScrollRef.current = true
   })
 
-  // Recheck visibility on date changes and deliberate jumps, including to the same date.
-  // Only those: re-running on scroll-driven growth would snap back to activeDate and
-  // break free pan. A new track, or a target too far away to scroll through smoothly, jumps.
-  const dayWidthRef = useRef(dayWidth)
-  dayWidthRef.current = dayWidth
-  const previousOriginRef = useRef(origin)
-  useLayoutEffect(() => {
-    const originChanged = !previousOriginRef.current.equals(origin)
-    previousOriginRef.current = origin
+  // Bring activeDate's column into view if it isn't. A new track, or a target too far
+  // away to scroll through smoothly, jumps.
+  const revealedRef = useRef({ dateKey: activeDateKey, origin })
+  const revealActiveDate = () => {
+    const originChanged = !revealedRef.current.origin.equals(origin)
+    revealedRef.current = { dateKey: activeDateKey, origin }
     if (!didInitialScrollRef.current) return
     const el = scrollContainerRef.current
     if (!el) return
-    const width = dayWidthRef.current
 
-    const columnLeft = GUTTER_WIDTH + (epochDay(activeDate) - epochDay(origin)) * width
-    const columnRight = columnLeft + width
+    const columnLeft = GUTTER_WIDTH + (epochDay(activeDate) - epochDay(origin)) * dayWidth
+    const columnRight = columnLeft + dayWidth
     const viewportLeft = el.scrollLeft + GUTTER_WIDTH
     const viewportRight = el.scrollLeft + el.clientWidth
 
     if (originChanged || columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
-      const left = weekScrollLeft(activeDate, width)
+      const left = weekScrollLeft(activeDate, dayWidth)
       const far = Math.abs(left - el.scrollLeft) > 3 * el.clientWidth
       el.scrollTo({ left, behavior: originChanged || far ? "instant" : "smooth" })
     }
-  }, [activeDateKey, navigationVersion, origin, scrollContainerRef])
+  }
+
+  // Deliberate jumps, even to the date already selected.
+  useOnNavigate(revealActiveDate)
+
+  // Date changes from elsewhere too, like the agenda's scrolling, and a new track. Not
+  // scroll-driven growth: that would snap back to activeDate and break free pan.
+  useLayoutEffect(() => {
+    const revealed = revealedRef.current
+    if (revealed.dateKey === activeDateKey && revealed.origin.equals(origin)) return
+    revealActiveDate()
+  })
 
   const trackWidth = GUTTER_WIDTH + TRACK_DAYS * dayWidth
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
@@ -151,12 +156,7 @@ export function WeekTimeGrid({
               className="sticky left-0 z-30 bg-background border-r border-b border-border"
               style={{ gridColumn: 1, gridRow: "1 / -1" }}
             />
-            <DayHeaders
-              days={days}
-              activeDateKey={activeDateKey}
-              dimmed={dimmed}
-              onDayClick={goToDate}
-            />
+            <DayHeaders days={days} activeDateKey={activeDateKey} onDayClick={goToDate} />
             {hasAllDay && (
               <>
                 {/* Per-day backgrounds for the all-day region */}
@@ -254,12 +254,10 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 const DayHeaders = ({
   days,
   activeDateKey,
-  dimmed,
   onDayClick,
 }: {
   days: WeekDay[]
   activeDateKey: string
-  dimmed: boolean
   onDayClick: (date: Temporal.PlainDate) => void
 }) => {
   return days.map((day) => (
@@ -288,9 +286,9 @@ const DayHeaders = ({
         data-slot="week-day-number"
         data-today={day.isToday || undefined}
         className={cn(
-          "text-xs font-medium w-7 h-7 flex items-center justify-center rounded-circle",
+          // Fades while the user types a new event in the header.
+          "text-xs font-medium w-7 h-7 flex items-center justify-center rounded-circle in-data-dimmed:opacity-50",
           day.isToday && "bg-today text-today-foreground",
-          dimmed && "opacity-50",
         )}
       >
         {day.date.day}

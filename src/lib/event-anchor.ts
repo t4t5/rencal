@@ -1,37 +1,48 @@
-import type { MouseEvent } from "react"
+/**
+ * What an event or new-event popover opens beside. `pointerX` is where the
+ * click landed on it, for anchors wider than the popover.
+ */
+export type PopoverAnchor = { getBoundingClientRect: () => DOMRect; pointerX?: number }
 
-type EventAnchor = { getBoundingClientRect: () => DOMRect }
+let _anchor: PopoverAnchor | null = null
 
-let _anchor: EventAnchor | null = null
-
-export const setEventAnchor = (anchor: EventAnchor | null) => {
+export const setEventAnchor = (anchor: PopoverAnchor | null) => {
   _anchor = anchor
 }
 
 export const getEventAnchor = () => _anchor
 
-// Events that fill the whole row (>= 1 week long) push the popover
-// off-screen, so we anchor them at the clicking point
-export const pointAnchorFromClick = (e: MouseEvent<Element>): EventAnchor => {
-  const { top, height } = e.currentTarget.getBoundingClientRect()
-  const x = e.clientX
-  return {
-    getBoundingClientRect: () => new DOMRect(x, top, 0, height),
-  }
-}
+/** `el`, clicked at `pointerX`. */
+export const elementAnchor = (el: Element, pointerX?: number): PopoverAnchor => ({
+  getBoundingClientRect: () => el.getBoundingClientRect(),
+  pointerX,
+})
 
 export const EVENT_POPOVER_WIDTH = 350
 export const EVENT_POPOVER_GAP = 8
 export const EVENT_POPOVER_PADDING = 16
 
-// Anchors too wide for the popover to fit on either side (e.g. multi-day
-// events) push it off-screen, so collapse them to a point it fits next to
-export const fitPopoverAnchor = (rect: DOMRect, viewportWidth = window.innerWidth): DOMRect => {
-  const needed = EVENT_POPOVER_GAP + EVENT_POPOVER_WIDTH + EVENT_POPOVER_PADDING
-  const fitsRight = rect.right + needed <= viewportWidth
-  const fitsLeft = rect.left - needed >= 0
-  if (fitsRight || fitsLeft) return rect
+/**
+ * Where the popover goes for an anchor at `rect`. Anchors wider than the
+ * popover, like an event spanning a week, collapse to the click so it opens
+ * where the user looked; anchors with no room on either side collapse to a
+ * point it fits next to.
+ */
+export const fitPopoverAnchor = (
+  rect: DOMRect,
+  {
+    pointerX,
+    viewportWidth = window.innerWidth,
+  }: { pointerX?: number; viewportWidth?: number } = {},
+): DOMRect => {
+  const point = (x: number) =>
+    new DOMRect(Math.min(Math.max(x, rect.left), rect.right), rect.top, 0, rect.height)
+  const anchor = pointerX !== undefined && rect.width > EVENT_POPOVER_WIDTH ? point(pointerX) : rect
 
-  const x = Math.min(Math.max(viewportWidth - needed, rect.left), rect.right)
-  return new DOMRect(x, rect.top, 0, rect.height)
+  const needed = EVENT_POPOVER_GAP + EVENT_POPOVER_WIDTH + EVENT_POPOVER_PADDING
+  const fitsRight = anchor.right + needed <= viewportWidth
+  const fitsLeft = anchor.left - needed >= 0
+  if (fitsRight || fitsLeft) return anchor
+
+  return point(Math.min(Math.max(viewportWidth - needed, rect.left), rect.right))
 }

@@ -1,11 +1,4 @@
-import {
-  type AllDayBar,
-  type CalendarEvent,
-  cn,
-  UntitledEventText,
-  useEventProps,
-  useEventState,
-} from "@/sdk"
+import { type AllDayBar, type CalendarEvent, cn, UntitledEventText, useEventProps } from "@/sdk"
 
 import { GUTTER_WIDTH } from "./grid"
 
@@ -21,17 +14,15 @@ export function WeekAllDayBar({
   rowOffset: number
 }) {
   const event = bar.item
-  const fillsRow = bar.span >= 7
-  const eventProps = useEventProps(event, {
-    drag: "pill",
-    anchor: fillsRow ? "pointer" : "element",
-  })
-  const { drag } = useEventState(event)
+  const eventProps = useEventProps(event, { drag: "pill" })
 
   return (
     <div
       data-slot="week-all-day-lane"
-      className={cn("p-0.5 py-px pr-[3px]", drag === "preview" && "pointer-events-none")}
+      className={cn(
+        "p-0.5 py-px pr-[3px]",
+        event.transient === "drag-preview" && "pointer-events-none",
+      )}
       style={{
         gridColumn: `${bar.column + 1 + colOffset} / span ${bar.span}`,
         gridRow: bar.lane + 1 + rowOffset,

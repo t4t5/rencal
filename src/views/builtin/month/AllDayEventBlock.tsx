@@ -4,10 +4,7 @@ import { allDayBarStyle } from "./lane-geometry"
 
 export function MonthAllDayEvent({ bar }: { bar: AllDayBar<CalendarEvent> }) {
   const event = bar.item
-  const eventProps = useEventProps(event, {
-    drag: "pill",
-    anchor: bar.span === 7 ? "pointer" : "element",
-  })
+  const eventProps = useEventProps(event, { drag: "pill" })
 
   return (
     <div

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest"
 
 import type { Calendar } from "@/lib/api"
 import { type EventAttendee, rpcToCalendarEvent, withDates } from "@/lib/cal-events"
+import { makeDragPreview } from "@/lib/event-drag"
 import { atTime } from "@/lib/event-time"
 
 import { eventsByDay, toAppEvent, toPluginEvents } from "./events"
@@ -64,8 +65,17 @@ describe("toPluginEvents", () => {
       status: "confirmed",
       availability: "busy",
       rsvp: null,
+      transient: null,
     })
     expect(second.key).toBe("work::later")
+  })
+
+  it("marks the draft and drag previews as transient", () => {
+    const draft = { ...trip, id: "" }
+    const preview = makeDragPreview(trip, { start: trip.start, end: trip.end })
+
+    expect(toPluginEvents([draft], [work])[0].transient).toBe("draft")
+    expect(toPluginEvents([preview], [work])[0].transient).toBe("drag-preview")
   })
 
   it("keeps each event's identity and maps it back to the app event", () => {

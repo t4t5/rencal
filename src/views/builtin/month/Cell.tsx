@@ -1,4 +1,4 @@
-import { type RefObject, useRef, useState } from "react"
+import { useState } from "react"
 
 import {
   type CalendarEvent,
@@ -69,7 +69,6 @@ export function MonthDayCell({
 /** "+n more" label whose tooltip lists the events that didn't fit in the cell. */
 function HiddenEventsLabel({ events }: { events: CalendarEvent[] }) {
   const [open, setOpen] = useState(false)
-  const labelRef = useRef<HTMLDivElement>(null)
   const rows = events.length > MAX_TOOLTIP_ROWS ? events.slice(0, MAX_TOOLTIP_ROWS - 1) : events
   const rest = events.length - rows.length
 
@@ -83,21 +82,13 @@ function HiddenEventsLabel({ events }: { events: CalendarEvent[] }) {
       content={
         <>
           {rows.map((event) => (
-            <HiddenEventRow
-              key={event.key}
-              event={event}
-              labelRef={labelRef}
-              onOpen={() => setOpen(false)}
-            />
+            <HiddenEventRow key={event.key} event={event} onOpen={() => setOpen(false)} />
           ))}
           {rest > 0 && <span className="text-2xs opacity-70 px-1.5">and {rest} more</span>}
         </>
       }
     >
-      <div
-        ref={labelRef}
-        className="text-xs text-muted-foreground px-0.5 truncate shrink-0 self-start hover:text-foreground"
-      >
+      <div className="text-xs text-muted-foreground px-0.5 truncate shrink-0 self-start hover:text-foreground">
         +{events.length} more
       </div>
     </Tooltip>
@@ -105,17 +96,9 @@ function HiddenEventsLabel({ events }: { events: CalendarEvent[] }) {
 }
 
 /** A plain row, which unmounts when the tooltip closes: no drag or context menu. */
-function HiddenEventRow({
-  event,
-  labelRef,
-  onOpen,
-}: {
-  event: CalendarEvent
-  labelRef: RefObject<HTMLDivElement | null>
-  onOpen: () => void
-}) {
-  // Anchor to the label: the row unmounts once the tooltip closes.
-  const eventProps = useEventProps(event, { anchor: labelRef })
+function HiddenEventRow({ event, onOpen }: { event: CalendarEvent; onOpen: () => void }) {
+  // In the tooltip, the popover opens beside the "+n more" label.
+  const eventProps = useEventProps(event)
   const { onClick } = eventProps
   const spanning = isSpanning(event)
 

@@ -31,7 +31,8 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
   const { timeFormat } = useDisplaySettings()
   // The floating copy keeps this block's size so it reads as the block being lifted.
   const eventProps = useEventProps(event, { drag: "block" })
-  const { draft, drag, menuOpen } = useEventState(event)
+  const { dragging, menuOpen } = useEventState(event)
+  const draft = event.transient === "draft"
 
   const mode = displayModeFor(event)
   const isDashed = event.rsvp === "needs-action" || event.rsvp === "declined"
@@ -46,7 +47,7 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
       side="right"
       className="max-w-64 flex-col items-start gap-0.5"
       // Stay out of the way while the event is being dragged or its menu is open.
-      disabled={draft || drag !== null || menuOpen}
+      disabled={event.transient !== null || dragging || menuOpen}
       content={
         <>
           <span className="font-medium wrap-break-word">{summary}</span>
@@ -68,7 +69,7 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
           ...weekEventBox(block.top, block.height),
           ...overlapBox(block),
           // Overlaps paint in layout order; lift the preview above them so its ring stays visible.
-          zIndex: drag === "preview" ? 10 : undefined,
+          zIndex: event.transient === "drag-preview" ? 10 : undefined,
           ...eventProps.style,
         }}
       >

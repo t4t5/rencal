@@ -393,6 +393,8 @@ and control height can change without a fixed viewport-height offset.
 Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `main-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
+  `main-viewport` carries `data-dimmed` while the user types a new event in the
+  header, when views fade their day numbers and weekday labels;
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
   `minical-event-dots`, plus the date-grid slots `calendar-grid` (the day
   table), `calendar-weekday`, and `calendar-day`, which the date picker shares.

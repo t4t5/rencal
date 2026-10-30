@@ -1,4 +1,4 @@
-import { cn, type FirstDayOfWeek, useDisplaySettings, useIsDimmed } from "@/sdk"
+import { cn, type FirstDayOfWeek, useDisplaySettings } from "@/sdk"
 
 const WEEKDAY_LABELS: Record<FirstDayOfWeek, string[]> = {
   monday: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
@@ -9,7 +9,6 @@ const isWeekendLabel = (label: string) => label === "Sat" || label === "Sun"
 
 export const WeekDayLabels = () => {
   const { firstDayOfWeek } = useDisplaySettings()
-  const dimmed = useIsDimmed()
 
   return (
     <div data-slot="month-weekdays" className="grid grid-cols-7 border-b border-border">
@@ -20,9 +19,9 @@ export const WeekDayLabels = () => {
           data-weekend={isWeekendLabel(label) || undefined}
           key={label}
           className={cn(
-            "text-2xs text-muted-foreground py-2 text-center font-medium uppercase",
+            // Fades while the user types a new event in the header.
+            "text-2xs text-muted-foreground py-2 text-center font-medium uppercase in-data-dimmed:opacity-50",
             isWeekendLabel(label) && "bg-weekend",
-            dimmed && "opacity-50",
           )}
         >
           {label}

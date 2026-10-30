@@ -7,11 +7,11 @@ import { useDeleteEvent } from "@/contexts/DeleteEventContext"
 import { useDuplicateEvent } from "@/contexts/DuplicateEventContext"
 
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
-import { setEventAnchor } from "@/lib/event-anchor"
+import { type PopoverAnchor, setEventAnchor } from "@/lib/event-anchor"
 import { isEventReadonly } from "@/lib/event-utils"
 
 /** The context menu's items for `event`; popovers they open sit beside `anchor`. */
-export function EventMenuItems({ event, anchor }: { event: CalendarEvent; anchor: HTMLElement }) {
+export function EventMenuItems({ event, anchor }: { event: CalendarEvent; anchor: PopoverAnchor }) {
   const { setActiveEventKey } = useCalEvents()
   const { calendars } = useCalendars()
   const { canCreate } = useCreateEventGate()

@@ -18,6 +18,7 @@ import {
   useDayGrid,
   useDisplaySettings,
   useNavigation,
+  useOnNavigate,
   useToday,
 } from "@/sdk"
 
@@ -56,7 +57,7 @@ export function MonthGrid({
   rowHeight: number
   scrollRef: RefObject<HTMLDivElement | null>
 }) {
-  const { activeDate, goToDate, navigationVersion } = useNavigation()
+  const { activeDate, goToDate } = useNavigation()
   const { firstDayOfWeek } = useDisplaySettings()
   const today = useToday()
   const activeDateKey = activeDate.toString()
@@ -159,14 +160,9 @@ export function MonthGrid({
     }
   }, [virtualizer, rowHeight])
 
-  // Scrolls that only move the active date (the agenda's) don't change the version.
-  const seenNavigationVersion = useRef(navigationVersion)
-
-  // During explicit navigation, scroll the active week fully into view if needed. A jump
-  // off the track starts a new one, so this also runs when the origin changes.
-  useEffect(() => {
-    if (navigationVersion === seenNavigationVersion.current) return
-    seenNavigationVersion.current = navigationVersion
+  // During explicit navigation, scroll the active week fully into view if needed. Scrolls
+  // that only move the active date (the agenda's) aren't navigation and leave it be.
+  useOnNavigate((date) => {
     navigatingUntil.current = Date.now() + NAVIGATION_SETTLE_MS
     snapSessionRef.current?.cancel()
 
@@ -179,14 +175,14 @@ export function MonthGrid({
 
     if (!el) return
 
-    const weekIndex = trackIndex(activeDate, origin, firstDayOfWeek)
+    const weekIndex = trackIndex(date, origin, firstDayOfWeek)
     const weekStart = weekIndex * rowHeight
     if (weekStart >= el.scrollTop && weekStart + rowHeight <= el.scrollTop + el.clientHeight) {
       return
     }
 
     virtualizer.scrollToIndex(weekIndex, { align: "start" })
-  }, [navigationVersion, activeDate, origin, firstDayOfWeek, rowHeight, virtualizer, scrollRef])
+  })
 
   return (
     <div

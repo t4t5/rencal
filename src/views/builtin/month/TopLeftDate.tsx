@@ -1,4 +1,4 @@
-import { cn, dayProps, formatMonth, useIsDimmed } from "@/sdk"
+import { cn, dayProps, formatMonth } from "@/sdk"
 
 import type { MonthDay } from "./useMonthGrid"
 
@@ -11,8 +11,6 @@ export function TopLeftDate({
   isActive: boolean
   onClick: () => void
 }) {
-  const dimmed = useIsDimmed()
-
   return (
     <div
       data-slot="month-day-header"
@@ -37,10 +35,10 @@ export function TopLeftDate({
         data-slot="month-day-number"
         data-today={day.isToday || undefined}
         className={cn(
-          "pointer-events-none text-xs w-5 h-5 flex items-center justify-center",
+          // Fades while the user types a new event in the header.
+          "pointer-events-none text-xs w-5 h-5 flex items-center justify-center in-data-dimmed:opacity-50",
           day.isToday && "bg-today text-today-foreground rounded-circle",
           isActive && !day.isToday && "bg-selected text-selected-foreground rounded-circle",
-          dimmed && "opacity-50",
         )}
       >
         {day.date.day}

@@ -30,7 +30,7 @@ export function PopoverNewEvent() {
     const anchor = getDraftAnchor()
     if (!anchor) return
 
-    const rect = fitPopoverAnchor(anchor.getBoundingClientRect())
+    const rect = fitPopoverAnchor(anchor.getBoundingClientRect(), { pointerX: anchor.pointerX })
     setPos({ top: rect.top + rect.height / 2, left: rect.left, width: rect.width })
   }, [draftPopoverOpen])
 

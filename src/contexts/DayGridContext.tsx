@@ -24,6 +24,7 @@ import { getLastEventEndTime } from "@/lib/active-day-draft"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { closestDay, type DayElement } from "@/lib/day-grid"
 import { type CreateSelection, minutesAtY } from "@/lib/drag-to-create"
+import { elementAnchor, type PopoverAnchor } from "@/lib/event-anchor"
 import { getCreateSelectionStyle } from "@/lib/event-styles"
 import { atTime } from "@/lib/event-time"
 import { setMenuEventKey } from "@/lib/menu-event"
@@ -38,7 +39,7 @@ export function useCreateSelection(): CreateSelection | null {
 }
 
 type MenuTarget =
-  | { kind: "event"; event: CalendarEvent; el: HTMLElement }
+  | { kind: "event"; event: CalendarEvent; anchor: PopoverAnchor }
   | { kind: "day"; day: DayElement; y: number }
 
 const isOnEvent = (target: EventTarget) =>
@@ -71,7 +72,7 @@ export function DayGridProvider({ children }: { children: ReactElement }) {
         ? e.target.closest<HTMLElement>("[data-event-key][data-event-clickable]")
         : null
     const event = eventEl && calendarEvents.find((ev) => eventKey(ev) === eventEl.dataset.eventKey)
-    if (eventEl && event) return { kind: "event", event, el: eventEl }
+    if (eventEl && event) return { kind: "event", event, anchor: elementAnchor(eventEl, e.clientX) }
     const day = closestDay(e.target)
     return day ? { kind: "day", day, y: e.clientY } : null
   }
@@ -108,7 +109,7 @@ export function DayGridProvider({ children }: { children: ReactElement }) {
           {children}
         </ContextMenuTrigger>
         <ContextMenuContent>
-          {menu?.kind === "event" && <EventMenuItems event={menu.event} anchor={menu.el} />}
+          {menu?.kind === "event" && <EventMenuItems event={menu.event} anchor={menu.anchor} />}
           {menu?.kind === "day" && (
             // After the menu has closed, so the popover it opens stays open.
             <ContextMenuItem onClick={() => setTimeout(() => openDraftOn(menu.day, menu.y))}>

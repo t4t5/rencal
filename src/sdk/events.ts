@@ -8,6 +8,8 @@ import {
   eventKey,
   type ResponseStatus,
 } from "@/lib/cal-events"
+import { isDraftEvent } from "@/lib/draft-to-event"
+import { isDragPreview } from "@/lib/event-drag"
 import { DAY_MINUTES, epochDay, type EventTime, plainDateFromEpochDay } from "@/lib/event-time"
 import { getUserResponseStatus } from "@/lib/event-utils"
 
@@ -37,6 +39,12 @@ export interface CalendarEvent {
   readonly availability: EventAvailability
   /** The user's response when they're an attendee, otherwise null. */
   readonly rsvp: ResponseStatus | null
+  /**
+   * Not a saved event: `"draft"` is the event the user is creating, and
+   * `"drag-preview"` a dragged event's copy at its drop position. Both are drawn
+   * like events but can't be clicked; leave them out of counts and totals.
+   */
+  readonly transient: "draft" | "drag-preview" | null
 }
 
 // Cached both ways so a plugin event keeps its identity across renders and the
@@ -66,6 +74,7 @@ function toPluginEvent(event: AppEvent, calendars: Calendar[]): CalendarEvent {
       status: event.status,
       availability: event.availability,
       rsvp,
+      transient: isDraftEvent(event) ? "draft" : isDragPreview(event) ? "drag-preview" : null,
     }
     pluginEvents.set(event, pluginEvent)
     appEvents.set(pluginEvent, event)

@@ -18,11 +18,10 @@ const SELECTION_ATTR = "data-create-selection"
 
 /**
  * Marks an element that draws part of a days selection; releasing opens the
- * new-event popover beside the part nearest the pointer, or at the pointer for
- * parts too wide for it to fit beside, like a whole week.
+ * new-event popover beside the part nearest the pointer.
  */
-export function createSelectionAttributes(anchor: "element" | "pointer") {
-  return { [SELECTION_ATTR]: anchor } as const
+export function createSelectionAttributes() {
+  return { [SELECTION_ATTR]: true } as const
 }
 
 type Anchor = {
@@ -103,17 +102,13 @@ export function useCreateDrag(): {
           ? candidate
           : nearest
       }, null)
-      const partRect = part?.getBoundingClientRect() ?? originEl.getBoundingClientRect()
       // A snapshot: the selection unmounts once the popover opens.
-      const anchorRect =
-        part?.getAttribute(SELECTION_ATTR) === "pointer"
-          ? new DOMRect(pointer.x, partRect.top, 0, partRect.height)
-          : new DOMRect(partRect.left, partRect.top, partRect.width, partRect.height)
+      const anchorRect = (part ?? originEl).getBoundingClientRect()
       const range = daySelectionRange(selection)
 
       openDayDraft(
         selection.start,
-        { getBoundingClientRect: () => anchorRect },
+        { getBoundingClientRect: () => anchorRect, pointerX: pointer.x },
         { allDay: true, start: range.start, end: range.end },
       )
     },

@@ -96,13 +96,19 @@ export function computeDropRange(
   return shiftRange(event, dayDelta, 0)
 }
 
+const DRAG_PREVIEW_SUFFIX = "__drag-preview"
+
 /**
  * A stand-in rendered at the drop position while dragging. It gets its own id
  * so it never collides with the (still rendered, dimmed) source event in React
  * keys or the active-event tracker.
  */
 export function makeDragPreview(event: CalendarEvent, range: EventTimeRange): CalendarEvent {
-  return { ...withDates(event, range.start, range.end), id: `${event.id}__drag-preview` }
+  return { ...withDates(event, range.start, range.end), id: `${event.id}${DRAG_PREVIEW_SUFFIX}` }
+}
+
+export function isDragPreview(event: CalendarEvent): boolean {
+  return event.id.endsWith(DRAG_PREVIEW_SUFFIX)
 }
 
 /**

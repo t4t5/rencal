@@ -8,7 +8,7 @@ export function MonthDragToCreateSelection({ bar }: { bar: AllDayBar<unknown> })
   return (
     <div
       data-slot="month-create-selection"
-      {...selectionProps(bar.span === 7 ? "pointer" : "element")}
+      {...selectionProps()}
       className={cn(
         "absolute z-10 pointer-events-none",
         bar.isStart && "rounded-l-xs",
