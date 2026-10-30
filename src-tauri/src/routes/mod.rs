@@ -1,3 +1,4 @@
+pub mod agents;
 pub mod caldir;
 pub mod config;
 pub mod error;

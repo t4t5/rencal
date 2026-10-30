@@ -1,3 +1,4 @@
+import { agents } from "@/lib/api/agents"
 import { events } from "@/lib/api/calendar-events"
 import { calendars } from "@/lib/api/calendars"
 import { contacts } from "@/lib/api/contacts"
@@ -22,10 +23,12 @@ export const api = {
   views,
   notifications,
   plugins,
+  agents,
 } as const
 
 export type AppApi = typeof api
 
+export type { Skill, SkillsStatus } from "@/lib/api/agents"
 export type {
   CreateEventParams,
   EventRange,

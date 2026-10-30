@@ -4,16 +4,18 @@
 use std::ffi::{OsStr, OsString};
 use std::process::ExitCode;
 
-mod skill_install;
+use rencal_lib::skill_install::{self, Skill};
 
 const PLUGIN_INSTALL_USAGE: &str = "usage: rencal plugin install <owner/repo-or-github-url>";
-const SKILL_INSTALL_USAGE: &str = "usage: rencal skill install";
+const SKILL_USAGE: &str = "usage: rencal skill <install|uninstall|show>";
 
 #[derive(Debug, Eq, PartialEq)]
 enum Command {
     LaunchApp,
     InstallPlugin(String),
     InstallSkill,
+    UninstallSkill,
+    ShowSkill,
 }
 
 fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command, &'static str> {
@@ -23,7 +25,9 @@ fn command_from_args(mut args: impl Iterator<Item = OsString>) -> Result<Command
     if command == "skill" {
         return match (args.next(), args.next()) {
             (Some(action), None) if action == "install" => Ok(Command::InstallSkill),
-            _ => Err(SKILL_INSTALL_USAGE),
+            (Some(action), None) if action == "uninstall" => Ok(Command::UninstallSkill),
+            (Some(action), None) if action == "show" => Ok(Command::ShowSkill),
+            _ => Err(SKILL_USAGE),
         };
     }
     if command != "plugin" {
@@ -71,25 +75,41 @@ fn main() -> ExitCode {
                 ExitCode::FAILURE
             }
         },
-        Ok(Command::InstallSkill) => match skill_install::install() {
-            Ok(report) => {
-                println!("renCal skill installed at {}", report.source.display());
-                for path in report.linked {
-                    println!("Linked {}", path.display());
+        Ok(Command::InstallSkill) => {
+            match skill_install::install(Skill::Rencal, &skill_install::rencal_files()) {
+                Ok(report) => {
+                    println!("renCal skill installed at {}", report.source.display());
+                    for path in report.linked {
+                        println!("Linked {}", path.display());
+                    }
+                    for path in report.already_linked {
+                        println!("Already linked {}", path.display());
+                    }
+                    ExitCode::SUCCESS
                 }
-                for path in report.already_linked {
-                    println!("Already linked {}", path.display());
+                Err(error) => {
+                    eprintln!("Could not install skill: {error}");
+                    ExitCode::FAILURE
                 }
-                for path in report.skipped {
-                    println!("Skipped existing skill at {}", path.display());
+            }
+        }
+        Ok(Command::UninstallSkill) => match skill_install::uninstall(Skill::Rencal) {
+            Ok(removed) => {
+                println!("renCal skill removed");
+                for path in removed {
+                    println!("Unlinked {}", path.display());
                 }
                 ExitCode::SUCCESS
             }
             Err(error) => {
-                eprintln!("Could not install skill: {error}");
+                eprintln!("Could not uninstall skill: {error}");
                 ExitCode::FAILURE
             }
         },
+        Ok(Command::ShowSkill) => {
+            print!("{}", skill_install::show());
+            ExitCode::SUCCESS
+        }
         Err(usage) => {
             eprintln!("{usage}");
             ExitCode::from(2)
@@ -131,18 +151,27 @@ mod tests {
     }
 
     #[test]
-    fn skill_install_requires_no_other_arguments() {
+    fn skill_commands_take_no_other_arguments() {
         assert_eq!(
             command_from_args(args(&["skill", "install"])),
             Ok(Command::InstallSkill)
         );
         assert_eq!(
-            command_from_args(args(&["skill"])),
-            Err(SKILL_INSTALL_USAGE)
+            command_from_args(args(&["skill", "uninstall"])),
+            Ok(Command::UninstallSkill)
         );
         assert_eq!(
+            command_from_args(args(&["skill", "show"])),
+            Ok(Command::ShowSkill)
+        );
+        assert_eq!(command_from_args(args(&["skill"])), Err(SKILL_USAGE));
+        assert_eq!(
             command_from_args(args(&["skill", "install", "extra"])),
-            Err(SKILL_INSTALL_USAGE)
+            Err(SKILL_USAGE)
+        );
+        assert_eq!(
+            command_from_args(args(&["skill", "unknown"])),
+            Err(SKILL_USAGE)
         );
     }
 

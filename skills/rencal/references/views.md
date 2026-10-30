@@ -14,7 +14,7 @@ Use the directory the user names. Otherwise create `~/.config/rencal/views/<name
 id = "local.agenda-grid"
 name = "Agenda Grid"
 description = "Today's events as a grid of cards"
-min_rencal_version = "0.9.0"
+min_rencal_version = "0.9.1"
 
 [[contributes.views]]
 id = "agenda-grid"
@@ -23,7 +23,7 @@ script = "dist/agenda-grid.js"
 css = "dist/agenda-grid.css"
 ```
 
-Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise.
+Keep `min_rencal_version = "0.9.1"`, the first release that runs views built with the SDK version below. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise.
 
 `package.json`:
 
@@ -64,7 +64,7 @@ Views can read events and calendars, and let the user create and move events thr
 
 ## Building and loading
 
-1. Install the SDK and React types as dev dependencies with the user's package manager, e.g. `npm install -D @rencomputer/rencal-sdk @types/react @types/react-dom`. If it finds no versions of `@rencomputer/rencal-sdk`, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release; tell the user rather than changing their configuration.
+1. Install the SDK at exactly the version this guide names, and the React types, as dev dependencies with the user's package manager, e.g. `npm install -D --save-exact @rencomputer/rencal-sdk@0.3.0 @types/react @types/react-dom`. This guide comes with the installed renCal, and a newer SDK can describe features it lacks, so don't upgrade the SDK. If the package manager can't find that version, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release, or it isn't published yet; tell the user rather than installing another version or changing their configuration.
 2. Run `npm run build`. It type-checks the view and writes the files the manifest names. Fix every error it reports.
 3. Add the checkout's path to the `plugins` array in `~/.config/rencal/plugins.toml`, e.g. `"~/.config/rencal/views/agenda-grid"`, keeping existing entries. Create the file with only that array if it does not exist. A running renCal loads the view immediately.
 

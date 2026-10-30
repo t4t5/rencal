@@ -1,6 +1,7 @@
 import { ComponentType } from "react"
 
 import { AccountsPage } from "@/components/settings/accounts/AccountsPage"
+import { AgentsPage } from "@/components/settings/agents/AgentsPage"
 import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
 import { GeneralPage } from "@/components/settings/general/GeneralPage"
 import { PluginsPage } from "@/components/settings/plugins/PluginsPage"
@@ -10,6 +11,7 @@ import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { IconType } from "@/lib/types"
 
+import { AgentIcon } from "@/icons/agent"
 import { BellIcon } from "@/icons/bell"
 import { CalendarIcon } from "@/icons/calendar"
 import { PaletteIcon } from "@/icons/palette"
@@ -31,6 +33,7 @@ export const NAV_ITEMS = [
   { tab: "reminders" as const, label: "Reminders", icon: BellIcon, page: RemindersPage },
   { tab: "themes" as const, label: "Themes", icon: PaletteIcon, page: ThemesPage },
   { tab: "plugins" as const, label: "Plugins", icon: PluginIcon, page: PluginsPage },
+  { tab: "agents" as const, label: "Agents", icon: AgentIcon, page: AgentsPage },
 ] satisfies NavItem[]
 
 export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]

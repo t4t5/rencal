@@ -22,11 +22,13 @@ mod signal;
 mod single_instance;
 #[cfg(target_os = "linux")]
 mod skia_compositor_workaround;
+pub mod skill_install;
 pub mod state;
 mod state_bridge;
 mod tasks;
 mod watchers;
 
+use routes::agents::{AgentsApi, AgentsApiImpl};
 use routes::caldir::{CaldirApi, CaldirApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
@@ -66,6 +68,7 @@ fn create_router_with_plugins(
         .merge(PluginsApiImpl::new(plugins).into_handler())
         .merge(ThemesApiImpl.into_handler())
         .merge(ViewsApiImpl.into_handler())
+        .merge(AgentsApiImpl.into_handler())
 }
 
 /// Directory of the providers bundled with this build (google, icloud,
@@ -347,6 +350,9 @@ pub async fn run() {
             macos_notifications::init(app.handle().clone(), state.clone());
 
             spawn_reminder_loop_if_needed(app);
+
+            // Keep installed agent skills in step with renCal and caldir.
+            spawn_task("agent skills", skill_install::refresh());
 
             // AppState notifications → webview events:
             spawn_task(
