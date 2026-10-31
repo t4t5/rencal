@@ -185,7 +185,7 @@ function ShortcutsEditor() {
       )}
 
       <p className="text-muted-foreground text-xs">
-        Saved to <code>~/.config/rencal/keys.toml</code>, which you can also edit by hand.
+        Saved to <code>~/.config/rencal/keys.toml</code>
       </p>
     </SettingsContent>
   )
