@@ -144,7 +144,7 @@ function ShortcutsEditor() {
           placeholder="Filter shortcuts"
           aria-label="Filter shortcuts"
           variant="default"
-          className="h-9 pr-3 pl-9"
+          className="pr-3 pl-9"
         />
       </div>
 

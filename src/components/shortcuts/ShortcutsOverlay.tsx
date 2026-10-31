@@ -97,7 +97,7 @@ export function ShortcutsOverlay({
               placeholder="Find keyboard shortcuts"
               aria-label="Find keyboard shortcuts"
               variant="default"
-              className="h-10 pr-3 pl-9"
+              className="h-control-lg pr-3 pl-9"
             />
           </div>
         </SheetHeader>
