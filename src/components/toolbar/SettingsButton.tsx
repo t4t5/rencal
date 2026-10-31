@@ -2,8 +2,8 @@ import { WebviewWindow } from "@tauri-apps/api/webviewWindow"
 import { currentMonitor, getCurrentWindow } from "@tauri-apps/api/window"
 
 import type { SettingsTab } from "@/components/settings/SettingsSidebar"
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { Button } from "@/components/ui/button"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { needsNativeDecorations } from "@/lib/api/internal"
 import { isMacOS } from "@/lib/utils"
@@ -51,10 +51,10 @@ export async function openSettingsWindow(options: { tab?: SettingsTab } = {}) {
 
 export const SettingsButton = () => {
   return (
-    <ShortcutTooltip text="Settings" shortcut="mod+comma">
+    <CommandTooltip text="Settings" action="app.settings">
       <Button tabIndex={-1} size="icon" variant="ghost" onClick={() => openSettingsWindow()}>
         <SettingsIcon className="size-4" />
       </Button>
-    </ShortcutTooltip>
+    </CommandTooltip>
   )
 }

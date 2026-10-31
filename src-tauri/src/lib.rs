@@ -1,9 +1,11 @@
+pub mod control;
 mod deep_links;
 mod event_cache;
 mod events;
 mod external_themes;
 mod external_views;
 mod fs_watch;
+mod keys;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 #[cfg(target_os = "macos")]
@@ -30,7 +32,9 @@ mod watchers;
 
 use routes::agents::{AgentsApi, AgentsApiImpl};
 use routes::caldir::{CaldirApi, CaldirApiImpl};
+use routes::commands::{CommandsApi, CommandsApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
+use routes::keys::{KeysApi, KeysApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::plugins::{PluginsApi, PluginsApiImpl};
@@ -62,6 +66,7 @@ fn create_router_with_plugins(
     events::export_types().expect("failed to export notification types");
     Router::new()
         .merge(CaldirApiImpl::new(state.clone()).into_handler())
+        .merge(CommandsApiImpl::new(state.clone()).into_handler())
         .merge(PlatformApiImpl::new(state).into_handler())
         .merge(OmarchyApiImpl.into_handler())
         .merge(ConfigApiImpl.into_handler())
@@ -69,6 +74,7 @@ fn create_router_with_plugins(
         .merge(ThemesApiImpl.into_handler())
         .merge(ViewsApiImpl.into_handler())
         .merge(AgentsApiImpl.into_handler())
+        .merge(KeysApiImpl.into_handler())
 }
 
 /// Directory of the providers bundled with this build (google, icloud,
@@ -350,6 +356,12 @@ pub async fn run() {
             macos_notifications::init(app.handle().clone(), state.clone());
 
             spawn_reminder_loop_if_needed(app);
+
+            #[cfg(unix)]
+            spawn_task(
+                "control socket",
+                control::serve(app.handle().clone(), state.clone()),
+            );
 
             // Keep installed agent skills in step with renCal and caldir.
             spawn_task("agent skills", skill_install::refresh());

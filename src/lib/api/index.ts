@@ -2,6 +2,7 @@ import { agents } from "@/lib/api/agents"
 import { events } from "@/lib/api/calendar-events"
 import { calendars } from "@/lib/api/calendars"
 import { contacts } from "@/lib/api/contacts"
+import { keys } from "@/lib/api/keys"
 import { notifications } from "@/lib/api/notifications"
 import { plugins } from "@/lib/api/plugins"
 import { providers } from "@/lib/api/providers"
@@ -21,6 +22,7 @@ export const api = {
   settings,
   themes,
   views,
+  keys,
   notifications,
   plugins,
   agents,
@@ -39,6 +41,7 @@ export type {
 } from "@/lib/api/calendar-events"
 export type { Calendar } from "@/lib/api/calendars"
 export type { Contact } from "@/lib/api/contacts"
+export type { KeysSnapshot, UserKeyBinding } from "@/lib/api/keys"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"
 export type {

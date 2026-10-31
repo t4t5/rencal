@@ -1,6 +1,6 @@
 import type { ComponentType } from "react"
 
-import { SHORTCUTS, type ShortcutDef } from "@/lib/shortcuts"
+import type { Binding } from "@/lib/key-bindings"
 
 import { MonthView } from "@/views/builtin/month/MonthView"
 import { WeekView } from "@/views/builtin/week/WeekView"
@@ -10,7 +10,7 @@ export type ViewDescriptor = {
   id: string
   name: string
   component: ComponentType
-  // Single character that shows this view. Also shown in the view dropdown.
+  // Default key that shows this view; keys.toml can rebind it.
   shortcut?: string
 }
 
@@ -31,17 +31,9 @@ export function resolveView(id: string, views: readonly ViewDescriptor[]): ViewD
   return view
 }
 
-export function viewShortcuts(views: readonly ViewDescriptor[]): ShortcutDef[] {
-  return views.flatMap(({ id, name, shortcut }) =>
-    shortcut
-      ? [
-          {
-            id,
-            group: "View",
-            label: `Display ${name.toLowerCase()} view`,
-            bindings: [{ keys: shortcut, type: "char" }],
-          },
-        ]
-      : [],
+// Each view's shortcut switches to it; they lead the default bindings.
+export function viewBindings(views: readonly ViewDescriptor[]): Binding[] {
+  return views.flatMap(({ id, shortcut }) =>
+    shortcut ? [{ keys: shortcut, action: `view.switch:${id}` }] : [],
   )
 }

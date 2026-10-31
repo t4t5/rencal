@@ -1,8 +1,8 @@
 import { ReactNode, RefObject, useEffect, useRef } from "react"
 
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { useFlyAnimation } from "@/components/sidebar/header/FlyAnimation"
 import { DragRegion } from "@/components/ui/drag-region"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useEventDraft, useEventText } from "@/contexts/EventDraftContext"
 
@@ -47,12 +47,16 @@ export function ComposeEventButton() {
     <SidebarOverlay expanded={expanded}>
       {isMd && <Spacer grow={!expanded} />}
 
-      <ShortcutTooltip open={expanded ? false : undefined} text="Create new event" shortcut="c">
+      <CommandTooltip
+        open={expanded ? false : undefined}
+        text="Create new event"
+        action="event.new"
+      >
         <ButtonContainer expanded={expanded} ref={containerRef}>
           <ComposeEventInput onExit={exitDraft} />
           <PlusButtonOverlay show={!expanded} />
         </ButtonContainer>
-      </ShortcutTooltip>
+      </CommandTooltip>
 
       {!isMd && <Spacer grow={!expanded} />}
     </SidebarOverlay>

@@ -1,13 +1,14 @@
 import { readFile } from "node:fs/promises"
 import { describe, expect, it, vi } from "vitest"
 
-import { SHORTCUTS } from "@/lib/shortcuts"
+import { findCommand, parseAction } from "@/lib/commands"
+import { canonicalKeys, DEFAULT_BINDINGS } from "@/lib/key-bindings"
 
 import {
   BUILTIN_VIEWS,
   DEFAULT_VIEW_ID,
   resolveView,
-  viewShortcuts,
+  viewBindings,
   type ViewDescriptor,
 } from "@/views/manifest"
 
@@ -39,47 +40,52 @@ describe("resolveView", () => {
   })
 })
 
-describe("viewShortcuts", () => {
-  it("derives a char shortcut for each view that declares one", () => {
-    expect(viewShortcuts([view("week", "w"), view("board")])).toEqual([
-      {
-        id: "week",
-        group: "View",
-        label: "Display week view",
-        bindings: [{ keys: "w", type: "char" }],
-      },
+describe("viewBindings", () => {
+  it("binds each view's shortcut to switching to it", () => {
+    expect(viewBindings([view("week", "w"), view("board")])).toEqual([
+      { keys: "w", action: "view.switch:week" },
     ])
   })
 })
 
-describe("shortcut registry", () => {
-  const defs = [...viewShortcuts(BUILTIN_VIEWS), ...SHORTCUTS]
-
-  it("has no duplicate command ids", () => {
-    const ids = defs.map((def) => def.id)
-    expect(ids).toEqual([...new Set(ids)])
-  })
+describe("default bindings", () => {
+  const bindings = [...viewBindings(BUILTIN_VIEWS), ...DEFAULT_BINDINGS]
 
   it("has no two bindings on the same keys", () => {
-    const keys = defs.flatMap((def) => def.bindings.map((binding) => binding.keys))
+    const keys = bindings.map((binding) => canonicalKeys(binding.keys))
     expect(keys).toEqual([...new Set(keys)])
+  })
+
+  it("only binds registered commands", () => {
+    for (const { action } of bindings) {
+      expect(findCommand(parseAction(action).command), action).toBeDefined()
+    }
   })
 })
 
 describe("native menu", () => {
-  it("only switches to registered views", async () => {
+  const menuIds = async () => {
     const menu = await readFile(new URL("../../src-tauri/src/menu.rs", import.meta.url), "utf8")
-    // View items are the ones on CmdOrCtrl+<digit>.
-    const menuViewIds = [
-      ...menu.matchAll(
-        /MenuItemBuilder::with_id\("([^"]+)",[^)]*\)\s*\.accelerator\("CmdOrCtrl\+\d"\)/g,
-      ),
-    ].map((match) => match[1])
+    // Opened by the backend itself rather than sent to the frontend.
+    const native = new Set(["help-website", "help-issues"])
+    return [...menu.matchAll(/MenuItemBuilder::with_id\("([^"]+)"/g)]
+      .map((match) => match[1])
+      .filter((id) => !native.has(id))
+  }
 
-    expect(menuViewIds.length).toBeGreaterThan(0)
+  it("sends registered commands", async () => {
+    const ids = await menuIds()
+    expect(ids.length).toBeGreaterThan(0)
+    for (const id of ids) {
+      expect(findCommand(parseAction(id).command), `menu.rs item "${id}"`).toBeDefined()
+    }
+  })
+
+  it("only switches to registered views", async () => {
     const registered = BUILTIN_VIEWS.map((v) => v.id)
-    for (const id of menuViewIds) {
-      expect(registered, `menu.rs item "${id}" is not a registered view`).toContain(id)
+    for (const id of await menuIds()) {
+      const { command, value } = parseAction(id)
+      if (command === "view.switch") expect(registered, `menu.rs item "${id}"`).toContain(value)
     }
   })
 })

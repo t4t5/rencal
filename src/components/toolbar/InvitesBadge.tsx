@@ -2,8 +2,8 @@ import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useRef, useState } from "react"
 
 import { RsvpBar } from "@/components/event-parts/inputs/RsvpBar"
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { Popover, PopoverArrow, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useSettings } from "@/contexts/SettingsContext"
@@ -62,7 +62,7 @@ export function InvitesBadge() {
 
   return (
     <Popover>
-      <ShortcutTooltip text="Invitations" shortcut="i">
+      <CommandTooltip text="Invitations" action="invites.toggle">
         <PopoverTrigger asChild>
           <button
             id={INVITES_BUTTON_EL_ID}
@@ -75,7 +75,7 @@ export function InvitesBadge() {
             {invites.length}
           </button>
         </PopoverTrigger>
-      </ShortcutTooltip>
+      </CommandTooltip>
       <PopoverContent
         align={isMd ? "start" : "end"}
         collisionPadding={16}

@@ -9,6 +9,7 @@ use tauri::{Emitter, Runtime};
 
 use crate::external_themes::ExternalThemesSnapshot;
 use crate::external_views::ExternalViewsSnapshot;
+use crate::keys::KeysSnapshot;
 use crate::omarchy::OmarchyColors;
 use crate::routes::caldir::CaldirSettings;
 use crate::routes::config::ThemeSettings;
@@ -27,6 +28,10 @@ pub enum AppEvent {
     OmarchyThemeChanged(OmarchyColors),
     ExternalThemesChanged(ExternalThemesSnapshot),
     ExternalViewsChanged(ExternalViewsSnapshot),
+    KeysChanged(KeysSnapshot),
+    /// `rencal do` queued a command; drain it with `commands.take_pending`.
+    #[cfg_attr(not(unix), allow(dead_code))]
+    CommandRequested(()),
     #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
     MenuAction(String),
     #[allow(dead_code)] // Emitted by the frontend only; still part of the contract.
@@ -160,9 +165,19 @@ mod tests {
                 serde_json::to_value(views).unwrap(),
             ),
             (
-                AppEvent::MenuAction("compose-event".into()),
+                AppEvent::KeysChanged(KeysSnapshot::default()),
+                "keys-changed",
+                json!({ "bindings": [], "error": null }),
+            ),
+            (
+                AppEvent::CommandRequested(()),
+                "command-requested",
+                Value::Null,
+            ),
+            (
+                AppEvent::MenuAction("event.new".into()),
                 "menu-action",
-                json!("compose-event"),
+                json!("event.new"),
             ),
             (
                 AppEvent::ThemeChanged(ThemeSettings {
