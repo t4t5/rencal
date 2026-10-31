@@ -1,6 +1,7 @@
 // Which key runs which command action. Defaults live here (plus each view's
 // shortcut, from `@/views/manifest`); `~/.config/rencal/keys.toml` rebinds or
 // unbinds keys on top of them.
+import type { KeyEdit } from "@/lib/api"
 import { findCommand, parseAction } from "@/lib/commands"
 import { isMacOS } from "@/lib/utils"
 
@@ -130,4 +131,100 @@ export function resolveBindings(
     bindings: [...byKey.values()].filter((binding) => binding !== null),
     errors,
   }
+}
+
+// Physical keys by `KeyboardEvent.code`, named as bindings write them.
+const CODE_NAMES: Partial<Record<string, string>> = {
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  ArrowUp: "up",
+  ArrowDown: "down",
+}
+
+const MODIFIER_KEYS = new Set(["Control", "Shift", "Alt", "AltGraph", "Meta", "OS", "CapsLock"])
+
+// The binding a key press makes, or null for a lone modifier. Characters typed
+// without ctrl/alt/meta bind by character, like the defaults; anything else by
+// physical key, as react-hotkeys-hook matches it.
+export function keysFromEvent(event: KeyboardEvent): string | null {
+  if (MODIFIER_KEYS.has(event.key)) return null
+  const primary = isMacOS ? event.metaKey : event.ctrlKey
+  const plain = !event.ctrlKey && !event.altKey && !event.metaKey
+  if (plain && event.key.length === 1 && event.key !== " " && event.key !== ",") {
+    const char = event.key.toLowerCase()
+    return /[a-z]/.test(char) && event.shiftKey ? `shift+${char}` : char
+  }
+  const key = CODE_NAMES[event.code] ?? event.code.toLowerCase().replace(/^(key|digit|numpad)/, "")
+  if (!key) return null
+  const modifiers = [
+    primary && "mod",
+    !isMacOS && event.metaKey && "meta",
+    isMacOS && event.ctrlKey && "ctrl",
+    event.altKey && "alt",
+    event.shiftKey && "shift",
+  ].filter((modifier) => modifier !== false)
+  return [...modifiers, key].join("+")
+}
+
+const sameKeys = (a: string) => (b: { keys: string }) => canonicalKeys(b.keys) === canonicalKeys(a)
+
+// The keys.toml entry for `keys`, spelled as the file has it, so edits replace it.
+const fileSpelling = (keys: string, user: readonly UserBinding[]) =>
+  user.find(sameKeys(keys))?.keys ?? keys
+
+// Edits that make `keys` run `action`.
+export function bindKeyEdits(
+  keys: string,
+  action: string,
+  defaults: readonly Binding[],
+  user: readonly UserBinding[],
+): KeyEdit[] {
+  const spelled = fileSpelling(keys, user)
+  if (defaults.find(sameKeys(keys))?.action === action) {
+    // Already the default: drop any override instead of repeating it.
+    return user.some(sameKeys(keys)) ? [{ kind: "clear", keys: spelled }] : []
+  }
+  return [{ kind: "bind", keys: spelled, action }]
+}
+
+// Edits that make `keys` do nothing.
+export function unbindKeyEdits(
+  keys: string,
+  defaults: readonly Binding[],
+  user: readonly UserBinding[],
+): KeyEdit[] {
+  const spelled = fileSpelling(keys, user)
+  // A default key needs `false`; a key only keys.toml binds just goes.
+  if (defaults.some(sameKeys(keys))) return [{ kind: "unbind", keys: spelled }]
+  return user.some(sameKeys(keys)) ? [{ kind: "clear", keys: spelled }] : []
+}
+
+// Edits that give `action` back its default keys, taking them from whatever
+// keys.toml moved them to, and drop keys keys.toml added to it.
+export function resetActionEdits(
+  action: string,
+  defaults: readonly Binding[],
+  user: readonly UserBinding[],
+): KeyEdit[] {
+  const defaultKeys = defaults.filter((binding) => binding.action === action)
+  return user
+    .filter(
+      (binding) => binding.action === action || defaultKeys.some((d) => sameKeys(d.keys)(binding)),
+    )
+    .map((binding) => ({ kind: "clear", keys: binding.keys }))
+}
+
+// Whether `action`'s keys differ from its defaults.
+export function isCustomized(
+  action: string,
+  defaults: readonly Binding[],
+  bindings: readonly Binding[],
+): boolean {
+  const keysOf = (list: readonly Binding[]) =>
+    list
+      .filter((binding) => binding.action === action)
+      .map((binding) => canonicalKeys(binding.keys))
+      .sort()
+      .join(" ")
+  return keysOf(defaults) !== keysOf(bindings)
 }

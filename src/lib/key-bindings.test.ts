@@ -1,12 +1,18 @@
+// @vitest-environment happy-dom
 import { describe, expect, it } from "vitest"
 
 import {
   actionError,
   type Binding,
+  bindKeyEdits,
   canonicalKeys,
   isCharKey,
+  isCustomized,
   keysError,
+  keysFromEvent,
+  resetActionEdits,
   resolveBindings,
+  unbindKeyEdits,
 } from "@/lib/key-bindings"
 
 const defaults: Binding[] = [
@@ -85,5 +91,71 @@ describe("keys", () => {
   it("rejects keys without a key", () => {
     expect(keysError("ctrl+")).toMatch(/has no key/)
     expect(keysError("mod+shift+t")).toBeNull()
+  })
+})
+
+describe("editing keys.toml", () => {
+  it("binds a key, or clears an override that only restates the default", () => {
+    expect(bindKeyEdits("n", "date.today", defaults, [])).toEqual([
+      { kind: "bind", keys: "n", action: "date.today" },
+    ])
+    expect(bindKeyEdits("l", "date.next:day", defaults, [])).toEqual([])
+    expect(
+      bindKeyEdits("l", "date.next:day", defaults, [{ keys: "L", action: "date.today" }]),
+    ).toEqual([{ kind: "clear", keys: "L" }])
+  })
+
+  it("replaces an entry with the file's spelling of the key", () => {
+    expect(
+      bindKeyEdits("ctrl+shift+d", "app.sync", defaults, [
+        { keys: "Shift+Ctrl+D", action: "date.today" },
+      ]),
+    ).toEqual([{ kind: "bind", keys: "Shift+Ctrl+D", action: "app.sync" }])
+  })
+
+  it("unbinds default keys with false and drops keys only the file adds", () => {
+    expect(unbindKeyEdits("ctrl+b", defaults, [])).toEqual([{ kind: "unbind", keys: "ctrl+b" }])
+    expect(unbindKeyEdits("n", defaults, [{ keys: "n", action: "date.today" }])).toEqual([
+      { kind: "clear", keys: "n" },
+    ])
+  })
+
+  it("resets an action by clearing its entries and those that took its keys", () => {
+    const user = [
+      { keys: "l", action: "date.today" },
+      { keys: "n", action: "date.next:day" },
+      { keys: "ctrl+b", action: null },
+    ]
+    expect(resetActionEdits("date.next:day", defaults, user)).toEqual([
+      { kind: "clear", keys: "l" },
+      { kind: "clear", keys: "n" },
+    ])
+  })
+
+  it("knows when an action's keys differ from its defaults", () => {
+    const { bindings } = resolveBindings(defaults, [{ keys: "ctrl+b", action: null }])
+    expect(isCustomized("sidebar.toggle", defaults, bindings)).toBe(true)
+    expect(isCustomized("date.next:day", defaults, bindings)).toBe(false)
+  })
+})
+
+describe("keysFromEvent", () => {
+  const press = (init: KeyboardEventInit) => keysFromEvent(new KeyboardEvent("keydown", init))
+
+  it("binds typed characters by character", () => {
+    expect(press({ key: "w", code: "KeyW" })).toBe("w")
+    expect(press({ key: "?", code: "Slash", shiftKey: true })).toBe("?")
+    expect(press({ key: "W", code: "KeyW", shiftKey: true })).toBe("shift+w")
+  })
+
+  it("binds keys with modifiers by physical key", () => {
+    expect(press({ key: "d", code: "KeyD", ctrlKey: true })).toBe("mod+d")
+    expect(press({ key: "Tab", code: "Tab", shiftKey: true })).toBe("shift+tab")
+    expect(press({ key: "ArrowLeft", code: "ArrowLeft" })).toBe("left")
+    expect(press({ key: ",", code: "Comma" })).toBe("comma")
+  })
+
+  it("ignores a lone modifier", () => {
+    expect(press({ key: "Control", code: "ControlLeft", ctrlKey: true })).toBeNull()
   })
 })

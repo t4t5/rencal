@@ -5,7 +5,6 @@
 //! installed package directories without depending on the app runtime.
 
 use std::collections::HashSet;
-use std::io::Write;
 use std::path::{Path, PathBuf};
 
 pub use rencal_plugin_contract::{
@@ -256,79 +255,8 @@ fn write_atomic(
     follow_symlink: bool,
     new_file_mode: u32,
 ) -> Result<(), PluginError> {
-    #[cfg(not(unix))]
-    let _ = new_file_mode;
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent).map_err(|error| {
-            PluginError::new(format!("could not create {}: {error}", parent.display()))
-        })?;
-    }
-    // Keep dotfile-manager symlinks intact while still replacing the actual
-    // declarations file atomically.
-    let destination = match std::fs::symlink_metadata(path) {
-        Ok(metadata) if follow_symlink && metadata.file_type().is_symlink() => {
-            std::fs::canonicalize(path).map_err(|error| {
-                PluginError::new(format!(
-                    "could not resolve {label} symlink {}: {error}",
-                    path.display()
-                ))
-            })?
-        }
-        _ => path.to_path_buf(),
-    };
-    let parent = destination.parent().ok_or_else(|| {
-        PluginError::new(format!("{} has no parent directory", destination.display()))
-    })?;
-
-    #[cfg(unix)]
-    let destination_mode = match std::fs::metadata(&destination) {
-        Ok(metadata) => {
-            use std::os::unix::fs::PermissionsExt;
-            metadata.permissions().mode()
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => new_file_mode,
-        Err(error) => {
-            return Err(PluginError::new(format!(
-                "could not read permissions for {}: {error}",
-                destination.display()
-            )));
-        }
-    };
-
-    let mut temporary = tempfile::NamedTempFile::new_in(parent).map_err(|error| {
-        PluginError::new(format!(
-            "could not create temporary {label} beside {}: {error}",
-            path.display()
-        ))
-    })?;
-    temporary
-        .write_all(contents)
-        .map_err(|error| PluginError::new(format!("could not write temporary {label}: {error}")))?;
-    #[cfg(unix)]
-    {
-        use std::os::unix::fs::PermissionsExt;
-        let permissions = std::fs::Permissions::from_mode(destination_mode);
-        temporary
-            .as_file()
-            .set_permissions(permissions)
-            .map_err(|error| {
-                PluginError::new(format!(
-                    "could not set temporary {label} permissions: {error}"
-                ))
-            })?;
-    }
-    temporary
-        .as_file()
-        .sync_all()
-        .map_err(|error| PluginError::new(format!("could not sync temporary {label}: {error}")))?;
-    temporary.persist(&destination).map_err(|error| {
-        PluginError::new(format!(
-            "could not replace {}: {}",
-            destination.display(),
-            error.error
-        ))
-    })?;
-    Ok(())
+    crate::atomic_write::write_atomic(path, contents, label, follow_symlink, new_file_mode)
+        .map_err(PluginError::new)
 }
 
 fn validate_plugin_lock_file(file: &PluginLockFile) -> Result<(), PluginError> {

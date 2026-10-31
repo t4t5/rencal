@@ -6,6 +6,7 @@ import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
 import { GeneralPage } from "@/components/settings/general/GeneralPage"
 import { PluginsPage } from "@/components/settings/plugins/PluginsPage"
 import { RemindersPage } from "@/components/settings/reminders/RemindersPage"
+import { ShortcutsPage } from "@/components/settings/shortcuts/ShortcutsPage"
 import { ThemesPage } from "@/components/settings/themes/ThemesPage"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -14,6 +15,7 @@ import { IconType } from "@/lib/types"
 import { AgentIcon } from "@/icons/agent"
 import { BellIcon } from "@/icons/bell"
 import { CalendarIcon } from "@/icons/calendar"
+import { KeyboardIcon } from "@/icons/keyboard"
 import { PaletteIcon } from "@/icons/palette"
 import { PluginIcon } from "@/icons/plugin"
 import { SettingsIcon } from "@/icons/settings"
@@ -32,6 +34,7 @@ export const NAV_ITEMS = [
   { tab: "calendars" as const, label: "Calendars", icon: CalendarIcon, page: CalendarsPage },
   { tab: "reminders" as const, label: "Reminders", icon: BellIcon, page: RemindersPage },
   { tab: "themes" as const, label: "Themes", icon: PaletteIcon, page: ThemesPage },
+  { tab: "shortcuts" as const, label: "Shortcuts", icon: KeyboardIcon, page: ShortcutsPage },
   { tab: "plugins" as const, label: "Plugins", icon: PluginIcon, page: PluginsPage },
   { tab: "agents" as const, label: "Agents", icon: AgentIcon, page: AgentsPage },
 ] satisfies NavItem[]

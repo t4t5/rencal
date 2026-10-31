@@ -1,3 +1,4 @@
+mod atomic_write;
 pub mod control;
 mod deep_links;
 mod event_cache;

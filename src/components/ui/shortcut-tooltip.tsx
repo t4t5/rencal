@@ -26,6 +26,7 @@ export function formatHotkeyKey(key: string): string {
   if (key === "shift") return isMacOS ? "\u21E7" : "Shift"
   if (key === "alt") return isMacOS ? "\u2325" : "Alt"
   if (key === "ctrl") return isMacOS ? "\u2303" : "Ctrl"
+  if (key === "meta") return isMacOS ? "\u2318" : "Super"
   return KEY_DISPLAY[key] ?? key.toUpperCase()
 }
 

@@ -34,6 +34,8 @@ export interface CommandDef {
   allowWhileEventOpen?: boolean
   // react-hotkeys-hook ignores keys inside inputs by default; opt in per command.
   enableOnFormTags?: boolean
+  // For `rencal do` only; Settings offers no keys for it.
+  cliOnly?: boolean
 }
 
 const unitValues = (verb: string): readonly CommandValue[] =>
@@ -83,7 +85,7 @@ export const COMMANDS = [
     args: [{ name: "group", description: "A calendar group name", required: true }],
     palette: "command",
   },
-  { id: "group.next", label: "Switch calendar group", group: "View" },
+  { id: "group.next", label: "Next calendar group", group: "View" },
   { id: "sidebar.toggle", label: "Toggle sidebar", group: "View" },
   {
     id: "date.go",
@@ -159,6 +161,7 @@ export const COMMANDS = [
     label: "List commands, their arguments and keys",
     group: "General",
     allowWhileEventOpen: true,
+    cliOnly: true,
   },
 ] as const satisfies readonly CommandDef[]
 

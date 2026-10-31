@@ -41,7 +41,7 @@ export type {
 } from "@/lib/api/calendar-events"
 export type { Calendar } from "@/lib/api/calendars"
 export type { Contact } from "@/lib/api/contacts"
-export type { KeysSnapshot, UserKeyBinding } from "@/lib/api/keys"
+export type { KeyEdit, KeysSnapshot, UserKeyBinding } from "@/lib/api/keys"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"
 export type {

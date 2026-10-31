@@ -10,6 +10,9 @@ import { useViews } from "@/views/useViews"
 
 interface KeyBindingsContextType {
   bindings: readonly Binding[]
+  defaults: readonly Binding[]
+  // keys.toml's entries, as written.
+  userBindings: readonly UserKeyBinding[]
   // Problems in keys.toml ("keys.toml: ..."): it couldn't be read, or an entry was skipped.
   errors: readonly string[]
 }
@@ -39,12 +42,15 @@ export function KeyBindingsProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const value = useMemo(() => {
-    const { bindings, errors } = resolveBindings(
-      [...viewBindings(views), ...DEFAULT_BINDINGS],
-      userBindings,
-    )
+    const defaults = [...viewBindings(views), ...DEFAULT_BINDINGS]
+    const { bindings, errors } = resolveBindings(defaults, userBindings)
     const entryErrors = errors.map((error) => `keys.toml: ${error}`)
-    return { bindings, errors: fileError ? [fileError, ...entryErrors] : entryErrors }
+    return {
+      bindings,
+      defaults,
+      userBindings,
+      errors: fileError ? [fileError, ...entryErrors] : entryErrors,
+    }
   }, [views, userBindings, fileError])
 
   useEffect(() => {

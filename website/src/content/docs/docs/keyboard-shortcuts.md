@@ -22,12 +22,12 @@ Press <kbd>?</kbd> in the app to see all shortcuts.
 
 ## View
 
-| Action                | Shortcut     |
-| --------------------- | ------------ |
-| Display week view     | <kbd>w</kbd> |
-| Display month view    | <kbd>m</kbd> |
-| Display year view     | <kbd>y</kbd> |
-| Switch calendar group | <kbd>g</kbd> |
+| Action              | Shortcut     |
+| ------------------- | ------------ |
+| Display week view   | <kbd>w</kbd> |
+| Display month view  | <kbd>m</kbd> |
+| Display year view   | <kbd>y</kbd> |
+| Next calendar group | <kbd>g</kbd> |
 
 ## General
 
@@ -44,7 +44,7 @@ Press <kbd>?</kbd> in the app to see all shortcuts.
 
 ## Change keys
 
-Rebind keys in `~/.config/rencal/keys.toml`. Each entry maps a key to a command, and renCal picks up changes as you save:
+Rebind keys in **Settings → Shortcuts**: press **+** on an action, then the keys you want. renCal saves your changes to `~/.config/rencal/keys.toml`, which you can also edit by hand or keep in your dotfiles. Each entry maps a key to a command, and renCal picks up changes as you save:
 
 ```toml
 [keys]
