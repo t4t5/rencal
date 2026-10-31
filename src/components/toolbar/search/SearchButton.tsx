@@ -1,7 +1,7 @@
 import { useState } from "react"
 
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { Button } from "@/components/ui/button"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { SearchIcon } from "@/icons/search"
 
@@ -14,7 +14,7 @@ export function SearchButton() {
 
   return (
     <>
-      <ShortcutTooltip text="Search" shortcut="/">
+      <CommandTooltip text="Search" action="search.open">
         <Button
           id={SEARCH_BUTTON_EL_ID}
           size="icon"
@@ -24,7 +24,7 @@ export function SearchButton() {
         >
           <SearchIcon />
         </Button>
-      </ShortcutTooltip>
+      </CommandTooltip>
       <SearchPalette open={open} onOpenChange={setOpen} />
     </>
   )

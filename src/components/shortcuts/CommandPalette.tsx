@@ -19,43 +19,85 @@ import {
 } from "@/components/ui/dialog"
 import { Kbd, KbdGroup } from "@/components/ui/kbd"
 
+import { useKeyBindings } from "@/contexts/KeyBindingsContext"
+
+import {
+  argValues,
+  COMMAND_GROUPS,
+  COMMANDS,
+  type CommandDef,
+  type CommandGroup as CommandGroupName,
+  type CommandId,
+  type CommandValues,
+  findCommand,
+} from "@/lib/commands"
 import { formatLongDate, dateInViewerZone } from "@/lib/event-time"
 import { parseEventText } from "@/lib/magic-parser"
-import {
-  COMMAND_GROUPS,
-  type PaletteCommand,
-  type PalettePage,
-  type PaletteSubmenu,
-  type SubmenuConfig,
-} from "@/lib/palette-commands"
 
 import { ArrowRightIcon } from "@/icons/arrow-right"
 import { CheckIcon } from "@/icons/check"
 import { ChevronRightIcon } from "@/icons/chevron-right"
-import { useShortcutDefs } from "@/views/useViews"
 
-type PaletteHandlers = Record<string, (e?: KeyboardEvent) => void>
+// "root", or the command whose missing argument is being asked for.
+export type PalettePage = "root" | CommandId
 
-type Page = "root" | PaletteSubmenu | PalettePage
+interface PaletteEntry {
+  // The action run on select: `date.today`, `view.switch:week`.
+  action: string
+  label: string
+  group: CommandGroupName
+  // Selecting asks for this command's argument instead of running it.
+  prompt?: CommandId
+}
+
+const firstRequiredArg = (command: CommandDef) => command.args?.find((arg) => arg.required)
+
+function paletteEntries(values: CommandValues): PaletteEntry[] {
+  return COMMANDS.flatMap((command: CommandDef): PaletteEntry[] => {
+    const arg = command.args?.[0]
+    if (command.palette === "values" && arg) {
+      return argValues(command, arg, values).map((choice) => ({
+        action: `${command.id}:${choice.value}`,
+        label: choice.label,
+        group: command.group,
+      }))
+    }
+    if (command.palette !== "command") return []
+    const prompt = firstRequiredArg(command)
+    // Hidden when there's nothing to choose between.
+    if (prompt && prompt.kind !== "date" && argValues(command, prompt, values).length < 2) {
+      return []
+    }
+    return [
+      {
+        action: command.id,
+        label: command.paletteLabel ?? command.label,
+        group: command.group,
+        prompt: prompt ? (command.id as CommandId) : undefined,
+      },
+    ]
+  })
+}
+
+const capitalize = (text: string) => text.charAt(0).toUpperCase() + text.slice(1)
 
 export function CommandPalette({
   open,
   onOpenChange,
   requestedPage = "root",
-  commands,
-  handlers,
-  submenus,
-  onGoToDate,
+  values,
+  current,
+  onRun,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
-  requestedPage?: "root" | PalettePage
-  commands: readonly PaletteCommand[]
-  handlers: PaletteHandlers
-  submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
-  onGoToDate: (date: Temporal.PlainDate) => void
+  requestedPage?: PalettePage
+  values: CommandValues
+  // The value a prompt's list marks as current, by command.
+  current: Partial<Record<CommandId, string>>
+  onRun: (action: string) => void
 }) {
-  const [page, setPage] = useState<Page>("root")
+  const [page, setPage] = useState<PalettePage>("root")
   const [search, setSearch] = useState("")
 
   // Defer the action until the dialog has fully closed
@@ -72,13 +114,13 @@ export function CommandPalette({
     }
   }, [open, requestedPage])
 
-  const goToPage = (next: Page) => {
+  const goToPage = (next: PalettePage) => {
     setSearch("")
     setPage(next)
   }
 
-  const run = (action: () => void) => {
-    pendingRef.current = action
+  const run = (action: string) => {
+    pendingRef.current = () => onRun(action)
     onOpenChange(false)
   }
 
@@ -90,10 +132,11 @@ export function CommandPalette({
     }
   }
 
-  // The date page drives its own dynamic content rather than a static submenu.
-  const isGoToDatePage = page === "go-to-date"
-
-  const submenu = page === "root" || isGoToDatePage ? null : (submenus[page] ?? null)
+  const command = page === "root" ? undefined : findCommand(page)
+  const prompt = command && firstRequiredArg(command)
+  // The date page drives its own dynamic content rather than a list.
+  const isDatePage = prompt?.kind === "date"
+  const choices = command && prompt && !isDatePage ? argValues(command, prompt, values) : null
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -121,27 +164,47 @@ export function CommandPalette({
         </DialogHeader>
 
         {/* cmdk's fuzzy filter would hide the date page's single dynamic result, so we disable it: */}
-        <Command shouldFilter={!isGoToDatePage} onKeyDown={handleKeyDown}>
+        <Command shouldFilter={!isDatePage} onKeyDown={handleKeyDown}>
           <CommandInput
             placeholder={
-              isGoToDatePage ? "Type a date…" : submenu ? submenu.placeholder : "Type a command…"
+              isDatePage ? "Type a date…" : prompt ? `Search ${prompt.name}s…` : "Type a command…"
             }
             value={search}
             onValueChange={setSearch}
           />
 
           <CommandList>
-            <CommandListContent
-              isGoToDatePage={isGoToDatePage}
-              submenu={submenu}
-              search={search}
-              submenus={submenus}
-              goToPage={goToPage}
-              run={run}
-              commands={commands}
-              handlers={handlers}
-              onGoToDate={onGoToDate}
-            />
+            {command && isDatePage ? (
+              <DatePage
+                search={search}
+                heading={command.label.replace(/…$/, "")}
+                onSelect={(date) => run(`${command.id}:${date.toString()}`)}
+              />
+            ) : command && prompt && choices ? (
+              <>
+                <CommandEmpty>No {prompt.name}s found.</CommandEmpty>
+                <CommandGroup heading={capitalize(prompt.name)}>
+                  {choices.map((choice) => (
+                    <CommandItem
+                      key={choice.value}
+                      value={choice.label}
+                      keywords={[prompt.name]}
+                      onSelect={() => run(`${command.id}:${choice.value}`)}
+                    >
+                      <span>{choice.label}</span>
+                      {choice.value === current[command.id as CommandId] && (
+                        <CheckIcon className="ml-auto size-4" />
+                      )}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </>
+            ) : (
+              <>
+                <CommandEmpty>No commands found.</CommandEmpty>
+                <RootCommands values={values} goToPage={goToPage} run={run} />
+              </>
+            )}
           </CommandList>
 
           <PaletteFooter escAction={page === "root" ? "close" : "back"} />
@@ -151,106 +214,35 @@ export function CommandPalette({
   )
 }
 
-function CommandListContent({
-  isGoToDatePage,
-  submenu,
-  search,
-  submenus,
-  goToPage,
-  run,
-  commands,
-  handlers,
-  onGoToDate,
-}: {
-  isGoToDatePage: boolean
-  submenu: SubmenuConfig | null
-  search: string
-  submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
-  goToPage: (next: Page) => void
-  run: (action: () => void) => void
-  commands: readonly PaletteCommand[]
-  handlers: PaletteHandlers
-  onGoToDate: (date: Temporal.PlainDate) => void
-}) {
-  if (isGoToDatePage) {
-    return <GoToDatePage search={search} onSelect={(date) => run(() => onGoToDate(date))} />
-  }
-
-  if (submenu) {
-    return (
-      <>
-        <CommandEmpty>{submenu.empty}</CommandEmpty>
-        <CommandGroup heading={submenu.heading}>
-          {submenu.items.map((item) => (
-            <CommandItem
-              key={item.id}
-              value={item.label}
-              keywords={[submenu.heading]}
-              onSelect={() => run(() => submenu.onSelect(item.id))}
-            >
-              <span>{item.label}</span>
-              {item.id === submenu.activeId && <CheckIcon className="ml-auto size-4" />}
-            </CommandItem>
-          ))}
-        </CommandGroup>
-      </>
-    )
-  }
-
-  return (
-    <>
-      <CommandEmpty>No commands found.</CommandEmpty>
-      <RootCommands
-        commands={commands}
-        submenus={submenus}
-        goToPage={goToPage}
-        run={run}
-        handlers={handlers}
-      />
-    </>
-  )
-}
-
 function RootCommands({
-  commands,
-  submenus,
+  values,
   goToPage,
   run,
-  handlers,
 }: {
-  commands: readonly PaletteCommand[]
-  submenus: Partial<Record<PaletteSubmenu, SubmenuConfig>>
-  goToPage: (next: Page) => void
-  run: (action: () => void) => void
-  handlers: PaletteHandlers
+  values: CommandValues
+  goToPage: (next: PalettePage) => void
+  run: (action: string) => void
 }) {
-  const shortcutDefs = useShortcutDefs()
-  const shortcutById = useMemo(
-    () => new Map(shortcutDefs.map((def) => [def.id, def])),
-    [shortcutDefs],
-  )
+  const { bindings } = useKeyBindings()
+  const entries = paletteEntries(values)
 
   return COMMAND_GROUPS.map((group) => (
     <CommandGroup key={group} heading={group}>
-      {commands
-        .filter(
-          (command) => command.group === group && (!command.submenu || submenus[command.submenu]),
-        )
-        .map((command) => {
-          const def = shortcutById.get(command.id)
-          const label = command.label ?? def?.label ?? command.id
-          const binding = def?.bindings.find((b) => !b.hidden)
-          const drill = command.submenu ?? command.page
+      {entries
+        .filter((entry) => entry.group === group)
+        .map((entry) => {
+          const binding = bindings.find((b) => b.action === entry.action && !b.hidden)
+          const { prompt } = entry
 
           return (
             <CommandItem
-              key={command.id}
-              value={label}
+              key={entry.action}
+              value={entry.label}
               keywords={[group]}
-              onSelect={() => (drill ? goToPage(drill) : run(() => handlers[command.id]?.()))}
+              onSelect={() => (prompt ? goToPage(prompt) : run(entry.action))}
             >
-              <span>{label}</span>
-              {drill ? (
+              <span>{entry.label}</span>
+              {prompt ? (
                 <ChevronRightIcon className="ml-auto size-4 opacity-50" />
               ) : (
                 binding && (
@@ -266,11 +258,13 @@ function RootCommands({
   ))
 }
 
-function GoToDatePage({
+function DatePage({
   search,
+  heading,
   onSelect,
 }: {
   search: string
+  heading: string
   onSelect: (date: Temporal.PlainDate) => void
 }) {
   const date = useMemo(() => {
@@ -287,9 +281,9 @@ function GoToDatePage({
   }
 
   return (
-    <CommandGroup heading="Go to date">
+    <CommandGroup heading={heading}>
       {/* A constant value keeps cmdk's selection stable as the label changes. */}
-      <CommandItem value="go-to-date-result" onSelect={() => onSelect(date)}>
+      <CommandItem value="date-result" onSelect={() => onSelect(date)}>
         {formatLongDate(date)}
       </CommandItem>
     </CommandGroup>

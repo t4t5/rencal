@@ -29,6 +29,8 @@ const FILES: [(&str, &str); 4] = [
         include_str!("../../skills/rencal/references/providers.md"),
     ),
 ];
+// The views guide links the built-in views on `main`; a release links its own tag.
+const BUILTIN_VIEWS_URL: &str = "https://github.com/t4t5/rencal/tree/main/src/views/builtin";
 const CALDIR_SKILL_URL: &str = "https://caldir.org/skill.md";
 const FETCH_TIMEOUT: Duration = Duration::from_secs(15);
 const MARKER: &str = ".rencal-managed";
@@ -164,7 +166,7 @@ pub async fn refresh() {
 
 /// renCal's skill as one document, for `rencal skill show`.
 pub fn show() -> String {
-    FILES
+    rencal_files()
         .iter()
         .map(|(name, contents)| format!("==> {name} <==\n{contents}"))
         .collect::<Vec<_>>()
@@ -172,10 +174,18 @@ pub fn show() -> String {
 }
 
 pub fn rencal_files() -> SkillFiles {
+    let builtin_views = builtin_views_url(crate::plugins::running_app_version());
     FILES
         .iter()
-        .map(|(name, contents)| (*name, (*contents).to_owned()))
+        .map(|(name, contents)| (*name, contents.replace(BUILTIN_VIEWS_URL, &builtin_views)))
         .collect()
+}
+
+fn builtin_views_url(version: Option<semver::Version>) -> String {
+    match version {
+        Some(version) => BUILTIN_VIEWS_URL.replace("/tree/main/", &format!("/tree/v{version}/")),
+        None => BUILTIN_VIEWS_URL.to_owned(),
+    }
 }
 
 fn dirs() -> Result<(PathBuf, PathBuf), String> {
@@ -582,6 +592,21 @@ mod tests {
         ));
         assert!(!is_caldir_skill("<!doctype html><title>Not found</title>"));
         assert!(!is_caldir_skill("---\nname: other\n---\nname: caldir\n"));
+    }
+
+    #[test]
+    fn views_guide_links_the_built_in_views_of_its_release() {
+        let views = FILES
+            .iter()
+            .find_map(|(name, contents)| (*name == "references/views.md").then_some(*contents))
+            .unwrap();
+        assert!(views.contains(BUILTIN_VIEWS_URL));
+
+        assert_eq!(
+            builtin_views_url(Some(semver::Version::new(0, 9, 1))),
+            "https://github.com/t4t5/rencal/tree/v0.9.1/src/views/builtin"
+        );
+        assert_eq!(builtin_views_url(None), BUILTIN_VIEWS_URL);
     }
 
     #[test]

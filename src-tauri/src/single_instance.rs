@@ -45,23 +45,7 @@ impl InstanceGuard {
 }
 
 fn socket_path() -> PathBuf {
-    // Dev rencal (launched with "just dev") & prod rencal (installed with aur)
-    // use different sockets so that both can run at the same time:
-    let name = if cfg!(debug_assertions) {
-        "rencal-dev"
-    } else {
-        "rencal"
-    };
-
-    if let Some(runtime) = dirs::runtime_dir() {
-        // XDG_RUNTIME_DIR is already per-user (mode 0700, owned by the user),
-        // so a bare filename is safe.
-        return runtime.join(format!("{name}.sock"));
-    }
-    // Fallback: /tmp is shared across users. Namespace by euid so each user
-    // gets their own socket instead of fighting over a single global one.
-    let uid = unsafe { libc::geteuid() };
-    std::env::temp_dir().join(format!("{name}-{uid}.sock"))
+    crate::control::runtime_socket_path("rencal")
 }
 
 /// Either acquire the single-instance role (returning a guard + listener),

@@ -26,6 +26,7 @@ export function formatHotkeyKey(key: string): string {
   if (key === "shift") return isMacOS ? "\u21E7" : "Shift"
   if (key === "alt") return isMacOS ? "\u2325" : "Alt"
   if (key === "ctrl") return isMacOS ? "\u2303" : "Ctrl"
+  if (key === "meta") return isMacOS ? "\u2318" : "Super"
   return KEY_DISPLAY[key] ?? key.toUpperCase()
 }
 
@@ -36,11 +37,12 @@ export function ShortcutTooltip({
   children,
 }: {
   text: string
-  shortcut: string
+  // Unbound commands show the text alone.
+  shortcut?: string
   children: React.ReactNode
   open?: boolean
 }) {
-  const keys = shortcut.split("+").map(formatHotkeyKey)
+  const keys = shortcut?.split("+").map(formatHotkeyKey) ?? []
 
   return (
     <Tooltip open={open} delayDuration={1000}>
@@ -48,11 +50,13 @@ export function ShortcutTooltip({
       <TooltipContent className="py-1 px-2">
         <span>{text}</span>
 
-        <KbdGroup>
-          {keys.map((key) => (
-            <Kbd key={key}>{key}</Kbd>
-          ))}
-        </KbdGroup>
+        {keys.length > 0 && (
+          <KbdGroup>
+            {keys.map((key) => (
+              <Kbd key={key}>{key}</Kbd>
+            ))}
+          </KbdGroup>
+        )}
       </TooltipContent>
     </Tooltip>
   )

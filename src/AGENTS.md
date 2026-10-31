@@ -22,6 +22,11 @@
 - Built-in plugins live in `src/views/builtin/<id>/` (week, month, year). They import the host only through `@/sdk`, plus `./Sibling` files; ESLint enforces this. Grow `src/sdk/` deliberately: every export is a contract third-party plugins will rely on.
 - Installed view plugins are registered by `src/views/ViewRegistry.tsx`. Their scripts import `@rencomputer/rencal-sdk`, `react`, `react-dom`, `react/jsx-runtime` and `@js-temporal/polyfill`, which `src/views/plugin-modules.ts` links to the host's own modules. The list lives in `src/views/shared-modules.ts`; `packages/sdk/build.js` (the `rencal-sdk` build command) leaves those modules out of plugin bundles. Run `just sdk` after changing `src/sdk/` to regenerate the types in `packages/sdk/`. When the SDK changes, bump `version` in `packages/sdk/package.json`, set its `engines.rencal` to the first renCal release that ships the change, and update the pinned SDK and `min_rencal_version` in `skills/rencal/references/views.md` and the SDK README (a Rust test in `src-tauri/src/skill_install.rs` checks they agree). Run `just publish-sdk` only after that release is out; it refuses before the tag exists. Board lives in its own repository (`rencal-view-board`) as the reference view plugin.
 
+## Commands and keys
+
+- Anything a key, the native menu or the command palette triggers is a command in `src/lib/commands.ts`, implemented in `src/components/shortcuts/GlobalShortcuts.tsx`. `rencal do` and `rencal commands` (`src-tauri/src/control.rs`) run the same registry, so a handler throws `CommandError` with a message for whoever ran it rather than failing silently. Command ids are a user contract (`keys.toml`, scripts): rename them only deliberately.
+- Default keys live in `src/lib/key-bindings.ts` and a view's `shortcut`; users rebind them in `~/.config/rencal/keys.toml`. Never hardcode a key in UI: show bound keys with `CommandTooltip` or `useActionKeys`.
+
 ## Event date/time
 
 - Read `docs/event-time-system.md` before changing event date/time logic.
