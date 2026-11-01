@@ -25,6 +25,7 @@ export async function updateAndSyncEvent(
       new_calendar_slug:
         current.calendar_slug !== original.calendar_slug ? current.calendar_slug : null,
       summary: current.summary,
+      availability: current.availability,
       description: current.description,
       location: current.location,
       url: current.url,
