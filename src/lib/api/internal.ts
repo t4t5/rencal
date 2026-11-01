@@ -15,4 +15,8 @@ export {
   type CommandRequest,
 } from "@/lib/api/commands"
 export { emitAppEvent } from "@/lib/api/notifications"
-export { needsNativeDecorations, takePendingEventLinks } from "@/lib/api/platform"
+export {
+  needsNativeDecorations,
+  takePendingEventLinks,
+  takePendingIcsFile,
+} from "@/lib/api/platform"

@@ -47,6 +47,7 @@ pub trait PlatformApi {
     async fn needs_native_decorations() -> bool;
     async fn take_pending_event_links() -> Vec<EventDeepLink>;
     async fn take_pending_plugin_install() -> Option<PluginInstallLink>;
+    async fn take_pending_ics_file() -> Option<String>;
 }
 
 #[derive(Clone)]
@@ -72,5 +73,9 @@ impl PlatformApi for PlatformApiImpl {
 
     async fn take_pending_plugin_install(self) -> Option<PluginInstallLink> {
         self.state.deep_links.take_plugin_install()
+    }
+
+    async fn take_pending_ics_file(self) -> Option<String> {
+        self.state.deep_links.take_ics_file()
     }
 }

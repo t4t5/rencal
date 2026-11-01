@@ -3,8 +3,8 @@ use crate::routes::{
     error::{RpcError, RpcErrorKind},
 };
 use caldir_core::{
-    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence, Status,
-    TimeFormat as CoreTimeFormat,
+    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence,
+    Status, TimeFormat as CoreTimeFormat,
 };
 use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -356,6 +356,50 @@ pub struct SyncPreview {
     pub to_push_count: u32,
     pub to_push_delete_count: u32,
     pub to_pull_count: u32,
+}
+
+#[derive(Serialize, Type)]
+pub struct IcsPreview {
+    pub file_name: String,
+    pub calendars: Vec<IcsSourceCalendar>,
+    /// The file's only event (a series counts as one), e.g. an invite.
+    pub event: Option<CalendarEvent>,
+    /// Events that couldn't be read and won't be imported.
+    pub skipped_count: u32,
+}
+
+/// A calendar found in an .ics file. Its index is the `source` of an import target.
+#[derive(Serialize, Type)]
+pub struct IcsSourceCalendar {
+    pub name: String,
+    pub color: Option<String>,
+    pub event_count: u32,
+    pub first_start: RpcEventTime,
+    pub last_start: RpcEventTime,
+    /// Some events have an organizer or guests.
+    pub has_guests: bool,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct IcsImportTarget {
+    pub source: u32,
+    pub destination: IcsImportDestination,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum IcsImportDestination {
+    Existing { calendar_slug: String },
+    New { name: String, color: Option<String> },
+}
+
+#[derive(Serialize, Type)]
+pub struct IcsImportResult {
+    pub imported_count: u32,
+    /// Already in the target calendar (same UID), so left alone.
+    pub duplicate_count: u32,
+    /// Set when exactly one event was imported, so the UI can show it.
+    pub event: Option<CalendarEvent>,
 }
 
 impl From<&caldir_core::Calendar> for Calendar {

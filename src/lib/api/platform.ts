@@ -10,3 +10,8 @@ export function needsNativeDecorations(): Promise<boolean> {
 export function takePendingEventLinks(): Promise<EventDeepLink[]> {
   return rpc.platform.take_pending_event_links()
 }
+
+/** The next .ics file the OS asked renCal to open, if any. Taking it removes it. */
+export function takePendingIcsFile(): Promise<string | null> {
+  return rpc.platform.take_pending_ics_file()
+}

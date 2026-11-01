@@ -215,7 +215,7 @@ uninstall-notifierd:
 notifierd-logs:
   journalctl --user -u rencal-notifierd.service -f
 
-# Point rencal:// links at the dev build (for testing deeplinks against `just dev`)
+# Point rencal:// links and .ics files at the dev build (for testing deeplinks against `just dev`)
 deeplink-dev:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -226,12 +226,14 @@ deeplink-dev:
     'Name=renCal' \
     'Terminal=false' \
     'NoDisplay=true' \
-    'MimeType=x-scheme-handler/rencal' \
+    'MimeType=x-scheme-handler/rencal;text/calendar;' \
     'Exec={{justfile_directory()}}/src-tauri/target/debug/rencal %u' \
     > ~/.local/share/applications/rencal-handler.desktop
   xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
+  xdg-mime default rencal-handler.desktop text/calendar
 
-# Point rencal:// links back at the installed app
+# Point rencal:// links and .ics files back at the installed app
 deeplink-prod:
   xdg-mime default renCal.desktop x-scheme-handler/rencal
+  xdg-mime default renCal.desktop text/calendar
   rm -f ~/.local/share/applications/rencal-handler.desktop
