@@ -2,7 +2,8 @@
 //!
 //! We avoid `tauri-plugin-single-instance` here because its Linux zbus path can
 //! panic inside Tauri's tokio runtime. The first process owns a per-user Unix
-//! socket; later launches send deep-link URLs to it and exit. Debug and release
+//! socket; later launches send deep-link URLs (and `file://` URLs of .ics
+//! files they were asked to open) to it and exit. Debug and release
 //! use separate sockets so `tauri dev` does not fight the installed app.
 //!
 //! Handshake (issue #114): a later launch writes its URLs and waits briefly
@@ -88,10 +89,18 @@ pub fn try_acquire_or_signal() -> Option<InstanceGuard> {
 /// Send our deep-link URLs (possibly none, meaning focus-only) to the primary
 /// and wait for its ack. Any error means the caller should take over.
 fn signal_primary(stream: &mut UnixStream) -> std::io::Result<()> {
-    let urls: Vec<String> = std::env::args_os()
+    let args: Vec<String> = std::env::args_os()
+        .skip(1)
         .filter_map(|arg| arg.into_string().ok())
-        .filter(|arg| arg.starts_with("rencal:"))
         .collect();
+    let mut urls: Vec<String> = args
+        .iter()
+        .filter(|arg| arg.starts_with("rencal:"))
+        .cloned()
+        .collect();
+    // Resolve paths here: the primary runs in a different directory.
+    let cwd = std::env::current_dir().unwrap_or_default();
+    urls.extend(crate::deep_links::ics_file_urls(&args, &cwd));
     stream.write_all(urls.join("\n").as_bytes())?;
     // Half-close so the primary's read_to_string sees EOF while our read
     // side stays open for the ack.

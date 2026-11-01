@@ -2,6 +2,7 @@ import { agents } from "@/lib/api/agents"
 import { events } from "@/lib/api/calendar-events"
 import { calendars } from "@/lib/api/calendars"
 import { contacts } from "@/lib/api/contacts"
+import { icsFiles } from "@/lib/api/ics-files"
 import { keys } from "@/lib/api/keys"
 import { notifications } from "@/lib/api/notifications"
 import { plugins } from "@/lib/api/plugins"
@@ -16,6 +17,7 @@ export type { ExternalView, ExternalViewsSnapshot } from "@/lib/api/views"
 export const api = {
   events,
   calendars,
+  icsFiles,
   contacts,
   providers,
   sync,
@@ -41,6 +43,13 @@ export type {
 } from "@/lib/api/calendar-events"
 export type { Calendar } from "@/lib/api/calendars"
 export type { Contact } from "@/lib/api/contacts"
+export type {
+  IcsImportDestination,
+  IcsImportResult,
+  IcsImportTarget,
+  IcsPreview,
+  IcsSourceCalendar,
+} from "@/lib/api/ics-files"
 export type { KeyEdit, KeysSnapshot, UserKeyBinding } from "@/lib/api/keys"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"

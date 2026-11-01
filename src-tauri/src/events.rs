@@ -23,6 +23,7 @@ pub enum AppEvent {
     ProvidersChanged(()),
     EventDeepLinkAvailable(()),
     PluginDeepLinkAvailable(()),
+    IcsFileAvailable(()),
     RencalConfigChanged(()),
     SystemTzChanged(String),
     OmarchyThemeChanged(OmarchyColors),
@@ -137,6 +138,11 @@ mod tests {
             (
                 AppEvent::PluginDeepLinkAvailable(()),
                 "plugin-deep-link-available",
+                Value::Null,
+            ),
+            (
+                AppEvent::IcsFileAvailable(()),
+                "ics-file-available",
                 Value::Null,
             ),
             (

@@ -29,6 +29,15 @@
     "active": true,
     "createUpdaterArtifacts": true,
     "targets": "all",
+    "fileAssociations": [
+      {
+        "ext": ["ics"],
+        "mimeType": "text/calendar",
+        "name": "iCalendar",
+        "description": "iCalendar file",
+        "role": "Viewer"
+      }
+    ],
     "resources": [
       "providers/caldir-provider-google",
       "providers/caldir-provider-icloud",

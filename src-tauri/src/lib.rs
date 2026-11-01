@@ -281,11 +281,18 @@ pub async fn run() {
     let router = create_router_with_plugins(state.clone(), plugins.clone());
 
     let builder = tauri::Builder::default();
+    let drop_state = state.clone();
 
+    // Deep links reach the plugin's deep-link feature; .ics files don't.
     #[cfg(any(target_os = "macos", target_os = "windows"))]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-        focus_main_window(app);
-    }));
+    let builder = builder.plugin({
+        let state = state.clone();
+        tauri_plugin_single_instance::init(move |app, args, cwd| {
+            let urls = deep_links::ics_file_urls(args.iter().skip(1), std::path::Path::new(&cwd));
+            deep_links::enqueue_urls(app, &state.deep_links, &urls);
+            focus_main_window(app);
+        })
+    });
 
     // Native macOS menu bar
     #[cfg(target_os = "macos")]
@@ -324,6 +331,11 @@ pub async fn run() {
                 let urls: Vec<String> = urls.into_iter().map(|url| url.to_string()).collect();
                 deep_links::enqueue_urls(app.handle(), &state.deep_links, &urls);
             }
+            // Launched to open .ics files ("Open with", double-click). macOS
+            // delivers those as Opened events, which arrive via on_open_url.
+            let cwd = std::env::current_dir().unwrap_or_default();
+            let ics_urls = deep_links::ics_file_urls(std::env::args().skip(1), &cwd);
+            deep_links::enqueue_urls(app.handle(), &state.deep_links, &ics_urls);
 
             let app_handle = app.handle().clone();
             let inbox_state = state.clone();
@@ -392,8 +404,8 @@ pub async fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+        .on_window_event(move |window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
                 // Hide the main window instead of closing it so the app keeps
                 // running in the background (e.g. for notifications).
                 // Only applied where no visible close button exists — on
@@ -403,6 +415,13 @@ pub async fn run() {
                     let _ = window.hide();
                 }
             }
+            // .ics files dropped onto a window import like opened ones.
+            tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
+                let paths = paths.iter().map(|path| path.to_string_lossy());
+                let urls = deep_links::ics_file_urls(paths, std::path::Path::new("/"));
+                deep_links::enqueue_urls(window.app_handle(), &drop_state.deep_links, &urls);
+            }
+            _ => {}
         })
         .invoke_handler(router.into_handler())
         .build(context)
