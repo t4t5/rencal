@@ -6,9 +6,9 @@ const debug = createDebugLogger("agenda")
 
 type Anchor = { el: Element; offset: number; scrollTop: number }
 
-// WebKit has no CSS scroll anchoring, so when the sections reflow without a scroll
-// (a theme and its fonts swap in, the sidebar resizes) the same scrollTop lands on
-// other days. Keep the topmost visible section where it was instead.
+// The agenda opts out of CSS scroll anchoring (older WebKit lacks it), so when the
+// sections reflow without a scroll (a theme and its fonts swap in, the sidebar resizes)
+// the same scrollTop lands on other days. Keep the topmost visible section where it was.
 export function usePreserveScrollOnReflow({
   scrollContainerRef,
   enabled,
