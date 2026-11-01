@@ -1,6 +1,6 @@
 import { ReactNode, useCallback, useEffect, useState } from "react"
 
-import { api, type CaldirSettings } from "@/lib/api"
+import { api, type CaldirSettings, type VisibleHours } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 import type { CalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
@@ -13,6 +13,8 @@ interface SettingsContextType {
   setFirstDayOfWeek: (day: FirstDayOfWeek) => Promise<void>
   showWeekNumbers: boolean
   setShowWeekNumbers: (show: boolean) => Promise<void>
+  visibleHours: VisibleHours | null
+  setVisibleHours: (hours: VisibleHours | null) => Promise<void>
   defaultReminders: number[]
   setDefaultReminders: (mins: number[]) => Promise<void>
   defaultCalendar: string | null
@@ -40,6 +42,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const [timeFormat, setTimeFormatState] = useState<TimeFormat>("24h")
   const [firstDayOfWeek, setFirstDayOfWeekState] = useState<FirstDayOfWeek>("monday")
   const [showWeekNumbers, setShowWeekNumbersState] = useState<boolean>(false)
+  const [visibleHours, setVisibleHoursState] = useState<VisibleHours | null>(null)
   const [defaultReminders, setDefaultRemindersState] = useState<number[]>([])
   const [defaultCalendar, setDefaultCalendarState] = useState<string | null>(null)
   const [calendarDir, setCalendarDirState] = useState<string>("")
@@ -57,20 +60,23 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
 
   const reloadSettings = useCallback(async () => {
     try {
-      const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult] = await Promise.all([
-        api.settings.getCaldirSettings(),
-        api.settings.getNotificationsEnabled(),
-        api.settings.getAutoSyncEnabled(),
-        api.settings.getFirstDayOfWeek(),
-        api.settings.getShowWeekNumbers(),
-        api.settings.getCalendarGroups(),
-      ])
+      const [caldir, notifs, autoSync, firstDay, weekNumbers, groupsResult, hours] =
+        await Promise.all([
+          api.settings.getCaldirSettings(),
+          api.settings.getNotificationsEnabled(),
+          api.settings.getAutoSyncEnabled(),
+          api.settings.getFirstDayOfWeek(),
+          api.settings.getShowWeekNumbers(),
+          api.settings.getCalendarGroups(),
+          api.settings.getVisibleHours(),
+        ])
       applyCaldirSettings(caldir)
       setNotificationsEnabledState(notifs)
       setAutoSyncEnabledState(autoSync)
       setFirstDayOfWeekState(firstDay)
       setShowWeekNumbersState(weekNumbers)
       setGroupsState(groupsResult)
+      setVisibleHoursState(hours)
       setSettingsLoaded(true)
     } catch (e) {
       console.error(e)
@@ -134,6 +140,12 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     await emitAppEvent("rencal-config-changed")
   }
 
+  const setVisibleHours = async (hours: VisibleHours | null) => {
+    await api.settings.setVisibleHours(hours)
+    setVisibleHoursState(hours)
+    await emitAppEvent("rencal-config-changed")
+  }
+
   const setAutoSyncEnabled = async (enabled: boolean) => {
     setAutoSyncEnabledState(enabled)
     await api.settings.setAutoSyncEnabled(enabled)
@@ -155,6 +167,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
         setFirstDayOfWeek,
         showWeekNumbers,
         setShowWeekNumbers,
+        visibleHours,
+        setVisibleHours,
         defaultReminders,
         setDefaultReminders,
         defaultCalendar,

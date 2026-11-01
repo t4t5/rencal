@@ -102,6 +102,19 @@ user scrolls.
   scrolling. The strip stays fully scrollable while events load, when no calendars are
   visible, and when the calendar is empty.
 
+### Preferred visible hours
+
+- Settings → General → Preferred visible hours optionally fits a start/end range
+  into the available time-grid height, excluding the sticky day/all-day header.
+  The full 24-hour grid stays scrollable; events outside the range are never hidden.
+- Opening the view or changing the preferred range aligns its start with the top.
+  Resizing the window or changing the header height rescales the grid while
+  preserving the hour the user has scrolled to. Horizontal navigation does not reset it.
+- Without a preferred range, the existing hourly scale and initial scroll to the
+  current time (or 08:00 for a week without today) are unchanged.
+- The setting is exposed as `visibleHours` by the SDK's `useDisplaySettings()`
+  for other time-grid views. There is currently no built-in daily view.
+
 ### Active date while scrolling
 
 - On open, the strip is positioned so the first day of the active date's week (per the

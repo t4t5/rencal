@@ -63,7 +63,7 @@ export type {
   PluginInstallLink,
 } from "@/lib/api/plugins"
 export type { CredentialFieldInput, ProviderField, ProviderInfo } from "@/lib/api/providers"
-export type { CaldirSettings } from "@/lib/api/settings"
+export type { CaldirSettings, VisibleHours } from "@/lib/api/settings"
 export type { SyncPreview } from "@/lib/api/sync"
 export type {
   ExternalTheme,

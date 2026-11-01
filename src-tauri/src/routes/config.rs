@@ -1,4 +1,4 @@
-use crate::routes::error::RpcError;
+use crate::routes::error::{RpcError, RpcErrorKind};
 use std::collections::BTreeMap;
 
 use rencal_config::RencalConfig;
@@ -92,6 +92,37 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
     }
 }
 
+/// Preferred time-grid hours, saved together so the range is always valid.
+#[derive(Clone, Copy, Serialize, Deserialize, Type)]
+pub struct VisibleHours {
+    pub start_hour: u32,
+    pub end_hour: u32,
+}
+
+impl From<rencal_config::VisibleHours> for VisibleHours {
+    fn from(value: rencal_config::VisibleHours) -> Self {
+        Self {
+            start_hour: value.start_hour,
+            end_hour: value.end_hour,
+        }
+    }
+}
+
+impl TryFrom<VisibleHours> for rencal_config::VisibleHours {
+    type Error = RpcError;
+
+    fn try_from(value: VisibleHours) -> Result<Self, Self::Error> {
+        let hours = Self {
+            start_hour: value.start_hour,
+            end_hour: value.end_hour,
+        };
+        hours
+            .validate()
+            .map_err(|message| RpcError::new(RpcErrorKind::InvalidInput, message))?;
+        Ok(hours)
+    }
+}
+
 #[taurpc::procedures(path = "config", export_to = "../src/rpc/bindings.ts")]
 pub trait ConfigApi {
     async fn get_theme() -> TauResult<ThemeSettings>;
@@ -104,6 +135,8 @@ pub trait ConfigApi {
     async fn set_first_day_of_week(day: FirstDayOfWeek) -> TauResult<()>;
     async fn get_show_week_numbers() -> TauResult<bool>;
     async fn set_show_week_numbers(show: bool) -> TauResult<()>;
+    async fn get_visible_hours() -> TauResult<Option<VisibleHours>>;
+    async fn set_visible_hours(hours: Option<VisibleHours>) -> TauResult<()>;
     async fn get_groups() -> TauResult<BTreeMap<String, Vec<String>>>;
     async fn set_groups(groups: BTreeMap<String, Vec<String>>) -> TauResult<()>;
 }
@@ -160,6 +193,17 @@ impl ConfigApi for ConfigApiImpl {
     async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
+        config.save().map_err(RpcError::from)
+    }
+
+    async fn get_visible_hours(self) -> TauResult<Option<VisibleHours>> {
+        Ok(RencalConfig::load()?.visible_hours.map(Into::into))
+    }
+
+    async fn set_visible_hours(self, hours: Option<VisibleHours>) -> TauResult<()> {
+        let hours = hours.map(TryInto::try_into).transpose()?;
+        let mut config = RencalConfig::load()?;
+        config.visible_hours = hours;
         config.save().map_err(RpcError::from)
     }
 

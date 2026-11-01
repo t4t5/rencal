@@ -1,5 +1,4 @@
 export const HOUR_HEIGHT = 48
-export const GRID_HEIGHT = 24 * HOUR_HEIGHT
 export const GUTTER_WIDTH = 48
 export const DAY_MINUTES = 24 * 60
 
