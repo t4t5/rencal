@@ -1,11 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
-import {
-  PluginBadges,
-  PluginDetails,
-  usePluginAction,
-} from "@/components/settings/plugins/PluginDetails"
+import { PluginBadges } from "@/components/settings/plugins/PluginBadge"
+import { PluginDetails, usePluginAction } from "@/components/settings/plugins/PluginDetails"
 import {
   mergePlugins,
   resolveSelection,
@@ -85,7 +82,10 @@ function PluginInstallDialogContent({
 
   useEffect(() => {
     let cancelled = false
-    Promise.all([api.plugins.list(), api.plugins.catalog()])
+    // List after the catalog: the backend finds updates against the catalog it fetched.
+    api.plugins
+      .catalog()
+      .then(async (catalog) => [await api.plugins.list(), catalog] as const)
       .then(([installed, catalog]) => {
         if (!cancelled) setPlugins(mergePlugins(installed, catalog))
       })

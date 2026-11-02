@@ -16,10 +16,9 @@ import {
 
 import { api, getErrorMessage, type InstalledPlugins, type PluginCatalog } from "@/lib/api"
 
-import { PluginBadge } from "./PluginBadge"
+import { PluginBadges } from "./PluginBadge"
 import { PluginSheet } from "./PluginSheet"
 import {
-  CONTRIBUTION_LABELS,
   isProvider,
   mergePlugins,
   pluginOwner,
@@ -59,6 +58,8 @@ export function PluginsPage() {
     setCatalogLoading(true)
     try {
       setCatalog(await api.plugins.catalog())
+      // The backend finds updates against the catalog it just fetched.
+      void refreshInstalled()
     } catch (error) {
       setCatalog((previous) => ({
         plugins: previous?.plugins ?? [],
@@ -67,7 +68,7 @@ export function PluginsPage() {
     } finally {
       setCatalogLoading(false)
     }
-  }, [])
+  }, [refreshInstalled])
 
   useEffect(() => {
     void refreshInstalled()
@@ -209,8 +210,13 @@ function pluginCount(visible: number, total: number): string {
     : `${visible.toLocaleString()} of ${total.toLocaleString()} ${noun}`
 }
 
-/** Unlisted plugins have no stars or release date, so they sort last; ties go by name. */
+/**
+ * Updatable plugins sort first. Unlisted plugins have no stars or release
+ * date, so they sort last; ties go by name.
+ */
 function comparePlugins(left: PluginListItem, right: PluginListItem, sort: PluginSort): number {
+  const byUpdate = Number(hasUpdate(right)) - Number(hasUpdate(left))
+  if (byUpdate) return byUpdate
   const byKey =
     sort === "stars"
       ? right.stars - left.stars
@@ -218,13 +224,10 @@ function comparePlugins(left: PluginListItem, right: PluginListItem, sort: Plugi
   return byKey || left.name.localeCompare(right.name, undefined, { sensitivity: "base" })
 }
 
+const hasUpdate = (plugin: PluginListItem) => Boolean(plugin.installed?.update_version)
+
 function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: () => void }) {
   const error = plugin.installed?.error
-  const status = plugin.installed?.update_version
-    ? "Update available"
-    : plugin.installed
-      ? "Installed"
-      : null
 
   // Flex column pins content to the top of a stretched <button>; w-full because WebKit doesn't stretch its children.
   return (
@@ -237,14 +240,7 @@ function PluginCard({ plugin, onSelect }: { plugin: PluginListItem; onSelect: ()
         <h3 data-typography="heading" className="truncate text-sm">
           {plugin.name}
         </h3>
-        {(plugin.contributions.length > 0 || status) && (
-          <div className="flex flex-wrap gap-1.5">
-            {plugin.contributions.map((kind) => (
-              <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
-            ))}
-            {status && <PluginBadge solid>{status}</PluginBadge>}
-          </div>
-        )}
+        <PluginBadges plugin={plugin} />
         {plugin.description && (
           <p className="line-clamp-2 text-sm text-muted-foreground">{plugin.description}</p>
         )}
