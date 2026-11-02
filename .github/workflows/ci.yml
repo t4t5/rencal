@@ -62,6 +62,10 @@ jobs:
       - name: Install frontend dependencies
         run: pnpm install --frozen-lockfile
 
+      # Catches a Cargo.lock committed with a local [patch] active.
+      - name: Check Cargo.lock is up to date
+        run: cargo metadata --locked --format-version 1 --manifest-path src-tauri/Cargo.toml > /dev/null
+
       - name: Create provider placeholders
         run: |
           mkdir -p src-tauri/providers
