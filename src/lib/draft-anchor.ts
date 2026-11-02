@@ -1,4 +1,6 @@
-export type DraftAnchor = { getBoundingClientRect: () => DOMRect }
+import type { PopoverAnchor } from "@/lib/event-anchor"
+
+export type DraftAnchor = PopoverAnchor
 
 let _anchor: DraftAnchor | null = null
 

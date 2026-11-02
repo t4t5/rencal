@@ -3,6 +3,7 @@ mod availability_draft;
 mod conference;
 mod event_color;
 mod helpers;
+mod ics_file;
 mod types;
 
 mod check_provider_connection;
@@ -25,12 +26,14 @@ mod get_event;
 mod get_provider_connect_info;
 mod list_availabilities;
 mod list_availability_dirs;
+mod import_ics;
 mod list_calendars;
 mod list_contacts;
 mod list_events;
 mod list_invites;
 mod list_providers;
 mod preview_availability;
+mod preview_ics;
 mod rename_calendar;
 mod rsvp;
 mod search_events;
@@ -45,8 +48,9 @@ mod update_event;
 pub use types::{
     AvailabilityDetails, AvailabilityDraft, AvailabilityPreview, AvailabilitySummary,
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
-    CredentialsConnectResult, PreviewSource, ProviderConnectInfo, ResponseStatus,
-    SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
+    CredentialsConnectResult, IcsImportResult, IcsImportTarget, IcsPreview, PreviewSource,
+    ProviderConnectInfo, ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat,
+    UpdateEventInput,
 };
 
 use crate::routes::TauResult;
@@ -76,6 +80,8 @@ pub trait CaldirApi {
     async fn split_recurring_series_at(
         input: SplitRecurringSeriesInput,
     ) -> TauResult<CalendarEvent>;
+    async fn preview_ics(path: String) -> TauResult<IcsPreview>;
+    async fn import_ics(path: String, targets: Vec<IcsImportTarget>) -> TauResult<IcsImportResult>;
 
     async fn search_events(
         calendar_slugs: Vec<String>,
@@ -220,6 +226,18 @@ impl CaldirApi for CaldirApiImpl {
         input: SplitRecurringSeriesInput,
     ) -> TauResult<CalendarEvent> {
         split_recurring_series_at::handler(&self.state, input)
+    }
+
+    async fn preview_ics(self, path: String) -> TauResult<IcsPreview> {
+        preview_ics::handler(path)
+    }
+
+    async fn import_ics(
+        self,
+        path: String,
+        targets: Vec<IcsImportTarget>,
+    ) -> TauResult<IcsImportResult> {
+        import_ics::handler(&self.state, path, targets)
     }
 
     async fn search_events(

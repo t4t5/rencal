@@ -19,6 +19,7 @@ use specta::Type;
 use tokio::sync::watch;
 
 use crate::busy_cache::BusyCache;
+use crate::control::PendingCommands;
 use crate::deep_links::DeepLinkInbox;
 use crate::event_cache::EventCache;
 use crate::plugins;
@@ -139,6 +140,7 @@ pub struct AppState {
     availabilities_changed: Signal,
     providers_changed: Signal,
     pub deep_links: DeepLinkInbox,
+    pub commands: PendingCommands,
 }
 
 impl AppState {
@@ -170,6 +172,7 @@ impl AppState {
             availabilities_changed: Signal::new(),
             providers_changed: Signal::new(),
             deep_links: DeepLinkInbox::default(),
+            commands: PendingCommands::default(),
         })
     }
 

@@ -7,11 +7,10 @@
  * move through `requestSave`, which handles optimistic updates, rollback, and
  * the recurring-event dialog exactly like the edit popover does.
  *
- * Drop targets are discovered from the DOM: grid cells/columns declare
- * `data-drop-day` + `data-drop-zone` (see `DropZone` in lib/event-drag), and
- * scroll containers declare `data-drag-scroll` to opt in to edge auto-scroll.
+ * Drop targets are the day elements views mark with `dayAttributes` (see
+ * `DayZone` in lib/day-grid); the event's scroll container auto-scrolls near
+ * its edges.
  */
-import { Temporal } from "@js-temporal/polyfill"
 import {
   useMemo,
   useRef,
@@ -25,6 +24,7 @@ import { useCalendars } from "@/contexts/CalendarStateContext"
 import { useRecurrenceEdit } from "@/contexts/RecurrenceEditContext"
 
 import { eventKey, withDates, type CalendarEvent } from "@/lib/cal-events"
+import { dayElementAt, scrollParent } from "@/lib/day-grid"
 import { createDebugLogger } from "@/lib/debug"
 import {
   computeDropRange,
@@ -34,15 +34,8 @@ import {
   makeDragPreview,
   type DragGrab,
   type DropHit,
-  type DropZone,
 } from "@/lib/event-drag"
-import {
-  DAY_MINUTES,
-  dateKeyToPlainDate,
-  formatDateKey,
-  isSameEventTime,
-  type EventTimeRange,
-} from "@/lib/event-time"
+import { DAY_MINUTES, formatDateKey, isSameEventTime, type EventTimeRange } from "@/lib/event-time"
 import { isEventReadonly } from "@/lib/event-utils"
 import { createStrictContext } from "@/lib/strict-context"
 
@@ -74,7 +67,7 @@ export interface ActiveEventDrag {
 
 type StartDrag = (
   event: CalendarEvent,
-  e: ReactPointerEvent<HTMLElement>,
+  e: ReactPointerEvent<Element>,
   opts: { float: DragFloatKind },
 ) => void
 
@@ -105,36 +98,13 @@ type DragSession = {
   raf: number | null
 }
 
-export function findDropDayElement(
-  x: number,
-  y: number,
-): { el: HTMLElement; day: Temporal.PlainDate } | null {
-  // `elementsFromPoint` returns the full stack under the point, so a cell is
-  // found even when an event block (a sibling in the grid) sits on top of it.
-  const el = document
-    .elementsFromPoint(x, y)
-    .find(
-      (candidate): candidate is HTMLElement =>
-        candidate instanceof HTMLElement && candidate.dataset.dropDay !== undefined,
-    )
-  if (!el) return null
-
-  const dayKey = el.dataset.dropDay
-  if (!dayKey) return null
-  return { el, day: dateKeyToPlainDate(dayKey) }
-}
-
 function findDropHit(x: number, y: number): DropHit | null {
-  const hit = findDropDayElement(x, y)
+  const hit = dayElementAt(x, y)
   if (!hit) return null
-
-  const zone = hit.el.dataset.dropZone as DropZone | undefined
-  if (!zone) return null
-
-  if (zone !== "timed") return { zone, day: hit.day, minutes: null }
+  if (hit.zone !== "timed") return { zone: hit.zone, day: hit.day, minutes: null }
 
   const rect = hit.el.getBoundingClientRect()
-  return { zone, day: hit.day, minutes: ((y - rect.top) / rect.height) * DAY_MINUTES }
+  return { zone: hit.zone, day: hit.day, minutes: ((y - rect.top) / rect.height) * DAY_MINUTES }
 }
 
 function sameRange(a: EventTimeRange | null, b: EventTimeRange | null): boolean {
@@ -305,7 +275,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
           offsetX: e.clientX - rect.left,
           offsetY: e.clientY - rect.top,
         },
-        scrollEl: el.closest<HTMLElement>("[data-drag-scroll]"),
+        scrollEl: scrollParent(el),
         startX: e.clientX,
         startY: e.clientY,
         lastX: e.clientX,
@@ -340,7 +310,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
 export function useEventDragHandle(
   event: CalendarEvent,
   { disabled = false, float = "pill" }: { disabled?: boolean; float?: DragFloatKind } = {},
-): ((e: ReactPointerEvent<HTMLElement>) => void) | undefined {
+): ((e: ReactPointerEvent<Element>) => void) | undefined {
   const { startDrag } = useEventDrag()
   const { calendars } = useCalendars()
 

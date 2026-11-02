@@ -2,7 +2,9 @@ import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
 import type { Calendar } from "@/lib/api"
-import { type EventAttendee, rpcToCalendarEvent } from "@/lib/cal-events"
+import { type EventAttendee, rpcToCalendarEvent, withDates } from "@/lib/cal-events"
+import { makeDragPreview } from "@/lib/event-drag"
+import { atTime } from "@/lib/event-time"
 
 import { eventsByDay, toAppEvent, toPluginEvents } from "./events"
 
@@ -58,11 +60,22 @@ describe("toPluginEvents", () => {
       end: trip.end,
       firstDay: expect.objectContaining({ year: 2026, month: 9, day: 15 }),
       lastDay: expect.objectContaining({ year: 2026, month: 9, day: 17 }),
+      startMinutes: 0,
+      endMinutes: 3 * 1440,
       status: "confirmed",
       availability: "busy",
       rsvp: null,
+      transient: null,
     })
     expect(second.key).toBe("work::later")
+  })
+
+  it("marks the draft and drag previews as transient", () => {
+    const draft = { ...trip, id: "" }
+    const preview = makeDragPreview(trip, { start: trip.start, end: trip.end })
+
+    expect(toPluginEvents([draft], [work])[0].transient).toBe("draft")
+    expect(toPluginEvents([preview], [work])[0].transient).toBe("drag-preview")
   })
 
   it("keeps each event's identity and maps it back to the app event", () => {
@@ -70,6 +83,18 @@ describe("toPluginEvents", () => {
 
     expect(toPluginEvents([trip], [work])[0]).toBe(pluginEvent)
     expect(toAppEvent(pluginEvent)).toBe(trip)
+  })
+
+  it("measures a timed event's minutes from the midnight starting its first day", () => {
+    const day = Temporal.PlainDate.from("2026-09-15")
+    const late = withDates(
+      event("late", "2026-09-15", "2026-09-16"),
+      atTime(day, 22, 30),
+      atTime(day.add({ days: 1 }), 1),
+    )
+    const [pluginEvent] = toPluginEvents([late], [work])
+
+    expect([pluginEvent.startMinutes, pluginEvent.endMinutes]).toEqual([22 * 60 + 30, 25 * 60])
   })
 
   it("reads the user's RSVP from the attendee matching the calendar's email", () => {

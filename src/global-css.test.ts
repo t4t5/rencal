@@ -121,9 +121,9 @@ describe("global CSS contract", () => {
     )
   })
 
-  it("paints create selections and month boundaries through their slots", () => {
+  it("paints create selections in the default calendar's colour, and month boundaries", () => {
     expect(source).toMatch(
-      /:where\(\[data-slot="month-create-selection"\], \[data-slot="week-create-selection"\]\)\s*\{[^}]*background:[^}]*var\(--calendar-event-color\)/,
+      /:where\(\[data-create-selection\]\)\s*\{[^}]*--calendar-event-color:\s*var\(--create-selection-color\);[^}]*background:[^}]*var\(--calendar-event-color\)/,
     )
     expect(source).toMatch(/:where\(\[data-slot="month-boundary"\]\)\s*\{[^}]*background:/)
   })

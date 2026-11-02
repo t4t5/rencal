@@ -11,6 +11,7 @@ use crate::{external_themes, omarchy};
 
 pub mod caldir;
 pub mod caldir_config;
+pub mod keys;
 pub mod plugins;
 pub mod rencal_config;
 pub mod tz;
@@ -34,6 +35,7 @@ pub fn spawn_all(
         "rencal config watcher",
         rencal_config::run_watcher(app.clone()),
     );
+    spawn_task("keys watcher", keys::run_watcher(app.clone()));
     spawn_task(
         "plugin declarations watcher",
         plugins::run_watcher(app.clone(), plugin_manager.clone(), state.clone()),

@@ -12,7 +12,7 @@ const WEBSITE_URL: &str = "https://rencal.org";
 const ISSUES_URL: &str = "https://github.com/t4t5/rencal/issues/new";
 
 pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
-    let settings = MenuItemBuilder::with_id("settings", "Settings…")
+    let settings = MenuItemBuilder::with_id("app.settings", "Settings…")
         .accelerator("CmdOrCtrl+,")
         .build(handle)?;
 
@@ -30,10 +30,10 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .quit()
         .build()?;
 
-    let new_event = MenuItemBuilder::with_id("compose-event", "New Event")
+    let new_event = MenuItemBuilder::with_id("event.new", "New Event")
         .accelerator("CmdOrCtrl+N")
         .build(handle)?;
-    let duplicate_event = MenuItemBuilder::with_id("duplicate-event", "Duplicate Event")
+    let duplicate_event = MenuItemBuilder::with_id("event.duplicate", "Duplicate Event")
         .accelerator("CmdOrCtrl+D")
         .build(handle)?;
     let file_menu = SubmenuBuilder::new(handle, "File")
@@ -54,19 +54,19 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .build()?;
 
     // Views use Cmd+<digit> to avoid clobbering system Cmd+W (close) / Cmd+M (minimize).
-    let week = MenuItemBuilder::with_id("week", "Week")
+    let week = MenuItemBuilder::with_id("view.switch:week", "Week")
         .accelerator("CmdOrCtrl+1")
         .build(handle)?;
-    let month = MenuItemBuilder::with_id("month", "Month")
+    let month = MenuItemBuilder::with_id("view.switch:month", "Month")
         .accelerator("CmdOrCtrl+2")
         .build(handle)?;
-    let year = MenuItemBuilder::with_id("year", "Year")
+    let year = MenuItemBuilder::with_id("view.switch:year", "Year")
         .accelerator("CmdOrCtrl+3")
         .build(handle)?;
-    let today = MenuItemBuilder::with_id("today", "Go to Today")
+    let today = MenuItemBuilder::with_id("date.today", "Go to Today")
         .accelerator("CmdOrCtrl+T")
         .build(handle)?;
-    let go_to_date = MenuItemBuilder::with_id("go-to-date", "Go to Date…")
+    let go_to_date = MenuItemBuilder::with_id("date.go", "Go to Date…")
         .accelerator("CmdOrCtrl+G")
         .build(handle)?;
     let view_menu = SubmenuBuilder::new(handle, "View")
@@ -83,7 +83,7 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .maximize()
         .build()?;
 
-    let shortcuts = MenuItemBuilder::with_id("shortcuts", "Keyboard Shortcuts")
+    let shortcuts = MenuItemBuilder::with_id("app.shortcuts", "Keyboard Shortcuts")
         .accelerator("CmdOrCtrl+/")
         .build(handle)?;
     let website = MenuItemBuilder::with_id("help-website", "renCal Website").build(handle)?;
@@ -116,6 +116,7 @@ pub fn handle_menu_event<R: Runtime>(app: &AppHandle<R>, event: MenuEvent) {
         "help-issues" => {
             let _ = app.opener().open_url(ISSUES_URL, None::<&str>);
         }
+        // Every other item id is a command action, like a key binding's.
         id => {
             let _ = AppEvent::MenuAction(id.to_string()).emit(app);
         }

@@ -1,10 +1,13 @@
+mod atomic_write;
 mod busy_cache;
+pub mod control;
 mod deep_links;
 mod event_cache;
 mod events;
 mod external_themes;
 mod external_views;
 mod fs_watch;
+mod keys;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
 #[cfg(target_os = "macos")]
@@ -23,13 +26,17 @@ mod signal;
 mod single_instance;
 #[cfg(target_os = "linux")]
 mod skia_compositor_workaround;
+pub mod skill_install;
 pub mod state;
 mod state_bridge;
 mod tasks;
 mod watchers;
 
+use routes::agents::{AgentsApi, AgentsApiImpl};
 use routes::caldir::{CaldirApi, CaldirApiImpl};
+use routes::commands::{CommandsApi, CommandsApiImpl};
 use routes::config::{ConfigApi, ConfigApiImpl};
+use routes::keys::{KeysApi, KeysApiImpl};
 use routes::omarchy::{OmarchyApi, OmarchyApiImpl};
 use routes::platform::{PlatformApi, PlatformApiImpl, needs_native_decorations};
 use routes::plugins::{PluginsApi, PluginsApiImpl};
@@ -61,12 +68,15 @@ fn create_router_with_plugins(
     events::export_types().expect("failed to export notification types");
     Router::new()
         .merge(CaldirApiImpl::new(state.clone()).into_handler())
+        .merge(CommandsApiImpl::new(state.clone()).into_handler())
         .merge(PlatformApiImpl::new(state).into_handler())
         .merge(OmarchyApiImpl.into_handler())
         .merge(ConfigApiImpl.into_handler())
         .merge(PluginsApiImpl::new(plugins).into_handler())
         .merge(ThemesApiImpl.into_handler())
         .merge(ViewsApiImpl.into_handler())
+        .merge(AgentsApiImpl.into_handler())
+        .merge(KeysApiImpl.into_handler())
 }
 
 /// Directory of the providers bundled with this build (google, icloud,
@@ -272,11 +282,18 @@ pub async fn run() {
     let router = create_router_with_plugins(state.clone(), plugins.clone());
 
     let builder = tauri::Builder::default();
+    let drop_state = state.clone();
 
+    // Deep links reach the plugin's deep-link feature; .ics files don't.
     #[cfg(any(target_os = "macos", target_os = "windows"))]
-    let builder = builder.plugin(tauri_plugin_single_instance::init(|app, _args, _cwd| {
-        focus_main_window(app);
-    }));
+    let builder = builder.plugin({
+        let state = state.clone();
+        tauri_plugin_single_instance::init(move |app, args, cwd| {
+            let urls = deep_links::ics_file_urls(args.iter().skip(1), std::path::Path::new(&cwd));
+            deep_links::enqueue_urls(app, &state.deep_links, &urls);
+            focus_main_window(app);
+        })
+    });
 
     // Native macOS menu bar
     #[cfg(target_os = "macos")]
@@ -315,6 +332,11 @@ pub async fn run() {
                 let urls: Vec<String> = urls.into_iter().map(|url| url.to_string()).collect();
                 deep_links::enqueue_urls(app.handle(), &state.deep_links, &urls);
             }
+            // Launched to open .ics files ("Open with", double-click). macOS
+            // delivers those as Opened events, which arrive via on_open_url.
+            let cwd = std::env::current_dir().unwrap_or_default();
+            let ics_urls = deep_links::ics_file_urls(std::env::args().skip(1), &cwd);
+            deep_links::enqueue_urls(app.handle(), &state.deep_links, &ics_urls);
 
             let app_handle = app.handle().clone();
             let inbox_state = state.clone();
@@ -349,6 +371,15 @@ pub async fn run() {
 
             spawn_reminder_loop_if_needed(app);
 
+            #[cfg(unix)]
+            spawn_task(
+                "control socket",
+                control::serve(app.handle().clone(), state.clone()),
+            );
+
+            // Keep installed agent skills in step with renCal and caldir.
+            spawn_task("agent skills", skill_install::refresh());
+
             // AppState notifications → webview events:
             spawn_task(
                 "state bridge",
@@ -374,8 +405,8 @@ pub async fn run() {
 
             Ok(())
         })
-        .on_window_event(|window, event| {
-            if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+        .on_window_event(move |window, event| match event {
+            tauri::WindowEvent::CloseRequested { api, .. } => {
                 // Hide the main window instead of closing it so the app keeps
                 // running in the background (e.g. for notifications).
                 // Only applied where no visible close button exists — on
@@ -385,6 +416,13 @@ pub async fn run() {
                     let _ = window.hide();
                 }
             }
+            // .ics files dropped onto a window import like opened ones.
+            tauri::WindowEvent::DragDrop(tauri::DragDropEvent::Drop { paths, .. }) => {
+                let paths = paths.iter().map(|path| path.to_string_lossy());
+                let urls = deep_links::ics_file_urls(paths, std::path::Path::new("/"));
+                deep_links::enqueue_urls(window.app_handle(), &drop_state.deep_links, &urls);
+            }
+            _ => {}
         })
         .invoke_handler(router.into_handler())
         .build(context)

@@ -1,16 +1,12 @@
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 
-import { WeekTimeGrid } from "@/components/main/week-view/WeekTimeGrid"
-
-import { useCalEvents } from "@/contexts/CalEventsContext"
-import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
-
-import { useDayRangeLayout } from "@/hooks/cal-events/useDayRangeLayout"
-import { useInfiniteDays } from "@/hooks/cal-events/useInfiniteDays"
-import { getPreviousCalendarView, useCalendarView } from "@/hooks/useCalendarView"
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import type { AvailabilitySource } from "@/lib/api"
-import { formatDateKey } from "@/lib/event-time"
+
+import { useEventsInRange, useNavigation } from "@/sdk"
+import { WeekTimeGrid } from "@/views/builtin/week/WeekTimeGrid"
+import { useDayRangeLayout } from "@/views/builtin/week/useDayRangeLayout"
+import { useDayWidth, useInfiniteDays } from "@/views/builtin/week/useInfiniteDays"
 
 import { AvailabilityProvider, useAvailability } from "./AvailabilityContext"
 import {
@@ -25,8 +21,6 @@ import { invalidRange } from "./hours-reducer"
 import { useAvailabilityPreview } from "./useAvailabilityPreview"
 import { useShareDrag } from "./useShareDrag"
 
-const FALLBACK_VIEW_ID = "week"
-
 /**
  * Create, edit, preview and share availabilities: a week grid that shows what
  * someone booking would get, with an inspector panel on the right.
@@ -40,15 +34,19 @@ export function AvailabilityView() {
 }
 
 function AvailabilityViewContent() {
-  const { calendars } = useCalendars()
-  const { activeDate, navigateToDate } = useCalendarNavigation()
-  const { calendarEvents } = useCalEvents()
+  const { activeDate } = useNavigation()
   const { mode, editor, dirty, selections, addSelection, hoveredSelection } = useAvailability()
   const tzid = useViewerTzid()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
-  const { days } = useInfiniteDays({ scrollContainerRef, activeDate })
-  const layout = useDayRangeLayout(days, calendarEvents, calendars)
+  const { dayWidth, measured } = useDayWidth(scrollContainerRef)
+  const { origin, startIndex, days, start, end } = useInfiniteDays({
+    scrollContainerRef,
+    activeDate,
+    dayWidth,
+  })
+  const events = useEventsInRange(start, end)
+  const layout = useDayRangeLayout(days, events)
 
   const hoursValid =
     editor !== null &&
@@ -60,10 +58,7 @@ function AvailabilityViewContent() {
   const schedule = useAvailabilityPreview(scheduleSourceOrNull, days)
   const share = useAvailabilityPreview(shareSource, days)
 
-  const { dragging, startDrag } = useShareDrag(scrollContainerRef, tzid, addSelection)
-  const draggingRef = useRef(dragging)
-  draggingRef.current = dragging
-  useBackOnEscape(draggingRef)
+  const { dragging, startDrag } = useShareDrag(tzid, addSelection)
 
   const scheduleLayers = mode === "schedules" && editor ? { preview: schedule.preview, tzid } : null
 
@@ -71,19 +66,14 @@ function AvailabilityViewContent() {
     <div className="flex h-full w-full min-w-0">
       <div className="relative h-full grow min-w-0">
         <WeekTimeGrid
+          origin={origin}
+          startIndex={startIndex}
           days={days}
-          timedByDay={layout.timedByDay}
-          allDayItems={layout.allDayItems}
-          maxAllDayLane={layout.maxAllDayLane}
-          activeEventKey={null}
-          selectedEventKey={null}
-          activeDateKey={formatDateKey(activeDate)}
+          dayWidth={dayWidth}
+          dayWidthMeasured={measured}
+          layout={layout}
           scrollContainerRef={scrollContainerRef}
-          onDayClick={navigateToDate}
-          onEventClick={() => {}}
-          draftEvent={null}
-          dimmed={false}
-          eventsInteractive={false}
+          readOnly
           onDayPointerDown={mode === "share" ? startDrag : undefined}
           dayBackground={
             scheduleLayers
@@ -125,34 +115,4 @@ function AvailabilityViewContent() {
       <AvailabilityPanel />
     </div>
   )
-}
-
-/**
- * Esc returns to the view you came from, once nothing inside wants it: open
- * popovers and selects handle it first, a focused input blurs, and a dirty
- * draft asks through the leave guard.
- */
-function useBackOnEscape(draggingRef: { current: unknown }) {
-  const { setCalendarView } = useCalendarView()
-  const setViewRef = useRef(setCalendarView)
-  setViewRef.current = setCalendarView
-
-  useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== "Escape" || event.defaultPrevented || draggingRef.current) return
-      const active = document.activeElement
-      if (
-        active instanceof HTMLElement &&
-        active.matches("input, textarea, select, [contenteditable='true']")
-      ) {
-        active.blur()
-        return
-      }
-      if (document.querySelector("[role='dialog'], [data-radix-popper-content-wrapper]")) return
-      event.preventDefault()
-      setViewRef.current(getPreviousCalendarView() ?? FALLBACK_VIEW_ID)
-    }
-    window.addEventListener("keydown", onKeyDown)
-    return () => window.removeEventListener("keydown", onKeyDown)
-  }, [draggingRef])
 }

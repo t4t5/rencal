@@ -1,5 +1,5 @@
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { Button } from "@/components/ui/button"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
 
@@ -11,7 +11,7 @@ export function ToggleSidebarButton() {
   if (!collapsed) return null
 
   return (
-    <ShortcutTooltip text="Show sidebar" shortcut="ctrl+b">
+    <CommandTooltip text="Show sidebar" action="sidebar.toggle">
       <Button
         aria-label="Show sidebar"
         tabIndex={-1}
@@ -21,6 +21,6 @@ export function ToggleSidebarButton() {
       >
         <SidebarIcon />
       </Button>
-    </ShortcutTooltip>
+    </CommandTooltip>
   )
 }

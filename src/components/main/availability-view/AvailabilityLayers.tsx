@@ -1,8 +1,9 @@
 import type { CSSProperties } from "react"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import type { AvailabilityPreview, InstantSpan } from "@/lib/api"
 import { DAY_MINUTES } from "@/lib/event-time"
+
+import type { WeekDay } from "@/views/builtin/week/useInfiniteDays"
 
 import { type DaySegment, dayGaps, daySegments } from "./day-segments"
 
@@ -60,7 +61,7 @@ function Conflicts({ segments }: { segments: readonly DaySegment[] }) {
 }
 
 type ScheduleLayerProps = {
-  day: MonthDay
+  day: WeekDay
   preview: AvailabilityPreview | null
   tzid: string
 }
@@ -91,7 +92,7 @@ export function ShareBackground({
   tzid,
   dragging,
 }: {
-  day: MonthDay
+  day: WeekDay
   selections: readonly InstantSpan[]
   tzid: string
   dragging: DaySegment | null
@@ -111,7 +112,7 @@ export function ShareOverlay({
   tzid,
   dragging,
 }: {
-  day: MonthDay
+  day: WeekDay
   hovered: InstantSpan | null
   busy: readonly InstantSpan[]
   tzid: string

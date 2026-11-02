@@ -29,7 +29,7 @@ const apiImplementations = {
 }
 
 // Built-in plugins are written against the same API as third-party ones.
-const plugins = ["src/plugins/**"]
+const plugins = ["src/views/builtin/**"]
 // The transport and the app API facade may use the generated proxy directly.
 const rpcBoundary = ["src/rpc/**", "src/lib/api/**"]
 // Pure conversion modules translate generated types into app types.

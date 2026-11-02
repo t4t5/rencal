@@ -96,6 +96,33 @@ pub fn is_any_change(event: &notify::Event) -> bool {
     )
 }
 
+/// The directories to watch for changes to the file at `path`: its own, plus
+/// its symlink target's (a dotfiles checkout), whose saves the link's
+/// directory never sees.
+pub fn file_watch_dirs(path: &Path) -> Vec<PathBuf> {
+    let mut directories = path
+        .parent()
+        .map(Path::to_path_buf)
+        .into_iter()
+        .collect::<Vec<_>>();
+    if std::fs::symlink_metadata(path).is_ok_and(|metadata| metadata.file_type().is_symlink())
+        && let Ok(target) = std::fs::read_link(path)
+    {
+        let target = if target.is_absolute() {
+            target
+        } else {
+            path.parent().unwrap_or_else(|| Path::new("")).join(target)
+        };
+        if let Some(parent) = target.parent() {
+            let parent = std::fs::canonicalize(parent).unwrap_or_else(|_| parent.to_path_buf());
+            if parent.is_dir() && !directories.iter().any(|directory| directory == &parent) {
+                directories.push(parent);
+            }
+        }
+    }
+    directories
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -190,5 +217,25 @@ mod tests {
             "expected {second:?}, got {paths:?}"
         );
         assert_eq!(paths.iter().filter(|path| *path == &first).count(), 1);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn watches_a_symlinked_declarations_target_too() {
+        use std::os::unix::fs::symlink;
+
+        let temp = tempfile::tempdir().unwrap();
+        // macOS resolves /var to /private/var when canonicalizing the symlink
+        // target, so construct both expected paths from the resolved root.
+        let root = temp.path().canonicalize().unwrap();
+        let config = root.join("config");
+        let dotfiles = root.join("dotfiles");
+        std::fs::create_dir_all(&config).unwrap();
+        std::fs::create_dir_all(&dotfiles).unwrap();
+        std::fs::write(dotfiles.join("plugins.toml"), "plugins = []\n").unwrap();
+        let declarations = config.join("plugins.toml");
+        symlink("../dotfiles/plugins.toml", &declarations).unwrap();
+
+        assert_eq!(file_watch_dirs(&declarations), [config, dotfiles]);
     }
 }

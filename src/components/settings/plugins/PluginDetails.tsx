@@ -6,9 +6,8 @@ import { Button } from "@/components/ui/button"
 
 import { api, getErrorMessage } from "@/lib/api"
 
-import { PluginBadge } from "./PluginBadge"
 import { PluginPreview } from "./PluginPreview"
-import { CONTRIBUTION_LABELS, pluginOwner, type PluginListItem } from "./plugin-list"
+import { pluginOwner, type PluginListItem } from "./plugin-list"
 
 type Action = "install" | "update" | "uninstall"
 
@@ -39,18 +38,6 @@ export function usePluginAction(plugin: PluginListItem, onChanged: () => void) {
   }
 
   return { action, error, run }
-}
-
-export function PluginBadges({ plugin }: { plugin: PluginListItem }) {
-  if (plugin.contributions.length === 0 && !plugin.installed) return null
-  return (
-    <div className="flex flex-wrap gap-1.5">
-      {plugin.contributions.map((kind) => (
-        <PluginBadge key={kind}>{CONTRIBUTION_LABELS[kind]}</PluginBadge>
-      ))}
-      {plugin.installed && <PluginBadge solid>Installed</PluginBadge>}
-    </div>
-  )
 }
 
 /** Actions, preview and details shared by the settings sheet and the deep-link dialog. */

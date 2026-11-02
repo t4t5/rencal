@@ -9,8 +9,6 @@ const schema = z.string()
 // Stored as-is: unknown ids fall back at render time, so a plugin view that
 // loads late or fails to load doesn't overwrite the user's preference.
 let calendarView = readInitial()
-// In memory only: where a view that offers "back" (Esc) returns to.
-let previousView: string | null = null
 let leaveGuard: (() => Promise<boolean>) | null = null
 const listeners = new Set<() => void>()
 
@@ -29,7 +27,6 @@ function readInitial(): string {
 async function setCalendarView(next: string) {
   if (next === calendarView) return
   if (leaveGuard && !(await leaveGuard())) return
-  previousView = calendarView
   calendarView = next
   localStorage.setItem(CALENDAR_VIEW_KEY, JSON.stringify(next))
   listeners.forEach((listener) => listener())
@@ -38,11 +35,6 @@ async function setCalendarView(next: string) {
 function subscribe(listener: () => void) {
   listeners.add(listener)
   return () => listeners.delete(listener)
-}
-
-/** The view shown before the current one this session, if any. */
-export function getPreviousCalendarView(): string | null {
-  return previousView
 }
 
 /**

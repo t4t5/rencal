@@ -22,13 +22,15 @@ The `id` is `<github-owner>.<plugin-name>`, in lowercase, and the owner must mat
 
 ## Build it with an agent
 
-renCal ships a skill that teaches coding agents like Claude Code and Codex to build plugins. On Linux, install it with:
+renCal ships a skill that teaches coding agents like Claude Code and Codex to build plugins. Tick **renCal** in **Settings → Agents**, which adds it to every supported agent it finds. On Linux, you can also use the terminal:
 
 ```sh
 rencal skill install
 ```
 
-Or copy it [from GitHub](https://github.com/t4t5/rencal/tree/main/skills/rencal) into your agent's skills directory. Then ask your agent something like _"Make a renCal theme based on Tokyo Night"_.
+renCal updates the installed skill every time it starts, so it always matches your version. Untick it to remove it, or run `rencal skill uninstall`. `rencal skill show` prints the skill instead of installing it.
+
+Or copy it [from GitHub](https://github.com/t4t5/rencal/tree/main/skills/rencal) into your agent's skills directory. That copy follows renCal's development version, so it can ask for features your release doesn't have yet. Then ask your agent something like _"Make a renCal theme based on Tokyo Night"_.
 
 ## Test it locally
 

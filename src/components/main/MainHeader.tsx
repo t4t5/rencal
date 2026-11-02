@@ -1,3 +1,4 @@
+import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
@@ -13,9 +14,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SelectButton } from "@/components/ui/select"
-import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
+import { formatHotkeyKey } from "@/components/ui/shortcut-tooltip"
 
 import { useCalendarNavigation, useCalendars } from "@/contexts/CalendarStateContext"
+import { useActionKeys } from "@/contexts/KeyBindingsContext"
 import { useSettings } from "@/contexts/SettingsContext"
 
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
@@ -39,11 +41,11 @@ export function MainHeader({
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
 
-        <ShortcutTooltip text="Go to Today" shortcut="t">
+        <CommandTooltip text="Go to Today" action="date.today">
           <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
             Today
           </Button>
-        </ShortcutTooltip>
+        </CommandTooltip>
 
         <SettingsButton />
         <InvitesBadge />
@@ -86,7 +88,7 @@ const CalendarViewDropdown = ({
               {activeView.id === view.id && <CheckIcon className="size-4" />}
             </span>
             <span>{view.name}</span>
-            <DropdownMenuShortcut>{view.shortcut?.toUpperCase()}</DropdownMenuShortcut>
+            <ViewShortcut viewId={view.id} />
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>
@@ -121,5 +123,13 @@ const GroupSwitcher = () => {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+function ViewShortcut({ viewId }: { viewId: string }) {
+  const keys = useActionKeys(`view.switch:${viewId}`)
+  if (!keys) return null
+  return (
+    <DropdownMenuShortcut>{keys.split("+").map(formatHotkeyKey).join("+")}</DropdownMenuShortcut>
   )
 }

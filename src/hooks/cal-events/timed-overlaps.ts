@@ -1,6 +1,15 @@
 import { DAY_MINUTES } from "@/lib/event-time"
 
-import type { WeekTimedEventLayout } from "./useDayRangeLayout"
+/** A timed event's box in a day column: `top`/`height` in percent, the rest as shares of its width. */
+export type TimedBox = {
+  top: number
+  height: number
+  /** Share of the day's width left of the event. */
+  left: number
+  width: number
+  /** Share at the right edge drawn over by a neighbour, kept clear of text. */
+  coveredWidth: number
+}
 
 /** Overlapping events starting this much later nest on top instead of sharing columns. */
 const NEST_AFTER = (30 / DAY_MINUTES) * 100
@@ -14,15 +23,15 @@ const COLUMN_OVERLAP = 0.4
 const OVERLAP_EPS = 1e-5
 
 /** Events starting at about the same time, sharing the width right of `left` in columns. */
-type Cluster = {
+type Cluster<T> = {
   start: number
   left: number
-  columns: WeekTimedEventLayout[][]
+  columns: T[][]
 }
 
-const endOf = (ev: WeekTimedEventLayout) => ev.top + ev.height
+const endOf = (ev: TimedBox) => ev.top + ev.height
 
-function overlaps(a: WeekTimedEventLayout, b: WeekTimedEventLayout) {
+function overlaps(a: TimedBox, b: TimedBox) {
   return a.top < endOf(b) - OVERLAP_EPS && b.top < endOf(a) - OVERLAP_EPS
 }
 
@@ -30,17 +39,18 @@ function overlaps(a: WeekTimedEventLayout, b: WeekTimedEventLayout) {
  * Lays out overlapping timed events Google Calendar style: events starting together
  * sit side by side, each extending under its right-hand neighbour and widening into
  * columns left free; events starting later nest on top, indented so the titles beneath
- * stay visible. Reorders `events` into paint order, back to front.
+ * stay visible. Sets each box's `left`, `width` and `coveredWidth` from its `top` and
+ * `height`, and reorders `events` into paint order, back to front.
  */
-export function layoutTimedOverlaps(events: WeekTimedEventLayout[]) {
+export function layoutTimedOverlaps<T extends TimedBox>(events: T[]) {
   events.sort((a, b) => a.top - b.top || b.height - a.height)
 
-  const clusters: Cluster[] = []
-  const clusterOf = new Map<WeekTimedEventLayout, Cluster>()
-  const columnOf = new Map<WeekTimedEventLayout, number>()
+  const clusters: Cluster<T>[] = []
+  const clusterOf = new Map<T, Cluster<T>>()
+  const columnOf = new Map<T, number>()
 
   // Final for every cluster that can no longer gain columns, which nesting guarantees.
-  const leftOf = (ev: WeekTimedEventLayout) => {
+  const leftOf = (ev: T) => {
     const cluster = clusterOf.get(ev)!
     const share = (1 - cluster.left) / cluster.columns.length
     return cluster.left + columnOf.get(ev)! * share
@@ -50,7 +60,7 @@ export function layoutTimedOverlaps(events: WeekTimedEventLayout[]) {
     const ev = events[i]
     const active = events.slice(0, i).filter((placed) => endOf(placed) > ev.top + OVERLAP_EPS)
 
-    let newest: Cluster | undefined
+    let newest: Cluster<T> | undefined
     for (const placed of active) {
       const cluster = clusterOf.get(placed)!
       if (!newest || cluster.start > newest.start) newest = cluster

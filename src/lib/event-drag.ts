@@ -10,22 +10,13 @@
 import { Temporal } from "@js-temporal/polyfill"
 
 import { withDates, type CalendarEvent } from "@/lib/cal-events"
+import type { DayZone } from "@/lib/day-grid"
 import { addDays, addMinutes, DAY_MINUTES, epochDay, type EventTimeRange } from "@/lib/event-time"
 import { isSpanning } from "@/lib/event-utils"
 
-/**
- * Grid regions an event can be dropped on, declared via `data-drop-zone` on the
- * DOM together with `data-drop-day` (a `YYYY-MM-DD` key):
- *
- * - "day": a month-view cell. Any event, keeps its wallclock time.
- * - "all-day": the week view's all-day lane. Spanning events only.
- * - "timed": a week-view day column. Single-day timed events only.
- */
-export type DropZone = "day" | "all-day" | "timed"
-
 /** Where the pointer currently is, resolved from the DOM. */
 export type DropHit = {
-  zone: DropZone
+  zone: DayZone
   day: Temporal.PlainDate
   /** Viewer-zone wallclock minutes-of-day under the pointer; "timed" zone only. */
   minutes: number | null
@@ -105,13 +96,19 @@ export function computeDropRange(
   return shiftRange(event, dayDelta, 0)
 }
 
+const DRAG_PREVIEW_SUFFIX = "__drag-preview"
+
 /**
  * A stand-in rendered at the drop position while dragging. It gets its own id
  * so it never collides with the (still rendered, dimmed) source event in React
  * keys or the active-event tracker.
  */
 export function makeDragPreview(event: CalendarEvent, range: EventTimeRange): CalendarEvent {
-  return { ...withDates(event, range.start, range.end), id: `${event.id}__drag-preview` }
+  return { ...withDates(event, range.start, range.end), id: `${event.id}${DRAG_PREVIEW_SUFFIX}` }
+}
+
+export function isDragPreview(event: CalendarEvent): boolean {
+  return event.id.endsWith(DRAG_PREVIEW_SUFFIX)
 }
 
 /**

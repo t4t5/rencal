@@ -1,7 +1,10 @@
+import { agents } from "@/lib/api/agents"
 import { availability } from "@/lib/api/availability"
 import { events } from "@/lib/api/calendar-events"
 import { calendars } from "@/lib/api/calendars"
 import { contacts } from "@/lib/api/contacts"
+import { icsFiles } from "@/lib/api/ics-files"
+import { keys } from "@/lib/api/keys"
 import { notifications } from "@/lib/api/notifications"
 import { plugins } from "@/lib/api/plugins"
 import { providers } from "@/lib/api/providers"
@@ -16,18 +19,22 @@ export const api = {
   events,
   availability,
   calendars,
+  icsFiles,
   contacts,
   providers,
   sync,
   settings,
   themes,
   views,
+  keys,
   notifications,
   plugins,
+  agents,
 } as const
 
 export type AppApi = typeof api
 
+export type { Skill, SkillsStatus } from "@/lib/api/agents"
 export type {
   AvailabilityDetails,
   AvailabilityDraft,
@@ -50,6 +57,14 @@ export type {
 } from "@/lib/api/calendar-events"
 export type { Calendar } from "@/lib/api/calendars"
 export type { Contact } from "@/lib/api/contacts"
+export type {
+  IcsImportDestination,
+  IcsImportResult,
+  IcsImportTarget,
+  IcsPreview,
+  IcsSourceCalendar,
+} from "@/lib/api/ics-files"
+export type { KeyEdit, KeysSnapshot, UserKeyBinding } from "@/lib/api/keys"
 export { getErrorMessage, isRenCalError, type RenCalError } from "@/lib/api/errors"
 export type { NotificationSubscription } from "@/lib/api/notifications"
 export type {

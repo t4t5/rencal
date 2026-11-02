@@ -157,7 +157,6 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
     openDuplicateDraft(event, event.recurrence ?? event.master_recurrence, anchor)
   }
 
-  // Keep the value stable: every event block subscribes through EventContextMenu.
   const value = useMemo(() => ({ triggerDuplicate }), [triggerDuplicate])
 
   return (

@@ -222,6 +222,8 @@ it("keeps a failed update open, then updates and uninstalls without changing sel
   expect(api.themes.setConfigured).not.toHaveBeenCalled()
 })
 
+const names = () => [...document.querySelectorAll("h3")].map((heading) => heading.textContent)
+
 it("sorts and filters the grid", async () => {
   const anotherPlugin: PluginCatalogEntry = {
     ...entry,
@@ -232,13 +234,15 @@ it("sorts and filters the grid", async () => {
     stars: 12,
     released_at: "2026-08-01T00:00:00Z",
   }
-  vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
+  vi.mocked(api.plugins.list).mockResolvedValue({
+    plugins: [{ ...installed, update_version: null }],
+    errors: [],
+  })
   vi.mocked(api.plugins.catalog).mockResolvedValue({
     plugins: [{ ...entry, stars: 3, released_at: "2026-09-01T00:00:00Z" }, anotherPlugin],
     error: null,
   })
   await render()
-  const names = () => [...document.querySelectorAll("h3")].map((heading) => heading.textContent)
   expect(names()).toEqual(["Dawn", "Dusk"])
 
   await act(async () => {
@@ -261,6 +265,23 @@ it("sorts and filters the grid", async () => {
   expect(document.body.textContent).not.toContain("Dusk")
   await searchFor("missing")
   expect(document.body.textContent).toContain("No plugins match your search.")
+})
+
+it("puts plugins with updates first", async () => {
+  vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [installed], errors: [] })
+  vi.mocked(api.plugins.catalog).mockResolvedValue({
+    plugins: [
+      { ...entry, stars: 3 },
+      { ...entry, id: "bob.dawn", name: "Dawn", repo: "bob/dawn", stars: 12 },
+    ],
+    error: null,
+  })
+  await render()
+
+  expect(names()).toEqual(["Dusk", "Dawn"])
+  await open("Dusk")
+  expect(sheetText()).toContain("Update available")
+  expect(sheetText()).not.toContain("Installed")
 })
 
 it("marks provider plugins from the catalog", async () => {
@@ -286,6 +307,15 @@ it("marks provider plugins from the catalog", async () => {
   await searchFor("provider")
   expect(document.body.textContent).toContain("Tuta")
   expect(document.body.textContent).not.toContain("Dusk")
+})
+
+it("shows an update found by the catalog fetched after the first list", async () => {
+  vi.mocked(api.plugins.list)
+    .mockResolvedValueOnce({ plugins: [{ ...installed, update_version: null }], errors: [] })
+    .mockResolvedValue({ plugins: [installed], errors: [] })
+  await render()
+
+  expect(card("Dusk").textContent).toContain("Update available")
 })
 
 it("describes a local checkout with only an uninstall action", async () => {

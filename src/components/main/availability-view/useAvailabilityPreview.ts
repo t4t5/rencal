@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from "react"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useVisibleCalendarIds } from "@/hooks/cal-events/useVisibleCalendarIds"
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { api, getErrorMessage, type AvailabilityPreview, type AvailabilitySource } from "@/lib/api"
+
+import type { WeekDay } from "@/views/builtin/week/useInfiniteDays"
 
 import { daysRange } from "./day-segments"
 
@@ -17,7 +18,7 @@ const DEBOUNCE_MS = 16
  */
 export function useAvailabilityPreview(
   source: AvailabilitySource | null,
-  days: readonly MonthDay[],
+  days: readonly WeekDay[],
 ): { preview: AvailabilityPreview | null; error: string | null } {
   const tzid = useViewerTzid()
   const calendarSlugs = useVisibleCalendarIds()

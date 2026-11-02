@@ -3,10 +3,17 @@ import type { DraftEvent } from "@/contexts/EventDraftContext"
 import type { CalendarEvent } from "@/lib/cal-events"
 import { computeEventDateInfo } from "@/lib/event-time"
 
+// Saved events always have an id, so an empty one marks the draft.
+const DRAFT_ID = ""
+
+export function isDraftEvent(event: CalendarEvent): boolean {
+  return event.id === DRAFT_ID
+}
+
 export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
   if (draft.calendarId == null) return null
   return {
-    id: "",
+    id: DRAFT_ID,
     recurring_event_id: null,
     summary: draft.summary,
     description: draft.description,

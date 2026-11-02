@@ -1,5 +1,6 @@
 import type { ReactNode } from "react"
 
+import { PendingIcsImport } from "@/components/ics-import/PendingIcsImport"
 import { PluginInstallDialog } from "@/components/plugins/PluginInstallDialog"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { Toaster } from "@/components/ui/sonner"
@@ -51,6 +52,7 @@ export function AppProviders({ preload, children }: AppProvidersProps) {
         </RecurrenceEditProvider>
         <MassDeleteConfirmDialog />
         <PluginInstallDialog />
+        <PendingIcsImport />
         <UpdateChecker />
         <Toaster />
       </SyncProvider>

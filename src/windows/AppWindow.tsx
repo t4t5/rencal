@@ -7,6 +7,8 @@ import { GlobalShortcuts } from "@/components/shortcuts/GlobalShortcuts"
 import { Sidebar } from "@/components/sidebar/Sidebar"
 import { DragRegion } from "@/components/ui/drag-region"
 
+import { KeyBindingsProvider } from "@/contexts/KeyBindingsContext"
+
 import { useBreakpoint } from "@/hooks/useBreakpoint"
 import { useCalendarView } from "@/hooks/useCalendarView"
 import { useSidebarCollapse } from "@/hooks/useSidebarCollapse"
@@ -27,7 +29,9 @@ export function AppWindow({
   return (
     <AppProviders preload={preload}>
       <ViewRegistryProvider initialExternalViews={externalViews}>
-        <App />
+        <KeyBindingsProvider>
+          <App />
+        </KeyBindingsProvider>
       </ViewRegistryProvider>
     </AppProviders>
   )

@@ -162,11 +162,12 @@ export function Agenda() {
       )}
     >
       {/* Keep themed borders and padding outside the scrolling viewport. */}
+      {/* No native scroll anchoring (WebKitGTK 2.54+): it doubles our prepend/reflow corrections. */}
       <div
         ref={scrollContainerRef}
         data-slot="agenda-scroll"
         data-agenda-scroll-container
-        className="grow min-h-0 overflow-auto outline-none [scroll-padding:inherit]"
+        className="grow min-h-0 overflow-auto outline-none [scroll-padding:inherit] [overflow-anchor:none]"
       >
         {sectionsToRender.map(({ date, events, isGhost }) => {
           const dateStr = formatDateKey(date)

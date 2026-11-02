@@ -14,7 +14,7 @@ Use the directory the user names. Otherwise create `~/.config/rencal/views/<name
 id = "local.agenda-grid"
 name = "Agenda Grid"
 description = "Today's events as a grid of cards"
-min_rencal_version = "0.9.0"
+min_rencal_version = "0.9.1"
 
 [[contributes.views]]
 id = "agenda-grid"
@@ -23,7 +23,7 @@ script = "dist/agenda-grid.js"
 css = "dist/agenda-grid.css"
 ```
 
-Keep `min_rencal_version = "0.9.0"`, the first release with views. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise.
+Keep `min_rencal_version = "0.9.1"`, the first release that runs views built with the SDK version below. The plugin ID is `<github-owner>.<name>`. Use the user's GitHub login when it is known (`gh api user --jq .login`), and `local.<name>` otherwise.
 
 `package.json`:
 
@@ -58,11 +58,14 @@ The SDK documents itself. After installing, read `README.md` and `index.d.ts` in
 - Style with Tailwind classes against renCal's tokens (`bg-background`, `text-foreground`, `text-muted-foreground`, `border-border`, `bg-primary/30` and others in `node_modules/@rencomputer/rencal-sdk/theme.css`) instead of fixed colours, so the view follows the user's theme. Tailwind classes only work when the manifest declares `css`. Inline styles can use the same tokens as `var(--primary)` and so on. Plain CSS files imported from `src/` work too.
 - The view may import `react`, `react-dom` (`createPortal` and `flushSync` only) and the SDK, which renCal provides. Other npm packages are bundled into the script, which is limited to 2 MiB.
 
-Views can read events and calendars, but cannot create or edit events, make network requests, or store settings through renCal. When a request needs one of these, tell the user what the view can do instead of working around it.
+- Mark each element that stands for a day with `dayProps(date, zone)`: renCal then drops dragged events there and creates events from it by dragging, double-clicking or right-clicking. `"timed"` columns create timed events, `"day"` cells events after the day's last one, `"all-day"` lanes all-day events. Render the range being drawn from `useDayGrid().selection`, with `selectionProps()` on what draws it. Pass `useEventProps(event, { drag: "pill" })` to let events move; every event spread with `useEventProps` gets renCal's right-click menu. `useEventsInRange` already includes the event being created and a dragged event's preview, marked by `event.transient`, so lay out every event it returns but leave transient ones out of counts and totals. A view that scrolls to the selected date calls `useOnNavigate` to bring it into view after each deliberate navigation. Elements that should fade while the user types a new event in the header can use the `in-data-dimmed:opacity-50` class.
+- renCal's own week, month and year views are written against the same SDK, so they work as examples of everything above: [their source](https://github.com/t4t5/rencal/tree/main/src/views/builtin) for the renCal version this guide comes with. Read them before writing similar code, and borrow from them freely; their `@/sdk` imports are `@rencomputer/rencal-sdk` in a plugin.
+
+Views can read events and calendars, and let the user create and move events through renCal's popover and drag interactions, but cannot save or edit events themselves, make network requests, or store settings through renCal. When a request needs one of these, tell the user what the view can do instead of working around it.
 
 ## Building and loading
 
-1. Install the SDK and React types as dev dependencies with the user's package manager, e.g. `npm install -D @rencomputer/rencal-sdk @types/react @types/react-dom`. If it finds no versions of `@rencomputer/rencal-sdk`, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release; tell the user rather than changing their configuration.
+1. Install the SDK at exactly the version this guide names, and the React types, as dev dependencies with the user's package manager, e.g. `npm install -D --save-exact @rencomputer/rencal-sdk@0.3.0 @types/react @types/react-dom`. This guide comes with the installed renCal, and a newer SDK can describe features it lacks, so don't upgrade the SDK. If the package manager can't find that version, a release-age policy such as npm's `min-release-age` or pnpm's `minimumReleaseAge` is hiding a recent release, or it isn't published yet; tell the user rather than installing another version or changing their configuration.
 2. Run `npm run build`. It type-checks the view and writes the files the manifest names. Fix every error it reports.
 3. Add the checkout's path to the `plugins` array in `~/.config/rencal/plugins.toml`, e.g. `"~/.config/rencal/views/agenda-grid"`, keeping existing entries. Create the file with only that array if it does not exist. A running renCal loads the view immediately.
 

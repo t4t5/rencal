@@ -2,6 +2,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window"
 import { useEffect, useState } from "react"
 
 import { NAV_ITEMS, SettingsSidebar, SettingsTab } from "@/components/settings/SettingsSidebar"
+import { PluginUpdatesProvider } from "@/components/settings/plugins/PluginUpdates"
 import { DragRegion } from "@/components/ui/drag-region"
 import { ShortcutTooltip } from "@/components/ui/shortcut-tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -63,25 +64,31 @@ export function SettingsWindow() {
         </button>
       </ShortcutTooltip>
 
-      <Tabs
-        orientation="vertical"
-        value={activeTab}
-        onValueChange={(value) => {
-          const item = NAV_ITEMS.find((item) => item.tab === value)
-          if (item) setActiveTab(item.tab)
-        }}
-        className="min-h-0 flex-1"
-      >
-        <SettingsSidebar />
+      <PluginUpdatesProvider>
+        <Tabs
+          orientation="vertical"
+          value={activeTab}
+          onValueChange={(value) => {
+            const item = NAV_ITEMS.find((item) => item.tab === value)
+            if (item) setActiveTab(item.tab)
+          }}
+          className="min-h-0 flex-1"
+        >
+          <SettingsSidebar />
 
-        {NAV_ITEMS.map(({ tab, page: Page }) => (
-          <TabsContent key={tab} value={tab} className="min-h-0 min-w-0 data-[state=active]:flex">
-            <div data-slot="settings-page" data-page={tab} className="flex min-h-0 min-w-0 flex-1">
-              <Page />
-            </div>
-          </TabsContent>
-        ))}
-      </Tabs>
+          {NAV_ITEMS.map(({ tab, page: Page }) => (
+            <TabsContent key={tab} value={tab} className="min-h-0 min-w-0 data-[state=active]:flex">
+              <div
+                data-slot="settings-page"
+                data-page={tab}
+                className="flex min-h-0 min-w-0 flex-1"
+              >
+                <Page />
+              </div>
+            </TabsContent>
+          ))}
+        </Tabs>
+      </PluginUpdatesProvider>
 
       <Toaster />
     </div>

@@ -287,7 +287,7 @@ The wrapper is a convenience, not a security boundary: malformed CSS can close i
 
 Prefer primitives first—the derivation chain covers most visual-identity needs. You can also override a derived token directly (for example, set `--border`) when the computed value is not right for the theme. Target stable `data-slot` attributes in custom rules; class names are implementation details.
 
-Custom rules may select on `data-slot` for identity and on the other attributes documented here, summarized in the table below. Any other `data-*` attribute (`data-drop-zone`, `data-drag-scroll`, `data-date-key`, `data-create-selection`, `data-agenda-item`, `data-event-clickable`, and similar) is an interaction hook for the app's own scripts and is not part of the styling contract; it can change without notice. Use the same rule for element and descendant selectors: prefer a child slot such as `minical-year` over `[data-slot="minical-title"] span`.
+Custom rules may select on `data-slot` for identity and on the other attributes documented here, summarized in the table below. Any other `data-*` attribute (`data-day-zone`, `data-event-key`, `data-date-key`, `data-create-selection`, `data-agenda-item`, `data-event-clickable`, and similar) is an interaction hook for the app's own scripts and is not part of the styling contract; it can change without notice. Use the same rule for element and descendant selectors: prefer a child slot such as `minical-year` over `[data-slot="minical-title"] span`.
 
 | Attribute                                                                                                       | Meaning                                                                                                                                           |
 | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -393,6 +393,8 @@ and control height can change without a fixed viewport-height offset.
 Calendar chrome exposes these slots for scoped theme rules:
 
 - `main-toolbar`, `main-viewport`, `sidebar`, `sidebar-header`, `sidebar-toolbar`;
+  `main-viewport` carries `data-dimmed` while the user types a new event in the
+  header, when views fade their day numbers and weekday labels;
 - `minical-header`, `minical-title`, `minical-year`, `minical-navigation`,
   `minical-event-dots`, plus the date-grid slots `calendar-grid` (the day
   table), `calendar-weekday`, and `calendar-day`, which the date picker shares.
@@ -450,7 +452,7 @@ highlight with `data-selected="true"`, so style it like `data-highlighted`.
 Every rendered event uses `data-slot="calendar-event"`. The `data-view` values
 are `week`, `month`, `agenda`, `board`, and `search` (the drag overlay has none;
 match it with `data-drag-state="overlay"`); the
-`data-kind` values are `timed` and `all-day`. The stable child slots are
+`data-kind` values are `timed` and `all-day`; views that draw timed events crossing midnight as bars across days, like week and month, mark those `all-day` too. The stable child slots are
 `calendar-event-title`, `calendar-event-time`, and
 `calendar-event-color-marker`; a part is omitted when that rendering does not
 need it.
@@ -475,8 +477,8 @@ them without `!important`. Hover uses `--hover`. On unfilled blocks,
 `--calendar-event-selected-fill`, `--calendar-event-foreground`, and
 `--calendar-event-tinted-foreground` custom properties are also available on
 each event. Create selections (`month-create-selection`,
-`week-create-selection`) likewise set only `--calendar-event-color` inline and
-paint their tint in CSS. Inline `top`, `left`, `width`, `height`, and grid placement are
+`week-create-selection`) take `--calendar-event-color` from the default calendar
+and paint their tint in CSS. Inline `top`, `left`, `width`, `height`, and grid placement are
 layout geometry and must be preserved.
 
 The `agenda` slot is the fixed outer frame: apply backgrounds, borders, shadows,

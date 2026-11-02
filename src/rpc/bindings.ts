@@ -57,6 +57,28 @@ export type CalendarEvent = { id: string; recurring_event_id: string | null; sum
  */
 updated: string | null }
 
+export type CommandInvocation = { 
+/**
+ * A command id, optionally with its first argument: `date.next:day`.
+ */
+command: string; 
+/**
+ * Fills the command's first argument.
+ */
+value: string | null; 
+/**
+ * Arguments by name.
+ */
+args: Partial<{ [key in string]: string }> }
+
+export type CommandOutcome = 
+/**
+ * `result` is JSON text, or `None` when the command returns nothing.
+ */
+{ status: "ok"; result: string | null } | { status: "error"; message: string }
+
+export type CommandRequest = { id: number; invocation: CommandInvocation }
+
 export type ConferenceProvider = "google" | "outlook" | "proton"
 
 export type Contact = { email: string; name: string | null; count: number; last_seen: string }
@@ -143,6 +165,39 @@ export type FirstDayOfWeek = "monday" | "sunday"
 
 export type FontStyle = "normal" | "italic" | "oblique"
 
+export type IcsImportDestination = { kind: "existing"; calendar_slug: string } | { kind: "new"; name: string; color: string | null }
+
+export type IcsImportResult = { imported_count: number; 
+/**
+ * Already in the target calendar (same UID), so left alone.
+ */
+duplicate_count: number; 
+/**
+ * Set when exactly one event was imported, so the UI can show it.
+ */
+event: CalendarEvent | null }
+
+export type IcsImportTarget = { source: number; destination: IcsImportDestination }
+
+export type IcsPreview = { file_name: string; calendars: IcsSourceCalendar[]; 
+/**
+ * The file's only event (a series counts as one), e.g. an invite.
+ */
+event: CalendarEvent | null; 
+/**
+ * Events that couldn't be read and won't be imported.
+ */
+skipped_count: number }
+
+/**
+ * A calendar found in an .ics file. Its index is the `source` of an import target.
+ */
+export type IcsSourceCalendar = { name: string; color: string | null; event_count: number; first_start: RpcEventTime; last_start: RpcEventTime; 
+/**
+ * Some events have an organizer or guests.
+ */
+has_guests: boolean }
+
 export type InstalledPlugin = { id: string; name: string; 
 /**
  * From the installed manifest, for plugins the catalog doesn't list.
@@ -154,6 +209,35 @@ description: string | null; contributions: ContributionKind[];
 preview_url: string | null; repo: string | null; local_dir: string | null; version: string | null; update_version: string | null; error: string | null }
 
 export type InstalledPlugins = { plugins: InstalledPlugin[]; errors: string[] }
+
+export type KeyBinding = { keys: string; 
+/**
+ * `None` unbinds the key.
+ */
+action: string | null }
+
+/**
+ * A change to one key's entry.
+ */
+export type KeyEdit = 
+/**
+ * `keys = "action"`
+ */
+{ kind: "bind"; keys: string; action: string } | 
+/**
+ * `keys = false`
+ */
+{ kind: "unbind"; keys: string } | 
+/**
+ * Removes the entry, so the key's default applies again.
+ */
+{ kind: "clear"; keys: string }
+
+/**
+ * `error` describes a file that couldn't be read; its bindings are then
+ * empty, and the frontend keeps the last good ones.
+ */
+export type KeysSnapshot = { bindings: KeyBinding[]; error: string | null }
 
 export type OmarchyColors = { mode: OmarchyMode; 
 /**
@@ -258,6 +342,43 @@ export type RpcEventTime =
 
 export type RpcRecurrence = { rrule: string; exdates: RpcEventTime[]; rdates: RpcEventTime[] }
 
+export type Skill = 
+/**
+ * Building renCal plugins. Built into this binary.
+ */
+"rencal" | 
+/**
+ * Reading and editing events with the caldir CLI. Fetched from caldir.org.
+ */
+"caldir"
+
+export type SkillAgent = { name: string; link: SkillLink }
+
+export type SkillLink = 
+/**
+ * Links to renCal's copy of the skill.
+ */
+"linked" | 
+/**
+ * Has no link to it; installing adds one, replacing any skill of that name.
+ */
+"missing"
+
+/**
+ * The coding agents in the home directory and whether each has the skill.
+ */
+export type SkillStatus = { skill: Skill; 
+/**
+ * False while a program the skill drives is missing (the caldir CLI).
+ */
+available: boolean; agents: SkillAgent[] }
+
+export type SkillsStatus = { 
+/**
+ * False where renCal can't link skills (Windows).
+ */
+supported: boolean; skills: SkillStatus[] }
+
 /**
  * UTC RFC 3339 instants, `[start, end)`.
  */
@@ -323,8 +444,11 @@ color: string | null }
 
 export type Weekday = "mo" | "tu" | "we" | "th" | "fr" | "sa" | "su"
 
-const ARGS_MAP = { 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_availability":["draft","dir"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_availability":["id"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"free_times_text":["source","calendar_slugs","tzid"],"get_availability":["id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"list_availabilities":[],"list_availability_dirs":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_availability":["source","calendar_slugs","from","to"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_availability":["id","draft"],"update_event":["input"]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
-export type Router = { "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
+const ARGS_MAP = { 'agents':'{"install_skill":["skill"],"skills":[],"uninstall_skill":["skill"]}', 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_availability":["draft","dir"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_availability":["id"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"free_times_text":["source","calendar_slugs","tzid"],"get_availability":["id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"import_ics":["path","targets"],"list_availabilities":[],"list_availability_dirs":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_availability":["source","calendar_slugs","from","to"],"preview_ics":["path"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_availability":["id","draft"],"update_event":["input"]}', 'commands':'{"respond":["id","outcome"],"take_pending":[]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'keys':'{"edit":["edits"],"get":[]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_ics_file":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
+export type Router = { "agents": {install_skill: (skill: Skill) => Promise<SkillsStatus>, 
+skills: () => Promise<SkillsStatus>, 
+uninstall_skill: (skill: Skill) => Promise<SkillsStatus>},
+"caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<CredentialsConnectResult>, 
 create_availability: (draft: AvailabilityDraft, dir: string | null) => Promise<string>, 
@@ -342,6 +466,7 @@ get_availability: (id: string) => Promise<AvailabilityDetails>,
 get_caldir_settings: () => Promise<CaldirSettings>, 
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
 get_provider_connect_info: (providerName: string) => Promise<ProviderConnectInfo>, 
+import_ics: (path: string, targets: IcsImportTarget[]) => Promise<IcsImportResult>, 
 list_availabilities: () => Promise<AvailabilitySummary[]>, 
 list_availability_dirs: () => Promise<string[]>, 
 list_calendars: () => Promise<Calendar[]>, 
@@ -350,6 +475,7 @@ list_events: (calendarSlugs: string[], start: string, end: string) => Promise<Ca
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<ProviderInfo[]>, 
 preview_availability: (source: PreviewSource, calendarSlugs: string[], from: string, to: string) => Promise<AvailabilityPreview>, 
+preview_ics: (path: string) => Promise<IcsPreview>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
 rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
 search_events: (calendarSlugs: string[], query: string) => Promise<CalendarEvent[]>, 
@@ -363,6 +489,8 @@ sync: (allowMassDelete: string[]) => Promise<null>,
 sync_preview: () => Promise<SyncPreview[]>, 
 update_availability: (id: string, draft: AvailabilityDraft) => Promise<null>, 
 update_event: (input: UpdateEventInput) => Promise<null>},
+"commands": {respond: (id: number, outcome: CommandOutcome) => Promise<void>, 
+take_pending: () => Promise<CommandRequest[]>},
 "config": {get_auto_sync_enabled: () => Promise<boolean>, 
 get_first_day_of_week: () => Promise<FirstDayOfWeek>, 
 get_groups: () => Promise<Partial<{ [key in string]: string[] }>>, 
@@ -375,9 +503,12 @@ set_groups: (groups: Partial<{ [key in string]: string[] }>) => Promise<null>,
 set_notifications_enabled: (enabled: boolean) => Promise<null>, 
 set_show_week_numbers: (show: boolean) => Promise<null>, 
 set_theme: (settings: ThemeSettings) => Promise<null>},
+"keys": {edit: (edits: KeyEdit[]) => Promise<KeysSnapshot>, 
+get: () => Promise<KeysSnapshot>},
 "omarchy": {get_colors: () => Promise<OmarchyColors | null>},
 "platform": {needs_native_decorations: () => Promise<boolean>, 
 take_pending_event_links: () => Promise<EventDeepLink[]>, 
+take_pending_ics_file: () => Promise<string | null>, 
 take_pending_plugin_install: () => Promise<PluginInstallLink | null>},
 "plugins": {catalog: () => Promise<PluginCatalog>, 
 install: (repo: string) => Promise<PluginInspection>, 

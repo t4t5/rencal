@@ -31,9 +31,9 @@ export function PopoverEditEvent() {
   useLayoutEffect(() => {
     if (!activeEvent) return
 
-    const rect = getEventAnchor()?.getBoundingClientRect()
-    if (rect) {
-      const fitted = fitPopoverAnchor(rect)
+    const anchor = getEventAnchor()
+    if (anchor) {
+      const fitted = fitPopoverAnchor(anchor.getBoundingClientRect(), { pointerX: anchor.pointerX })
       setAnchorRect(new DOMRect(fitted.left, fitted.top + fitted.height / 2, fitted.width, 0))
     }
   }, [activeEvent])

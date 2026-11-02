@@ -54,6 +54,12 @@ publish-sdk: sdk
     echo "packages/sdk has uncommitted or regenerated changes; commit them first." >&2
     exit 1
   fi
+  # Views built with this SDK need the renCal release in engines.rencal; publish only once it's out.
+  min=$(node -p 'require("./packages/sdk/package.json").engines.rencal.replace(/^>=/, "")')
+  if ! git rev-parse -q --verify "refs/tags/v$min" >/dev/null; then
+    echo "This SDK needs renCal $min, which isn't released yet (no tag v$min); release it first." >&2
+    exit 1
+  fi
   cd packages/sdk && npm publish
 
 # Test production version of app (needs build first)
@@ -209,7 +215,7 @@ uninstall-notifierd:
 notifierd-logs:
   journalctl --user -u rencal-notifierd.service -f
 
-# Point rencal:// links at the dev build (for testing deeplinks against `just dev`)
+# Point rencal:// links and .ics files at the dev build (for testing deeplinks against `just dev`)
 deeplink-dev:
   #!/usr/bin/env bash
   set -euo pipefail
@@ -220,12 +226,14 @@ deeplink-dev:
     'Name=renCal' \
     'Terminal=false' \
     'NoDisplay=true' \
-    'MimeType=x-scheme-handler/rencal' \
+    'MimeType=x-scheme-handler/rencal;text/calendar;' \
     'Exec={{justfile_directory()}}/src-tauri/target/debug/rencal %u' \
     > ~/.local/share/applications/rencal-handler.desktop
   xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
+  xdg-mime default rencal-handler.desktop text/calendar
 
-# Point rencal:// links back at the installed app
+# Point rencal:// links and .ics files back at the installed app
 deeplink-prod:
   xdg-mime default renCal.desktop x-scheme-handler/rencal
+  xdg-mime default renCal.desktop text/calendar
   rm -f ~/.local/share/applications/rencal-handler.desktop

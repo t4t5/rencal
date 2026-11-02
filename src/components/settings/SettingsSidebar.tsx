@@ -1,17 +1,22 @@
 import { ComponentType } from "react"
 
 import { AccountsPage } from "@/components/settings/accounts/AccountsPage"
+import { AgentsPage } from "@/components/settings/agents/AgentsPage"
 import { CalendarsPage } from "@/components/settings/calendars/CalendarsPage"
 import { GeneralPage } from "@/components/settings/general/GeneralPage"
+import { usePluginUpdateCount } from "@/components/settings/plugins/PluginUpdates"
 import { PluginsPage } from "@/components/settings/plugins/PluginsPage"
 import { RemindersPage } from "@/components/settings/reminders/RemindersPage"
+import { ShortcutsPage } from "@/components/settings/shortcuts/ShortcutsPage"
 import { ThemesPage } from "@/components/settings/themes/ThemesPage"
 import { TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { IconType } from "@/lib/types"
 
+import { AgentIcon } from "@/icons/agent"
 import { BellIcon } from "@/icons/bell"
 import { CalendarIcon } from "@/icons/calendar"
+import { KeyboardIcon } from "@/icons/keyboard"
 import { PaletteIcon } from "@/icons/palette"
 import { PluginIcon } from "@/icons/plugin"
 import { SettingsIcon } from "@/icons/settings"
@@ -30,12 +35,15 @@ export const NAV_ITEMS = [
   { tab: "calendars" as const, label: "Calendars", icon: CalendarIcon, page: CalendarsPage },
   { tab: "reminders" as const, label: "Reminders", icon: BellIcon, page: RemindersPage },
   { tab: "themes" as const, label: "Themes", icon: PaletteIcon, page: ThemesPage },
+  { tab: "shortcuts" as const, label: "Shortcuts", icon: KeyboardIcon, page: ShortcutsPage },
   { tab: "plugins" as const, label: "Plugins", icon: PluginIcon, page: PluginsPage },
+  { tab: "agents" as const, label: "Agents", icon: AgentIcon, page: AgentsPage },
 ] satisfies NavItem[]
 
 export type SettingsTab = (typeof NAV_ITEMS)[number]["tab"]
 
 export function SettingsSidebar() {
+  const pluginUpdates = usePluginUpdateCount()
   return (
     <nav
       data-slot="settings-sidebar"
@@ -50,6 +58,14 @@ export function SettingsSidebar() {
           <TabsTrigger key={tab} value={tab} data-page={tab}>
             <Icon className="size-4" />
             {label}
+            {tab === "plugins" && pluginUpdates > 0 && (
+              <span
+                aria-label={`${pluginUpdates} plugin ${pluginUpdates === 1 ? "update" : "updates"} available`}
+                className="ml-auto flex h-5 min-w-5 items-center justify-center rounded-full bg-brand px-1 text-xs font-medium text-brand-foreground"
+              >
+                {pluginUpdates}
+              </span>
+            )}
           </TabsTrigger>
         ))}
       </TabsList>

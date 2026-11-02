@@ -72,7 +72,10 @@ export function useOpenDayDraft() {
     if (opts.anchorY != null) {
       const { left, width } = anchor.getBoundingClientRect()
       const y = opts.anchorY
-      setDraftAnchor({ getBoundingClientRect: () => new DOMRect(left, y, width, 0) })
+      setDraftAnchor({
+        getBoundingClientRect: () => new DOMRect(left, y, width, 0),
+        pointerX: anchor.pointerX,
+      })
     } else {
       setDraftAnchor(anchor)
     }

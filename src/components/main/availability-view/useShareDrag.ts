@@ -1,26 +1,25 @@
-import { useCallback, type PointerEvent as ReactPointerEvent, type RefObject } from "react"
+import { useCallback, type PointerEvent as ReactPointerEvent } from "react"
 
-import type { MonthDay } from "@/hooks/cal-events/useMonthGrid"
 import { useDragToCreateSession } from "@/hooks/useDragToCreateSession"
 import type { InstantSpan } from "@/lib/api"
 import { minutesAtY, selectionForPointer } from "@/lib/drag-to-create"
 
+import type { WeekDay } from "@/views/builtin/week/useInfiniteDays"
+
 import { type DaySegment, instantAt } from "./day-segments"
 
-type Anchor = { day: MonthDay; anchorMinutes: number }
+type Anchor = { day: WeekDay; anchorMinutes: number }
 type Selection = DaySegment & { dayKey: string }
 
 /** Drag on a day column to pick a time, snapped to 15 minutes like drag-to-create. */
 export function useShareDrag(
-  scrollContainerRef: RefObject<HTMLDivElement | null>,
   tzid: string,
   onPick: (span: InstantSpan) => void,
 ): {
   dragging: Selection | null
-  startDrag: (day: MonthDay, event: ReactPointerEvent<HTMLElement>) => void
+  startDrag: (day: WeekDay, event: ReactPointerEvent<HTMLElement>) => void
 } {
   const session = useDragToCreateSession<Anchor, Selection>({
-    scrollContainerRef,
     selectionAt: (anchor, originEl, pointer) => ({
       dayKey: anchor.day.dateKey,
       ...selectionForPointer(
@@ -37,16 +36,18 @@ export function useShareDrag(
       }),
   })
 
+  const { startCreateDrag } = session
   const startDrag = useCallback(
-    (day: MonthDay, event: ReactPointerEvent<HTMLElement>) =>
-      session.startCreateDrag(
+    (day: WeekDay, event: ReactPointerEvent<HTMLElement>) =>
+      startCreateDrag(
         {
           day,
           anchorMinutes: minutesAtY(event.currentTarget.getBoundingClientRect(), event.clientY),
         },
+        event.currentTarget,
         event,
       ),
-    [session.startCreateDrag],
+    [startCreateDrag],
   )
 
   return { dragging: session.selection, startDrag }
