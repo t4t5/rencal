@@ -10,7 +10,8 @@ import {
 
 import { CloseIcon } from "@/icons/close"
 
-import { PluginBadges, PluginDetails, usePluginAction } from "./PluginDetails"
+import { PluginBadges } from "./PluginBadge"
+import { PluginDetails, usePluginAction } from "./PluginDetails"
 import type { PluginListItem } from "./plugin-list"
 
 export function PluginSheet({
