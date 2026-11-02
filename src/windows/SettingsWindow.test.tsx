@@ -3,6 +3,8 @@ import { act } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
+import { api, type InstalledPlugin } from "@/lib/api"
+
 import { SettingsWindow } from "./SettingsWindow"
 
 vi.mock("@tauri-apps/api/window", () => ({
@@ -10,7 +12,10 @@ vi.mock("@tauri-apps/api/window", () => ({
 }))
 vi.mock("@/hooks/useTheme", () => ({ useTheme: () => {} }))
 vi.mock("@/lib/api", () => ({
-  api: { notifications: { listen: () => ({ ready: Promise.resolve(), unlisten: vi.fn() }) } },
+  api: {
+    notifications: { listen: () => ({ ready: Promise.resolve(), unlisten: vi.fn() }) },
+    plugins: { catalog: vi.fn(), list: vi.fn() },
+  },
 }))
 vi.mock("@/components/settings/general/GeneralPage", () => ({
   GeneralPage: () => <div>General settings</div>,
@@ -32,6 +37,8 @@ beforeEach(() => {
   const container = document.createElement("div")
   document.body.append(container)
   root = createRoot(container)
+  vi.mocked(api.plugins.catalog).mockResolvedValue({ plugins: [], error: null })
+  vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [], errors: [] })
 })
 
 afterEach(async () => {
@@ -104,4 +111,24 @@ it("exposes settings slots with the active page", async () => {
   expect(trigger.getAttribute("data-state")).toBe("active")
   const page = document.querySelector('[data-slot="settings-page"][data-page="plugins"]')!
   expect(page.textContent).toContain("Plugin settings")
+})
+
+it("counts plugin updates on the Plugins tab", async () => {
+  const plugin: InstalledPlugin = {
+    id: "alice.dusk",
+    name: "Dusk",
+    description: null,
+    contributions: [],
+    preview_url: null,
+    repo: "alice/dusk",
+    local_dir: null,
+    version: "v1.2.0",
+    update_version: "v1.10.0",
+    error: null,
+  }
+  vi.mocked(api.plugins.list).mockResolvedValue({ plugins: [plugin], errors: [] })
+  await renderAt("?appWindow=settings")
+
+  const badge = document.querySelector('[aria-label="1 plugin update available"]')
+  expect(badge?.closest('[data-page="plugins"]')).toBeTruthy()
 })

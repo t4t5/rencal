@@ -18,6 +18,7 @@ import { api, getErrorMessage, type InstalledPlugins, type PluginCatalog } from 
 
 import { PluginBadges } from "./PluginBadge"
 import { PluginSheet } from "./PluginSheet"
+import { useReportPluginUpdates } from "./PluginUpdates"
 import {
   isProvider,
   mergePlugins,
@@ -40,6 +41,7 @@ export function PluginsPage() {
   const installedOnlyId = useId()
   const [selection, setSelection] = useState<PluginSelection | null>(null)
   const listRequest = useRef(0)
+  const reportUpdates = useReportPluginUpdates()
 
   const refreshInstalled = useCallback(async () => {
     const request = ++listRequest.current
@@ -47,12 +49,13 @@ export function PluginsPage() {
       const snapshot = await api.plugins.list()
       if (request !== listRequest.current) return
       setInstalled(snapshot)
+      reportUpdates(snapshot)
       setListError(null)
     } catch (error) {
       if (request === listRequest.current)
         setListError(getErrorMessage(error, "Failed to load installed plugins"))
     }
-  }, [])
+  }, [reportUpdates])
 
   const refreshCatalog = useCallback(async () => {
     setCatalogLoading(true)
