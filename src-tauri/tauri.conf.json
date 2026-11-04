@@ -29,6 +29,8 @@
     "active": true,
     "createUpdaterArtifacts": true,
     "targets": "all",
+    "category": "Productivity",
+    "longDescription": "Local-first calendar that stores events as plaintext .ics files and syncs with Google, iCloud, Outlook and CalDAV.",
     "fileAssociations": [
       {
         "ext": ["ics"],

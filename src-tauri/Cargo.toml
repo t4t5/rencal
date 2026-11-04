@@ -17,7 +17,7 @@ provider-tag = "v0.14.9"
 name = "rencal"
 version = "0.0.1"
 description = "A modern open-source calendar"
-authors = ["you"]
+authors = ["T4T5 <t4t5@hey.com>"]
 edition = "2024"
 default-run = "rencal"
 
