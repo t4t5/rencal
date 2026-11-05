@@ -30,6 +30,8 @@ pub mod state;
 mod state_bridge;
 mod tasks;
 mod watchers;
+#[cfg(target_os = "linux")]
+mod web_process_workaround;
 
 use routes::agents::{AgentsApi, AgentsApiImpl};
 use routes::caldir::{CaldirApi, CaldirApiImpl};
@@ -413,6 +415,12 @@ pub async fn run() {
                 if window.label() == "main" && !needs_native_decorations() {
                     api.prevent_close();
                     let _ = window.hide();
+                }
+                // A close prompt on Settings would leave a blank window: this
+                // runs even when the close gets prevented.
+                #[cfg(target_os = "linux")]
+                if window.label() == "settings" {
+                    web_process_workaround::terminate(window);
                 }
             }
             // .ics files dropped onto a window import like opened ones.
