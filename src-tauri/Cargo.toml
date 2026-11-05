@@ -13,6 +13,12 @@ caldir-core = "0.17.4"
 [workspace.metadata.caldir]
 provider-tag = "v0.14.9"
 
+# No `panic = "abort"`: a panicking tokio task shouldn't take the whole app down.
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true
+
 [package]
 name = "rencal"
 version = "0.0.1"
