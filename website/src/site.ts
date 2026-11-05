@@ -9,6 +9,7 @@ export const site = {
   repoUrl: "https://github.com/t4t5/rencal",
   aurPackageUrl: "https://aur.archlinux.org/packages/rencal-bin",
   aurCommand: "yay -S rencal-bin",
+  brewCommand: "brew install --cask rencal",
   ogImage: "https://rencal.org/og.jpg",
   ogImageWidth: 1200,
   ogImageHeight: 630,

@@ -45,7 +45,11 @@ Download from the [Download page](https://rencal.org/download/).
 
 ### macOS
 
-Download the latest `.dmg` from the [Download page](https://rencal.org/download/), open it, and drag renCal to `/Applications`.
+```bash
+brew install --cask rencal
+```
+
+Or download the latest `.dmg` from the [Download page](https://rencal.org/download/), open it, and drag renCal to `/Applications`.
 
 ### NixOS
 

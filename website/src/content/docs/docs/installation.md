@@ -19,7 +19,15 @@ Download the latest `.deb`, `.rpm` or AppImage from the [download page](/downloa
 
 ## macOS
 
-Download the latest `.dmg` from the [download page](/download/), open it, and drag renCal to `/Applications`. renCal prompts you in-app when a new version is available.
+Install with [Homebrew](https://brew.sh/):
+
+```sh
+brew install --cask rencal
+```
+
+Or download the latest `.dmg` from the [download page](/download/), open it, and drag renCal to `/Applications`.
+
+renCal prompts you in-app when a new version is available.
 
 ## NixOS
 
