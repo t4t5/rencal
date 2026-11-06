@@ -37,7 +37,7 @@ export function AvailabilityView() {
   const draggingOn = (day: WeekDay) => (dragging?.dayKey === day.dateKey ? dragging : null)
 
   return (
-    <div className="flex h-full w-full min-w-0">
+    <div className="flex h-full w-full min-w-0 border-t border-border">
       <div className="relative h-full grow min-w-0">
         <WeekTimeGrid
           origin={origin}
