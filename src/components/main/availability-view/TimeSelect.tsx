@@ -23,16 +23,14 @@ export function TimeSelect({
   value,
   min,
   max,
-  placeholder,
   disabled,
   onChange,
 }: {
-  value: number | null
+  value: number
   min: number
   max: number
-  placeholder?: string
   disabled?: boolean
-  onChange?: (minutes: number) => void
+  onChange: (minutes: number) => void
 }) {
   const { timeFormat } = useSettings()
   const options = Array.from(
@@ -42,12 +40,12 @@ export function TimeSelect({
 
   return (
     <Select
-      value={value === null ? "" : String(value)}
+      value={String(value)}
       disabled={disabled}
-      onValueChange={(next) => onChange?.(Number(next))}
+      onValueChange={(next) => onChange(Number(next))}
     >
       <SelectTrigger variant="default" className="w-[5.5rem] tabular-nums">
-        <SelectValue placeholder={placeholder} />
+        <SelectValue />
       </SelectTrigger>
       <SelectContent className="max-h-64">
         {options.map((minutes) => (

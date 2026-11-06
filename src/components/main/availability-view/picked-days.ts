@@ -6,6 +6,7 @@ import { type DaySegment, instantAt } from "./day-segments"
 
 export const TIME_STEP_MINUTES = 15
 export const LAST_START_MINUTES = DAY_MINUTES - TIME_STEP_MINUTES
+export const DEFAULT_RANGE: DaySegment = { startMinutes: 9 * 60, endMinutes: 17 * 60 }
 
 /** A date in the list. Unticked ones stay, ready to re-tick, but aren't offered. */
 export type PickedDay = {
@@ -79,12 +80,34 @@ export function removeRange(
   }))
 }
 
+/** Take a date's ranges to another date, joining any already there. */
+export function moveDay(
+  days: readonly PickedDay[],
+  from: Temporal.PlainDate,
+  to: Temporal.PlainDate,
+): PickedDay[] {
+  const ranges = days.find((day) => day.date.equals(from))?.ranges ?? []
+  return ranges.reduce(
+    (moved, range) => addRange(moved, to, range),
+    days.filter((day) => !day.date.equals(from)),
+  )
+}
+
 export function setOffered(
   days: readonly PickedDay[],
   date: Temporal.PlainDate,
   offered: boolean,
 ): PickedDay[] {
   return updateDay(days, date, (day) => ({ ...day, offered }))
+}
+
+/** The day after the last date, or today when there's nothing from today on. */
+export function nextDate(
+  days: readonly PickedDay[],
+  today: Temporal.PlainDate,
+): Temporal.PlainDate {
+  const next = days.at(-1)?.date.add({ days: 1 })
+  return next && Temporal.PlainDate.compare(next, today) > 0 ? next : today
 }
 
 /** A meeting's length from `startMinutes`, stopping at midnight. */

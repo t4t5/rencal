@@ -1,8 +1,19 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useSyncExternalStore } from "react"
 
+import { today } from "@/lib/event-time"
+
 import type { DaySegment } from "./day-segments"
-import { addRange, type PickedDay, removeRange, setOffered, setRange } from "./picked-days"
+import {
+  addRange,
+  DEFAULT_RANGE,
+  moveDay,
+  nextDate,
+  type PickedDay,
+  removeRange,
+  setOffered,
+  setRange,
+} from "./picked-days"
 
 type AvailabilityState = {
   days: PickedDay[]
@@ -29,6 +40,11 @@ export const useAvailability = () => useSyncExternalStore(subscribe, () => state
 
 export const pickRange = (date: Temporal.PlainDate, range: DaySegment) =>
   update({ days: addRange(state.days, date, range) })
+
+export const addDay = () => pickRange(nextDate(state.days, today()), DEFAULT_RANGE)
+
+export const changeDate = (from: Temporal.PlainDate, to: Temporal.PlainDate) =>
+  update({ days: moveDay(state.days, from, to) })
 
 export const editRange = (date: Temporal.PlainDate, index: number, range: DaySegment) =>
   update({ days: setRange(state.days, date, index, range) })

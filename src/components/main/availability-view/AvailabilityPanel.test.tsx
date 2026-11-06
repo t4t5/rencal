@@ -11,12 +11,16 @@ vi.mock("@/contexts/SettingsContext", () => ({ useSettings: () => ({ timeFormat:
 vi.mock("@/hooks/useViewerTzid", () => ({ useViewerTzid: () => "Europe/Stockholm" }))
 
 const MONDAY = Temporal.PlainDate.from("2026-11-09")
+const TODAY = Temporal.PlainDate.from("2026-11-01")
+const TOMORROW = TODAY.add({ days: 1 })
 const MORNING = { startMinutes: 9 * 60, endMinutes: 12 * 60 }
 
 let root: Root
 
 const message = () => document.querySelector("[data-slot=availability-message]")?.textContent
 const dayRows = () => document.querySelectorAll("[data-slot=availability-day]")
+const addDayButton = () =>
+  [...document.querySelectorAll("button")].find((button) => button.textContent === "Add day")!
 const copyButton = () => document.querySelector<HTMLElement>("button[aria-label='Copy message']")
 const writeText = vi.fn(() => Promise.resolve())
 
@@ -36,19 +40,30 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount())
   document.body.replaceChildren()
-  tickDay(MONDAY, false)
+  for (const date of [MONDAY, TODAY, TOMORROW]) tickDay(date, false)
   forgetUnticked()
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
 
-it("starts with just the placeholder, and nothing to copy", async () => {
+it("starts with no days, and nothing to copy", async () => {
   await renderPanel()
 
   expect(dayRows()).toHaveLength(0)
-  expect(document.querySelector("[data-slot=availability-new-day]")).not.toBeNull()
+  expect(addDayButton()).toBeDefined()
   expect(message()).toContain("Pick some times")
   expect(copyButton()).toBeNull()
+})
+
+it("adds today from nine to five, then the day after", async () => {
+  await renderPanel()
+
+  await act(async () => addDayButton().click())
+  expect(message()).toContain("Sun, 1 Nov: 09:00–17:00")
+
+  await act(async () => addDayButton().click())
+  expect(dayRows()).toHaveLength(2)
+  expect(message()).toContain("Mon, 2 Nov: 09:00–17:00")
 })
 
 it("turns a picked time into the message", async () => {

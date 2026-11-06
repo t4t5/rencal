@@ -29,6 +29,8 @@ import { PlusIcon } from "@/icons/plus"
 
 import { TimeSelect } from "./TimeSelect"
 import {
+  addDay,
+  changeDate,
   dropRange,
   editRange,
   pickRange,
@@ -66,7 +68,10 @@ export function AvailabilityPanel() {
         {days.map((day) => (
           <DayRow key={day.date.toString()} day={day} />
         ))}
-        <NewDayRow />
+        <Button variant="ghost" size="sm" className="self-start" onClick={addDay}>
+          <PlusIcon className="size-4" />
+          Add day
+        </Button>
       </div>
       <MessageSection />
     </aside>
@@ -98,20 +103,24 @@ function DurationField() {
 function DayRow({ day }: { day: PickedDay }) {
   const { durationMinutes } = useAvailability()
   const { date, ranges, offered } = day
-  const id = `availability-day-${date.toString()}`
   const spare = nextRange(ranges, durationMinutes)
 
   return (
     <div data-slot="availability-day" className="flex flex-col gap-1">
       <div className="flex items-center gap-2 h-control">
         <Checkbox
-          id={id}
+          aria-label={formatShortDate(date)}
           checked={offered}
           onCheckedChange={(checked) => tickDay(date, checked === true)}
         />
-        <Label htmlFor={id} className={cn("text-sm", !offered && "text-muted-foreground")}>
-          {formatShortDate(date)}
-        </Label>
+        <DatePicker
+          date={date}
+          setDate={(next) => next && changeDate(date, next)}
+          className={cn(
+            "border-0 px-0 data-[state=open]:bg-transparent",
+            !offered && "text-muted-foreground",
+          )}
+        />
       </div>
 
       {ranges.map((range, index) => (
@@ -165,46 +174,6 @@ function DayRow({ day }: { day: PickedDay }) {
           </div>
         </div>
       ))}
-    </div>
-  )
-}
-
-/** Always last: pick a day, then a start, and it becomes a real row. */
-function NewDayRow() {
-  const { durationMinutes } = useAvailability()
-  const [date, setDate] = useState<Temporal.PlainDate | null>(null)
-
-  return (
-    <div data-slot="availability-new-day" className="flex flex-col gap-1">
-      <div className="flex items-center gap-2 h-control">
-        <Checkbox checked={false} disabled aria-label="New date" />
-        <DatePicker
-          date={date}
-          setDate={setDate}
-          placeholder="Day"
-          className={cn(
-            "border-0 px-0 data-[state=open]:bg-transparent",
-            !date &&
-              "text-muted-foreground hover:text-foreground data-[state=open]:text-foreground",
-          )}
-        />
-      </div>
-      <div className="flex items-center gap-1 pl-6">
-        <TimeSelect
-          value={null}
-          min={0}
-          max={LAST_START_MINUTES}
-          placeholder="Start"
-          disabled={!date}
-          onChange={(startMinutes) => {
-            if (!date) return
-            pickRange(date, rangeFrom(startMinutes, durationMinutes))
-            setDate(null)
-          }}
-        />
-        <span className="text-muted-foreground">–</span>
-        <TimeSelect value={null} min={0} max={0} placeholder="End" disabled />
-      </div>
     </div>
   )
 }
