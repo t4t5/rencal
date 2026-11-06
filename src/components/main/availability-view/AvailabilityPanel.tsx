@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { useEffect, useState } from "react"
+import { memo, useEffect, useState } from "react"
 import { toast } from "sonner"
 
 import { TimeZoneSelect } from "@/components/event-parts/inputs/TimeZoneSelect"
@@ -60,8 +60,11 @@ const DURATIONS = [15, 30, 45, 60, 90]
 const COPIED_MS = 1500
 const SMALL_LABEL = "text-xs font-normal text-muted-foreground"
 
-/** The inspector on the right: your times, then the message they turn into. */
-export function AvailabilityPanel() {
+/**
+ * The inspector on the right: your times, then the message they turn into.
+ * Memoized so drag steps in the grid don't re-render every closed TimeSelect.
+ */
+export const AvailabilityPanel = memo(function AvailabilityPanel() {
   const { days } = useAvailability()
 
   return (
@@ -82,7 +85,7 @@ export function AvailabilityPanel() {
       <MessageSection />
     </aside>
   )
-}
+})
 
 function DurationSelect() {
   const { durationMinutes } = useAvailability()
