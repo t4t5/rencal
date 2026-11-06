@@ -41,8 +41,8 @@ type WeekTimeGridProps = {
   layout: DayRangeLayout
   scrollContainerRef: RefObject<HTMLDivElement | null>
   /**
-   * The days aren't drop targets and don't create events, and the events are
-   * dimmed and ignore the pointer, so the view can drag across them.
+   * The days can't be selected, aren't drop targets and don't create events, and
+   * the events are dimmed and ignore the pointer, so the view can drag across them.
    */
   readOnly?: boolean
   /** Drawn under the events of each day column. */
@@ -71,6 +71,8 @@ export function WeekTimeGrid({
   const { selection } = useDayGrid()
 
   const activeDateKey = activeDate.toString()
+  // A read-only view draws its own layers, which the selected fill would wash out.
+  const selectedDateKey = readOnly ? null : activeDateKey
   const N = days.length
   const hasAllDay = allDayBars.length > 0
 
@@ -179,7 +181,7 @@ export function WeekTimeGrid({
             />
             <DayHeaders
               days={days}
-              activeDateKey={activeDateKey}
+              selectedDateKey={selectedDateKey}
               readOnly={readOnly}
               onDayClick={goToDate}
             />
@@ -191,13 +193,13 @@ export function WeekTimeGrid({
                     key={`${day.dateKey}-allday-bg`}
                     className={cn(
                       "border-r border-b border-border",
-                      day.dateKey === activeDateKey
+                      day.dateKey === selectedDateKey
                         ? "bg-selected text-selected-foreground"
                         : day.isWeekend && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
                     data-slot="week-all-day"
-                    data-selected={day.dateKey === activeDateKey || undefined}
+                    data-selected={day.dateKey === selectedDateKey || undefined}
                     data-weekend={day.isWeekend || undefined}
                     {...(!readOnly && dayProps(day.date, "all-day"))}
                   />
@@ -229,7 +231,7 @@ export function WeekTimeGrid({
               key={day.dateKey}
               className={cn(
                 "relative border-r border-border cursor-default",
-                day.dateKey === activeDateKey
+                day.dateKey === selectedDateKey
                   ? "bg-selected text-selected-foreground"
                   : day.isWeekend && "bg-weekend",
               )}
@@ -238,10 +240,10 @@ export function WeekTimeGrid({
               }}
               {...(!readOnly && dayProps(day.date, "timed"))}
               data-slot="week-day"
-              data-selected={day.dateKey === activeDateKey || undefined}
+              data-selected={day.dateKey === selectedDateKey || undefined}
               data-weekend={day.isWeekend || undefined}
               onPointerDown={onDayPointerDown && ((event) => onDayPointerDown(day, event))}
-              onClick={() => goToDate(day.date)}
+              onClick={readOnly ? undefined : () => goToDate(day.date)}
             >
               {dayBackground?.(day)}
 
@@ -286,12 +288,12 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 
 const DayHeaders = ({
   days,
-  activeDateKey,
+  selectedDateKey,
   readOnly,
   onDayClick,
 }: {
   days: WeekDay[]
-  activeDateKey: string
+  selectedDateKey: string | null
   readOnly: boolean
   onDayClick: (date: Temporal.PlainDate) => void
 }) => {
@@ -300,11 +302,11 @@ const DayHeaders = ({
       key={day.dateKey}
       data-slot="week-day-header"
       data-typography="numerical"
-      data-selected={day.dateKey === activeDateKey || undefined}
+      data-selected={day.dateKey === selectedDateKey || undefined}
       data-weekend={day.isWeekend || undefined}
       className={cn(
         "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
-        day.dateKey === activeDateKey
+        day.dateKey === selectedDateKey
           ? "bg-selected text-selected-foreground"
           : day.isWeekend && "bg-weekend",
       )}
@@ -312,7 +314,7 @@ const DayHeaders = ({
       // Headers double as all-day days so multi-day bars can land here, and
       // all-day events be created, even when no all-day lane is rendered yet.
       {...(!readOnly && dayProps(day.date, "all-day"))}
-      onClick={() => onDayClick(day.date)}
+      onClick={readOnly ? undefined : () => onDayClick(day.date)}
     >
       <span data-slot="week-weekday" className="text-2xs text-muted-foreground uppercase">
         {formatWeekday(day.date, "short")}
