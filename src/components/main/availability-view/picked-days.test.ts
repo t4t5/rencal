@@ -8,6 +8,7 @@ import {
   offeredSpans,
   type PickedDay,
   rangeFrom,
+  removeDay,
   removeRange,
   setRange,
 } from "./picked-days"
@@ -35,15 +36,14 @@ it("joins ranges an edit pushes together, keeping them in order", () => {
   expect(setRange(days, MON, 0, range(16, 17))[0].ranges).toEqual([range(14, 15), range(16, 17)])
 })
 
-describe("removeRange", () => {
-  it("removes one range and leaves the date", () => {
-    const days = addRange([monday], MON, range(14, 15))
-    expect(removeRange(days, MON, 0)[0].ranges).toEqual([range(14, 15)])
-  })
+it("removes one range and leaves the date", () => {
+  const days = addRange([monday], MON, range(14, 15))
+  expect(removeRange(days, MON, 0)[0].ranges).toEqual([range(14, 15)])
+})
 
-  it("removes the date with its last range", () => {
-    expect(removeRange([monday], MON, 0)).toEqual([])
-  })
+it("removes a whole date", () => {
+  const days = addRange([monday], TUE, range(9, 10))
+  expect(removeDay(days, MON).map((day) => day.date.toString())).toEqual(["2026-11-10"])
 })
 
 describe("nextDate", () => {

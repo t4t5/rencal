@@ -5,7 +5,14 @@ import { toast } from "sonner"
 import { TimeZoneSelect } from "@/components/event-parts/inputs/TimeZoneSelect"
 import { Button } from "@/components/ui/button"
 import { DatePicker } from "@/components/ui/date-picker"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
+import { MoreButton } from "@/components/ui/more-button"
 import {
   Select,
   SelectContent,
@@ -28,6 +35,7 @@ import { PlusIcon } from "@/icons/plus"
 
 import { TimeSelect } from "./TimeSelect"
 import {
+  dropDay,
   dropRange,
   editRange,
   pickRange,
@@ -47,7 +55,7 @@ import {
   TIME_STEP_MINUTES,
 } from "./picked-days"
 
-const PANEL_WIDTH = 360
+const PANEL_WIDTH = 392
 const DURATIONS = [15, 30, 45, 60, 90]
 const COPIED_MS = 1500
 
@@ -101,56 +109,78 @@ function DayRow({ day }: { day: PickedDay }) {
   const spare = nextRange(ranges, durationMinutes)
 
   return (
-    <div data-slot="availability-day" className="flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2 h-control">
-        <Label>{formatShortDate(date)}</Label>
-        {spare && (
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title="Add times"
-            onClick={() => pickRange(date, spare)}
-          >
-            <PlusIcon className="size-4" />
-          </Button>
-        )}
+    <div data-slot="availability-day" className="flex gap-1">
+      <Label className="w-22 shrink-0 h-control">{formatShortDate(date)}</Label>
+      <div className="flex flex-col gap-1">
+        {ranges.map((range, index) => (
+          <div key={index} className="flex items-center gap-1">
+            <TimeSelect
+              value={range.startMinutes}
+              min={0}
+              max={LAST_START_MINUTES}
+              onChange={(startMinutes) =>
+                editRange(
+                  date,
+                  index,
+                  startMinutes < range.endMinutes
+                    ? { ...range, startMinutes }
+                    : rangeFrom(startMinutes, durationMinutes),
+                )
+              }
+            />
+            <span className="text-muted-foreground">–</span>
+            <TimeSelect
+              value={range.endMinutes}
+              min={range.startMinutes + TIME_STEP_MINUTES}
+              max={DAY_MINUTES}
+              onChange={(endMinutes) => editRange(date, index, { ...range, endMinutes })}
+            />
+            {index === 0 ? (
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon-sm"
+                  title="Add times"
+                  disabled={!spare}
+                  onClick={() => spare && pickRange(date, spare)}
+                >
+                  <PlusIcon className="size-4" />
+                </Button>
+                <DayMenu day={day} />
+              </>
+            ) : (
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Remove times"
+                onClick={() => dropRange(date, index)}
+              >
+                <CloseIcon className="size-4" />
+              </Button>
+            )}
+          </div>
+        ))}
       </div>
-
-      {ranges.map((range, index) => (
-        <div key={index} className="flex items-center gap-1">
-          <TimeSelect
-            value={range.startMinutes}
-            min={0}
-            max={LAST_START_MINUTES}
-            onChange={(startMinutes) =>
-              editRange(
-                date,
-                index,
-                startMinutes < range.endMinutes
-                  ? { ...range, startMinutes }
-                  : rangeFrom(startMinutes, durationMinutes),
-              )
-            }
-          />
-          <span className="text-muted-foreground">–</span>
-          <TimeSelect
-            value={range.endMinutes}
-            min={range.startMinutes + TIME_STEP_MINUTES}
-            max={DAY_MINUTES}
-            onChange={(endMinutes) => editRange(date, index, { ...range, endMinutes })}
-          />
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            title="Remove times"
-            className="ml-auto"
-            onClick={() => dropRange(date, index)}
-          >
-            <CloseIcon className="size-4" />
-          </Button>
-        </div>
-      ))}
     </div>
+  )
+}
+
+/** The first range has no remove button of its own, so clearing it lives here. */
+function DayMenu({ day: { date, ranges } }: { day: PickedDay }) {
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <MoreButton size="icon-sm" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => dropDay(date)}>Clear day</DropdownMenuItem>
+        {ranges.length > 1 && (
+          <DropdownMenuItem onClick={() => dropRange(date, 0)}>
+            Clear first time range
+          </DropdownMenuItem>
+        )}
+      </DropdownMenuContent>
+    </DropdownMenu>
   )
 }
 
@@ -161,8 +191,8 @@ function NewDayRow() {
   const { startMinutes, endMinutes } = DEFAULT_RANGE
 
   return (
-    <div data-slot="availability-new-day" className="flex flex-col gap-1">
-      <div className="flex items-center justify-between gap-2 h-control">
+    <div data-slot="availability-new-day" className="flex items-center gap-1">
+      <div className="w-22 shrink-0">
         <DatePicker
           date={null}
           defaultDate={date}
@@ -171,37 +201,35 @@ function NewDayRow() {
           placeholder="Add day"
           className="border-0 px-0 text-muted-foreground hover:text-foreground data-[state=open]:bg-transparent data-[state=open]:text-foreground"
         />
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          title="Add day"
-          onClick={() => pickRange(date, DEFAULT_RANGE)}
-        >
-          <PlusIcon className="size-4" />
-        </Button>
       </div>
-      <div className="flex items-center gap-1">
-        <TimeSelect
-          value={startMinutes}
-          min={0}
-          max={LAST_START_MINUTES}
-          onChange={(start) =>
-            pickRange(
-              date,
-              start < endMinutes
-                ? { ...DEFAULT_RANGE, startMinutes: start }
-                : rangeFrom(start, durationMinutes),
-            )
-          }
-        />
-        <span className="text-muted-foreground">–</span>
-        <TimeSelect
-          value={endMinutes}
-          min={startMinutes + TIME_STEP_MINUTES}
-          max={DAY_MINUTES}
-          onChange={(end) => pickRange(date, { ...DEFAULT_RANGE, endMinutes: end })}
-        />
-      </div>
+      <TimeSelect
+        value={startMinutes}
+        min={0}
+        max={LAST_START_MINUTES}
+        onChange={(start) =>
+          pickRange(
+            date,
+            start < endMinutes
+              ? { ...DEFAULT_RANGE, startMinutes: start }
+              : rangeFrom(start, durationMinutes),
+          )
+        }
+      />
+      <span className="text-muted-foreground">–</span>
+      <TimeSelect
+        value={endMinutes}
+        min={startMinutes + TIME_STEP_MINUTES}
+        max={DAY_MINUTES}
+        onChange={(end) => pickRange(date, { ...DEFAULT_RANGE, endMinutes: end })}
+      />
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        title="Add day"
+        onClick={() => pickRange(date, DEFAULT_RANGE)}
+      >
+        <PlusIcon className="size-4" />
+      </Button>
     </div>
   )
 }

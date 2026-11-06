@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { AvailabilityPanel } from "./AvailabilityPanel"
-import { dropRange, pickRange } from "./availability-store"
+import { dropDay, pickRange } from "./availability-store"
 
 vi.mock("@/contexts/SettingsContext", () => ({ useSettings: () => ({ timeFormat: "24h" }) }))
 vi.mock("@/hooks/useViewerTzid", () => ({ useViewerTzid: () => "Europe/Stockholm" }))
@@ -14,6 +14,7 @@ const MONDAY = Temporal.PlainDate.from("2026-11-09")
 const TODAY = Temporal.PlainDate.from("2026-11-01")
 const TOMORROW = TODAY.add({ days: 1 })
 const MORNING = { startMinutes: 9 * 60, endMinutes: 12 * 60 }
+const AFTERNOON = { startMinutes: 14 * 60, endMinutes: 15 * 60 }
 
 let root: Root
 
@@ -21,6 +22,16 @@ const message = () => document.querySelector("[data-slot=availability-message]")
 const dayRows = () => document.querySelectorAll("[data-slot=availability-day]")
 const newDayRow = () => document.querySelector("[data-slot=availability-new-day]")
 const addDay = () => newDayRow()!.querySelector<HTMLElement>("button[title='Add day']")!.click()
+const openDayMenu = () =>
+  document
+    .querySelector('[aria-label="More options"]')!
+    .dispatchEvent(
+      new PointerEvent("pointerdown", { bubbles: true, button: 0, pointerType: "mouse" }),
+    )
+const menuItem = (name: string) =>
+  [...document.querySelectorAll<HTMLElement>("[role=menuitem]")].find(
+    (item) => item.textContent === name,
+  )
 const copyButton = () => document.querySelector<HTMLElement>("button[aria-label='Copy message']")
 const writeText = vi.fn(() => Promise.resolve())
 
@@ -40,7 +51,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount())
   document.body.replaceChildren()
-  for (const date of [MONDAY, TODAY, TOMORROW]) dropRange(date, 0)
+  for (const date of [MONDAY, TODAY, TOMORROW]) dropDay(date)
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
@@ -76,16 +87,33 @@ it("turns a picked time into the message", async () => {
   expect(copyButton()).not.toBeNull()
 })
 
-it("removes a day along with its last time", async () => {
+it("clears a day from its menu", async () => {
   pickRange(MONDAY, MORNING)
   await renderPanel()
+
+  await act(async () => openDayMenu())
+  expect(menuItem("Clear first time range")).toBeUndefined()
+  await act(async () => menuItem("Clear day")!.click())
+
+  expect(message()).toContain("Pick some times")
+  expect(dayRows()).toHaveLength(0)
+})
+
+it("clears the first time from the menu and later ones with their button", async () => {
+  pickRange(MONDAY, MORNING)
+  pickRange(MONDAY, AFTERNOON)
+  pickRange(MONDAY, { startMinutes: 16 * 60, endMinutes: 17 * 60 })
+  await renderPanel()
+
+  await act(async () => openDayMenu())
+  await act(async () => menuItem("Clear first time range")!.click())
+  expect(message()).toContain("Mon, 9 Nov: 14:00–15:00, or 16:00–17:00")
 
   await act(async () => {
     document.querySelector<HTMLElement>("button[title='Remove times']")!.click()
   })
-
-  expect(message()).toContain("Pick some times")
-  expect(dayRows()).toHaveLength(0)
+  expect(message()).toContain("Mon, 9 Nov: 14:00–15:00")
+  expect(message()).not.toContain("16:00")
 })
 
 it("copies on a click anywhere in the box and shows it worked", async () => {
