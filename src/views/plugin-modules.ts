@@ -1,5 +1,5 @@
 import * as temporal from "@js-temporal/polyfill"
-import { init, parse } from "es-module-lexer"
+import { parse } from "es-module-lexer/js"
 import * as React from "react"
 import * as ReactDOM from "react-dom"
 import * as jsxRuntime from "react/jsx-runtime"
@@ -53,7 +53,6 @@ export async function linkPluginScript(
   source: string,
   resolve: (specifier: string) => string | undefined,
 ): Promise<string> {
-  await init
   const [imports] = parse(source)
   let linked = ""
   let last = 0
