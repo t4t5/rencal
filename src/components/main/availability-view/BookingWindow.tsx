@@ -42,6 +42,7 @@ const formatNotice = (minutes: number) =>
 
 const formatHorizon = (days: number) => `${days} ${days === 1 ? "day" : "days"}`
 
+/** @public Unused until "Copy link" brings it back to SchedulesPanel. */
 export function BookingWindow({
   draft,
   onChange,
