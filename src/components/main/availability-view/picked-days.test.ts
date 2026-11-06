@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest"
 
 import {
   addRange,
-  moveDay,
   nextDate,
   nextRange,
   offeredSpans,
@@ -45,20 +44,6 @@ it("joins ranges an edit pushes together, keeping them in order", () => {
 it("removes one range and leaves the date", () => {
   const days = addRange([monday], MON, range(14, 15))
   expect(removeRange(days, MON, 0)[0].ranges).toEqual([range(14, 15)])
-})
-
-describe("moveDay", () => {
-  it("keeps date order", () => {
-    const days = addRange([monday], TUE, range(9, 10))
-    const moved = moveDay(days, MON, TUE.add({ days: 1 }))
-    expect(moved.map((day) => day.date.toString())).toEqual(["2026-11-10", "2026-11-11"])
-    expect(moved[1].ranges).toEqual([range(9, 12)])
-  })
-
-  it("joins the ranges of a date that's already there", () => {
-    const days = addRange([monday], TUE, range(11, 13))
-    expect(moveDay(days, MON, TUE)).toMatchObject([{ date: TUE, ranges: [range(9, 13)] }])
-  })
 })
 
 describe("nextDate", () => {

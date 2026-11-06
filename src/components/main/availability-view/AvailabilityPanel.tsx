@@ -19,7 +19,7 @@ import { useSettings } from "@/contexts/SettingsContext"
 
 import { useViewerTzid } from "@/hooks/useViewerTzid"
 import { getErrorMessage } from "@/lib/api"
-import { DAY_MINUTES, formatShortDate } from "@/lib/event-time"
+import { DAY_MINUTES, formatShortDate, today } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
 
 import { CheckIcon } from "@/icons/check"
@@ -29,8 +29,6 @@ import { PlusIcon } from "@/icons/plus"
 
 import { TimeSelect } from "./TimeSelect"
 import {
-  addDay,
-  changeDate,
   dropRange,
   editRange,
   pickRange,
@@ -41,7 +39,9 @@ import {
 } from "./availability-store"
 import { freeTimesMessage } from "./free-times-message"
 import {
+  DEFAULT_RANGE,
   LAST_START_MINUTES,
+  nextDate,
   nextRange,
   offeredSpans,
   type PickedDay,
@@ -68,10 +68,7 @@ export function AvailabilityPanel() {
         {days.map((day) => (
           <DayRow key={day.date.toString()} day={day} />
         ))}
-        <Button variant="ghost" size="sm" className="self-start" onClick={addDay}>
-          <PlusIcon className="size-4" />
-          Add day
-        </Button>
+        <NewDayRow />
       </div>
       <MessageSection />
     </aside>
@@ -103,24 +100,20 @@ function DurationField() {
 function DayRow({ day }: { day: PickedDay }) {
   const { durationMinutes } = useAvailability()
   const { date, ranges, offered } = day
+  const id = `availability-day-${date.toString()}`
   const spare = nextRange(ranges, durationMinutes)
 
   return (
     <div data-slot="availability-day" className="flex flex-col gap-1">
       <div className="flex items-center gap-2 h-control">
         <Checkbox
-          aria-label={formatShortDate(date)}
+          id={id}
           checked={offered}
           onCheckedChange={(checked) => tickDay(date, checked === true)}
         />
-        <DatePicker
-          date={date}
-          setDate={(next) => next && changeDate(date, next)}
-          className={cn(
-            "border-0 px-0 data-[state=open]:bg-transparent",
-            !offered && "text-muted-foreground",
-          )}
-        />
+        <Label htmlFor={id} className={cn("text-sm", !offered && "text-muted-foreground")}>
+          {formatShortDate(date)}
+        </Label>
       </div>
 
       {ranges.map((range, index) => (
@@ -174,6 +167,55 @@ function DayRow({ day }: { day: PickedDay }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+/** Always last: ticking it, or changing its date or times, makes it a real row. */
+function NewDayRow() {
+  const { days, durationMinutes } = useAvailability()
+  const date = nextDate(days, today())
+  const { startMinutes, endMinutes } = DEFAULT_RANGE
+
+  return (
+    <div data-slot="availability-new-day" className="flex flex-col gap-1">
+      <div className="flex items-center gap-2 h-control">
+        <Checkbox
+          checked={false}
+          aria-label="Add day"
+          onCheckedChange={() => pickRange(date, DEFAULT_RANGE)}
+        />
+        <DatePicker
+          date={null}
+          defaultDate={date}
+          // Clicking the marked date deselects it, which reports null.
+          setDate={(picked) => pickRange(picked ?? date, DEFAULT_RANGE)}
+          placeholder="Add day"
+          className="border-0 px-0 text-muted-foreground hover:text-foreground data-[state=open]:bg-transparent data-[state=open]:text-foreground"
+        />
+      </div>
+      <div className="flex items-center gap-1 pl-6">
+        <TimeSelect
+          value={startMinutes}
+          min={0}
+          max={LAST_START_MINUTES}
+          onChange={(start) =>
+            pickRange(
+              date,
+              start < endMinutes
+                ? { ...DEFAULT_RANGE, startMinutes: start }
+                : rangeFrom(start, durationMinutes),
+            )
+          }
+        />
+        <span className="text-muted-foreground">–</span>
+        <TimeSelect
+          value={endMinutes}
+          min={startMinutes + TIME_STEP_MINUTES}
+          max={DAY_MINUTES}
+          onChange={(end) => pickRange(date, { ...DEFAULT_RANGE, endMinutes: end })}
+        />
+      </div>
     </div>
   )
 }

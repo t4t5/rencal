@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 
 export const DatePicker = ({
   date,
+  defaultDate,
   setDate,
   addon,
   className,
@@ -20,6 +21,8 @@ export const DatePicker = ({
   placeholder = "Select date",
 }: {
   date: Temporal.PlainDate | null
+  /** Marked in the calendar while `date` is empty. */
+  defaultDate?: Temporal.PlainDate
   setDate: (date: Temporal.PlainDate | null) => void
   addon?: ReactNode
   className?: string
@@ -29,6 +32,7 @@ export const DatePicker = ({
   const [open, setOpen] = useState(false)
 
   const formattedDate = date ? formatShortDate(date) : null
+  const calendarDate = date ?? defaultDate
 
   return (
     <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
@@ -54,8 +58,8 @@ export const DatePicker = ({
       <PopoverContent className="w-auto overflow-hidden p-0" align="start">
         <Calendar
           mode="single"
-          selected={date ? plainDateToJsDate(date) : undefined}
-          defaultMonth={date ? plainDateToJsDate(date) : undefined}
+          selected={calendarDate ? plainDateToJsDate(calendarDate) : undefined}
+          defaultMonth={calendarDate ? plainDateToJsDate(calendarDate) : undefined}
           captionLayout="dropdown"
           fixedWeeks
           // With year dropdowns, RDP otherwise ends navigation at the current year.

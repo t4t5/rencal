@@ -80,19 +80,6 @@ export function removeRange(
   }))
 }
 
-/** Take a date's ranges to another date, joining any already there. */
-export function moveDay(
-  days: readonly PickedDay[],
-  from: Temporal.PlainDate,
-  to: Temporal.PlainDate,
-): PickedDay[] {
-  const ranges = days.find((day) => day.date.equals(from))?.ranges ?? []
-  return ranges.reduce(
-    (moved, range) => addRange(moved, to, range),
-    days.filter((day) => !day.date.equals(from)),
-  )
-}
-
 export function setOffered(
   days: readonly PickedDay[],
   date: Temporal.PlainDate,

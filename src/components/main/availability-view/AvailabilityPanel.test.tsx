@@ -19,8 +19,8 @@ let root: Root
 
 const message = () => document.querySelector("[data-slot=availability-message]")?.textContent
 const dayRows = () => document.querySelectorAll("[data-slot=availability-day]")
-const addDayButton = () =>
-  [...document.querySelectorAll("button")].find((button) => button.textContent === "Add day")!
+const newDayRow = () => document.querySelector("[data-slot=availability-new-day]")
+const addDay = () => newDayRow()!.querySelector<HTMLElement>("[role=checkbox]")!.click()
 const copyButton = () => document.querySelector<HTMLElement>("button[aria-label='Copy message']")
 const writeText = vi.fn(() => Promise.resolve())
 
@@ -50,7 +50,7 @@ it("starts with no days, and nothing to copy", async () => {
   await renderPanel()
 
   expect(dayRows()).toHaveLength(0)
-  expect(addDayButton()).toBeDefined()
+  expect(newDayRow()?.textContent).toContain("Add day")
   expect(message()).toContain("Pick some times")
   expect(copyButton()).toBeNull()
 })
@@ -58,10 +58,10 @@ it("starts with no days, and nothing to copy", async () => {
 it("adds today from nine to five, then the day after", async () => {
   await renderPanel()
 
-  await act(async () => addDayButton().click())
+  await act(async () => addDay())
   expect(message()).toContain("Sun, 1 Nov: 09:00–17:00")
 
-  await act(async () => addDayButton().click())
+  await act(async () => addDay())
   expect(dayRows()).toHaveLength(2)
   expect(message()).toContain("Mon, 2 Nov: 09:00–17:00")
 })
