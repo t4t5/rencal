@@ -20,6 +20,15 @@ export function timeZoneCity(tzid: string): string {
   return tzid.slice(tzid.lastIndexOf("/") + 1).replaceAll("_", " ")
 }
 
+/** e.g. "Eastern Time": generic, so it holds on both sides of a DST change. */
+export function timeZoneName(tzid: string): string {
+  const parts = new Intl.DateTimeFormat("en-US", {
+    timeZone: tzid,
+    timeZoneName: "longGeneric",
+  }).formatToParts()
+  return parts.find((part) => part.type === "timeZoneName")?.value ?? timeZoneCity(tzid)
+}
+
 /** Formats the zone's UTC offset at the event instant, accounting for DST. */
 export function timeZoneOffsetLabel(tzid: string, at: EventTime): string {
   const offset = instantForOrdering(at).toZonedDateTimeISO(tzid).offset // e.g. "+01:00"

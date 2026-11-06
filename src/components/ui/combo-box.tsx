@@ -11,7 +11,6 @@ import { SelectIcon } from "./select"
 
 export function Combobox({
   addon,
-  suffix,
   inputClassName,
   children,
   placeholder,
@@ -27,8 +26,6 @@ export function Combobox({
   onHighlightChange,
 }: {
   addon: ReactNode
-  /** Rendered after the input, e.g. a muted label for the value. */
-  suffix?: ReactNode
   inputClassName?: string
   children: ReactNode
   placeholder?: string
@@ -123,7 +120,6 @@ export function Combobox({
               // Like a disabled picker, a locked field isn't a Tab stop.
               tabIndex={interactive ? undefined : -1}
             />
-            {suffix}
 
             {interactive && <SelectIcon forceVisible={open || variant === "default"} />}
           </div>

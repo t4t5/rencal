@@ -20,7 +20,6 @@ pub enum AppEvent {
     CaldirConfigChanged(CaldirSettings),
     CalendarsChanged(()),
     EventsChanged(()),
-    AvailabilitiesChanged(()),
     ProvidersChanged(()),
     EventDeepLinkAvailable(()),
     PluginDeepLinkAvailable(()),
@@ -126,11 +125,6 @@ mod tests {
                 Value::Null,
             ),
             (AppEvent::EventsChanged(()), "events-changed", Value::Null),
-            (
-                AppEvent::AvailabilitiesChanged(()),
-                "availabilities-changed",
-                Value::Null,
-            ),
             (
                 AppEvent::ProvidersChanged(()),
                 "providers-changed",

@@ -6,38 +6,6 @@ type TAURI_CHANNEL<T> = (response: T) => void
 
 export type Appearance = "light" | "dark"
 
-export type AvailabilityDetails = { id: string; reference: string; draft: AvailabilityDraft; 
-/**
- * False when the blocks aren't plain weekly hours; `draft.hours` is then
- * empty and saving leaves the blocks alone.
- */
-hours_editable: boolean; override_count: number }
-
-/**
- * The parts of an availability the editor understands.
- */
-export type AvailabilityDraft = { name: string; tzid: string; hours: DayHours[]; duration_minutes: number; notice_minutes: number; horizon_days: number }
-
-export type AvailabilityPreview = { 
-/**
- * Your hours, before busy.
- */
-available: Span[]; 
-/**
- * Busy time where it falls inside `available`.
- */
-busy: Span[] }
-
-export type AvailabilitySummary = { 
-/**
- * `dir/slug`, stable while another directory gains the same slug.
- */
-id: string; 
-/**
- * What `caldir free` accepts: the slug when unique, else `dir/slug`.
- */
-reference: string; name: string; duration_minutes: number; tzid: string | null }
-
 export type CaldirSettings = { time_format: TimeFormat; default_reminders: number[]; default_calendar: string | null; 
 /**
  * Tildified for display.
@@ -113,8 +81,6 @@ export type CredentialFieldInput = { id: string; value: string }
  * connecting or asked for another form (e.g. a 2FA code).
  */
 export type CredentialsConnectResult = { status: "done"; calendars: Calendar[] } | { status: "needs_credentials"; fields: ProviderField[] }
-
-export type DayHours = { day: Weekday; ranges: TimeRange[] }
 
 export type EventAttendee = { name: string | null; email: string; response_status: ResponseStatus | null }
 
@@ -270,16 +236,6 @@ export type PluginThemeInspection = { id: string; name: string; appearance: Appe
 
 export type PluginViewInspection = { id: string; name: string }
 
-export type PreviewSource = { kind: "saved"; id: string } | 
-/**
- * An edited draft; with `id`, the file's overrides still apply.
- */
-{ kind: "draft"; id: string | null; draft: AvailabilityDraft } | 
-/**
- * Times picked by hand. `tzid` resolves all-day busy events.
- */
-{ kind: "ranges"; ranges: Span[]; tzid: string }
-
 export type ProviderConnectInfo = { step: ProviderConnectStepKind; fields: ProviderField[]; instructions: string | null }
 
 export type ProviderConnectStepKind = "oauth_redirect" | "hosted_oauth" | "credentials" | "needs_setup"
@@ -315,7 +271,7 @@ export type ResponseStatus = "accepted" | "declined" | "tentative" | "needs-acti
 
 export type RpcError = { kind: RpcErrorKind; message: string }
 
-export type RpcErrorKind = "calendar_not_found" | "event_not_found" | "availability_not_found" | "provider_not_found" | "provider_failure" | "invalid_input" | "conflict" | "configuration" | "authentication" | "network" | "rate_limited" | "missing_release" | "incompatible" | "invalid_package" | "io" | "internal"
+export type RpcErrorKind = "calendar_not_found" | "event_not_found" | "provider_not_found" | "provider_failure" | "invalid_input" | "conflict" | "configuration" | "authentication" | "network" | "rate_limited" | "missing_release" | "incompatible" | "invalid_package" | "io" | "internal"
 
 /**
  * JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
@@ -380,11 +336,6 @@ export type SkillsStatus = {
 supported: boolean; skills: SkillStatus[] }
 
 /**
- * UTC RFC 3339 instants, `[start, end)`.
- */
-export type Span = { start: string; end: string }
-
-/**
  * Input for splitting a recurring series at a given instance.
  * 
  * Truncates the master's RRULE to end before `split_start`, then creates a new
@@ -425,11 +376,6 @@ export type ThemeSettings = { mode: ThemeMode; single: string; light: string; da
 export type TimeFormat = "24h" | "12h"
 
 /**
- * Wall-clock `HH:MM` times; `end` is after `start` on the same day.
- */
-export type TimeRange = { start: string; end: string }
-
-/**
  * Input for updating an event
  */
 export type UpdateEventInput = { id: string; calendar_slug: string; 
@@ -442,39 +388,30 @@ new_calendar_slug: string | null; summary: string; description: string | null; l
  */
 color: string | null }
 
-export type Weekday = "mo" | "tu" | "we" | "th" | "fr" | "sa" | "su"
-
-const ARGS_MAP = { 'agents':'{"install_skill":["skill"],"skills":[],"uninstall_skill":["skill"]}', 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_availability":["draft","dir"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_availability":["id"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"free_times_text":["source","calendar_slugs","tzid"],"get_availability":["id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"import_ics":["path","targets"],"list_availabilities":[],"list_availability_dirs":[],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_availability":["source","calendar_slugs","from","to"],"preview_ics":["path"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_availability":["id","draft"],"update_event":["input"]}', 'commands':'{"respond":["id","outcome"],"take_pending":[]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'keys':'{"edit":["edits"],"get":[]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_ics_file":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
+const ARGS_MAP = { 'agents':'{"install_skill":["skill"],"skills":[],"uninstall_skill":["skill"]}', 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"import_ics":["path","targets"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_ics":["path"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'commands':'{"respond":["id","outcome"],"take_pending":[]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'keys':'{"edit":["edits"],"get":[]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_ics_file":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
 export type Router = { "agents": {install_skill: (skill: Skill) => Promise<SkillsStatus>, 
 skills: () => Promise<SkillsStatus>, 
 uninstall_skill: (skill: Skill) => Promise<SkillsStatus>},
 "caldir": {check_provider_connection: (providerName: string, account: string) => Promise<null>, 
 connect_provider: (providerName: string) => Promise<Calendar[]>, 
 connect_provider_with_credentials: (providerName: string, credentials: CredentialFieldInput[]) => Promise<CredentialsConnectResult>, 
-create_availability: (draft: AvailabilityDraft, dir: string | null) => Promise<string>, 
 create_event: (input: CreateEventInput) => Promise<CalendarEvent>, 
 create_local_calendar: (name: string, color: string | null) => Promise<Calendar>, 
 delete_account: (providerName: string, account: string) => Promise<null>, 
-delete_availability: (id: string) => Promise<null>, 
 delete_calendar: (calendarSlug: string) => Promise<null>, 
 delete_event: (calendarSlug: string, eventId: string) => Promise<null>, 
 delete_recurring_series: (calendarSlug: string, uid: string) => Promise<null>, 
 discard: () => Promise<null>, 
 find_event: (uid: string, recurrenceId: string | null) => Promise<CalendarEvent | null>, 
-free_times_text: (source: PreviewSource, calendarSlugs: string[], tzid: string | null) => Promise<string>, 
-get_availability: (id: string) => Promise<AvailabilityDetails>, 
 get_caldir_settings: () => Promise<CaldirSettings>, 
 get_event: (calendarSlug: string, eventId: string) => Promise<CalendarEvent | null>, 
 get_provider_connect_info: (providerName: string) => Promise<ProviderConnectInfo>, 
 import_ics: (path: string, targets: IcsImportTarget[]) => Promise<IcsImportResult>, 
-list_availabilities: () => Promise<AvailabilitySummary[]>, 
-list_availability_dirs: () => Promise<string[]>, 
 list_calendars: () => Promise<Calendar[]>, 
 list_contacts: () => Promise<Contact[]>, 
 list_events: (calendarSlugs: string[], start: string, end: string) => Promise<CalendarEvent[]>, 
 list_invites: (calendarSlugs: string[]) => Promise<CalendarEvent[]>, 
 list_providers: () => Promise<ProviderInfo[]>, 
-preview_availability: (source: PreviewSource, calendarSlugs: string[], from: string, to: string) => Promise<AvailabilityPreview>, 
 preview_ics: (path: string) => Promise<IcsPreview>, 
 rename_calendar: (calendarSlug: string, name: string) => Promise<null>, 
 rsvp: (calendarSlug: string, eventId: string, response: ResponseStatus) => Promise<null>, 
@@ -487,7 +424,6 @@ set_time_format: (timeFormat: TimeFormat) => Promise<null>,
 split_recurring_series_at: (input: SplitRecurringSeriesInput) => Promise<CalendarEvent>, 
 sync: (allowMassDelete: string[]) => Promise<null>, 
 sync_preview: () => Promise<SyncPreview[]>, 
-update_availability: (id: string, draft: AvailabilityDraft) => Promise<null>, 
 update_event: (input: UpdateEventInput) => Promise<null>},
 "commands": {respond: (id: number, outcome: CommandOutcome) => Promise<void>, 
 take_pending: () => Promise<CommandRequest[]>},

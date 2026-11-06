@@ -1,5 +1,4 @@
 import { agents } from "@/lib/api/agents"
-import { availability } from "@/lib/api/availability"
 import { events } from "@/lib/api/calendar-events"
 import { calendars } from "@/lib/api/calendars"
 import { contacts } from "@/lib/api/contacts"
@@ -17,7 +16,6 @@ export type { ExternalView, ExternalViewsSnapshot } from "@/lib/api/views"
 
 export const api = {
   events,
-  availability,
   calendars,
   icsFiles,
   contacts,
@@ -35,18 +33,6 @@ export const api = {
 export type AppApi = typeof api
 
 export type { Skill, SkillsStatus } from "@/lib/api/agents"
-export type {
-  AvailabilityDetails,
-  AvailabilityDraft,
-  AvailabilityPreview,
-  AvailabilitySource,
-  AvailabilitySummary,
-  DayHours,
-  InstantSpan,
-  TimeRange,
-  Weekday,
-} from "@/lib/api/availability"
-
 export type {
   CreateEventParams,
   EventRange,

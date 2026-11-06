@@ -2,7 +2,6 @@
 //! context; Tauri serializes this object directly as the rejected invoke value.
 //! Shared crates retain their own errors and never depend on this boundary.
 
-use caldir_core::availability::AvailabilityError;
 use caldir_core::{
     CaldirConfigError, CaldirError, CalendarConfigError, CalendarError, CalendarEventError,
     CalendarStateError, ConnectionError, EventError, ProviderError, ProviderTransportError,
@@ -17,7 +16,6 @@ use specta::Type;
 pub enum RpcErrorKind {
     CalendarNotFound,
     EventNotFound,
-    AvailabilityNotFound,
     ProviderNotFound,
     ProviderFailure,
     InvalidInput,
@@ -85,17 +83,6 @@ map_error!(CaldirError, e => match e {
     CaldirError::Provider(e) => e.into(),
     CaldirError::Config(e) => e.into(),
     CaldirError::NoDefaultCalendar => Self::Configuration,
-    CaldirError::Availability(e) => e.into(),
-    CaldirError::AvailabilityNotFound { .. } => Self::AvailabilityNotFound,
-    CaldirError::AmbiguousAvailability { .. } | CaldirError::AmbiguousAvailabilityDir(_)
-    | CaldirError::NotAnAvailabilityDir(_) => Self::InvalidInput,
-    _ => Self::Internal,
-});
-map_error!(AvailabilityError, e => match e {
-    AvailabilityError::NotFound(_) => Self::AvailabilityNotFound,
-    AvailabilityError::Read(_, e) | AvailabilityError::Write(_, e)
-    | AvailabilityError::Delete(_, e) | AvailabilityError::List(_, e) => e.into(),
-    AvailabilityError::Invalid(..) => Self::InvalidInput,
     _ => Self::Internal,
 });
 map_error!(CalendarError, e => match e {

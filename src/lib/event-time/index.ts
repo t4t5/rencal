@@ -76,4 +76,4 @@ export {
   withRangeTimeZone,
   withRangeViewerZone,
 } from "./range"
-export { listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "./timezones"
+export { listTimeZones, timeZoneCity, timeZoneName, timeZoneOffsetLabel } from "./timezones"

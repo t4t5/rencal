@@ -17,12 +17,14 @@ export const DatePicker = ({
   addon,
   className,
   readOnly,
+  placeholder = "Select date",
 }: {
   date: Temporal.PlainDate | null
   setDate: (date: Temporal.PlainDate | null) => void
   addon?: ReactNode
   className?: string
   readOnly?: boolean
+  placeholder?: string
 }) => {
   const [open, setOpen] = useState(false)
 
@@ -44,7 +46,7 @@ export const DatePicker = ({
           )}
         >
           {addon}
-          <ItemContent>{date ? formattedDate : "Select date"}</ItemContent>
+          <ItemContent>{date ? formattedDate : placeholder}</ItemContent>
           {/* Hidden by default to fit narrow forms; combo-box themes can show it. */}
           {!readOnly && <SelectIcon forceVisible={open} className="hidden" />}
         </button>

@@ -53,16 +53,12 @@ struct Changes {
     slugs: BTreeSet<String>,
     /// A calendar's `.caldir/config.toml` or its directory changed.
     calendars: bool,
-    /// A file in an availability directory changed.
-    availabilities: bool,
     /// A path could not be attributed to a calendar.
     unattributed: bool,
 }
 
-/// The slug is the first path component under `root`. `.ics` files under an
-/// availability directory in `availability_slugs` are availabilities, not
-/// events.
-fn classify(root: &Path, paths: &[PathBuf], availability_slugs: &BTreeSet<String>) -> Changes {
+/// The slug is the first path component under `root`.
+fn classify(root: &Path, paths: &[PathBuf]) -> Changes {
     let mut changes = Changes::default();
 
     for path in paths {
@@ -79,7 +75,6 @@ fn classify(root: &Path, paths: &[PathBuf], availability_slugs: &BTreeSet<String
             changes.calendars = true;
         } else if is_ics_event_file(path) {
             match slug.to_str() {
-                Some(slug) if availability_slugs.contains(slug) => changes.availabilities = true,
                 Some(slug) => {
                     changes.slugs.insert(slug.to_owned());
                 }
@@ -99,7 +94,6 @@ pub async fn run_watcher(state: Arc<AppState>) {
     loop {
         let data_dir = config.borrow_and_update().data_dir();
         let mut watch = open_watch(&data_dir);
-        let mut availability_slugs = availability_slugs(&state);
 
         loop {
             tokio::select! {
@@ -130,16 +124,7 @@ pub async fn run_watcher(state: Arc<AppState>) {
                         continue;
                     };
 
-                    let mut changes = classify(root, &paths, &availability_slugs);
-                    // A `kind` edit or a renamed directory moves a directory
-                    // between calendars and availabilities.
-                    if changes.calendars {
-                        let slugs = self::availability_slugs(&state);
-                        if slugs != availability_slugs {
-                            availability_slugs = slugs;
-                            changes.availabilities = true;
-                        }
-                    }
+                    let changes = classify(root, &paths);
                     if changes.unattributed {
                         state.invalidate_all_events();
                     } else {
@@ -153,22 +138,10 @@ pub async fn run_watcher(state: Arc<AppState>) {
                     if changes.calendars {
                         state.notify_calendars_changed();
                     }
-                    if changes.availabilities {
-                        state.notify_availabilities_changed();
-                    }
                 }
             }
         }
     }
-}
-
-fn availability_slugs(state: &AppState) -> BTreeSet<String> {
-    state
-        .caldir()
-        .availability_dirs()
-        .iter()
-        .filter_map(|dir| dir.slug().map(str::to_string))
-        .collect()
 }
 
 struct DirWatch {
@@ -239,34 +212,6 @@ mod tests {
     use notify::EventKind;
     use notify::event::{CreateKind, ModifyKind, RenameMode};
 
-    fn none() -> BTreeSet<String> {
-        BTreeSet::new()
-    }
-
-    #[test]
-    fn classifies_availability_files_apart_from_events() {
-        let availability = BTreeSet::from(["booking".to_string()]);
-        let changes = classify(
-            Path::new("/cal"),
-            &[
-                PathBuf::from("/cal/booking/calls.ics"),
-                PathBuf::from("/cal/work/event.ics"),
-            ],
-            &availability,
-        );
-        assert!(changes.availabilities);
-        assert_eq!(changes.slugs, BTreeSet::from(["work".to_string()]));
-        assert!(!changes.calendars);
-
-        let config = classify(
-            Path::new("/cal"),
-            &[PathBuf::from("/cal/booking/.caldir/config.toml")],
-            &availability,
-        );
-        assert!(config.calendars);
-        assert!(!config.availabilities);
-    }
-
     #[test]
     fn matches_relevant_files_only() {
         let root = Path::new("/cal");
@@ -309,11 +254,7 @@ mod tests {
 
     #[test]
     fn classifies_an_event_file_by_calendar_slug() {
-        let changes = classify(
-            Path::new("/cal"),
-            &[PathBuf::from("/cal/work/event.ics")],
-            &none(),
-        );
+        let changes = classify(Path::new("/cal"), &[PathBuf::from("/cal/work/event.ics")]);
         assert_eq!(changes.slugs, BTreeSet::from(["work".to_string()]));
         assert!(!changes.calendars);
         assert!(!changes.unattributed);
@@ -333,7 +274,7 @@ mod tests {
             .add_path(path.clone());
         assert!(is_relevant(root, &atomic_save));
 
-        let changes = classify(root, &[path], &none());
+        let changes = classify(root, &[path]);
         assert!(changes.slugs.is_empty());
         assert!(changes.calendars);
         assert!(!changes.unattributed);
@@ -366,7 +307,7 @@ mod tests {
             .await
             .unwrap()
             .unwrap();
-        assert!(classify(&root, &paths, &none()).calendars, "{paths:?}");
+        assert!(classify(&root, &paths).calendars, "{paths:?}");
         let reloaded = caldir_core::Calendar::load(calendar.path()).unwrap();
         assert_eq!(reloaded.name(), Some("Renamed"));
         assert_eq!(reloaded.color(), Some("#123456"));
@@ -377,13 +318,12 @@ mod tests {
         let changes = classify(
             Path::new("/cal"),
             &[PathBuf::from("/cal/work"), PathBuf::from("/cal/archive")],
-            &none(),
         );
         assert!(changes.slugs.is_empty());
         assert!(changes.calendars);
         assert!(!changes.unattributed);
 
-        let hidden = classify(Path::new("/cal"), &[PathBuf::from("/cal/.git")], &none());
+        let hidden = classify(Path::new("/cal"), &[PathBuf::from("/cal/.git")]);
         assert_eq!(hidden, Changes::default());
     }
 
@@ -392,7 +332,6 @@ mod tests {
         let changes = classify(
             Path::new("/cal"),
             &[PathBuf::from("/elsewhere/work/event.ics")],
-            &none(),
         );
         assert!(changes.unattributed);
     }
@@ -406,7 +345,6 @@ mod tests {
                 PathBuf::from("/cal/home/.caldir/config.toml"),
                 PathBuf::from("/elsewhere/event.ics"),
             ],
-            &none(),
         );
         assert_eq!(changes.slugs, BTreeSet::from(["work".to_string()]));
         assert!(changes.calendars);

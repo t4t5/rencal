@@ -7,7 +7,6 @@ import type { Binding } from "@/lib/key-bindings"
 import { MonthView } from "@/views/builtin/month/MonthView"
 import { WeekView } from "@/views/builtin/week/WeekView"
 import { YearView } from "@/views/builtin/year/YearView"
-import { DEFAULT_VIEW_ID } from "@/views/default-view"
 
 export type ViewDescriptor = {
   id: string
@@ -17,7 +16,7 @@ export type ViewDescriptor = {
   shortcut?: string
 }
 
-export { DEFAULT_VIEW_ID }
+export const DEFAULT_VIEW_ID = "month"
 
 // Array order is display order (dropdown, palette, shortcuts overlay).
 export const BUILTIN_VIEWS: ViewDescriptor[] = [
@@ -25,7 +24,7 @@ export const BUILTIN_VIEWS: ViewDescriptor[] = [
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
   { id: "year", name: "Year", component: YearView, shortcut: "y" },
   // `f` as in `caldir free`; `a` adds an event.
-  { id: "availability", name: "Scheduling", component: AvailabilityView, shortcut: "f" },
+  { id: "availability", name: "Availability", component: AvailabilityView, shortcut: "f" },
 ]
 
 // Unknown ids (a removed view, a plugin view not loaded yet) fall back to the default.
