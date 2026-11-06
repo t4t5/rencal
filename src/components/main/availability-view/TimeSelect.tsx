@@ -23,13 +23,11 @@ export function TimeSelect({
   value,
   min,
   max,
-  disabled,
   onChange,
 }: {
   value: number
   min: number
   max: number
-  disabled?: boolean
   onChange: (minutes: number) => void
 }) {
   const { timeFormat } = useSettings()
@@ -39,11 +37,7 @@ export function TimeSelect({
   )
 
   return (
-    <Select
-      value={String(value)}
-      disabled={disabled}
-      onValueChange={(next) => onChange(Number(next))}
-    >
+    <Select value={String(value)} onValueChange={(next) => onChange(Number(next))}>
       <SelectTrigger variant="default" className="w-[5.5rem] tabular-nums">
         <SelectValue />
       </SelectTrigger>

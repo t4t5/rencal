@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react"
+import { useRef } from "react"
 
 import { useEventsInRange, useNavigation } from "@/sdk"
 import { WeekTimeGrid } from "@/views/builtin/week/WeekTimeGrid"
@@ -7,7 +7,7 @@ import { useDayWidth, useInfiniteDays, type WeekDay } from "@/views/builtin/week
 
 import { PickedBackground } from "./AvailabilityLayers"
 import { AvailabilityPanel } from "./AvailabilityPanel"
-import { forgetUnticked, pickRange, useAvailability } from "./availability-store"
+import { pickRange, useAvailability } from "./availability-store"
 import { usePickDrag } from "./usePickDrag"
 
 /**
@@ -30,10 +30,8 @@ export function AvailabilityView() {
 
   const { dragging, startDrag } = usePickDrag((day, range) => pickRange(day.date, range))
 
-  useEffect(() => forgetUnticked, [])
-
   const pickedOn = (day: WeekDay) =>
-    picked.find((other) => other.offered && other.date.equals(day.date))?.ranges ?? []
+    picked.find((other) => other.date.equals(day.date))?.ranges ?? []
   const draggingOn = (day: WeekDay) => (dragging?.dayKey === day.dateKey ? dragging : null)
 
   return (

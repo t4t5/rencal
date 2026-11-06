@@ -4,7 +4,6 @@ import { toast } from "sonner"
 
 import { TimeZoneSelect } from "@/components/event-parts/inputs/TimeZoneSelect"
 import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
 import { DatePicker } from "@/components/ui/date-picker"
 import { Label } from "@/components/ui/label"
 import {
@@ -34,7 +33,6 @@ import {
   pickRange,
   setDuration,
   setTheirTzid,
-  tickDay,
   useAvailability,
 } from "./availability-store"
 import { freeTimesMessage } from "./free-times-message"
@@ -99,30 +97,31 @@ function DurationField() {
 
 function DayRow({ day }: { day: PickedDay }) {
   const { durationMinutes } = useAvailability()
-  const { date, ranges, offered } = day
-  const id = `availability-day-${date.toString()}`
+  const { date, ranges } = day
   const spare = nextRange(ranges, durationMinutes)
 
   return (
     <div data-slot="availability-day" className="flex flex-col gap-1">
-      <div className="flex items-center gap-2 h-control">
-        <Checkbox
-          id={id}
-          checked={offered}
-          onCheckedChange={(checked) => tickDay(date, checked === true)}
-        />
-        <Label htmlFor={id} className={cn("text-sm", !offered && "text-muted-foreground")}>
-          {formatShortDate(date)}
-        </Label>
+      <div className="flex items-center justify-between gap-2 h-control">
+        <Label>{formatShortDate(date)}</Label>
+        {spare && (
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Add times"
+            onClick={() => pickRange(date, spare)}
+          >
+            <PlusIcon className="size-4" />
+          </Button>
+        )}
       </div>
 
       {ranges.map((range, index) => (
-        <div key={index} className="flex items-center gap-1 pl-6">
+        <div key={index} className="flex items-center gap-1">
           <TimeSelect
             value={range.startMinutes}
             min={0}
             max={LAST_START_MINUTES}
-            disabled={!offered}
             onChange={(startMinutes) =>
               editRange(
                 date,
@@ -138,40 +137,24 @@ function DayRow({ day }: { day: PickedDay }) {
             value={range.endMinutes}
             min={range.startMinutes + TIME_STEP_MINUTES}
             max={DAY_MINUTES}
-            disabled={!offered}
             onChange={(endMinutes) => editRange(date, index, { ...range, endMinutes })}
           />
-          <div className="ml-auto">
-            {index > 0 ? (
-              <Button
-                variant="ghost"
-                size="icon-sm"
-                title="Remove times"
-                onClick={() => dropRange(date, index)}
-              >
-                <CloseIcon className="size-4" />
-              </Button>
-            ) : (
-              spare &&
-              offered && (
-                <Button
-                  variant="ghost"
-                  size="icon-sm"
-                  title="Add times"
-                  onClick={() => pickRange(date, spare)}
-                >
-                  <PlusIcon className="size-4" />
-                </Button>
-              )
-            )}
-          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            title="Remove times"
+            className="ml-auto"
+            onClick={() => dropRange(date, index)}
+          >
+            <CloseIcon className="size-4" />
+          </Button>
         </div>
       ))}
     </div>
   )
 }
 
-/** Always last: ticking it, or changing its date or times, makes it a real row. */
+/** Always last: adding it, or changing its date or times, makes it a real row. */
 function NewDayRow() {
   const { days, durationMinutes } = useAvailability()
   const date = nextDate(days, today())
@@ -179,12 +162,7 @@ function NewDayRow() {
 
   return (
     <div data-slot="availability-new-day" className="flex flex-col gap-1">
-      <div className="flex items-center gap-2 h-control">
-        <Checkbox
-          checked={false}
-          aria-label="Add day"
-          onCheckedChange={() => pickRange(date, DEFAULT_RANGE)}
-        />
+      <div className="flex items-center justify-between gap-2 h-control">
         <DatePicker
           date={null}
           defaultDate={date}
@@ -193,8 +171,16 @@ function NewDayRow() {
           placeholder="Add day"
           className="border-0 px-0 text-muted-foreground hover:text-foreground data-[state=open]:bg-transparent data-[state=open]:text-foreground"
         />
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          title="Add day"
+          onClick={() => pickRange(date, DEFAULT_RANGE)}
+        >
+          <PlusIcon className="size-4" />
+        </Button>
       </div>
-      <div className="flex items-center gap-1 pl-6">
+      <div className="flex items-center gap-1">
         <TimeSelect
           value={startMinutes}
           min={0}

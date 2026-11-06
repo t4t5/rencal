@@ -8,11 +8,10 @@ export const TIME_STEP_MINUTES = 15
 export const LAST_START_MINUTES = DAY_MINUTES - TIME_STEP_MINUTES
 export const DEFAULT_RANGE: DaySegment = { startMinutes: 9 * 60, endMinutes: 17 * 60 }
 
-/** A date in the list. Unticked ones stay, ready to re-tick, but aren't offered. */
+/** A date in the list, which goes when its last range does. */
 export type PickedDay = {
   date: Temporal.PlainDate
   ranges: DaySegment[]
-  offered: boolean
 }
 
 export type InstantSpan = { start: Temporal.Instant; end: Temporal.Instant }
@@ -39,21 +38,20 @@ function updateDay(
   return days.map((day) => (day.date.equals(date) ? update(day) : day))
 }
 
-/** Add to a ticked date, or start an unticked or new one afresh. */
+/** Add to a date, or start a new one. */
 export function addRange(
   days: readonly PickedDay[],
   date: Temporal.PlainDate,
   range: DaySegment,
 ): PickedDay[] {
   if (!days.some((day) => day.date.equals(date))) {
-    return [...days, { date, ranges: [range], offered: true }].toSorted((a, b) =>
+    return [...days, { date, ranges: [range] }].toSorted((a, b) =>
       Temporal.PlainDate.compare(a.date, b.date),
     )
   }
   return updateDay(days, date, (day) => ({
     ...day,
-    offered: true,
-    ranges: day.offered ? mergeRanges([...day.ranges, range]) : [range],
+    ranges: mergeRanges([...day.ranges, range]),
   }))
 }
 
@@ -77,15 +75,7 @@ export function removeRange(
   return updateDay(days, date, (day) => ({
     ...day,
     ranges: day.ranges.filter((_, i) => i !== index),
-  }))
-}
-
-export function setOffered(
-  days: readonly PickedDay[],
-  date: Temporal.PlainDate,
-  offered: boolean,
-): PickedDay[] {
-  return updateDay(days, date, (day) => ({ ...day, offered }))
+  })).filter((day) => day.ranges.length > 0)
 }
 
 /** The day after the last date, or today when there's nothing from today on. */
@@ -111,14 +101,12 @@ export function nextRange(
   return start < DAY_MINUTES ? rangeFrom(start, durationMinutes) : null
 }
 
-/** What goes in the message: the ticked dates' ranges, as instants. */
+/** What goes in the message: every range, as instants. */
 export function offeredSpans(days: readonly PickedDay[], tzid: string): InstantSpan[] {
-  return days
-    .filter((day) => day.offered)
-    .flatMap((day) =>
-      day.ranges.map((range) => ({
-        start: instantAt(day.date, range.startMinutes, tzid),
-        end: instantAt(day.date, range.endMinutes, tzid),
-      })),
-    )
+  return days.flatMap((day) =>
+    day.ranges.map((range) => ({
+      start: instantAt(day.date, range.startMinutes, tzid),
+      end: instantAt(day.date, range.endMinutes, tzid),
+    })),
+  )
 }

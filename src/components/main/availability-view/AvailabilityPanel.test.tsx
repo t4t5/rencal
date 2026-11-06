@@ -5,7 +5,7 @@ import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 
 import { AvailabilityPanel } from "./AvailabilityPanel"
-import { forgetUnticked, pickRange, tickDay } from "./availability-store"
+import { dropRange, pickRange } from "./availability-store"
 
 vi.mock("@/contexts/SettingsContext", () => ({ useSettings: () => ({ timeFormat: "24h" }) }))
 vi.mock("@/hooks/useViewerTzid", () => ({ useViewerTzid: () => "Europe/Stockholm" }))
@@ -20,7 +20,7 @@ let root: Root
 const message = () => document.querySelector("[data-slot=availability-message]")?.textContent
 const dayRows = () => document.querySelectorAll("[data-slot=availability-day]")
 const newDayRow = () => document.querySelector("[data-slot=availability-new-day]")
-const addDay = () => newDayRow()!.querySelector<HTMLElement>("[role=checkbox]")!.click()
+const addDay = () => newDayRow()!.querySelector<HTMLElement>("button[title='Add day']")!.click()
 const copyButton = () => document.querySelector<HTMLElement>("button[aria-label='Copy message']")
 const writeText = vi.fn(() => Promise.resolve())
 
@@ -40,8 +40,7 @@ beforeEach(() => {
 afterEach(async () => {
   await act(async () => root.unmount())
   document.body.replaceChildren()
-  for (const date of [MONDAY, TODAY, TOMORROW]) tickDay(date, false)
-  forgetUnticked()
+  for (const date of [MONDAY, TODAY, TOMORROW]) dropRange(date, 0)
   vi.useRealTimers()
   vi.unstubAllGlobals()
 })
@@ -77,18 +76,15 @@ it("turns a picked time into the message", async () => {
   expect(copyButton()).not.toBeNull()
 })
 
-it("drops an unticked date from the message but keeps its row until you leave", async () => {
+it("removes a day along with its last time", async () => {
   pickRange(MONDAY, MORNING)
   await renderPanel()
 
   await act(async () => {
-    document.querySelector<HTMLElement>("[data-slot=availability-day] [role=checkbox]")!.click()
+    document.querySelector<HTMLElement>("button[title='Remove times']")!.click()
   })
 
   expect(message()).toContain("Pick some times")
-  expect(dayRows()).toHaveLength(1)
-
-  await act(async () => forgetUnticked())
   expect(dayRows()).toHaveLength(0)
 })
 
