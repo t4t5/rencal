@@ -388,7 +388,12 @@ new_calendar_slug: string | null; summary: string; description: string | null; l
  */
 color: string | null }
 
-const ARGS_MAP = { 'agents':'{"install_skill":["skill"],"skills":[],"uninstall_skill":["skill"]}', 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"import_ics":["path","targets"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_ics":["path"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'commands':'{"respond":["id","outcome"],"take_pending":[]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"]}', 'keys':'{"edit":["edits"],"get":[]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_ics_file":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
+/**
+ * Preferred time-grid hours, saved together so the range is always valid.
+ */
+export type VisibleHours = { start_hour: number; end_hour: number }
+
+const ARGS_MAP = { 'agents':'{"install_skill":["skill"],"skills":[],"uninstall_skill":["skill"]}', 'caldir':'{"check_provider_connection":["provider_name","account"],"connect_provider":["provider_name"],"connect_provider_with_credentials":["provider_name","credentials"],"create_event":["input"],"create_local_calendar":["name","color"],"delete_account":["provider_name","account"],"delete_calendar":["calendar_slug"],"delete_event":["calendar_slug","event_id"],"delete_recurring_series":["calendar_slug","uid"],"discard":[],"find_event":["uid","recurrence_id"],"get_caldir_settings":[],"get_event":["calendar_slug","event_id"],"get_provider_connect_info":["provider_name"],"import_ics":["path","targets"],"list_calendars":[],"list_contacts":[],"list_events":["calendar_slugs","start","end"],"list_invites":["calendar_slugs"],"list_providers":[],"preview_ics":["path"],"rename_calendar":["calendar_slug","name"],"rsvp":["calendar_slug","event_id","response"],"search_events":["calendar_slugs","query"],"set_calendar_color":["calendar_slug","color"],"set_calendar_dir":["path"],"set_default_calendar":["slug"],"set_default_reminders":["minutes"],"set_time_format":["time_format"],"split_recurring_series_at":["input"],"sync":["allow_mass_delete"],"sync_preview":[],"update_event":["input"]}', 'commands':'{"respond":["id","outcome"],"take_pending":[]}', 'config':'{"get_auto_sync_enabled":[],"get_first_day_of_week":[],"get_groups":[],"get_notifications_enabled":[],"get_show_week_numbers":[],"get_theme":[],"get_visible_hours":[],"set_auto_sync_enabled":["enabled"],"set_first_day_of_week":["day"],"set_groups":["groups"],"set_notifications_enabled":["enabled"],"set_show_week_numbers":["show"],"set_theme":["settings"],"set_visible_hours":["hours"]}', 'keys':'{"edit":["edits"],"get":[]}', 'omarchy':'{"get_colors":[]}', 'platform':'{"needs_native_decorations":[],"take_pending_event_links":[],"take_pending_ics_file":[],"take_pending_plugin_install":[]}', 'plugins':'{"catalog":[],"install":["repo"],"list":[],"uninstall":["id"]}', 'themes':'{"list_external":[],"load_fonts":["theme_id"]}', 'views':'{"list_external":[]}' }
 export type Router = { "agents": {install_skill: (skill: Skill) => Promise<SkillsStatus>, 
 skills: () => Promise<SkillsStatus>, 
 uninstall_skill: (skill: Skill) => Promise<SkillsStatus>},
@@ -433,12 +438,14 @@ get_groups: () => Promise<Partial<{ [key in string]: string[] }>>,
 get_notifications_enabled: () => Promise<boolean>, 
 get_show_week_numbers: () => Promise<boolean>, 
 get_theme: () => Promise<ThemeSettings>, 
+get_visible_hours: () => Promise<VisibleHours | null>, 
 set_auto_sync_enabled: (enabled: boolean) => Promise<null>, 
 set_first_day_of_week: (day: FirstDayOfWeek) => Promise<null>, 
 set_groups: (groups: Partial<{ [key in string]: string[] }>) => Promise<null>, 
 set_notifications_enabled: (enabled: boolean) => Promise<null>, 
 set_show_week_numbers: (show: boolean) => Promise<null>, 
-set_theme: (settings: ThemeSettings) => Promise<null>},
+set_theme: (settings: ThemeSettings) => Promise<null>, 
+set_visible_hours: (hours: VisibleHours | null) => Promise<null>},
 "keys": {edit: (edits: KeyEdit[]) => Promise<KeysSnapshot>, 
 get: () => Promise<KeysSnapshot>},
 "omarchy": {get_colors: () => Promise<OmarchyColors | null>},

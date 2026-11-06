@@ -173,11 +173,20 @@ export function useCalendars(): readonly Calendar[] {
 
 /**
  * The user's time format, first day of the week and whether to number weeks
- * (`isoWeekNumber`). Views mount once renCal has read them.
+ * (`isoWeekNumber`), plus optional preferred visible hours for time grids.
+ * Views mount once renCal has read them.
  */
 export function useDisplaySettings() {
-  const { timeFormat, firstDayOfWeek, showWeekNumbers } = useSettings()
-  return { timeFormat, firstDayOfWeek, showWeekNumbers }
+  const { timeFormat, firstDayOfWeek, showWeekNumbers, visibleHours } = useSettings()
+  return {
+    timeFormat,
+    firstDayOfWeek,
+    showWeekNumbers,
+    visibleHours: visibleHours && {
+      start_hour: visibleHours.start_hour,
+      end_hour: visibleHours.end_hour,
+    },
+  }
 }
 
 /**

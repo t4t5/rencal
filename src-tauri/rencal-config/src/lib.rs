@@ -104,6 +104,43 @@ pub enum FirstDayOfWeek {
     Sunday,
 }
 
+/// Preferred hours to fit in a time-grid viewport; all 24 hours remain scrollable.
+#[derive(Serialize, Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
+#[serde(try_from = "UncheckedVisibleHours")]
+pub struct VisibleHours {
+    pub start_hour: u32,
+    pub end_hour: u32,
+}
+
+#[derive(Deserialize)]
+struct UncheckedVisibleHours {
+    start_hour: u32,
+    end_hour: u32,
+}
+
+impl VisibleHours {
+    pub fn validate(&self) -> Result<(), &'static str> {
+        if self.start_hour < self.end_hour && self.end_hour <= 24 {
+            Ok(())
+        } else {
+            Err("Visible hours must satisfy 0 <= start_hour < end_hour <= 24")
+        }
+    }
+}
+
+impl TryFrom<UncheckedVisibleHours> for VisibleHours {
+    type Error = &'static str;
+
+    fn try_from(value: UncheckedVisibleHours) -> Result<Self, Self::Error> {
+        let hours = Self {
+            start_hour: value.start_hour,
+            end_hour: value.end_hour,
+        };
+        hours.validate()?;
+        Ok(hours)
+    }
+}
+
 #[derive(Serialize, Deserialize, Clone)]
 pub struct RencalConfig {
     #[serde(default = "default_notifications_enabled")]
@@ -122,6 +159,9 @@ pub struct RencalConfig {
     #[serde(default, deserialize_with = "deserialize_theme")]
     pub theme: ThemeConfig,
 
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible_hours: Option<VisibleHours>,
+
     #[serde(default)]
     pub groups: BTreeMap<String, Vec<String>>,
 }
@@ -134,6 +174,7 @@ impl Default for RencalConfig {
             first_day_of_week: FirstDayOfWeek::default(),
             show_week_numbers: false,
             theme: ThemeConfig::default(),
+            visible_hours: None,
             groups: BTreeMap::new(),
         }
     }
@@ -220,6 +261,38 @@ fn load_toml<T: DeserializeOwned + Default>(path: &Path) -> Result<T, ConfigErro
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn visible_hours_are_optional_and_round_trip_with_other_tables() {
+        let config: RencalConfig = toml::from_str("").expect("parse");
+        assert!(config.visible_hours.is_none());
+        assert!(!toml::to_string(&config).unwrap().contains("visible_hours"));
+
+        for (start_hour, end_hour) in [(0, 24), (8, 20), (23, 24)] {
+            let hours = VisibleHours {
+                start_hour,
+                end_hour,
+            };
+            let config = RencalConfig {
+                visible_hours: Some(hours),
+                groups: BTreeMap::from([("work".into(), vec!["work-cal".into()])]),
+                ..Default::default()
+            };
+            let text = toml::to_string_pretty(&config).expect("serialize");
+            let reparsed: RencalConfig = toml::from_str(&text).expect("re-parse");
+            assert_eq!(reparsed.visible_hours, Some(hours));
+            assert_eq!(reparsed.theme, config.theme);
+            assert_eq!(reparsed.groups, config.groups);
+        }
+    }
+
+    #[test]
+    fn invalid_visible_hours_are_rejected() {
+        for (start, end) in [(8, 8), (20, 8), (0, 25), (24, 24), (-1, 20)] {
+            let text = format!("[visible_hours]\nstart_hour = {start}\nend_hour = {end}");
+            assert!(toml::from_str::<RencalConfig>(&text).is_err(), "{text}");
+        }
+    }
 
     #[test]
     fn serializes_with_valid_toml_field_ordering() {

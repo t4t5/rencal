@@ -5,12 +5,12 @@
  * emit `rencal-config-changed` themselves (see SettingsContext).
  */
 import { rpc } from "@/rpc"
-import type { CaldirSettings } from "@/rpc/bindings"
+import type { CaldirSettings, VisibleHours } from "@/rpc/bindings"
 
 import { normalizeCalendarGroups, type CalendarGroups } from "@/lib/calendar-groups"
 import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
 
-export type { CaldirSettings }
+export type { CaldirSettings, VisibleHours }
 
 export function getCaldirSettings(): Promise<CaldirSettings> {
   return rpc.caldir.get_caldir_settings()
@@ -64,6 +64,14 @@ export async function setShowWeekNumbers(show: boolean): Promise<void> {
   await rpc.config.set_show_week_numbers(show)
 }
 
+export function getVisibleHours(): Promise<VisibleHours | null> {
+  return rpc.config.get_visible_hours()
+}
+
+export async function setVisibleHours(hours: VisibleHours | null): Promise<void> {
+  await rpc.config.set_visible_hours(hours)
+}
+
 /** Named calendar groups from config.toml's `[groups]` table, with malformed entries dropped. */
 export async function getCalendarGroups(): Promise<CalendarGroups> {
   return normalizeCalendarGroups(await rpc.config.get_groups())
@@ -87,6 +95,8 @@ export const settings = {
   setFirstDayOfWeek,
   getShowWeekNumbers,
   setShowWeekNumbers,
+  getVisibleHours,
+  setVisibleHours,
   getCalendarGroups,
   setCalendarGroups,
 } as const
