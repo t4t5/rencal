@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react"
+import { useState } from "react"
 
 import {
   Command,
@@ -72,40 +72,16 @@ export const TimeZoneSelect = ({
   defaultOpen?: boolean
   onChange: (tzid: string) => void
 }) => {
-  const viewerTzid = useViewerTzid()
   const tzid = eventTzid(value)
-
   const [open, setOpen] = useState(defaultOpen)
-  const [query, setQuery] = useState("")
-  const [highlighted, setHighlighted] = useState<string | undefined>(defaultOpen ? tzid : undefined)
-
-  // Build DST-aware offsets lazily because calculating every zone is expensive.
-  const options = useMemo(
-    () => (open ? buildOptions(withKnownZones(listTimeZones(), [tzid, viewerTzid]), value) : []),
-    [open, tzid, viewerTzid, value],
-  )
-  const filtered = filterOptions(options, query)
-
-  const handleOpenChange = (next: boolean) => {
-    setOpen(next)
-    setQuery("")
-    if (next) setHighlighted(tzid)
-  }
-
-  const handleQueryChange = (next: string) => {
-    setQuery(next)
-    const [best] = filterOptions(options, next)
-    setHighlighted(next.trim() ? best?.tzid : tzid)
-  }
 
   const commit = (nextTzid: string) => {
     if (nextTzid !== tzid) onChange(nextTzid)
     setOpen(false)
-    setQuery("")
   }
 
   return (
-    <Popover open={readOnly ? false : open} onOpenChange={handleOpenChange}>
+    <Popover open={readOnly ? false : open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <button
           type="button"
@@ -129,33 +105,64 @@ export const TimeZoneSelect = ({
       </PopoverTrigger>
 
       <PopoverContent className="p-0 w-(--radix-popover-trigger-width)" align="start">
-        <Command shouldFilter={false} value={highlighted} onValueChange={setHighlighted}>
-          <CommandInput
-            placeholder="Search timezones"
-            value={query}
-            onValueChange={handleQueryChange}
-          />
-          <CommandList>
-            {filtered.length ? (
-              <CommandGroup>
-                {filtered.map((option) => (
-                  <CommandItem
-                    key={option.tzid}
-                    value={option.tzid}
-                    onSelect={() => commit(option.tzid)}
-                    className={cn(option.tzid === tzid && "font-medium")}
-                  >
-                    <TimeZoneLabel offset={option.offset} city={option.city} />
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            ) : (
-              <CommandEmpty>No timezones found.</CommandEmpty>
-            )}
-          </CommandList>
-        </Command>
+        <TimeZoneList value={value} onCommit={commit} />
       </PopoverContent>
     </Popover>
+  )
+}
+
+// Mounted with the popover content, so it stays filled through the exit animation.
+const TimeZoneList = ({
+  value,
+  onCommit,
+}: {
+  value: EventTime
+  onCommit: (tzid: string) => void
+}) => {
+  const viewerTzid = useViewerTzid()
+  const tzid = eventTzid(value)
+
+  const [query, setQuery] = useState("")
+  const [highlighted, setHighlighted] = useState<string | undefined>(tzid)
+
+  // Build DST-aware offsets once per open because calculating every zone is expensive.
+  const [options] = useState(() =>
+    buildOptions(withKnownZones(listTimeZones(), [tzid, viewerTzid]), value),
+  )
+  const filtered = filterOptions(options, query)
+
+  const handleQueryChange = (next: string) => {
+    setQuery(next)
+    const [best] = filterOptions(options, next)
+    setHighlighted(next.trim() ? best?.tzid : tzid)
+  }
+
+  return (
+    <Command shouldFilter={false} value={highlighted} onValueChange={setHighlighted}>
+      <CommandInput
+        placeholder="Search timezones"
+        value={query}
+        onValueChange={handleQueryChange}
+      />
+      <CommandList>
+        {filtered.length ? (
+          <CommandGroup>
+            {filtered.map((option) => (
+              <CommandItem
+                key={option.tzid}
+                value={option.tzid}
+                onSelect={() => onCommit(option.tzid)}
+                className={cn(option.tzid === tzid && "font-medium")}
+              >
+                <TimeZoneLabel offset={option.offset} city={option.city} />
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        ) : (
+          <CommandEmpty>No timezones found.</CommandEmpty>
+        )}
+      </CommandList>
+    </Command>
   )
 }
 
