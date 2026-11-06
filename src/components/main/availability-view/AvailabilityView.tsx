@@ -5,7 +5,7 @@ import { WeekTimeGrid } from "@/views/builtin/week/WeekTimeGrid"
 import { useDayRangeLayout } from "@/views/builtin/week/useDayRangeLayout"
 import { useDayWidth, useInfiniteDays, type WeekDay } from "@/views/builtin/week/useInfiniteDays"
 
-import { PickedBackground, PickedOverlay } from "./AvailabilityLayers"
+import { PickedBackground } from "./AvailabilityLayers"
 import { AvailabilityPanel } from "./AvailabilityPanel"
 import { forgetUnticked, pickRange, useAvailability } from "./availability-store"
 import { usePickDrag } from "./usePickDrag"
@@ -16,7 +16,7 @@ import { usePickDrag } from "./usePickDrag"
  */
 export function AvailabilityView() {
   const { activeDate } = useNavigation()
-  const { days: picked, hovered } = useAvailability()
+  const { days: picked } = useAvailability()
 
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const { dayWidth, measured } = useDayWidth(scrollContainerRef)
@@ -51,12 +51,6 @@ export function AvailabilityView() {
           onDayPointerDown={startDrag}
           dayBackground={(day) => (
             <PickedBackground picked={pickedOn(day)} dragging={draggingOn(day)} />
-          )}
-          dayOverlay={(day) => (
-            <PickedOverlay
-              hovered={hovered?.date.equals(day.date) ? hovered.range : null}
-              dragging={draggingOn(day)}
-            />
           )}
         />
       </div>

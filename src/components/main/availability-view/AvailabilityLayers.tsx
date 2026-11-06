@@ -11,10 +11,6 @@ const UNAVAILABLE: CSSProperties = {
   backgroundAttachment: "fixed",
 }
 
-const DRAFT: CSSProperties = {
-  backgroundColor: "color-mix(in oklab, var(--primary) 10%, transparent)",
-}
-
 function segmentBox({ startMinutes, endMinutes }: DaySegment): CSSProperties {
   return {
     top: `${(startMinutes / DAY_MINUTES) * 100}%`,
@@ -40,25 +36,4 @@ export function PickedBackground({
       style={{ ...segmentBox(segment), ...UNAVAILABLE }}
     />
   ))
-}
-
-/** Over the events (z-1, under the sticky gutter): the hovered time and the drag in progress. */
-export function PickedOverlay({
-  hovered,
-  dragging,
-}: {
-  hovered: DaySegment | null
-  dragging: DaySegment | null
-}) {
-  return [hovered, dragging].map(
-    (segment, index) =>
-      segment && (
-        <div
-          key={index}
-          data-slot="availability-selection-draft"
-          className="absolute inset-x-0 z-1 pointer-events-none"
-          style={{ ...segmentBox(segment), ...DRAFT }}
-        />
-      ),
-  )
 }

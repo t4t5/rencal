@@ -42,13 +42,11 @@ type WeekTimeGridProps = {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   /**
    * The days aren't drop targets and don't create events, and the events are
-   * dimmed and ignore the pointer, so the view can draw over them.
+   * dimmed and ignore the pointer, so the view can drag across them.
    */
   readOnly?: boolean
   /** Drawn under the events of each day column. */
   dayBackground?: (day: WeekDay) => ReactNode
-  /** Drawn over the events of each day column. */
-  dayOverlay?: (day: WeekDay) => ReactNode
   onDayPointerDown?: (day: WeekDay, event: PointerEvent<HTMLElement>) => void
 }
 
@@ -65,7 +63,6 @@ export function WeekTimeGrid({
   scrollContainerRef,
   readOnly = false,
   dayBackground,
-  dayOverlay,
   onDayPointerDown,
 }: WeekTimeGridProps) {
   const { activeDate, goToDate } = useNavigation()
@@ -253,8 +250,6 @@ export function WeekTimeGrid({
                   <WeekTimedEvent key={block.item.key} block={block} />
                 ))}
               </div>
-
-              {dayOverlay?.(day)}
 
               {selection?.kind === "timed" && selection.day.equals(day.date) && (
                 <DragToCreateSelection selection={selection} />

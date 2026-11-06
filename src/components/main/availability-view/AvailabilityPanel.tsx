@@ -33,7 +33,6 @@ import {
   editRange,
   pickRange,
   setDuration,
-  setHovered,
   setTheirTzid,
   tickDay,
   useAvailability,
@@ -116,12 +115,7 @@ function DayRow({ day }: { day: PickedDay }) {
       </div>
 
       {ranges.map((range, index) => (
-        <div
-          key={index}
-          className="flex items-center gap-1 pl-6"
-          onPointerEnter={() => offered && setHovered({ date, range })}
-          onPointerLeave={() => setHovered(null)}
-        >
+        <div key={index} className="flex items-center gap-1 pl-6">
           <TimeSelect
             value={range.startMinutes}
             min={0}
