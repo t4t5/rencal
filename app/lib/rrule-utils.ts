@@ -1,0 +1,267 @@
+import { Temporal } from "@js-temporal/polyfill"
+import { RRule, RRuleSet, rrulestr } from "rrule"
+
+import { type CalendarEvent, type Recurrence, withDates } from "./cal-events"
+import {
+  addDays,
+  dateInEventZone,
+  eventTzid,
+  fromDate,
+  getViewerTzid,
+  toViewerZonedDateTime,
+  type EventTime,
+  wallclockTime,
+} from "./event-time"
+
+const MAX_EXDATE_SKIPS = 32
+
+/** Project an event's wall-clock fields into the fake-UTC space rrule.js expects. */
+function eventTimeToRRuleDate(eventTime: EventTime): Date {
+  const date = dateInEventZone(eventTime)
+  const time = wallclockTime(eventTime)
+  return new Date(Date.UTC(date.year, date.month - 1, date.day, time.hour, time.minute))
+}
+
+/** Project a wallclock into the same fake-UTC space rrule.js expects. */
+function localDateToRRuleDate(date: Temporal.PlainDateTime): Date {
+  return new Date(
+    Date.UTC(
+      date.year,
+      date.month - 1,
+      date.day,
+      date.hour,
+      date.minute,
+      date.second,
+      date.millisecond,
+    ),
+  )
+}
+
+function rruleDateToPlainDate(date: Date): Temporal.PlainDate {
+  return new Temporal.PlainDate(date.getUTCFullYear(), date.getUTCMonth() + 1, date.getUTCDate())
+}
+
+function nearestDateOnSide(
+  dates: Date[],
+  boundary: Date,
+  direction: "after" | "before",
+): Date | null {
+  let nearest: Date | null = null
+
+  for (const candidate of dates) {
+    if (direction === "after") {
+      if (candidate < boundary) continue
+      if (!nearest || candidate < nearest) nearest = candidate
+      continue
+    }
+
+    if (candidate > boundary) continue
+    if (!nearest || candidate > nearest) nearest = candidate
+  }
+
+  return nearest
+}
+
+/**
+ * Parse an RRULE string and create an RRule with the correct dtstart.
+ *
+ * rrule.js performs calendar math on Date's UTC fields, so callers must encode
+ * wall-clock values with Date.UTC instead of passing a real local-time instant.
+ *
+ * rrulestr() has a bug where it initializes BY* fields to the current date/time
+ * when they're not in the RRULE string. We only extract the recurrence-defining
+ * fields and let dtstart control the actual occurrence dates.
+ */
+export function createRRuleWithDtstart(rruleString: string, dtstart: Date): RRule {
+  const parsed = rrulestr(rruleString)
+
+  return new RRule({
+    freq: parsed.options.freq,
+    interval: parsed.options.interval,
+    count: parsed.options.count,
+    until: parsed.options.until,
+    wkst: parsed.options.wkst,
+    byweekday: rruleString.includes("BYDAY") ? parsed.options.byweekday : undefined,
+    bymonth: rruleString.includes("BYMONTH") ? parsed.options.bymonth : undefined,
+    bymonthday: rruleString.includes("BYMONTHDAY") ? parsed.options.bymonthday : undefined,
+    byhour: rruleString.includes("BYHOUR") ? parsed.options.byhour : undefined,
+    byminute: rruleString.includes("BYMINUTE") ? parsed.options.byminute : undefined,
+    dtstart,
+  })
+}
+
+/**
+ * Days to move a series start forward so it lands on the rule's first
+ * occurrence, e.g. a Monday start for a Tuesday/Thursday rule → 1. RFC 5545
+ * leaves a DTSTART that doesn't match its own rule undefined.
+ */
+export function daysToFirstOccurrence(start: EventTime, rrule: string): number {
+  const dtstart = eventTimeToRRuleDate(start)
+  const first = createRRuleWithDtstart(rrule, dtstart).after(dtstart, true)
+  if (!first) return 0
+
+  return dateInEventZone(start).until(rruleDateToPlainDate(first)).days
+}
+
+/**
+ * rrule.js reads every UNTIL as UTC fields. For zoned and UTC series that is
+ * the real instant; for all-day and floating series it's the wallclock.
+ */
+function untilWallclock(until: Date, start: EventTime): Temporal.PlainDateTime {
+  if (start.kind === "date" || start.kind === "datetime_floating") {
+    return new Temporal.PlainDateTime(
+      until.getUTCFullYear(),
+      until.getUTCMonth() + 1,
+      until.getUTCDate(),
+      until.getUTCHours(),
+      until.getUTCMinutes(),
+      until.getUTCSeconds(),
+    )
+  }
+  return Temporal.Instant.fromEpochMilliseconds(until.getTime())
+    .toZonedDateTimeISO(eventTzid(start))
+    .toPlainDateTime()
+}
+
+/** The last day a series starting at `start` can have an occurrence before UNTIL. */
+export function untilToLastDate(until: Date, start: EventTime): Temporal.PlainDate {
+  const wallclock = untilWallclock(until, start)
+  const { hour, minute } = wallclockTime(start)
+  // A split's UNTIL lands just before that day's occurrence.
+  const fits = wallclock.hour * 60 + wallclock.minute >= hour * 60 + minute
+  return fits ? wallclock.toPlainDate() : wallclock.toPlainDate().subtract({ days: 1 })
+}
+
+/** UNTIL that ends a series starting at `start` after its occurrence on `date`. */
+export function lastDateToUntil(date: Temporal.PlainDate, start: EventTime): Date {
+  if (start.kind === "date") return localDateToRRuleDate(date.toPlainDateTime())
+  const endOfDay = date.toPlainDateTime({ hour: 23, minute: 59, second: 59 })
+  if (start.kind === "datetime_floating") return localDateToRRuleDate(endOfDay)
+  return new Date(endOfDay.toZonedDateTime(eventTzid(start)).epochMilliseconds)
+}
+
+/**
+ * rrule.js always writes UTC datetimes for UNTIL, but RFC 5545 wants a DATE
+ * for all-day series and a local time for floating ones.
+ */
+function formatUntil(rrule: string, start: EventTime): string {
+  return rrule.replace(/UNTIL=(\d{8})(T\d{6})?Z?/, (match, date: string, time = "") => {
+    if (start.kind === "date") return `UNTIL=${date}`
+    if (start.kind === "datetime_floating") return `UNTIL=${date}${time}`
+    return match
+  })
+}
+
+/** For a recurring master, shift start/end to the occurrence nearest to now. */
+export function withNearestOccurrence(
+  event: CalendarEvent,
+  now: Temporal.PlainDateTime = Temporal.Now.zonedDateTimeISO(getViewerTzid()).toPlainDateTime(),
+): CalendarEvent {
+  if (!event.recurrence) return event
+
+  try {
+    const masterStart = eventTimeToRRuleDate(event.start)
+    const rule = createRRuleWithDtstart(event.recurrence.rrule, masterStart)
+    const exdateTimes = new Set(
+      event.recurrence.exdates.map((exdate) => eventTimeToRRuleDate(exdate).getTime()),
+    )
+    const rdateOccurrences = event.recurrence.rdates
+      .map(eventTimeToRRuleDate)
+      .filter((rdate) => !exdateTimes.has(rdate.getTime()))
+    const rruleNow = localDateToRRuleDate(now)
+    const findIncludedOccurrence = (direction: "after" | "before"): Date | null => {
+      let ruleOccurrence =
+        direction === "after" ? rule.after(rruleNow, true) : rule.before(rruleNow, true)
+
+      for (let i = 0; ruleOccurrence && i < MAX_EXDATE_SKIPS; i++) {
+        if (!exdateTimes.has(ruleOccurrence.getTime())) break
+        ruleOccurrence =
+          direction === "after"
+            ? rule.after(ruleOccurrence, false)
+            : rule.before(ruleOccurrence, false)
+      }
+      if (ruleOccurrence && exdateTimes.has(ruleOccurrence.getTime())) ruleOccurrence = null
+
+      const rdateOccurrence = nearestDateOnSide(rdateOccurrences, rruleNow, direction)
+
+      if (!ruleOccurrence) return rdateOccurrence
+      if (!rdateOccurrence) return ruleOccurrence
+      if (direction === "after") {
+        return ruleOccurrence < rdateOccurrence ? ruleOccurrence : rdateOccurrence
+      }
+      return ruleOccurrence > rdateOccurrence ? ruleOccurrence : rdateOccurrence
+    }
+
+    const occurrence = findIncludedOccurrence("after") ?? findIncludedOccurrence("before")
+    if (!occurrence) return event
+
+    const dayDelta = dateInEventZone(event.start).until(rruleDateToPlainDate(occurrence)).days
+    return withDates(event, addDays(event.start, dayDelta), addDays(event.end, dayDelta))
+  } catch {
+    return event
+  }
+}
+
+/**
+ * Convert a Recurrence object into an RRuleSet.
+ * rrule.js works with JS Date; we bridge each exception/addition's viewer-zone
+ * wallclock into a local-components Date — the inverse of the fromDate bridge
+ * in rruleToRecurrence, so the round trip through RRuleSet is lossless.
+ */
+export function recurrenceToRRuleSet(recurrence: Recurrence): RRuleSet {
+  const rruleSet = new RRuleSet()
+  rruleSet.rrule(rrulestr(recurrence.rrule) as RRule)
+  for (const exdate of recurrence.exdates) {
+    const z = toViewerZonedDateTime(exdate)
+    rruleSet.exdate(new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond))
+  }
+  for (const rdate of recurrence.rdates) {
+    const z = toViewerZonedDateTime(rdate)
+    rruleSet.rdate(new Date(z.year, z.month - 1, z.day, z.hour, z.minute, z.second, z.millisecond))
+  }
+  return rruleSet
+}
+
+/**
+ * Strip the "RRULE:" prefix that rrule.js adds, since caldir
+ * expects just the value (e.g. "FREQ=WEEKLY;BYDAY=MO").
+ */
+function stripRRulePrefix(s: string): string {
+  return s.replace(/^RRULE:/i, "")
+}
+
+/**
+ * Convert an RRule or RRuleSet back to a Recurrence object.
+ * Exception and addition dates from rrule.js are JS Dates; we wrap them as
+ * zoned EventTime in the viewer's local zone. Pass the series `start` to
+ * write UNTIL in the form its kind needs.
+ */
+export function rruleToRecurrence(
+  rrule: RRule | RRuleSet | null,
+  start?: EventTime,
+): Recurrence | null {
+  if (!rrule) return null
+
+  const ruleValue = (rule: RRule) => {
+    const value = stripRRulePrefix(rule.toString())
+    return start ? formatUntil(value, start) : value
+  }
+
+  if (rrule instanceof RRuleSet) {
+    const rrules = rrule.rrules()
+    if (rrules.length === 0) return null
+
+    const tzid = getViewerTzid()
+    return {
+      rrule: ruleValue(rrules[0]),
+      exdates: rrule.exdates().map((d) => fromDate(d, tzid)),
+      rdates: rrule.rdates().map((d) => fromDate(d, tzid)),
+    }
+  }
+
+  return {
+    rrule: ruleValue(rrule),
+    exdates: [],
+    rdates: [],
+  }
+}

@@ -1,0 +1,155 @@
+import { Temporal } from "@js-temporal/polyfill"
+
+import { afterEach, beforeEach, describe, expect, it, vi } from "@/lib/testing/vitest"
+
+import type { CalendarEvent } from "./cal-events"
+import { computeEventDateInfo, formatDateKey, type EventTime } from "./event-time"
+import { fromRpcEventTime } from "./event-time/rpc"
+import {
+  daysToFirstOccurrence,
+  recurrenceToRRuleSet,
+  rruleToRecurrence,
+  withNearestOccurrence,
+} from "./rrule-utils"
+
+const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date: value })
+
+function recurringEvent({
+  rrule = "FREQ=WEEKLY;BYDAY=MO",
+  exdates = [],
+  rdates = [],
+  startDate = "2020-06-01",
+}: {
+  rrule?: string
+  exdates?: EventTime[]
+  rdates?: EventTime[]
+  startDate?: string
+} = {}): CalendarEvent {
+  const start = date(startDate)
+  const end = date(start.value.add({ days: 1 }).toString())
+
+  return {
+    id: "weekly-event",
+    recurring_event_id: null,
+    summary: "Weekly event",
+    description: null,
+    location: null,
+    url: null,
+    start,
+    end,
+    status: "confirmed",
+    availability: "busy",
+    recurrence: { rrule, exdates, rdates },
+    master_recurrence: null,
+    reminders: [],
+    organizer: null,
+    attendees: [],
+    conference: null,
+    calendar_slug: "calendar",
+    color: null,
+    updated: null,
+    dateInfo: computeEventDateInfo(start, end),
+  }
+}
+
+describe("withNearestOccurrence", () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+    vi.setSystemTime(new Date(2026, 6, 31, 12))
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  it("shifts a recurring master to its next occurrence", () => {
+    const shifted = withNearestOccurrence(recurringEvent())
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-03")
+    expect(formatDateKey(shifted.end)).toBe("2026-08-04")
+  })
+
+  it("keeps the DTSTART weekday when BYDAY is omitted across DST", () => {
+    const winterNow = Temporal.PlainDateTime.from("2026-01-30T12:00")
+    const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY" }), winterNow)
+
+    expect(formatDateKey(shifted.start)).toBe("2026-02-02")
+    expect(formatDateKey(shifted.end)).toBe("2026-02-03")
+  })
+
+  it("skips excluded occurrences", () => {
+    const shifted = withNearestOccurrence(recurringEvent({ exdates: [date("2026-08-03")] }))
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-10")
+    expect(formatDateKey(shifted.end)).toBe("2026-08-11")
+  })
+
+  it("uses an added RDATE occurrence before the next RRULE occurrence", () => {
+    const shifted = withNearestOccurrence(recurringEvent({ rdates: [date("2026-08-01")] }))
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-01")
+    expect(formatDateKey(shifted.end)).toBe("2026-08-02")
+  })
+
+  it("lets EXDATE exclude an occurrence also present in RDATE", () => {
+    const excluded = date("2026-08-01")
+    const shifted = withNearestOccurrence(
+      recurringEvent({ exdates: [excluded], rdates: [excluded] }),
+    )
+
+    expect(formatDateKey(shifted.start)).toBe("2026-08-03")
+  })
+
+  it("uses the last occurrence when a finite series has ended", () => {
+    const shifted = withNearestOccurrence(recurringEvent({ rrule: "FREQ=WEEKLY;COUNT=3" }))
+
+    expect(formatDateKey(shifted.start)).toBe("2020-06-15")
+    expect(formatDateKey(shifted.end)).toBe("2020-06-16")
+  })
+
+  it("returns the master unchanged when its rule cannot be parsed", () => {
+    const event = recurringEvent({ rrule: "not-an-rrule" })
+
+    expect(withNearestOccurrence(event)).toBe(event)
+  })
+
+  it("passes non-recurring events through unchanged", () => {
+    const event = { ...recurringEvent(), recurrence: null }
+
+    expect(withNearestOccurrence(event)).toBe(event)
+  })
+})
+
+describe("recurrence RRuleSet conversion", () => {
+  it("retains RDATEs through the recurrence editor representation", () => {
+    const recurrence = {
+      rrule: "FREQ=WEEKLY;BYDAY=MO",
+      exdates: [date("2026-08-03")],
+      rdates: [date("2026-08-04")],
+    }
+
+    const converted = rruleToRecurrence(recurrenceToRRuleSet(recurrence))
+
+    expect(converted?.exdates.map(formatDateKey)).toEqual(["2026-08-03"])
+    expect(converted?.rdates.map(formatDateKey)).toEqual(["2026-08-04"])
+  })
+})
+
+describe("daysToFirstOccurrence", () => {
+  // 2026-10-12 is a Monday.
+  const monday = date("2026-10-12")
+  const mondayAt9: EventTime = {
+    kind: "datetime_floating",
+    value: Temporal.PlainDateTime.from("2026-10-12T09:00"),
+  }
+
+  it("keeps a start that already matches the rule", () => {
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;BYDAY=MO,WE")).toBe(0)
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;INTERVAL=3")).toBe(0)
+  })
+
+  it("moves the start onto the rule's first day", () => {
+    expect(daysToFirstOccurrence(monday, "FREQ=WEEKLY;BYDAY=TU,TH")).toBe(1)
+    expect(daysToFirstOccurrence(mondayAt9, "FREQ=WEEKLY;BYDAY=FR")).toBe(4)
+  })
+})

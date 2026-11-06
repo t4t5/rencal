@@ -1,0 +1,14 @@
+{
+  "extends": "./.nsh/tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "nsh": ["./.nsh/types/nsh/index.d.ts"],
+      "nsh/*": ["./.nsh/types/nsh/*.d.ts"],
+      "@/*": ["./*"],
+      "@js-temporal/polyfill": ["./lib/temporal.ts"],
+      "*": ["./.nsh/types/*.d.ts"]
+    }
+  },
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["native", ".nsh/out", ".nsh/rust"]
+}

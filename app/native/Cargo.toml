@@ -1,0 +1,53 @@
+[package]
+name = "rencal-native"
+version = "0.0.1"
+description = "renCal's backend, as the native module of its NSH app"
+authors = ["T4T5 <t4t5@hey.com>"]
+edition = "2024"
+publish = false
+
+[workspace]
+
+[lib]
+name = "rencal_native"
+
+[dependencies]
+nsh-core = "0.4.0"
+nsh-base = "0.4.0"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+specta = { version = "=2.0.0-rc.22", features = ["derive"] }
+tokio = { version = "1", features = ["full"] }
+url = "2.5"
+anyhow = "1.0.100"
+socket2 = "0.5"
+caldir-core = "0.17.4"
+icalendar = "0.17"
+chrono = "0.4.43"
+reminder-core = { path = "../../src-tauri/reminder-core" }
+rencal-config = { path = "../../src-tauri/rencal-config" }
+rencal-plugin-contract = { path = "../../src-tauri/plugin-contract" }
+chrono-tz = "0.10.4"
+toml = "0.8"
+toml_edit = "0.20"
+notify = "6"
+iana-time-zone = "0.1"
+dirs = "5"
+log = "0.4.29"
+parking_lot = "0.12"
+semver = "1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls-no-provider", "stream"] }
+rustls = { version = "0.23", default-features = false, features = ["ring"] }
+futures-util = "0.3"
+tempfile = "3"
+base64 = "0.22"
+flate2 = "1"
+quick-xml = "0.39"
+sha2 = "0.10"
+tar = "0.4"
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
+
+[target.'cfg(target_os = "linux")'.dependencies]
+gtk4 = { version = "0.11", features = ["v4_14"] }

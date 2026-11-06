@@ -1,0 +1,29 @@
+{
+  "name": "renCal",
+  "id": "dev.rencal.app",
+  "version": "0.9.2",
+  "build": 1,
+  "rust": "native",
+  "appearance": "dark",
+  "resolve": {
+    "alias": {
+      "@js-temporal/polyfill": "./lib/temporal.ts",
+      "@": "./"
+    }
+  },
+  "theme": "theme.json",
+  "tailwind": {
+    "fontSize": {
+      "2xs": [11, 1.27],
+      "xs": [12, 1.33],
+      "sm": [14, 1.43],
+      "base": [16, 1.5],
+      "lg": [18, 1.56],
+      "xl": [20, 1.4],
+      "2xl": [24, 1.33]
+    },
+    "breakpoints": {
+      "xs": 380
+    }
+  }
+}

@@ -1,0 +1,57 @@
+import { Temporal } from "@js-temporal/polyfill"
+
+import { describe, expect, it } from "@/lib/testing/vitest"
+
+import type { CalendarEvent, Recurrence } from "./cal-events"
+import { computeEventDateInfo, type EventTime } from "./event-time"
+import { fromRpcEventTime } from "./event-time/rpc"
+import { prepareSearchResults } from "./search-results"
+
+const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date: value })
+
+function event(id: string, startDate: string, recurrence: Recurrence | null = null): CalendarEvent {
+  const start = date(startDate)
+  const end = date(startDate)
+
+  return {
+    id,
+    recurring_event_id: null,
+    summary: id,
+    description: null,
+    location: null,
+    url: null,
+    start,
+    end,
+    status: "confirmed",
+    availability: "busy",
+    recurrence,
+    master_recurrence: null,
+    reminders: [],
+    organizer: null,
+    attendees: [],
+    conference: null,
+    calendar_slug: "calendar",
+    color: null,
+    updated: null,
+    dateInfo: computeEventDateInfo(start, end),
+  }
+}
+
+describe("prepareSearchResults", () => {
+  it("ranks a recurring event by its displayed occurrence instead of its master start", () => {
+    const results = prepareSearchResults(
+      [
+        event("2015 event", "2015-08-06"),
+        event("2013 event", "2013-12-05"),
+        event("recurring event", "2010-05-14", {
+          rrule: "FREQ=YEARLY;BYMONTH=5;BYMONTHDAY=14",
+          exdates: [],
+          rdates: [],
+        }),
+      ],
+      Temporal.ZonedDateTime.from("2026-07-31T12:00:00+02:00[Europe/Berlin]").toInstant(),
+    )
+
+    expect(results.map(({ id }) => id)).toEqual(["recurring event", "2015 event", "2013 event"])
+  })
+})

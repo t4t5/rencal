@@ -1,0 +1,37 @@
+import type { CalendarEvent } from "@/lib/cal-events"
+import { computeEventDateInfo } from "@/lib/event-time"
+
+import type { DraftEvent } from "@/stores/draft"
+
+// Saved events always have an id, so an empty one marks the draft.
+const DRAFT_ID = ""
+
+export function isDraftEvent(event: CalendarEvent): boolean {
+  return event.id === DRAFT_ID
+}
+
+export function draftToCalendarEvent(draft: DraftEvent): CalendarEvent | null {
+  if (draft.calendarId == null) return null
+  return {
+    id: DRAFT_ID,
+    recurring_event_id: null,
+    summary: draft.summary,
+    description: draft.description,
+    location: draft.location,
+    url: draft.url,
+    start: draft.start,
+    end: draft.end,
+    dateInfo: computeEventDateInfo(draft.start, draft.end),
+    status: "confirmed",
+    availability: "busy",
+    recurrence: draft.recurrence,
+    master_recurrence: null,
+    reminders: [],
+    organizer: null,
+    attendees: draft.attendees,
+    conference: draft.conference,
+    calendar_slug: draft.calendarId,
+    color: draft.color,
+    updated: null,
+  }
+}

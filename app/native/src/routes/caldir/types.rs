@@ -1,0 +1,677 @@
+use crate::routes::{
+    TauResult,
+    error::{RpcError, RpcErrorKind},
+};
+use caldir_core::{
+    Attendee, Availability, CaldirConfig, Event, EventTime, ParticipationStatus, Recurrence,
+    Status, TimeFormat as CoreTimeFormat,
+};
+use chrono::{DateTime, NaiveDate, NaiveDateTime, Utc};
+use serde::{Deserialize, Serialize};
+use specta::Type;
+
+use super::conference::conference_from_event;
+use super::event_color::event_color;
+use super::helpers::tildify;
+
+#[derive(Serialize, Deserialize, Type)]
+pub struct Calendar {
+    pub slug: String,
+    pub name: Option<String>,
+    pub color: Option<String>,
+    pub provider: Option<String>,
+    pub account: Option<String>,
+    /// The user's invitee address, which may differ from `account` (e.g. CalDAV logins).
+    pub email: Option<String>,
+    pub read_only: Option<bool>,
+}
+
+/// JSCalendar/RFC 8984-shaped event time. Mirrors caldir-core's `EventTime` 1:1
+/// so the RPC format is lossless: zoned events keep their IANA zone identity,
+/// all-day stays date-only, UTC and floating round-trip faithfully.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum RpcEventTime {
+    /// All-day event. ISO date "YYYY-MM-DD".
+    Date { date: String },
+    /// Genuine UTC instant. ISO 8601 with Z suffix.
+    DatetimeUtc { instant: String },
+    /// Floating local time (no zone). ISO 8601 wall-clock without offset.
+    DatetimeFloating { wallclock: String },
+    /// Wall-clock + IANA zone — the canonical shape for authored timed events.
+    DatetimeZoned { wallclock: String, tzid: String },
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct RpcRecurrence {
+    pub rrule: String,
+    pub exdates: Vec<RpcEventTime>,
+    pub rdates: Vec<RpcEventTime>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct Contact {
+    pub email: String,
+    pub name: Option<String>,
+    pub count: u32,
+    pub last_seen: String,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub enum TimeFormat {
+    #[serde(rename = "24h")]
+    H24,
+    #[serde(rename = "12h")]
+    H12,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub struct CaldirSettings {
+    pub time_format: TimeFormat,
+    pub default_reminders: Vec<i32>,
+    pub default_calendar: Option<String>,
+    /// Tildified for display.
+    pub calendar_dir: String,
+}
+
+impl From<&CaldirConfig> for CaldirSettings {
+    fn from(config: &CaldirConfig) -> Self {
+        let time_format = match config.time_format() {
+            CoreTimeFormat::H24 => TimeFormat::H24,
+            CoreTimeFormat::H12 => TimeFormat::H12,
+        };
+        let default_reminders = config
+            .default_reminders()
+            .unwrap_or_default()
+            .into_iter()
+            .map(|reminder| reminder.minutes_before_start as i32)
+            .collect();
+
+        Self {
+            time_format,
+            default_reminders,
+            default_calendar: config.default_calendar_slug().map(String::from),
+            calendar_dir: tildify(&config.data_dir().to_string_lossy()),
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
+pub enum ResponseStatus {
+    #[serde(rename = "accepted")]
+    Accepted,
+    #[serde(rename = "declined")]
+    Declined,
+    #[serde(rename = "tentative")]
+    Tentative,
+    #[serde(rename = "needs-action")]
+    NeedsAction,
+}
+
+impl From<ResponseStatus> for ParticipationStatus {
+    fn from(status: ResponseStatus) -> Self {
+        match status {
+            ResponseStatus::Accepted => Self::Accepted,
+            ResponseStatus::Declined => Self::Declined,
+            ResponseStatus::Tentative => Self::Tentative,
+            ResponseStatus::NeedsAction => Self::NeedsAction,
+        }
+    }
+}
+
+impl From<ParticipationStatus> for ResponseStatus {
+    fn from(status: ParticipationStatus) -> Self {
+        match status {
+            ParticipationStatus::Accepted => Self::Accepted,
+            ParticipationStatus::Declined => Self::Declined,
+            ParticipationStatus::Tentative => Self::Tentative,
+            ParticipationStatus::NeedsAction => Self::NeedsAction,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum EventStatus {
+    Confirmed,
+    Tentative,
+    Cancelled,
+}
+
+impl From<Status> for EventStatus {
+    fn from(status: Status) -> Self {
+        match status {
+            Status::Confirmed => Self::Confirmed,
+            Status::Tentative => Self::Tentative,
+            Status::Cancelled => Self::Cancelled,
+        }
+    }
+}
+
+/// Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
+#[serde(rename_all = "lowercase")]
+pub enum EventAvailability {
+    Busy,
+    Free,
+}
+
+impl From<Availability> for EventAvailability {
+    fn from(availability: Availability) -> Self {
+        match availability {
+            Availability::Busy => Self::Busy,
+            Availability::Free => Self::Free,
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct EventAttendee {
+    pub name: Option<String>,
+    pub email: String,
+    pub response_status: Option<ResponseStatus>,
+}
+
+impl EventAttendee {
+    pub fn to_core(&self) -> Attendee {
+        Attendee {
+            email: self.email.clone(),
+            name: self.name.clone(),
+            status: self.response_status.map(Into::into),
+        }
+    }
+}
+
+impl From<&Attendee> for EventAttendee {
+    fn from(a: &Attendee) -> Self {
+        EventAttendee {
+            name: a.name.clone(),
+            email: a.email.clone(),
+            response_status: a.status.map(Into::into),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Type)]
+pub struct CalendarEvent {
+    pub id: String,
+    pub recurring_event_id: Option<String>,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub url: Option<String>,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
+    pub status: EventStatus,
+    pub availability: EventAvailability,
+    pub recurrence: Option<RpcRecurrence>,
+    pub master_recurrence: Option<RpcRecurrence>,
+    pub reminders: Vec<i32>,
+    pub organizer: Option<EventAttendee>,
+    pub attendees: Vec<EventAttendee>,
+    pub conference: Option<EventConference>,
+    pub calendar_slug: String,
+    pub color: Option<String>,
+    /// RFC 3339 timestamp of the event's last modification (DTSTAMP/LAST-MODIFIED).
+    /// Used by the frontend to cheaply detect content changes for reload dedup.
+    pub updated: Option<String>,
+}
+
+#[derive(Clone, Copy, PartialEq, Serialize, Deserialize, Type)]
+pub enum ConferenceProvider {
+    #[serde(rename = "google")]
+    Google,
+    #[serde(rename = "outlook")]
+    Outlook,
+    #[serde(rename = "proton")]
+    Proton,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "status", rename_all = "lowercase")]
+pub enum EventConference {
+    Requested {
+        provider: ConferenceProvider,
+    },
+    Live {
+        provider: ConferenceProvider,
+        url: String,
+    },
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct CredentialFieldInput {
+    pub id: String,
+    pub value: String,
+}
+
+/// Result of submitting a credentials form: the provider either finished
+/// connecting or asked for another form (e.g. a 2FA code).
+#[derive(Serialize, Deserialize, Type)]
+#[serde(tag = "status", rename_all = "snake_case")]
+pub enum CredentialsConnectResult {
+    Done { calendars: Vec<Calendar> },
+    NeedsCredentials { fields: Vec<ProviderField> },
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub enum ProviderConnectStepKind {
+    #[serde(rename = "oauth_redirect")]
+    OAuthRedirect,
+    #[serde(rename = "hosted_oauth")]
+    HostedOAuth,
+    #[serde(rename = "credentials")]
+    Credentials,
+    #[serde(rename = "needs_setup")]
+    NeedsSetup,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub enum ProviderFieldType {
+    #[serde(rename = "text")]
+    Text,
+    #[serde(rename = "password")]
+    Password,
+    #[serde(rename = "url")]
+    Url,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct ProviderField {
+    pub id: String,
+    pub label: String,
+    pub field_type: ProviderFieldType,
+    pub required: bool,
+    pub help: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct ProviderConnectInfo {
+    pub step: ProviderConnectStepKind,
+    pub fields: Vec<ProviderField>,
+    pub instructions: Option<String>,
+}
+
+/// Input for creating an event
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct CreateEventInput {
+    pub calendar_slug: String,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub url: Option<String>,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
+    pub recurrence: Option<RpcRecurrence>,
+    pub reminders: Vec<i32>,
+    pub attendees: Vec<EventAttendee>,
+    pub conference: Option<EventConference>,
+    /// The event's own color as hex; `None` uses the calendar's.
+    pub color: Option<String>,
+}
+
+/// Input for updating an event
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct UpdateEventInput {
+    pub id: String,
+    pub calendar_slug: String,
+    /// If set and different from calendar_slug, moves the event to this calendar
+    pub new_calendar_slug: Option<String>,
+    pub summary: String,
+    pub description: Option<String>,
+    pub location: Option<String>,
+    pub url: Option<String>,
+    pub start: RpcEventTime,
+    pub end: RpcEventTime,
+    pub recurrence: Option<RpcRecurrence>,
+    pub reminders: Vec<i32>,
+    pub attendees: Vec<EventAttendee>,
+    pub conference: Option<EventConference>,
+    /// The event's own color as hex; `None` uses the calendar's.
+    pub color: Option<String>,
+}
+
+/// Input for splitting a recurring series at a given instance.
+///
+/// Truncates the master's RRULE to end before `split_start`, then creates a new
+/// master starting at `split_start` (carrying the original master's other fields)
+/// with `new_recurrence`. Any override files at or after `split_start` are
+/// deleted (the user's "all future events" choice supersedes them).
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct SplitRecurringSeriesInput {
+    pub calendar_slug: String,
+    /// UID of the master event to split.
+    pub master_uid: String,
+    /// Start time of the instance from which the new series begins.
+    pub split_start: RpcEventTime,
+    /// End time of the new master (matches the duration the instance had).
+    pub split_end: RpcEventTime,
+    /// Recurrence rule for the new series. None means a single non-recurring event.
+    pub new_recurrence: Option<RpcRecurrence>,
+}
+
+#[derive(Serialize, Type)]
+pub struct SyncPreview {
+    pub calendar_slug: String,
+    pub to_push_count: u32,
+    pub to_push_delete_count: u32,
+    pub to_pull_count: u32,
+}
+
+#[derive(Serialize, Type)]
+pub struct IcsPreview {
+    pub file_name: String,
+    pub calendars: Vec<IcsSourceCalendar>,
+    /// The file's only event (a series counts as one), e.g. an invite.
+    pub event: Option<CalendarEvent>,
+    /// Events that couldn't be read and won't be imported.
+    pub skipped_count: u32,
+}
+
+/// A calendar found in an .ics file. Its index is the `source` of an import target.
+#[derive(Serialize, Type)]
+pub struct IcsSourceCalendar {
+    pub name: String,
+    pub color: Option<String>,
+    pub event_count: u32,
+    pub first_start: RpcEventTime,
+    pub last_start: RpcEventTime,
+    /// Some events have an organizer or guests.
+    pub has_guests: bool,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+pub struct IcsImportTarget {
+    pub source: u32,
+    pub destination: IcsImportDestination,
+}
+
+#[derive(Clone, Serialize, Deserialize, Type)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum IcsImportDestination {
+    Existing { calendar_slug: String },
+    New { name: String, color: Option<String> },
+}
+
+#[derive(Serialize, Type)]
+pub struct IcsImportResult {
+    pub imported_count: u32,
+    /// Already in the target calendar (same UID), so left alone.
+    pub duplicate_count: u32,
+    /// Set when exactly one event was imported, so the UI can show it.
+    pub event: Option<CalendarEvent>,
+}
+
+impl From<&caldir_core::Calendar> for Calendar {
+    fn from(c: &caldir_core::Calendar) -> Self {
+        Calendar {
+            slug: c.slug().map(String::from).unwrap_or_default(),
+            name: c.name().map(String::from),
+            color: c.color().map(String::from),
+            provider: c.remote_config().map(|r| r.provider_slug().to_string()),
+            account: c
+                .remote_config()
+                .and_then(|r| r.account_identifier().map(String::from)),
+            email: c.remote_email().map(String::from),
+            read_only: c.read_only_setting(),
+        }
+    }
+}
+
+/// Parse `YYYY-MM-DDTHH:MM:SS` (no offset, no Z) as a NaiveDateTime.
+/// Tolerates an optional fractional seconds component.
+pub fn parse_naive_datetime(s: &str) -> TauResult<NaiveDateTime> {
+    NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
+        .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f"))
+        .map_err(|e| {
+            RpcError::new(
+                RpcErrorKind::InvalidInput,
+                format!("Invalid wallclock datetime '{}': {}", s, e),
+            )
+        })
+}
+
+/// Convert an RPC event time into caldir-core's `EventTime`.
+/// 1:1 mapping; no instant computation for zoned times — the wallclock IS the
+/// source of truth on disk.
+pub fn rpc_time_to_core(w: &RpcEventTime) -> TauResult<EventTime> {
+    match w {
+        RpcEventTime::Date { date } => {
+            let d = NaiveDate::parse_from_str(date, "%Y-%m-%d").map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Invalid date '{}': {}", date, e),
+                )
+            })?;
+            Ok(EventTime::Date(d))
+        }
+        RpcEventTime::DatetimeUtc { instant } => {
+            let dt: DateTime<Utc> = instant.parse().map_err(|e: chrono::ParseError| {
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Invalid UTC instant '{}': {}", instant, e),
+                )
+            })?;
+            Ok(EventTime::DateTimeUtc(dt))
+        }
+        RpcEventTime::DatetimeFloating { wallclock } => Ok(EventTime::DateTimeFloating(
+            parse_naive_datetime(wallclock)?,
+        )),
+        RpcEventTime::DatetimeZoned { wallclock, tzid } => {
+            let datetime = parse_naive_datetime(wallclock)?;
+            // Validate the tzid is a known IANA zone, but store the original string.
+            tzid.parse::<chrono_tz::Tz>().map_err(|e| {
+                RpcError::new(
+                    RpcErrorKind::InvalidInput,
+                    format!("Unknown IANA timezone '{}': {}", tzid, e),
+                )
+            })?;
+            Ok(EventTime::DateTimeZoned {
+                datetime,
+                tzid: tzid.clone(),
+            })
+        }
+    }
+}
+
+/// Convert caldir-core's `EventTime` into the RPC shape. Inverse of
+/// `rpc_time_to_core`; lossless across all four variants.
+pub fn core_time_to_rpc(e: &EventTime) -> RpcEventTime {
+    match e {
+        EventTime::Date(d) => RpcEventTime::Date {
+            date: d.format("%Y-%m-%d").to_string(),
+        },
+        EventTime::DateTimeUtc(dt) => RpcEventTime::DatetimeUtc {
+            instant: dt.to_rfc3339(),
+        },
+        EventTime::DateTimeFloating(dt) => RpcEventTime::DatetimeFloating {
+            wallclock: dt.format("%Y-%m-%dT%H:%M:%S").to_string(),
+        },
+        EventTime::DateTimeZoned { datetime, tzid } => RpcEventTime::DatetimeZoned {
+            wallclock: datetime.format("%Y-%m-%dT%H:%M:%S").to_string(),
+            tzid: tzid.clone(),
+        },
+    }
+}
+
+pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> TauResult<Recurrence> {
+    let exdates = r
+        .exdates
+        .iter()
+        .map(rpc_time_to_core)
+        .collect::<Result<Vec<_>, _>>()?;
+    let rdates = r
+        .rdates
+        .iter()
+        .map(rpc_time_to_core)
+        .collect::<Result<Vec<_>, _>>()?;
+    Ok(Recurrence {
+        rrule: r.rrule.clone(),
+        exdates,
+        rdates,
+    })
+}
+
+pub fn core_recurrence_to_rpc(r: &Recurrence) -> RpcRecurrence {
+    RpcRecurrence {
+        rrule: r.rrule.clone(),
+        exdates: r.exdates.iter().map(core_time_to_rpc).collect(),
+        rdates: r.rdates.iter().map(core_time_to_rpc).collect(),
+    }
+}
+
+impl CalendarEvent {
+    pub fn from_event(
+        e: &Event,
+        calendar_slug: &str,
+        master_recurrence: Option<RpcRecurrence>,
+    ) -> Self {
+        // If event has a recurrence_id, it's an instance of a recurring event
+        // and the uid is the parent recurring event's ID
+        let recurring_event_id = e.recurrence_id.as_ref().map(|_| e.uid.as_str().to_string());
+
+        // end is Option<EventTime>; fall back to start so the RPC field stays required.
+        let end_rpc = match &e.end {
+            Some(end) => core_time_to_rpc(end),
+            None => core_time_to_rpc(&e.start),
+        };
+
+        CalendarEvent {
+            id: e.event_instance_id().to_string(),
+            recurring_event_id,
+            summary: e.summary.clone().unwrap_or_default(),
+            description: e.description.clone(),
+            location: e.location.clone(),
+            url: e.url.clone(),
+            start: core_time_to_rpc(&e.start),
+            end: end_rpc,
+            status: e.status.into(),
+            availability: e.availability.into(),
+            recurrence: e.recurrence.as_ref().map(core_recurrence_to_rpc),
+            master_recurrence,
+            reminders: e
+                .reminders
+                .iter()
+                .map(|r| r.minutes_before_start as i32)
+                .collect(),
+            organizer: e.organizer.as_ref().map(|o| EventAttendee {
+                name: o.name.clone(),
+                email: o.email.clone(),
+                response_status: None,
+            }),
+            attendees: e.attendees.iter().map(EventAttendee::from).collect(),
+            conference: conference_from_event(e),
+            calendar_slug: calendar_slug.to_string(),
+            color: event_color(e),
+            updated: e.last_modified.map(|dt| dt.to_rfc3339()),
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_rsvp_values_round_trip_and_convert_attendees() {
+        for (response, core, wire) in [
+            (
+                ResponseStatus::Accepted,
+                ParticipationStatus::Accepted,
+                "accepted",
+            ),
+            (
+                ResponseStatus::Declined,
+                ParticipationStatus::Declined,
+                "declined",
+            ),
+            (
+                ResponseStatus::Tentative,
+                ParticipationStatus::Tentative,
+                "tentative",
+            ),
+            (
+                ResponseStatus::NeedsAction,
+                ParticipationStatus::NeedsAction,
+                "needs-action",
+            ),
+        ] {
+            assert_eq!(ParticipationStatus::from(response), core);
+            assert_eq!(ResponseStatus::from(core), response);
+            assert_eq!(serde_json::to_value(response).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<ResponseStatus>(serde_json::json!(wire)).unwrap(),
+                response
+            );
+            let attendee = EventAttendee {
+                name: None,
+                email: "user@example.com".into(),
+                response_status: Some(response),
+            };
+            assert_eq!(attendee.to_core().status, Some(core));
+            assert_eq!(
+                EventAttendee::from(&attendee.to_core()).response_status,
+                Some(response)
+            );
+        }
+        assert!(serde_json::from_value::<ResponseStatus>(serde_json::json!("maybe")).is_err());
+    }
+
+    #[test]
+    fn all_event_status_values_preserve_the_wire_representation() {
+        for (core, status, wire) in [
+            (Status::Confirmed, EventStatus::Confirmed, "confirmed"),
+            (Status::Tentative, EventStatus::Tentative, "tentative"),
+            (Status::Cancelled, EventStatus::Cancelled, "cancelled"),
+        ] {
+            assert_eq!(EventStatus::from(core), status);
+            assert_eq!(serde_json::to_value(status).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<EventStatus>(serde_json::json!(wire)).unwrap(),
+                status
+            );
+        }
+        assert!(serde_json::from_value::<EventStatus>(serde_json::json!("unknown")).is_err());
+    }
+
+    #[test]
+    fn all_availability_values_preserve_the_wire_representation() {
+        for (core, availability, wire) in [
+            (Availability::Busy, EventAvailability::Busy, "busy"),
+            (Availability::Free, EventAvailability::Free, "free"),
+        ] {
+            assert_eq!(EventAvailability::from(core), availability);
+            assert_eq!(serde_json::to_value(availability).unwrap(), wire);
+            assert_eq!(
+                serde_json::from_value::<EventAvailability>(serde_json::json!(wire)).unwrap(),
+                availability
+            );
+        }
+    }
+
+    #[test]
+    fn recurrence_rpc_round_trip_preserves_rdates() {
+        let recurrence = Recurrence {
+            rrule: "FREQ=WEEKLY;BYDAY=MO".to_string(),
+            exdates: vec![EventTime::Date(
+                NaiveDate::from_ymd_opt(2026, 9, 21).unwrap(),
+            )],
+            rdates: vec![
+                EventTime::Date(NaiveDate::from_ymd_opt(2026, 9, 22).unwrap()),
+                EventTime::DateTimeZoned {
+                    datetime: NaiveDateTime::parse_from_str(
+                        "2026-09-29T09:30:00",
+                        "%Y-%m-%dT%H:%M:%S",
+                    )
+                    .unwrap(),
+                    tzid: "Europe/London".to_string(),
+                },
+            ],
+        };
+
+        let rpc = core_recurrence_to_rpc(&recurrence);
+        let round_tripped = rpc_recurrence_to_core(&rpc).unwrap();
+
+        assert_eq!(round_tripped, recurrence);
+    }
+}

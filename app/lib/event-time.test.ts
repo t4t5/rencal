@@ -1,0 +1,706 @@
+import { Temporal } from "@js-temporal/polyfill"
+
+import { describe, expect, it } from "@/lib/testing/vitest"
+
+import {
+  addDays,
+  addMinutes,
+  coversFullDay,
+  dateKeyFromEpochDay,
+  epochDay,
+  formatDateKey,
+  isoWeekNumber,
+  startOfWeek,
+  computeEventDateInfo,
+  getViewerTzid,
+  occupiedDays,
+  plainDateFromEpochDay,
+  setViewerTzid,
+  subscribeViewerTzid,
+  toViewerZonedDateTime,
+  wallclockTime,
+  isAllDay,
+  isSameDay,
+  normalizeAllDayRange,
+  toAllDay,
+  dateInEventZone,
+  toTimedAtStartOfDay,
+  allDayDate,
+  eventTzid,
+  listTimeZones,
+  timeZoneCity,
+  timeZoneOffsetLabel,
+  withEventTimeZone,
+  withRangeTimeZone,
+  withRangeViewerZone,
+  type EventTime,
+} from "./event-time"
+import { withEventDate, withWallclockTime } from "./event-time/edit"
+import { instantForOrdering } from "./event-time/projections"
+import { fromRpcEventTime, toRpcEventTime } from "./event-time/rpc"
+
+const date = (s: string): EventTime => fromRpcEventTime({ kind: "date", date: s })
+const utc = (s: string): EventTime => fromRpcEventTime({ kind: "datetime_utc", instant: s })
+const floating = (s: string): EventTime =>
+  fromRpcEventTime({ kind: "datetime_floating", wallclock: s })
+const zoned = (wallclock: string, tzid: string): EventTime =>
+  fromRpcEventTime({ kind: "datetime_zoned", wallclock, tzid })
+
+describe("RPC round-trip", () => {
+  it("date", () => {
+    const w = { kind: "date" as const, date: "2026-04-28" }
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
+  })
+
+  it("datetime_floating", () => {
+    const w = { kind: "datetime_floating" as const, wallclock: "2026-04-28T09:00:00" }
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
+  })
+
+  it("datetime_zoned preserves tzid", () => {
+    const w = {
+      kind: "datetime_zoned" as const,
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "America/Los_Angeles",
+    }
+    expect(toRpcEventTime(fromRpcEventTime(w))).toEqual(w)
+  })
+
+  it("datetime_utc round-trips by instant", () => {
+    const w = { kind: "datetime_utc" as const, instant: "2026-04-28T10:00:00Z" }
+    const round = toRpcEventTime(fromRpcEventTime(w))
+    // The string form may differ ("Z" vs "+00:00"), so compare by parsed instant.
+    expect(fromRpcEventTime(round)).toEqual(fromRpcEventTime(w))
+  })
+})
+
+describe("isAllDay", () => {
+  it("true for date variant", () => {
+    expect(isAllDay(date("2026-04-28"))).toBe(true)
+  })
+
+  it("false for timed variants", () => {
+    expect(isAllDay(zoned("2026-04-28T09:00:00", "Europe/Stockholm"))).toBe(false)
+    expect(isAllDay(utc("2026-04-28T10:00:00Z"))).toBe(false)
+    expect(isAllDay(floating("2026-04-28T09:00:00"))).toBe(false)
+  })
+})
+
+describe("withWallclockTime", () => {
+  it("changes wallclock in the event's OWN zone (not the viewer's)", () => {
+    // An LA-authored 9am event. The user changes the time to 10:30. The event
+    // should keep its LA zone identity, and the new wallclock 10:30 should be
+    // 10:30 in LA — not in the viewer's zone.
+    const before = zoned("2026-04-28T09:00:00", "America/Los_Angeles")
+    const after = withWallclockTime(before, 10, 30)
+    expect(after.kind).toBe("datetime_zoned")
+    if (after.kind !== "datetime_zoned") return
+    expect(after.value.timeZoneId).toBe("America/Los_Angeles")
+    expect(after.value.toPlainDateTime().toString()).toBe("2026-04-28T10:30:00")
+  })
+
+  it("is a no-op for all-day", () => {
+    const d = date("2026-04-28")
+    expect(withWallclockTime(d, 10, 30)).toEqual(d)
+  })
+
+  it("preserves floating variant", () => {
+    const before = floating("2026-04-28T09:00:00")
+    const after = withWallclockTime(before, 11, 15)
+    expect(after.kind).toBe("datetime_floating")
+    if (after.kind !== "datetime_floating") return
+    expect(after.value.toString()).toBe("2026-04-28T11:15:00")
+  })
+})
+
+describe("withEventDate", () => {
+  it("changes the date but preserves wallclock and zone for zoned events", () => {
+    const before = zoned("2026-04-28T09:00:00", "America/Los_Angeles")
+    const newPd = Temporal.PlainDate.from("2026-05-15")
+    const after = withEventDate(before, newPd)
+    expect(after.kind).toBe("datetime_zoned")
+    if (after.kind !== "datetime_zoned") return
+    expect(after.value.timeZoneId).toBe("America/Los_Angeles")
+    expect(after.value.toPlainDateTime().toString()).toBe("2026-05-15T09:00:00")
+  })
+
+  it("swaps the PlainDate for all-day", () => {
+    const before = date("2026-04-28")
+    const newPd = Temporal.PlainDate.from("2026-05-15")
+    const after = withEventDate(before, newPd)
+    expect(after.kind).toBe("date")
+    if (after.kind !== "date") return
+    expect(after.value.toString()).toBe("2026-05-15")
+  })
+})
+
+describe("dateInEventZone", () => {
+  it("returns the event's own-zone date for zoned events", () => {
+    // 23:00 Stockholm on 2026-04-28 is still 2026-04-28 in Stockholm — even
+    // though it's a different date in some other zones.
+    const ev = zoned("2026-04-28T23:00:00", "Europe/Stockholm")
+    expect(dateInEventZone(ev).toString()).toBe("2026-04-28")
+  })
+})
+
+describe("wallclockTime", () => {
+  it("returns wallclock in the event's OWN zone", () => {
+    const ev = zoned("2026-04-28T09:30:00", "America/Los_Angeles")
+    expect(wallclockTime(ev)).toEqual({ hour: 9, minute: 30 })
+  })
+
+  it("returns 0/0 for all-day", () => {
+    expect(wallclockTime(date("2026-04-28"))).toEqual({ hour: 0, minute: 0 })
+  })
+})
+
+describe("addDays across DST", () => {
+  it("zoned event keeps its wallclock across spring-forward", () => {
+    // EU spring-forward 2026: 02:00 → 03:00 local on 2026-03-29.
+    // Adding one day to "Saturday 09:00 Stockholm" should produce "Sunday 09:00 Stockholm",
+    // not "Sunday 08:00" or "Sunday 10:00".
+    const sat = zoned("2026-03-28T09:00:00", "Europe/Stockholm")
+    const sun = addDays(sat, 1)
+    expect(sun.kind).toBe("datetime_zoned")
+    if (sun.kind !== "datetime_zoned") return
+    expect(sun.value.toPlainDateTime().toString()).toBe("2026-03-29T09:00:00")
+    expect(sun.value.timeZoneId).toBe("Europe/Stockholm")
+  })
+
+  it("date variant adds whole days", () => {
+    const start = date("2026-02-28")
+    expect(formatDateKey(addDays(start, 1))).toBe("2026-03-01")
+  })
+})
+
+describe("addMinutes", () => {
+  it("respects DST on a zoned event", () => {
+    // 30 minutes added at 01:30 Stockholm on spring-forward day jumps over 02:00→03:00.
+    // The Temporal ZonedDateTime arithmetic handles this — the resulting wallclock
+    // is 03:00, not 02:00.
+    const before = zoned("2026-03-29T01:30:00", "Europe/Stockholm")
+    const after = addMinutes(before, 60)
+    if (after.kind !== "datetime_zoned") throw new Error("expected zoned")
+    expect(after.value.toPlainDateTime().toString()).toBe("2026-03-29T03:30:00")
+  })
+})
+
+describe("toAllDay / toTimedAtStartOfDay", () => {
+  it("toAllDay produces a PlainDate for the local-zone calendar day", () => {
+    const t = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
+    const d = toAllDay(t)
+    expect(d.kind).toBe("date")
+  })
+
+  it("toTimedAtStartOfDay produces a zoned event in the viewer's zone", () => {
+    const d = date("2026-04-28")
+    const t = toTimedAtStartOfDay(d)
+    expect(t.kind).toBe("datetime_zoned")
+    if (t.kind !== "datetime_zoned") return
+    expect(t.value.timeZoneId).toBe(getViewerTzid())
+    // Hour is 0 in the viewer's zone (start-of-day).
+    expect(t.value.hour).toBe(0)
+  })
+
+  it("are inverse on a viewer-local zoned event", () => {
+    const d = date("2026-04-28")
+    expect(toAllDay(toTimedAtStartOfDay(d))).toEqual(d)
+  })
+})
+
+describe("computeEventDateInfo epoch projections", () => {
+  it("projects start and end to epoch ms", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T10:00:00", tz)
+    const end = zoned("2026-04-28T10:30:00", tz)
+    const { startMs, endMs } = computeEventDateInfo(start, end)
+    expect(endMs - startMs).toBe(30 * 60_000)
+  })
+})
+
+describe("computeEventDateInfo day range", () => {
+  it("all-day single-day occupies one day (DTEND exclusive)", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-29")
+    const { firstDay, lastDay } = computeEventDateInfo(start, end)
+    expect(firstDay).toBe(lastDay)
+  })
+
+  it("all-day three-day spans the right inclusive range", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-05-01") // exclusive: covers 28, 29, 30
+    const { firstDay, lastDay } = computeEventDateInfo(start, end)
+    expect(firstDay).toBe(epochDay(Temporal.PlainDate.from("2026-04-28")))
+    expect(lastDay).toBe(epochDay(Temporal.PlainDate.from("2026-04-30")))
+  })
+
+  it("timed event ending exactly at midnight stops on the previous day", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T22:00:00", tz)
+    const end = zoned("2026-04-29T00:00:00", tz)
+    const { firstDay, lastDay } = computeEventDateInfo(start, end)
+    expect(firstDay).toBe(lastDay)
+  })
+
+  it("detects viewer-zone midnight after the system timezone changes", () => {
+    const original = getViewerTzid()
+    const other = original === "America/New_York" ? "Europe/London" : "America/New_York"
+    try {
+      setViewerTzid(other)
+      const start = zoned("2026-08-17T22:00:00", other)
+      const end = zoned("2026-08-18T00:00:00", other)
+      const { firstDay, lastDay } = computeEventDateInfo(start, end)
+      expect(firstDay).toBe(lastDay)
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("uses calendar arithmetic for exclusive ends across DST", () => {
+    const originalProcessTz = process.env.TZ
+    const originalViewerTz = getViewerTzid()
+    try {
+      process.env.TZ = "Europe/London"
+      setViewerTzid("Europe/London")
+
+      const { lastDay } = computeEventDateInfo(date("2026-03-28"), date("2026-03-30"))
+      expect(lastDay).toBe(epochDay(Temporal.PlainDate.from("2026-03-29")))
+    } finally {
+      if (originalProcessTz === undefined) delete process.env.TZ
+      else process.env.TZ = originalProcessTz
+      setViewerTzid(originalViewerTz)
+    }
+  })
+
+  it("keeps epoch-day keys independent of the webview timezone", () => {
+    const originalProcessTz = process.env.TZ
+    const originalViewerTz = getViewerTzid()
+    try {
+      setViewerTzid("Europe/London")
+      process.env.TZ = "Pacific/Kiritimati"
+      const inKiritimati = computeEventDateInfo(date("2026-08-17"), date("2026-08-18"))
+      process.env.TZ = "America/Los_Angeles"
+      const inLosAngeles = computeEventDateInfo(date("2026-08-17"), date("2026-08-18"))
+      expect(inKiritimati).toEqual(inLosAngeles)
+      expect(inKiritimati.firstDay).toBe(epochDay(Temporal.PlainDate.from("2026-08-17")))
+    } finally {
+      if (originalProcessTz === undefined) delete process.env.TZ
+      else process.env.TZ = originalProcessTz
+      setViewerTzid(originalViewerTz)
+    }
+  })
+
+  it("timed event spanning midnight covers two days", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T22:00:00", tz)
+    const end = zoned("2026-04-29T01:00:00", tz)
+    const { firstDay, lastDay } = computeEventDateInfo(start, end)
+    expect(lastDay - firstDay).toBeGreaterThan(0)
+  })
+})
+
+describe("isSameDay", () => {
+  it("two events at different times on the same local day", () => {
+    const tz = getViewerTzid()
+    expect(isSameDay(zoned("2026-04-28T09:00:00", tz), zoned("2026-04-28T22:00:00", tz))).toBe(true)
+  })
+
+  it("crosses midnight", () => {
+    const tz = getViewerTzid()
+    expect(isSameDay(zoned("2026-04-28T23:00:00", tz), zoned("2026-04-29T01:00:00", tz))).toBe(
+      false,
+    )
+  })
+})
+
+describe("normalizeAllDayRange", () => {
+  it("bumps end by a day when end is not after start", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-28")
+    const { end: bumped } = normalizeAllDayRange(start, end)
+    expect(formatDateKey(bumped)).toBe("2026-04-29")
+  })
+
+  it("leaves a valid range alone", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-05-01")
+    const { end: out } = normalizeAllDayRange(start, end)
+    expect(formatDateKey(out)).toBe("2026-05-01")
+  })
+})
+
+describe("epochDay", () => {
+  const samples = [
+    "1970-01-01",
+    "1969-12-31",
+    "1900-03-01",
+    "2000-02-29",
+    "2000-03-01",
+    "2024-02-29",
+    "2026-01-01",
+    "2026-04-28",
+    "2026-12-31",
+    "2100-02-28",
+    "2100-03-01",
+  ]
+
+  it("matches the UTC-midnight reference for leap days and century boundaries", () => {
+    for (const iso of samples) {
+      const date = Temporal.PlainDate.from(iso)
+      const reference = date.toZonedDateTime("UTC").epochMilliseconds / 86_400_000
+      expect(epochDay(date), iso).toBe(reference)
+    }
+  })
+
+  it("round-trips through plainDateFromEpochDay and dateKeyFromEpochDay", () => {
+    for (const iso of samples) {
+      const day = epochDay(Temporal.PlainDate.from(iso))
+      expect(plainDateFromEpochDay(day).toString()).toBe(iso)
+      expect(dateKeyFromEpochDay(day)).toBe(iso)
+    }
+  })
+
+  it("returns the same PlainDate instance for the same day", () => {
+    const day = epochDay(Temporal.PlainDate.from("2026-04-28"))
+    expect(plainDateFromEpochDay(day)).toBe(plainDateFromEpochDay(day))
+  })
+})
+
+describe("occupiedDays", () => {
+  const occupied = (start: EventTime, end: EventTime) =>
+    occupiedDays(computeEventDateInfo(start, end)).map(dateKeyFromEpochDay)
+
+  it("single-day timed event yields a single key", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T09:00:00", tz)
+    const end = zoned("2026-04-28T10:00:00", tz)
+    expect(occupied(start, end)).toEqual(["2026-04-28"])
+  })
+
+  it("multi-day timed event enumerates every occupied day", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T19:00:00", tz)
+    const end = zoned("2026-05-01T05:00:00", tz)
+    expect(occupied(start, end)).toEqual(["2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01"])
+  })
+
+  it("timed event ending at midnight excludes the end date", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T19:00:00", tz)
+    const end = zoned("2026-05-01T00:00:00", tz)
+    expect(occupied(start, end)).toEqual(["2026-04-28", "2026-04-29", "2026-04-30"])
+  })
+
+  it("all-day three-day enumerates start through end-exclusive", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-05-01")
+    expect(occupied(start, end)).toEqual(["2026-04-28", "2026-04-29", "2026-04-30"])
+  })
+
+  it("degenerate single-day all-day still yields the start key", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-28")
+    expect(occupied(start, end)).toEqual(["2026-04-28"])
+  })
+
+  it("an end before the start still yields the start key", () => {
+    const tz = getViewerTzid()
+    const start = zoned("2026-04-28T09:00:00", tz)
+    const end = zoned("2026-04-26T09:00:00", tz)
+    expect(occupied(start, end)).toEqual(["2026-04-28"])
+  })
+})
+
+describe("coversFullDay", () => {
+  const timed = (start: string, end: string) => {
+    const tz = getViewerTzid()
+    return [zoned(start, tz), zoned(end, tz)] as const
+  }
+  const covers = (start: EventTime, end: EventTime, iso: string) =>
+    coversFullDay(start, computeEventDateInfo(start, end), epochDay(Temporal.PlainDate.from(iso)))
+
+  it("is false for single-day and overnight partial events", () => {
+    const [start, end] = timed("2026-07-24T19:00:00", "2026-07-24T21:00:00")
+    expect(covers(start, end, "2026-07-24")).toBe(false)
+
+    const [oStart, oEnd] = timed("2026-07-24T19:00:00", "2026-07-25T05:00:00")
+    expect(covers(oStart, oEnd, "2026-07-24")).toBe(false)
+    expect(covers(oStart, oEnd, "2026-07-25")).toBe(false)
+  })
+
+  it("is true only for the fully covered middle days of a multi-day event", () => {
+    const [start, end] = timed("2026-07-24T19:00:00", "2026-07-27T05:00:00")
+    expect(covers(start, end, "2026-07-24")).toBe(false)
+    expect(covers(start, end, "2026-07-25")).toBe(true)
+    expect(covers(start, end, "2026-07-26")).toBe(true)
+    expect(covers(start, end, "2026-07-27")).toBe(false)
+  })
+
+  it("treats boundary days starting or ending exactly at midnight as covered", () => {
+    const [aStart, aEnd] = timed("2026-07-24T00:00:00", "2026-07-25T05:00:00")
+    expect(covers(aStart, aEnd, "2026-07-24")).toBe(true)
+    expect(covers(aStart, aEnd, "2026-07-25")).toBe(false)
+
+    const [bStart, bEnd] = timed("2026-07-24T19:00:00", "2026-07-26T00:00:00")
+    expect(covers(bStart, bEnd, "2026-07-24")).toBe(false)
+    expect(covers(bStart, bEnd, "2026-07-25")).toBe(true)
+
+    const [cStart, cEnd] = timed("2026-07-24T00:00:00", "2026-07-25T00:00:00")
+    expect(covers(cStart, cEnd, "2026-07-24")).toBe(true)
+  })
+
+  it("stays partial when a partial event ends at the next midnight", () => {
+    const [start, end] = timed("2026-07-24T19:00:00", "2026-07-25T00:00:00")
+    expect(covers(start, end, "2026-07-24")).toBe(false)
+  })
+
+  it("is true for all-day events on the days they occupy", () => {
+    expect(covers(date("2026-07-24"), date("2026-07-25"), "2026-07-24")).toBe(true)
+  })
+})
+
+describe("instantForOrdering ordering", () => {
+  it("a zoned 09:00 Stockholm sorts before 09:00 LA on the same date", () => {
+    const sthlm = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
+    const la = zoned("2026-04-28T09:00:00", "America/Los_Angeles")
+    expect(instantForOrdering(sthlm).epochMilliseconds).toBeLessThan(
+      instantForOrdering(la).epochMilliseconds,
+    )
+  })
+})
+
+describe("allDayDate", () => {
+  it("constructs a date variant", () => {
+    const d = allDayDate(new Temporal.PlainDate(2026, 4, 28))
+    expect(d.kind).toBe("date")
+    expect(formatDateKey(d)).toBe("2026-04-28")
+  })
+})
+
+describe("viewer zone store", () => {
+  it("updates getViewerTzid, notifies subscribers, and rejects unknown zones", () => {
+    const original = getViewerTzid()
+    const other = original === "Europe/Stockholm" ? "America/Los_Angeles" : "Europe/Stockholm"
+    let notified = 0
+    const unsubscribe = subscribeViewerTzid(() => notified++)
+    try {
+      setViewerTzid(other)
+      expect(getViewerTzid()).toBe(other)
+      expect(notified).toBe(1)
+
+      // Same value → no notification.
+      setViewerTzid(other)
+      expect(notified).toBe(1)
+
+      // Unknown zone → ignored.
+      setViewerTzid("Not/AZone")
+      expect(getViewerTzid()).toBe(other)
+      expect(notified).toBe(1)
+    } finally {
+      unsubscribe()
+      setViewerTzid(original)
+    }
+  })
+
+  it("changes the zone used by viewer projections", () => {
+    const original = getViewerTzid()
+    const et = zoned("2026-04-28T09:00:00", "Europe/Stockholm")
+    try {
+      // 09:00 CEST is 00:00 the same day in Los Angeles.
+      setViewerTzid("America/Los_Angeles")
+      expect(toViewerZonedDateTime(et).hour).toBe(0)
+      expect(formatDateKey(et)).toBe("2026-04-28")
+
+      // ...and 21:00 the same day in Kiritimati (UTC+14).
+      setViewerTzid("Pacific/Kiritimati")
+      expect(toViewerZonedDateTime(et).hour).toBe(21)
+      expect(formatDateKey(et)).toBe("2026-04-28")
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+})
+
+describe("startOfWeek", () => {
+  // 2024-01-01 was a Monday.
+  const monday = Temporal.PlainDate.from("2024-01-01")
+  const wednesday = Temporal.PlainDate.from("2024-01-03")
+  const saturday = Temporal.PlainDate.from("2024-01-06")
+  const sunday = Temporal.PlainDate.from("2024-01-07")
+
+  it("returns the preceding (or same) Monday when weeks start on Monday", () => {
+    expect(startOfWeek(monday, "monday").equals(monday)).toBe(true)
+    expect(startOfWeek(wednesday, "monday").equals(monday)).toBe(true)
+    expect(startOfWeek(sunday, "monday").equals(monday)).toBe(true)
+  })
+
+  it("returns the preceding (or same) Sunday when weeks start on Sunday", () => {
+    const previousSunday = Temporal.PlainDate.from("2023-12-31")
+    expect(startOfWeek(previousSunday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(monday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(wednesday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(saturday, "sunday").equals(previousSunday)).toBe(true)
+    expect(startOfWeek(sunday, "sunday").equals(sunday)).toBe(true)
+  })
+})
+
+describe("eventTzid", () => {
+  it("is the zone of a zoned time", () => {
+    expect(eventTzid(zoned("2026-04-28T09:00:00", "America/Los_Angeles"))).toBe(
+      "America/Los_Angeles",
+    )
+  })
+
+  it("is the viewer zone for floating, UTC, and all-day values", () => {
+    const viewer = getViewerTzid()
+    expect(eventTzid(floating("2026-04-28T09:00:00"))).toBe(viewer)
+    expect(eventTzid(utc("2026-04-28T09:00:00Z"))).toBe(viewer)
+    expect(eventTzid(date("2026-04-28"))).toBe(viewer)
+  })
+})
+
+describe("withEventTimeZone", () => {
+  it("keeps the wallclock and moves the instant for zoned times", () => {
+    const et = withEventTimeZone(zoned("2026-04-28T09:00:00", "Europe/Stockholm"), "Europe/London")
+    expect(toRpcEventTime(et)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "Europe/London",
+    })
+    expect(instantForOrdering(et).toString()).toBe("2026-04-28T08:00:00Z")
+  })
+
+  it("pins a floating time to the zone", () => {
+    const et = withEventTimeZone(floating("2026-04-28T09:00:00"), "Asia/Kolkata")
+    expect(toRpcEventTime(et)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "Asia/Kolkata",
+    })
+  })
+
+  it("carries over the viewer-zone wallclock of a UTC instant", () => {
+    const original = getViewerTzid()
+    setViewerTzid("Europe/Stockholm")
+    try {
+      // 07:00Z reads as 09:00 in Stockholm, so London gets 09:00 too.
+      const et = withEventTimeZone(utc("2026-04-28T07:00:00Z"), "Europe/London")
+      expect(toRpcEventTime(et)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T09:00:00",
+        tzid: "Europe/London",
+      })
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("passes all-day dates through", () => {
+    const et = date("2026-04-28")
+    expect(withEventTimeZone(et, "Europe/London")).toBe(et)
+  })
+})
+
+describe("withRangeTimeZone", () => {
+  it("moves both ends, keeping their wallclocks", () => {
+    const range = withRangeTimeZone(
+      {
+        start: zoned("2026-04-28T09:00:00", "Europe/Stockholm"),
+        end: zoned("2026-04-28T10:30:00", "Europe/Stockholm"),
+      },
+      "America/New_York",
+    )
+    expect(toRpcEventTime(range.start)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T09:00:00",
+      tzid: "America/New_York",
+    })
+    expect(toRpcEventTime(range.end)).toEqual({
+      kind: "datetime_zoned",
+      wallclock: "2026-04-28T10:30:00",
+      tzid: "America/New_York",
+    })
+  })
+})
+
+describe("withRangeViewerZone", () => {
+  it("keeps the instants and re-expresses both ends in the viewer's clock", () => {
+    const original = getViewerTzid()
+    setViewerTzid("Europe/Stockholm")
+    try {
+      const range = withRangeViewerZone({
+        start: zoned("2026-04-28T09:00:00", "Europe/London"),
+        end: zoned("2026-04-28T10:30:00", "Europe/London"),
+      })
+      expect(toRpcEventTime(range.start)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T10:00:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(toRpcEventTime(range.end)).toEqual({
+        kind: "datetime_zoned",
+        wallclock: "2026-04-28T11:30:00",
+        tzid: "Europe/Stockholm",
+      })
+      expect(instantForOrdering(range.start).toString()).toBe("2026-04-28T08:00:00Z")
+    } finally {
+      setViewerTzid(original)
+    }
+  })
+
+  it("passes all-day ranges through", () => {
+    const start = date("2026-04-28")
+    const end = date("2026-04-29")
+    expect(withRangeViewerZone({ start, end })).toEqual({ start, end })
+  })
+})
+
+describe("timezone labels", () => {
+  it("timeZoneCity takes the last path segment with spaces", () => {
+    expect(timeZoneCity("Europe/London")).toBe("London")
+    expect(timeZoneCity("America/Argentina/Buenos_Aires")).toBe("Buenos Aires")
+    expect(timeZoneCity("UTC")).toBe("UTC")
+  })
+
+  it("timeZoneOffsetLabel follows DST at the event's date", () => {
+    const summer = zoned("2026-07-01T10:00:00", "UTC")
+    const winter = zoned("2026-01-01T10:00:00", "UTC")
+    expect(timeZoneOffsetLabel("Europe/London", summer)).toBe("GMT+1")
+    expect(timeZoneOffsetLabel("Europe/London", winter)).toBe("GMT+0")
+    expect(timeZoneOffsetLabel("Asia/Kolkata", summer)).toBe("GMT+5:30")
+    expect(timeZoneOffsetLabel("America/Sao_Paulo", summer)).toBe("GMT-3")
+    expect(timeZoneOffsetLabel("UTC", summer)).toBe("GMT+0")
+  })
+
+  it("listTimeZones has Area/City ids plus UTC", () => {
+    const zones = listTimeZones()
+    expect(zones).toContain("Europe/London")
+    expect(zones).toContain("UTC")
+    expect(zones.every((z) => z === "UTC" || (z.includes("/") && !z.startsWith("Etc/")))).toBe(true)
+  })
+})
+
+describe("isoWeekNumber", () => {
+  it("matches the ISO week for Monday-first rows", () => {
+    // 2026-08-24 is a Monday in ISO week 35.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-24"), "monday")).toBe(35)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-30"), "monday")).toBe(35)
+  })
+
+  it("numbers a Sunday-first row by its Thursday", () => {
+    // The Sunday-first row 2026-08-23 … 2026-08-29 contains ISO week 35's Thursday.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-23"), "sunday")).toBe(35)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-29"), "sunday")).toBe(35)
+    // The Sunday itself belongs to ISO week 34, but its displayed row is week 35.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2026-08-23"), "monday")).toBe(34)
+  })
+
+  it("handles ISO year boundaries", () => {
+    // 2024-12-30 (Monday) starts ISO week 1 of 2025.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2024-12-30"), "monday")).toBe(1)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2024-12-29"), "sunday")).toBe(1)
+    // 2021-01-01 (Friday) falls in ISO week 53 of 2020.
+    expect(isoWeekNumber(Temporal.PlainDate.from("2021-01-01"), "monday")).toBe(53)
+    expect(isoWeekNumber(Temporal.PlainDate.from("2021-01-01"), "sunday")).toBe(53)
+  })
+})

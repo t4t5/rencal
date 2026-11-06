@@ -237,3 +237,27 @@ deeplink-prod:
   xdg-mime default renCal.desktop x-scheme-handler/rencal
   xdg-mime default renCal.desktop text/calendar
   rm -f ~/.local/share/applications/rencal-handler.desktop
+
+# Run the NSH port against your real calendars (TSX hot, Rust restarts)
+[working-directory: 'app']
+nsh-dev:
+  nsh run .
+
+# Run the NSH port against a generated mock caldir, leaving your calendars alone
+nsh-demo:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  export RENCAL_SHOTS_DIR="${XDG_RUNTIME_DIR:-/tmp}/rencal-nsh-demo"
+  .agents/skills/screenshots/scripts/shots.sh setup
+  cd app
+  XDG_CONFIG_HOME="$RENCAL_SHOTS_DIR/xdg" nsh run .
+
+# Type check the NSH port (Rust, then TSX)
+[working-directory: 'app']
+nsh-check:
+  nsh check
+
+# Run the NSH port's Rust and TSX tests
+[working-directory: 'app']
+nsh-test:
+  scripts/test.sh
