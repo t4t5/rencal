@@ -35,6 +35,7 @@ import { PlusIcon } from "@/icons/plus"
 
 import { TimeSelect } from "./TimeSelect"
 import {
+  clearDays,
   dropDay,
   dropRange,
   editRange,
@@ -74,9 +75,16 @@ export const AvailabilityPanel = memo(function AvailabilityPanel() {
       style={{ width: PANEL_WIDTH }}
     >
       <div className="flex flex-col gap-4 overflow-y-auto p-4 grow min-h-0">
-        <h3 data-typography="heading" className="text-sm">
-          Availability schedule
-        </h3>
+        <div className="flex items-center justify-between h-control-xs">
+          <h3 data-typography="heading" className="text-sm">
+            Availability schedule
+          </h3>
+          {days.length > 0 && (
+            <Button variant="ghost" size="xs" className="text-muted-foreground" onClick={clearDays}>
+              Clear
+            </Button>
+          )}
+        </div>
         {days.map((day) => (
           <DayRow key={day.date.toString()} day={day} />
         ))}

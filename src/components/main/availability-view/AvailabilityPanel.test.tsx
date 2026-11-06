@@ -32,6 +32,10 @@ const menuItem = (name: string) =>
   [...document.querySelectorAll<HTMLElement>("[role=menuitem]")].find(
     (item) => item.textContent === name,
   )
+const clearButton = () =>
+  [...document.querySelectorAll<HTMLElement>("button")].find(
+    (button) => button.textContent === "Clear",
+  )
 const copyButton = () => document.querySelector<HTMLElement>("button[aria-label='Copy message']")
 const writeText = vi.fn(() => Promise.resolve())
 
@@ -97,6 +101,22 @@ it("clears a day from its menu", async () => {
 
   expect(message()).toContain("Pick some times")
   expect(dayRows()).toHaveLength(0)
+})
+
+it("clears every day at once, and only offers to when there are some", async () => {
+  await renderPanel()
+  expect(clearButton()).toBeUndefined()
+
+  await act(async () => {
+    pickRange(MONDAY, MORNING)
+    pickRange(TOMORROW, AFTERNOON)
+  })
+  expect(dayRows()).toHaveLength(2)
+
+  await act(async () => clearButton()!.click())
+  expect(dayRows()).toHaveLength(0)
+  expect(message()).toContain("Pick some times")
+  expect(clearButton()).toBeUndefined()
 })
 
 it("clears the first time from the menu and later ones with their button", async () => {

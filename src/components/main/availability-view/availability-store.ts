@@ -38,6 +38,8 @@ export const dropRange = (date: Temporal.PlainDate, index: number) =>
 
 export const dropDay = (date: Temporal.PlainDate) => update({ days: removeDay(state.days, date) })
 
+export const clearDays = () => update({ days: [] })
+
 export const setDuration = (durationMinutes: number) => update({ durationMinutes })
 
 export const setTheirTzid = (theirTzid: string) => update({ theirTzid })
