@@ -273,8 +273,9 @@ function MessageSection() {
           <DurationSelect />
         </div>
         <div className="flex flex-col gap-1 min-w-0 grow">
-          <Label className={cn(SMALL_LABEL, "px-(--control-padding-inline)")}>Their timezone</Label>
+          <Label className={SMALL_LABEL}>Their timezone</Label>
           <TimeZoneSelect
+            variant="default"
             value={{ kind: "datetime_zoned", value: Temporal.Now.zonedDateTimeISO(tzid) }}
             onChange={setTheirTzid}
           />

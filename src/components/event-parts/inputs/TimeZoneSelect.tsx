@@ -64,11 +64,13 @@ function withKnownZones(zones: string[], extra: string[]): string[] {
 export const TimeZoneSelect = ({
   value,
   readOnly,
+  variant = "ghost",
   defaultOpen = false,
   onChange,
 }: {
   value: EventTime
   readOnly?: boolean
+  variant?: "ghost" | "default"
   defaultOpen?: boolean
   onChange: (tzid: string) => void
 }) => {
@@ -87,8 +89,10 @@ export const TimeZoneSelect = ({
           type="button"
           disabled={readOnly}
           data-control="select"
+          data-variant={variant}
           className={cn(
             "control-row group h-control w-full rounded-md border border-transparent bg-transparent text-sm outline-none hover:border-input",
+            variant === "default" && "border-border",
             controlSurfaceActive.focusVisible,
             controlSurfaceActive.open,
             readOnly && "pointer-events-none disabled:cursor-default",
@@ -100,7 +104,7 @@ export const TimeZoneSelect = ({
           <ItemContent>
             <TimeZoneLabel offset={timeZoneOffsetLabel(tzid, value)} city={timeZoneCity(tzid)} />
           </ItemContent>
-          {!readOnly && <SelectIcon forceVisible={open} />}
+          {!readOnly && <SelectIcon forceVisible={open || variant === "default"} />}
         </button>
       </PopoverTrigger>
 
