@@ -5,6 +5,7 @@ import { getErrorMessage, api, type Calendar } from "@/lib/api"
 import {
   type CalendarEvent,
   type EventAttendee,
+  type EventAvailability,
   reconcileOptimisticCreate,
   type Recurrence,
   rollbackOptimisticCreate,
@@ -27,6 +28,7 @@ import { useSettings } from "./SettingsContext"
 import { useSync } from "./SyncContext"
 
 export interface DraftEvent {
+  availability: EventAvailability
   summary: string
   description: string | null
   start: EventTime
@@ -113,6 +115,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
     const start = getClosestNextHour()
     return {
       summary: "",
+      availability: "busy",
       description: null,
       start,
       end: addMinutes(start, DEFAULT_DURATION_MINS),
@@ -197,7 +200,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       end: draftEvent.end,
       dateInfo: computeEventDateInfo(draftEvent.start, draftEvent.end),
       status: "confirmed",
-      availability: "busy",
+      availability: draftEvent.availability,
       recurrence: draftEvent.recurrence,
       master_recurrence: null,
       reminders: draftReminders,
@@ -219,6 +222,7 @@ export function EventDraftProvider({ children }: { children: ReactNode }) {
       createdEvent = await api.events.create({
         calendar_slug: draftEvent.calendarId,
         summary: draftEvent.summary ?? "",
+        availability: draftEvent.availability,
         description: draftEvent.description,
         location: draftEvent.location ?? null,
         url: draftEvent.url,

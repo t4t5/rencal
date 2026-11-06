@@ -150,6 +150,7 @@ describe("calendar event writes", () => {
     })
     expect(calls[0].args?.input).toEqual(
       expect.objectContaining({
+        availability: "busy",
         description: null,
         location: null,
         url: null,
@@ -163,10 +164,13 @@ describe("calendar event writes", () => {
   })
 
   it("converts create input once and returns the stored event converted once", async () => {
-    const calls = mockRpc({ "TauRPC__caldir.create_event": rpcEvent({ id: "stored" }) })
+    const calls = mockRpc({
+      "TauRPC__caldir.create_event": rpcEvent({ id: "stored", availability: "free" }),
+    })
     const created = await api.events.create({
       calendar_slug: "work",
       summary: "Standup",
+      availability: "free",
       description: null,
       location: null,
       url: null,
@@ -189,6 +193,7 @@ describe("calendar event writes", () => {
           input: {
             calendar_slug: "work",
             summary: "Standup",
+            availability: "free",
             description: null,
             location: null,
             url: null,
@@ -218,6 +223,7 @@ describe("calendar event writes", () => {
       },
     ])
     expect(created.id).toBe("stored")
+    expect(created.availability).toBe("free")
     expect(created.start).toEqual(zoned("2026-09-18T09:00:00"))
     expect(created.dateInfo.endMs - created.dateInfo.startMs).toBe(30 * 60_000)
   })
@@ -230,6 +236,7 @@ describe("calendar event writes", () => {
         calendar_slug: "work",
         new_calendar_slug: "personal",
         summary: "Moved",
+        availability: "free",
         description: null,
         location: null,
         url: null,
@@ -245,6 +252,7 @@ describe("calendar event writes", () => {
     expect(calls[0].args).toEqual({
       input: expect.objectContaining({
         new_calendar_slug: "personal",
+        availability: "free",
         start: { kind: "date", date: "2026-09-18" },
         end: { kind: "date", date: "2026-09-19" },
         recurrence: null,
