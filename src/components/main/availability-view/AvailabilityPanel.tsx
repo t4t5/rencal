@@ -58,6 +58,7 @@ import {
 const PANEL_WIDTH = 392
 const DURATIONS = [15, 30, 45, 60, 90]
 const COPIED_MS = 1500
+const SMALL_LABEL = "text-xs font-normal text-muted-foreground"
 
 /** The inspector on the right: your times, then the message they turn into. */
 export function AvailabilityPanel() {
@@ -70,7 +71,9 @@ export function AvailabilityPanel() {
       style={{ width: PANEL_WIDTH }}
     >
       <div className="flex flex-col gap-4 overflow-y-auto p-4 grow min-h-0">
-        <DurationField />
+        <h3 data-typography="heading" className="text-sm">
+          Availability schedule
+        </h3>
         {days.map((day) => (
           <DayRow key={day.date.toString()} day={day} />
         ))}
@@ -81,25 +84,22 @@ export function AvailabilityPanel() {
   )
 }
 
-function DurationField() {
+function DurationSelect() {
   const { durationMinutes } = useAvailability()
 
   return (
-    <section className="flex items-center justify-between gap-3">
-      <Label className="text-sm font-medium">Duration</Label>
-      <Select value={String(durationMinutes)} onValueChange={(next) => setDuration(Number(next))}>
-        <SelectTrigger variant="default" className="w-28">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {DURATIONS.map((minutes) => (
-            <SelectItem key={minutes} value={String(minutes)}>
-              {minutes} min
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-    </section>
+    <Select value={String(durationMinutes)} onValueChange={(next) => setDuration(Number(next))}>
+      <SelectTrigger variant="default" aria-label="Duration" className="w-full">
+        <SelectValue />
+      </SelectTrigger>
+      <SelectContent>
+        {DURATIONS.map((minutes) => (
+          <SelectItem key={minutes} value={String(minutes)}>
+            {minutes} min
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   )
 }
 
@@ -264,9 +264,16 @@ function MessageSection() {
 
   return (
     <section className="flex flex-col gap-3 p-4 border-t border-border shrink-0">
-      <div className="flex items-center justify-between gap-3">
-        <Label className="text-sm font-medium">Their timezone</Label>
-        <div className="w-44">
+      <h3 data-typography="heading" className="text-sm">
+        Message
+      </h3>
+      <div className="flex gap-1">
+        <div className="flex flex-col gap-1 w-28 shrink-0">
+          <Label className={SMALL_LABEL}>Duration</Label>
+          <DurationSelect />
+        </div>
+        <div className="flex flex-col gap-1 min-w-0 grow">
+          <Label className={cn(SMALL_LABEL, "px-(--control-padding-inline)")}>Their timezone</Label>
           <TimeZoneSelect
             value={{ kind: "datetime_zoned", value: Temporal.Now.zonedDateTimeISO(tzid) }}
             onChange={setTheirTzid}
