@@ -2,6 +2,8 @@ import { cleanup, createMotion, LayoutAnimation, View, type ViewRef } from "nsh"
 
 import { ComposeEventInner } from "@/components/event-parts/ComposeEvent"
 
+import { inspectable } from "@/lib/inspect"
+
 import { isDrafting, draftText, stopDrafting } from "@/stores/draft"
 
 import { bindFlightCard, isFlying, startFlight } from "./FlyAnimation"
@@ -31,7 +33,10 @@ function DraftCard() {
 export function SidebarHeader() {
   const showDraft = () => (isDrafting() && draftText().length > 0) || isFlying()
   return (
-    <View class="relative z-20 p-(--layout-padding) pb-0">
+    <View
+      ref={inspectable("Sidebar header", "components/sidebar/header/SidebarHeader.tsx")}
+      class="relative z-20 p-(--layout-padding) pb-0"
+    >
       <SidebarToolbar />
       <If when={showDraft()}>
         <DraftCard />

@@ -2,6 +2,7 @@
 //! `Backend.call` reaches every procedure in `routes/dispatch.rs`, and
 //! `Backend.onEvent` delivers what `AppEvent` announces.
 
+mod annotate;
 mod atomic_write;
 pub mod control;
 mod deep_links;
@@ -286,6 +287,19 @@ impl Backend {
     /// would otherwise show GTK's header bar on a dialog.
     pub fn needs_native_decorations() -> bool {
         routes::platform::needs_native_decorations()
+    }
+
+    /// Whether annotate mode is on, from `RENCAL_ANNOTATE`, which TSX's
+    /// `process.env` doesn't see in every host.
+    pub fn annotate_enabled() -> bool {
+        annotate::enabled()
+    }
+
+    /// Saves annotate mode's notes with a screenshot of the window, where
+    /// `RENCAL_ANNOTATE` says; resolves with the notes' path.
+    pub async fn save_annotations(markdown: String) -> Result<String, String> {
+        let task = RUNTIME.spawn(annotate::save(markdown));
+        task.await.map_err(|error| error.to_string())?
     }
 
     /// Opens `url` in the user's browser.

@@ -13,6 +13,7 @@ import {
   plainDateFromEpochDay,
   startOfWeek,
 } from "@/lib/event-time"
+import { inspectable } from "@/lib/inspect"
 import { cn } from "@/lib/utils"
 
 import { ChevronDownIcon, ChevronUpIcon } from "@/icons"
@@ -153,7 +154,7 @@ const shiftMonth = (months: number) => navigateToDate(activeDate().add({ months 
 
 export function Minical() {
   return (
-    <View class="pt-4">
+    <View ref={inspectable("Minical", "components/sidebar/Minical.tsx")} class="pt-4">
       <View class="h-12 flex-row items-center justify-between px-(--layout-padding) pb-4">
         <Text class={cn("font-mono text-2xl font-bold line-clamp-1", displayCase())}>
           {formatMonth(activeDate(), "long")}{" "}

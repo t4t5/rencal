@@ -10,6 +10,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. `native/Cargo.toml` pins nsh's c
 - `nsh build`: read every warning; it reports unknown classes.
 - `scripts/test.sh`: every Rust and TS test. Use this, not `nsh test`: see below.
 - `nsh run .`: the app, TSX hot, Rust restarts. Never run it against real data while developing: set `XDG_CONFIG_HOME` to an isolated config (`.agents/skills/screenshots` makes one).
+- `RENCAL_ANNOTATE=1 nsh run .`: annotate mode (`mod+shift+a`), for the user's feedback. Each save is a Markdown file of pinned notes, with where each points and the app's state, plus a screenshot, in `../.agents/feedback/`: read the newest when they mention notes. Views name themselves to it with `ref={inspectable(...)}` (`lib/inspect.ts`).
 
 ## Layout
 

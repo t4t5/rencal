@@ -1,5 +1,7 @@
 import { View } from "nsh"
 
+import { inspectable } from "@/lib/inspect"
+
 import { calendarView } from "@/stores/view"
 import { VIEWS } from "@/views/manifest"
 
@@ -12,7 +14,12 @@ export function Main() {
       <Each of={VIEWS} key={(view) => view.id}>
         {(view) => (
           <If when={calendarView() === view().id}>
-            <View class="flex-1 min-h-0">{view().component()}</View>
+            <View
+              ref={inspectable(`${view().name} view`, `views/${view().id}/`)}
+              class="flex-1 min-h-0"
+            >
+              {view().component()}
+            </View>
           </If>
         )}
       </Each>

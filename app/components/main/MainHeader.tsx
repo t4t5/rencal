@@ -9,6 +9,7 @@ import { Menu, MenuItem } from "@/components/ui/menu"
 
 import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
+import { inspectable } from "@/lib/inspect"
 
 import { CheckIcon, ChevronDownIcon, SearchIcon, SettingsIcon, SidebarIcon } from "@/icons"
 import { activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
@@ -86,7 +87,11 @@ function GroupSwitcher() {
 
 export function MainHeader() {
   return (
-    <View class="shrink-0 flex-row gap-2 p-(--layout-padding)" desktop={{ windowDrag: true }}>
+    <View
+      ref={inspectable("Main header", "components/main/MainHeader.tsx")}
+      class="shrink-0 flex-row gap-2 p-(--layout-padding)"
+      desktop={{ windowDrag: true }}
+    >
       <View class="flex-row gap-2 items-center">
         <Button variant="ghost" size="icon" onPress={toggleSidebar}>
           <SidebarIcon />

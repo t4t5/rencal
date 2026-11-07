@@ -1,5 +1,6 @@
 import { View } from "nsh"
 
+import { inspectable } from "@/lib/inspect"
 import { cn } from "@/lib/utils"
 
 import { isWideWindow, sidebarCollapsed } from "@/stores/view"
@@ -11,6 +12,7 @@ import { SidebarHeader } from "./header/SidebarHeader"
 export function Sidebar() {
   return (
     <View
+      ref={inspectable("Sidebar", "components/sidebar/Sidebar.tsx")}
       class={cn(
         "flex-col shrink-0 overflow-hidden bg-sidebar",
         isWideWindow() ? "w-[300px] border-r border-border" : "flex-1",

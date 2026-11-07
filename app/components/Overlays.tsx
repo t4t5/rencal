@@ -1,5 +1,6 @@
 import { View } from "nsh"
 
+import { AnnotateOverlay } from "@/components/annotate/AnnotateOverlay"
 import { ConnectPrompt } from "@/components/event-parts/ConnectPrompt"
 import { DeleteConfirmDialog } from "@/components/event-parts/DeleteConfirmDialog"
 import { PopoverEditEvent } from "@/components/event-parts/PopoverEditEvent"
@@ -16,6 +17,7 @@ import { SheetEvent } from "@/components/sidebar/SheetEvent"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { Toaster } from "@/components/ui/toaster"
 
+import { annotateEnabled } from "@/stores/annotate"
 import { isWideWindow } from "@/stores/view"
 import { EventDragOverlay } from "@/views/EventDragOverlay"
 
@@ -37,6 +39,9 @@ export function Overlays() {
       <MassDeleteConfirmDialog />
       <PendingIcsImport />
       <PluginInstallDialog />
+      <If when={annotateEnabled}>
+        <AnnotateOverlay />
+      </If>
       <Toaster />
     </View>
   )

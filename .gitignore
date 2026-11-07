@@ -50,3 +50,6 @@ result
 packages/sdk/theme.css
 packages/sdk/shared-modules.js
 packages/sdk/shared-modules.d.ts
+
+# Annotate mode notes (RENCAL_ANNOTATE=1)
+.agents/feedback/
