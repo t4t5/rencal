@@ -5,6 +5,8 @@ import { currentWindow, Window } from "nsh/desktop"
 import { Toaster } from "@/components/ui/toaster"
 import { Tooltip } from "@/components/ui/tooltip"
 
+import { needsNativeDecorations } from "@/lib/api/internal"
+
 import { CloseIcon } from "@/icons"
 import { SETTINGS_WINDOW, setSettingsOpen, settingsOpen, settingsTab } from "@/stores/view"
 
@@ -12,6 +14,8 @@ import { NAV_ITEMS, SettingsSidebar } from "./SettingsSidebar"
 import { checkPluginUpdates } from "./plugins/plugin-updates"
 
 const isMacOS = platform.os === "macos"
+// Tiling compositors draw no title bar, but GTK gives a dialog one of its own.
+const frameless = platform.os === "linux" && !needsNativeDecorations()
 
 function SettingsPanel() {
   const win = currentWindow()
@@ -39,7 +43,7 @@ function SettingsPanel() {
           </Each>
         </View>
       </View>
-      <If when={!isMacOS}>
+      <If when={frameless}>
         <BaseButton
           accessibilityLabel="Close"
           onPress={() => win.close()}
@@ -67,6 +71,7 @@ export function SettingsWindow() {
       defaultSize={{ width: 800, height: 500 }}
       resizable={false}
       titleBar={isMacOS ? { style: "hidden" } : undefined}
+      frame={frameless ? "none" : undefined}
       open={settingsOpen()}
       onOpenChange={(event) => setSettingsOpen(event.open)}
     >

@@ -1,9 +1,11 @@
+import { Backend } from "rencal/native"
+
 import { rpc } from "@/rpc"
 import type { EventDeepLink } from "@/rpc/bindings"
 
 /** Whether new windows need OS-drawn decorations on this platform/compositor. */
-export function needsNativeDecorations(): Promise<boolean> {
-  return rpc.platform.needs_native_decorations()
+export function needsNativeDecorations(): boolean {
+  return Backend.needsNativeDecorations()
 }
 
 /** Drain `rencal://` event links queued since the last call. */

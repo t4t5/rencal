@@ -282,6 +282,12 @@ impl Backend {
         window::configure(hide_on_close);
     }
 
+    /// Whether windows get the system's frame: off on tiling compositors, which
+    /// would otherwise show GTK's header bar on a dialog.
+    pub fn needs_native_decorations() -> bool {
+        routes::platform::needs_native_decorations()
+    }
+
     /// Opens `url` in the user's browser.
     pub fn open_url(url: String) -> Result<(), String> {
         host::open_url(&url).map_err(|error| error.to_string())
