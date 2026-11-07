@@ -14,6 +14,8 @@ mod host;
 mod keys;
 #[cfg(target_os = "linux")]
 mod linux_reminders;
+#[cfg(target_os = "macos")]
+mod macos_notifications;
 mod notifications;
 mod oauth;
 mod omarchy;
@@ -121,6 +123,10 @@ fn load() -> Result<Arc<Router>, String> {
         .filter(|arg| arg.starts_with("rencal://"))
         .collect();
     deep_links::enqueue_urls(&AppHandle, &state.deep_links, &links);
+
+    // Registered at launch so a click that cold-launches renCal is delivered.
+    #[cfg(target_os = "macos")]
+    macos_notifications::init(state.clone());
 
     // Development runs leave the user's installed notifier and skills alone.
     if !cfg!(debug_assertions) {
