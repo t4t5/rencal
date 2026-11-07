@@ -1,5 +1,4 @@
 import { mount, signal, Text, View } from "nsh"
-import { Window } from "nsh/desktop"
 
 import { Overlays } from "@/components/Overlays"
 import { dropFiles, startIcsImport } from "@/components/ics-import/ics-import"
@@ -38,7 +37,6 @@ async function start() {
 }
 
 function App() {
-  Window.setTitle("renCal")
   startClock()
   startWindow()
   start().catch((error: unknown) => failure.set(String(error)))

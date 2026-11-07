@@ -10,7 +10,7 @@ import {
 } from "@/components/event-parts/RecurrenceConfirmDialog"
 import { PendingIcsImport } from "@/components/ics-import/PendingIcsImport"
 import { SearchPalette } from "@/components/search/SearchPalette"
-import { SettingsOverlay } from "@/components/settings/SettingsOverlay"
+import { SettingsWindow } from "@/components/settings/SettingsWindow"
 import { PluginInstallDialog } from "@/components/settings/plugins/PluginInstallDialog"
 import { SheetEvent } from "@/components/sidebar/SheetEvent"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
@@ -33,7 +33,7 @@ export function Overlays() {
       <DuplicateRecurrenceDialog />
       <DeleteConfirmDialog />
       <ConnectPrompt />
-      <SettingsOverlay />
+      <SettingsWindow />
       <MassDeleteConfirmDialog />
       <PendingIcsImport />
       <PluginInstallDialog />

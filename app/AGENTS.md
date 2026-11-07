@@ -4,7 +4,7 @@ The NSH port of renCal: a mixed app (TSX screens on QuickJS, a Rust crate in `na
 
 ## Commands
 
-Run from `app/`, with `~/.local/bin` on `PATH`.
+Run from `app/`, with `~/.local/bin` on `PATH`. `native/Cargo.toml` pins nsh's crates to a git repo and rev (unreleased windows of the app's own, plus a fix from a fork): the `nsh` CLI must be built from that same repo and rev (`cargo install --git <repo> --rev <rev> nsh-cli --root ~/.local`), since it generates the hosts and the type declarations.
 
 - `nsh check`: `cargo check`, then `tsc`. The only type check.
 - `nsh build`: read every warning; it reports unknown classes.
@@ -41,7 +41,8 @@ Run from `app/`, with `~/.local/bin` on `PATH`.
 - `Intl` needs `new`, and only knows the device's zone and UTC. Named zones are `lib/temporal.ts`, which `nsh.json` aliases `@js-temporal/polyfill` to. There's no `Temporal`, `window`, `document` or `localStorage` (`@/lib/local-storage` has its surface).
 - `List` keeps every size it measured, so after a resize its offsets are no longer multiples of a uniform item size. The month and week tracks are a `Scroll` with `views/track-window.ts` instead, which also keeps item math exact for snapping and hit tests.
 - A view's position comes from `measure()`; day hit testing is `lib/day-hits.ts`, fed by each view from its scroll offsets. Mouse drags go to responders, finger drags to the scroll views around them, so `app.drag` headless only reaches a responder across a scroll view's axis.
-- There's no wheel event on a view, and no second window on Linux: Settings is a full-window `Dialog`, so that Escape reaches what's on top of it first. An `Overlay` hears Escape along with the dialog above it.
+- There's no wheel event on a view. An `Overlay` hears Escape along with the dialog above it.
+- Settings is a `<Window kind="dialog">` (`components/settings/SettingsWindow.tsx`), rendered from the app's one engine: it reads the same stores, with no syncing between windows. Escape goes to its own dialogs first, then closes it. `currentWindow()` only works while rendering; `focusedWindow()` says which window has the keys (`settingsFocused` keeps the calendar's keys out of Settings). Headless tests run as iOS unless `open` names a desktop `platform`, and `<Window>` renders nothing off desktops.
 - A signal made in a component throws `not a live signal` once the component has gone: after `await`, never write one past `onClose()`. No `finally { saving.set(false) }` in a dialog.
 - No `capabilities` key doesn't mean `fs`: `fs/promises` refuses every path until `capabilities.fs` grants it, and declaring the key limits everything else. The backend reads files; `Backend.pickPath` shows the system's file dialog, which NSH gives to Rust only (`Picker` is photos).
 - Only `Input` reports keys, without modifiers. To capture a keystroke, bind them all (`components/settings/shortcuts/key-capture.ts`).

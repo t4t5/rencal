@@ -8,7 +8,7 @@ import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { Button } from "@/components/ui/button"
 
 import { SettingsIcon } from "@/icons"
-import { isWideWindow, setSettingsOpen } from "@/stores/view"
+import { isWideWindow, openSettings } from "@/stores/view"
 
 import { ComposeEventButton } from "./ComposeEventButton"
 
@@ -30,7 +30,7 @@ export function SidebarToolbar() {
               variant="ghost"
               size="icon"
               accessibilityLabel="Settings"
-              onPress={() => setSettingsOpen(true)}
+              onPress={() => openSettings()}
             >
               <SettingsIcon />
             </Button>

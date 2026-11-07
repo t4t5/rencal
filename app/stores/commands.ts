@@ -47,7 +47,7 @@ import { toggleInvites } from "@/stores/invites"
 import { clearPopoverAnchor } from "@/stores/popover"
 import { groups, setShowWeekNumbers, showWeekNumbers } from "@/stores/settings"
 import { syncNow } from "@/stores/sync"
-import { setCalendarView, setSettingsOpen, settingsOpen, toggleSidebar } from "@/stores/view"
+import { openSettings, setCalendarView, settingsFocused, toggleSidebar } from "@/stores/view"
 import { activeTheme, cycleTheme, pickTheme, themeDescriptors } from "@/themes/controller"
 import { viewBindings, VIEWS } from "@/views/manifest"
 
@@ -139,9 +139,9 @@ export const currentValues = computed(
 
 export const eventOpen = () => !!activeEvent() || draftPopoverOpen()
 
-/** Something modal covers the calendar: only keys that work anywhere reach it. */
+/** Something modal covers the calendar, or Settings has the keyboard: only keys that work anywhere reach it. */
 export const calendarCovered = () =>
-  paletteVisible() || searchVisible() || shortcutsVisible() || settingsOpen()
+  paletteVisible() || searchVisible() || shortcutsVisible() || settingsFocused()
 
 function openPalette(next: PalettePage) {
   page.set(next)
@@ -269,7 +269,7 @@ const handlers: Record<CommandId, CommandHandler> = {
   "theme.set": ({ theme }) => {
     if (theme) pickTheme(theme)
   },
-  "app.settings": () => setSettingsOpen(true),
+  "app.settings": () => openSettings(),
   "app.shortcuts": () => shortcutsVisible.set(true),
   "theme.toggle": () => cycleTheme(),
   // `rencal do app.sync` waits for the sync to finish.

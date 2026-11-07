@@ -1,5 +1,6 @@
 import { Overlay, Text, View } from "nsh"
 import { Toast, ToastStack } from "nsh/base"
+import { currentWindow, focusedWindow } from "nsh/desktop"
 
 import { dismissToast, type Toast as ToastData, toasts } from "@/lib/toast"
 
@@ -30,10 +31,19 @@ function Item(props: { toast: ToastData }) {
   )
 }
 
-/** The messages from `lib/toast.ts`, stacked at the window's bottom right. */
+/**
+ * The messages from `lib/toast.ts`, stacked at the window's bottom right. Every
+ * window has a toaster; the one in front shows them, the main window's while
+ * another app is.
+ */
 export function Toaster() {
+  const win = currentWindow()
+  const inFront = () => {
+    const focused = focusedWindow()
+    return focused ? focused.id === win.id : win.main
+  }
   return (
-    <If when={toasts().length > 0}>
+    <If when={toasts().length > 0 && inFront()}>
       <Overlay class="bottom-4 right-4 w-[356px]">
         <ToastStack
           placement="bottomRight"

@@ -1,5 +1,6 @@
 // The window's layout: which view shows, and whether the sidebar does.
 import { signal, windowSize } from "nsh"
+import { focusedWindow, Window } from "nsh/desktop"
 
 import { localStorage } from "@/lib/local-storage"
 
@@ -12,12 +13,15 @@ const collapsed = signal(false)
 const settings = signal(false)
 const settingsPage = signal("general")
 
+export const SETTINGS_WINDOW = "settings"
+
 export const calendarView = () => view()
 /** Below `md` the window is one column: the sidebar alone, events in a sheet. */
 export const isWideWindow = () => windowSize().width >= MD_BREAKPOINT
 export const sidebarCollapsed = () => collapsed()
 export const settingsOpen = () => settings()
 export const settingsTab = () => settingsPage()
+export const settingsFocused = () => focusedWindow()?.id === SETTINGS_WINDOW
 
 export function setCalendarView(id: string) {
   view.set(id)
@@ -27,6 +31,12 @@ export function setCalendarView(id: string) {
 export function toggleSidebar() {
   collapsed.update((value) => !value)
   localStorage.setItem(COLLAPSED_KEY, String(collapsed()))
+}
+
+/** Opens Settings' window, or brings it forward when it's open already. */
+export function openSettings() {
+  if (settings()) Window.get(SETTINGS_WINDOW)?.focus()
+  else settings.set(true)
 }
 
 export const setSettingsOpen = (open: boolean) => settings.set(open)

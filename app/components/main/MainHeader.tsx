@@ -14,7 +14,7 @@ import { CheckIcon, ChevronDownIcon, SearchIcon, SettingsIcon, SidebarIcon } fro
 import { activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
 import { actionKeys, setSearchOpen } from "@/stores/commands"
 import { groups } from "@/stores/settings"
-import { calendarView, setCalendarView, setSettingsOpen, toggleSidebar } from "@/stores/view"
+import { calendarView, openSettings, setCalendarView, toggleSidebar } from "@/stores/view"
 import { resolveView, VIEWS } from "@/views/manifest"
 
 /** A dropdown with the look of the old select button. */
@@ -99,7 +99,7 @@ export function MainHeader() {
             variant="ghost"
             size="icon"
             accessibilityLabel="Settings"
-            onPress={() => setSettingsOpen(true)}
+            onPress={() => openSettings()}
           >
             <SettingsIcon />
           </Button>
