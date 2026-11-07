@@ -4,7 +4,7 @@ The NSH port of renCal: a mixed app (TSX screens on QuickJS, a Rust crate in `na
 
 ## Commands
 
-Run from `app/`, with `~/.local/bin` on `PATH`. `native/Cargo.toml` pins nsh's crates to a git repo and rev (unreleased windows of the app's own, plus a fix from a fork): the `nsh` CLI must be built from that same repo and rev (`cargo install --git <repo> --rev <rev> nsh-cli --root ~/.local`), since it generates the hosts and the type declarations.
+Run from `app/`, with `~/.local/bin` on `PATH`. `native/Cargo.toml` pins nsh's crates to a git repo and rev (unreleased windows of the app's own, plus a fix from a fork): the `nsh` CLI must be built from that same repo and rev (`cargo install --locked --git <repo> --rev <rev> nsh-cli --root ~/.local`; without `--locked` newer dependencies break the build), since it generates the hosts and the type declarations.
 
 - `nsh check`: `cargo check`, then `tsc`. The only type check.
 - `nsh build`: read every warning; it reports unknown classes.
