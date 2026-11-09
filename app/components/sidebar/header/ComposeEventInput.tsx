@@ -134,7 +134,8 @@ export function ComposeEventInput(props: { onExit: () => void }) {
       <Input
         ref={input}
         readonly={!isDrafting()}
-        focusable={isDrafting()}
+        // Desktop Tab treats every enabled input as a stop, whatever `focusable` says.
+        disabled={!isDrafting()}
         variant="default"
         placeholder={isDrafting() ? "Meeting at 3pm" : ""}
         value={shownText()}
