@@ -1,263 +1,263 @@
 # List all available tasks
 default:
-  @just --list
+    @just --list
 
 # Install NPM dependencies
 install:
-  pnpm install
+    pnpm install
 
 # Format files
 format:
-  @just format-rust
+    @just format-rust
 
-[working-directory: 'src-tauri']
+[working-directory('src-tauri')]
 format-rust:
-  cargo fmt --all
+    cargo fmt --all
 
 # Run app (dev mode)
 dev: ensure-providers
-  pnpm tauri dev
+    pnpm tauri dev
 
 # Run website docs (dev mode)
 web:
-  pnpm --dir website dev
+    pnpm --dir website dev
 
 # Preview README as GitHub renders it (dark by default; `just readme-preview light`)
 readme-preview theme="dark":
-  #!/usr/bin/env bash
-  set -euo pipefail
-  out=.readme-preview.html
-  # Export next to the README so relative image paths keep working.
-  uvx grip --export --quiet --user "$(gh api user --jq .login)" --pass "$(gh auth token)" README.md "$out"
-  sed -i 's|<html lang="en">|<html lang="en" data-color-mode="{{theme}}" data-{{theme}}-theme="{{theme}}">|' "$out"
-  xdg-open "$out"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    out=.readme-preview.html
+    # Export next to the README so relative image paths keep working.
+    uvx grip --export --quiet --user "$(gh api user --jq .login)" --pass "$(gh auth token)" README.md "$out"
+    sed -i 's|<html lang="en">|<html lang="en" data-color-mode="{{ theme }}" data-{{ theme }}-theme="{{ theme }}">|' "$out"
+    xdg-open "$out"
 
 # Force deploy website (used to update /releases)
 deploy-web:
-  gh workflow run website.yml --ref main 
-  gh run watch
+    gh workflow run website.yml --ref main 
+    gh run watch
 
 # Generate TypeScript bindings from Rust types
-[working-directory: 'src-tauri']
+[working-directory('src-tauri')]
 gen-types:
-  cargo run --example gen_types
+    cargo run --example gen_types
 
 # Generate the @rencomputer/rencal-sdk package (types and Tailwind tokens for view plugins)
 sdk:
-  node scripts/build-sdk.mjs
+    node scripts/build-sdk.mjs
 
 # Publish @rencomputer/rencal-sdk to npm at the version in packages/sdk/package.json
 publish-sdk: sdk
-  #!/usr/bin/env bash
-  set -euo pipefail
-  if [[ -n "$(git status --porcelain -- packages/sdk)" ]]; then
-    echo "packages/sdk has uncommitted or regenerated changes; commit them first." >&2
-    exit 1
-  fi
-  # Views built with this SDK need the renCal release in engines.rencal; publish only once it's out.
-  min=$(node -p 'require("./packages/sdk/package.json").engines.rencal.replace(/^>=/, "")')
-  if ! git rev-parse -q --verify "refs/tags/v$min" >/dev/null; then
-    echo "This SDK needs renCal $min, which isn't released yet (no tag v$min); release it first." >&2
-    exit 1
-  fi
-  cd packages/sdk && npm publish
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [[ -n "$(git status --porcelain -- packages/sdk)" ]]; then
+      echo "packages/sdk has uncommitted or regenerated changes; commit them first." >&2
+      exit 1
+    fi
+    # Views built with this SDK need the renCal release in engines.rencal; publish only once it's out.
+    min=$(node -p 'require("./packages/sdk/package.json").engines.rencal.replace(/^>=/, "")')
+    if ! git rev-parse -q --verify "refs/tags/v$min" >/dev/null; then
+      echo "This SDK needs renCal $min, which isn't released yet (no tag v$min); release it first." >&2
+      exit 1
+    fi
+    cd packages/sdk && npm publish
 
 # Test production version of app (needs build first)
 start:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  shopt -s nullglob
-  appimages=(src-tauri/target/release/bundle/appimage/renCal_*.AppImage)
-  if [[ ${#appimages[@]} -ne 1 ]]; then
-    echo "Expected exactly one AppImage in src-tauri/target/release/bundle/appimage. Run 'just build' first." >&2
-    exit 1
-  fi
-  "${appimages[0]}"
+    #!/usr/bin/env bash
+    set -euo pipefail
+    shopt -s nullglob
+    appimages=(src-tauri/target/release/bundle/appimage/renCal_*.AppImage)
+    if [[ ${#appimages[@]} -ne 1 ]]; then
+      echo "Expected exactly one AppImage in src-tauri/target/release/bundle/appimage. Run 'just build' first." >&2
+      exit 1
+    fi
+    "${appimages[0]}"
 
 # Check Rust and TypeScript types
 check:
-  cargo check --workspace --manifest-path src-tauri/Cargo.toml
-  cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
-  @just typecheck
+    cargo check --workspace --manifest-path src-tauri/Cargo.toml
+    cargo clippy --workspace --manifest-path src-tauri/Cargo.toml -- -D warnings
+    @just typecheck
 
 # Check TypeScript types only
 typecheck:
-  pnpm typecheck
-  pnpm lint
-  pnpm find:unused-exports
+    pnpm typecheck
+    pnpm lint
+    pnpm find:unused-exports
 
 # Run frontend and Rust tests, and verify the generated IPC contracts and SDK are current
 test:
-  pnpm test
-  cargo test --workspace --manifest-path src-tauri/Cargo.toml
-  bash scripts/check-generated-types.sh
+    pnpm test
+    cargo test --workspace --manifest-path src-tauri/Cargo.toml
+    bash scripts/check-generated-types.sh
 
 # Run app with frontend debug logging enabled. Pass a namespace to narrow it, e.g. `just debug agenda`.
 debug flags="*": ensure-providers
-  VITE_RENCAL_DEBUG={{flags}} pnpm tauri dev
+    VITE_RENCAL_DEBUG={{ flags }} pnpm tauri dev
 
 # Seed local-only calendars with edge-case events, e.g. `just fixtures overlaps "next week"`
 fixtures scenario="all" week="today":
-  scripts/seed-fixtures.sh "{{scenario}}" "{{week}}"
+    scripts/seed-fixtures.sh "{{ scenario }}" "{{ week }}"
 
 # Analyze which parts of app are slow based on ChromeDevTool recording:
 analyze path:
-  bun scripts/analyze-recording.ts {{path}}
+    bun scripts/analyze-recording.ts {{ path }}
 
 # Generate platform-specific app icons from src-tauri/icons-src/*.svg
 icons:
-  scripts/generate-icons.sh
+    scripts/generate-icons.sh
 
 # See the size of dependencies:
 bundlesize:
-  npx vite-bundle-visualizer
+    npx vite-bundle-visualizer
 
 # Build the app for production
 build: ensure-providers
-  #!/usr/bin/env bash
-  set -euo pipefail
-  # Linux deb/rpm bundles ship the reminder daemon — build it first so
-  # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
-  if [[ "$(uname -s)" == "Linux" ]]; then
-    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
-  fi
-  NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
-  if [[ "$(uname -s)" == "Linux" ]]; then
-    scripts/check-bundled-providers.sh
-  fi
-  printf '\nrenCal built successfully.\n'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Linux deb/rpm bundles ship the reminder daemon — build it first so
+    # tauri-bundler can pick it up via bundle.linux.{deb,rpm}.files.
+    if [[ "$(uname -s)" == "Linux" ]]; then
+      cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+    fi
+    NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+    if [[ "$(uname -s)" == "Linux" ]]; then
+      scripts/check-bundled-providers.sh
+    fi
+    printf '\nrenCal built successfully.\n'
 
 # Build, sign, and notarize the app for distribution (requires .env with Apple credentials)
 notarize: ensure-providers
-  #!/usr/bin/env bash
-  set -euo pipefail
-  set -a && source .env && set +a
-  # Sign bundled provider binaries with hardened runtime + secure timestamp
-  for bin in src-tauri/providers/caldir-provider-*; do
-    codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
-  done
-  # Updater artifacts (and their signing key) are produced in CI, not here.
-  NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+    #!/usr/bin/env bash
+    set -euo pipefail
+    set -a && source .env && set +a
+    # Sign bundled provider binaries with hardened runtime + secure timestamp
+    for bin in src-tauri/providers/caldir-provider-*; do
+      codesign --sign "$APPLE_SIGNING_IDENTITY" --timestamp --options runtime --force "$bin"
+    done
+    # Updater artifacts (and their signing key) are produced in CI, not here.
+    NO_STRIP=true pnpm tauri build --config '{ "bundle": { "createUpdaterArtifacts": false } }'
 
 # Download the caldir provider binaries pinned in src-tauri/Cargo.toml, unless already installed.
 ensure-providers:
-  scripts/install-caldir-providers.sh
+    scripts/install-caldir-providers.sh
 
 # Move caldir-core and the provider binaries to a caldir release, e.g. `just bump-caldir v0.14.1`.
 bump-caldir tag:
-  scripts/bump-caldir.sh {{tag}}
+    scripts/bump-caldir.sh {{ tag }}
 
 # Build the providers from a local caldir checkout instead of the pinned release. Delete src-tauri/providers/ to undo.
 build-providers-local caldir_repo="../caldir":
-  scripts/build-local-caldir-providers.sh {{caldir_repo}}
+    scripts/build-local-caldir-providers.sh {{ caldir_repo }}
 
 # ---- NOTIFICATIONS
 
 # Create test event 2 min from now with 1m reminder, then run the app to see the notification
 test-notification:
-  #!/usr/bin/env bash
-  if date -d '+2 minutes' +%H:%M &>/dev/null; then
-    start_time=$(date -d '+2 minutes' +%H:%M)
-  else
-    start_time=$(date -v+2M +%H:%M)
-  fi
-  caldir new "Test notification" --start "today ${start_time}" --reminder 1m
-  echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
+    #!/usr/bin/env bash
+    if date -d '+2 minutes' +%H:%M &>/dev/null; then
+      start_time=$(date -d '+2 minutes' +%H:%M)
+    else
+      start_time=$(date -v+2M +%H:%M)
+    fi
+    caldir new "Test notification" --start "today ${start_time}" --reminder 1m
+    echo "Event created at ${start_time} with 1m reminder. Notification should fire in ~1 minute."
 
 # Build a signed debug .app and open it. macOS notifications only work from a signed bundle.
 bundle-debug-macos: ensure-providers
-  #!/usr/bin/env bash
-  set -euo pipefail
-  # UNUserNotificationCenter rejects unsigned bundles. Export only the signing
-  # identity from .env: with APPLE_ID set too, tauri would also notarize.
-  APPLE_SIGNING_IDENTITY="$(set -a && source .env && echo "${APPLE_SIGNING_IDENTITY:-}")"
-  if [[ -z "$APPLE_SIGNING_IDENTITY" ]]; then
-    echo "Set APPLE_SIGNING_IDENTITY in .env (see 'security find-identity -v -p codesigning')." >&2
-    exit 1
-  fi
-  export APPLE_SIGNING_IDENTITY
-  pnpm tauri build --debug --bundles app --config '{ "bundle": { "createUpdaterArtifacts": false } }'
-  open src-tauri/target/debug/bundle/macos/renCal.app
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # UNUserNotificationCenter rejects unsigned bundles. Export only the signing
+    # identity from .env: with APPLE_ID set too, tauri would also notarize.
+    APPLE_SIGNING_IDENTITY="$(set -a && source .env && echo "${APPLE_SIGNING_IDENTITY:-}")"
+    if [[ -z "$APPLE_SIGNING_IDENTITY" ]]; then
+      echo "Set APPLE_SIGNING_IDENTITY in .env (see 'security find-identity -v -p codesigning')." >&2
+      exit 1
+    fi
+    export APPLE_SIGNING_IDENTITY
+    pnpm tauri build --debug --bundles app --config '{ "bundle": { "createUpdaterArtifacts": false } }'
+    open src-tauri/target/debug/bundle/macos/renCal.app
 
 clear-notification-cache:
-  rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
+    rm -f ~/.cache/rencal/delivered-reminders.json ~/.cache/rencal/last-reminder-check
 
 # Build the standalone reminder daemon (Linux)
 build-notifierd:
-  cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
+    cargo build --release --manifest-path src-tauri/Cargo.toml -p rencal-notifierd
 
 # Install the reminder daemon binary + systemd user unit, then enable + start it.
 # Also drops the rencal icon at the XDG user path so daemon notifications get
 # the app icon (deb/rpm/AUR installs put it at /usr/share/icons/... instead).
 # Idempotent — safe to re-run after rebuilds.
 install-notifierd: build-notifierd
-  install -Dm755 src-tauri/target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
-  install -d ~/.config/systemd/user
-  sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
-    src-tauri/notifierd/rencal-notifierd.service \
-    > ~/.config/systemd/user/rencal-notifierd.service
-  install -Dm644 src-tauri/icons/linux/icon.svg ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
-  systemctl --user daemon-reload
-  systemctl --user enable --now rencal-notifierd.service
-  -systemctl --user restart rencal-notifierd.service
-  @echo
-  systemctl --user status rencal-notifierd.service --no-pager --lines=0
+    install -Dm755 src-tauri/target/release/rencal-notifierd ~/.local/bin/rencal-notifierd
+    install -d ~/.config/systemd/user
+    sed 's|/usr/bin/rencal-notifierd|%h/.local/bin/rencal-notifierd|' \
+      src-tauri/notifierd/rencal-notifierd.service \
+      > ~/.config/systemd/user/rencal-notifierd.service
+    install -Dm644 src-tauri/icons/linux/icon.svg ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
+    systemctl --user daemon-reload
+    systemctl --user enable --now rencal-notifierd.service
+    -systemctl --user restart rencal-notifierd.service
+    @echo
+    systemctl --user status rencal-notifierd.service --no-pager --lines=0
 
 # Remove the reminder daemon and its systemd unit
 uninstall-notifierd:
-  -systemctl --user disable --now rencal-notifierd.service
-  rm -f ~/.local/bin/rencal-notifierd
-  rm -f ~/.config/systemd/user/rencal-notifierd.service
-  rm -f ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
-  systemctl --user daemon-reload
+    -systemctl --user disable --now rencal-notifierd.service
+    rm -f ~/.local/bin/rencal-notifierd
+    rm -f ~/.config/systemd/user/rencal-notifierd.service
+    rm -f ~/.local/share/icons/hicolor/scalable/apps/rencal.svg
+    systemctl --user daemon-reload
 
 # Tail the reminder daemon's logs
 notifierd-logs:
-  journalctl --user -u rencal-notifierd.service -f
+    journalctl --user -u rencal-notifierd.service -f
 
 # Point rencal:// links and .ics files at the dev build (for testing deeplinks against `just dev`)
 deeplink-dev:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  mkdir -p ~/.local/share/applications
-  printf '%s\n' \
-    '[Desktop Entry]' \
-    'Type=Application' \
-    'Name=renCal' \
-    'Terminal=false' \
-    'NoDisplay=true' \
-    'MimeType=x-scheme-handler/rencal;text/calendar;' \
-    'Exec={{justfile_directory()}}/src-tauri/target/debug/rencal %u' \
-    > ~/.local/share/applications/rencal-handler.desktop
-  xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
-  xdg-mime default rencal-handler.desktop text/calendar
+    #!/usr/bin/env bash
+    set -euo pipefail
+    mkdir -p ~/.local/share/applications
+    printf '%s\n' \
+      '[Desktop Entry]' \
+      'Type=Application' \
+      'Name=renCal' \
+      'Terminal=false' \
+      'NoDisplay=true' \
+      'MimeType=x-scheme-handler/rencal;text/calendar;' \
+      'Exec={{ justfile_directory() }}/src-tauri/target/debug/rencal %u' \
+      > ~/.local/share/applications/rencal-handler.desktop
+    xdg-mime default rencal-handler.desktop x-scheme-handler/rencal
+    xdg-mime default rencal-handler.desktop text/calendar
 
 # Point rencal:// links and .ics files back at the installed app
 deeplink-prod:
-  xdg-mime default renCal.desktop x-scheme-handler/rencal
-  xdg-mime default renCal.desktop text/calendar
-  rm -f ~/.local/share/applications/rencal-handler.desktop
+    xdg-mime default renCal.desktop x-scheme-handler/rencal
+    xdg-mime default renCal.desktop text/calendar
+    rm -f ~/.local/share/applications/rencal-handler.desktop
 
 # Run the NSH port against your real calendars (TSX hot, Rust restarts)
-[working-directory: 'app']
+[working-directory('app')]
 nsh-dev:
-  nsh run .
+    RENCAL_ANNOTATE=1 nsh run .
 
 # Run the NSH port against a generated mock caldir, leaving your calendars alone
 nsh-demo:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  export RENCAL_SHOTS_DIR="${XDG_RUNTIME_DIR:-/tmp}/rencal-nsh-demo"
-  .agents/skills/screenshots/scripts/shots.sh setup
-  cd app
-  XDG_CONFIG_HOME="$RENCAL_SHOTS_DIR/xdg" nsh run .
+    #!/usr/bin/env bash
+    set -euo pipefail
+    export RENCAL_SHOTS_DIR="${XDG_RUNTIME_DIR:-/tmp}/rencal-nsh-demo"
+    .agents/skills/screenshots/scripts/shots.sh setup
+    cd app
+    XDG_CONFIG_HOME="$RENCAL_SHOTS_DIR/xdg" nsh run .
 
 # Type check the NSH port (Rust, then TSX)
-[working-directory: 'app']
+[working-directory('app')]
 nsh-check:
-  nsh check
+    nsh check
 
 # Run the NSH port's Rust and TSX tests
-[working-directory: 'app']
+[working-directory('app')]
 nsh-test:
-  scripts/test.sh
+    scripts/test.sh
