@@ -4,7 +4,8 @@ import { Input as BaseInput, type InputProps } from "nsh/base"
 
 import { cn } from "@/lib/utils"
 
-const VERTICAL_PADDING = 7
+const MIN_VERTICAL_PADDING = 6
+const BORDER_WIDTH = 1
 
 type Props = InputProps & { ref?: InputRef | ((ref: InputRef) => void) }
 
@@ -12,8 +13,9 @@ type Props = InputProps & { ref?: InputRef | ((ref: InputRef) => void) }
 export function Textarea(props: Props) {
   const [own, rest] = split(props, ["class"])
   return (
-    <TextareaInner
+    <GrowingInput
       {...rest}
+      bordered
       class={cn(
         "w-full rounded-(--radius-md) border px-2",
         "border-transparent hover:border-input focus:border-transparent focus:bg-secondary",
@@ -25,19 +27,30 @@ export function Textarea(props: Props) {
 
 /** The same, for a wrapper that owns the box. */
 export function TextareaInner(props: Props) {
-  const [own, rest] = split(props, ["class", "onContentSizeChange"])
-  const height = signal(token("control-height"))
+  return <GrowingInput {...props} />
+}
+
+function GrowingInput(props: Props & { bordered?: boolean }) {
+  const [own, rest] = split(props, ["class", "bordered", "onContentSizeChange"])
+  const contentHeight = signal(0)
+  // One line fills a control's height, inside a border of its own or its wrapper's.
+  const minHeight = () => token("control-height") - 2 * BORDER_WIDTH
+  const padding = () => Math.max(MIN_VERTICAL_PADDING, (minHeight() - contentHeight()) / 2)
+  const border = () => (own.bordered ? 2 * BORDER_WIDTH : 0)
   return (
     <BaseInput
       {...rest}
       multiline
       onContentSizeChange={(event) => {
-        height.set(Math.max(token("control-height"), event.size.height + VERTICAL_PADDING * 2 + 2))
+        contentHeight.set(event.size.height)
         own.onContentSizeChange?.(event)
       }}
-      style={{ height: height() }}
+      style={{
+        height: contentHeight() + 2 * padding() + border(),
+        paddingVertical: padding(),
+      }}
       class={cn(
-        "min-w-0 py-[7px] text-sm text-foreground placeholder:text-placeholder-foreground",
+        "min-w-0 text-sm text-foreground placeholder:text-placeholder-foreground",
         own.class,
       )}
     />
