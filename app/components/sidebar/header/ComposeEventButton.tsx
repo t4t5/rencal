@@ -6,7 +6,7 @@ import { Tooltip } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 
 import { PlusIcon } from "@/icons"
-import { isDrafting, startDrafting, stopDrafting } from "@/stores/draft"
+import { COMPOSE_ANIMATION, isDrafting, startDrafting, stopDrafting } from "@/stores/draft"
 
 import { ComposeEventInput } from "./ComposeEventInput"
 import { isFlying } from "./FlyAnimation"
@@ -17,14 +17,14 @@ import { isFlying } from "./FlyAnimation"
  */
 export function ComposeEventButton() {
   const expanded = () => isDrafting() || isFlying()
-  const animated = (change: () => void) => {
-    LayoutAnimation.configureNext(LayoutAnimation.create(200, "easeOut", "opacity"))
-    change()
+  const exit = () => {
+    LayoutAnimation.configureNext(COMPOSE_ANIMATION)
+    stopDrafting()
   }
 
   return (
     <View class={cn("relative", expanded() ? "w-full" : "w-(--control-height)")}>
-      <ComposeEventInput onExit={() => animated(stopDrafting)} />
+      <ComposeEventInput onExit={exit} />
       <If when={!expanded()}>
         <View
           class="absolute inset-0"
@@ -36,7 +36,7 @@ export function ComposeEventButton() {
             class="w-full"
             testID="compose-event"
             accessibilityLabel="Create new event"
-            onPress={() => animated(startDrafting)}
+            onPress={startDrafting}
           >
             <PlusIcon />
           </Button>

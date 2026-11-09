@@ -6,7 +6,7 @@
  *   await anchorPopover(cellRef, press)    // stores/popover.ts
  *   openDraftPopover({ start, end })
  */
-import { batch, computed, signal, untracked } from "nsh"
+import { batch, computed, LayoutAnimation, signal, untracked } from "nsh"
 
 import { api, getErrorMessage } from "@/lib/api"
 import {
@@ -144,12 +144,16 @@ export function resetDraft() {
   })
 }
 
-/** Starts composing in the sidebar. */
+/** The "+" growing into the input and back. */
+export const COMPOSE_ANIMATION = LayoutAnimation.create(200, "easeOut", "opacity")
+
+/** Starts composing in the sidebar, the "+" growing into the input. */
 export function startDrafting() {
   if (!untracked(canCreate)) {
     promptToConnect()
     return
   }
+  LayoutAnimation.configureNext(COMPOSE_ANIMATION)
   resetDraft()
   drafting.set(true)
 }
