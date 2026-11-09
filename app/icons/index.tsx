@@ -51,7 +51,8 @@ const icon =
     <Image
       src={source}
       class={`size-4 ${props.class ?? ""}`}
-      style={{ tintColor: props.color ?? token("foreground") }}
+      // Images cover their box by default, which crops the wider SVGs (the clouds).
+      style={{ objectFit: "contain", tintColor: props.color ?? token("foreground") }}
     />
   )
 

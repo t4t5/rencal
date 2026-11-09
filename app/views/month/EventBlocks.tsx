@@ -8,7 +8,7 @@ import { eventKey } from "@/lib/cal-events"
 import { formatTime } from "@/lib/event-time"
 import { isSpanning } from "@/lib/event-utils"
 import { type AllDayBar } from "@/lib/layout"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { dragRole, eventDragHandlers, selectionColor } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
@@ -65,6 +65,7 @@ export function TimedEvent(props: { event: () => CalendarEvent }) {
       {...eventDragHandlers({ event: props.event, kind: "pill", block: () => block })}
       class={cn(
         "flex-row gap-1 shrink-0 rounded-(--radius-xs) pr-1",
+        FOCUS_RING,
         isSelected(props.event()) ? "bg-selected text-selected-foreground" : "hover:bg-hover",
         isTentative(props.event()) && "opacity-50",
         role() === "source" && "opacity-40",
@@ -105,6 +106,7 @@ export function AllDayBarView(props: {
       {...eventDragHandlers({ event, kind: "pill", block: () => block })}
       class={cn(
         "absolute px-(--event-padding-inline) justify-center overflow-hidden",
+        FOCUS_RING,
         props.bar().isStart && "rounded-l-(--radius-xs)",
         props.bar().isEnd && "rounded-r-(--radius-xs)",
         isTentative(event()) && "opacity-50",
@@ -166,6 +168,7 @@ function HiddenEventRow(props: { event: () => CalendarEvent; onOpen: () => void 
       }}
       class={cn(
         "flex-row gap-1 shrink-0 rounded-(--radius-xs)",
+        FOCUS_RING,
         spanning() ? "px-1 py-px" : "pr-1 hover:bg-hover",
       )}
       style={spanning() ? { backgroundColor: paintOf(props.event()).fill } : undefined}

@@ -33,7 +33,7 @@ import {
 } from "@/lib/event-time"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 import type { DateRange } from "@/lib/types"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { VideoIcon } from "@/icons"
 import {
@@ -150,6 +150,7 @@ function AllDayChip(props: { event: () => CalendarEvent; day: number }) {
       onPress={(press) => pressRow(props.event(), props.day, true, chip, press)}
       class={cn(
         "max-w-full rounded-(--radius-xs) px-(--event-padding-inline) py-px hover:opacity-90",
+        FOCUS_RING,
         faded() && "opacity-50",
       )}
       style={{
@@ -221,6 +222,7 @@ function TimedRow(props: { row: () => AgendaTimedRow }) {
       onPress={(press) => pressRow(event(), props.row().day, false, block, press)}
       class={cn(
         "flex-row gap-3 px-(--layout-padding) py-1",
+        FOCUS_RING,
         highlighted() ? "bg-selected" : "hover:bg-hover",
         isFaded(event()) && "opacity-50",
       )}

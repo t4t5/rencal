@@ -7,4 +7,8 @@ export function cn(...inputs: ClassValue[]) {
   return inputs.filter(Boolean).join(" ")
 }
 
+// Inset, so cells that clip their content still show it.
+export const FOCUS_RING =
+  "focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring"
+
 export const isMacOS = platform.os === "macos"

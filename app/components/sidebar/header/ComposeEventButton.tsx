@@ -11,33 +11,36 @@ import { isDrafting, startDrafting, stopDrafting } from "@/stores/draft"
 import { ComposeEventInput } from "./ComposeEventInput"
 import { isFlying } from "./FlyAnimation"
 
-/** The "+": pressed, it grows into the natural-language input. */
+/**
+ * The "+": pressed, it grows into the natural-language input. The input is always
+ * there, under the button, so opening and closing are the same resize.
+ */
 export function ComposeEventButton() {
   const expanded = () => isDrafting() || isFlying()
   const animated = (change: () => void) => {
-    LayoutAnimation.easeInEaseOut()
+    LayoutAnimation.configureNext(LayoutAnimation.create(200, "easeOut", "opacity"))
     change()
   }
 
   return (
-    <View class={cn("flex-row justify-end", expanded() ? "w-full" : "w-(--control-height)")}>
-      <If
-        when={expanded()}
-        else={
-          <View tooltip={<Tooltip label="Create new event" placement="bottom" />}>
-            <Button
-              variant="secondary"
-              size="icon"
-              testID="compose-event"
-              accessibilityLabel="Create new event"
-              onPress={() => animated(startDrafting)}
-            >
-              <PlusIcon />
-            </Button>
-          </View>
-        }
-      >
-        <ComposeEventInput onExit={() => animated(stopDrafting)} />
+    <View class={cn("relative", expanded() ? "w-full" : "w-(--control-height)")}>
+      <ComposeEventInput onExit={() => animated(stopDrafting)} />
+      <If when={!expanded()}>
+        <View
+          class="absolute inset-0"
+          tooltip={<Tooltip label="Create new event" placement="bottom" />}
+        >
+          <Button
+            variant="secondary"
+            size="icon"
+            class="w-full"
+            testID="compose-event"
+            accessibilityLabel="Create new event"
+            onPress={() => animated(startDrafting)}
+          >
+            <PlusIcon />
+          </Button>
+        </View>
       </If>
     </View>
   )

@@ -4,7 +4,7 @@ import { computed, Text, View } from "nsh"
 import { eventKey, type CalendarEvent } from "@/lib/cal-events"
 import { epochDay, formatMonth, isoWeekNumber } from "@/lib/event-time"
 import { type AllDayBar, type DayRange, layoutAllDay } from "@/lib/layout"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { activeDate, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
@@ -54,6 +54,7 @@ function Day(props: {
       }}
       class={cn(
         "flex-1 min-w-0 border-r border-border overflow-hidden",
+        FOCUS_RING,
         weekend() && "bg-weekend",
         selected() && "bg-selected text-selected-foreground",
       )}

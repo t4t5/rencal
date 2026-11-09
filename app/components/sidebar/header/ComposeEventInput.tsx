@@ -80,6 +80,31 @@ function useJumpToStartDate() {
   })
 }
 
+/** Mounted only while drafting, so a collapsed field doesn't take Escape or presses. */
+function ExitListeners(props: { field: ViewRef | undefined; onExit: () => void }) {
+  // Once clears the text; again leaves compose mode.
+  keymap.bind(
+    "escape",
+    () => {
+      if (draftText()) setDraftText("")
+      else props.onExit()
+    },
+    { when: "always" },
+  )
+
+  return (
+    // Draws nothing: it's how to hear a press outside the field.
+    <Overlay
+      anchor={props.field}
+      class="size-0"
+      onPressOutside={() => {
+        if (!draftText()) props.onExit()
+      }}
+    />
+  )
+}
+
+/** Always mounted under the "+", and inert until drafting starts. */
 export function ComposeEventInput(props: { onExit: () => void }) {
   let input: InputRef | undefined
   let field: ViewRef | undefined
@@ -94,33 +119,24 @@ export function ComposeEventInput(props: { onExit: () => void }) {
     void createDraftEvent().then(props.onExit)
   }
 
-  // Once clears the text; again leaves compose mode.
-  keymap.bind(
-    "escape",
-    () => {
-      if (draftText()) setDraftText("")
-      else props.onExit()
-    },
-    { when: "always" },
-  )
+  effect(() => {
+    if (isDrafting()) input?.focus()
+    else input?.blur()
+  })
 
   useJumpToStartDate()
 
   return (
     <View ref={field} class="relative w-full">
-      {/* Draws nothing: it's how to hear a press outside the field. */}
-      <Overlay
-        anchor={field}
-        class="size-0"
-        onPressOutside={() => {
-          if (!draftText()) props.onExit()
-        }}
-      />
+      <If when={isDrafting()}>
+        <ExitListeners field={field} onExit={props.onExit} />
+      </If>
       <Input
         ref={input}
-        autoFocus
+        readonly={!isDrafting()}
+        focusable={isDrafting()}
         variant="default"
-        placeholder="Meeting at 3pm"
+        placeholder={isDrafting() ? "Meeting at 3pm" : ""}
         value={shownText()}
         class={cn(shownText() && "pr-9")}
         submitBehavior="submit"

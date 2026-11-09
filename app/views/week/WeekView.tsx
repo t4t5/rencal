@@ -23,7 +23,7 @@ import {
   plainDateFromEpochDay,
 } from "@/lib/event-time"
 import { type AllDayBar, layoutAllDay, type TimedBlock } from "@/lib/layout"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { activeDate, navigateToDate, onNavigate } from "@/stores/calendar"
 import { currentDay, now } from "@/stores/clock"
@@ -144,7 +144,7 @@ function DayColumn(props: { index: () => number; dayWidth: () => number }) {
         if (press.clickCount === 2) createEventAt(press.pagePosition)
         else navigateToDate(date())
       }}
-      class={cn("absolute top-0 border-r border-border", dayClass(date()))}
+      class={cn("absolute top-0 border-r border-border", FOCUS_RING, dayClass(date()))}
       style={{
         left: props.index() * props.dayWidth(),
         width: props.dayWidth(),
@@ -203,7 +203,7 @@ function DayHeader(props: {
         if (press.clickCount === 2) createEventAt(press.pagePosition)
         else navigateToDate(date())
       }}
-      class={cn("absolute top-0 bottom-0 border-r border-border", dayClass(date()))}
+      class={cn("absolute top-0 bottom-0 border-r border-border", FOCUS_RING, dayClass(date()))}
       style={{ left: props.left(), width: props.dayWidth() }}
     >
       <View

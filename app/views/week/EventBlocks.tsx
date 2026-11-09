@@ -4,7 +4,7 @@ import { Tooltip } from "@/components/ui/tooltip"
 
 import { DAY_MINUTES, formatTime } from "@/lib/event-time"
 import { type AllDayBar, type TimedBlock } from "@/lib/layout"
-import { cn } from "@/lib/utils"
+import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { activeDrag, dragRole, eventDragHandlers } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
@@ -77,6 +77,7 @@ export function TimedEventBlock(props: {
       {...eventDragHandlers({ event, kind: "block", block: () => block })}
       class={cn(
         "absolute overflow-hidden rounded-(--radius-sm) ring-1 ring-background",
+        FOCUS_RING,
         mode() === "xs" && "flex-row items-baseline gap-1 pt-px",
         mode() === "sm" && "pt-0.5",
         (mode() === "md" || mode() === "lg") && "py-1",
@@ -157,6 +158,7 @@ export function AllDayBarBlock(props: {
         {...eventDragHandlers({ event, kind: "pill", block: () => block })}
         class={cn(
           "justify-center px-(--event-padding-inline) py-px rounded-(--radius-xs) overflow-hidden",
+          FOCUS_RING,
           isTentative(event()) && "opacity-50",
           role() === "source" && "opacity-40",
         )}
