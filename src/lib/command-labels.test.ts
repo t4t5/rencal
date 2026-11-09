@@ -1,4 +1,7 @@
-import { describe, expect, it } from "vitest"
+import { i18n } from "@lingui/core"
+import { afterAll, beforeAll, describe, expect, it } from "vitest"
+
+import { loadCatalog } from "@/locales/load-catalog"
 
 import {
   commandGroupLabel,
@@ -67,5 +70,27 @@ describe("command labels (English source text)", () => {
       placeholder: "Search colors…",
       empty: "No colors found.",
     })
+  })
+})
+
+describe("command labels (German catalog)", () => {
+  beforeAll(async () => {
+    i18n.loadAndActivate({ locale: "de", messages: await loadCatalog("de") })
+  })
+  afterAll(() => {
+    i18n.activate("en")
+  })
+
+  it.each([
+    ["date.next:week", "Nächste Woche"],
+    ["app.sync", "Jetzt synchronisieren"],
+    ["view.switch", "Ansicht wechseln"],
+  ])("describes %s as %s", (action, label) => {
+    expect(describeCommandAction(action, {})?.label).toBe(label)
+  })
+
+  it("translates group names and built-in view switches", () => {
+    expect(commandGroupLabel("View")).toBe("Ansicht")
+    expect(viewSwitchLabel({ id: "week", name: "Week" })).toBe("Wochenansicht anzeigen")
   })
 })

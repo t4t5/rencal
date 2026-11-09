@@ -120,6 +120,7 @@ export function WeekTimeGrid({
   })
 
   const trackWidth = GUTTER_WIDTH + TRACK_DAYS * dayWidth
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- CSS grid template
   const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
   // The rendered days, at their own offset on the track.
   const windowBox = { marginLeft: startIndex * dayWidth, width: GUTTER_WIDTH + N * dayWidth }

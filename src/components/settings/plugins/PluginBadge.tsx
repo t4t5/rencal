@@ -6,12 +6,15 @@ import { cn } from "@/lib/utils"
 
 import { CONTRIBUTION_LABELS, type PluginListItem } from "./plugin-list"
 
+// Tailwind classes, no user-visible text
+/* eslint-disable lingui/no-unlocalized-strings */
 const VARIANTS = {
   outline: "border-border text-muted-foreground",
   solid: "border-transparent bg-secondary text-secondary-foreground shadow-button-border",
   // Themes check --success as text, but pair no foreground with it as a fill.
   success: "border-success/50 bg-success/10 text-success",
 }
+/* eslint-enable lingui/no-unlocalized-strings */
 
 export function PluginBadge({
   variant = "outline",

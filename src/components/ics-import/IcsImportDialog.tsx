@@ -1,3 +1,4 @@
+import { plural, t } from "@lingui/core/macro"
 import { useEffect, useState } from "react"
 import { toast } from "sonner"
 
@@ -78,7 +79,7 @@ export function IcsImportDialog({
         if (!cancelled) setPreview(next)
       })
       .catch((error: unknown) => {
-        if (!cancelled) setLoadError(getErrorMessage(error, "Couldn’t read this file"))
+        if (!cancelled) setLoadError(getErrorMessage(error, t`Couldn’t read this file`))
       })
     return () => {
       cancelled = true
@@ -107,7 +108,7 @@ export function IcsImportDialog({
         ) : (
           <>
             <DialogHeader>
-              <DialogTitle>Import .ics file</DialogTitle>
+              <DialogTitle>{t`Import .ics file`}</DialogTitle>
               <DialogDescription className="break-words">{fileName(path)}</DialogDescription>
             </DialogHeader>
             {loadError ? (
@@ -116,7 +117,7 @@ export function IcsImportDialog({
               </p>
             ) : (
               <p role="status" className="text-sm text-muted-foreground">
-                Reading file…
+                {t`Reading file…`}
               </p>
             )}
           </>
@@ -181,7 +182,7 @@ function IcsImportForm({
       onClose()
       onImported(result)
     } catch (err) {
-      setError(getErrorMessage(err, "Couldn’t import this file"))
+      setError(getErrorMessage(err, t`Couldn’t import this file`))
     } finally {
       setIsImporting(false)
     }
@@ -195,10 +196,10 @@ function IcsImportForm({
       <DialogHeader>
         <DialogTitle>
           {single
-            ? "Add event"
+            ? t`Add event`
             : preview.calendars.length > 1
-              ? "Import calendars"
-              : "Import calendar"}
+              ? t`Import calendars`
+              : t`Import calendar`}
         </DialogTitle>
         <DialogDescription className="break-words">
           {single
@@ -231,12 +232,15 @@ function IcsImportForm({
 
         {preview.skipped_count > 0 && (
           <p className="text-muted-foreground">
-            {eventsLabel(preview.skipped_count)} in this file couldn’t be read and will be left out.
+            {plural(preview.skipped_count, {
+              one: "# event in this file couldn’t be read and will be left out.",
+              other: "# events in this file couldn’t be read and will be left out.",
+            })}
           </p>
         )}
         {dropsGuests && (
           <p className="text-muted-foreground">
-            Guests aren’t copied into synced calendars, so nobody gets an invitation email.
+            {t`Guests aren’t copied into synced calendars, so nobody gets an invitation email.`}
           </p>
         )}
         {error && (
@@ -248,10 +252,14 @@ function IcsImportForm({
 
       <DialogFooter>
         <Button variant="secondary" onClick={onClose} disabled={isImporting}>
-          Cancel
+          {t`Cancel`}
         </Button>
         <Button onClick={handleImport} disabled={isImporting || !chosen.length}>
-          {isImporting ? "Importing…" : single ? "Add event" : `Import ${eventsLabel(eventCount)}`}
+          {isImporting
+            ? t`Importing…`
+            : single
+              ? t`Add event`
+              : plural(eventCount, { one: "Import # event", other: "Import # events" })}
         </Button>
       </DialogFooter>
     </>
@@ -263,7 +271,7 @@ function EventSummary({ event }: { event: CalendarEvent }) {
 
   return (
     <div className="flex min-w-0 flex-col gap-0.5">
-      <span className="break-words font-medium">{event.summary || "Untitled event"}</span>
+      <span className="break-words font-medium">{event.summary || t`Untitled event`}</span>
       <span className="text-muted-foreground">{eventWhen(event.start, event.end, timeFormat)}</span>
       {event.location && (
         <span className="break-words text-muted-foreground">{event.location}</span>
@@ -291,9 +299,9 @@ function DestinationSelect({
   const selected = calendars.find((cal) => cal.slug === value)
   const label =
     value === NEW_CALENDAR
-      ? `New calendar “${source.name}”`
+      ? newCalendarLabel(source)
       : value === SKIP
-        ? "Don’t import"
+        ? t`Don’t import`
         : selected?.name || value
 
   const option = (destination: string, color: string | null, text: string) => (
@@ -330,11 +338,11 @@ function DestinationSelect({
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="start" className="min-w-(--radix-dropdown-menu-trigger-width)">
-        {option(NEW_CALENDAR, newColor, `New calendar “${source.name}”`)}
+        {option(NEW_CALENDAR, newColor, newCalendarLabel(source))}
         {calendars.length > 0 && <DropdownMenuSeparator />}
         {calendars.map((cal) => option(cal.slug, getCalendarColor(cal), cal.name || cal.slug))}
         {allowSkip && <DropdownMenuSeparator />}
-        {allowSkip && option(SKIP, null, "Don’t import")}
+        {allowSkip && option(SKIP, null, t`Don’t import`)}
       </DropdownMenuContent>
     </DropdownMenu>
   )
@@ -353,8 +361,13 @@ function fileName(path: string): string {
   return path.split(/[/\\]/).pop() || path
 }
 
+function newCalendarLabel(source: IcsSourceCalendar): string {
+  const name = source.name
+  return t`New calendar “${name}”`
+}
+
 function eventsLabel(count: number): string {
-  return count === 1 ? "1 event" : `${count.toLocaleString()} events`
+  return plural(count, { one: "# event", other: "# events" })
 }
 
 function totalEvents(preview: IcsPreview): number {
@@ -383,16 +396,17 @@ function eventWhen(start: EventTime, end: EventTime, timeFormat: TimeFormat): st
 function importedMessage(result: IcsImportResult, calendars: Calendar[]): string {
   if (result.imported_count === 0) {
     return result.duplicate_count === 1
-      ? "This event is already in your calendar"
-      : "These events are already in your calendar"
+      ? t`This event is already in your calendar`
+      : t`These events are already in your calendar`
   }
   if (result.event) {
     const calendar = calendars.find((cal) => cal.slug === result.event?.calendar_slug)
-    const added = `Added “${result.event.summary || "Untitled event"}”`
-    return calendar?.name ? `${added} to ${calendar.name}` : added
+    const summary = result.event.summary || t`Untitled event`
+    const calendarName = calendar?.name
+    return calendarName ? t`Added “${summary}” to ${calendarName}` : t`Added “${summary}”`
   }
-  const skipped = result.duplicate_count
-    ? ` (${eventsLabel(result.duplicate_count)} already there)`
-    : ""
-  return `Imported ${eventsLabel(result.imported_count)}${skipped}`
+  const imported = eventsLabel(result.imported_count)
+  if (!result.duplicate_count) return t`Imported ${imported}`
+  const duplicates = eventsLabel(result.duplicate_count)
+  return t`Imported ${imported} (${duplicates} already there)`
 }

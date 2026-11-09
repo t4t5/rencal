@@ -7,16 +7,17 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgctxt "command group"
 msgid "Calendar"
 msgstr "Calendar"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgctxt "command group"
 msgid "Navigation"
 msgstr "Navigation"
 
+#: src/components/ics-import/IcsImportDialog.tsx
 #: src/components/ui/untitled-event-text.tsx
 msgid "Untitled event"
 msgstr "Untitled event"
@@ -30,7 +31,7 @@ msgstr "Default"
 msgid "Failed to install plugin"
 msgstr "Failed to install plugin"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Previous event"
 msgstr "Previous event"
 
@@ -46,6 +47,10 @@ msgstr "Failed to delete calendar"
 msgid "Choose a unique name for this calendar group."
 msgstr "Choose a unique name for this calendar group."
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Build your own renCal views, themes and providers."
+msgstr "Build your own renCal views, themes and providers."
+
 #: src/components/event-parts/RecurrenceConfirmDialog.tsx
 msgid "Edit recurring event"
 msgstr "Edit recurring event"
@@ -57,6 +62,10 @@ msgstr "Interval"
 #: src/components/toolbar/ToggleSidebarButton.tsx
 msgid "Show sidebar"
 msgstr "Show sidebar"
+
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Add a key for {label}"
+msgstr "Add a key for {label}"
 
 #: src/components/event-parts/inputs/NotesInput.tsx
 msgid "Notes"
@@ -78,12 +87,12 @@ msgstr "Remove account"
 msgid "Every 2 weeks"
 msgstr "Every 2 weeks"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Go to settings"
 msgstr "Go to settings"
 
 #: src/components/sidebar/minical/Minical.tsx
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Previous month"
 msgstr "Previous month"
 
@@ -101,15 +110,20 @@ msgctxt "calendar group name"
 msgid "Default"
 msgstr "Default"
 
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Tomato"
+msgstr "Tomato"
+
 #: src/components/settings/accounts/AccountsPage.tsx
 msgid "{calendarCount, plural, one {its calendar} other {its # calendars}}"
 msgstr "{calendarCount, plural, one {its calendar} other {its # calendars}}"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgid "Search events…"
 msgstr "Search events…"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Toggle theme"
 msgstr "Toggle theme"
 
@@ -121,6 +135,10 @@ msgstr "Failed to load plugin catalog"
 msgid "Searching events"
 msgstr "Searching events"
 
+#: src/components/event-parts/inputs/EventColorPicker.tsx
+msgid "Calendar color"
+msgstr "Calendar color"
+
 #: src/contexts/SyncContext.tsx
 msgid "Failed to sync calendars"
 msgstr "Failed to sync calendars"
@@ -130,13 +148,30 @@ msgctxt "calendar account heading"
 msgid "Local-only"
 msgstr "Local-only"
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Tick a skill to install it for your coding agents."
+msgstr "Tick a skill to install it for your coding agents."
+
 #: src/components/settings/accounts/AccountsPage.tsx
 msgid "Remove account..."
 msgstr "Remove account..."
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Failed to add the skill"
+msgstr "Failed to add the skill"
+
+#: src/components/event-parts/inputs/EventColorPicker.tsx
+msgid "Event color: {selectedName}"
+msgstr "Event color: {selectedName}"
+
 #: src/components/event-parts/ComposeEvent.tsx
 msgid "Add Event"
 msgstr "Add Event"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Tangerine"
+msgstr "Tangerine"
 
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "No plugins match your search."
@@ -159,7 +194,7 @@ msgstr "Disconnect calendar"
 msgid "More options"
 msgstr "More options"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Open command palette"
 msgstr "Open command palette"
 
@@ -167,7 +202,7 @@ msgstr "Open command palette"
 msgid "Edit group"
 msgstr "Edit group"
 
-#: src/views/manifest.ts
+#: src/lib/command-labels.ts
 msgid "Display year view"
 msgstr "Display year view"
 
@@ -175,9 +210,24 @@ msgstr "Display year view"
 msgid "Failed to load providers"
 msgstr "Failed to load providers"
 
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgctxt "no keys bound"
+msgid "None"
+msgstr "None"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Sage"
+msgstr "Sage"
+
 #: src/lib/recurrence-text.ts
 msgid "Custom recurrence"
 msgstr "Custom recurrence"
+
+#: src/lib/command-labels.ts
+msgctxt "command palette submenu"
+msgid "View"
+msgstr "View"
 
 #: src/components/settings/calendars/AddSubscriptionModal.tsx
 msgid "Adding..."
@@ -191,7 +241,7 @@ msgstr "Switch to event's time zone to edit"
 msgid "Command Palette"
 msgstr "Command Palette"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Next day"
 msgstr "Next day"
 
@@ -199,11 +249,11 @@ msgstr "Next day"
 msgid "Sort plugins"
 msgstr "Sort plugins"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
 msgid "Search groups…"
 msgstr "Search groups…"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgid "Switch calendar group…"
 msgstr "Switch calendar group…"
 
@@ -257,9 +307,22 @@ msgstr "{total, plural, one {{shown} of # plugin} other {{shown} of # plugins}}"
 msgid "Failed to load the linked event"
 msgstr "Failed to load the linked event"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
+msgid "Next day, week or month"
+msgstr "Next day, week or month"
+
+#: src/lib/command-labels.ts
 msgid "Go to date…"
 msgstr "Go to date…"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Banana"
+msgstr "Banana"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgid "Agents"
+msgstr "Agents"
 
 #: src/components/main/MainHeader.tsx
 msgctxt "view name"
@@ -270,7 +333,7 @@ msgstr "Month"
 msgid "Please enter a calendar URL"
 msgstr "Please enter a calendar URL"
 
-#: src/views/manifest.ts
+#: src/lib/command-labels.ts
 msgid "Display {view} view"
 msgstr "Display {view} view"
 
@@ -291,7 +354,7 @@ msgid "Failed to connect"
 msgstr "Failed to connect"
 
 #: src/components/toolbar/search/SearchButton.tsx
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Search"
 msgstr "Search"
 
@@ -346,15 +409,23 @@ msgctxt "organizer"
 msgid "Unknown"
 msgstr "Unknown"
 
+#: src/lib/command-labels.ts
+msgid "Search {argName}s…"
+msgstr "Search {argName}s…"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Couldn’t read this file"
+msgstr "Couldn’t read this file"
+
 #: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "Failed to create calendar"
 msgstr "Failed to create calendar"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Toggle sidebar"
 msgstr "Toggle sidebar"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
 msgid "Search themes…"
 msgstr "Search themes…"
 
@@ -366,7 +437,7 @@ msgstr "Accounts"
 msgid "Tomorrow"
 msgstr "Tomorrow"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Compose new event"
 msgstr "Compose new event"
 
@@ -382,9 +453,14 @@ msgstr "Occurrences"
 msgid "Accepted"
 msgstr "Accepted"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Show keyboard shortcuts"
 msgstr "Show keyboard shortcuts"
+
+#: src/components/settings/SettingsSidebar.tsx
+msgctxt "settings page"
+msgid "Shortcuts"
+msgstr "Shortcuts"
 
 #: src/components/settings/general/GeneralPage.tsx
 msgid "Uncheck if you prefer to manually push/pull changes."
@@ -394,7 +470,7 @@ msgstr "Uncheck if you prefer to manually push/pull changes."
 msgid "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
 msgstr "{n, selectordinal, one {#st} two {#nd} few {#rd} other {#th}}"
 
-#: src/components/settings/plugins/PluginsPage.tsx
+#: src/components/settings/plugins/PluginBadge.tsx
 #: src/lib/updater.ts
 msgid "Update available"
 msgstr "Update available"
@@ -439,10 +515,6 @@ msgctxt "rsvp"
 msgid "Maybe"
 msgstr "Maybe"
 
-#: src/lib/shortcuts.ts
-msgid "Switch calendar group"
-msgstr "Switch calendar group"
-
 #: src/lib/updater.ts
 msgid "renCal v{version} is available. Download and install it now?"
 msgstr "renCal v{version} is available. Download and install it now?"
@@ -451,11 +523,12 @@ msgstr "renCal v{version} is available. Download and install it now?"
 msgid "Color {swatch}"
 msgstr "Color {swatch}"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgid "Set theme…"
 msgstr "Set theme…"
 
 #: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
+#: src/components/ics-import/IcsImportDialog.tsx
 #: src/components/settings/accounts/AccountsPage.tsx
 #: src/components/settings/calendars/CalendarsColumn.tsx
 #: src/components/settings/calendars/ChangeCalendarColorModal.tsx
@@ -478,6 +551,10 @@ msgstr "No repeat"
 msgid "Type a date…"
 msgstr "Type a date…"
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Needs the caldir CLI."
+msgstr "Needs the caldir CLI."
+
 #: src/components/toolbar/SyncStatus.tsx
 msgid "{name}: {pushCount} to push"
 msgstr "{name}: {pushCount} to push"
@@ -490,19 +567,35 @@ msgstr "Done"
 msgid "Light theme"
 msgstr "Light theme"
 
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Press keys…"
+msgstr "Press keys…"
+
 #: src/components/settings/calendars/ChangeCalendarColorModal.tsx
 msgid "Calendar color hue"
 msgstr "Calendar color hue"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Add event"
+msgstr "Add event"
 
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Installing…"
 msgstr "Installing…"
 
+#: src/lib/command-labels.ts
+msgid "No {argName}s found."
+msgstr "No {argName}s found."
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "These events are already in your calendar"
+msgstr "These events are already in your calendar"
+
 #: src/lib/event-time/display.ts
 msgid "Today"
 msgstr "Today"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
 msgctxt "calendar group, command palette submenu"
 msgid "Group"
 msgstr "Group"
@@ -533,6 +626,10 @@ msgstr "Event not found"
 msgid "Paste a public .ics calendar feed URL (webcal or http)"
 msgstr "Paste a public .ics calendar feed URL (webcal or http)"
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "No supported coding agent was found in your home folder."
+msgstr "No supported coding agent was found in your home folder."
+
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Installed {name}"
 msgstr "Installed {name}"
@@ -555,6 +652,10 @@ msgstr "Esc"
 msgid "Search plugins…"
 msgstr "Search plugins…"
 
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgid "Change keys in"
+msgstr "Change keys in"
+
 #: src/components/settings/plugins/PluginSheet.tsx
 msgid "Close plugin details"
 msgstr "Close plugin details"
@@ -572,7 +673,7 @@ msgstr "{n, plural, one {Every day} other {Every # days}}"
 msgid "Calendar groups"
 msgstr "Calendar groups"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
 msgid "No groups found."
 msgstr "No groups found."
 
@@ -584,6 +685,11 @@ msgstr "Download"
 #: src/components/settings/SettingsSidebar.tsx
 msgid "Themes"
 msgstr "Themes"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Grape"
+msgstr "Grape"
 
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "by {owner}"
@@ -623,12 +729,12 @@ msgctxt "plugin sort order"
 msgid "Latest"
 msgstr "Latest"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgctxt "command group"
 msgid "View"
 msgstr "View"
 
-#: src/views/manifest.ts
+#: src/lib/command-labels.ts
 msgid "Display week view"
 msgstr "Display week view"
 
@@ -637,7 +743,7 @@ msgid "Accept"
 msgstr "Accept"
 
 #: src/components/sidebar/minical/Minical.tsx
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Next month"
 msgstr "Next month"
 
@@ -650,9 +756,14 @@ msgctxt "keyboard key"
 msgid "Delete"
 msgstr "Delete"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
 msgid "No themes found."
 msgstr "No themes found."
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Basil"
+msgstr "Basil"
 
 #: src/components/toolbar/search/SearchPalette.tsx
 msgid "Search visible calendars for an event"
@@ -671,6 +782,11 @@ msgctxt "weekly recurrence"
 msgid "{base} on {names}"
 msgstr "{base} on {names}"
 
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Flamingo"
+msgstr "Flamingo"
+
 #: src/components/settings/accounts/AddAccountModal.tsx
 msgid "Connect {provider}"
 msgstr "Connect {provider}"
@@ -687,19 +803,23 @@ msgstr "On day of event ({time})"
 msgid "Dark theme"
 msgstr "Dark theme"
 
-#: src/lib/shortcuts.ts
-msgctxt "shortcut group"
-msgid "Navigation"
-msgstr "Navigation"
-
 #: src/lib/recurrence-text.ts
 msgctxt "recurrence count"
 msgid "{description}, {count, plural, one {# time} other {# times}}"
 msgstr "{description}, {count, plural, one {# time} other {# times}}"
 
+#. placeholder {0}: displayKeys(key)
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Remove {0} from {label}"
+msgstr "Remove {0} from {label}"
+
 #: src/components/plugins/PluginInstallDialog.tsx
 msgid "Couldn’t open plugin link"
 msgstr "Couldn’t open plugin link"
+
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Failed to remove the skill"
+msgstr "Failed to remove the skill"
 
 #: src/components/settings/plugins/PluginsPage.tsx
 msgid "Most starred"
@@ -717,9 +837,22 @@ msgstr "Installed only"
 msgid "Default reminders"
 msgstr "Default reminders"
 
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Couldn’t import this file"
+msgstr "Couldn’t import this file"
+
 #: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "Creating..."
 msgstr "Creating..."
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Peacock"
+msgstr "Peacock"
+
+#: src/lib/command-labels.ts
+msgid "Search views…"
+msgstr "Search views…"
 
 #: src/components/settings/calendars/GroupsColumn.tsx
 msgctxt "calendar group menu"
@@ -751,23 +884,26 @@ msgstr "Failed to uninstall plugin"
 msgid "Syncing would delete {totalDeletes, plural, one {# event} other {# events}} from {calendarCount, plural, one {# calendar} other {# calendars}}. Continue?"
 msgstr "Syncing would delete {totalDeletes, plural, one {# event} other {# events}} from {calendarCount, plural, one {# calendar} other {# calendars}}. Continue?"
 
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "{count, plural, one {# event} other {# events}}"
+msgstr "{count, plural, one {# event} other {# events}}"
+
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Repository"
 msgstr "Repository"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Next week"
 msgstr "Next week"
 
-#: src/components/settings/plugins/PluginDetails.tsx
-#: src/components/settings/plugins/PluginsPage.tsx
+#: src/components/settings/plugins/PluginBadge.tsx
 msgctxt "plugin status badge"
 msgid "Installed"
 msgstr "Installed"
 
-#: src/components/shortcuts/CommandPalette.tsx
-msgid "Go to date"
-msgstr "Go to date"
+#: src/lib/command-labels.ts
+msgid "List commands, their arguments and keys"
+msgstr "List commands, their arguments and keys"
 
 #: src/components/ui/shortcut-tooltip.tsx
 msgctxt "keyboard key"
@@ -800,24 +936,20 @@ msgstr "Are you sure you want to delete \"{calendarName}\"? All events will be p
 msgid "Decline"
 msgstr "Decline"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgctxt "command group"
 msgid "General"
 msgstr "General"
 
-#: src/lib/shortcuts.ts
-msgid "Go to date..."
-msgstr "Go to date..."
+#: src/components/shortcuts/ShortcutsOverlay.tsx
+msgctxt "alternative keyboard shortcuts"
+msgid "or"
+msgstr "or"
 
 #: src/components/event-parts/DeleteConfirmDialog.tsx
 #: src/components/event-parts/RecurrenceConfirmDialog.tsx
 msgid "This and future events"
 msgstr "This and future events"
-
-#: src/lib/shortcuts.ts
-msgctxt "shortcut group"
-msgid "General"
-msgstr "General"
 
 #: src/lib/conference.ts
 msgctxt "video meeting"
@@ -859,6 +991,10 @@ msgctxt "recurrence weekdays"
 msgid "On"
 msgstr "On"
 
+#: src/lib/command-labels.ts
+msgid "Previous day, week or month"
+msgstr "Previous day, week or month"
+
 #: src/components/event-parts/inputs/RepeatSelect.tsx
 msgid "Every month"
 msgstr "Every month"
@@ -867,9 +1003,21 @@ msgstr "Every month"
 msgid "Find keyboard shortcuts"
 msgstr "Find keyboard shortcuts"
 
-#: src/lib/shortcuts.ts
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Import calendars"
+msgstr "Import calendars"
+
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Restore default keys"
+msgstr "Restore default keys"
+
+#: src/lib/command-labels.ts
 msgid "Sync now"
 msgstr "Sync now"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "This event is already in your calendar"
+msgstr "This event is already in your calendar"
 
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Disconnect \"{calendarName}\"? This will delete the directory from this computer."
@@ -896,7 +1044,7 @@ msgstr "Install {pluginName}"
 msgid "Search events"
 msgstr "Search events"
 
-#: src/lib/palette-commands.ts
+#: src/lib/command-labels.ts
 msgid "Toggle week numbers"
 msgstr "Toggle week numbers"
 
@@ -904,7 +1052,7 @@ msgstr "Toggle week numbers"
 msgid "Remove \"{account}\"? This will remove {calendarsLabel} from this computer."
 msgstr "Remove \"{account}\"? This will remove {calendarsLabel} from this computer."
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Previous day"
 msgstr "Previous day"
 
@@ -922,11 +1070,16 @@ msgstr "Rename calendar"
 msgid "Removing..."
 msgstr "Removing..."
 
+#: src/lib/command-labels.ts
+msgid "Switch view"
+msgstr "Switch view"
+
 #: src/components/settings/calendars/AddSubscriptionModal.tsx
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Add subscription"
 msgstr "Add subscription"
 
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
 #: src/components/shortcuts/ShortcutsOverlay.tsx
 msgid "No shortcuts found"
 msgstr "No shortcuts found"
@@ -938,22 +1091,25 @@ msgstr "Week"
 
 #: src/components/event-parts/DeleteConfirmDialog.tsx
 #: src/components/event-parts/EditEvent.tsx
-#: src/components/EventContextMenu.tsx
+#: src/components/EventMenuItems.tsx
 msgid "Delete event"
 msgstr "Delete event"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Previous week"
 msgstr "Previous week"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Don’t import"
+msgstr "Don’t import"
 
 #: src/components/event-parts/inputs/DateTimeSelect.tsx
 msgid "Show in your time zone"
 msgstr "Show in your time zone"
 
-#: src/components/shortcuts/ShortcutsOverlay.tsx
-msgctxt "between alternative shortcut keys"
-msgid "or"
-msgstr "or"
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Installing agent skills is supported on Linux and macOS."
+msgstr "Installing agent skills is supported on Linux and macOS."
 
 #: src/components/event-parts/inputs/ReminderSelect.tsx
 #: src/components/event-parts/inputs/TimeInput.tsx
@@ -985,6 +1141,10 @@ msgstr "Ends at {time}"
 msgid "Are you sure you want to delete the event {eventName}?"
 msgstr "Are you sure you want to delete the event {eventName}?"
 
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Saved to"
+msgstr "Saved to"
+
 #: src/components/event-parts/inputs/TimeZoneSelect.tsx
 msgid "Search timezones"
 msgstr "Search timezones"
@@ -1001,11 +1161,6 @@ msgstr "No plugins listed yet."
 msgid "{days, plural, one {# day} other {# days}}"
 msgstr "{days, plural, one {# day} other {# days}}"
 
-#: src/lib/shortcuts.ts
-msgctxt "shortcut group"
-msgid "View"
-msgstr "View"
-
 #: src/contexts/EventDraftContext.tsx
 msgid "Failed to create event"
 msgstr "Failed to create event"
@@ -1017,6 +1172,10 @@ msgstr "Add timezone"
 #: src/lib/recurrence-text.ts
 msgid "{n, plural, one {Every week} other {Every # weeks}}"
 msgstr "{n, plural, one {Every week} other {Every # weeks}}"
+
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Couldn’t save keys.toml"
+msgstr "Couldn’t save keys.toml"
 
 #: src/lib/providers.ts
 msgctxt "provider name"
@@ -1032,7 +1191,16 @@ msgstr "Plugins"
 msgid "Only this event"
 msgstr "Only this event"
 
-#: src/components/shortcuts/GlobalShortcuts.tsx
+#: src/lib/command-labels.ts
+msgid "Next calendar group"
+msgstr "Next calendar group"
+
+#. placeholder {0}: preview.skipped_count
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "{0, plural, one {# event in this file couldn’t be read and will be left out.} other {# events in this file couldn’t be read and will be left out.}}"
+msgstr "{0, plural, one {# event in this file couldn’t be read and will be left out.} other {# events in this file couldn’t be read and will be left out.}}"
+
+#: src/lib/command-labels.ts
 msgctxt "command palette submenu"
 msgid "Theme"
 msgstr "Theme"
@@ -1053,6 +1221,10 @@ msgstr "Never"
 #: src/components/settings/calendars/CalendarsColumn.tsx
 msgid "Disconnecting..."
 msgstr "Disconnecting..."
+
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Read, create and edit your events with the caldir CLI."
+msgstr "Read, create and edit your events with the caldir CLI."
 
 #: src/components/event-parts/inputs/ReminderSelect.tsx
 msgctxt "reminder offset"
@@ -1079,7 +1251,15 @@ msgstr "{minutes, plural, one {# minute} other {# minutes}}"
 msgid "Failed to load installed plugins"
 msgstr "Failed to load installed plugins"
 
-#: src/plugins/year/YearView.tsx
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Import calendar"
+msgstr "Import calendar"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Added “{summary}” to {calendarName}"
+msgstr "Added “{summary}” to {calendarName}"
+
+#: src/views/builtin/year/YearView.tsx
 msgid "Previous year"
 msgstr "Previous year"
 
@@ -1109,9 +1289,11 @@ msgstr "Hide password"
 msgid "No events found."
 msgstr "No events found."
 
-#: src/components/main/month-view/Cell.tsx
-#: src/components/main/week-view/AllDayContextMenu.tsx
-#: src/components/main/week-view/ScheduledDayContextMenu.tsx
+#: src/components/settings/SettingsSidebar.tsx
+msgid "{pluginUpdates, plural, one {# plugin update available} other {# plugin updates available}}"
+msgstr "{pluginUpdates, plural, one {# plugin update available} other {# plugin updates available}}"
+
+#: src/contexts/DayGridContext.tsx
 msgid "Create event"
 msgstr "Create event"
 
@@ -1123,6 +1305,10 @@ msgstr "{count, plural, one {month} other {months}}"
 msgid "This calendar will live on your computer only, and never be connected to the internet."
 msgstr "This calendar will live on your computer only, and never be connected to the internet."
 
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Reading file…"
+msgstr "Reading file…"
+
 #: src/components/event-parts/DeleteConfirmDialog.tsx
 msgid "This event is part of a recurring series. Which events do you want to delete?"
 msgstr "This event is part of a recurring series. Which events do you want to delete?"
@@ -1131,9 +1317,14 @@ msgstr "This event is part of a recurring series. Which events do you want to de
 msgid "Connected"
 msgstr "Connected"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Toggle invitations"
 msgstr "Toggle invitations"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Lavender"
+msgstr "Lavender"
 
 #: src/components/event-parts/inputs/CustomRecurrenceModal.tsx
 msgctxt "recurrence end date"
@@ -1170,6 +1361,11 @@ msgstr "Space"
 msgctxt "recurrence dialog title"
 msgid "Repeat"
 msgstr "Repeat"
+
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Blueberry"
+msgstr "Blueberry"
 
 #: src/components/shortcuts/CommandPalette.tsx
 msgid "close"
@@ -1216,9 +1412,17 @@ msgstr "select"
 msgid "Connect a calendar"
 msgstr "Connect a calendar"
 
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Install it"
+msgstr "Install it"
+
 #: src/components/ui/date-picker.tsx
 msgid "Select date"
 msgstr "Select date"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Importing…"
+msgstr "Importing…"
 
 #: src/components/event-parts/inputs/ReminderSelect.tsx
 msgid "{weeks, plural, one {# week} other {# weeks}}"
@@ -1232,10 +1436,21 @@ msgstr "This plugin isn't listed in the renCal catalog."
 msgid "Restore events"
 msgstr "Restore events"
 
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "New calendar “{name}”"
+msgstr "New calendar “{name}”"
+
 #: src/components/ui/shortcut-tooltip.tsx
 msgctxt "keyboard key"
 msgid "Up"
 msgstr "Up"
+
+#. placeholder {0}: displayKeys(keys)
+#. placeholder {1}: label(action)
+#. placeholder {2}: label(previous.action)
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "{0} now runs “{1}” instead of “{2}”"
+msgstr "{0} now runs “{1}” instead of “{2}”"
 
 #: src/components/settings/plugins/plugin-list.ts
 msgctxt "plugin contribution kind"
@@ -1274,6 +1489,10 @@ msgstr "No plugins installed yet."
 #: src/components/settings/accounts/CredentialsForm.tsx
 msgid "Connect {providerName}"
 msgstr "Connect {providerName}"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Imported {imported}"
+msgstr "Imported {imported}"
 
 #: src/components/settings/SettingsSidebar.tsx
 #: src/components/toolbar/SettingsButton.tsx
@@ -1321,9 +1540,17 @@ msgstr "Show week numbers"
 msgid "Calendar name"
 msgstr "Calendar name"
 
-#: src/plugins/year/YearView.tsx
+#: src/components/ics-import/PendingIcsImport.tsx
+msgid "Failed to read the opened file"
+msgstr "Failed to read the opened file"
+
+#: src/views/builtin/year/YearView.tsx
 msgid "Next year"
 msgstr "Next year"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Imported {imported} ({duplicates} already there)"
+msgstr "Imported {imported} ({duplicates} already there)"
 
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Details"
@@ -1338,7 +1565,7 @@ msgctxt "settings page"
 msgid "General"
 msgstr "General"
 
-#: src/components/EventContextMenu.tsx
+#: src/components/EventMenuItems.tsx
 msgid "Edit event"
 msgstr "Edit event"
 
@@ -1354,13 +1581,17 @@ msgstr "{n, plural, one {Every month} other {Every # months}}"
 msgid "Add reminder"
 msgstr "Add reminder"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Add event to selected day"
 msgstr "Add event to selected day"
 
 #: src/components/settings/plugins/PluginDetails.tsx
 msgid "Author"
 msgstr "Author"
+
+#: src/lib/command-labels.ts
+msgid "No views found."
+msgstr "No views found."
 
 #: src/components/event-parts/inputs/RsvpSelect.tsx
 msgid "My status"
@@ -1375,9 +1606,13 @@ msgid "Are you sure you want to delete this event?"
 msgstr "Are you sure you want to delete this event?"
 
 #: src/components/event-parts/EditEvent.tsx
-#: src/components/EventContextMenu.tsx
+#: src/components/EventMenuItems.tsx
 msgid "Duplicate event"
 msgstr "Duplicate event"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Guests aren’t copied into synced calendars, so nobody gets an invitation email."
+msgstr "Guests aren’t copied into synced calendars, so nobody gets an invitation email."
 
 #: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "Please enter a calendar name"
@@ -1390,6 +1625,10 @@ msgstr "{count, plural, one {day} other {days}}"
 #: src/lib/event-url.ts
 msgid "Linked in event notes"
 msgstr "Linked in event notes"
+
+#: src/components/ics-import/PendingIcsImport.tsx
+msgid "Couldn’t open file"
+msgstr "Couldn’t open file"
 
 #: src/components/event-parts/inputs/UrlInput.tsx
 msgid "Add link"
@@ -1425,6 +1664,10 @@ msgstr "Backspace"
 msgid "Location"
 msgstr "Location"
 
+#: src/components/settings/shortcuts/ShortcutsPage.tsx
+msgid "Filter shortcuts"
+msgstr "Filter shortcuts"
+
 #: src/components/settings/calendars/RenameCalendarModal.tsx
 msgid "Choose a new display name for this calendar."
 msgstr "Choose a new display name for this calendar."
@@ -1434,7 +1677,7 @@ msgctxt "plugin contribution kind"
 msgid "Provider"
 msgstr "Provider"
 
-#: src/views/manifest.ts
+#: src/lib/command-labels.ts
 msgid "Display month view"
 msgstr "Display month view"
 
@@ -1442,7 +1685,7 @@ msgstr "Display month view"
 msgid "Please fill in all required fields"
 msgstr "Please fill in all required fields"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Duplicate selected event"
 msgstr "Duplicate selected event"
 
@@ -1466,7 +1709,12 @@ msgstr "Sync with system"
 msgid "This repeat rule can't be edited in renCal. Choose another option to replace it."
 msgstr "This repeat rule can't be edited in renCal. Choose another option to replace it."
 
-#: src/lib/shortcuts.ts
+#: src/components/ui/shortcut-tooltip.tsx
+msgctxt "keyboard key"
+msgid "Super"
+msgstr "Super"
+
+#: src/lib/command-labels.ts
 msgid "Next event"
 msgstr "Next event"
 
@@ -1483,9 +1731,17 @@ msgstr "Saving..."
 msgid "Event Title"
 msgstr "Event Title"
 
-#: src/lib/shortcuts.ts
+#: src/lib/command-labels.ts
 msgid "Go to today"
 msgstr "Go to today"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Added “{summary}”"
+msgstr "Added “{summary}”"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "{eventCount, plural, one {Import # event} other {Import # events}}"
+msgstr "{eventCount, plural, one {Import # event} other {Import # events}}"
 
 #: src/lib/event-time/display.ts
 msgid "Yesterday"
@@ -1495,6 +1751,11 @@ msgstr "Yesterday"
 msgctxt "close settings window"
 msgid "Close"
 msgstr "Close"
+
+#. placeholder {0}: formatList(missing)
+#: src/components/settings/agents/AgentsPage.tsx
+msgid "Add to {0}"
+msgstr "Add to {0}"
 
 #: src/components/event-parts/inputs/AttendeesDisplay.tsx
 msgid "Add participant"
@@ -1559,9 +1820,18 @@ msgstr "Groups"
 msgid "Command palette"
 msgstr "Command palette"
 
+#: src/lib/event-colors.ts
+msgctxt "event color"
+msgid "Graphite"
+msgstr "Graphite"
+
 #: src/components/settings/accounts/LocalCalendarForm.tsx
 msgid "New local-only calendar"
 msgstr "New local-only calendar"
+
+#: src/components/ics-import/IcsImportDialog.tsx
+msgid "Import .ics file"
+msgstr "Import .ics file"
 
 #: src/components/toolbar/InvitesBadge.tsx
 msgid "Invitations"

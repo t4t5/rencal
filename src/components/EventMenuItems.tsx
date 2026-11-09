@@ -1,3 +1,5 @@
+import { t } from "@lingui/core/macro"
+
 import { ContextMenuItem, ContextMenuShortcut } from "@/components/ui/context-menu"
 
 import { useCalEvents } from "@/contexts/CalEventsContext"
@@ -31,17 +33,18 @@ export function EventMenuItems({ event, anchor }: { event: CalendarEvent; anchor
           })
         }}
       >
-        Edit event
+        {t`Edit event`}
       </ContextMenuItem>
       {canDuplicate && (
         <ContextMenuItem onClick={() => triggerDuplicate(event, anchor)}>
-          Duplicate event
+          {t`Duplicate event`}
+          {/* eslint-disable-next-line lingui/no-unlocalized-strings -- keyboard key */}
           <ContextMenuShortcut>D</ContextMenuShortcut>
         </ContextMenuItem>
       )}
       {canDelete && (
         <ContextMenuItem variant="destructive" onClick={() => triggerDelete(event)}>
-          Delete event
+          {t`Delete event`}
         </ContextMenuItem>
       )}
     </>

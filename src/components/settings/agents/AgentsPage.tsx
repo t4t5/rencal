@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from "@lingui/core"
+import { i18n } from "@lingui/core"
+import { msg, t } from "@lingui/core/macro"
 import { openUrl } from "@tauri-apps/plugin-opener"
 import { useCallback, useEffect, useId, useState } from "react"
 
@@ -6,26 +9,25 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 
 import { api, getErrorMessage, type Skill, type SkillsStatus } from "@/lib/api"
+import { formatList } from "@/lib/event-time"
 import { logger } from "@/lib/logger"
 
 type SkillState = SkillsStatus["skills"][number]
 
-const SKILLS: { skill: Skill; label: string; description: string }[] = [
+const SKILLS: { skill: Skill; label: string; description: MessageDescriptor }[] = [
   {
     skill: "caldir",
     label: "caldir",
-    description: "Read, create and edit your events with the caldir CLI.",
+    description: msg`Read, create and edit your events with the caldir CLI.`,
   },
   {
     skill: "rencal",
     label: "renCal",
-    description: "Build your own renCal views, themes and providers.",
+    description: msg`Build your own renCal views, themes and providers.`,
   },
 ]
 
 const CALDIR_INSTALL_URL = "https://caldir.org/quickstart/"
-
-const listFormat = new Intl.ListFormat("en", { type: "conjunction" })
 
 export function AgentsPage() {
   const [status, setStatus] = useState<SkillsStatus | null>(null)
@@ -52,7 +54,7 @@ export function AgentsPage() {
     return (
       <SettingsContent>
         <p className="text-sm text-muted-foreground w-[400px]">
-          Installing agent skills is supported on Linux and macOS.
+          {t`Installing agent skills is supported on Linux and macOS.`}
         </p>
       </SettingsContent>
     )
@@ -62,10 +64,10 @@ export function AgentsPage() {
 
   return (
     <SettingsContent>
-      <p className="text-sm w-[400px]">Tick a skill to install it for your coding agents.</p>
+      <p className="text-sm w-[400px]">{t`Tick a skill to install it for your coding agents.`}</p>
       {noAgents && (
         <p className="text-sm w-[400px]">
-          No supported coding agent was found in your home folder.
+          {t`No supported coding agent was found in your home folder.`}
         </p>
       )}
       {SKILLS.map(({ skill, label, description }) => {
@@ -76,7 +78,7 @@ export function AgentsPage() {
               key={skill}
               state={state}
               label={label}
-              description={description}
+              description={i18n._(description)}
               onChange={setStatus}
             />
           )
@@ -117,7 +119,7 @@ function SkillRow({
       )
     } catch (err) {
       setError(
-        getErrorMessage(err, install ? "Failed to add the skill" : "Failed to remove the skill"),
+        getErrorMessage(err, install ? t`Failed to add the skill` : t`Failed to remove the skill`),
       )
     } finally {
       setBusy(false)
@@ -140,13 +142,13 @@ function SkillRow({
         <p>{description}</p>
         {!state.available && (
           <p>
-            Needs the caldir CLI.{" "}
+            {t`Needs the caldir CLI.`}{" "}
             <button
               type="button"
               onClick={() => void openUrl(CALDIR_INSTALL_URL)}
               className="text-primary hover:underline cursor-pointer"
             >
-              Install it
+              {t`Install it`}
             </button>
           </p>
         )}
@@ -157,7 +159,7 @@ function SkillRow({
             onClick={() => void run(true)}
             className="w-fit text-primary hover:underline cursor-pointer"
           >
-            Add to {listFormat.format(missing)}
+            {t`Add to ${formatList(missing)}`}
           </button>
         )}
         {error && (

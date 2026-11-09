@@ -1,3 +1,6 @@
+import { i18n } from "@lingui/core"
+import { t } from "@lingui/core/macro"
+
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -36,19 +39,17 @@ export const EventColorPicker = ({
   onChange: (color: string | null) => void
 }) => {
   const selected = EVENT_COLORS.find((c) => c.hex.toLowerCase() === color?.toLowerCase())
+  const calendarColor = t`Calendar color`
   const options = [
-    { name: "Calendar color", hex: null, swatch: calendar?.color ?? DEFAULT_CALENDAR_COLOR },
-    ...EVENT_COLORS.map((c) => ({ ...c, swatch: c.hex })),
+    { name: calendarColor, hex: null, swatch: calendar?.color ?? DEFAULT_CALENDAR_COLOR },
+    ...EVENT_COLORS.map((c) => ({ name: i18n._(c.name), hex: c.hex, swatch: c.hex })),
   ]
+  const selectedName = selected ? i18n._(selected.name) : calendarColor
 
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          aria-label={`Event color: ${selected?.name ?? "Calendar color"}`}
-        >
+        <Button variant="ghost" size="icon" aria-label={t`Event color: ${selectedName}`}>
           <span
             className="size-3.5 rounded-full"
             style={{ backgroundColor: selected?.hex ?? options[0].swatch }}

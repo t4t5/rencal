@@ -1,3 +1,4 @@
+/* eslint-disable lingui/no-unlocalized-strings -- CSS calc() values */
 import type { CSSProperties } from "react"
 
 import type { AllDayBar } from "@/sdk"

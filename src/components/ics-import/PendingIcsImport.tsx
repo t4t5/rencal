@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -24,8 +25,8 @@ export function PendingIcsImport() {
       }
     } catch (error) {
       console.error("Failed to open .ics file:", error)
-      toast.error("Couldn’t open file", {
-        description: getErrorMessage(error, "Failed to read the opened file"),
+      toast.error(t`Couldn’t open file`, {
+        description: getErrorMessage(error, t`Failed to read the opened file`),
       })
     }
   }, [])

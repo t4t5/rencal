@@ -1,3 +1,4 @@
+import { t } from "@lingui/core/macro"
 import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "sonner"
 
@@ -11,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { KeyBindingsProvider, useKeyBindings } from "@/contexts/KeyBindingsContext"
 
 import { api, type ExternalView, getErrorMessage, type KeyEdit } from "@/lib/api"
+import { commandGroupLabel, describeCommandAction, viewSwitchLabel } from "@/lib/command-labels"
 import {
   argValues,
   COMMAND_GROUPS,
@@ -19,11 +21,6 @@ import {
   type CommandGroup,
   type CommandValues,
 } from "@/lib/commands"
-import {
-  commandGroupLabel,
-  describeCommandAction,
-  viewSwitchLabel,
-} from "@/lib/command-labels"
 import {
   type Binding,
   bindKeyEdits,
@@ -121,7 +118,7 @@ function ShortcutsEditor() {
       await api.keys.edit(edits)
       if (message) toast(message)
     } catch (err) {
-      toast.error(getErrorMessage(err, "Couldn't save keys.toml"))
+      toast.error(getErrorMessage(err, t`Couldn’t save keys.toml`))
     }
   }
 
@@ -132,7 +129,7 @@ function ShortcutsEditor() {
     const previous = bindings.find((binding) => canonicalKeys(binding.keys) === canonicalKeys(keys))
     const moved =
       previous && previous.action !== action
-        ? `${displayKeys(keys)} now runs “${label(action)}” instead of “${label(previous.action)}”`
+        ? t`${displayKeys(keys)} now runs “${label(action)}” instead of “${label(previous.action)}”`
         : undefined
     void save(bindKeyEdits(keys, action, defaults, userBindings), moved)
   }
@@ -145,8 +142,8 @@ function ShortcutsEditor() {
           type="search"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
-          placeholder="Filter shortcuts"
-          aria-label="Filter shortcuts"
+          placeholder={t`Filter shortcuts`}
+          aria-label={t`Filter shortcuts`}
           variant="default"
           className="pr-3 pl-9"
         />
@@ -165,7 +162,9 @@ function ShortcutsEditor() {
         if (groupRows.length === 0) return null
         return (
           <section key={group} className="flex flex-col">
-            <h3 className="text-foreground pb-1 text-sm font-semibold">{commandGroupLabel(group)}</h3>
+            <h3 className="text-foreground pb-1 text-sm font-semibold">
+              {commandGroupLabel(group)}
+            </h3>
             {groupRows.map((row) => (
               <ShortcutRow
                 key={row.action}
@@ -185,11 +184,11 @@ function ShortcutsEditor() {
       })}
 
       {filteredRows.length === 0 && (
-        <p className="text-muted-foreground py-10 text-center text-sm">No shortcuts found</p>
+        <p className="text-muted-foreground py-10 text-center text-sm">{t`No shortcuts found`}</p>
       )}
 
       <p className="text-muted-foreground text-xs">
-        Saved to <code>~/.config/rencal/keys.toml</code>
+        {t`Saved to`} <code>~/.config/rencal/keys.toml</code>
       </p>
     </SettingsContent>
   )
@@ -232,7 +231,7 @@ function ShortcutRow({
             <ShortcutKeys keys={key} />
             <button
               type="button"
-              aria-label={`Remove ${displayKeys(key)} from ${label}`}
+              aria-label={t`Remove ${displayKeys(key)} from ${label}`}
               onClick={() => onRemove(key)}
               className="text-muted-foreground hover:text-foreground rounded-sm p-0.5"
             >
@@ -244,14 +243,18 @@ function ShortcutRow({
         {capturing ? (
           <KeyCapture onCapture={onCapture} onCancel={onCancelCapture} />
         ) : (
-          keys.length === 0 && <span className="text-muted-foreground text-xs">None</span>
+          keys.length === 0 && (
+            <span className="text-muted-foreground text-xs">
+              {t({ message: "None", context: "no keys bound" })}
+            </span>
+          )
         )}
 
-        <RowButton label={`Add a key for ${label}`} onClick={onStartCapture}>
+        <RowButton label={t`Add a key for ${label}`} onClick={onStartCapture}>
           <PlusIcon className="size-4" />
         </RowButton>
         {customized && (
-          <RowButton label="Restore default keys" onClick={onReset}>
+          <RowButton label={t`Restore default keys`} onClick={onReset}>
             <UndoIcon className="size-4" />
           </RowButton>
         )}
@@ -311,7 +314,7 @@ function KeyCapture({
         if (keys) onCapture(keys)
       }}
     >
-      Press keys…
+      {t`Press keys…`}
     </button>
   )
 }

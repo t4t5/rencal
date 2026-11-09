@@ -84,6 +84,10 @@ export default tseslint.config(
       "src/**/*-styles.ts",
       // Parser input words per language, not UI text
       "src/lib/magic-parser/vocabularies/**",
+      // The command registry and keys.toml diagnostics speak English to
+      // `rencal commands`; the UI shows them through src/lib/command-labels.ts.
+      "src/lib/commands.ts",
+      "src/lib/key-bindings.ts",
     ],
     plugins: { lingui: pluginLingui },
     rules: {
@@ -117,6 +121,9 @@ export default tseslint.config(
             "clsx",
             "console.*",
             "Error",
+            // Answers to `rencal do`, read in the terminal.
+            "CommandError",
+            "clickElement",
             "*.debug",
             "debug",
             "debugMonthScroll",

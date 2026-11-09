@@ -5,6 +5,7 @@
  * event menu on events. Handlers sit on the viewport around the views, and the
  * range being drawn is shared with them to render.
  */
+import { t } from "@lingui/core/macro"
 import { type CSSProperties, type MouseEvent, type ReactElement, useMemo, useState } from "react"
 
 import { EventMenuItems } from "@/components/EventMenuItems"
@@ -113,7 +114,7 @@ export function DayGridProvider({ children }: { children: ReactElement }) {
           {menu?.kind === "day" && (
             // After the menu has closed, so the popover it opens stays open.
             <ContextMenuItem onClick={() => setTimeout(() => openDraftOn(menu.day, menu.y))}>
-              Create event
+              {t`Create event`}
             </ContextMenuItem>
           )}
         </ContextMenuContent>
