@@ -8,6 +8,7 @@ import { isDraftEvent } from "@/lib/draft-to-event"
 import { eventPaint } from "@/lib/event-paint"
 import { getUserResponseStatus, isEventReadonly } from "@/lib/event-utils"
 
+import { selectedItem } from "@/stores/agenda"
 import { calendarOf, calendars } from "@/stores/calendar"
 import { triggerDelete } from "@/stores/delete"
 import { canCreate } from "@/stores/draft"
@@ -21,9 +22,11 @@ export const UNTITLED = "Untitled event"
 export const paintOf = (event: CalendarEvent) =>
   eventPaint(event.color ?? calendarOf(event.calendar_slug)?.color ?? null)
 
+/** Open, or selected in the agenda: on any day the event spans. */
 export function isSelected(event: CalendarEvent) {
+  const key = eventKey(event)
   const active = activeEvent()
-  return active !== null && eventKey(active) === eventKey(event)
+  return (active !== null && eventKey(active) === key) || selectedItem()?.key === key
 }
 
 /** Invitations not accepted are drawn hollow and faded. */
