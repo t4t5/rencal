@@ -3,7 +3,7 @@ export type Appearance = "light" | "dark"
 export const themes = [
   { id: "ren", name: "Ren", appearance: "dark" },
   { id: "ren-light", name: "Ren Light", appearance: "light" },
-  { id: "catpuccin-latte", name: "Catpuccin Latte", appearance: "light" },
+  { id: "catpuccin-latte", name: "Catppuccin Latte", appearance: "light" },
   { id: "tokyonight", name: "Tokyo Night", appearance: "dark" },
   { id: "classic", name: "Classic", appearance: "dark" },
   { id: "nord", name: "Nord", appearance: "dark" },
