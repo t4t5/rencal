@@ -25,7 +25,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. `native/Cargo.toml` pins nsh's c
 
 - Imports are absolute (`@/`); relative only for same-directory siblings. No `any`.
 - Colors are theme tokens (`bg-selected`, `text-muted-foreground`). The one exception is event colors, from `lib/event-paint.ts`, which come from data.
-- Typography that was `data-typography="heading|button|numerical"` is `font-mono` with `displayCase()` from `@/themes`, a class that follows the theme; a static `uppercase` stays uppercase on themes that turned it off. Radii go through tokens (`rounded-(--radius-md)`), because Ren's are 0.
+- Typography that was `data-typography="heading|button|numerical"` is `font-mono` with `displayCase()` from `@/themes`, a class that follows the theme; a static `uppercase` stays uppercase on themes that turned it off. Headings take their weight from `displayWeight()` (regular unless the theme sets `text-heading--font-weight`), not `font-bold`. Radii go through tokens (`rounded-(--radius-md)`), because Ren's are 0.
 - Control sizes go through tokens: `h-(--control-height)`, `p-(--layout-padding)`.
 - Backend access goes through `@/lib/api`, never `rpc` directly.
 

@@ -65,7 +65,7 @@ import { triggerDelete } from "@/stores/delete"
 import { activeEvent, eventsReady, eventsSettled, extendActiveRange } from "@/stores/events"
 import { pressEvent } from "@/stores/popover"
 import { timeFormat } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { displayCase, displayWeight } from "@/themes"
 
 // A day header's height: what the sticky header covers when a row scrolls in from above.
 const HEADER_HEIGHT = 32
@@ -116,7 +116,14 @@ function DateBar(props: { day: number }) {
   const label = () => (currentDay(), getRelativeDayLabel(date()))
   return (
     <View class="h-8 flex-row items-center gap-2 bg-sidebar px-(--layout-padding) py-1.5">
-      <Text class={cn("font-mono text-[13px] font-bold", displayCase(), isToday() && "text-today")}>
+      <Text
+        class={cn(
+          "font-mono text-[13px]",
+          displayCase(),
+          displayWeight(),
+          isToday() && "text-today",
+        )}
+      >
         {label()}
       </Text>
       <Text

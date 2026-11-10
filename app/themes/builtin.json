@@ -29,6 +29,7 @@
   "classic": {
     "background": "#1a1b26",
     "font-heading": "var(--font-sans)",
+    "text-heading--font-weight": "700",
     "font-button": "var(--font-sans)",
     "font-numerical": "var(--font-sans)",
     "text-heading--transform": "normal",

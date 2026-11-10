@@ -12,7 +12,7 @@ import { activeDate, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
 import { calendarEvents, holdRange } from "@/stores/events"
 import { firstDayOfWeek } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { displayCase, displayWeight } from "@/themes"
 import { paintOf } from "@/views/event-block"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i + 1)
@@ -176,7 +176,7 @@ export function YearView() {
   return (
     <View class="flex-1 min-h-0">
       <View class="flex-row items-center justify-between shrink-0 px-(--layout-padding) pb-2">
-        <Text class={cn("font-mono text-2xl font-bold", displayCase())}>{year()}</Text>
+        <Text class={cn("font-mono text-2xl", displayCase(), displayWeight())}>{year()}</Text>
         <View class="flex-row items-center gap-1">
           <Button
             variant="ghost"

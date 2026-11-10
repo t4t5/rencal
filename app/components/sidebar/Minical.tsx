@@ -21,7 +21,7 @@ import { activeDate, calendars, navigateToDate } from "@/stores/calendar"
 import { currentDay } from "@/stores/clock"
 import { calendarEvents } from "@/stores/events"
 import { firstDayOfWeek, showWeekNumbers } from "@/stores/settings"
-import { displayCase } from "@/themes"
+import { displayCase, displayWeight } from "@/themes"
 
 const WEEKS = 6
 const WEEKDAYS = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"]
@@ -156,7 +156,7 @@ export function Minical() {
   return (
     <View ref={inspectable("Minical", "components/sidebar/Minical.tsx")} class="pt-4">
       <View class="h-12 flex-row items-center justify-between px-(--layout-padding) pb-4">
-        <Text class={cn("font-mono text-2xl font-bold line-clamp-1", displayCase())}>
+        <Text class={cn("font-mono text-2xl line-clamp-1", displayCase(), displayWeight())}>
           {formatMonth(activeDate(), "long")}{" "}
           <Text class="text-brand font-normal">{activeDate().year}</Text>
         </Text>

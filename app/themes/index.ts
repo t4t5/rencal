@@ -27,6 +27,7 @@ const UNDRAWN = [
   "text-heading--transform",
   "text-button--transform",
   "text-numerical--transform",
+  "text-heading--font-weight",
 ]
 
 function length(value: string | undefined): number | null {
@@ -116,9 +117,16 @@ const caseOf = (overrides: Vars) => {
   return transform === undefined || transform === "uppercase" ? "uppercase" : "normal-case"
 }
 
+/** Regular unless the theme asks for bold headings. */
+const headingWeightOf = (overrides: Vars) => {
+  const weight = overrides["text-heading--font-weight"]
+  return weight === "bold" || Number(weight) >= 600 ? "font-bold" : "font-normal"
+}
+
 const appearance = signal<Appearance>("dark")
 const paintVersion = signal(0)
 const textCase = signal<"uppercase" | "normal-case">("uppercase")
+const headingWeight = signal<"font-normal" | "font-bold">("font-normal")
 
 export const activeAppearance = () => appearance()
 
@@ -128,10 +136,14 @@ export const themeVersion = () => paintVersion()
 /** The case class of what was `data-typography`; a theme decides it. */
 export const displayCase = () => textCase()
 
+/** The weight class of headings; a theme decides it. */
+export const displayWeight = () => headingWeight()
+
 export async function applyTheme(overrides: Vars, mode: Appearance): Promise<void> {
   await Backend.setTheme(themeFile(overrides, mode))
   appearance.set(mode)
   textCase.set(caseOf(overrides))
+  headingWeight.set(headingWeightOf(overrides))
   paintVersion.update((version) => version + 1)
 }
 
