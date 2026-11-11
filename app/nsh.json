@@ -5,6 +5,14 @@
   "build": 1,
   "rust": "native",
   "appearance": "dark",
+  "window": {
+    "title": "renCal",
+    "minSize": {
+      "width": 300,
+      "height": 600
+    }
+  },
+  "singleInstance": true,
   "resolve": {
     "alias": {
       "@js-temporal/polyfill": "./lib/temporal.ts",

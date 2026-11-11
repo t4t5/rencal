@@ -1,6 +1,12 @@
 import { expect, open, test } from "nsh/test"
 
-const desktop = { width: 1400, height: 860, platform: "linux" } as const
+// The day the mock calendar's "Drinks at The Albion" is on, so it's in the agenda too.
+const desktop = {
+  width: 1400,
+  height: 860,
+  platform: "linux",
+  clock: { time: new Date(2026, 10, 6, 12) },
+} as const
 
 test("/ searches events, and choosing one opens it", async () => {
   const app = await open("../../App.tsx", desktop)

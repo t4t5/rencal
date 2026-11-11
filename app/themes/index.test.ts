@@ -14,7 +14,7 @@ const LENGTH_OR_FONT = /^(radius|control-|layout-|month-|event-padding|lane-|fon
 const colorNames = Object.keys(tokens).filter((name) => !LENGTH_OR_FONT.test(name))
 
 const fileVars = (overrides: Vars, mode: "light" | "dark" = "dark"): Vars =>
-  (JSON.parse(themeFile(overrides, mode)) as { cssVars: { theme: Vars } }).cssVars.theme
+  themeFile(overrides, mode).cssVars.theme as Vars
 
 describe("themeFile", () => {
   it("scales the baseline's surfaces by the theme's step, and leaves a theme's own alone", () => {

@@ -1,10 +1,10 @@
 /*
  * Draws a theme. `theme.json` is the baseline, with the derived tokens as var()
  * and color-mix(), so a theme only overrides primitives, as a `[data-theme]` CSS
- * rule did. What CSS derived with calc() is derived here, and `Backend.setTheme`
+ * rule did. What CSS derived with calc() is derived here, and NSH's `setTheme`
  * swaps the tokens natively.
  */
-import { signal } from "nsh"
+import { setTheme, signal, type Theme } from "nsh"
 import { Backend } from "rencal/native"
 
 import baseline from "@/theme.json"
@@ -97,7 +97,7 @@ const derivedToast = (mode: Appearance): Vars =>
   mode === "light" ? { toast: "var(--foreground)", "toast-foreground": "var(--background)" } : {}
 
 /** The theme file of `overrides` over the baseline. */
-export function themeFile(overrides: Vars, mode: Appearance): string {
+export function themeFile(overrides: Vars, mode: Appearance): Theme {
   const step = Number.parseFloat(overrides["surface-tint-step"] ?? "") || BASE_STEP
   const vars: Vars = {
     ...steppedBaseline(step),
@@ -108,7 +108,7 @@ export function themeFile(overrides: Vars, mode: Appearance): string {
     ...overrides,
   }
   for (const name of UNDRAWN) delete vars[name]
-  return JSON.stringify({ cssVars: { theme: vars } })
+  return { cssVars: { theme: vars } }
 }
 
 /** `uppercase` unless the theme turned it off; themes set the three alike. */
@@ -140,7 +140,7 @@ export const displayCase = () => textCase()
 export const displayWeight = () => headingWeight()
 
 export async function applyTheme(overrides: Vars, mode: Appearance): Promise<void> {
-  await Backend.setTheme(themeFile(overrides, mode))
+  setTheme(themeFile(overrides, mode))
   appearance.set(mode)
   textCase.set(caseOf(overrides))
   headingWeight.set(headingWeightOf(overrides))
@@ -149,5 +149,6 @@ export async function applyTheme(overrides: Vars, mode: Appearance): Promise<voi
 
 /** A theme's colors by token, for painting it without drawing the app with it. */
 export function themeColors(overrides: Vars, mode: Appearance): Promise<Vars> {
-  return Backend.themeColors(themeFile(overrides, mode), mode === "dark") as Promise<Vars>
+  const file = JSON.stringify(themeFile(overrides, mode))
+  return Backend.themeColors(file, mode === "dark") as Promise<Vars>
 }

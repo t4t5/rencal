@@ -18,6 +18,8 @@ use crate::routes::config::{FirstDayOfWeek, ThemeSettings};
 use crate::skill_install::Skill;
 
 pub struct Router {
+    /// For what isn't a procedure: deep links a later launch hands over.
+    pub state: std::sync::Arc<crate::state::AppState>,
     pub agents: super::agents::AgentsApiImpl,
     pub caldir: super::caldir::CaldirApiImpl,
     pub commands: super::commands::CommandsApiImpl,

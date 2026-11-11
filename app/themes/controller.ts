@@ -16,6 +16,7 @@ import { logger } from "@/lib/logger"
 
 import builtin from "./builtin.json"
 import { externalThemeDescriptor, parseThemeCss } from "./external"
+import { loadThemeFonts, withThemeFonts } from "./fonts"
 import { applyTheme, type Vars } from "./index"
 import {
   type Appearance,
@@ -76,7 +77,7 @@ export function themeVars(id: string): Vars {
   const palette = omarchy()
   if (isOmarchy(id) && palette) return omarchyVars(palette)
   const external = externalThemeList().find((theme) => theme.id === id)
-  if (external) return parseThemeCss(external.css).vars
+  if (external) return withThemeFonts(parseThemeCss(external.css).vars)
   return (builtin as Record<string, Vars>)[id] ?? {}
 }
 
@@ -148,6 +149,11 @@ export async function startThemes() {
   effect(() => setColorScheme(forcedAppearance() ?? "system"))
   effect(() => {
     if (forcedAppearance() === null) os.set(colorScheme())
+  })
+
+  effect(() => {
+    const external = externalThemeList().find((theme) => theme.id === activeTheme())
+    if (external) void loadThemeFonts(external)
   })
 
   await new Promise<void>((drawn) => {

@@ -260,4 +260,4 @@ nsh-check:
 # Run the NSH port's Rust and TSX tests
 [working-directory('app')]
 nsh-test:
-    scripts/test.sh
+    nsh test .

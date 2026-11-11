@@ -321,7 +321,9 @@ function AgendaList() {
   const scrollToTarget = () => {
     const index = headerIndexOf(untracked(agendaRows), untracked(activeDate))
     if (index === -1 || !target) return
-    list?.scrollToIndex({ index, animated: target.animated })
+    // A point into the header: landing exactly on it, NSH keeps the day before's
+    // header pinned over it.
+    list?.scrollToIndex({ index, animated: target.animated, viewOffset: -1 })
   }
 
   /** Ends the jump, landing it exactly: rows measured on the way moved what it aimed for. */

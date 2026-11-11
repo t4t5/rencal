@@ -12,11 +12,8 @@ publish = false
 name = "rencal_native"
 
 [dependencies]
-# Unreleased main for windows of the app's own (`<Window>`, longbridge/nsh#1137),
-# plus dialogs in them showing over them (longbridge/nsh#1217, from a fork until
-# it merges); back to crates.io once 0.5.0 is out. Build the nsh CLI from the same rev.
-nsh-core = { git = "https://github.com/t4t5/nsh", rev = "86f3e62374cbc9b7fb9a1c89bd6cef8e0b894c0b" }
-nsh-base = { git = "https://github.com/t4t5/nsh", rev = "86f3e62374cbc9b7fb9a1c89bd6cef8e0b894c0b" }
+nsh-core = "0.5.0"
+nsh-base = "0.5.0"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 specta = { version = "=2.0.0-rc.22", features = ["derive"] }
@@ -52,8 +49,6 @@ tar = "0.4"
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
 
-[target.'cfg(target_os = "linux")'.dependencies]
-gtk4 = { version = "0.11", features = ["v4_14"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 block2 = "0.6"

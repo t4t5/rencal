@@ -23,15 +23,12 @@ mod omarchy;
 pub mod plugins;
 mod routes;
 mod signal;
-#[cfg(target_os = "linux")]
-mod single_instance;
 pub mod skill_install;
 pub mod state;
 mod state_bridge;
 mod tasks;
 mod time_zone;
 mod watchers;
-mod window;
 
 use std::path::PathBuf;
 use std::sync::{Arc, LazyLock, OnceLock};
@@ -95,35 +92,10 @@ fn load() -> Result<Arc<Router>, String> {
 
     let _guard = RUNTIME.enter();
 
-    // A second launch hands over its URLs and exits; development runs stay separate.
-    #[cfg(target_os = "linux")]
-    if !cfg!(debug_assertions) {
-        let Some(mut instance) = single_instance::try_acquire_or_signal() else {
-            std::process::exit(0);
-        };
-        if let Some(listener) = instance.take_listener() {
-            let state = state.clone();
-            single_instance::spawn_listener(listener, move |urls| {
-                if !urls.is_empty() {
-                    deep_links::enqueue_urls(&AppHandle, &state.deep_links, &urls);
-                }
-                AppHandle.emit("focus-window", Value::Null);
-                true
-            });
-        }
-        // Dropping the guard removes the socket, so it stays for the process's life.
-        std::mem::forget(instance);
-    }
-
+    // What this launch was started with; later launches come through `openLaunchArgs`.
     let cwd = std::env::current_dir().unwrap_or_default();
-    let ics_urls = deep_links::ics_file_urls(std::env::args().skip(1), &cwd);
-    deep_links::enqueue_urls(&AppHandle, &state.deep_links, &ics_urls);
-    // The link this launch was started with; later ones come through the socket.
-    let links: Vec<String> = std::env::args()
-        .skip(1)
-        .filter(|arg| arg.starts_with("rencal://"))
-        .collect();
-    deep_links::enqueue_urls(&AppHandle, &state.deep_links, &links);
+    let args: Vec<String> = std::env::args().skip(1).collect();
+    deep_links::enqueue_urls(&AppHandle, &state.deep_links, &launch_urls(&args, &cwd));
 
     // Registered at launch so a click that cold-launches renCal is delivered.
     #[cfg(target_os = "macos")]
@@ -153,6 +125,7 @@ fn load() -> Result<Arc<Router>, String> {
     watchers::spawn_all(&AppHandle, &state, &plugins);
 
     Ok(Arc::new(Router {
+        state: state.clone(),
         agents: AgentsApiImpl,
         caldir: CaldirApiImpl::new(state.clone()),
         commands: CommandsApiImpl::new(state.clone()),
@@ -164,6 +137,14 @@ fn load() -> Result<Arc<Router>, String> {
         themes: ThemesApiImpl,
         views: ViewsApiImpl,
     }))
+}
+
+/// The `rencal:` links and `.ics` files among a launch's arguments, as URLs.
+fn launch_urls(args: &[String], cwd: &std::path::Path) -> Vec<String> {
+    let mut urls: Vec<String> =
+        args.iter().filter(|arg| arg.starts_with("rencal:")).cloned().collect();
+    urls.extend(deep_links::ics_file_urls(args, cwd));
+    urls
 }
 
 fn router() -> Result<Arc<Router>, Value> {
@@ -230,12 +211,6 @@ impl Backend {
         chrono_tz::TZ_VARIANTS.iter().map(|tz| tz.name().to_owned()).collect()
     }
 
-    /// Draws the app with theme file `json`: classes naming tokens follow natively.
-    pub async fn set_theme(json: String) -> Result<(), String> {
-        nsh_core::element::set_tokens(nsh_base::tokens_of(Some(&json))?);
-        Ok(())
-    }
-
     /// The colors of theme file `json` by token, as `#rrggbbaa`: previews paint
     /// a theme that isn't the one drawn.
     pub async fn theme_colors(json: String, dark: bool) -> Result<JsonValue, String> {
@@ -274,13 +249,14 @@ impl Backend {
         ) || !std::path::Path::new("/proc/net/route").exists()
     }
 
-    /// Sets the window's minimum size and what closing it does: where there's no
-    /// visible close button, closing hides it, and the app stays for its reminders.
-    /// Development runs quit, or they would linger without a window.
-    pub fn configure_window() {
-        let hide_on_close =
-            !cfg!(debug_assertions) && !routes::platform::needs_native_decorations();
-        window::configure(hide_on_close);
+
+    /// Opens what a later launch of the app was started with (NSH's single
+    /// instance hands it over): its `rencal:` links and `.ics` files.
+    pub async fn open_launch_args(args: Vec<String>, cwd: String) -> Result<(), JsonValue> {
+        let router = router()?;
+        let urls = launch_urls(&args, std::path::Path::new(&cwd));
+        deep_links::enqueue_urls(&AppHandle, &router.state.deep_links, &urls);
+        Ok(())
     }
 
     /// Whether windows get the system's frame: off on tiling compositors, which
