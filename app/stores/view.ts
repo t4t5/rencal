@@ -1,5 +1,5 @@
 // The window's layout: which view shows, and whether the sidebar does.
-import { signal, windowSize } from "nsh"
+import { LayoutAnimation, signal, windowSize } from "nsh"
 import { focusedWindow, Window } from "nsh/desktop"
 
 import { localStorage } from "@/lib/local-storage"
@@ -7,6 +7,7 @@ import { localStorage } from "@/lib/local-storage"
 const MD_BREAKPOINT = 768
 const VIEW_KEY = "calendarView"
 const COLLAPSED_KEY = "sidebarCollapsed"
+const SIDEBAR_SLIDE_MS = 200
 
 const view = signal("month")
 const collapsed = signal(false)
@@ -29,6 +30,7 @@ export function setCalendarView(id: string) {
 }
 
 export function toggleSidebar() {
+  LayoutAnimation.configureNext(LayoutAnimation.create(SIDEBAR_SLIDE_MS, "easeInEaseOut"))
   collapsed.update((value) => !value)
   localStorage.setItem(COLLAPSED_KEY, String(collapsed()))
 }
