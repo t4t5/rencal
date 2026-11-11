@@ -132,22 +132,46 @@ const addIfMissing = (events: CalendarEvent[], target: CalendarEvent) => {
   return events.some((event) => eventKey(event) === key) ? events : [...events, target]
 }
 
-/** Goes to `event`, loading its day first, and opens it. */
-export async function jumpToEvent(event: CalendarEvent) {
-  const date = dateInViewerZone(event.start)
-  navigateToDate(date)
-  await eventsSettled()
-  setCalendarEvents((events) => addIfMissing(events, event))
+// How long a jump waits for its day to load and its row to land, about a second.
+const JUMP_FRAMES = 60
+const nextFrame = () => new Promise(requestAnimationFrame)
 
-  const day = epochDay(date)
+const findItem = (event: CalendarEvent, day: number) => {
   const key = eventKey(event)
   const candidates = untracked(items).filter((item) => item.day === day)
   // A recurring master stands for its occurrences, which carry its key as a prefix.
-  const item =
+  return (
     candidates.find((candidate) => candidate.key === key) ??
     (event.recurrence ? candidates.find((c) => c.key.startsWith(`${key}__`)) : undefined)
+  )
+}
+
+/** Waits for the item's row to be on screen and done scrolling. */
+async function rowLanded(item: AgendaItem) {
+  let last: number | undefined
+  for (let frame = 0; frame < JUMP_FRAMES; frame++) {
+    await nextFrame()
+    const y = (await rowViews.get(rowViewKey(item))?.()?.measure())?.pagePosition.y
+    if (y !== undefined && y === last) return
+    last = y
+  }
+}
+
+/** Goes to `event`, loading its day first, and opens it against its row. */
+export async function jumpToEvent(event: CalendarEvent) {
+  const date = dateInViewerZone(event.start)
+  const day = epochDay(date)
+  navigateToDate(date)
+  // The load for the new date starts in an effect, after the next render.
+  let item: AgendaItem | undefined
+  for (let frame = 0; frame < JUMP_FRAMES && !item; frame++) {
+    await nextFrame()
+    await eventsSettled()
+    setCalendarEvents((events) => addIfMissing(events, event))
+    item = findItem(event, day)
+  }
   if (!item) return
   revealRow(rowIndexOf(untracked(agendaRows), item), 0)
-  await new Promise(requestAnimationFrame)
+  await rowLanded(item)
   await openAgendaItem(item)
 }

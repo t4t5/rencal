@@ -20,6 +20,17 @@ test("/ searches events, and choosing one opens it", async () => {
   expect(app.shows("id:search-events")).toBe(false)
 })
 
+test("choosing an event months away loads its day and opens it", async () => {
+  const app = await open("../../App.tsx", { ...desktop, clock: { time: new Date(2027, 5, 1, 12) } })
+  await app.waitFor("id:agenda")
+  await app.keyboard.press("/")
+  await app.waitFor("id:search-events")
+  await app.type("id:search-events", "albion")
+  await app.waitUntil(() => app.count("text:Drinks at The Albion") > 0)
+  await app.keyboard.press("enter")
+  await app.waitFor("Add timezone")
+})
+
 test("a query with no match says so", async () => {
   const app = await open("../../App.tsx", desktop)
   await app.waitFor("id:agenda")
