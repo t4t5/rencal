@@ -26,7 +26,6 @@ import { holdVisibleDays } from "@/views/visible-range"
 
 import { WeekRow } from "./WeekRow"
 import { centerTrack, TRACK_WEEKS, trackIndex, trackOrigin } from "./layout"
-import { createWheelSnap } from "./wheel-snap"
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 /** Days loaded beyond the viewport, and how close to the end of them it grows. */
@@ -166,25 +165,6 @@ export function MonthView() {
   })
   cleanup(forgetScroller)
 
-  // Where a wheel scrolls to, and that it lands on a week.
-  const wheel = createWheelSnap({
-    offset: () => offset,
-    rowHeight: () => untracked(rowHeight),
-    maxOffset: () => TRACK_WEEKS * untracked(rowHeight) - untracked(height),
-    scrollTo(y, animated) {
-      offset = y
-      scroller?.scrollTo({ y, animated })
-      if (!animated) reportVisible()
-    },
-    now: () => performance.now(),
-    setTimer(run, ms) {
-      const timer = setTimeout(run, ms)
-      return () => clearTimeout(timer)
-    },
-    reduceMotion: () => untracked(reduceMotion),
-  })
-  cleanup(wheel.dispose)
-
   return (
     <View class="flex-1 min-h-0">
       <WeekDayLabels />
@@ -218,10 +198,7 @@ export function MonthView() {
             }}
             class="flex-1"
           >
-            <View
-              style={{ height: TRACK_WEEKS * rowHeight() }}
-              onWheel={(event) => wheel.wheel(event)}
-            >
+            <View style={{ height: TRACK_WEEKS * rowHeight() }}>
               <Each of={track.slots()}>
                 {(slot) => (
                   <WeekRow index={() => track.indexOf(slot())} height={rowHeight} width={width} />
