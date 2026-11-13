@@ -18,7 +18,7 @@ export function Combobox(props: ComboboxProps & { variant?: "ghost" | "default" 
       {...rest}
       class={cn(
         "h-(--control-height) w-full flex-row items-center gap-2 rounded-(--radius-md) border px-2",
-        "border-transparent hover:border-input focus-within:border-transparent focus-within:bg-secondary",
+        "border-transparent hover:border-input focus-within:border-transparent focus-within:hover:border-transparent focus-within:bg-secondary",
         own.variant === "default" && "border-border",
         own.class,
       )}

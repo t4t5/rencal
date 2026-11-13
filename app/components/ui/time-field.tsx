@@ -28,7 +28,7 @@ export function TimeField(props: {
       class={cn(
         "h-(--control-height) flex-row items-center rounded-(--radius-md) border border-transparent px-2",
         !props.disabled &&
-          "hover:border-input focus-within:border-transparent focus-within:bg-secondary",
+          "hover:border-input focus-within:border-transparent focus-within:hover:border-transparent focus-within:bg-secondary",
         props.class,
       )}
       segmentClass="rounded-(--radius-xs) text-sm text-foreground focus:bg-accent"
