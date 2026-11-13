@@ -77,7 +77,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v4
         with:
-          node-version-file: .node-version
+          node-version-file: rencal/.node-version
           cache: pnpm
           cache-dependency-path: rencal/pnpm-lock.yaml
 
