@@ -305,10 +305,12 @@ export function WeekView() {
   })
 
   // Wider columns at the same offset would show other days: keep the left one.
+  // Until the strip opens, `openStrip` places it; scrolling here first would
+  // flash the track's first day.
   let keptWidth = 0
   effect(() => {
     const next = dayWidth()
-    if (keptWidth !== 0 && keptWidth !== next) {
+    if (opened && keptWidth !== next) {
       const index = Math.round(offsetX / keptWidth)
       offsetX = index * next
       queueMicrotask(() => scrollToDay(index, false))
