@@ -557,9 +557,9 @@ dependencies = [
 
 [[package]]
 name = "caldir-core"
-version = "0.17.4"
+version = "0.17.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0acf08f890819fdbf92a78802629137ee348c8dfb526110a34b222a466bf0df8"
+checksum = "32aae0cdc75f09877113dac46f71c7644592f7f5a040682adb23d10356f23931"
 dependencies = [
  "async-trait",
  "chrono",
@@ -7468,7 +7468,3 @@ dependencies = [
  "syn 2.0.117",
  "winnow 1.0.2",
 ]
-
-[[patch.unused]]
-name = "caldir-core"
-version = "0.17.5"
