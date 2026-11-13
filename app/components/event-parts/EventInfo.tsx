@@ -4,7 +4,7 @@ import type { RRule, RRuleSet } from "rrule"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar } from "@/lib/api"
-import type { EventAttendee, ResponseStatus } from "@/lib/cal-events"
+import type { EventAttendee, EventAvailability, ResponseStatus } from "@/lib/cal-events"
 import type { EventConference } from "@/lib/conference"
 import { supportsEventColor } from "@/lib/event-colors"
 import type { EventTime } from "@/lib/event-time"
@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils"
 
 import { AllDayCheckbox } from "./inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "./inputs/AttendeesDisplay"
+import { AvailabilitySelect } from "./inputs/AvailabilitySelect"
 import { CalendarSelect } from "./inputs/CalendarSelect"
 import { ConferenceDisplay } from "./inputs/ConferenceDisplay"
 import { type DateTimeRange, DateTimeSelect } from "./inputs/DateTimeSelect"
@@ -44,6 +45,8 @@ export function EventInfo(props: {
   start: EventTime
   end: EventTime
   onChangeDateTime: (range: DateTimeRange) => void
+  availability: EventAvailability
+  onAvailabilityChange: (availability: EventAvailability) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
   location?: string | null
@@ -208,6 +211,11 @@ export function EventInfo(props: {
               />
             </View>
           </If>
+          <AvailabilitySelect
+            value={props.availability}
+            onChange={props.onAvailabilityChange}
+            readOnly={props.readonly}
+          />
           <If when={canEdit() || !!props.description?.trim()}>
             <NotesInput
               value={props.description}

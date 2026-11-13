@@ -26,6 +26,7 @@ pub(super) fn handler(state: &AppState, input: CreateEventInput) -> TauResult<Ca
 
     let mut event = Event::new(input.summary, start);
     event.end = Some(end);
+    event.availability = input.availability.into();
     event.description = input.description;
     event.location = input.location;
     event.url = input.url;

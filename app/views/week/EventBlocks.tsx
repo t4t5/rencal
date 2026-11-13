@@ -31,9 +31,9 @@ export const LANE_HEIGHT = 20
 type DisplayMode = "xs" | "sm" | "md" | "lg"
 
 // Thresholds are the shortest durations whose block fits each mode's lines at 48px per hour.
-function displayModeFor({ startMinutes, endMinutes }: TimedItem): DisplayMode {
-  // An event ending at midnight ends at the bottom of its day.
-  const minutes = Math.min(endMinutes, DAY_MINUTES) - startMinutes
+function displayModeFor(block: TimedBlock<TimedItem>): DisplayMode {
+  // The block's own day: an event crossing midnight has a block on each day.
+  const minutes = Math.round((block.height / 100) * DAY_MINUTES)
   if (minutes < 45) return "xs"
   if (minutes < 60) return "sm"
   if (minutes < 75) return "md"
@@ -46,7 +46,7 @@ export function TimedEventBlock(props: {
 }) {
   let block: ViewRef | undefined
   const event = () => props.block().item.event
-  const mode = () => displayModeFor(props.block().item)
+  const mode = () => displayModeFor(props.block())
   const box = () => eventBox(props.block(), props.dayWidth())
   const paint = () => paintOf(event())
   const role = () => dragRole(event())
@@ -54,6 +54,9 @@ export function TimedEventBlock(props: {
   const start = () => formatTime(event().start, timeFormat())
   const end = () => formatTime(event().end, timeFormat())
   const separator = () => (mode() === "sm" ? "-" : "–")
+  // An end on another day reads as a time on this one, so blocks crossing midnight show the start only.
+  const timeRange = (dash: string) =>
+    props.block().item.endMinutes > DAY_MINUTES ? start() : `${start()} ${dash} ${end()}`
   const summary = () => event().summary || UNTITLED
 
   return (
@@ -66,9 +69,7 @@ export function TimedEventBlock(props: {
           <Tooltip
             placement="right"
             delay={500}
-            label={[summary(), `${start()} – ${end()}`, event().location]
-              .filter(Boolean)
-              .join("\n")}
+            label={[summary(), timeRange("–"), event().location].filter(Boolean).join("\n")}
           />
         ) : undefined
       }
@@ -120,7 +121,7 @@ export function TimedEventBlock(props: {
         )}
         style={{ color: paint().foreground }}
       >
-        {mode() === "xs" ? start() : `${start()} ${separator()} ${end()}`}
+        {mode() === "xs" ? start() : timeRange(separator())}
       </Text>
     </View>
   )

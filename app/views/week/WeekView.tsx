@@ -32,6 +32,7 @@ import {
   createEventAt,
   createSelection,
   selectionColor,
+  selectionPartOn,
   setDragScroller,
 } from "@/stores/drag"
 import { timeFormat } from "@/stores/settings"
@@ -131,9 +132,10 @@ function CurrentTimeIndicator() {
 function DayColumn(props: { index: () => number; dayWidth: () => number }) {
   const date = computed(() => dateOf(props.index()))
   const blocks = (): TimedBlock<TimedItem>[] => weekEvents().blocks.get(epochDay(date())) ?? []
+  // A timed selection can run across days: each column draws its own part.
   const selection = () => {
     const current = createSelection()
-    return current?.kind === "timed" && current.day.equals(date()) ? current : null
+    return current?.kind === "timed" ? selectionPartOn(current, date()) : null
   }
 
   return (

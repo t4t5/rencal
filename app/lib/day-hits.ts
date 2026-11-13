@@ -13,7 +13,7 @@ import { Temporal } from "@js-temporal/polyfill"
  *   time; new events start after the day's last one.
  * - "all-day": a day in an all-day lane. Spanning events only; new events are all-day.
  * - "timed": a day column from 00:00 at its top to 24:00 at its bottom.
- *   Single-day timed events only, at the time under the pointer.
+ *   Timed events not covering a whole day, at the time under the pointer.
  */
 export type DayZone = "day" | "all-day" | "timed"
 
@@ -39,11 +39,14 @@ export function setDayAreas(owner: string, areas: (() => DayArea[]) | null) {
   else sources.delete(owner)
 }
 
-/** The day under a window point. */
-export function dayAt(x: number, y: number): DayArea | null {
+/** The day under a window point; given a `zone`, the first one of that zone. */
+export function dayAt(x: number, y: number, zone?: DayZone): DayArea | null {
   for (const areas of sources.values()) {
     const hit = areas().find(
-      (area) => contains(area.rect, x, y) && (!area.visible || contains(area.visible, x, y)),
+      (area) =>
+        (zone === undefined || area.zone === zone) &&
+        contains(area.rect, x, y) &&
+        (!area.visible || contains(area.visible, x, y)),
     )
     if (hit) return hit
   }

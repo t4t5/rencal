@@ -32,6 +32,7 @@ function openDuplicateDraft(source: CalendarEvent, recurrence: Recurrence | null
   openDraftPopover(
     {
       summary: source.summary,
+      availability: source.availability,
       description: source.description,
       start: source.start,
       end: source.end,

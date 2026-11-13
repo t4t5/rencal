@@ -147,6 +147,8 @@ export function EditEvent(props: {
         start={dirty().start}
         end={dirty().end}
         onChangeDateTime={({ start, end }) => dirty.set(withDates(dirty(), start, end))}
+        availability={dirty().availability}
+        onAvailabilityChange={(availability) => update({ availability })}
         allDay={isAllDay(dirty().start)}
         onAllDayChange={changeAllDay}
         location={dirty().location}

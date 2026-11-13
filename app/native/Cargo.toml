@@ -21,7 +21,7 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 anyhow = "1.0.100"
 socket2 = "0.5"
-caldir-core = "0.17.4"
+caldir-core = "0.17.5"
 icalendar = "0.17"
 chrono = "0.4.43"
 reminder-core = { path = "../../src-tauri/reminder-core" }

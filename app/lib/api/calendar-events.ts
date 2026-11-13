@@ -15,6 +15,7 @@ import {
   rpcToCalendarEvents,
   type CalendarEvent,
   type EventAttendee,
+  type EventAvailability,
   type Recurrence,
   type ResponseStatus,
 } from "@/lib/cal-events"
@@ -47,6 +48,7 @@ export interface ListInvitesParams {
 
 /** The complete editable record used by the app's legacy replacement path. */
 export interface EventReplacement {
+  availability: EventAvailability
   summary: string
   description: string | null
   location: string | null
@@ -66,6 +68,8 @@ export interface EventReplacement {
  * defaults: nullable fields become `null`, and collections become `[]`.
  */
 export interface CreateEventParams {
+  /** Whether the event blocks time; defaults to busy. */
+  availability?: EventAvailability
   calendar_slug: string
   summary: string
   start: EventTime
@@ -103,6 +107,7 @@ export interface SplitRecurringSeriesInput {
 function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "calendar_slug"> {
   return {
     summary: input.summary,
+    availability: input.availability,
     description: input.description,
     location: input.location,
     url: input.url,
@@ -165,6 +170,7 @@ export async function listInvites({ calendar_slugs }: ListInvitesParams): Promis
 export async function createEvent(input: CreateEventParams): Promise<CalendarEvent> {
   const completeInput: EventReplacement = {
     summary: input.summary,
+    availability: input.availability ?? "busy",
     description: input.description ?? null,
     location: input.location ?? null,
     url: input.url ?? null,

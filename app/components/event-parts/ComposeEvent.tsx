@@ -70,6 +70,8 @@ export function ComposeEventInner(props: {
         start={draftEvent().start}
         end={draftEvent().end}
         onChangeDateTime={({ start, end }) => updateDraft({ start, end })}
+        availability={draftEvent().availability}
+        onAvailabilityChange={(availability) => updateDraft({ availability })}
         allDay={isAllDay(draftEvent().start)}
         onAllDayChange={changeAllDay}
         location={draftEvent().location}

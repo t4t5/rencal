@@ -3,7 +3,14 @@ import { Temporal } from "@js-temporal/polyfill"
 import { computed, signal } from "nsh"
 
 import type { CalendarEvent } from "@/lib/cal-events"
-import { DAY_MINUTES, epochDay, plainDateFromEpochDay, startOfWeek, today } from "@/lib/event-time"
+import {
+  DAY_MINUTES,
+  epochDay,
+  occupiedDays,
+  plainDateFromEpochDay,
+  startOfWeek,
+  today,
+} from "@/lib/event-time"
 import { isSpanning } from "@/lib/event-utils"
 import { layoutTimed, type TimedBlock, type TimedRange } from "@/lib/layout"
 
@@ -48,13 +55,17 @@ export const weekEvents = computed(() => {
       event,
       startMinutes: startLocalMinutes,
       endMinutes: (endDay - firstDay) * DAY_MINUTES + endLocalMinutes,
+      firstDay: plainDateFromEpochDay(firstDay),
     }
-    const day = timed.get(firstDay)
-    if (day) day.push(item)
-    else timed.set(firstDay, [item])
+    // An event crossing midnight is laid out on each day it touches.
+    for (const day of occupiedDays(event.dateInfo)) {
+      const items = timed.get(day)
+      if (items) items.push(item)
+      else timed.set(day, [item])
+    }
   }
 
   const blocks = new Map<number, TimedBlock<TimedItem>[]>()
-  for (const [day, items] of timed) blocks.set(day, layoutTimed(items))
+  for (const [day, items] of timed) blocks.set(day, layoutTimed(items, plainDateFromEpochDay(day)))
   return { spanning, blocks }
 })

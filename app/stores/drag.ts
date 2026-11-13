@@ -11,6 +11,7 @@
  * around them `createDragHandlers`: blocks are asked first, so a press on one
  * never starts a selection.
  */
+import type { Temporal } from "@js-temporal/polyfill"
 import {
   batch,
   computed,
@@ -34,6 +35,7 @@ import {
   minutesAtY,
   selectionForPointer,
   selectionRange,
+  timedSelection,
 } from "@/lib/drag-to-create"
 import {
   computeDropRange,
@@ -52,6 +54,7 @@ import {
   atTime,
   DAY_MINUTES,
   DEFAULT_DURATION_MINS,
+  epochDay,
   isSameEventTime,
   type EventTimeRange,
   withViewerZone,
@@ -309,16 +312,37 @@ const sameSelection = (a: CreateSelection | null, b: CreateSelection) => {
   return false
 }
 
+type TimedSelection = Extract<CreateSelection, { kind: "timed" }>
+
+/** The part of a timed selection on `day`, in minutes of that day, or null if it has none. */
+export function selectionPartOn(selection: TimedSelection, day: Temporal.PlainDate) {
+  const offset = (epochDay(day) - epochDay(selection.day)) * DAY_MINUTES
+  const startMinutes = Math.max(0, selection.startMinutes - offset)
+  const endMinutes = Math.min(DAY_MINUTES, selection.endMinutes - offset)
+  return endMinutes > startMinutes ? { startMinutes, endMinutes } : null
+}
+
+/** The column and vertical extent of the selection's part nearest a point, in window coordinates. */
+function nearestSelectionPart(selection: TimedSelection, point: Point) {
+  let nearest: { column: DayArea; top: number; bottom: number; distance: number } | null = null
+  const days = Math.ceil(selection.endMinutes / DAY_MINUTES)
+  for (let i = 0; i < days; i++) {
+    const column = dayArea(selection.day.add({ days: i }), "timed")
+    const part = column && selectionPartOn(selection, column.day)
+    if (!column || !part) continue
+    const { x, y, width, height } = column.rect
+    const top = y + (part.startMinutes / DAY_MINUTES) * height
+    const bottom = y + (part.endMinutes / DAY_MINUTES) * height
+    const dx = Math.max(x - point.x, 0, point.x - (x + width))
+    const dy = Math.max(top - point.y, 0, point.y - bottom)
+    const distance = Math.hypot(dx, dy)
+    if (!nearest || distance < nearest.distance) nearest = { column, top, bottom, distance }
+  }
+  return nearest
+}
+
 /** The selection for a pointer, or null to keep the previous one. */
 function selectionAt(anchor: DayArea, minutes: number, point: Point): CreateSelection | null {
-  if (anchor.zone === "timed") {
-    const column = dayArea(anchor.day, "timed") ?? anchor
-    return {
-      kind: "timed",
-      day: anchor.day,
-      ...selectionForPointer(minutes, minutesAtY(topOf(column), point.y)),
-    }
-  }
   // Clamped so dragging past the grid's edge keeps selecting its edge days.
   const rect = scroller?.rect()
   const inside = rect
@@ -328,6 +352,22 @@ function selectionAt(anchor: DayArea, minutes: number, point: Point): CreateSele
         point.y,
       )
     : point
+
+  if (anchor.zone === "timed") {
+    // Columns line up with the anchor's; above or below them, take the column at its edge.
+    const column = dayArea(anchor.day, "timed") ?? anchor
+    const visible = column.visible ?? column.rect
+    const y = Math.max(visible.y + 1, Math.min(visible.y + visible.height - 1, inside.y))
+    const hit = dayAt(inside.x, y, "timed")
+    if (!hit) return null
+    const range = selectionForPointer(
+      minutes,
+      minutesAtY(topOf(column), point.y),
+      epochDay(hit.day) - epochDay(anchor.day),
+    )
+    return timedSelection(anchor.day, range)
+  }
+
   const hit = dayAt(inside.x, inside.y)
   if (!hit || hit.zone !== anchor.zone) return null
   return { kind: "days", ...daySelectionForPointer(anchor.day, hit.day) }
@@ -356,11 +396,13 @@ export function startCreateDrag(anchor: DayArea, start: Point) {
         openDraftPopover(daySelectionRange(current))
         return
       }
-      // Beside the middle of the selection, as far as it's on screen.
-      const column = dayArea(current.day, "timed") ?? anchor
+      // Beside the middle of the part nearest the pointer, as far as it's on screen.
+      const part = nearestSelectionPart(current, untracked(pointer))
+      const column = part?.column ?? anchor
       const { x, y, width, height } = column.visible ?? column.rect
-      const midpoint = (current.startMinutes + current.endMinutes) / 2
-      const middle = column.rect.y + (midpoint / DAY_MINUTES) * column.rect.height
+      const middle = part
+        ? (part.top + part.bottom) / 2
+        : column.rect.y + (current.startMinutes / DAY_MINUTES) * column.rect.height
       anchorPopoverAt({
         origin: { x, y: Math.max(y, Math.min(y + height, middle)) },
         size: { width, height: 0 },

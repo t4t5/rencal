@@ -7,6 +7,7 @@ import {
   allDayDate,
   atTime,
   computeEventDateInfo,
+  DAY_MINUTES,
   formatDateKey,
   wallclockTime,
 } from "@/lib/event-time"
@@ -19,6 +20,7 @@ import {
   dragRole,
   endGesture,
   movePointer,
+  selectionPartOn,
   setDragScroller,
   startCreateDrag,
   startEventDrag,
@@ -143,16 +145,40 @@ describe("drag", () => {
     expect(pendingEdit()).toBe(null)
   })
 
-  test("a timed selection stays in its column and snaps to quarters", () => {
+  test("a timed selection snaps to quarters, and runs across columns from the time pressed", () => {
     setDayAreas("test", () => timedAreas())
-    const [area] = timedAreas()
-    startCreateDrag(area!, { x: 50, y: 190 })
-    movePointer({ x: 350, y: 201 })
+    const areas = timedAreas()
+    startCreateDrag(areas[0]!, { x: 50, y: 190 })
 
-    const selection = createSelection()
+    movePointer({ x: 50, y: 201 })
+    let selection = createSelection()
     expect(selection?.kind === "timed" && selection.day.equals(day(0))).toBe(true)
     expect(selection?.kind === "timed" && selection.startMinutes).toBe(9 * 60)
     expect(selection?.kind === "timed" && selection.endMinutes).toBe(10 * 60 + 15)
+
+    // Thursday at 10:06: minutes still count from Monday's midnight.
+    movePointer({ x: 350, y: 201 })
+    selection = createSelection()
+    expect(selection?.kind === "timed" && selection.day.equals(day(0))).toBe(true)
+    expect(selection?.kind === "timed" && selection.endMinutes).toBe(3 * DAY_MINUTES + 10 * 60 + 15)
+    if (selection?.kind !== "timed") return
+    expect(selectionPartOn(selection, day(1))).toEqual({ startMinutes: 0, endMinutes: DAY_MINUTES })
+    expect(selectionPartOn(selection, day(3))).toEqual({
+      startMinutes: 0,
+      endMinutes: 10 * 60 + 15,
+    })
+    expect(selectionPartOn(selection, day(4))).toBe(null)
+  })
+
+  test("a timed selection drawn back to an earlier column starts there", () => {
+    setDayAreas("test", () => timedAreas())
+    startCreateDrag(timedAreas()[3]!, { x: 350, y: 190 })
+    movePointer({ x: 150, y: 130 })
+
+    const selection = createSelection()
+    expect(selection?.kind === "timed" && selection.day.equals(day(1))).toBe(true)
+    expect(selection?.kind === "timed" && selection.startMinutes).toBe(3 * 60)
+    expect(selection?.kind === "timed" && selection.endMinutes).toBe(2 * DAY_MINUTES + 9 * 60 + 15)
   })
 
   test("a day selection grows across rows, and the release opens an all-day draft", () => {

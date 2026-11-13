@@ -48,9 +48,12 @@ export function layoutAllDay<T extends DayRange>(
   }
 }
 
+/** Anything placed by time. Events have all three fields. */
 export interface TimedRange {
   readonly startMinutes: number
   readonly endMinutes: number
+  /** The day whose midnight the minutes count from, when laid out on a later day. */
+  readonly firstDay?: Temporal.PlainDate
 }
 
 export interface TimedBlock<T> {
@@ -62,15 +65,29 @@ export interface TimedBlock<T> {
   readonly coveredWidth: number
 }
 
-export function layoutTimed<T extends TimedRange>(items: readonly T[]): TimedBlock<T>[] {
-  const blocks = items.map((item) => ({
-    item,
-    top: (item.startMinutes / DAY_MINUTES) * 100,
-    height: ((Math.min(item.endMinutes, DAY_MINUTES) - item.startMinutes) / DAY_MINUTES) * 100,
-    left: 0,
-    width: 1,
-    coveredWidth: 0,
-  }))
+/**
+ * Given the `date` being laid out, an item from an earlier `firstDay` shows its
+ * part on that date from the top, so an event crossing midnight can be laid out
+ * on each day it touches. An item crossing midnight is cut off at the bottom.
+ */
+export function layoutTimed<T extends TimedRange>(
+  items: readonly T[],
+  date?: Temporal.PlainDate,
+): TimedBlock<T>[] {
+  const day = date ? epochDay(date) : null
+  const blocks = items.map((item) => {
+    const offset = day !== null && item.firstDay ? (day - epochDay(item.firstDay)) * DAY_MINUTES : 0
+    const start = Math.max(0, item.startMinutes - offset)
+    const end = Math.min(DAY_MINUTES, item.endMinutes - offset)
+    return {
+      item,
+      top: (start / DAY_MINUTES) * 100,
+      height: ((end - start) / DAY_MINUTES) * 100,
+      left: 0,
+      width: 1,
+      coveredWidth: 0,
+    }
+  })
   layoutTimedOverlaps(blocks)
   return blocks
 }

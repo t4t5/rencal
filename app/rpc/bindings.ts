@@ -101,6 +101,7 @@ export type ContributionKind =
  */
 export type CreateEventInput = {
   calendar_slug: string
+  availability: EventAvailability
   summary: string
   description: string | null
   location: string | null
@@ -547,6 +548,7 @@ export type TimeFormat = "24h" | "12h"
  */
 export type UpdateEventInput = {
   id: string
+  availability: EventAvailability
   calendar_slug: string
   /**
    * If set and different from calendar_slug, moves the event to this calendar

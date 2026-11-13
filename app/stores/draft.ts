@@ -12,6 +12,7 @@ import { api, getErrorMessage } from "@/lib/api"
 import {
   type CalendarEvent,
   type EventAttendee,
+  type EventAvailability,
   reconcileOptimisticCreate,
   type Recurrence,
   rollbackOptimisticCreate,
@@ -34,6 +35,7 @@ import { defaultCalendar, defaultReminders } from "@/stores/settings"
 import { requestSync } from "@/stores/sync"
 
 export interface DraftEvent {
+  availability: EventAvailability
   summary: string
   description: string | null
   start: EventTime
@@ -76,6 +78,7 @@ function emptyDraft(): DraftEvent {
   const start = closestNextHour()
   return {
     summary: "",
+    availability: "busy",
     description: null,
     start,
     end: addMinutes(start, DEFAULT_DURATION_MINS),
@@ -199,7 +202,7 @@ export async function createDraftEvent() {
     end: event.end,
     dateInfo: computeEventDateInfo(event.start, event.end),
     status: "confirmed",
-    availability: "busy",
+    availability: event.availability,
     recurrence: event.recurrence,
     master_recurrence: null,
     reminders: eventReminders,
@@ -221,6 +224,7 @@ export async function createDraftEvent() {
     created = await api.events.create({
       calendar_slug: calendarSlug,
       summary: event.summary,
+      availability: event.availability,
       description: event.description,
       location: event.location,
       url: event.url,
