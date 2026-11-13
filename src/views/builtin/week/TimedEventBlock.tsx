@@ -17,9 +17,9 @@ import { DAY_MINUTES, overlapBox, weekEventBox } from "./grid"
 type DisplayMode = "xs" | "sm" | "md" | "lg"
 
 // Thresholds are the shortest durations whose block fits each mode's lines at 48px per hour.
-function displayModeFor(event: CalendarEvent): DisplayMode {
-  // An event ending at midnight ends at the bottom of its day.
-  const minutes = Math.min(event.endMinutes, DAY_MINUTES) - event.startMinutes
+function displayModeFor(block: TimedBlock<CalendarEvent>): DisplayMode {
+  // The block's own day: an event crossing midnight has a block on each day.
+  const minutes = Math.round((block.height / 100) * DAY_MINUTES)
   if (minutes < 45) return "xs"
   if (minutes < 60) return "sm"
   if (minutes < 75) return "md"
@@ -34,13 +34,16 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
   const { dragging, menuOpen } = useEventState(event)
   const draft = event.transient === "draft"
 
-  const mode = displayModeFor(event)
+  const mode = displayModeFor(block)
   const isDashed = event.rsvp === "needs-action" || event.rsvp === "declined"
   const hasStripe = !isDashed && !draft
 
   const summary = event.summary || <UntitledEventText />
   const startTime = formatTime(event.start, timeFormat)
   const endTime = formatTime(event.end, timeFormat)
+  // An end on another day reads as a time on this one, so blocks crossing midnight show the start only.
+  const timeRange = (dash: string) =>
+    event.endMinutes > DAY_MINUTES ? startTime : `${startTime} ${dash} ${endTime}`
 
   return (
     <Tooltip
@@ -100,7 +103,7 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
               {summary}
             </div>
             <div data-slot="calendar-event-time" className="truncate leading-tight">
-              {startTime} - {endTime}
+              {timeRange("-")}
             </div>
           </div>
         ) : mode === "md" ? (
@@ -110,7 +113,7 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
               {summary}
             </div>
             <div data-slot="calendar-event-time" className="truncate leading-tight">
-              {startTime} – {endTime}
+              {timeRange("–")}
             </div>
           </div>
         ) : (
@@ -123,7 +126,7 @@ function WeekTimedEventImpl({ block }: { block: TimedBlock<CalendarEvent> }) {
               {summary}
             </div>
             <div data-slot="calendar-event-time" className="truncate leading-tight">
-              {startTime} – {endTime}
+              {timeRange("–")}
             </div>
           </div>
         )}

@@ -33,7 +33,7 @@ Views are declared in the plugin's `rencal-plugin.toml`:
 id = "alice.upcoming"
 name = "Upcoming"
 description = "The next seven days as a list."
-min_rencal_version = "0.9.1"
+min_rencal_version = "0.9.3"
 
 [[contributes.views]]
 id = "upcoming"
@@ -99,7 +99,7 @@ Tailwind classes work out of the box and use renCal's theme, so views match what
 | `useEventAppearance(event)`                                                                                                     | An event's colour and RSVP, for marks that aren't event elements                                                                                                                |
 | `Temporal`                                                                                                                      | The Temporal API renCal uses for dates and times                                                                                                                                |
 | `eventsByDay(events, start, end)`                                                                                               | Events grouped into one entry per day from `start` up to, not including, `end`, empty days included                                                                             |
-| `layoutAllDay(items, start, dayCount)`, `layoutTimed(items)`, `isSpanning(event)`                                               | renCal's layouts: events across days packed into lanes, and a day's overlapping timed events side by side                                                                       |
+| `layoutAllDay(items, start, dayCount)`, `layoutTimed(items, date?)`, `isSpanning(event)`                                        | renCal's layouts: events covering whole days packed into lanes, and a day's overlapping timed events side by side                                                               |
 | `dateInViewerZone`, `toViewerZonedDateTime`, `isAllDay`, `isSameDay`, `startOfWeek`, `isoWeekNumber`, `epochDay`                | Date helpers                                                                                                                                                                    |
 | `formatTime`, `formatWallclockTime`, `formatShortDate`, `formatLongDate`, `formatWeekday`, `formatMonth`, `getRelativeDayLabel` | Formatting that follows renCal's                                                                                                                                                |
 | `Button`, `Tooltip`, `cn`, `ChevronLeftIcon`, `ChevronRightIcon`, `UntitledEventText`                                           | Components and utilities from renCal's UI                                                                                                                                       |

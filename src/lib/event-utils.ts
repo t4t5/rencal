@@ -1,13 +1,21 @@
 import type { Calendar } from "@/lib/api"
 import type { CalendarEvent, ResponseStatus } from "@/lib/cal-events"
-import { isAllDay } from "@/lib/event-time"
+import { coversFullDay, isAllDay } from "@/lib/event-time"
 
 /**
- * All-day events always occupy the all-day lane; timed events only span it if
- * they cross a day boundary.
+ * Whether the event is drawn as a bar across days: all-day events, and timed
+ * events covering at least one whole day. Shorter timed events crossing midnight,
+ * like 23:00 to 01:00, stay at their times.
  */
 export function isSpanning(event: CalendarEvent): boolean {
-  return isAllDay(event.start) || event.dateInfo.lastDay - event.dateInfo.firstDay >= 1
+  if (isAllDay(event.start)) return true
+  const { dateInfo } = event
+  if (dateInfo.lastDay <= dateInfo.firstDay) return false
+  // A whole day it covers, if any, is its first or second.
+  return (
+    coversFullDay(event.start, dateInfo, dateInfo.firstDay) ||
+    coversFullDay(event.start, dateInfo, dateInfo.firstDay + 1)
+  )
 }
 
 export function getUserResponseStatus(

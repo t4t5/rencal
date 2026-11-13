@@ -126,7 +126,7 @@ describe("computeDropRange", () => {
     expect(wallclock(range!.end)).toBe("2025-07-13 19:00")
   })
 
-  it("clamps a timed drop so the event stays inside the day", () => {
+  it("runs a late timed drop past midnight but keeps the start on the day", () => {
     const event = makeEvent(atTime(day("2025-07-12"), 9), atTime(day("2025-07-12"), 11))
 
     const late = computeDropRange(
@@ -134,8 +134,8 @@ describe("computeDropRange", () => {
       { zone: "timed", day: day("2025-07-12"), minutes: 23 * 60 + 30 },
       noGrab,
     )
-    expect(wallclock(late!.start)).toBe("2025-07-12 22:00")
-    expect(wallclock(late!.end)).toBe("2025-07-13 00:00")
+    expect(wallclock(late!.start)).toBe("2025-07-12 23:30")
+    expect(wallclock(late!.end)).toBe("2025-07-13 01:30")
 
     const early = computeDropRange(
       event,
@@ -145,7 +145,7 @@ describe("computeDropRange", () => {
     expect(wallclock(early!.start)).toBe("2025-07-12 00:00")
   })
 
-  it("treats an event ending at midnight as lasting until midnight when clamping", () => {
+  it("moves an event ending at midnight to an earlier time", () => {
     const event = makeEvent(atTime(day("2025-07-12"), 22), atTime(day("2025-07-13"), 0))
 
     const range = computeDropRange(
@@ -170,8 +170,8 @@ describe("computeDropRange", () => {
     ).toBeNull()
   })
 
-  it("moves a multi-day timed event across the all-day lane by whole days", () => {
-    const event = makeEvent(atTime(day("2025-07-12"), 20), atTime(day("2025-07-13"), 10))
+  it("moves a timed event covering a whole day across the all-day lane by whole days", () => {
+    const event = makeEvent(atTime(day("2025-07-12"), 20), atTime(day("2025-07-14"), 10))
 
     const range = computeDropRange(
       event,
@@ -180,7 +180,51 @@ describe("computeDropRange", () => {
     )
 
     expect(wallclock(range!.start)).toBe("2025-07-15 20:00")
-    expect(wallclock(range!.end)).toBe("2025-07-16 10:00")
+    expect(wallclock(range!.end)).toBe("2025-07-17 10:00")
+  })
+
+  it("re-times an overnight event in the week grid, not the all-day lane", () => {
+    const event = makeEvent(atTime(day("2025-07-12"), 23), atTime(day("2025-07-13"), 1))
+
+    expect(
+      computeDropRange(event, { zone: "all-day", day: day("2025-07-15"), minutes: null }, noGrab),
+    ).toBeNull()
+
+    const range = computeDropRange(
+      event,
+      { zone: "timed", day: day("2025-07-12"), minutes: 23 * 60 + 30 },
+      noGrab,
+    )
+    expect(wallclock(range!.start)).toBe("2025-07-12 23:30")
+    expect(wallclock(range!.end)).toBe("2025-07-13 01:30")
+  })
+
+  it("keeps the grab point of an overnight event grabbed after midnight", () => {
+    const event = makeEvent(atTime(day("2025-07-12"), 23), atTime(day("2025-07-13"), 1))
+    // Grabbed at 00:30, on the block for the 13th.
+    const grab = grabFor(event, { zone: "timed", day: day("2025-07-13"), minutes: 30 })
+
+    // An hour later on the same column: the event starts at midnight.
+    const later = computeDropRange(
+      event,
+      { zone: "timed", day: day("2025-07-13"), minutes: 90 },
+      grab,
+    )
+    expect(wallclock(later!.start)).toBe("2025-07-13 00:00")
+    expect(wallclock(later!.end)).toBe("2025-07-13 02:00")
+
+    // Late in the evening of the 13th: the start rolls over onto that day.
+    const evening = computeDropRange(
+      event,
+      { zone: "timed", day: day("2025-07-13"), minutes: 22 * 60 + 30 },
+      grab,
+    )
+    expect(wallclock(evening!.start)).toBe("2025-07-13 21:00")
+
+    // Back where it was grabbed: no move.
+    expect(
+      computeDropRange(event, { zone: "timed", day: day("2025-07-13"), minutes: 30 }, grab),
+    ).toBeNull()
   })
 })
 

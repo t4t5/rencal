@@ -128,7 +128,8 @@ export declare function useToday(): Temporal.PlainDate;
 export declare function useViewerTzid(): string;
 /**
  * Whether an event is drawn as a bar across days rather than at its time: all-day
- * events, and timed events that cross midnight.
+ * events, and timed events covering at least one whole day. A timed event that
+ * only crosses midnight, like 23:00 to 01:00, is drawn at its time on each day.
  */
 export declare function isSpanning(event: CalendarEvent): boolean;
 /** Anything covering whole days, inclusive. Events have both fields. */
@@ -158,10 +159,12 @@ export declare function layoutAllDay<T extends DayRange>(items: readonly T[], st
 	bars: AllDayBar<T>[];
 	laneCount: number;
 };
-/** Anything placed by time within one day. Events have both fields. */
+/** Anything placed by time. Events have all three fields. */
 export interface TimedRange {
 	readonly startMinutes: number;
 	readonly endMinutes: number;
+	/** The day whose midnight the minutes count from, when laid out on a later day. */
+	readonly firstDay?: Temporal.PlainDate;
 }
 /** An item's box in a day column. */
 export interface TimedBlock<T> {
@@ -179,10 +182,13 @@ export interface TimedBlock<T> {
  * Lays out one day's timed items, Google Calendar style: items starting together
  * sit side by side, each extending under its right-hand neighbour; items starting
  * later nest on top, indented so the titles beneath stay visible. Returns them in
- * paint order, back to front. An item ending at midnight ends at the bottom; leave
- * events that cross midnight to `layoutAllDay` (`isSpanning`).
+ * paint order, back to front. An item crossing midnight is cut off at the bottom.
+ * Given the `date` being laid out, an item from an earlier `firstDay` shows its
+ * part on that date from the top, so an event crossing midnight can be laid out
+ * on each day it touches (`eventsByDay`). Leave events covering whole days to
+ * `layoutAllDay` (`isSpanning`).
  */
-export declare function layoutTimed<T extends TimedRange>(items: readonly T[]): TimedBlock<T>[];
+export declare function layoutTimed<T extends TimedRange>(items: readonly T[], date?: Temporal.PlainDate): TimedBlock<T>[];
 type ClassValue$1 = ClassValue;
 type ClassProp = {
 	class: ClassValue$1;
