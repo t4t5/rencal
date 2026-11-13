@@ -94,6 +94,10 @@ export function annotateKey() {
 
 export const regionsUnder = (x: number, y: number) => regionsAt(regions, x, y)
 
+/** Whether a popover covers the point, hiding the days beneath it. */
+export const coveredAt = (x: number, y: number) =>
+  regionsUnder(x, y).some((region) => region.floating)
+
 export async function copyAnnotations() {
   const list = pinList().filter((pin) => pin.note)
   if (list.length === 0 || saving()) return
@@ -128,7 +132,7 @@ function minuteOf(event: CalendarEvent, day: number, edge: "start" | "end") {
 /** What lies under a window point: regions, then the day, time and events there. */
 function describePoint(x: number, y: number): string[] {
   const lines = regionsUnder(x, y).map((region) => `${region.name} (\`${region.source}\`)`)
-  const area = dayAt(x, y)
+  const area = coveredAt(x, y) ? null : dayAt(x, y)
   if (!area) return lines
 
   const day = epochDay(area.day)

@@ -23,7 +23,11 @@ function NewEventPopup() {
   let summary: InputRef | undefined
   setTimeout(() => summary?.focus(), 0)
   return (
-    <EventPopup onDismiss={closeDraftPopover}>
+    <EventPopup
+      name="New event popover"
+      source="components/event-parts/PopoverNewEvent.tsx"
+      onDismiss={closeDraftPopover}
+    >
       <ComposeEventInner summaryRef={(ref) => (summary = ref)} onCreated={closeDraftPopover} />
     </EventPopup>
   )

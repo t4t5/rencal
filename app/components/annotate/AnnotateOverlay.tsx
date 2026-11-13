@@ -15,6 +15,7 @@ import {
   annotateSaving,
   copyAnnotations,
   annotating,
+  coveredAt,
   editingPin,
   editPin,
   escapeAnnotate,
@@ -31,9 +32,9 @@ const PIN_SIZE = 22
 
 type Target = { label: string; rect: Rect }
 
-/** The innermost thing under the pointer: a day, else a registered region. */
+/** The innermost thing under the pointer: a day not under a popover, else a registered region. */
 function targetAt(x: number, y: number): Target | null {
-  const area = dayAt(x, y)
+  const area = coveredAt(x, y) ? null : dayAt(x, y)
   if (area) return { label: formatLongDate(area.day), rect: area.visible ?? area.rect }
   const region = regionsUnder(x, y)[0]
   return region ? { label: region.name, rect: region.rect } : null
