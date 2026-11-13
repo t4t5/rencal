@@ -8,10 +8,10 @@ members = [
 ]
 
 [workspace.dependencies]
-caldir-core = "0.17.4"
+caldir-core = "0.17.5"
 
 [workspace.metadata.caldir]
-provider-tag = "v0.14.9"
+provider-tag = "v0.14.10"
 
 # No `panic = "abort"`: a panicking tokio task shouldn't take the whole app down.
 [profile.release]

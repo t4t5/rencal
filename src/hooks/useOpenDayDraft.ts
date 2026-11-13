@@ -57,6 +57,7 @@ export function useOpenDayDraft() {
     setIsDrafting(false)
     setDraftEvent({
       summary: "",
+      availability: "busy",
       description: null,
       start,
       end,

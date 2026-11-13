@@ -165,6 +165,15 @@ impl From<Availability> for EventAvailability {
     }
 }
 
+impl From<EventAvailability> for Availability {
+    fn from(availability: EventAvailability) -> Self {
+        match availability {
+            EventAvailability::Busy => Self::Busy,
+            EventAvailability::Free => Self::Free,
+        }
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct EventAttendee {
     pub name: Option<String>,
@@ -296,6 +305,7 @@ pub struct ProviderConnectInfo {
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct CreateEventInput {
     pub calendar_slug: String,
+    pub availability: EventAvailability,
     pub summary: String,
     pub description: Option<String>,
     pub location: Option<String>,
@@ -314,6 +324,7 @@ pub struct CreateEventInput {
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct UpdateEventInput {
     pub id: String,
+    pub availability: EventAvailability,
     pub calendar_slug: String,
     /// If set and different from calendar_slug, moves the event to this calendar
     pub new_calendar_slug: Option<String>,

@@ -36,6 +36,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
     if (draftPopoverOpen) {
       return draftToCalendarEvent({
         summary: deferredSummary,
+        availability: draftEvent.availability,
         description: deferredDescription,
         location: deferredLocation,
         url: deferredUrl,
@@ -52,6 +53,7 @@ export function useEventsWithDraft(events: CalendarEvent[]) {
     return draftToCalendarEvent(deferredDraftEvent)
   }, [
     draftPopoverOpen,
+    draftEvent.availability,
     draftEvent.start,
     draftEvent.end,
     draftEvent.calendarId,

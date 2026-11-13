@@ -9,7 +9,8 @@ import { type CalendarEvent, toAppEvent } from "./events"
 
 /**
  * Whether an event is drawn as a bar across days rather than at its time: all-day
- * events, and timed events that cross midnight.
+ * events, and timed events covering at least one whole day. A timed event that
+ * only crosses midnight, like 23:00 to 01:00, is drawn at its time on each day.
  */
 export function isSpanning(event: CalendarEvent): boolean {
   return isAppEventSpanning(toAppEvent(event))
@@ -66,10 +67,12 @@ export function layoutAllDay<T extends DayRange>(
   }
 }
 
-/** Anything placed by time within one day. Events have both fields. */
+/** Anything placed by time. Events have all three fields. */
 export interface TimedRange {
   readonly startMinutes: number
   readonly endMinutes: number
+  /** The day whose midnight the minutes count from, when laid out on a later day. */
+  readonly firstDay?: Temporal.PlainDate
 }
 
 /** An item's box in a day column. */
@@ -89,18 +92,30 @@ export interface TimedBlock<T> {
  * Lays out one day's timed items, Google Calendar style: items starting together
  * sit side by side, each extending under its right-hand neighbour; items starting
  * later nest on top, indented so the titles beneath stay visible. Returns them in
- * paint order, back to front. An item ending at midnight ends at the bottom; leave
- * events that cross midnight to `layoutAllDay` (`isSpanning`).
+ * paint order, back to front. An item crossing midnight is cut off at the bottom.
+ * Given the `date` being laid out, an item from an earlier `firstDay` shows its
+ * part on that date from the top, so an event crossing midnight can be laid out
+ * on each day it touches (`eventsByDay`). Leave events covering whole days to
+ * `layoutAllDay` (`isSpanning`).
  */
-export function layoutTimed<T extends TimedRange>(items: readonly T[]): TimedBlock<T>[] {
-  const blocks = items.map((item) => ({
-    item,
-    top: (item.startMinutes / DAY_MINUTES) * 100,
-    height: ((Math.min(item.endMinutes, DAY_MINUTES) - item.startMinutes) / DAY_MINUTES) * 100,
-    left: 0,
-    width: 1,
-    coveredWidth: 0,
-  }))
+export function layoutTimed<T extends TimedRange>(
+  items: readonly T[],
+  date?: Temporal.PlainDate,
+): TimedBlock<T>[] {
+  const day = date ? epochDay(date) : null
+  const blocks = items.map((item) => {
+    const offset = day !== null && item.firstDay ? (day - epochDay(item.firstDay)) * DAY_MINUTES : 0
+    const start = Math.max(0, item.startMinutes - offset)
+    const end = Math.min(DAY_MINUTES, item.endMinutes - offset)
+    return {
+      item,
+      top: (start / DAY_MINUTES) * 100,
+      height: ((end - start) / DAY_MINUTES) * 100,
+      left: 0,
+      width: 1,
+      coveredWidth: 0,
+    }
+  })
   layoutTimedOverlaps(blocks)
   return blocks
 }

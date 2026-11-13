@@ -3,7 +3,7 @@ import { useMemo } from "react"
 import {
   type AllDayBar,
   type CalendarEvent,
-  epochDay,
+  eventsByDay,
   isSpanning,
   layoutAllDay,
   layoutTimed,
@@ -28,20 +28,16 @@ export function useDayRangeLayout(
       return { allDayBars: [], allDayLaneCount: 0, timedByDay: new Map() }
     }
 
-    const rangeStartDay = epochDay(days[0].date)
     const spanning: CalendarEvent[] = []
-    const timed: CalendarEvent[][] = days.map(() => [])
-
-    for (const event of events) {
-      if (isSpanning(event)) {
-        spanning.push(event)
-        continue
-      }
-      timed[epochDay(event.firstDay) - rangeStartDay]?.push(event)
-    }
+    const timed: CalendarEvent[] = []
+    for (const event of events) (isSpanning(event) ? spanning : timed).push(event)
 
     const { bars, laneCount } = layoutAllDay(spanning, days[0].date, N)
-    const timedByDay = new Map(days.map((day, i) => [day.dateKey, layoutTimed(timed[i])]))
+    // An event crossing midnight is laid out on each day it touches.
+    const timedDays = eventsByDay(timed, days[0].date, days[N - 1].date.add({ days: 1 }))
+    const timedByDay = new Map(
+      timedDays.map((day, i) => [days[i].dateKey, layoutTimed(day.events, day.date)]),
+    )
 
     return { allDayBars: bars, allDayLaneCount: laneCount, timedByDay }
   }, [days, events])

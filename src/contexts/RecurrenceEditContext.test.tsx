@@ -104,6 +104,16 @@ const edit = async (newRule: Recurrence | null) => {
   await act(async () => requestSave({ ...occurrence, master_recurrence: newRule }, occurrence))
 }
 
+it.each(["Only this event", "This and future events", "All events"])(
+  "carries availability changes through the %s save path",
+  async (scope) => {
+    vi.mocked(splitRecurringSeriesAt).mockResolvedValue(master)
+    await act(async () => requestSave({ ...occurrence, availability: "free" }, occurrence))
+    await act(async () => button(scope)!.click())
+    expect(vi.mocked(updateAndSyncEvent).mock.calls[0][0].availability).toBe("free")
+  },
+)
+
 it("applies a changed rule to all events, keeping exceptions", async () => {
   await edit(rule("FREQ=WEEKLY;BYDAY=MO,TU,TH"))
   await act(async () => button("All events")!.click())

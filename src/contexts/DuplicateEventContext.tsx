@@ -61,6 +61,7 @@ export function DuplicateEventProvider({ children }: { children: ReactNode }) {
 
       const draft: DraftEvent = {
         summary: source.summary,
+        availability: source.availability,
         description: source.description,
         start: source.start,
         end: source.end,

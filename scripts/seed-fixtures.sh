@@ -5,7 +5,7 @@
 set -euo pipefail
 shopt -s nullglob
 
-scenarios=(overlaps)
+scenarios=(overlaps overnight)
 scenario="${1:-all}"
 week_of="${2:-today}"
 
@@ -32,9 +32,14 @@ fixture_calendar() {
   calendar_configs[$calendar]=$(printf 'name = "%s"\ncolor = "%s"\nread_only = false' "$2" "$3")
 }
 
-# event <title> <day> <start> <end>
+# event <title> <day> <start> <end> [end day, if later than <day>]
 event() {
-  events+=("$calendar"$'\t'"$1"$'\t'"$(day "$2") $3"$'\t'"$(day "$2") $4")
+  events+=("$calendar"$'\t'"$1"$'\t'"$(day "$2") $3"$'\t'"$(day "${5:-$2}") $4")
+}
+
+# all_day <title> <day> [last day, inclusive]
+all_day() {
+  events+=("$calendar"$'\t'"$1"$'\t'"$(day "$2")"$'\t'"$(day $((${3:-$2} + 1)))")
 }
 
 # Overlapping timed events in the week view; titles start with the case number.
@@ -78,6 +83,25 @@ seed_overlaps() {
   event "10 · Group A" 4 15:00 16:00
   event "10 · Group B" 4 15:30 16:30
   event "10 · Separate later" 4 18:00 19:00
+}
+
+# Timed events crossing midnight next to all-day ones. Only those covering a whole
+# day belong in the all-day lane; titles say where each should be drawn.
+seed_overnight() {
+  fixture_calendar overnight "Fixtures: overnight" "#3d8be8"
+
+  event "1 · Overnight, timed on Mon + Tue" 0 23:00 01:00 1
+  event "2 · Evening to 02:00, timed on Tue + Wed" 1 17:45 02:00 2
+  event "3 · Ends at midnight, timed on Wed only" 2 22:00 00:00 3
+  event "4 · 25 hours, timed on Wed + Thu" 2 12:00 13:00 3
+  event "4 · Next morning, beside 4" 3 09:00 10:00
+  event "5 · From midnight, all-day lane" 3 00:00 01:00 4
+  all_day "6 · All-day, Thu" 3
+  event "7 · Covers Sat, all-day lane" 4 20:00 10:00 6
+  event "8 · Overnight, timed on Sat + Sun" 5 23:30 00:30 6
+  event "8 · Just after midnight, beside 8" 6 00:00 01:00
+  all_day "9 · All-day, Sat to Sun" 5 6
+  event "10 · Into next week, timed on Sun + Mon" 6 23:00 01:00 7
 }
 
 if [[ "$scenario" == all ]]; then

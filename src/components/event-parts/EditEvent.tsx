@@ -199,6 +199,8 @@ export const EditEvent = ({
         onChangeDateTime={({ start: newStart, end: newEnd }) => {
           setDirtyEvent(withDates(dirtyEvent, newStart, newEnd))
         }}
+        availability={dirtyEvent.availability}
+        onAvailabilityChange={(availability) => setDirtyEvent({ ...dirtyEvent, availability })}
         allDay={all_day}
         onAllDayChange={(checked) => {
           if (checked) {

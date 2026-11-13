@@ -95,6 +95,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       const updatedMaster: CalendarEvent = {
         ...withDates(newMaster, addDays(newMaster.start, shift), addDays(newMaster.end, shift)),
         summary: current.summary,
+        availability: current.availability,
         description: current.description,
         location: current.location,
         url: current.url,
@@ -151,6 +152,7 @@ export function RecurrenceEditProvider({ children }: { children: ReactNode }) {
       const updatedMaster: CalendarEvent = {
         ...master,
         summary: current.summary,
+        availability: current.availability,
         description: current.description,
         location: current.location,
         url: current.url,

@@ -4,7 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     caldir = {
-      url = "github:t4t5/caldir/v0.14.9";
+      url = "github:t4t5/caldir/v0.14.10";
       inputs.nixpkgs.follows = "nixpkgs";
     };
   };
@@ -54,7 +54,7 @@
               cargo
               rustc
               cargo-tauri
-              nodejs_22
+              nodejs_26
               pnpm
               pnpmConfigHook
               pkg-config
@@ -166,7 +166,7 @@
             clippy
             rustfmt
             rust-analyzer
-            nodejs_22
+            nodejs_26
             pnpm
             pkg-config
             webkitgtk_4_1
