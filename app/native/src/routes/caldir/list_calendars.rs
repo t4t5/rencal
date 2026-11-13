@@ -1,8 +1,8 @@
 use super::types::Calendar;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
-pub(super) fn handler(state: &AppState) -> TauResult<Vec<Calendar>> {
+pub(super) fn handler(state: &AppState) -> RpcResult<Vec<Calendar>> {
     let calendars = state
         .caldir()
         .calendars()

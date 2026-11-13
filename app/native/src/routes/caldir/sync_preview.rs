@@ -1,10 +1,10 @@
 use super::types::SyncPreview;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{DateRange, EventChange};
 
-pub(super) async fn handler(state: &AppState) -> TauResult<Vec<SyncPreview>> {
+pub(super) async fn handler(state: &AppState) -> RpcResult<Vec<SyncPreview>> {
     let range = DateRange::default_sync_window();
     let mut previews = Vec::new();
     let connections = state.caldir().connections();

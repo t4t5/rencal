@@ -1,8 +1,8 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
-pub(super) fn handler(state: &AppState, calendar_slug: String, color: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String, color: String) -> RpcResult<()> {
     if !is_hex_color(&color) {
         return Err(RpcError::new(
             RpcErrorKind::InvalidInput,

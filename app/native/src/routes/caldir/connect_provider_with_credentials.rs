@@ -2,7 +2,7 @@ use super::connect_provider;
 use super::helpers::{build_connect_options, provider};
 use super::types::{CredentialFieldInput, CredentialsConnectResult};
 use crate::oauth;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use crate::host::AppHandle;
@@ -12,7 +12,7 @@ pub(super) async fn handler(
     app: AppHandle,
     provider_name: String,
     credentials: Vec<CredentialFieldInput>,
-) -> TauResult<CredentialsConnectResult> {
+) -> RpcResult<CredentialsConnectResult> {
     let provider = provider(state, &provider_name)?;
 
     let mut cred_map = serde_json::Map::new();

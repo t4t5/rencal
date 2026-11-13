@@ -1,6 +1,6 @@
 use super::helpers::{event_time_sort_key, is_visible};
 use super::types::{CalendarEvent, RpcRecurrence, core_recurrence_to_rpc};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::expand_in_range;
@@ -12,7 +12,7 @@ pub(super) fn handler(
     calendar_slugs: Vec<String>,
     start: String,
     end: String,
-) -> TauResult<Vec<CalendarEvent>> {
+) -> RpcResult<Vec<CalendarEvent>> {
     let range_start: DateTime<Utc> = start.parse().map_err(|e: chrono::ParseError| {
         RpcError::new(
             RpcErrorKind::InvalidInput,

@@ -1,6 +1,6 @@
 # renCal on NSH
 
-The NSH port of renCal: a mixed app (TSX screens on QuickJS, a Rust crate in `native/`). The React app in `../src` and the Tauri backend in `../src-tauri` stay as the reference for behaviour and look; port from them, don't reinvent. Read the NSH skill (`skills/nsh` in `longbridge/nsh`) before using an API you haven't used here.
+The NSH port of renCal: a mixed app (TSX screens on QuickJS, a Rust crate in `native/`). The original app (`../src`, `../src-tauri`) stays as the reference for behaviour and look; port from them, don't reinvent. Read the NSH skill (`skills/nsh` in `longbridge/nsh`) before using an API you haven't used here.
 
 ## Commands
 
@@ -14,8 +14,8 @@ Run from `app/`, with `~/.local/bin` on `PATH`. The `nsh` CLI must match the ver
 
 ## Layout
 
-- `native/`: the backend. `routes/dispatch.rs` lists every procedure, reached through `Backend.call`. `host.rs` replaces Tauri's `AppHandle`.
-- `rpc/`: `bindings.ts` is still the typed contract, copied from `../src/rpc`. `proxy.ts` gives `rpc.caldir.list_events(...)` over `Backend.call`.
+- `native/`: the backend, a workspace of its own: `crates/` holds the config, reminder and plugin-contract crates and the `rencal-notifierd` daemon (symlinks into `../src-tauri` for now, as are `caldir-providers.sha256` and the icon; they move here when that directory goes); `providers/` is where `just nsh-providers` puts caldir's provider binaries. `routes/dispatch.rs` lists every procedure, reached through `Backend.call`. `host.rs` is how it reaches the UI: events out, URLs opened.
+- `rpc/`: `bindings.ts` is the typed contract, kept in step with `native/src/routes` by hand. `proxy.ts` gives `rpc.caldir.list_events(...)` over `Backend.call`.
 - `lib/`: logic from `../src/lib`, unchanged wherever possible. Keep its tests passing.
 - `stores/`: module-level signals, in place of React contexts. One owner per piece of state; read through functions.
 - `components/`, `views/`: UI. `components/ui/` is the styled kit over `nsh/base`.

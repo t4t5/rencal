@@ -48,7 +48,7 @@ impl AcceptedDeepLinks {
 }
 
 /// Deep links received before the frontend was ready to handle them. Lives in
-/// `AppState`; drained through taurpc.
+/// `AppState`; drained over RPC.
 #[derive(Default)]
 pub struct DeepLinkInbox {
     state: Mutex<DeepLinkInboxState>,
@@ -179,7 +179,7 @@ where
 
 /// Validate and enqueue URLs, waking the frontend when any were accepted. The
 /// emitted event is only a wake-up signal; the inbox remains authoritative and
-/// is drained through taurpc.
+/// is drained over RPC.
 pub fn enqueue_urls(
     app: &AppHandle,
     inbox: &DeepLinkInbox,

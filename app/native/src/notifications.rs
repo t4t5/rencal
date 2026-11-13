@@ -4,7 +4,7 @@
 //! active reminder source — `lib.rs::setup` decides whether to spawn it.
 //! macOS/Windows always run in-process. macOS posts through
 //! `UNUserNotificationCenter` (`macos_notifications.rs`), whose delegate opens
-//! the clicked reminder's event; Windows uses tauri-plugin-notification.
+//! the clicked reminder's event. Windows has no notifier yet: reminders are logged.
 //! See `docs/notifications.md` for the design.
 
 use std::path::PathBuf;
@@ -14,30 +14,12 @@ use crate::host::AppHandle;
 use {reminder_core::Notifier, reminder_core::ReminderNotification, std::path::Path};
 
 #[cfg(target_os = "windows")]
-struct TauriNotifier {
-    app: AppHandle,
-}
+struct LogNotifier;
 
 #[cfg(target_os = "windows")]
-impl Notifier for TauriNotifier {
-    fn notify(&self, notification: &ReminderNotification, icon: Option<&Path>) {
-        let app = self.app.clone();
-        let notification = notification.clone();
-        let icon = icon.map(|p| p.to_string_lossy().into_owned());
-        std::thread::spawn(move || {
-            let mut builder = app
-                .notification()
-                .builder()
-                .title(&notification.title)
-                .body(&notification.body)
-                .sound("default");
-            if let Some(icon) = icon {
-                builder = builder.icon(icon);
-            }
-            if let Err(e) = builder.show() {
-                log::warn!("show err: {e}");
-            }
-        });
+impl Notifier for LogNotifier {
+    fn notify(&self, notification: &ReminderNotification, _icon: Option<&Path>) {
+        log::warn!("reminder not shown (no Windows notifier): {}", notification.title);
     }
 }
 
@@ -63,7 +45,8 @@ pub async fn run_reminder_loop(app: AppHandle) {
 
     #[cfg(target_os = "windows")]
     {
-        reminder_core::run_reminder_loop(TauriNotifier { app }, icon).await;
+        let _ = app;
+        reminder_core::run_reminder_loop(LogNotifier, icon).await;
     }
 
     #[cfg(target_os = "linux")]
@@ -74,12 +57,11 @@ pub async fn run_reminder_loop(app: AppHandle) {
 }
 
 fn icon_path() -> Option<PathBuf> {
-    if cfg!(debug_assertions) {
-        Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/128x128.png"))
-    } else {
-        std::env::current_exe()
-            .ok()?
-            .parent()
-            .map(|dir| dir.join("icons/128x128.png"))
-    }
+    #[cfg(debug_assertions)]
+    return Some(PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/128x128.png"));
+    #[cfg(not(debug_assertions))]
+    std::env::current_exe()
+        .ok()?
+        .parent()
+        .map(|dir| dir.join("icons/128x128.png"))
 }

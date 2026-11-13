@@ -2,7 +2,7 @@ use super::types::{
     Calendar, CalendarEvent, ProviderField, ProviderFieldType, RpcEventTime,
     core_recurrence_to_rpc, rpc_time_to_core,
 };
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{CalendarConfig, DateRange, Event, Provider, ProviderSlug, Status};
@@ -10,7 +10,7 @@ use chrono::{DateTime, Utc};
 
 /// An owned handle to a provider binary (`Provider` is an `Arc` inside), so
 /// callers can talk to it without holding the caldir guard across the await.
-pub fn provider(state: &AppState, provider_name: &str) -> TauResult<Provider> {
+pub fn provider(state: &AppState, provider_name: &str) -> RpcResult<Provider> {
     state
         .caldir()
         .provider(&ProviderSlug::from(provider_name))
@@ -69,7 +69,7 @@ pub fn tildify(path: &str) -> String {
 }
 
 /// Parses the fields of a provider's `Credentials` step.
-pub fn credential_fields(data: serde_json::Value) -> TauResult<Vec<ProviderField>> {
+pub fn credential_fields(data: serde_json::Value) -> RpcResult<Vec<ProviderField>> {
     let data: caldir_core::rpc::CredentialsData = serde_json::from_value(data).map_err(|e| {
         RpcError::new(
             RpcErrorKind::ProviderFailure,
@@ -111,13 +111,13 @@ pub fn build_connect_options(
 }
 
 /// Create local calendars for a freshly connected account, pick a default
-/// calendar if none is set, pull their events, and tell the webview.
+/// calendar if none is set, pull their events, and tell the UI.
 pub async fn save_connected_calendars(
     state: &AppState,
     provider: &caldir_core::Provider,
     account_identifier: Option<String>,
     prefetched_calendars: Option<Vec<caldir_core::CalendarConfig>>,
-) -> TauResult<Vec<Calendar>> {
+) -> RpcResult<Vec<Calendar>> {
     let calendar_configs = if let Some(calendars) = prefetched_calendars {
         calendars
     } else {
@@ -164,7 +164,7 @@ struct CreatedCalendars {
 fn create_connected_calendars(
     state: &AppState,
     calendar_configs: Vec<CalendarConfig>,
-) -> TauResult<CreatedCalendars> {
+) -> RpcResult<CreatedCalendars> {
     let caldir = state.caldir();
     let existing_connections: Vec<_> = caldir
         .connections()
@@ -212,7 +212,7 @@ fn create_connected_calendars(
 async fn pull_created_calendar_events(
     state: &AppState,
     calendar_slugs: &[String],
-) -> TauResult<()> {
+) -> RpcResult<()> {
     if calendar_slugs.is_empty() {
         return Ok(());
     }

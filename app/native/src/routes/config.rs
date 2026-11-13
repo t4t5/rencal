@@ -5,10 +5,10 @@ use rencal_config::RencalConfig;
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 
 /// RPC mirror of `rencal_config::FirstDayOfWeek` (the config crate stays free
-/// of specta/taurpc so the notifier daemon can depend on it).
+/// of specta so the notifier daemon can depend on it).
 #[derive(Clone, Copy, Serialize, Deserialize, Type)]
 pub enum FirstDayOfWeek {
     #[serde(rename = "monday")]
@@ -97,61 +97,61 @@ impl From<ThemeSettings> for rencal_config::ThemeConfig {
 pub struct ConfigApiImpl;
 
 impl ConfigApiImpl {
-    pub async fn get_theme(self) -> TauResult<ThemeSettings> {
+    pub async fn get_theme(self) -> RpcResult<ThemeSettings> {
         Ok(RencalConfig::load()?.theme.into())
     }
 
-    pub async fn set_theme(self, settings: ThemeSettings) -> TauResult<()> {
+    pub async fn set_theme(self, settings: ThemeSettings) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.theme = settings.into();
         config.save().map_err(RpcError::from)
     }
 
-    pub async fn get_notifications_enabled(self) -> TauResult<bool> {
+    pub async fn get_notifications_enabled(self) -> RpcResult<bool> {
         Ok(RencalConfig::load()?.notifications_enabled)
     }
 
-    pub async fn set_notifications_enabled(self, enabled: bool) -> TauResult<()> {
+    pub async fn set_notifications_enabled(self, enabled: bool) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.notifications_enabled = enabled;
         config.save().map_err(RpcError::from)
     }
 
-    pub async fn get_auto_sync_enabled(self) -> TauResult<bool> {
+    pub async fn get_auto_sync_enabled(self) -> RpcResult<bool> {
         Ok(RencalConfig::load()?.auto_sync_enabled)
     }
 
-    pub async fn set_auto_sync_enabled(self, enabled: bool) -> TauResult<()> {
+    pub async fn set_auto_sync_enabled(self, enabled: bool) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.auto_sync_enabled = enabled;
         config.save().map_err(RpcError::from)
     }
 
-    pub async fn get_first_day_of_week(self) -> TauResult<FirstDayOfWeek> {
+    pub async fn get_first_day_of_week(self) -> RpcResult<FirstDayOfWeek> {
         Ok(RencalConfig::load()?.first_day_of_week.into())
     }
 
-    pub async fn set_first_day_of_week(self, day: FirstDayOfWeek) -> TauResult<()> {
+    pub async fn set_first_day_of_week(self, day: FirstDayOfWeek) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.first_day_of_week = day.into();
         config.save().map_err(RpcError::from)
     }
 
-    pub async fn get_show_week_numbers(self) -> TauResult<bool> {
+    pub async fn get_show_week_numbers(self) -> RpcResult<bool> {
         Ok(RencalConfig::load()?.show_week_numbers)
     }
 
-    pub async fn set_show_week_numbers(self, show: bool) -> TauResult<()> {
+    pub async fn set_show_week_numbers(self, show: bool) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
         config.save().map_err(RpcError::from)
     }
 
-    pub async fn get_groups(self) -> TauResult<BTreeMap<String, Vec<String>>> {
+    pub async fn get_groups(self) -> RpcResult<BTreeMap<String, Vec<String>>> {
         Ok(RencalConfig::load()?.groups)
     }
 
-    pub async fn set_groups(self, groups: BTreeMap<String, Vec<String>>) -> TauResult<()> {
+    pub async fn set_groups(self, groups: BTreeMap<String, Vec<String>>) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.groups = groups;
         config.save().map_err(RpcError::from)

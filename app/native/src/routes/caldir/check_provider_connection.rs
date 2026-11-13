@@ -1,5 +1,5 @@
 use super::helpers::provider;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::RpcError;
 use crate::state::AppState;
 
@@ -7,7 +7,7 @@ pub(super) async fn handler(
     state: &AppState,
     provider_name: String,
     account: String,
-) -> TauResult<()> {
+) -> RpcResult<()> {
     let provider = provider(state, &provider_name)?;
 
     provider

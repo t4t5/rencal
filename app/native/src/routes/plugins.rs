@@ -2,7 +2,7 @@ use crate::plugins::{
     InstalledPlugins, PluginCatalog, PluginInspection, PluginInstallError, PluginInstallErrorKind,
     PluginManager,
 };
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
 
@@ -18,22 +18,22 @@ impl PluginsApiImpl {
 }
 
 impl PluginsApiImpl {
-    pub async fn list(self) -> TauResult<InstalledPlugins> {
+    pub async fn list(self) -> RpcResult<InstalledPlugins> {
         Ok(self.manager.list().await)
     }
 
-    pub async fn catalog(self) -> TauResult<PluginCatalog> {
+    pub async fn catalog(self) -> RpcResult<PluginCatalog> {
         Ok(self.manager.catalog().await)
     }
 
-    pub async fn install(self, repo: String) -> TauResult<PluginInspection> {
+    pub async fn install(self, repo: String) -> RpcResult<PluginInspection> {
         self.manager
             .install(&repo)
             .await
             .map_err(|error| RpcError::from(error).context(format!("Plugin [{repo}]")))
     }
 
-    pub async fn uninstall(self, id: String) -> TauResult<()> {
+    pub async fn uninstall(self, id: String) -> RpcResult<()> {
         self.manager
             .uninstall(&id)
             .await

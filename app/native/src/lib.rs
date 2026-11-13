@@ -67,12 +67,12 @@ fn native(registry: &mut Registry) {
     registry.module::<Backend>();
 }
 
-/// Providers shipped with this build: next to the binary when packaged, the
-/// Tauri crate's download directory in development.
+/// Providers shipped with this build: next to the binary when packaged, where
+/// `just nsh-providers` downloads them in development.
 fn bundled_providers_dir() -> PathBuf {
-    if cfg!(debug_assertions) {
-        return PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../src-tauri/providers");
-    }
+    #[cfg(debug_assertions)]
+    return PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("providers");
+    #[cfg(not(debug_assertions))]
     std::env::current_exe()
         .ok()
         .and_then(|exe| exe.parent().map(|dir| dir.join("providers")))
@@ -201,11 +201,6 @@ impl Backend {
         iana_time_zone::get_timezone().unwrap_or_else(|_| "UTC".to_owned())
     }
 
-    /// Whether `tz` is a known IANA zone.
-    pub fn is_zone(tz: String) -> bool {
-        tz.parse::<chrono_tz::Tz>().is_ok()
-    }
-
     /// Every IANA zone name.
     pub fn zones() -> Vec<String> {
         chrono_tz::TZ_VARIANTS.iter().map(|tz| tz.name().to_owned()).collect()
@@ -276,11 +271,6 @@ impl Backend {
     pub async fn save_screenshot() -> Result<String, String> {
         let task = RUNTIME.spawn(annotate::save_screenshot());
         task.await.map_err(|error| error.to_string())?
-    }
-
-    /// Opens `url` in the user's browser.
-    pub fn open_url(url: String) -> Result<(), String> {
-        host::open_url(&url).map_err(|error| error.to_string())
     }
 }
 

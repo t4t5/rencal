@@ -272,7 +272,7 @@ describe("computeEventDateInfo day range", () => {
     }
   })
 
-  it("keeps epoch-day keys independent of the webview timezone", () => {
+  it("keeps epoch-day keys independent of the engine's timezone", () => {
     const originalProcessTz = process.env.TZ
     const originalViewerTz = getViewerTzid()
     try {

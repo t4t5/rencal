@@ -238,13 +238,17 @@ deeplink-prod:
     xdg-mime default renCal.desktop text/calendar
     rm -f ~/.local/share/applications/rencal-handler.desktop
 
+# Download the caldir provider binaries pinned in app/native/Cargo.toml, unless already installed.
+nsh-providers:
+    scripts/install-caldir-providers.sh app/native
+
 # Run the NSH port against your real calendars (TSX hot, Rust restarts)
 [working-directory('app')]
-nsh-dev:
+nsh-dev: nsh-providers
     RENCAL_ANNOTATE=1 nsh run .
 
 # Run the NSH port against a generated mock caldir, leaving your calendars alone
-nsh-demo:
+nsh-demo: nsh-providers
     #!/usr/bin/env bash
     set -euo pipefail
     export RENCAL_SHOTS_DIR="${XDG_RUNTIME_DIR:-/tmp}/rencal-nsh-demo"

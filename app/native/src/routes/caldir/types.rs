@@ -1,5 +1,5 @@
 use crate::routes::{
-    TauResult,
+    RpcResult,
     error::{RpcError, RpcErrorKind},
 };
 use caldir_core::{
@@ -431,7 +431,7 @@ impl From<&caldir_core::Calendar> for Calendar {
 
 /// Parse `YYYY-MM-DDTHH:MM:SS` (no offset, no Z) as a NaiveDateTime.
 /// Tolerates an optional fractional seconds component.
-pub fn parse_naive_datetime(s: &str) -> TauResult<NaiveDateTime> {
+pub fn parse_naive_datetime(s: &str) -> RpcResult<NaiveDateTime> {
     NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S")
         .or_else(|_| NaiveDateTime::parse_from_str(s, "%Y-%m-%dT%H:%M:%S%.f"))
         .map_err(|e| {
@@ -445,7 +445,7 @@ pub fn parse_naive_datetime(s: &str) -> TauResult<NaiveDateTime> {
 /// Convert an RPC event time into caldir-core's `EventTime`.
 /// 1:1 mapping; no instant computation for zoned times — the wallclock IS the
 /// source of truth on disk.
-pub fn rpc_time_to_core(w: &RpcEventTime) -> TauResult<EventTime> {
+pub fn rpc_time_to_core(w: &RpcEventTime) -> RpcResult<EventTime> {
     match w {
         RpcEventTime::Date { date } => {
             let d = NaiveDate::parse_from_str(date, "%Y-%m-%d").map_err(|e| {
@@ -505,7 +505,7 @@ pub fn core_time_to_rpc(e: &EventTime) -> RpcEventTime {
     }
 }
 
-pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> TauResult<Recurrence> {
+pub fn rpc_recurrence_to_core(r: &RpcRecurrence) -> RpcResult<Recurrence> {
     let exdates = r
         .exdates
         .iter()

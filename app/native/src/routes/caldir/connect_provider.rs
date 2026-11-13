@@ -3,7 +3,7 @@ use super::helpers::{
 };
 use super::types::{Calendar, CredentialsConnectResult};
 use crate::oauth;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::Provider;
@@ -13,7 +13,7 @@ pub(super) async fn handler(
     state: &AppState,
     app: AppHandle,
     provider_name: String,
-) -> TauResult<Vec<Calendar>> {
+) -> RpcResult<Vec<Calendar>> {
     let provider = provider(state, &provider_name)?;
 
     // Bind callback listener first on port 0 so the OS picks a free port
@@ -59,7 +59,7 @@ pub(super) async fn run_with_data(
     initial_data: serde_json::Map<String, serde_json::Value>,
     listener: tokio::net::TcpListener,
     redirect_uri: String,
-) -> TauResult<CredentialsConnectResult> {
+) -> RpcResult<CredentialsConnectResult> {
     use caldir_core::rpc::{ConnectResponse, ConnectStepKind};
 
     let mut data = initial_data;
@@ -78,7 +78,7 @@ pub(super) async fn run_with_data(
                         .await?;
                 return Ok(CredentialsConnectResult::Done { calendars });
             }
-            // Follow-up forms (e.g. a 2FA code) go back to the webview. The
+            // Follow-up forms (e.g. a 2FA code) go back to the UI. The
             // provider keeps its in-progress login, so the next submission only
             // needs the new fields.
             ConnectResponse::NeedsInput {
@@ -105,7 +105,7 @@ async fn run_connect_step(
     step_data: serde_json::Value,
     listener: &mut Option<tokio::net::TcpListener>,
     redirect_uri: &str,
-) -> TauResult<serde_json::Map<String, serde_json::Value>> {
+) -> RpcResult<serde_json::Map<String, serde_json::Value>> {
     use caldir_core::rpc::{ConnectStepKind, HostedOAuthData, OAuthData};
 
     match step {

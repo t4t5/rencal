@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
 # Build the provider binaries from a local caldir checkout instead of the pinned release.
-# Usage: scripts/build-local-caldir-providers.sh [caldir_repo]  (default: ../caldir, relative to the repo root)
-# Delete src-tauri/providers/ to go back to the pinned release.
+# Usage: scripts/build-local-caldir-providers.sh [caldir_repo] [backend_dir]
+# (defaults: ../caldir, relative to the repo root, and src-tauri; the NSH app's backend is app/native)
+# Delete the backend's providers/ to go back to the pinned release.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
 readonly caldir_repo="${1:-../caldir}"
-readonly providers_dir="src-tauri/providers"
+readonly providers_dir="${2:-src-tauri}/providers"
 readonly -a providers=(google icloud outlook caldav webcal)
 
 if [[ ! -f "$caldir_repo/Cargo.toml" ]]; then

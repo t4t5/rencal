@@ -33,7 +33,7 @@ export function nowZoned(): EventTime {
  * rrule.js). Those Dates carry the intended wallclock in their
  * local components, so interpret the components in the given zone, or the
  * viewer's zone. Interpreting the instant instead would shift the wallclock
- * whenever the webview's zone (fixed at launch) and the viewer's current zone
+ * whenever the engine's zone (fixed at launch) and the viewer's current zone
  * diverge after an OS timezone change.
  */
 export function fromDate(d: Date, tzid: string = getViewerTzid()): EventTime {

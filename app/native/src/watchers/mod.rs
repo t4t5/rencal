@@ -1,4 +1,4 @@
-//! Background watchers: filesystem → backend state / webview events. Each one
+//! Background watchers: filesystem → backend state / app events. Each one
 //! is a filter function plus a loop on `fs_watch::watch_debounced`.
 
 use std::sync::Arc;

@@ -32,7 +32,7 @@ const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 const BUFFER_DAYS = 63
 const EDGE_DAYS = 28
 
-/** A fling carries as far as WebKitGTK's kinetic scrolling did, a quarter of a second's worth. */
+/** A fling carries a quarter of a second's worth of its velocity. */
 const WEEK_SNAP_DECELERATION = 0.996
 /** Rows kept beyond the viewport on each side. */
 const OVERSCAN_ROWS = 2

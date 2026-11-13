@@ -1,8 +1,8 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
-pub(super) fn handler(state: &AppState, calendar_slug: String, name: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String, name: String) -> RpcResult<()> {
     let name = name.trim();
     if name.is_empty() {
         return Err(RpcError::new(

@@ -1,5 +1,5 @@
 //! Stable RPC failure categories. Classify concrete causes before adding operation
-//! context; Tauri serializes this object directly as the rejected invoke value.
+//! context; `dispatch` serializes this object as the call's `err`, which the proxy throws.
 //! Shared crates retain their own errors and never depend on this boundary.
 
 use caldir_core::{

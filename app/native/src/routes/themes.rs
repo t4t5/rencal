@@ -1,5 +1,5 @@
 use crate::external_themes::{self, ExternalThemeFonts, ExternalThemesSnapshot};
-use crate::routes::{TauResult, error::RpcErrorKind};
+use crate::routes::{RpcResult, error::RpcErrorKind};
 
 // list_external: loose CSS themes and installed plugin theme contributions.
 
@@ -7,11 +7,11 @@ use crate::routes::{TauResult, error::RpcErrorKind};
 pub struct ThemesApiImpl;
 
 impl ThemesApiImpl {
-    pub async fn list_external(self) -> TauResult<ExternalThemesSnapshot> {
+    pub async fn list_external(self) -> RpcResult<ExternalThemesSnapshot> {
         Ok(external_themes::scan())
     }
 
-    pub async fn load_fonts(self, theme_id: String) -> TauResult<ExternalThemeFonts> {
+    pub async fn load_fonts(self, theme_id: String) -> RpcResult<ExternalThemeFonts> {
         external_themes::load_fonts(&theme_id).map_err(|error| {
             let kind = match error.kind {
                 external_themes::ExternalThemeFontErrorKind::InvalidInput => {

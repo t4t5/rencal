@@ -1,4 +1,4 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{DateRange, EventChange};
@@ -7,7 +7,7 @@ use caldir_core::{DateRange, EventChange};
 /// Mirrors `caldir-cli`'s `guards::MASS_DELETE_THRESHOLD`.
 const MASS_DELETE_THRESHOLD: u32 = 10;
 
-pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) -> TauResult<()> {
+pub(super) async fn handler(state: &AppState, allow_mass_delete: Vec<String>) -> RpcResult<()> {
     let range = DateRange::default_sync_window();
     // Owned snapshot: the caldir guard must not live across the awaits below.
     let connections = state.caldir().connections();

@@ -1,7 +1,7 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
-pub(super) fn handler(state: &AppState, calendar_slug: String, uid: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String, uid: String) -> RpcResult<()> {
     let calendar = state.caldir().calendar(&calendar_slug)?;
 
     // Find all events with this uid (parent + instances). The mutation path

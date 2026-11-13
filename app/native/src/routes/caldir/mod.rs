@@ -41,7 +41,7 @@ pub use types::{
     ResponseStatus, SplitRecurringSeriesInput, SyncPreview, TimeFormat, UpdateEventInput,
 };
 
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::{AppState, ProviderInfo};
 use std::sync::Arc;
 use crate::host::AppHandle;
@@ -63,11 +63,11 @@ impl CaldirApiImpl {
 /// hold `state.caldir()` across an `.await` (the guard is `!Send`, so that is
 /// a compile error rather than a stall).
 impl CaldirApiImpl {
-    pub async fn list_calendars(self) -> TauResult<Vec<Calendar>> {
+    pub async fn list_calendars(self) -> RpcResult<Vec<Calendar>> {
         list_calendars::handler(&self.state)
     }
 
-    pub async fn list_contacts(self) -> TauResult<Vec<Contact>> {
+    pub async fn list_contacts(self) -> RpcResult<Vec<Contact>> {
         list_contacts::handler(&self.state)
     }
 
@@ -76,7 +76,7 @@ impl CaldirApiImpl {
         calendar_slugs: Vec<String>,
         start: String,
         end: String,
-    ) -> TauResult<Vec<CalendarEvent>> {
+    ) -> RpcResult<Vec<CalendarEvent>> {
         list_events::handler(&self.state, calendar_slugs, start, end)
     }
 
@@ -84,7 +84,7 @@ impl CaldirApiImpl {
         self,
         calendar_slug: String,
         event_id: String,
-    ) -> TauResult<Option<CalendarEvent>> {
+    ) -> RpcResult<Option<CalendarEvent>> {
         get_event::handler(&self.state, calendar_slug, event_id)
     }
 
@@ -92,34 +92,34 @@ impl CaldirApiImpl {
         self,
         uid: String,
         recurrence_id: Option<String>,
-    ) -> TauResult<Option<CalendarEvent>> {
+    ) -> RpcResult<Option<CalendarEvent>> {
         find_event::handler(&self.state, uid, recurrence_id)
     }
 
-    pub async fn create_event(self, input: CreateEventInput) -> TauResult<CalendarEvent> {
+    pub async fn create_event(self, input: CreateEventInput) -> RpcResult<CalendarEvent> {
         create_event::handler(&self.state, input)
     }
 
-    pub async fn update_event(self, input: UpdateEventInput) -> TauResult<()> {
+    pub async fn update_event(self, input: UpdateEventInput) -> RpcResult<()> {
         update_event::handler(&self.state, input)
     }
 
-    pub async fn delete_event(self, calendar_slug: String, event_id: String) -> TauResult<()> {
+    pub async fn delete_event(self, calendar_slug: String, event_id: String) -> RpcResult<()> {
         delete_event::handler(&self.state, calendar_slug, event_id)
     }
 
-    pub async fn delete_recurring_series(self, calendar_slug: String, uid: String) -> TauResult<()> {
+    pub async fn delete_recurring_series(self, calendar_slug: String, uid: String) -> RpcResult<()> {
         delete_recurring_series::handler(&self.state, calendar_slug, uid)
     }
 
     pub async fn split_recurring_series_at(
         self,
         input: SplitRecurringSeriesInput,
-    ) -> TauResult<CalendarEvent> {
+    ) -> RpcResult<CalendarEvent> {
         split_recurring_series_at::handler(&self.state, input)
     }
 
-    pub async fn preview_ics(self, path: String) -> TauResult<IcsPreview> {
+    pub async fn preview_ics(self, path: String) -> RpcResult<IcsPreview> {
         preview_ics::handler(path)
     }
 
@@ -127,7 +127,7 @@ impl CaldirApiImpl {
         self,
         path: String,
         targets: Vec<IcsImportTarget>,
-    ) -> TauResult<IcsImportResult> {
+    ) -> RpcResult<IcsImportResult> {
         import_ics::handler(&self.state, path, targets)
     }
 
@@ -135,11 +135,11 @@ impl CaldirApiImpl {
         self,
         calendar_slugs: Vec<String>,
         query: String,
-    ) -> TauResult<Vec<CalendarEvent>> {
+    ) -> RpcResult<Vec<CalendarEvent>> {
         search_events::handler(&self.state, calendar_slugs, query)
     }
 
-    pub async fn list_invites(self, calendar_slugs: Vec<String>) -> TauResult<Vec<CalendarEvent>> {
+    pub async fn list_invites(self, calendar_slugs: Vec<String>) -> RpcResult<Vec<CalendarEvent>> {
         list_invites::handler(&self.state, calendar_slugs)
     }
 
@@ -148,30 +148,30 @@ impl CaldirApiImpl {
         calendar_slug: String,
         event_id: String,
         response: ResponseStatus,
-    ) -> TauResult<()> {
+    ) -> RpcResult<()> {
         rsvp::handler(&self.state, calendar_slug, event_id, response)
     }
 
-    pub async fn sync_preview(self) -> TauResult<Vec<SyncPreview>> {
+    pub async fn sync_preview(self) -> RpcResult<Vec<SyncPreview>> {
         sync_preview::handler(&self.state).await
     }
 
-    pub async fn sync(self, allow_mass_delete: Vec<String>) -> TauResult<()> {
+    pub async fn sync(self, allow_mass_delete: Vec<String>) -> RpcResult<()> {
         sync::handler(&self.state, allow_mass_delete).await
     }
 
-    pub async fn discard(self) -> TauResult<()> {
+    pub async fn discard(self) -> RpcResult<()> {
         discard::handler(&self.state).await
     }
 
-    pub async fn list_providers(self) -> TauResult<Vec<ProviderInfo>> {
+    pub async fn list_providers(self) -> RpcResult<Vec<ProviderInfo>> {
         list_providers::handler(&self.state)
     }
 
     pub async fn get_provider_connect_info(
         self,
         provider_name: String,
-    ) -> TauResult<ProviderConnectInfo> {
+    ) -> RpcResult<ProviderConnectInfo> {
         get_provider_connect_info::handler(&self.state, provider_name).await
     }
 
@@ -179,7 +179,7 @@ impl CaldirApiImpl {
         self,
         provider_name: String,
         account: String,
-    ) -> TauResult<()> {
+    ) -> RpcResult<()> {
         check_provider_connection::handler(&self.state, provider_name, account).await
     }
 
@@ -187,7 +187,7 @@ impl CaldirApiImpl {
         self,
         app: AppHandle,
         provider_name: String,
-    ) -> TauResult<Vec<Calendar>> {
+    ) -> RpcResult<Vec<Calendar>> {
         connect_provider::handler(&self.state, app, provider_name).await
     }
 
@@ -196,7 +196,7 @@ impl CaldirApiImpl {
         app: AppHandle,
         provider_name: String,
         credentials: Vec<CredentialFieldInput>,
-    ) -> TauResult<CredentialsConnectResult> {
+    ) -> RpcResult<CredentialsConnectResult> {
         connect_provider_with_credentials::handler(&self.state, app, provider_name, credentials)
             .await
     }
@@ -205,42 +205,42 @@ impl CaldirApiImpl {
         self,
         name: String,
         color: Option<String>,
-    ) -> TauResult<Calendar> {
+    ) -> RpcResult<Calendar> {
         create_local_calendar::handler(&self.state, name, color)
     }
 
-    pub async fn rename_calendar(self, calendar_slug: String, name: String) -> TauResult<()> {
+    pub async fn rename_calendar(self, calendar_slug: String, name: String) -> RpcResult<()> {
         rename_calendar::handler(&self.state, calendar_slug, name)
     }
 
-    pub async fn set_calendar_color(self, calendar_slug: String, color: String) -> TauResult<()> {
+    pub async fn set_calendar_color(self, calendar_slug: String, color: String) -> RpcResult<()> {
         set_calendar_color::handler(&self.state, calendar_slug, color)
     }
 
-    pub async fn delete_calendar(self, calendar_slug: String) -> TauResult<()> {
+    pub async fn delete_calendar(self, calendar_slug: String) -> RpcResult<()> {
         delete_calendar::handler(&self.state, calendar_slug)
     }
 
-    pub async fn delete_account(self, provider_name: String, account: String) -> TauResult<()> {
+    pub async fn delete_account(self, provider_name: String, account: String) -> RpcResult<()> {
         delete_account::handler(&self.state, provider_name, account)
     }
 
-    pub async fn get_caldir_settings(self) -> TauResult<CaldirSettings> {
+    pub async fn get_caldir_settings(self) -> RpcResult<CaldirSettings> {
         get_config::get_caldir_settings(&self.state)
     }
-    pub async fn set_time_format(self, time_format: TimeFormat) -> TauResult<()> {
+    pub async fn set_time_format(self, time_format: TimeFormat) -> RpcResult<()> {
         set_config::set_time_format(&self.state, time_format)
     }
 
-    pub async fn set_default_reminders(self, minutes: Vec<i32>) -> TauResult<()> {
+    pub async fn set_default_reminders(self, minutes: Vec<i32>) -> RpcResult<()> {
         set_config::set_default_reminders(&self.state, minutes)
     }
 
-    pub async fn set_default_calendar(self, slug: Option<String>) -> TauResult<()> {
+    pub async fn set_default_calendar(self, slug: Option<String>) -> RpcResult<()> {
         set_config::set_default_calendar(&self.state, slug)
     }
 
-    pub async fn set_calendar_dir(self, path: String) -> TauResult<()> {
+    pub async fn set_calendar_dir(self, path: String) -> RpcResult<()> {
         set_config::set_calendar_dir(&self.state, path)
     }
 }

@@ -1,5 +1,5 @@
 use super::types::Calendar;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 use caldir_core::CalendarConfig;
 
@@ -7,7 +7,7 @@ pub(super) fn handler(
     state: &AppState,
     name: String,
     color: Option<String>,
-) -> TauResult<Calendar> {
+) -> RpcResult<Calendar> {
     let base_slug = caldir_core::Calendar::base_slug_for(Some(&name));
 
     let config = CalendarConfig::new(Some(name), color, None, None);

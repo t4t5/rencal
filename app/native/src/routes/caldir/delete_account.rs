@@ -1,8 +1,8 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
 /// Removes every calendar synced from `account`, leaving the remote untouched.
-pub(super) fn handler(state: &AppState, provider_name: String, account: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, provider_name: String, account: String) -> RpcResult<()> {
     let calendars: Vec<_> = state
         .caldir()
         .calendars()

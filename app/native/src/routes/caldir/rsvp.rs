@@ -1,5 +1,5 @@
 use super::types::ResponseStatus;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::EventInstanceId;
@@ -9,7 +9,7 @@ pub(super) fn handler(
     calendar_slug: String,
     event_id: String,
     response: ResponseStatus,
-) -> TauResult<()> {
+) -> RpcResult<()> {
     let calendar = state.caldir().calendar(&calendar_slug)?;
 
     let user_email = calendar

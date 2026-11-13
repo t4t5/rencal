@@ -267,9 +267,6 @@ impl Router {
             "omarchy.get_colors" => {
                 fallible(self.omarchy.clone().get_colors().await)
             }
-            "platform.needs_native_decorations" => {
-                plain(self.platform.clone().needs_native_decorations().await)
-            }
             "platform.take_pending_event_links" => {
                 plain(self.platform.clone().take_pending_event_links().await)
             }

@@ -1,5 +1,5 @@
 use crate::keys::{self, KeyEdit, KeysSnapshot};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
 // get: the user's bindings from keys.toml; `keys-changed` reports later edits.
@@ -13,7 +13,7 @@ impl KeysApiImpl {
         keys::load()
     }
 
-    pub async fn edit(self, edits: Vec<KeyEdit>) -> TauResult<KeysSnapshot> {
+    pub async fn edit(self, edits: Vec<KeyEdit>) -> RpcResult<KeysSnapshot> {
         keys::edit(&edits).map_err(|message| RpcError::new(RpcErrorKind::Configuration, message))
     }
 }

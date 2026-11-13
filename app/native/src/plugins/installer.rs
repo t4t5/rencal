@@ -394,7 +394,7 @@ impl PluginManager {
         packages_dir: PathBuf,
     ) -> Result<Self, PluginInstallError> {
         // reqwest intentionally leaves provider choice to the application.
-        // Installing ring is idempotent; another Tauri plugin may have done it.
+        // Installing ring is idempotent; another caller may have done it.
         let _ = rustls::crypto::ring::default_provider().install_default();
         let client = reqwest::Client::builder()
             .user_agent(format!("renCal/{}", env!("CARGO_PKG_VERSION")))
@@ -635,7 +635,7 @@ impl PluginManager {
         }
     }
 
-    /// Fetch through the backend so the webview's remote-resource CSP stays closed.
+    /// Fetch through the backend: the UI has no network capability.
     /// Keep the last successful catalog for this process if refresh fails.
     pub async fn catalog(&self) -> PluginCatalog {
         let result = self.fetch_catalog().await;

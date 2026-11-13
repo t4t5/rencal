@@ -338,12 +338,6 @@ export function listenForCommands() {
   const drain = () =>
     void drainCommands().catch((error: unknown) => logger.error("Failed to take commands", error))
   const requests = api.notifications.listen("command-requested", drain)
-  const menu = api.notifications.listen("menu-action", (action) =>
-    runSafely({ command: action }, "menu"),
-  )
   drain()
-  return () => {
-    requests.unlisten()
-    menu.unlisten()
-  }
+  return requests.unlisten
 }

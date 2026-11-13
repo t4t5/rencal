@@ -1,6 +1,6 @@
 //! Watches `/etc/localtime` and emits `system-tz-changed` with the new IANA
 //! timezone name when the system timezone changes, so the frontend can re-render
-//! event times in the current zone. The webview's own `Intl` timezone is fixed
+//! event times in the current zone. The engine's own `Intl` timezone is fixed
 //! at process start, so the frontend cannot detect this itself.
 
 use crate::events::AppEvent;

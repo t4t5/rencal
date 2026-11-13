@@ -1,13 +1,13 @@
 use super::helpers::{is_visible, sort_by_proximity_to_now};
 use super::types::CalendarEvent;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
 pub(super) fn handler(
     state: &AppState,
     calendar_slugs: Vec<String>,
     query: String,
-) -> TauResult<Vec<CalendarEvent>> {
+) -> RpcResult<Vec<CalendarEvent>> {
     let mut events = Vec::new();
     let query_lower = query.to_lowercase();
 

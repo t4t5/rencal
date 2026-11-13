@@ -1,9 +1,9 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::DateRange;
 
-pub(super) async fn handler(state: &AppState) -> TauResult<()> {
+pub(super) async fn handler(state: &AppState) -> RpcResult<()> {
     let range = DateRange::default_sync_window();
     let connections = state.caldir().connections();
 

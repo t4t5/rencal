@@ -1,14 +1,14 @@
 use super::types::{
     CalendarEvent, SplitRecurringSeriesInput, rpc_recurrence_to_core, rpc_time_to_core,
 };
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 use caldir_core::EventUid;
 
 pub(super) fn handler(
     state: &AppState,
     input: SplitRecurringSeriesInput,
-) -> TauResult<CalendarEvent> {
+) -> RpcResult<CalendarEvent> {
     let calendar = state.caldir().calendar(&input.calendar_slug)?;
 
     let split_start = rpc_time_to_core(&input.split_start)?;

@@ -1,12 +1,12 @@
 use super::helpers::{event_time_sort_key, is_visible};
 use super::types::CalendarEvent;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
 pub(super) fn handler(
     state: &AppState,
     calendar_slugs: Vec<String>,
-) -> TauResult<Vec<CalendarEvent>> {
+) -> RpcResult<Vec<CalendarEvent>> {
     let mut invites = Vec::new();
 
     for slug in &calendar_slugs {

@@ -1,6 +1,6 @@
 //! What the backend needs from the app around it: a way to tell the UI that
-//! something happened and a way to open URLs. This replaces Tauri's
-//! `AppHandle`; `Backend.onEvent` delivers the events to TSX.
+//! something happened and a way to open URLs. `Backend.onEvent` delivers the
+//! events to TSX.
 
 use std::sync::LazyLock;
 

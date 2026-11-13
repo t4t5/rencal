@@ -1,9 +1,9 @@
 use super::ics_file::IcsFile;
 use super::types::{CalendarEvent, IcsPreview, IcsSourceCalendar, core_time_to_rpc};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 
 /// What an .ics file holds, for the import dialog. Nothing is written.
-pub(super) fn handler(path: String) -> TauResult<IcsPreview> {
+pub(super) fn handler(path: String) -> RpcResult<IcsPreview> {
     let file = IcsFile::read(&path)?;
 
     let calendars = file

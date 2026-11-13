@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
-# Install the caldir provider binaries for the release pinned in src-tauri/Cargo.toml.
+# Install the caldir provider binaries for the release pinned in a backend's Cargo.toml.
+# Usage: scripts/install-caldir-providers.sh [backend_dir]  (default: src-tauri; the NSH app's is app/native)
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-readonly manifest="src-tauri/Cargo.toml"
-readonly checksums_file="src-tauri/caldir-providers.sha256"
-readonly providers_dir="src-tauri/providers"
+readonly backend="${1:-src-tauri}"
+readonly manifest="$backend/Cargo.toml"
+readonly checksums_file="$backend/caldir-providers.sha256"
+readonly providers_dir="$backend/providers"
 readonly version_file="$providers_dir/.caldir-version"
 readonly -a providers=(google icloud outlook caldav webcal)
 

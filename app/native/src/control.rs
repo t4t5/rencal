@@ -61,7 +61,7 @@ impl CommandOutcome {
 }
 
 /// Requests not yet taken by the frontend, and requests waiting for its
-/// outcome. Lives in `AppState`; drained and resolved through taurpc.
+/// outcome. Lives in `AppState`; drained and resolved over RPC.
 #[derive(Default)]
 pub struct PendingCommands {
     next_id: AtomicU32,

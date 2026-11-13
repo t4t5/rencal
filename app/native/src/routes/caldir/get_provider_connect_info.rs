@@ -1,13 +1,13 @@
 use super::helpers::{build_connect_options, credential_fields, map_fields, provider};
 use super::types::{ProviderConnectInfo, ProviderConnectStepKind};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 
 pub(super) async fn handler(
     state: &AppState,
     provider_name: String,
-) -> TauResult<ProviderConnectInfo> {
+) -> RpcResult<ProviderConnectInfo> {
     use caldir_core::rpc::{ConnectResponse, ConnectStepKind, SetupData};
 
     let provider = provider(state, &provider_name)?;

@@ -1,13 +1,13 @@
 use super::conference::apply_conference;
 use super::event_color::{apply_color_id, color_id};
 use super::types::{UpdateEventInput, rpc_recurrence_to_core, rpc_time_to_core};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{Attendee, EventInstanceId, Reminder};
 use chrono::Utc;
 
-pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> RpcResult<()> {
     let calendar = state.caldir().calendar(&input.calendar_slug)?;
 
     let id = EventInstanceId::from(input.id.as_str());

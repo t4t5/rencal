@@ -1,3 +1,3 @@
-import { createTauRPCProxy } from "./bindings"
+import { createRpcProxy } from "./bindings"
 
-export const rpc = createTauRPCProxy()
+export const rpc = createRpcProxy()

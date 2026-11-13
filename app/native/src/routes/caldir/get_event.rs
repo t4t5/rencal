@@ -1,6 +1,6 @@
 use super::helpers::to_calendar_event;
 use super::types::CalendarEvent;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 use caldir_core::EventInstanceId;
 
@@ -8,7 +8,7 @@ pub(super) fn handler(
     state: &AppState,
     calendar_slug: String,
     event_id: String,
-) -> TauResult<Option<CalendarEvent>> {
+) -> RpcResult<Option<CalendarEvent>> {
     let id = EventInstanceId::from(event_id);
 
     let parsed = state.events(&calendar_slug)?;

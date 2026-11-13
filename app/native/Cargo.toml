@@ -7,6 +7,13 @@ edition = "2024"
 publish = false
 
 [workspace]
+members = ["crates/notifierd", "crates/plugin-contract", "crates/reminder-core", "crates/rencal-config"]
+
+[workspace.dependencies]
+caldir-core = "0.17.5"
+
+[workspace.metadata.caldir]
+provider-tag = "v0.14.10"
 
 [lib]
 name = "rencal_native"
@@ -21,12 +28,12 @@ tokio = { version = "1", features = ["full"] }
 url = "2.5"
 anyhow = "1.0.100"
 socket2 = "0.5"
-caldir-core = "0.17.5"
+caldir-core = { workspace = true }
 icalendar = "0.17"
 chrono = "0.4.43"
-reminder-core = { path = "../../src-tauri/reminder-core" }
-rencal-config = { path = "../../src-tauri/rencal-config" }
-rencal-plugin-contract = { path = "../../src-tauri/plugin-contract" }
+reminder-core = { path = "crates/reminder-core" }
+rencal-config = { path = "crates/rencal-config" }
+rencal-plugin-contract = { path = "crates/plugin-contract" }
 chrono-tz = "0.10.4"
 toml = "0.8"
 toml_edit = "0.20"

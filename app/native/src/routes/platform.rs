@@ -1,6 +1,6 @@
 /// Returns true when the window should use OS-native decorations.
 ///
-/// - macOS uses the overlay titlebar configured in `tauri.macos.conf.json`.
+/// - macOS hides its title bar (`stores/window.ts`).
 /// - Linux only decorates on known stacking WMs (GNOME, KDE, etc.); tiling
 ///   WMs like Hyprland/sway/i3 stay decoration-free as the app expects.
 /// - Windows always decorates.
@@ -55,10 +55,6 @@ impl PlatformApiImpl {
 }
 
 impl PlatformApiImpl {
-    pub async fn needs_native_decorations(self) -> bool {
-        needs_native_decorations()
-    }
-
     pub async fn take_pending_event_links(self) -> Vec<EventDeepLink> {
         self.state.deep_links.take()
     }

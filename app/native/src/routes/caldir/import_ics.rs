@@ -3,7 +3,7 @@ use std::path::PathBuf;
 
 use super::ics_file::IcsFile;
 use super::types::{CalendarEvent, IcsImportDestination, IcsImportResult, IcsImportTarget};
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{CalendarConfig, Event};
@@ -15,7 +15,7 @@ pub(super) fn handler(
     state: &AppState,
     path: String,
     targets: Vec<IcsImportTarget>,
-) -> TauResult<IcsImportResult> {
+) -> RpcResult<IcsImportResult> {
     let mut file = IcsFile::read(&path)?;
     let mut written = Written::default();
 
@@ -63,7 +63,7 @@ fn import(
     file: &mut IcsFile,
     targets: Vec<IcsImportTarget>,
     written: &mut Written,
-) -> TauResult<IcsImportResult> {
+) -> RpcResult<IcsImportResult> {
     // Counted like the preview: a series and its overrides are one event.
     let mut imported = HashSet::new();
     let mut duplicates = HashSet::new();

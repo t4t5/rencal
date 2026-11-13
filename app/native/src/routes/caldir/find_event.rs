@@ -1,6 +1,6 @@
 use super::helpers::to_calendar_event;
 use super::types::CalendarEvent;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::{Event, EventInstanceId, EventUid, expand_in_range};
@@ -11,7 +11,7 @@ pub(super) fn handler(
     state: &AppState,
     uid: String,
     recurrence_id: Option<String>,
-) -> TauResult<Option<CalendarEvent>> {
+) -> RpcResult<Option<CalendarEvent>> {
     if uid.is_empty() {
         return Ok(None);
     }
@@ -51,9 +51,9 @@ fn parse_lookup_target(uid: String, recurrence_id: Option<String>) -> Option<Eve
     }
 }
 
-fn find_in_sources<I>(target: &EventInstanceId, sources: I) -> TauResult<Option<CalendarEvent>>
+fn find_in_sources<I>(target: &EventInstanceId, sources: I) -> RpcResult<Option<CalendarEvent>>
 where
-    I: IntoIterator<Item = TauResult<(String, Arc<Vec<Event>>)>>,
+    I: IntoIterator<Item = RpcResult<(String, Arc<Vec<Event>>)>>,
 {
     // A recurrence target is matched by expanding a narrow window around its
     // recurrence time; the window depends only on the target, so compute it once.
@@ -120,7 +120,7 @@ mod tests {
         event
     }
 
-    fn source(slug: &str, events: Vec<Event>) -> TauResult<(String, Arc<Vec<Event>>)> {
+    fn source(slug: &str, events: Vec<Event>) -> RpcResult<(String, Arc<Vec<Event>>)> {
         Ok((slug.into(), Arc::new(events)))
     }
 

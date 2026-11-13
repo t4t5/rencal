@@ -10,7 +10,7 @@ use std::path::Path;
 use caldir_core::Event;
 use icalendar::Component;
 
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
 /// Set on events Fossify exports; their `CATEGORIES` is the calendar title.
@@ -45,7 +45,7 @@ pub(super) struct IcsFile {
 }
 
 impl IcsFile {
-    pub fn read(path: &str) -> TauResult<Self> {
+    pub fn read(path: &str) -> RpcResult<Self> {
         let path = Path::new(path);
         let contents = std::fs::read_to_string(path).map_err(|e| {
             RpcError::new(
@@ -67,7 +67,7 @@ impl IcsFile {
     }
 
     /// `fallback_name` names events whose calendar has no name.
-    pub fn parse(contents: &str, fallback_name: &str) -> TauResult<Self> {
+    pub fn parse(contents: &str, fallback_name: &str) -> RpcResult<Self> {
         let mut calendars: Vec<SourceCalendar> = Vec::new();
         let mut skipped = 0;
 

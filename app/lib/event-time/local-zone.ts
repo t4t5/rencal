@@ -4,7 +4,7 @@ import { Backend } from "rencal/native"
 /**
  * The viewer's IANA timezone, for example "Europe/Stockholm". Seeded from Intl
  * once (construction is comparatively expensive), then kept current by the
- * Rust-side timezone watcher via setViewerTzid — the webview's own Intl zone is
+ * Rust-side timezone watcher via setViewerTzid — the engine's own Intl zone is
  * fixed at process start, so it cannot be re-read after an OS timezone change.
  */
 let cachedViewerTzid: string | undefined

@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Move caldir-core and the provider binaries to a caldir release, e.g. `scripts/bump-caldir.sh v0.14.1`.
-# Pins caldir-core to the version in that release, regenerates
-# src-tauri/caldir-providers.sha256 from the release's asset digests
-# and updates the matching Nix flake input when Nix is installed.
+# Pins caldir-core to the version in that release in both backends (src-tauri
+# and the NSH app's app/native), regenerates their caldir-providers.sha256 from
+# the release's asset digests and updates the matching Nix flake input when Nix is installed.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -13,8 +13,8 @@ if [[ $# -ne 1 ]]; then
 fi
 
 readonly tag="$1"
-readonly manifest="src-tauri/Cargo.toml"
-readonly checksums="src-tauri/caldir-providers.sha256"
+readonly -a backends=(src-tauri app/native)
+readonly checksums="${backends[0]}/caldir-providers.sha256"
 readonly flake="flake.nix"
 readonly -a targets=(
   aarch64-apple-darwin
@@ -48,17 +48,20 @@ for target in "${targets[@]}"; do
   fi
 done
 
-mv "$checksums.tmp" "$checksums"
+for backend in "${backends[@]}"; do
+  manifest="$backend/Cargo.toml"
+  cp "$checksums.tmp" "$backend/caldir-providers.sha256"
 
-# -i.bak works on both GNU and BSD sed.
-sed -i.bak -E "s|^(provider-tag = \")[^\"]*(\".*)$|\1$tag\2|" "$manifest"
-rm "$manifest.bak"
-grep -q "^provider-tag = \"$tag\"" "$manifest"
+  # -i.bak works on both GNU and BSD sed.
+  sed -i.bak -E "s|^(provider-tag = \")[^\"]*(\".*)$|\1$tag\2|" "$manifest"
+  rm "$manifest.bak"
+  grep -q "^provider-tag = \"$tag\"" "$manifest"
 
-sed -i.bak -E "s|^(caldir-core = \")[^\"]*(\".*)$|\1$core_version\2|" "$manifest"
-rm "$manifest.bak"
-grep -q "^caldir-core = \"$core_version\"" "$manifest"
-cargo update --manifest-path "$manifest" -p caldir-core --precise "$core_version"
+  sed -i.bak -E "s|^(caldir-core = \")[^\"]*(\".*)$|\1$core_version\2|" "$manifest"
+  rm "$manifest.bak"
+  grep -q "^caldir-core = \"$core_version\"" "$manifest"
+  cargo update --manifest-path "$manifest" -p caldir-core --precise "$core_version"
+done
 
 if command -v nix >/dev/null; then
   sed -i.bak -E "s|^( *url = \"github:t4t5/caldir/)[^\"]*(\";)$|\1$tag\2|" "$flake"

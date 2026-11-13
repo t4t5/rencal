@@ -1,6 +1,6 @@
 use caldir_core::{Event, XProperty};
 
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 
 const GOOGLE_COLOR_ID_PROP: &str = "X-GOOGLE-COLOR-ID";
@@ -29,7 +29,7 @@ pub fn event_color(event: &Event) -> Option<String> {
 }
 
 /// Resolve an event color to its Google `colorId`; `None` uses the calendar's.
-pub fn color_id(color: Option<&str>) -> TauResult<Option<&'static str>> {
+pub fn color_id(color: Option<&str>) -> RpcResult<Option<&'static str>> {
     color
         .map(|color| {
             GOOGLE_EVENT_COLORS

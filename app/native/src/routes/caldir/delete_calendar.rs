@@ -1,7 +1,7 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 
-pub(super) fn handler(state: &AppState, calendar_slug: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String) -> RpcResult<()> {
     let calendar = state.caldir().calendar(&calendar_slug)?;
     std::fs::remove_dir_all(calendar.path())?;
 

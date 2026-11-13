@@ -1,7 +1,7 @@
 //! The notification contract shared with the frontend. State changes still flow
 //! through AppState's watch channels and state_bridge; other producers keep
 //! ownership of their notifications. The enum envelope is for typing only:
-//! native Tauri delivery sends its payload on its name.
+//! the host delivers each payload under its name.
 
 use serde::Serialize;
 use specta::Type;
@@ -32,8 +32,6 @@ pub enum AppEvent {
     /// `rencal do` queued a command; drain it with `commands.take_pending`.
     #[cfg_attr(not(unix), allow(dead_code))]
     CommandRequested(()),
-    #[cfg_attr(not(target_os = "macos"), allow(dead_code))]
-    MenuAction(String),
     #[allow(dead_code)] // Emitted by the frontend only; still part of the contract.
     ThemeChanged(ThemeSettings),
 }
@@ -146,11 +144,6 @@ mod tests {
                 AppEvent::CommandRequested(()),
                 "command-requested",
                 Value::Null,
-            ),
-            (
-                AppEvent::MenuAction("event.new".into()),
-                "menu-action",
-                json!("event.new"),
             ),
             (
                 AppEvent::ThemeChanged(ThemeSettings {

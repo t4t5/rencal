@@ -1,9 +1,9 @@
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::routes::error::{RpcError, RpcErrorKind};
 use crate::state::AppState;
 use caldir_core::EventInstanceId;
 
-pub(super) fn handler(state: &AppState, calendar_slug: String, event_id: String) -> TauResult<()> {
+pub(super) fn handler(state: &AppState, calendar_slug: String, event_id: String) -> RpcResult<()> {
     let calendar = state.caldir().calendar(&calendar_slug)?;
 
     let instance_id = EventInstanceId::from(event_id.as_str());

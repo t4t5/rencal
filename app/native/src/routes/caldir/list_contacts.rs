@@ -1,5 +1,5 @@
 use super::types::Contact;
-use crate::routes::TauResult;
+use crate::routes::RpcResult;
 use crate::state::AppState;
 use caldir_core::{Attendee, Event};
 use chrono::{DateTime, Utc};
@@ -13,7 +13,7 @@ struct ContactAgg {
     last_seen: DateTime<Utc>,
 }
 
-pub(super) fn handler(state: &AppState) -> TauResult<Vec<Contact>> {
+pub(super) fn handler(state: &AppState) -> RpcResult<Vec<Contact>> {
     let calendars: Vec<_> = state
         .caldir()
         .calendars()

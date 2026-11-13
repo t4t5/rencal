@@ -2,9 +2,9 @@
 //! `Arc<AppState>` with every RPC surface and background task. Nothing else in
 //! the backend holds statics.
 //!
-//! `AppState` is Tauri-free: it never holds an `AppHandle` and never emits
-//! webview events. It exposes change notifications as tokio `watch` channels;
-//! `state_bridge` turns those into Tauri events. That keeps it constructible
+//! `AppState` is host-free: it never holds an `AppHandle` and never emits
+//! UI events. It exposes change notifications as tokio `watch` channels;
+//! `state_bridge` turns those into app events. That keeps it constructible
 //! and testable without an app.
 
 use std::collections::{BTreeMap, HashSet};
@@ -220,7 +220,7 @@ impl AppState {
     }
 
     /// Latest caldir config; wakes on every change. Backend tasks subscribe to
-    /// this instead of listening to webview events.
+    /// this instead of listening to UI events.
     pub fn subscribe_caldir_config(&self) -> watch::Receiver<CaldirConfig> {
         self.caldir_config.subscribe()
     }

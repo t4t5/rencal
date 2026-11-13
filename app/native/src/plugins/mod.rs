@@ -1,4 +1,4 @@
-//! Tauri-free plugin package contract and on-disk storage helpers.
+//! Host-free plugin package contract and on-disk storage helpers.
 //!
 //! Theme packages are deliberately plain data: this module parses and validates
 //! their manifests, reads user declarations and the internal lockfile, and scans
