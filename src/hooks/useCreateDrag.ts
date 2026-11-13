@@ -11,13 +11,14 @@ import {
   minutesAtY,
   selectionForPointer,
   selectionRange,
+  timedSelection,
 } from "@/lib/drag-to-create"
-import { DAY_MINUTES } from "@/lib/event-time"
+import { epochDay } from "@/lib/event-time"
 
 const SELECTION_ATTR = "data-create-selection"
 
 /**
- * Marks an element that draws part of a days selection; releasing opens the
+ * Marks an element that draws part of a selection; releasing opens the
  * new-event popover beside the part nearest the pointer.
  */
 export function createSelectionAttributes() {
@@ -41,16 +42,30 @@ function isSameSelection(a: CreateSelection, b: CreateSelection): boolean {
   return false
 }
 
-function verticalDistance(rect: DOMRect, y: number): number {
-  if (y < rect.top) return rect.top - y
-  if (y > rect.bottom) return y - rect.bottom
-  return 0
+function distance(rect: DOMRect, x: number, y: number): number {
+  const dx = Math.max(rect.left - x, 0, x - rect.right)
+  const dy = Math.max(rect.top - y, 0, y - rect.bottom)
+  return Math.hypot(dx, dy)
+}
+
+/** The drawn part of the selection nearest the pointer. */
+function nearestSelectionPart(root: ParentNode, x: number, y: number): HTMLElement | null {
+  const parts = Array.from(root.querySelectorAll<HTMLElement>(`[${SELECTION_ATTR}]`))
+  return parts.reduce<HTMLElement | null>(
+    (nearest, candidate) =>
+      !nearest ||
+      distance(candidate.getBoundingClientRect(), x, y) <
+        distance(nearest.getBoundingClientRect(), x, y)
+        ? candidate
+        : nearest,
+    null,
+  )
 }
 
 /**
- * Drag-to-create on the days views mark: a timed range within a "timed"
- * column, or an inclusive range across "day" elements, which may span rows.
- * Releasing opens the new-event popover for it.
+ * Drag-to-create on the days views mark: a timed range across "timed" columns,
+ * or an inclusive range across "day" elements, which may span rows. Releasing
+ * opens the new-event popover for it.
  */
 export function useCreateDrag(): {
   selection: CreateSelection | null
@@ -63,47 +78,47 @@ export function useCreateDrag(): {
 
   const session = useDragToCreateSession<Anchor, CreateSelection>({
     selectionAt: (anchor, originEl, pointer) => {
-      if (anchor.day.zone === "timed") {
-        const pointerMinutes = minutesAtY(originEl.getBoundingClientRect(), pointer.y)
-        return {
-          kind: "timed",
-          day: anchor.day.day,
-          ...selectionForPointer(anchor.minutes, pointerMinutes),
-        }
-      }
       // Clamped so dragging past the grid's edge keeps selecting its edge days.
       const point = anchor.scrollEl
         ? clampPointToRect(anchor.scrollEl.getBoundingClientRect(), pointer.x, pointer.y)
         : pointer
+
+      if (anchor.day.zone === "timed") {
+        // Columns line up with the origin's; above or below them, take the column at its edge.
+        const column = originEl.getBoundingClientRect()
+        const y = Math.max(column.top + 1, Math.min(column.bottom - 1, point.y))
+        const hit = dayElementAt(point.x, y, "timed")
+        if (!hit) return null
+        const range = selectionForPointer(
+          anchor.minutes,
+          minutesAtY(column, pointer.y),
+          epochDay(hit.day) - epochDay(anchor.day.day),
+        )
+        return timedSelection(anchor.day.day, range)
+      }
+
       const hit = dayElementAt(point.x, point.y)
       if (!hit || hit.zone !== anchor.day.zone) return null
       return { kind: "days", ...daySelectionForPointer(anchor.day.day, hit.day) }
     },
     isSameSelection,
     onCommit: (selection, anchor, originEl, pointer) => {
+      const part = nearestSelectionPart(anchor.scrollEl ?? document, pointer.x, pointer.y)
+
       if (selection.kind === "timed") {
         const range = selectionRange(selection.day, selection)
-        const rect = originEl.getBoundingClientRect()
-        const midpointMinutes = (selection.startMinutes + selection.endMinutes) / 2
-        openDayDraft(selection.day, originEl, {
+        // Beside the part's column, level with the part's middle.
+        const column = part?.closest<HTMLElement>("[data-day-key]") ?? originEl
+        const rect = (part ?? originEl).getBoundingClientRect()
+        openDayDraft(selection.day, column, {
           allDay: false,
           start: range.start,
           end: range.end,
-          anchorY: rect.top + (midpointMinutes / DAY_MINUTES) * rect.height,
+          anchorY: rect.top + rect.height / 2,
         })
         return
       }
 
-      const parts = Array.from(
-        (anchor.scrollEl ?? document).querySelectorAll<HTMLElement>(`[${SELECTION_ATTR}]`),
-      )
-      const part = parts.reduce<HTMLElement | null>((nearest, candidate) => {
-        if (!nearest) return candidate
-        return verticalDistance(candidate.getBoundingClientRect(), pointer.y) <
-          verticalDistance(nearest.getBoundingClientRect(), pointer.y)
-          ? candidate
-          : nearest
-      }, null)
       // A snapshot: the selection unmounts once the popover opens.
       const anchorRect = (part ?? originEl).getBoundingClientRect()
       const range = daySelectionRange(selection)

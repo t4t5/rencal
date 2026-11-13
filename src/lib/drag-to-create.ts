@@ -7,8 +7,9 @@ type MinuteRange = { startMinutes: number; endMinutes: number }
 type DayRange = { firstDay: Temporal.PlainDate; lastDay: Temporal.PlainDate }
 
 /**
- * A range being drawn to create an event: wallclock minutes in one day column,
- * snapped to 15, or an inclusive range of days.
+ * A range being drawn to create an event: wallclock minutes snapped to 15, or an
+ * inclusive range of days. Timed minutes count from the midnight starting `day`,
+ * so a range crossing into later days ends past 24:00 (`DAY_MINUTES`).
  */
 export type CreateSelection =
   | {
@@ -58,13 +59,22 @@ export function minutesAtY(rect: { top: number; height: number }, y: number): nu
   return ((y - rect.top) / rect.height) * DAY_MINUTES
 }
 
-/** Snapped selection that always contains the anchor's slot and grows toward the pointer. */
-export function selectionForPointer(anchorMinutes: number, pointerMinutes: number): MinuteRange {
+/**
+ * Snapped selection that always contains the anchor's slot and grows toward the
+ * pointer, which is `pointerDayOffset` days after the anchor's day. Minutes count
+ * from the anchor day's midnight, so they run outside 00:00–24:00 across days.
+ */
+export function selectionForPointer(
+  anchorMinutes: number,
+  pointerMinutes: number,
+  pointerDayOffset = 0,
+): MinuteRange {
   // Keep even an anchor on the exact bottom edge inside the final slot of the day.
   const anchor = Math.max(0, Math.min(DAY_MINUTES - 1e-9, anchorMinutes))
   const slotStart = Math.floor(anchor / DRAG_SNAP_MINUTES) * DRAG_SNAP_MINUTES
   const slotEnd = slotStart + DRAG_SNAP_MINUTES
-  const pointer = Math.max(0, Math.min(DAY_MINUTES, pointerMinutes))
+  const pointer =
+    pointerDayOffset * DAY_MINUTES + Math.max(0, Math.min(DAY_MINUTES, pointerMinutes))
 
   if (pointer >= slotEnd) {
     return {
@@ -81,11 +91,26 @@ export function selectionForPointer(anchorMinutes: number, pointerMinutes: numbe
   return { startMinutes: slotStart, endMinutes: slotEnd }
 }
 
-/** Build the wallclock range for a selection, treating 24:00 as next-day midnight. */
+/** Timed selection for a range from `anchorDay`'s midnight, rebased on the day it starts. */
+export function timedSelection(
+  anchorDay: Temporal.PlainDate,
+  range: MinuteRange,
+): Extract<CreateSelection, { kind: "timed" }> {
+  const days = Math.floor(range.startMinutes / DAY_MINUTES)
+  return {
+    kind: "timed",
+    day: anchorDay.add({ days }),
+    startMinutes: range.startMinutes - days * DAY_MINUTES,
+    endMinutes: range.endMinutes - days * DAY_MINUTES,
+  }
+}
+
+/** Build the wallclock range for minutes from `day`'s midnight, rolling 24:00 into the next day. */
 export function selectionRange(day: Temporal.PlainDate, selection: MinuteRange): EventTimeRange {
   const timeAtMinutes = (minutes: number) => {
-    if (minutes === DAY_MINUTES) return atTime(day.add({ days: 1 }), 0)
-    return atTime(day, Math.floor(minutes / 60), minutes % 60)
+    const days = Math.floor(minutes / DAY_MINUTES)
+    const rest = minutes - days * DAY_MINUTES
+    return atTime(day.add({ days }), Math.floor(rest / 60), rest % 60)
   }
 
   return {
