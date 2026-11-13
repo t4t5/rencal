@@ -51,12 +51,6 @@ export function grabFor(event: CalendarEvent, hit: DropHit | null): DragGrab {
   }
 }
 
-/** Duration of a single-day timed event; an event ending at midnight counts to midnight. */
-function timedDurationMinutes(event: CalendarEvent): number {
-  const { startLocalMinutes, endLocalMinutes, firstDay, endDay } = event.dateInfo
-  return endDay > firstDay ? DAY_MINUTES - startLocalMinutes : endLocalMinutes - startLocalMinutes
-}
-
 function shiftRange(event: CalendarEvent, days: number, minutes: number): EventTimeRange {
   return {
     start: addDays(addMinutes(event.start, minutes), days),
@@ -79,16 +73,17 @@ export function computeDropRange(
   if (hit.zone === "timed") {
     if (spanning || hit.minutes == null) return null
 
-    const duration = timedDurationMinutes(event)
-    const snapped =
-      Math.round((hit.minutes - grab.minuteOffset) / DRAG_SNAP_MINUTES) * DRAG_SNAP_MINUTES
-    // Keep the whole event inside the day it was dropped on.
-    const maxStart = Math.max(0, DAY_MINUTES - duration)
-    const newStart = Math.min(maxStart, Math.max(0, snapped))
-    const minuteDelta = newStart - event.dateInfo.startLocalMinutes
+    // From the midnight `dayDelta` days in, rolling over into later days: a block
+    // grabbed past midnight keeps the event's start on an earlier day than the pointer.
+    const snapped = Math.max(
+      0,
+      Math.round((hit.minutes - grab.minuteOffset) / DRAG_SNAP_MINUTES) * DRAG_SNAP_MINUTES,
+    )
+    const days = dayDelta + Math.floor(snapped / DAY_MINUTES)
+    const minuteDelta = (snapped % DAY_MINUTES) - event.dateInfo.startLocalMinutes
 
-    if (dayDelta === 0 && minuteDelta === 0) return null
-    return shiftRange(event, dayDelta, minuteDelta)
+    if (days === 0 && minuteDelta === 0) return null
+    return shiftRange(event, days, minuteDelta)
   }
 
   if (hit.zone === "all-day" && !spanning) return null

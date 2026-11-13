@@ -264,7 +264,7 @@ export function useEventProps(event: CalendarEvent, options: EventPropsOptions =
     "data-slot": "calendar-event",
     // Finds the event for the context menu, which the viewport opens.
     "data-event-key": event.key,
-    // Drawn as a bar across days, like multi-day timed events, or at its time.
+    // Drawn as a bar across days, like timed events covering whole days, or at its time.
     "data-kind": isSpanning(appEvent) ? "all-day" : "timed",
     "data-selected": state.selected || undefined,
     "data-rsvp": rsvp ?? undefined,

@@ -58,12 +58,14 @@ describe("getLastEventEndTime", () => {
     ]).toEqual([2025, 7, 18, 8, 0])
   })
 
-  it("recognizes a timed event spanning the spring-forward boundary", () => {
+  it("recognizes a timed event covering the spring-forward day as spanning", () => {
     const originalViewerTz = getViewerTzid()
     try {
       setViewerTzid("Europe/London")
-      const event = eventBetween(new Date(2026, 2, 28, 22), new Date(2026, 2, 29, 2))
-      expect(isSpanning(event)).toBe(true)
+      const overnight = eventBetween(new Date(2026, 2, 28, 22), new Date(2026, 2, 29, 2))
+      const covering = eventBetween(new Date(2026, 2, 28, 22), new Date(2026, 2, 30, 2))
+      expect(isSpanning(overnight)).toBe(false)
+      expect(isSpanning(covering)).toBe(true)
     } finally {
       setViewerTzid(originalViewerTz)
     }

@@ -30,10 +30,11 @@ in the week time grid, applied to both start and end. Duration, kind (all-day vs
 timed), and the event's own timezone are all preserved.
 
 - Month cells (`"day"`, see `DayZone` in `src/lib/day-grid.ts`): any event, time of day unchanged.
-- Week all-day lane and day headers (`"all-day"`): all-day and multi-day events
-  only.
-- Week day columns (`"timed"`): single-day timed events only, snapped to
-  15 minutes and clamped inside the day.
+- Week all-day lane and day headers (`"all-day"`): all-day events and timed
+  events covering a whole day (`isSpanning`) only.
+- Week day columns (`"timed"`): other timed events, including those crossing
+  midnight, snapped to 15 minutes. A drop near the bottom of a column runs the
+  event past midnight.
 
 Dropping where the event can't land (or back on its own slot) shows no preview
 and does nothing on release. Read-only calendars and events the user doesn't

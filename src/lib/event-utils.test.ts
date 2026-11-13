@@ -1,11 +1,12 @@
+import { Temporal } from "@js-temporal/polyfill"
 import { describe, expect, it } from "vitest"
 
 import type { Calendar } from "@/lib/api"
 
 import type { CalendarEvent } from "./cal-events"
-import { computeEventDateInfo, type EventTime } from "./event-time"
+import { atTime, computeEventDateInfo, type EventTime } from "./event-time"
 import { fromRpcEventTime } from "./event-time/rpc"
-import { getUserResponseStatus, isUserOrganizer } from "./event-utils"
+import { getUserResponseStatus, isSpanning, isUserOrganizer } from "./event-utils"
 
 const date = (value: string): EventTime => fromRpcEventTime({ kind: "date", date: value })
 
@@ -20,10 +21,7 @@ const calendar: Calendar = {
   read_only: false,
 }
 
-function invite(): CalendarEvent {
-  const start = date("2026-10-13")
-  const end = date("2026-10-13")
-
+function invite(start = date("2026-10-13"), end = date("2026-10-13")): CalendarEvent {
   return {
     id: "invite",
     recurring_event_id: null,
@@ -58,5 +56,29 @@ describe("invitee matching", () => {
 
   it("treats invites to the calendar email as not organized by the user", () => {
     expect(isUserOrganizer(invite(), [calendar])).toBe(false)
+  })
+})
+
+describe("isSpanning", () => {
+  const at = (day: string, hour: number, minute = 0) =>
+    atTime(Temporal.PlainDate.from(day), hour, minute)
+  const spanning = (start: EventTime, end: EventTime) => isSpanning(invite(start, end))
+
+  it("spans all-day events", () => {
+    expect(spanning(date("2026-10-13"), date("2026-10-14"))).toBe(true)
+  })
+
+  it("keeps timed events within a day, or crossing midnight only, at their times", () => {
+    expect(spanning(at("2026-10-13", 9), at("2026-10-13", 10))).toBe(false)
+    expect(spanning(at("2026-10-13", 0), at("2026-10-14", 0))).toBe(false)
+    expect(spanning(at("2026-10-13", 22), at("2026-10-14", 0))).toBe(false)
+    expect(spanning(at("2026-10-13", 23), at("2026-10-14", 1))).toBe(false)
+    expect(spanning(at("2026-10-13", 12), at("2026-10-14", 13))).toBe(false)
+  })
+
+  it("spans timed events covering a whole day", () => {
+    expect(spanning(at("2026-10-13", 0), at("2026-10-14", 1))).toBe(true)
+    expect(spanning(at("2026-10-13", 12), at("2026-10-15", 0))).toBe(true)
+    expect(spanning(at("2026-10-13", 12), at("2026-10-16", 14))).toBe(true)
   })
 })
