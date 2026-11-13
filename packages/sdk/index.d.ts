@@ -243,12 +243,13 @@ export declare function Tooltip({ content, side, delay, disabled, open: openProp
  *   time; new events start after the day's last one.
  * - "all-day": a day in an all-day lane. Spanning events only; new events are all-day.
  * - "timed": a day column from 00:00 at its top to 24:00 at its bottom.
- *   Single-day timed events only, at the time under the pointer.
+ *   Timed events not covering a whole day, at the time under the pointer.
  */
 export type DayZone = "day" | "all-day" | "timed";
 /**
- * A range being drawn to create an event: wallclock minutes in one day column,
- * snapped to 15, or an inclusive range of days.
+ * A range being drawn to create an event: wallclock minutes snapped to 15, or an
+ * inclusive range of days. Timed minutes count from the midnight starting `day`,
+ * so a range crossing into later days ends past 24:00 (`DAY_MINUTES`).
  */
 export type CreateSelection = {
 	readonly kind: "timed";
@@ -263,10 +264,11 @@ export type CreateSelection = {
 /**
  * Props that make an element `date` in the view. renCal then handles, per `zone`:
  * - dropping dragged events there (`"day"`: any event, keeping its time;
- *   `"all-day"`: all-day and multi-day events; `"timed"`: single-day timed
- *   events, at the time under the pointer);
- * - drawing a new event by dragging from it (`"timed"` within the column,
- *   `"day"` across days), shown through `useDayGrid`;
+ *   `"all-day"`: events drawn across days (`isSpanning`); `"timed"`: other
+ *   timed events, at the time under the pointer);
+ * - drawing a new event by dragging from it (`"timed"` across timed columns,
+ *   from the time pressed to the time under the pointer; `"day"` across days),
+ *   shown through `useDayGrid`;
  * - double-click and a "Create event" context menu, for a timed event at the
  *   hour under the pointer, an all-day event, or one after the day's last event;
  * - anchoring the new-event popover the "add event" shortcut opens.
@@ -287,7 +289,8 @@ export declare function selectionProps(): {
 };
 /**
  * The day grid's drag state. `selection` is the range being drawn to create an
- * event, for the view to render with `selectionProps()` on what draws it.
+ * event, for the view to render with `selectionProps()` on what draws it. A
+ * timed one can run across days: draw its part on each day it touches.
  * `isDragging` is true while an event is moved or drawn, for holding off what
  * would fight the drag's autoscroll, like scroll snapping.
  */

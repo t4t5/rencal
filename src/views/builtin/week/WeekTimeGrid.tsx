@@ -218,8 +218,8 @@ export function WeekTimeGrid({
                 <WeekTimedEvent key={block.item.key} block={block} />
               ))}
 
-              {selection?.kind === "timed" && selection.day.equals(day.date) && (
-                <DragToCreateSelection selection={selection} />
+              {selection?.kind === "timed" && (
+                <DragToCreateSelection selection={selection} date={day.date} />
               )}
 
               {day.isToday && <CurrentTimeIndicator />}

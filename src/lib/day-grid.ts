@@ -15,7 +15,7 @@ import { dateKeyToPlainDate, formatDateKey } from "@/lib/event-time"
  *   time; new events start after the day's last one.
  * - "all-day": a day in an all-day lane. Spanning events only; new events are all-day.
  * - "timed": a day column from 00:00 at its top to 24:00 at its bottom.
- *   Single-day timed events only, at the time under the pointer.
+ *   Timed events not covering a whole day, at the time under the pointer.
  */
 export type DayZone = "day" | "all-day" | "timed"
 
@@ -31,13 +31,18 @@ function readDay(el: HTMLElement): DayElement | null {
   return { el, day: dateKeyToPlainDate(dayKey), zone: dayZone as DayZone }
 }
 
-/** The day element under a viewport point, even below an event drawn over it. */
-export function dayElementAt(x: number, y: number): DayElement | null {
+/**
+ * The day element under a viewport point, even below an event drawn over it.
+ * Given a `zone`, the first one of that zone, even below other days' elements.
+ */
+export function dayElementAt(x: number, y: number, zone?: DayZone): DayElement | null {
   const el = document
     .elementsFromPoint(x, y)
     .find(
       (candidate): candidate is HTMLElement =>
-        candidate instanceof HTMLElement && candidate.dataset.dayKey !== undefined,
+        candidate instanceof HTMLElement &&
+        candidate.dataset.dayKey !== undefined &&
+        (zone === undefined || candidate.dataset.dayZone === zone),
     )
   return el ? readDay(el) : null
 }

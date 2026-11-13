@@ -1,6 +1,6 @@
 # Drag to create
 
-Empty calendar space can be dragged to draw a new event: a timed range in a "timed" day column, like the week time grid's, or an inclusive whole-day range across "day" elements, like the month grid's cells.
+Empty calendar space can be dragged to draw a new event: a timed range across "timed" day columns, like the week time grid's, or an inclusive whole-day range across "day" elements, like the month grid's cells.
 
 ## Who owns what
 
@@ -18,18 +18,20 @@ What a new event starts as depends on the zone: a timed event at the hour under 
 
 Only a left-button press directly on a day element can start a create drag. Event blocks therefore keep drag-to-reschedule, ordinary clicks still navigate, and right-click keeps opening the context menu.
 
-Pure selection math lives in `src/lib/drag-to-create.ts`. Temporary selections use the default writable calendar's flat tint: the provider sets `--create-selection-color` on the viewport, and `global.css` paints every `[data-create-selection]` with it. Release opens the normal event popover through `useOpenDayDraft`; the standard create gate prompts to connect an account when no writable calendar exists. The committed draft enters the normal event layout in the same update and replaces the flat selection with its dashed draft block.
+Pure selection math lives in `src/lib/drag-to-create.ts`. Temporary selections use the default writable calendar's flat tint: the provider sets `--create-selection-color` on the viewport, and `global.css` paints every `[data-create-selection]` with it. Views mark each element drawing part of a selection with `selectionProps()`, and release anchors the popover beside the part nearest the pointer. Release opens the normal event popover through `useOpenDayDraft`; the standard create gate prompts to connect an account when no writable calendar exists. The committed draft enters the normal event layout in the same update and replaces the flat selection with its dashed draft block.
 
 ## Timed selections
 
-The press anchors to one day and one wallclock minute. The selection remains in that day, snaps to 15-minute slots, includes the pressed slot, grows up or down, and clamps to 00:00–24:00. The week plugin draws its flat block (`src/views/builtin/week/DragToCreateSelection.tsx`).
+The press anchors to one day and one wallclock minute. The selection snaps to 15-minute slots, includes the pressed slot, and grows up or down to the time under the pointer, in the "timed" column under it: dragging from 20:00 on Tuesday to 15:00 on Wednesday selects the whole stretch between them. The column is found by the pointer's X, clamped into the scroll container; vertically every column lines up with the pressed one, so a pointer above or below the columns, or over the sticky header, still finds the column at that X. Minutes past either end of a column clamp to that day's 00:00 or 24:00.
 
-The anchor minute is captured at press time because auto-scroll moves the column's viewport rectangle. On release, the selected minutes become exact timed `EventTime` start/end values and the popover anchors beside the vertical midpoint of the selection.
+The selection's minutes count from the midnight starting its `day`, the day it starts on, so a range crossing into later days ends past 24:00, like a `CalendarEvent`'s `endMinutes`. The week plugin draws the part on each day it touches as a flat block (`src/views/builtin/week/DragToCreateSelection.tsx`).
+
+The anchor minute is captured at press time because auto-scroll moves the column's viewport rectangle. On release, the selected minutes become exact timed `EventTime` start/end values and the popover anchors beside the vertical midpoint of the part nearest the pointer. A selection covering a whole day becomes an event drawn across days (`isSpanning`), so its draft moves to the all-day lane.
 
 ## Day selections
 
 The press anchors to a `Temporal.PlainDate`. The session clamps pointer coordinates into the scroll container and finds the day element under them with the same zone, so the inclusive range can grow in either direction across rows and month boundaries. Passing over a border or other gap keeps the last valid selection. Storing dates rather than virtual row indices keeps the selection stable when infinite scroll prepends weeks.
 
-In the month view, each visible week lays the range out with its spanning events through `layoutAllDay`, as though it were the appended draft event. Overlapping bars therefore move to their eventual positions during the drag and stay there after release. Only the true range ends are rounded. On release, the popover receives an all-day `[start, end)` range whose end is the day after the last selected date, and anchors to a snapshot of the segment nearest the pointer. Views mark their segments with `selectionProps()` (`src/views/builtin/month/DragToCreateSelection.tsx`). Like every popover anchor, a segment wider than the popover collapses to the release point (`fitPopoverAnchor`).
+In the month view, each visible week lays the range out with its spanning events through `layoutAllDay`, as though it were the appended draft event. Overlapping bars therefore move to their eventual positions during the drag and stay there after release. Only the true range ends are rounded. On release, the popover receives an all-day `[start, end)` range whose end is the day after the last selected date, and anchors to a snapshot of the segment nearest the pointer. The month plugin draws them in `src/views/builtin/month/DragToCreateSelection.tsx`. Like every popover anchor, a segment wider than the popover collapses to the release point (`fitPopoverAnchor`).
 
 The week all-day lane could take day selections too: `useCreateDrag` would need to accept "all-day" zones, and the week plugin would render the clipped selection in its own lane geometry.

@@ -13,10 +13,11 @@ export type { CreateSelection } from "@/lib/drag-to-create"
 /**
  * Props that make an element `date` in the view. renCal then handles, per `zone`:
  * - dropping dragged events there (`"day"`: any event, keeping its time;
- *   `"all-day"`: all-day and multi-day events; `"timed"`: single-day timed
- *   events, at the time under the pointer);
- * - drawing a new event by dragging from it (`"timed"` within the column,
- *   `"day"` across days), shown through `useDayGrid`;
+ *   `"all-day"`: events drawn across days (`isSpanning`); `"timed"`: other
+ *   timed events, at the time under the pointer);
+ * - drawing a new event by dragging from it (`"timed"` across timed columns,
+ *   from the time pressed to the time under the pointer; `"day"` across days),
+ *   shown through `useDayGrid`;
  * - double-click and a "Create event" context menu, for a timed event at the
  *   hour under the pointer, an all-day event, or one after the day's last event;
  * - anchoring the new-event popover the "add event" shortcut opens.
@@ -38,7 +39,8 @@ export function selectionProps() {
 
 /**
  * The day grid's drag state. `selection` is the range being drawn to create an
- * event, for the view to render with `selectionProps()` on what draws it.
+ * event, for the view to render with `selectionProps()` on what draws it. A
+ * timed one can run across days: draw its part on each day it touches.
  * `isDragging` is true while an event is moved or drawn, for holding off what
  * would fight the drag's autoscroll, like scroll snapping.
  */
