@@ -47,9 +47,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
             event.url = input.url;
             event.start = start;
             event.end = Some(end);
-            if let Some(availability) = input.availability {
-                event.availability = availability.into();
-            }
+            event.availability = input.availability.into();
             event.reminders = input_reminders;
             event.attendees = input_attendees;
             apply_color_id(event, color_id);
@@ -81,9 +79,7 @@ pub(super) fn handler(state: &AppState, input: UpdateEventInput) -> TauResult<()
         updated_event.url = input.url;
         updated_event.start = start;
         updated_event.end = Some(end);
-        if let Some(availability) = input.availability {
-            updated_event.availability = availability.into();
-        }
+        updated_event.availability = input.availability.into();
         updated_event.recurrence = input_recurrence;
         updated_event.reminders = input_reminders;
         updated_event.attendees = input_attendees;

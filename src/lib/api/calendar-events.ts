@@ -104,9 +104,7 @@ export interface SplitRecurringSeriesInput {
   new_recurrence: Recurrence | null
 }
 
-function eventInputToRpc(
-  input: EventReplacement,
-): Omit<RpcCreateEventInput, "calendar_slug"> & { availability: EventAvailability } {
+function eventInputToRpc(input: EventReplacement): Omit<RpcCreateEventInput, "calendar_slug"> {
   return {
     summary: input.summary,
     availability: input.availability,

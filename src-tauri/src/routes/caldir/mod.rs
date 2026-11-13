@@ -35,9 +35,6 @@ mod sync;
 mod sync_preview;
 mod update_event;
 
-#[cfg(test)]
-mod availability_tests;
-
 pub use types::{
     CaldirSettings, Calendar, CalendarEvent, Contact, CreateEventInput, CredentialFieldInput,
     CredentialsConnectResult, IcsImportResult, IcsImportTarget, IcsPreview, ProviderConnectInfo,

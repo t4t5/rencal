@@ -149,10 +149,9 @@ impl From<Status> for EventStatus {
 }
 
 /// Whether the event blocks time (TRANSP: OPAQUE) or leaves it free (TRANSPARENT).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, Type)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, Type)]
 #[serde(rename_all = "lowercase")]
 pub enum EventAvailability {
-    #[default]
     Busy,
     Free,
 }
@@ -306,7 +305,6 @@ pub struct ProviderConnectInfo {
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct CreateEventInput {
     pub calendar_slug: String,
-    #[serde(default)]
     pub availability: EventAvailability,
     pub summary: String,
     pub description: Option<String>,
@@ -326,8 +324,7 @@ pub struct CreateEventInput {
 #[derive(Clone, Serialize, Deserialize, Type)]
 pub struct UpdateEventInput {
     pub id: String,
-    /// Omitted by older clients; keep the stored availability when absent.
-    pub availability: Option<EventAvailability>,
+    pub availability: EventAvailability,
     pub calendar_slug: String,
     /// If set and different from calendar_slug, moves the event to this calendar
     pub new_calendar_slug: Option<String>,
