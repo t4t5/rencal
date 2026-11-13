@@ -7,6 +7,7 @@ import { EVENT_POPOVER_GAP, EVENT_POPOVER_PADDING, EVENT_POPOVER_WIDTH } from "@
 import { inspectable } from "@/lib/inspect"
 import { cn } from "@/lib/utils"
 
+import { annotating } from "@/stores/annotate"
 import { activeEvent, setActiveEventKey } from "@/stores/events"
 import { noteDismissed, popoverAnchor } from "@/stores/popover"
 import { requestSave } from "@/stores/recurrence"
@@ -35,8 +36,9 @@ export function EventPopup(props: {
       margin={EVENT_POPOVER_PADDING}
       class={cn(POPUP_SURFACE, "overflow-hidden shadow-2xl")}
       style={{ width: EVENT_POPOVER_WIDTH, maxHeight: windowSize().height * 0.8, ...motion.style }}
-      onPressOutside={() => props.onDismiss("pressOutside")}
-      onCancel={() => props.onDismiss("cancel")}
+      // Annotate mode's layer is above it: its presses and Escape aren't leaving.
+      onPressOutside={() => !annotating() && props.onDismiss("pressOutside")}
+      onCancel={() => !annotating() && props.onDismiss("cancel")}
     >
       <Scroll class="min-h-0 shrink">{props.children}</Scroll>
     </Overlay>

@@ -6,6 +6,7 @@ import { EditEvent } from "@/components/event-parts/EditEvent"
 import { eventKey } from "@/lib/cal-events"
 import { inspectable } from "@/lib/inspect"
 
+import { annotating } from "@/stores/annotate"
 import { activeEvent, setActiveEventKey } from "@/stores/events"
 import { requestSave } from "@/stores/recurrence"
 
@@ -20,7 +21,8 @@ export function SheetEvent() {
       open={!!activeEvent()}
       side="right"
       onOpenChange={(event) => {
-        if (!event.open) setActiveEventKey(null)
+        // Annotate mode's presses and Escape aren't leaving.
+        if (!event.open && !annotating()) setActiveEventKey(null)
       }}
       backdropClass="bg-overlay"
       popupClass="w-3/4 max-w-sm border-l border-border bg-background shadow-lg"
