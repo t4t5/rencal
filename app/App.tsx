@@ -14,6 +14,7 @@ import { startDeepLinks } from "@/stores/deep-links"
 import { startEventStore } from "@/stores/events"
 import { loadSettings } from "@/stores/settings"
 import { startSync } from "@/stores/sync"
+import { startUpdates } from "@/stores/update"
 import { isWideWindow, loadViewState } from "@/stores/view"
 import { startWindow } from "@/stores/window"
 import { startThemes } from "@/themes/controller"
@@ -34,6 +35,7 @@ async function start() {
   startIcsImport()
   ready.set(true)
   startDeepLinks()
+  startUpdates()
 }
 
 function App() {

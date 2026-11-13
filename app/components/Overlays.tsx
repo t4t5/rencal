@@ -16,6 +16,7 @@ import { PluginInstallDialog } from "@/components/settings/plugins/PluginInstall
 import { SheetEvent } from "@/components/sidebar/SheetEvent"
 import { MassDeleteConfirmDialog } from "@/components/sync/MassDeleteConfirmDialog"
 import { Toaster } from "@/components/ui/toaster"
+import { UpdateDialog } from "@/components/update/UpdateDialog"
 
 import { annotateEnabled } from "@/stores/annotate"
 import { isWideWindow } from "@/stores/view"
@@ -39,6 +40,7 @@ export function Overlays() {
       <MassDeleteConfirmDialog />
       <PendingIcsImport />
       <PluginInstallDialog />
+      <UpdateDialog />
       <If when={annotateEnabled}>
         <AnnotateOverlay />
       </If>

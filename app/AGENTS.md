@@ -19,6 +19,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. The `nsh` CLI must match the ver
 - `lib/`: logic from `../src/lib`, unchanged wherever possible. Keep its tests passing.
 - `stores/`: module-level signals, in place of React contexts. One owner per piece of state; read through functions.
 - `components/`, `views/`: UI. `components/ui/` is the styled kit over `nsh/base`.
+- Updates: `nsh.json`'s `updater` reads `nsh-latest.json` from the latest GitHub release, `stores/update.ts` drives the check and install, and `../scripts/write-update-manifests.sh` writes that manifest for a release, with the `latest.json` that moves v0.9 installs over.
 - `themes/`, `theme.json`: tokens. `themes/index.ts` applies a theme at run time.
 
 ## Conventions

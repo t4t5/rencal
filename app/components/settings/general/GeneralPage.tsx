@@ -23,6 +23,13 @@ import {
   showWeekNumbers,
   timeFormat,
 } from "@/stores/settings"
+import {
+  availableUpdate,
+  installUpdate,
+  updateActionLabel,
+  updateError,
+  updatePhase,
+} from "@/stores/update"
 
 const TIME_FORMATS = [
   { value: "24h", title: "24h" },
@@ -68,6 +75,17 @@ export function GeneralPage() {
       <View class="h-px bg-border" />
       <SettingsField label="About" class="w-[400px]">
         <Text class="text-xs text-muted-foreground">renCal v{appInfo.version}</Text>
+        <If when={availableUpdate()}>
+          <Button
+            variant="link"
+            size="xs"
+            class="self-start px-0"
+            label={updateActionLabel(`Update to v${availableUpdate()?.version}`)}
+            disabled={updatePhase() !== "idle"}
+            onPress={() => void installUpdate()}
+          />
+          <ErrorText message={updateError()} />
+        </If>
       </SettingsField>
     </SettingsContent>
   )

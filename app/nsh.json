@@ -1,6 +1,6 @@
 {
   "name": "renCal",
-  "id": "dev.rencal.app",
+  "id": "org.ren.rencal",
   "version": "0.9.2",
   "build": 1,
   "rust": "native",
@@ -13,6 +13,10 @@
     }
   },
   "singleInstance": true,
+  "updater": {
+    "url": "https://github.com/t4t5/rencal/releases/latest/download/nsh-latest.json",
+    "publicKey": "QSE4HYwk/sFM81vmE0YoHIk6YV4jtwtizPRB+4WRmso="
+  },
   "resolve": {
     "alias": {
       "@js-temporal/polyfill": "./lib/temporal.ts",
