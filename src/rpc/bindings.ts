@@ -68,7 +68,7 @@ export type ContributionKind = "theme" |
 /**
  * Input for creating an event
  */
-export type CreateEventInput = { calendar_slug: string; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null; 
+export type CreateEventInput = { calendar_slug: string; availability: EventAvailability; summary: string; description: string | null; location: string | null; url: string | null; start: RpcEventTime; end: RpcEventTime; recurrence: RpcRecurrence | null; reminders: number[]; attendees: EventAttendee[]; conference: EventConference | null; 
 /**
  * The event's own color as hex; `None` uses the calendar's.
  */
@@ -378,7 +378,7 @@ export type TimeFormat = "24h" | "12h"
 /**
  * Input for updating an event
  */
-export type UpdateEventInput = { id: string; calendar_slug: string; 
+export type UpdateEventInput = { id: string; availability: EventAvailability; calendar_slug: string; 
 /**
  * If set and different from calendar_slug, moves the event to this calendar
  */

@@ -2,6 +2,7 @@ import { RRule, RRuleSet } from "rrule"
 
 import { AllDayCheckbox } from "@/components/event-parts/inputs/AllDayCheckbox"
 import { AttendeesDisplay } from "@/components/event-parts/inputs/AttendeesDisplay"
+import { AvailabilitySelect } from "@/components/event-parts/inputs/AvailabilitySelect"
 import { CalendarSelect } from "@/components/event-parts/inputs/CalendarSelect"
 import { ConferenceDisplay } from "@/components/event-parts/inputs/ConferenceDisplay"
 import { DateTimeSelect, type DateTimeRange } from "@/components/event-parts/inputs/DateTimeSelect"
@@ -13,7 +14,7 @@ import { UrlInput } from "@/components/event-parts/inputs/UrlInput"
 import { Textarea } from "@/components/ui/textarea"
 
 import type { Calendar } from "@/lib/api"
-import type { EventAttendee, ResponseStatus } from "@/lib/cal-events"
+import type { EventAttendee, EventAvailability, ResponseStatus } from "@/lib/cal-events"
 import type { EventConference } from "@/lib/conference"
 import { supportsEventColor } from "@/lib/event-colors"
 import type { EventTime } from "@/lib/event-time"
@@ -58,6 +59,8 @@ export function EventInfo({
   onChangeDateTime,
   allDay,
   onAllDayChange,
+  availability,
+  onAvailabilityChange,
   location,
   onLocationChange,
   url,
@@ -91,6 +94,8 @@ export function EventInfo({
   start: EventTime
   end: EventTime
   onChangeDateTime: (range: DateTimeRange) => void
+  availability: EventAvailability
+  onAvailabilityChange: (availability: EventAvailability) => void
   allDay: boolean
   onAllDayChange: (checked: boolean) => void
   location?: string | null
@@ -203,6 +208,12 @@ export function EventInfo({
       ) : (
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
       )}
+
+      <AvailabilitySelect
+        value={availability}
+        onChange={onAvailabilityChange}
+        readOnly={readonly}
+      />
 
       {(canEdit || !!description?.trim()) && (
         <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />

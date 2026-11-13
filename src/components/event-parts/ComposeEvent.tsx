@@ -76,6 +76,8 @@ export const ComposeEventInner = ({
           onChangeDateTime={({ start: newStart, end: newEnd }) => {
             setDraftEvent({ ...draftEvent, start: newStart, end: newEnd })
           }}
+          availability={draftEvent.availability}
+          onAvailabilityChange={(availability) => setDraftEvent({ ...draftEvent, availability })}
           allDay={allDay}
           onAllDayChange={(checked) => {
             if (checked) {
