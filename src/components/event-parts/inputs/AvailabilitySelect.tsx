@@ -4,8 +4,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger } from "@/components/u
 import type { EventAvailability } from "@/lib/cal-events"
 import { cn } from "@/lib/utils"
 
-import { CalendarIcon } from "@/icons/calendar"
-
 export function AvailabilitySelect({
   value,
   onChange,
@@ -28,12 +26,9 @@ export function AvailabilitySelect({
         controlLayout
         className={cn("w-full", readOnly && "disabled:cursor-default disabled:opacity-100")}
       >
-        <ItemMedia>
-          <CalendarIcon />
-        </ItemMedia>
-        <ItemContent className="flex gap-2 truncate text-left">
-          <span className="text-muted-foreground">Show as</span>
-          <span>{value === "busy" ? "Busy" : "Free"}</span>
+        <ItemMedia aria-hidden="true" />
+        <ItemContent className="truncate text-left">
+          {value === "busy" ? "Busy" : "Free"}
         </ItemContent>
       </SelectTrigger>
       <SelectContent>

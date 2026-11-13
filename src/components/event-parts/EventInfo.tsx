@@ -152,12 +152,6 @@ export function EventInfo({
         <AllDayCheckbox checked={allDay} onCheckedChange={onAllDayChange} readOnly={readonly} />
       )}
 
-      <AvailabilitySelect
-        value={availability}
-        onChange={onAvailabilityChange}
-        readOnly={readonly}
-      />
-
       {(canEdit || recurrence) && (
         <RepeatSelect
           value={recurrence}
@@ -214,6 +208,12 @@ export function EventInfo({
       ) : (
         <CalendarSelect calendar={calendar} onChange={onCalendarChange} readOnly={readonly} />
       )}
+
+      <AvailabilitySelect
+        value={availability}
+        onChange={onAvailabilityChange}
+        readOnly={readonly}
+      />
 
       {(canEdit || !!description?.trim()) && (
         <NotesInput value={description} onChange={onDescriptionChange} readOnly={readonly} />
