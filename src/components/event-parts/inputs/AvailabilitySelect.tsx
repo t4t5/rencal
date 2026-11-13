@@ -26,7 +26,10 @@ export function AvailabilitySelect({
         <SelectTrigger
           aria-label="Show as"
           controlLayout
-          className={cn("w-full", readOnly && "disabled:cursor-default disabled:opacity-100")}
+          className={cn(
+            "w-full",
+            readOnly && "pointer-events-none disabled:cursor-default disabled:opacity-100",
+          )}
         >
           <ItemContent className="truncate text-left">
             {value === "busy" ? "Busy" : "Free"}
