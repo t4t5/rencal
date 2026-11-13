@@ -20,9 +20,10 @@ import { WeekAllDayBar } from "./AllDayEventBlock"
 import { CurrentTimeIndicator } from "./CurrentTimeIndicator"
 import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
-import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
+import { GUTTER_WIDTH } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
 import { TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
+import { useVisibleHours } from "./useVisibleHours"
 
 type WeekTimeGridProps = {
   /** The first day of the scroll track; `days` start `startIndex` days after it. */
@@ -45,7 +46,10 @@ export function WeekTimeGrid({
   scrollContainerRef,
 }: WeekTimeGridProps) {
   const { activeDate, goToDate } = useNavigation()
-  const { timeFormat, firstDayOfWeek } = useDisplaySettings()
+  const { timeFormat, firstDayOfWeek, visibleHours } = useDisplaySettings()
+  const headerRef = useRef<HTMLDivElement>(null)
+  const hourHeight = useVisibleHours(scrollContainerRef, headerRef, visibleHours)
+  const gridHeight = 24 * hourHeight
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
 
@@ -80,7 +84,7 @@ export function WeekTimeGrid({
     const hasToday = days.some((d) => d.isToday)
     const now = Temporal.Now.zonedDateTimeISO(tzid)
     const targetHour = hasToday ? now.hour + now.minute / 60 : 8
-    el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
+    if (!visibleHours) el.scrollTop = Math.max(0, targetHour * hourHeight - 16)
     el.scrollLeft = weekScrollLeft(activeDate, dayWidth)
 
     didInitialScrollRef.current = true
@@ -128,14 +132,14 @@ export function WeekTimeGrid({
     <div
       ref={scrollContainerRef}
       data-slot="week-scroll"
-      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as CSSProperties}
+      style={{ "--week-hour-height": `${hourHeight}px` } as CSSProperties}
       className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
     >
       <div style={{ width: trackWidth, minHeight: "100%" }}>
         {/* The sticky header spans the whole track, so loading more days changes only
             what it draws, never where it sits: WebKitGTK can show a sticky layer at
             its new position a frame before its new content. */}
-        <div className="sticky top-0 z-20">
+        <div ref={headerRef} className="sticky top-0 z-20">
           {/* Zone 1+2: Day headers + all-day bars share one grid so column tracks
             line up exactly with the time grid below. */}
           <div
@@ -188,13 +192,13 @@ export function WeekTimeGrid({
         <div
           data-slot="week-time-grid"
           className="grid relative"
-          style={{ ...windowBox, gridTemplateColumns: dayGridCols, height: GRID_HEIGHT }}
+          style={{ ...windowBox, gridTemplateColumns: dayGridCols, height: gridHeight }}
         >
           <div
             data-slot="week-time-gutter"
             className="sticky left-0 z-10 bg-background border-r border-border"
           >
-            <TimeGutter timeFormat={timeFormat} />
+            <TimeGutter timeFormat={timeFormat} hourHeight={hourHeight} />
           </div>
           {days.map((day) => (
             <div
@@ -206,7 +210,7 @@ export function WeekTimeGrid({
                   : day.isWeekend && "bg-weekend",
               )}
               style={{
-                backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
+                backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${hourHeight - 1}px, var(--border) ${hourHeight - 1}px, var(--border) ${hourHeight}px))`,
               }}
               {...dayProps(day.date, "timed")}
               data-slot="week-day"
@@ -231,9 +235,10 @@ export function WeekTimeGrid({
   )
 }
 
-function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
+function TimeGutter({ timeFormat, hourHeight }: { timeFormat: TimeFormat; hourHeight: number }) {
+  const gridHeight = 24 * hourHeight
   return (
-    <div className="relative" style={{ height: GRID_HEIGHT }}>
+    <div className="relative" style={{ height: gridHeight }}>
       {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => {
         return (
           <span
@@ -241,7 +246,7 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
             data-slot="week-hour-label"
             data-typography="numerical"
             className="absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none"
-            style={{ top: h * HOUR_HEIGHT }}
+            style={{ top: h * hourHeight }}
           >
             {formatWallclockTime(h, 0, timeFormat)}
           </span>

@@ -324,12 +324,17 @@ export interface Calendar {
 export declare function useCalendars(): readonly Calendar[];
 /**
  * The user's time format, first day of the week and whether to number weeks
- * (`isoWeekNumber`). Views mount once renCal has read them.
+ * (`isoWeekNumber`), plus optional preferred visible hours for time grids.
+ * Views mount once renCal has read them.
  */
 export declare function useDisplaySettings(): {
 	timeFormat: TimeFormat;
 	firstDayOfWeek: FirstDayOfWeek;
 	showWeekNumbers: boolean;
+	visibleHours: {
+		start_hour: number;
+		end_hour: number;
+	} | null;
 };
 /**
  * Inline style (the source colour themes paint from) and the user's RSVP. Event

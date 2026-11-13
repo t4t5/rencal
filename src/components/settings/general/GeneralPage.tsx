@@ -21,12 +21,15 @@ import type { TimeFormat } from "@/lib/event-time"
 import type { FirstDayOfWeek } from "@/lib/event-time"
 import { checkForUpdate, promptAndInstall, type Update } from "@/lib/updater"
 
+import { VisibleHoursSection } from "./VisibleHoursSection"
+
 export function GeneralPage() {
   return (
     <SettingsContent>
       <TimeFormatSection />
       <FirstDayOfWeekSection />
       <WeekNumbersSection />
+      <VisibleHoursSection />
       <DataDirectorySection />
       <AutoSyncSection />
       <hr />
