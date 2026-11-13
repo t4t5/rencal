@@ -22,6 +22,8 @@ export default defineConfig(async () => ({
     env: {
       TZ: "Europe/Berlin",
     },
+    // Node 25+ defines its own (unusable) localStorage, which shadows happy-dom's.
+    execArgv: ["--no-experimental-webstorage"],
   },
 
   // Vite options tailored for Tauri development and only applied in `tauri dev` or `tauri build`

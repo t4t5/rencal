@@ -32,7 +32,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: .node-version
 
       # The indexer keeps listed plugins that GitHub fails to serve, so it must
       # start from the deployed index rather than the checked-in placeholder.

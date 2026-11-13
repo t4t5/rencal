@@ -54,7 +54,7 @@
               cargo
               rustc
               cargo-tauri
-              nodejs_22
+              nodejs_26
               pnpm
               pnpmConfigHook
               pkg-config
@@ -166,7 +166,7 @@
             clippy
             rustfmt
             rust-analyzer
-            nodejs_22
+            nodejs_26
             pnpm
             pkg-config
             webkitgtk_4_1
