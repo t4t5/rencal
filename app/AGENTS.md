@@ -10,7 +10,7 @@ Run from `app/`, with `~/.local/bin` on `PATH`. The `nsh` CLI must match the ver
 - `nsh build`: read every warning; it reports unknown classes.
 - `nsh test .`: every Rust and TS test.
 - `nsh run .`: the app, TSX hot, Rust restarts. Never run it against real data while developing: set `XDG_CONFIG_HOME` to an isolated config (`.agents/skills/screenshots` makes one).
-- `RENCAL_ANNOTATE=1 nsh run .`: annotate mode (`mod+shift+a`), for the user's feedback. Each save is a Markdown file of pinned notes, with where each points and the app's state, plus a screenshot, in `../.agents/feedback/`: read the newest when they mention notes. Views name themselves to it with `ref={inspectable(...)}` (`lib/inspect.ts`).
+- `RENCAL_ANNOTATE=1 nsh run .`: annotate mode (`mod+shift+a`), for the user's feedback. It copies a Markdown prompt of pinned notes, with where each points and the app's state, for the user to paste; the screenshot it links goes in `../.agents/feedback/`. Views name themselves to it with `ref={inspectable(...)}` (`lib/inspect.ts`).
 
 ## Layout
 

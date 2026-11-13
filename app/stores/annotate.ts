@@ -1,9 +1,9 @@
 /*
- * Annotate mode, for development: pins with notes on the window, saved with a
- * screenshot as Markdown for an agent to read. `RENCAL_ANNOTATE` turns it on
- * and says where the notes go (`native/src/annotate.rs`).
+ * Annotate mode, for development: pins with notes on the window, copied as a
+ * Markdown prompt for an agent, with a screenshot saved where
+ * `RENCAL_ANNOTATE` says (`native/src/annotate.rs`).
  */
-import { signal, windowSize } from "nsh"
+import { Clipboard, signal, windowSize } from "nsh"
 import { Backend } from "rencal/native"
 
 import type { CalendarEvent } from "@/lib/cal-events"
@@ -85,28 +85,32 @@ export function escapeAnnotate() {
   if (pinList().length === 0) stopAnnotate()
 }
 
-/** The annotate key: starts, or saves the notes and stops. */
+/** The annotate key: starts, or copies the notes and stops. */
 export function annotateKey() {
   if (!active()) return void startAnnotate()
-  if (pinList().some((pin) => pin.note)) return void saveAnnotations()
+  if (pinList().some((pin) => pin.note)) return void copyAnnotations()
   stopAnnotate()
 }
 
 export const regionsUnder = (x: number, y: number) => regionsAt(regions, x, y)
 
-export async function saveAnnotations() {
+export async function copyAnnotations() {
   const list = pinList().filter((pin) => pin.note)
   if (list.length === 0 || saving()) return
   saving.set(true)
   editing.set(null)
   // Let the editor go before the screenshot.
   await new Promise((resolve) => setTimeout(resolve, 150))
+  const shot = await Backend.saveScreenshot().then(
+    (path) => `Screenshot, with the numbered pins: ${path}`,
+    (error) => `No screenshot: ${String(error)}`,
+  )
   try {
-    const path = await Backend.saveAnnotations(toMarkdown(list))
-    toast.success("Notes saved", { description: path })
+    await Clipboard.writeText(toPrompt(list, shot))
+    toast.success("Prompt copied", { description: "Paste it to your agent" })
     stopAnnotate()
   } catch (error) {
-    toast.error("Couldn’t save notes", { description: String(error) })
+    toast.error("Couldn’t copy the prompt", { description: String(error) })
   } finally {
     saving.set(false)
   }
@@ -169,7 +173,13 @@ function appState(): string[] {
   ]
 }
 
-function toMarkdown(list: Pin[]): string {
+function toPrompt(list: Pin[], shot: string): string {
+  const ask =
+    list.length === 1
+      ? `Fix this in renCal: ${list[0].note}`
+      : ["Fix these in renCal:", ...list.map((pin, index) => `${index + 1}. ${pin.note}`)].join(
+          "\n",
+        )
   const notes = list.map((pin, index) =>
     [
       `### ${index + 1}. ${pin.note}`,
@@ -179,11 +189,15 @@ function toMarkdown(list: Pin[]): string {
     ].join("\n"),
   )
   return [
+    ask,
+    "",
+    shot,
+    "",
     "## App state",
     "",
     ...appState().map((line) => `- ${line}`),
     "",
-    "## Notes",
+    "## Where each note points",
     "",
     "Numbers match the pins in the screenshot. Points are in window coordinates.",
     "",

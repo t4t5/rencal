@@ -13,6 +13,7 @@ import {
   addPin,
   annotateKey,
   annotateSaving,
+  copyAnnotations,
   annotating,
   editingPin,
   editPin,
@@ -21,7 +22,6 @@ import {
   type Pin,
   pins,
   regionsUnder,
-  saveAnnotations,
   stopAnnotate,
 } from "@/stores/annotate"
 
@@ -134,9 +134,9 @@ function Bar() {
         <Button variant="ghost" size="xs" label="Discard" onPress={stopAnnotate} />
         <Button
           size="xs"
-          label={annotateSaving() ? "Saving…" : "Save"}
+          label={annotateSaving() ? "Copying…" : "Copy prompt"}
           disabled={count() === 0 || annotateSaving()}
-          onPress={() => void saveAnnotations()}
+          onPress={() => void copyAnnotations()}
         />
       </View>
     </View>

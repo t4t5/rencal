@@ -271,10 +271,10 @@ impl Backend {
         annotate::enabled()
     }
 
-    /// Saves annotate mode's notes with a screenshot of the window, where
-    /// `RENCAL_ANNOTATE` says; resolves with the notes' path.
-    pub async fn save_annotations(markdown: String) -> Result<String, String> {
-        let task = RUNTIME.spawn(annotate::save(markdown));
+    /// Saves a screenshot of the window for annotate mode, where
+    /// `RENCAL_ANNOTATE` says; resolves with its path.
+    pub async fn save_screenshot() -> Result<String, String> {
+        let task = RUNTIME.spawn(annotate::save_screenshot());
         task.await.map_err(|error| error.to_string())?
     }
 

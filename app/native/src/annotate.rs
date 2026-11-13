@@ -1,5 +1,5 @@
-//! Annotate mode's notes, for development. `RENCAL_ANNOTATE` names the folder
-//! they go in; `1` means the repo's `.agents/feedback`.
+//! Annotate mode's screenshots, for development. `RENCAL_ANNOTATE` names the
+//! folder they go in; `1` means the repo's `.agents/feedback`.
 
 use std::path::{Path, PathBuf};
 
@@ -21,28 +21,16 @@ fn dir() -> Option<PathBuf> {
     Some(PathBuf::from(value))
 }
 
-/// Writes `notes` as `<time>.md`, after a screenshot of the window as
-/// `<time>.png`; returns the notes' path.
-pub async fn save(notes: String) -> Result<String, String> {
+/// Saves a screenshot of the window as `<time>.png`; returns its path.
+pub async fn save_screenshot() -> Result<String, String> {
     let dir = dir().ok_or("RENCAL_ANNOTATE isn't set")?;
     tokio::fs::create_dir_all(&dir)
         .await
         .map_err(|error| format!("{}: {error}", dir.display()))?;
     let dir = dir.canonicalize().unwrap_or(dir);
-
-    let stamp = chrono::Local::now().format("%Y-%m-%d-%H%M%S").to_string();
-    let shot = format!("{stamp}.png");
-    let header = match screenshot(&dir.join(&shot)).await {
-        Ok(()) => format!("![The window, with numbered pins]({shot})"),
-        Err(error) => format!("No screenshot: {error}"),
-    };
-    let path = dir.join(format!("{stamp}.md"));
-    tokio::fs::write(
-        &path,
-        format!("# renCal feedback, {stamp}\n\n{header}\n\n{notes}"),
-    )
-    .await
-    .map_err(|error| format!("{}: {error}", path.display()))?;
+    let stamp = chrono::Local::now().format("%Y-%m-%d-%H%M%S");
+    let path = dir.join(format!("{stamp}.png"));
+    screenshot(&path).await?;
     Ok(path.to_string_lossy().into_owned())
 }
 
