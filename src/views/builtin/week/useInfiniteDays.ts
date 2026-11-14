@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { type RefObject, useEffect, useLayoutEffect, useMemo, useState } from "react"
+import { type RefObject, useLayoutEffect, useMemo, useState } from "react"
 
 import { epochDay, type FirstDayOfWeek, startOfWeek, useDisplaySettings, useToday } from "@/sdk"
 
@@ -95,8 +95,11 @@ export function useInfiniteDays({
     )
   }
 
-  // Keep the viewport and EDGE_DAYS around it rendered while the user scrolls.
-  useEffect(() => {
+  // Keep the viewport and EDGE_DAYS around it rendered while the user scrolls. A layout
+  // effect, so a new dayWidth replaces the listener in the commit that rescales scrollLeft:
+  // left to a passive effect, the old listener could read the new scrollLeft at the old
+  // width, take the viewport for hundreds of days away and render every day up to there.
+  useLayoutEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
     let frame = 0
