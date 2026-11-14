@@ -69,6 +69,7 @@ export {
 } from "./layout"
 export { Button } from "@/components/ui/button"
 export { UntitledEventText } from "@/components/ui/untitled-event-text"
+export { AddTimeZoneButton, TimeZoneMenu } from "@/components/time-zones/TimeZoneControls"
 export { ChevronLeftIcon } from "@/icons/chevron-left"
 export { ChevronRightIcon } from "@/icons/chevron-right"
 export { Tooltip } from "./components"

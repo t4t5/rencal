@@ -8,7 +8,7 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverAnchor, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 import { type EventTime, listTimeZones, timeZoneCity, timeZoneOffsetLabel } from "@/lib/event-time"
 import { cn } from "@/lib/utils"
@@ -64,6 +64,7 @@ export function TimeZonePicker({
   known = NO_ZONES,
   exclude = NO_ZONES,
   contentClassName,
+  asAnchor = false,
   children,
 }: {
   /** The zone chosen now, if any: the list opens on it. */
@@ -77,6 +78,8 @@ export function TimeZonePicker({
   /** Zones to leave out, e.g. ones already chosen elsewhere. */
   exclude?: readonly string[]
   contentClassName?: string
+  /** Place the list on the child without opening it on click, e.g. a menu's trigger. */
+  asAnchor?: boolean
   children: ReactElement
 }) {
   const [query, setQuery] = useState("")
@@ -110,9 +113,11 @@ export function TimeZonePicker({
     handleOpenChange(false)
   }
 
+  const Anchor = asAnchor ? PopoverAnchor : PopoverTrigger
+
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
-      <PopoverTrigger asChild>{children}</PopoverTrigger>
+      <Anchor asChild>{children}</Anchor>
 
       <PopoverContent
         className={cn("p-0 w-(--radix-popover-trigger-width)", contentClassName)}

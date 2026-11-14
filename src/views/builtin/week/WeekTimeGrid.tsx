@@ -2,12 +2,14 @@ import { Temporal } from "@js-temporal/polyfill"
 import { type CSSProperties, type RefObject, useLayoutEffect, useRef } from "react"
 
 import {
+  AddTimeZoneButton,
   cn,
   dayProps,
   epochDay,
   formatWallclockTime,
   formatWeekday,
   type TimeFormat,
+  TimeZoneMenu,
   Tooltip,
   useDayGrid,
   useDisplaySettings,
@@ -175,8 +177,17 @@ export function WeekTimeGrid({
               className="sticky left-0 z-30 bg-background border-r border-b border-border"
               style={{ gridColumn: 1, gridRow: "1 / -1" }}
             >
-              {/* One zone needs no name: every time on screen is in it. */}
-              {zones.length > 1 && <ZoneLabels zones={zones} date={activeDate} />}
+              {/* One zone needs no name: every time on screen is in it. Once zones are
+                  named, their menus add more: a "+" beside them would cover a name. */}
+              {zones.length > 1 ? (
+                <ZoneLabels zones={zones} date={activeDate} />
+              ) : (
+                <div className="h-7.5 pl-1 flex items-center">
+                  <Tooltip content="Add time zone" side="bottom">
+                    <AddTimeZoneButton />
+                  </Tooltip>
+                </div>
+              )}
             </div>
             <DayHeaders
               days={days}
@@ -310,25 +321,40 @@ function TimeGutter({
   )
 }
 
-/** Names the gutter's columns, at the height of the day headers. */
+/** Names the gutter's columns, at the height of the day headers. Extra zones open a menu. */
 function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.PlainDate }) {
   return (
     <div className="flex">
-      {zones.map(({ tzid, local }) => (
-        <Tooltip key={tzid} content={zoneDescription(tzid, date)} side="bottom">
-          <span
+      {zones.map(({ tzid, local }) => {
+        const name = zoneAbbreviation(tzid, date)
+        return (
+          <div
+            key={tzid}
             data-slot="week-zone-label"
             data-local={local || undefined}
             className={cn(
-              "h-7.5 pr-1.5 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none cursor-default",
+              "h-7.5 pr-1 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none",
               !local && "opacity-70",
             )}
             style={{ width: GUTTER_WIDTH }}
           >
-            {zoneAbbreviation(tzid, date)}
-          </span>
-        </Tooltip>
-      ))}
+            <Tooltip content={zoneDescription(tzid, date)} side="bottom">
+              {local ? (
+                <span className="px-1 cursor-default">{name}</span>
+              ) : (
+                <TimeZoneMenu tzid={tzid}>
+                  <button
+                    type="button"
+                    className="px-1 py-1 rounded-sm outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent aria-expanded:bg-accent"
+                  >
+                    {name}
+                  </button>
+                </TimeZoneMenu>
+              )}
+            </Tooltip>
+          </div>
+        )
+      })}
     </div>
   )
 }
