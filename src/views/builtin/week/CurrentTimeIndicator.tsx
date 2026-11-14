@@ -1,11 +1,12 @@
 import { Temporal } from "@js-temporal/polyfill"
 import { useEffect, useState } from "react"
 
-import { useDisplaySettings, useViewerTzid } from "@/sdk"
+import { cn, useDisplaySettings, useViewerTzid } from "@/sdk"
 
 import { DAY_MINUTES } from "./grid"
 
-export function CurrentTimeIndicator() {
+/** `inset` keeps the indicator inside its column instead of overhanging the neighbours (and the gutter). */
+export function CurrentTimeIndicator({ inset = false }: { inset?: boolean }) {
   const { timeFormat } = useDisplaySettings()
   const tzid = useViewerTzid()
   const [, tick] = useState(0)
@@ -28,7 +29,10 @@ export function CurrentTimeIndicator() {
 
   return (
     <div
-      className="absolute -left-3.5 -right-1 z-10 pointer-events-none flex items-center"
+      className={cn(
+        "absolute z-10 pointer-events-none flex items-center",
+        inset ? "inset-x-0 pl-1" : "-left-3.5 -right-1",
+      )}
       style={{ top: `${timeIndicatorTopPercent}%`, transform: "translateY(-50%)" }}
     >
       <span className="text-2xs font-medium text-today shrink-0 leading-none">

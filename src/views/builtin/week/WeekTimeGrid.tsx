@@ -7,7 +7,6 @@ import {
   epochDay,
   formatWallclockTime,
   formatWeekday,
-  startOfWeek,
   type TimeFormat,
   useDayGrid,
   useDisplaySettings,
@@ -22,9 +21,10 @@ import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
 import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
-import { TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
+import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
 
 type WeekTimeGridProps = {
+  span: Span
   /** The first day of the scroll track; `days` start `startIndex` days after it. */
   origin: Temporal.PlainDate
   startIndex: number
@@ -36,6 +36,7 @@ type WeekTimeGridProps = {
 }
 
 export function WeekTimeGrid({
+  span,
   origin,
   startIndex,
   days,
@@ -50,12 +51,14 @@ export function WeekTimeGrid({
   const { selection } = useDayGrid()
 
   const activeDateKey = activeDate.toString()
+  // A day on its own is always the active one, so marking it selected says nothing.
+  const selectedDateKey = span === "day" ? null : activeDateKey
   const N = days.length
   const hasAllDay = allDayBars.length > 0
 
-  // scrollLeft that puts the first day of `date`'s week right of the gutter.
-  const weekScrollLeft = (date: Temporal.PlainDate, width: number) =>
-    (epochDay(startOfWeek(date, firstDayOfWeek)) - epochDay(origin)) * width
+  // scrollLeft that puts the first day shown with `date` right of the gutter.
+  const spanScrollLeft = (date: Temporal.PlainDate, width: number) =>
+    (epochDay(firstVisibleDay(date, span, firstDayOfWeek)) - epochDay(origin)) * width
 
   // Theme padding, font loading, or a window resize can change the tracks.
   // Preserve the visible day offset after the new track widths reach the DOM.
@@ -71,7 +74,7 @@ export function WeekTimeGrid({
   }, [dayWidth, scrollContainerRef])
 
   // Initial scroll (once dayWidth is measured): scrollTop to current time / 08:00,
-  // scrollLeft to the first day of activeDate's week.
+  // scrollLeft to the first day shown with activeDate.
   useLayoutEffect(() => {
     if (!dayWidthMeasured || didInitialScrollRef.current) return
     const el = scrollContainerRef.current
@@ -81,7 +84,7 @@ export function WeekTimeGrid({
     const now = Temporal.Now.zonedDateTimeISO(tzid)
     const targetHour = hasToday ? now.hour + now.minute / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
-    el.scrollLeft = weekScrollLeft(activeDate, dayWidth)
+    el.scrollLeft = spanScrollLeft(activeDate, dayWidth)
 
     didInitialScrollRef.current = true
   })
@@ -102,7 +105,7 @@ export function WeekTimeGrid({
     const viewportRight = el.scrollLeft + el.clientWidth
 
     if (originChanged || columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
-      const left = weekScrollLeft(activeDate, dayWidth)
+      const left = spanScrollLeft(activeDate, dayWidth)
       const far = Math.abs(left - el.scrollLeft) > 3 * el.clientWidth
       el.scrollTo({ left, behavior: originChanged || far ? "instant" : "smooth" })
     }
@@ -128,8 +131,14 @@ export function WeekTimeGrid({
     <div
       ref={scrollContainerRef}
       data-slot="week-scroll"
+      data-span={span}
       style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as CSSProperties}
-      className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
+      className={cn(
+        "h-full w-full min-w-0",
+        // A day never rests between two days: only navigation moves it sideways.
+        span === "day" ? "overflow-x-hidden overflow-y-auto" : "overflow-auto",
+        selection && "select-none",
+      )}
     >
       <div style={{ width: trackWidth, minHeight: "100%" }}>
         {/* The sticky header spans the whole track, so loading more days changes only
@@ -156,7 +165,12 @@ export function WeekTimeGrid({
               className="sticky left-0 z-30 bg-background border-r border-b border-border"
               style={{ gridColumn: 1, gridRow: "1 / -1" }}
             />
-            <DayHeaders days={days} activeDateKey={activeDateKey} onDayClick={goToDate} />
+            <DayHeaders
+              days={days}
+              span={span}
+              selectedDateKey={selectedDateKey}
+              onDayClick={goToDate}
+            />
             {hasAllDay && (
               <>
                 {/* Per-day backgrounds for the all-day region */}
@@ -165,13 +179,13 @@ export function WeekTimeGrid({
                     key={`${day.dateKey}-allday-bg`}
                     className={cn(
                       "border-r border-b border-border",
-                      day.dateKey === activeDateKey
+                      day.dateKey === selectedDateKey
                         ? "bg-selected text-selected-foreground"
                         : day.isWeekend && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
                     data-slot="week-all-day"
-                    data-selected={day.dateKey === activeDateKey || undefined}
+                    data-selected={day.dateKey === selectedDateKey || undefined}
                     data-weekend={day.isWeekend || undefined}
                     {...dayProps(day.date, "all-day")}
                   />
@@ -201,7 +215,7 @@ export function WeekTimeGrid({
               key={day.dateKey}
               className={cn(
                 "relative border-r border-border cursor-default",
-                day.dateKey === activeDateKey
+                day.dateKey === selectedDateKey
                   ? "bg-selected text-selected-foreground"
                   : day.isWeekend && "bg-weekend",
               )}
@@ -210,7 +224,7 @@ export function WeekTimeGrid({
               }}
               {...dayProps(day.date, "timed")}
               data-slot="week-day"
-              data-selected={day.dateKey === activeDateKey || undefined}
+              data-selected={day.dateKey === selectedDateKey || undefined}
               data-weekend={day.isWeekend || undefined}
               onClick={() => goToDate(day.date)}
             >
@@ -222,7 +236,7 @@ export function WeekTimeGrid({
                 <DragToCreateSelection selection={selection} date={day.date} />
               )}
 
-              {day.isToday && <CurrentTimeIndicator />}
+              {day.isToday && <CurrentTimeIndicator inset={span === "day"} />}
             </div>
           ))}
         </div>
@@ -253,11 +267,13 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 
 const DayHeaders = ({
   days,
-  activeDateKey,
+  span,
+  selectedDateKey,
   onDayClick,
 }: {
   days: WeekDay[]
-  activeDateKey: string
+  span: Span
+  selectedDateKey: string | null
   onDayClick: (date: Temporal.PlainDate) => void
 }) => {
   return days.map((day) => (
@@ -265,11 +281,13 @@ const DayHeaders = ({
       key={day.dateKey}
       data-slot="week-day-header"
       data-typography="numerical"
-      data-selected={day.dateKey === activeDateKey || undefined}
+      data-selected={day.dateKey === selectedDateKey || undefined}
       data-weekend={day.isWeekend || undefined}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
-        day.dateKey === activeDateKey
+        "flex items-baseline gap-1 border-r border-border p-0.5 pb-px cursor-default",
+        // A lone day reads from the left, like its events; a week's dates line up on the right.
+        span === "day" ? "justify-start pl-2" : "justify-end",
+        day.dateKey === selectedDateKey
           ? "bg-selected text-selected-foreground"
           : day.isWeekend && "bg-weekend",
       )}

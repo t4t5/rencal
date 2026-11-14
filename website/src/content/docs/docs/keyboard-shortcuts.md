@@ -24,6 +24,7 @@ Press <kbd>?</kbd> in the app to see all shortcuts.
 
 | Action              | Shortcut     |
 | ------------------- | ------------ |
+| Display day view    | <kbd>d</kbd> |
 | Display week view   | <kbd>w</kbd> |
 | Display month view  | <kbd>m</kbd> |
 | Display year view   | <kbd>y</kbd> |

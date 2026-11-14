@@ -119,3 +119,15 @@ user scrolls.
 - This visibility check also runs when the target date is already active, so "t"
   brings today back into view after scrolling away without changing the selection.
 - A jump changes the active date directly; scrolling into view does not select a day.
+
+## Day view
+
+The day view is the week view's strip at one day's width
+(`DayView` in `src/views/builtin/week/WeekView.tsx`), so the track, lazy loading and
+jump navigation above apply to it. It differs in two ways:
+
+- The viewport always shows the active date, alone. A jump (or a date change from
+  elsewhere, like the agenda) slides to that day; a target more than three days away,
+  or off the track, is jumped to without animation.
+- The user cannot scroll it sideways: a pan could rest between two days. Only the
+  vertical time axis scrolls.
