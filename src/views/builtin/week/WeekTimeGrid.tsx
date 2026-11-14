@@ -168,6 +168,7 @@ export function WeekTimeGrid({
             <DayHeaders
               days={days}
               span={span}
+              hasAllDay={hasAllDay}
               selectedDateKey={selectedDateKey}
               onDayClick={goToDate}
             />
@@ -268,11 +269,13 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 const DayHeaders = ({
   days,
   span,
+  hasAllDay,
   selectedDateKey,
   onDayClick,
 }: {
   days: WeekDay[]
   span: Span
+  hasAllDay: boolean
   selectedDateKey: string | null
   onDayClick: (date: Temporal.PlainDate) => void
 }) => {
@@ -285,6 +288,8 @@ const DayHeaders = ({
       data-weekend={day.isWeekend || undefined}
       className={cn(
         "flex items-baseline gap-1 border-r border-border p-0.5 pb-px cursor-default",
+        // The all-day lane draws the line under the headers; without it, they do.
+        !hasAllDay && "border-b",
         // A lone day reads from the left, like its events; a week's dates line up on the right.
         span === "day" ? "justify-start pl-2" : "justify-end",
         day.dateKey === selectedDateKey
