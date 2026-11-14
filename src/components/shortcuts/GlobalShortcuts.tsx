@@ -12,6 +12,7 @@ import {
   isInteractiveElementFocused,
 } from "@/components/sidebar/agenda/useAgendaKeyboardNav"
 import { INVITES_BUTTON_EL_ID } from "@/components/toolbar/InvitesBadge"
+import { NEW_EVENT_BUTTON_EL_ID } from "@/components/toolbar/NewEventButton"
 import { openSettingsWindow } from "@/components/toolbar/SettingsButton"
 import { SEARCH_BUTTON_EL_ID } from "@/components/toolbar/search/SearchButton"
 
@@ -377,6 +378,12 @@ function useCommandHandlers({
       if (!canCreate) {
         promptToConnect()
         throw new CommandError("No calendar can take new events yet")
+      }
+      // The compose input lives in the sidebar; while that's hidden, the toolbar's button takes over.
+      const toolbarButton = document.getElementById(NEW_EVENT_BUTTON_EL_ID)
+      if (toolbarButton) {
+        toolbarButton.click()
+        return
       }
       setDefaultDraftEvent()
       setIsDrafting(true)

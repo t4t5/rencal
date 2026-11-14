@@ -1,5 +1,6 @@
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { InvitesBadge } from "@/components/toolbar/InvitesBadge"
+import { NewEventButton } from "@/components/toolbar/NewEventButton"
 import { SettingsButton } from "@/components/toolbar/SettingsButton"
 import { SyncStatus } from "@/components/toolbar/SyncStatus"
 import { ToggleSidebarButton } from "@/components/toolbar/ToggleSidebarButton"
@@ -40,6 +41,7 @@ export function MainHeader({
     <div data-slot="main-toolbar" className="shrink-0 flex gap-2 p-(--layout-padding)">
       <div className="flex gap-2 items-center">
         <ToggleSidebarButton />
+        <NewEventButton />
 
         <CommandTooltip text="Go to Today" action="date.today">
           <Button tabIndex={-1} variant="secondary" onClick={() => navigateToDate(today())}>
