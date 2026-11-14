@@ -182,12 +182,12 @@ export function WeekTimeGrid({
                       "border-r border-b border-border",
                       day.dateKey === selectedDateKey
                         ? "bg-selected text-selected-foreground"
-                        : day.isWeekend && "bg-weekend",
+                        : isWeekend(day, span) && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
                     data-slot="week-all-day"
                     data-selected={day.dateKey === selectedDateKey || undefined}
-                    data-weekend={day.isWeekend || undefined}
+                    data-weekend={isWeekend(day, span) || undefined}
                     {...dayProps(day.date, "all-day")}
                   />
                 ))}
@@ -218,7 +218,7 @@ export function WeekTimeGrid({
                 "relative border-r border-border cursor-default",
                 day.dateKey === selectedDateKey
                   ? "bg-selected text-selected-foreground"
-                  : day.isWeekend && "bg-weekend",
+                  : isWeekend(day, span) && "bg-weekend",
               )}
               style={{
                 backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
@@ -226,7 +226,7 @@ export function WeekTimeGrid({
               {...dayProps(day.date, "timed")}
               data-slot="week-day"
               data-selected={day.dateKey === selectedDateKey || undefined}
-              data-weekend={day.isWeekend || undefined}
+              data-weekend={isWeekend(day, span) || undefined}
               onClick={() => goToDate(day.date)}
             >
               {(timedByDay.get(day.dateKey) ?? []).map((block) => (
@@ -245,6 +245,9 @@ export function WeekTimeGrid({
     </div>
   )
 }
+
+// A lone day has no weekdays beside it to stand apart from.
+const isWeekend = (day: WeekDay, span: Span) => span === "week" && day.isWeekend
 
 function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
   return (
@@ -285,7 +288,7 @@ const DayHeaders = ({
       data-slot="week-day-header"
       data-typography="numerical"
       data-selected={day.dateKey === selectedDateKey || undefined}
-      data-weekend={day.isWeekend || undefined}
+      data-weekend={isWeekend(day, span) || undefined}
       className={cn(
         "flex items-baseline gap-1 border-r border-border p-0.5 pb-px cursor-default",
         // The all-day lane draws the line under the headers; without it, they do.
@@ -294,7 +297,7 @@ const DayHeaders = ({
         span === "day" ? "justify-start pl-2" : "justify-end",
         day.dateKey === selectedDateKey
           ? "bg-selected text-selected-foreground"
-          : day.isWeekend && "bg-weekend",
+          : isWeekend(day, span) && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
       // Headers double as all-day days so multi-day bars can land here, and
