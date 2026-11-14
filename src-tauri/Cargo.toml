@@ -8,10 +8,10 @@ members = [
 ]
 
 [workspace.dependencies]
-caldir-core = "0.17.5"
+caldir-core = "0.17.6"
 
 [workspace.metadata.caldir]
-provider-tag = "v0.14.10"
+provider-tag = "v0.14.11"
 
 # No `panic = "abort"`: a panicking tokio task shouldn't take the whole app down.
 [profile.release]
@@ -62,7 +62,6 @@ rencal-config = { path = "rencal-config" }
 rencal-plugin-contract = { path = "plugin-contract" }
 tauri-plugin-notification = "2"
 tauri-plugin-dialog = { version = "2", default-features = false, features = ["xdg-portal"] }
-chrono-tz = "0.10.4"
 toml = "0.8"
 toml_edit = "0.20"
 notify = "6"

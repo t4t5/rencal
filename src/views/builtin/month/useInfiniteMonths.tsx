@@ -1,5 +1,5 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { type RefObject, useEffect, useLayoutEffect, useState } from "react"
+import { type RefObject, useLayoutEffect, useState } from "react"
 
 import { epochDay, type FirstDayOfWeek, startOfWeek, useDisplaySettings } from "@/sdk"
 
@@ -90,7 +90,10 @@ export function useInfiniteMonths({
 
   // Keep the viewport and EDGE_WEEKS around it loaded while the user scrolls. Only scroll
   // events count: before the initial scroll lands, scrollTop 0 is not where the user is.
-  useEffect(() => {
+  // A layout effect, so a new rowHeight replaces the listener in the commit that rescales
+  // scrollTop: left to a passive effect, the old listener could read the new scrollTop at
+  // the old height, take the viewport for months away and load every week up to there.
+  useLayoutEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
     let frame = 0

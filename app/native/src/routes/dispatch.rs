@@ -250,6 +250,13 @@ impl Router {
                 let show: bool = arg(&args, 0)?;
                 fallible(self.config.clone().set_show_week_numbers(show).await)
             }
+            "config.get_extra_time_zones" => {
+                fallible(self.config.clone().get_extra_time_zones().await)
+            }
+            "config.set_extra_time_zones" => {
+                let zones: Vec<String> = arg(&args, 0)?;
+                fallible(self.config.clone().set_extra_time_zones(zones).await)
+            }
             "config.get_groups" => {
                 fallible(self.config.clone().get_groups().await)
             }

@@ -27,6 +27,31 @@ test("the week view shows today's week, with today marked by the current time", 
   expect(app.texts().join(" ").replace(/\s/g, "")).toContain(time)
 })
 
+test("the day view shows the active day alone, with a + to add a time zone", async () => {
+  const app = await openView("day")
+  await app.waitFor("12:00")
+  const now = new Date()
+  const time = `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`
+  expect(app.texts().join(" ").replace(/\s/g, "")).toContain(time)
+  expect(app.count("id:week-time-zone")).toBe(1)
+  expect(app.count("id:time-zone-add")).toBe(1)
+})
+
+test("with the sidebar hidden, the toolbar's + opens a new event on the selected day", async () => {
+  // From the week view: the day view mounts before the week view's cleanup.
+  const app = await openView("week")
+  await app.waitFor("12:00")
+  await app.press("Week")
+  await app.press("Day")
+  await app.wait(100)
+  expect(app.count("id:toolbar-new-event")).toBe(0)
+  await app.press("label:Hide sidebar")
+  await app.waitFor("id:toolbar-new-event")
+  await app.press("id:toolbar-new-event")
+  await app.waitFor("ADD EVENT")
+  expect(app.shows("label:Show sidebar")).toBe(true)
+})
+
 test("the year view shows twelve months and moves a year at a time", async () => {
   const app = await openView("year")
   const year = new Date().getFullYear()

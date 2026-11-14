@@ -10,10 +10,10 @@ publish = false
 members = ["crates/notifierd", "crates/plugin-contract", "crates/reminder-core", "crates/rencal-config"]
 
 [workspace.dependencies]
-caldir-core = "0.17.5"
+caldir-core = "0.17.6"
 
 [workspace.metadata.caldir]
-provider-tag = "v0.14.10"
+provider-tag = "v0.14.11"
 
 [lib]
 name = "rencal_native"
@@ -34,7 +34,7 @@ chrono = "0.4.43"
 reminder-core = { path = "crates/reminder-core" }
 rencal-config = { path = "crates/rencal-config" }
 rencal-plugin-contract = { path = "crates/plugin-contract" }
-chrono-tz = "0.10.4"
+jiff = "0.2.43"
 toml = "0.8"
 toml_edit = "0.20"
 notify = "6"

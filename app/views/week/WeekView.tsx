@@ -4,6 +4,7 @@ import {
   computed,
   createAnimatedValue,
   effect,
+  type JSX,
   Scroll,
   type ScrollRef,
   signal,
@@ -12,6 +13,9 @@ import {
   View,
   type ViewRef,
 } from "nsh"
+
+import { AddTimeZoneButton, ZoneName } from "@/components/time-zones/TimeZoneControls"
+import { Tooltip } from "@/components/ui/tooltip"
 
 import { type DayArea, setDayAreas } from "@/lib/day-hits"
 import {
@@ -26,7 +30,7 @@ import { type AllDayBar, layoutAllDay, type TimedBlock } from "@/lib/layout"
 import { cn, FOCUS_RING } from "@/lib/utils"
 
 import { activeDate, navigateToDate, onNavigate } from "@/stores/calendar"
-import { currentDay, now } from "@/stores/clock"
+import { currentDay, now, viewerTzid } from "@/stores/clock"
 import {
   createDragHandlers,
   createEventAt,
@@ -35,7 +39,7 @@ import {
   selectionPartOn,
   setDragScroller,
 } from "@/stores/drag"
-import { timeFormat } from "@/stores/settings"
+import { extraTimeZones, timeFormat } from "@/stores/settings"
 import { displayCase } from "@/themes"
 import { openDayMenu } from "@/views/event-block"
 import type { Spanning } from "@/views/month/layout"
@@ -46,14 +50,17 @@ import { AllDayBarBlock, LANE_HEIGHT, TimedEventBlock } from "./EventBlocks"
 import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT, selectionWidth, verticalBox } from "./grid"
 import {
   centerTrack,
+  firstVisibleIndex,
+  type Span,
   TRACK_DAYS,
   trackOrigin,
   type TimedItem,
+  VISIBLE_DAYS,
   weekEvents,
-  weekIndex,
 } from "./layout"
+import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
 
-/** Day column width: seven days fill the viewport right of the gutter, never under this. */
+/** Day column width: the span's days fill the viewport right of the gutter, never under this. */
 const DAY_WIDTH_MIN = 100
 const DAY_HEADER_HEIGHT = 31
 /** Days kept beyond the viewport on each side. */
@@ -63,6 +70,8 @@ const LANE_RANGE_DAYS = 28
 /** Days of events loaded beyond the viewport, and how close to their end they grow. */
 const LOAD_BUFFER_DAYS = 42
 const LOAD_EDGE_DAYS = 14
+/** What a sticky all-day title keeps of its bar at the bar's end. */
+const BAR_TITLE_ROOM = 48
 /** Lanes are padded by these to match the gap between them. */
 const LANES_TOP = 1
 const LANES_BOTTOM = 2
@@ -71,32 +80,89 @@ const HOURS = Array.from({ length: 23 }, (_, i) => i + 1)
 
 const dateOf = (index: number) => plainDateFromEpochDay(epochDay(trackOrigin()) + index)
 
-function dayClass(date: Temporal.PlainDate) {
+// A lone day is always the active one, with no weekdays beside it to stand apart from.
+function dayClass(date: Temporal.PlainDate, span: Span) {
+  if (span === "day") return undefined
   if (date.equals(activeDate())) return "bg-selected text-selected-foreground"
   return date.dayOfWeek >= 6 ? "bg-weekend" : undefined
 }
 
-function TimeGutter() {
+/**
+ * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
+ * read them as they fall on the active date, since a zone's offset can change from one day to the next.
+ */
+function TimeGutter(props: { zones: () => GutterZone[] }) {
   return (
     <View
-      class="relative border-r border-border bg-background shrink-0"
-      style={{ width: GUTTER_WIDTH, height: GRID_HEIGHT }}
+      class="flex-row border-r border-border bg-background shrink-0"
+      style={{ width: props.zones().length * GUTTER_WIDTH, height: GRID_HEIGHT }}
     >
-      <Each of={HOURS}>
-        {(hour) => (
-          <Text
-            class="absolute right-1.5 font-mono text-2xs leading-none text-muted-foreground"
-            style={{ top: hour() * HOUR_HEIGHT - 6 }}
+      <Each of={props.zones()} key={(zone) => zone.tzid}>
+        {(zone) => (
+          <View
+            testID="week-time-zone"
+            class={cn("relative flex-1", !zone().local && "opacity-70")}
           >
-            {formatWallclockTime(hour(), 0, timeFormat())}
-          </Text>
+            <Each of={HOURS}>
+              {(hour) => (
+                <Text
+                  class="absolute right-1.5 font-mono text-2xs leading-none text-muted-foreground"
+                  style={{ top: hour() * HOUR_HEIGHT - 6 }}
+                >
+                  {(() => {
+                    const there = hourInZone(activeDate(), hour(), viewerTzid(), zone().tzid)
+                    return formatWallclockTime(there.hour, there.minute, timeFormat())
+                  })()}
+                </Text>
+              )}
+            </Each>
+          </View>
         )}
       </Each>
     </View>
   )
 }
 
-function CurrentTimeIndicator() {
+/**
+ * Above the gutter: one zone needs no name, since every time on screen is in it, so a
+ * "+" adds another. Once zones are named, their menus add more.
+ */
+function GutterHeader(props: { zones: () => GutterZone[] }) {
+  return (
+    <If
+      when={props.zones().length > 1}
+      else={
+        <View class="pl-1 justify-center" style={{ height: DAY_HEADER_HEIGHT }}>
+          <AddTimeZoneButton />
+        </View>
+      }
+    >
+      <View class="flex-row" style={{ height: DAY_HEADER_HEIGHT }}>
+        <Each of={props.zones()} key={(zone) => zone.tzid}>
+          {(zone) => (
+            <View
+              testID="week-zone-label"
+              class={cn("pr-1 items-end justify-center", !zone().local && "opacity-70")}
+              style={{ width: GUTTER_WIDTH }}
+              tooltip={
+                <Tooltip label={zoneDescription(zone().tzid, activeDate())} placement="bottom" />
+              }
+            >
+              <ZoneName
+                tzid={zone().tzid}
+                local={zone().local}
+                name={zoneAbbreviation(zone().tzid, activeDate())}
+              />
+            </View>
+          )}
+        </Each>
+      </View>
+    </If>
+  )
+}
+
+/** `inset` keeps it inside its column instead of overhanging the neighbours. */
+function CurrentTimeIndicator(props: { inset: boolean }) {
   const clock = () => {
     now()
     return Temporal.Now.zonedDateTimeISO(getViewerTzid())
@@ -113,7 +179,10 @@ function CurrentTimeIndicator() {
   }
   return (
     <View
-      class="absolute -left-3.5 -right-1 z-10 flex-row items-center h-3"
+      class={cn(
+        "absolute z-10 flex-row items-center h-3",
+        props.inset ? "left-0 right-0 pl-1" : "-left-3.5 -right-1",
+      )}
       style={{ top: top() - 6, pointerEvents: "none" }}
     >
       <View class="flex-row shrink-0">
@@ -129,7 +198,7 @@ function CurrentTimeIndicator() {
   )
 }
 
-function DayColumn(props: { index: () => number; dayWidth: () => number }) {
+function DayColumn(props: { index: () => number; dayWidth: () => number; span: Span }) {
   const date = computed(() => dateOf(props.index()))
   const blocks = (): TimedBlock<TimedItem>[] => weekEvents().blocks.get(epochDay(date())) ?? []
   // A timed selection can run across days: each column draws its own part.
@@ -146,7 +215,7 @@ function DayColumn(props: { index: () => number; dayWidth: () => number }) {
         if (press.clickCount === 2) createEventAt(press.pagePosition)
         else navigateToDate(date())
       }}
-      class={cn("absolute top-0 border-r border-border", FOCUS_RING, dayClass(date()))}
+      class={cn("absolute top-0 border-r border-border", FOCUS_RING, dayClass(date(), props.span))}
       style={{
         left: props.index() * props.dayWidth(),
         width: props.dayWidth(),
@@ -184,7 +253,7 @@ function DayColumn(props: { index: () => number; dayWidth: () => number }) {
         )}
       </If>
       <If when={date().equals(currentDay())}>
-        <CurrentTimeIndicator />
+        <CurrentTimeIndicator inset={props.span === "day"} />
       </If>
     </View>
   )
@@ -195,6 +264,7 @@ function DayHeader(props: {
   left: () => number
   dayWidth: () => number
   lanes: () => boolean
+  span: Span
 }) {
   const date = computed(() => dateOf(props.index()))
   const isToday = () => date().equals(currentDay())
@@ -205,11 +275,19 @@ function DayHeader(props: {
         if (press.clickCount === 2) createEventAt(press.pagePosition)
         else navigateToDate(date())
       }}
-      class={cn("absolute top-0 bottom-0 border-r border-border", FOCUS_RING, dayClass(date()))}
+      class={cn(
+        "absolute top-0 bottom-0 border-r border-border",
+        FOCUS_RING,
+        dayClass(date(), props.span),
+      )}
       style={{ left: props.left(), width: props.dayWidth() }}
     >
       <View
-        class="flex-row items-baseline justify-end gap-1 p-0.5 pb-px"
+        // A lone day reads from the left, like its events; a week's dates line up on the right.
+        class={cn(
+          "flex-row items-baseline gap-1 p-0.5 pb-px",
+          props.span === "day" ? "justify-start pl-2" : "justify-end",
+        )}
         style={{ height: DAY_HEADER_HEIGHT }}
       >
         <Text class={cn("font-mono text-2xs text-muted-foreground", displayCase())}>
@@ -234,12 +312,27 @@ function DayHeader(props: {
 }
 
 export function WeekView() {
+  return timeGridView("week")
+}
+
+/** The week view's strip, one day wide: the same view at another width. */
+export function DayView() {
+  return timeGridView("day")
+}
+
+function timeGridView(span: Span): JSX.Element {
   const width = signal(0)
   const height = signal(0)
-  const dayWidth = () => Math.max(DAY_WIDTH_MIN, (width() - GUTTER_WIDTH) / 7)
+  // The gutter's zones from left to right: the extra ones, then the viewer's own beside the days.
+  const zones = computed((): GutterZone[] => [
+    ...extraTimeZones().map((tzid) => ({ tzid, local: false })),
+    { tzid: viewerTzid(), local: true },
+  ])
+  const gutterWidth = () => zones().length * GUTTER_WIDTH
+  const dayWidth = () => Math.max(DAY_WIDTH_MIN, (width() - gutterWidth()) / VISIBLE_DAYS[span])
   const showDays = holdVisibleDays(LOAD_BUFFER_DAYS, LOAD_EDGE_DAYS)
 
-  const openedAt = untracked(() => weekIndex(activeDate()))
+  const openedAt = untracked(() => firstVisibleIndex(activeDate(), span))
   // The header's days sit relative to this one, and it follows the strip on the UI thread.
   const base = openedAt
   const stripX = createAnimatedValue(0)
@@ -264,7 +357,19 @@ export function WeekView() {
   const headerHeight = () => DAY_HEADER_HEIGHT + lanesHeight()
   const leftOf = (index: number) => (index - base) * dayWidth()
 
-  const viewportWidth = () => untracked(width) - GUTTER_WIDTH
+  const viewportWidth = () => untracked(width) - untracked(gutterWidth)
+
+  // A bar that starts left of the viewport keeps its title at the viewport's edge,
+  // following the strip on the UI thread, until the bar's end leaves no room for it.
+  const titleShift = (index: number, span: number) => {
+    const start = index * dayWidth()
+    const room = Math.max(1, span * dayWidth() - BAR_TITLE_ROOM)
+    return stripX.interpolate({
+      inputRange: [start, start + room],
+      outputRange: [0, room],
+      extrapolate: "clamp",
+    })
+  }
   const viewportHeight = () => untracked(height) - untracked(headerHeight)
 
   const reportVisible = () => {
@@ -279,20 +384,20 @@ export function WeekView() {
   const scrollToDay = (index: number, animated: boolean) =>
     days?.scrollTo({ x: index * untracked(dayWidth), animated })
 
-  // A column fully on screen stays where it is; anything else brings its week
-  // to the left edge, without animating past more than a few screens.
+  // A column fully on screen stays where it is; anything else brings its week (or,
+  // in a day view, itself) to the left edge, without animating past more than a few screens.
   const reveal = (date: Temporal.PlainDate) => {
     if (!opened) return
     const index = epochDay(date) - epochDay(untracked(trackOrigin))
     if (index < 0 || index >= TRACK_DAYS) {
       centerTrack(date)
-      queueMicrotask(() => scrollToDay(weekIndex(date), false))
+      queueMicrotask(() => scrollToDay(firstVisibleIndex(date, span), false))
       return
     }
     const w = untracked(dayWidth)
     const left = index * w
     if (left >= offsetX - 1 && left + w <= offsetX + viewportWidth() + 1) return
-    const target = weekIndex(date)
+    const target = firstVisibleIndex(date, span)
     scrollToDay(target, Math.abs(target * w - offsetX) <= 3 * viewportWidth())
   }
 
@@ -319,9 +424,10 @@ export function WeekView() {
     keptWidth = next
   })
 
-  setDayAreas("week", () => {
+  // Owned by the span: switching between day and week mounts one before the other's cleanup.
+  setDayAreas(span, () => {
     const w = untracked(dayWidth)
-    const left = page.x + GUTTER_WIDTH
+    const left = page.x + untracked(gutterWidth)
     const body = page.y + untracked(headerHeight)
     const right = page.x + untracked(width)
     const bottom = page.y + untracked(height)
@@ -348,11 +454,12 @@ export function WeekView() {
     }
     return areas
   })
-  cleanup(() => setDayAreas("week", null))
+  cleanup(() => setDayAreas(span, null))
 
   const forgetScroller = setDragScroller({
     rect: () => ({ ...page, width: untracked(width), height: untracked(height) }),
-    axes: { x: true, y: true },
+    // A day never rests between two days: only navigation moves it sideways.
+    axes: { x: span === "week", y: true },
     scrollBy(dx, dy) {
       if (dx) {
         const end = TRACK_DAYS * untracked(dayWidth) - viewportWidth()
@@ -381,7 +488,8 @@ export function WeekView() {
   const startHour = untracked(() => {
     const opened = plainDateFromEpochDay(epochDay(trackOrigin()) + openedAt)
     const showsToday =
-      epochDay(currentDay()) >= epochDay(opened) && epochDay(currentDay()) < epochDay(opened) + 7
+      epochDay(currentDay()) >= epochDay(opened) &&
+      epochDay(currentDay()) < epochDay(opened) + VISIBLE_DAYS[span]
     const clock = Temporal.Now.zonedDateTimeISO(getViewerTzid())
     return showsToday ? clock.hour + clock.minute / 60 : 8
   })
@@ -405,8 +513,10 @@ export function WeekView() {
         <View class="flex-row shrink-0 bg-background" style={{ height: headerHeight() }}>
           <View
             class="border-r border-b border-border bg-background shrink-0"
-            style={{ width: GUTTER_WIDTH }}
-          />
+            style={{ width: gutterWidth() }}
+          >
+            <GutterHeader zones={zones} />
+          </View>
           <View class="flex-1 min-w-0 overflow-hidden relative border-b border-border">
             <View
               class="absolute top-0 bottom-0 left-0 w-0"
@@ -419,6 +529,7 @@ export function WeekView() {
                     left={() => leftOf(track.indexOf(slot()))}
                     dayWidth={dayWidth}
                     lanes={hasAllDay}
+                    span={span}
                   />
                 )}
               </Each>
@@ -436,6 +547,7 @@ export function WeekView() {
                         bar={bar as () => AllDayBar<Spanning>}
                         left={() => leftOf(laneStart() + bar().column)}
                         width={() => bar().span * dayWidth()}
+                        titleShift={() => titleShift(laneStart() + bar().column, bar().span)}
                       />
                     )}
                   </Each>
@@ -453,13 +565,14 @@ export function WeekView() {
           }}
         >
           <View class="flex-row" style={{ height: GRID_HEIGHT }}>
-            <TimeGutter />
+            <TimeGutter zones={zones} />
             <Scroll
               ref={days}
               horizontal
               scrollValue={stripX}
               scrollbar={false}
               bounces={false}
+              scrollable={span === "week"}
               onScroll={(event) => {
                 offsetX = event.offset.x
                 reportVisible()
@@ -469,7 +582,13 @@ export function WeekView() {
             >
               <View style={{ width: TRACK_DAYS * dayWidth(), height: GRID_HEIGHT }}>
                 <Each of={track.slots()}>
-                  {(slot) => <DayColumn index={() => track.indexOf(slot())} dayWidth={dayWidth} />}
+                  {(slot) => (
+                    <DayColumn
+                      index={() => track.indexOf(slot())}
+                      dayWidth={dayWidth}
+                      span={span}
+                    />
+                  )}
                 </Each>
               </View>
             </Scroll>

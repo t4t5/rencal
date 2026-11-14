@@ -32,6 +32,8 @@ import {
   edgeScrollDelta,
   grabFor,
   makeDragPreview,
+  startDragScroll,
+  type DragScroll,
   type DragGrab,
   type DropHit,
 } from "@/lib/event-drag"
@@ -96,6 +98,7 @@ type DragSession = {
   grab: DragGrab
   target: EventTimeRange | null
   raf: number | null
+  dragScroll: DragScroll
 }
 
 function findDropHit(x: number, y: number): DropHit | null {
@@ -164,10 +167,12 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
 
       const el = s.scrollEl
       if (el) {
-        const { dx, dy } = edgeScrollDelta(el.getBoundingClientRect(), s.lastX, s.lastY, {
-          x: el.scrollWidth > el.clientWidth,
-          y: el.scrollHeight > el.clientHeight,
-        })
+        const { dx, dy } = edgeScrollDelta(
+          el.getBoundingClientRect(),
+          s.lastX,
+          s.lastY,
+          s.dragScroll.autoscrollAxes(),
+        )
         if (dx || dy) {
           el.scrollBy(dx, dy)
           updateTarget(s)
@@ -216,6 +221,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
       const s = sessionRef.current
       if (!s) return
       if (s.raf !== null) cancelAnimationFrame(s.raf)
+      s.dragScroll.release()
       sessionRef.current = null
       window.removeEventListener("pointermove", onPointerMove)
       window.removeEventListener("pointerup", onPointerUp)
@@ -265,6 +271,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
 
       const el = e.currentTarget
       const rect = el.getBoundingClientRect()
+      const scrollEl = scrollParent(el)
       sessionRef.current = {
         event,
         sourceKey: eventKey(event),
@@ -275,7 +282,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
           offsetX: e.clientX - rect.left,
           offsetY: e.clientY - rect.top,
         },
-        scrollEl: scrollParent(el),
+        scrollEl,
         startX: e.clientX,
         startY: e.clientY,
         lastX: e.clientX,
@@ -285,6 +292,7 @@ export function EventDragProvider({ children }: { children: ReactNode }) {
         grab: { dayOffset: 0, minuteOffset: 0 },
         target: null,
         raf: null,
+        dragScroll: startDragScroll(scrollEl),
       }
       window.addEventListener("pointermove", onPointerMove)
       window.addEventListener("pointerup", onPointerUp)

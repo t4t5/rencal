@@ -1,9 +1,7 @@
 import { Temporal } from "@js-temporal/polyfill"
-import { type RefObject, useEffect, useLayoutEffect, useMemo, useState } from "react"
+import { type RefObject, useLayoutEffect, useMemo, useState } from "react"
 
 import { epochDay, type FirstDayOfWeek, startOfWeek, useDisplaySettings, useToday } from "@/sdk"
-
-import { GUTTER_WIDTH } from "./grid"
 
 /** Days on each side of the date the strip opened on: the scrollable track spans twice this. */
 const HALF_TRACK_DAYS = 3653
@@ -31,25 +29,40 @@ function buildDay(date: Temporal.PlainDate, today: Temporal.PlainDate): WeekDay 
   }
 }
 
+/** How much of the strip the viewport shows: a whole week, or a single day. */
+export type Span = "week" | "day"
+
+const VISIBLE_DAYS: Record<Span, number> = { week: 7, day: 1 }
+
+/** The day at the viewport's left edge when `date` is shown: its week's first day, or the day itself. */
+export function firstVisibleDay(
+  date: Temporal.PlainDate,
+  span: Span,
+  firstDayOfWeek: FirstDayOfWeek,
+): Temporal.PlainDate {
+  return span === "week" ? startOfWeek(date, firstDayOfWeek) : date
+}
+
 /** The rendered days, as [start, end) indexes on the track that begins at `origin`. */
 type Strip = { origin: Temporal.PlainDate; start: number; end: number }
 
-/** `date`'s week with BUFFER_DAYS on each side, on the given track or a new one centred on it. */
+/** The days shown with `date`, with BUFFER_DAYS on each side, on the given track or a new one centred on it. */
 function stripAround(
   date: Temporal.PlainDate,
+  span: Span,
   firstDayOfWeek: FirstDayOfWeek,
   origin = date.subtract({ days: HALF_TRACK_DAYS }),
 ): Strip {
-  const weekStart = epochDay(startOfWeek(date, firstDayOfWeek)) - epochDay(origin)
+  const first = epochDay(firstVisibleDay(date, span, firstDayOfWeek)) - epochDay(origin)
   return {
     origin,
-    start: Math.max(0, weekStart - BUFFER_DAYS),
-    end: Math.min(TRACK_DAYS, weekStart + 7 + BUFFER_DAYS),
+    start: Math.max(0, first - BUFFER_DAYS),
+    end: Math.min(TRACK_DAYS, first + VISIBLE_DAYS[span] + BUFFER_DAYS),
   }
 }
 
 /**
- * The days of the continuously-scrollable week view. The scroll container holds a
+ * The days of the continuously-scrollable week and day views. The scroll container holds a
  * fixed track of TRACK_DAYS around the date the view opened on, and only the days
  * near the viewport are rendered, each at its own offset on the track. Growing the
  * rendered range therefore never moves what's on screen, so the scroll position
@@ -60,10 +73,14 @@ export function useInfiniteDays({
   scrollContainerRef,
   activeDate,
   dayWidth,
+  gutterWidth,
+  span,
 }: {
   scrollContainerRef: RefObject<HTMLDivElement | null>
   activeDate: Temporal.PlainDate
   dayWidth: number
+  gutterWidth: number
+  span: Span
 }): {
   origin: Temporal.PlainDate
   startIndex: number
@@ -73,18 +90,18 @@ export function useInfiniteDays({
 } {
   const { firstDayOfWeek } = useDisplaySettings()
   const today = useToday()
-  const [strip, setStrip] = useState(() => stripAround(activeDate, firstDayOfWeek))
+  const [strip, setStrip] = useState(() => stripAround(activeDate, span, firstDayOfWeek))
 
-  // A jump outside the rendered days renders the target's week, joined to the current
+  // A jump outside the rendered days renders the days shown with the target, joined to the current
   // range when close; a jump off the track starts a new track around it.
   const activeIndex = epochDay(activeDate) - epochDay(strip.origin)
   if (activeIndex < strip.start || activeIndex >= strip.end) {
-    const target = stripAround(activeDate, firstDayOfWeek, strip.origin)
+    const target = stripAround(activeDate, span, firstDayOfWeek, strip.origin)
     const onTrack = target.start > 0 && target.end < TRACK_DAYS
     const gap = Math.max(target.start - strip.end, strip.start - target.end)
     setStrip(
       !onTrack
-        ? stripAround(activeDate, firstDayOfWeek)
+        ? stripAround(activeDate, span, firstDayOfWeek)
         : gap <= MAX_BRIDGE_DAYS
           ? {
               origin: strip.origin,
@@ -95,15 +112,18 @@ export function useInfiniteDays({
     )
   }
 
-  // Keep the viewport and EDGE_DAYS around it rendered while the user scrolls.
-  useEffect(() => {
+  // Keep the viewport and EDGE_DAYS around it rendered while the user scrolls. A layout
+  // effect, so a new dayWidth replaces the listener in the commit that rescales scrollLeft:
+  // left to a passive effect, the old listener could read the new scrollLeft at the old
+  // width, take the viewport for hundreds of days away and render every day up to there.
+  useLayoutEffect(() => {
     const el = scrollContainerRef.current
     if (!el) return
     let frame = 0
     const update = () => {
       frame = 0
       const first = Math.floor(el.scrollLeft / dayWidth)
-      const last = Math.ceil((el.scrollLeft + el.clientWidth - GUTTER_WIDTH) / dayWidth)
+      const last = Math.ceil((el.scrollLeft + el.clientWidth - gutterWidth) / dayWidth)
       setStrip((current) => {
         const start =
           first - EDGE_DAYS < current.start ? Math.max(0, first - BUFFER_DAYS) : current.start
@@ -125,7 +145,7 @@ export function useInfiniteDays({
       el.removeEventListener("scroll", onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [scrollContainerRef, dayWidth])
+  }, [scrollContainerRef, dayWidth, gutterWidth])
 
   const { origin, start, end } = strip
   const days = useMemo(
@@ -145,10 +165,14 @@ export function useInfiniteDays({
   }
 }
 
-/** Day column width: seven days fill the viewport right of the gutter, never under DAY_WIDTH_MIN. */
+/** Day column width: the span's days fill the viewport right of the gutter, never under DAY_WIDTH_MIN. */
 const DAY_WIDTH_MIN = 100
 
-export function useDayWidth(scrollContainerRef: RefObject<HTMLDivElement | null>): {
+export function useDayWidth(
+  scrollContainerRef: RefObject<HTMLDivElement | null>,
+  span: Span,
+  gutterWidth: number,
+): {
   dayWidth: number
   measured: boolean
 } {
@@ -159,14 +183,14 @@ export function useDayWidth(scrollContainerRef: RefObject<HTMLDivElement | null>
     const el = scrollContainerRef.current
     if (!el) return
     const update = () => {
-      setDayWidth(Math.max(DAY_WIDTH_MIN, (el.clientWidth - GUTTER_WIDTH) / 7))
+      setDayWidth(Math.max(DAY_WIDTH_MIN, (el.clientWidth - gutterWidth) / VISIBLE_DAYS[span]))
       setMeasured(true)
     }
     update()
     const ro = new ResizeObserver(update)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [scrollContainerRef])
+  }, [scrollContainerRef, span, gutterWidth])
 
   return { dayWidth, measured }
 }

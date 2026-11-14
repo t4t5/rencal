@@ -1,7 +1,7 @@
 use crate::routes::error::RpcError;
 use std::collections::BTreeMap;
 
-use rencal_config::RencalConfig;
+use rencal_config::{MAX_EXTRA_TIME_ZONES, RencalConfig};
 use serde::{Deserialize, Serialize};
 use specta::Type;
 
@@ -144,6 +144,17 @@ impl ConfigApiImpl {
     pub async fn set_show_week_numbers(self, show: bool) -> RpcResult<()> {
         let mut config = RencalConfig::load()?;
         config.show_week_numbers = show;
+        config.save().map_err(RpcError::from)
+    }
+
+    pub async fn get_extra_time_zones(self) -> RpcResult<Vec<String>> {
+        Ok(RencalConfig::load()?.extra_time_zones)
+    }
+
+    pub async fn set_extra_time_zones(self, mut zones: Vec<String>) -> RpcResult<()> {
+        zones.truncate(MAX_EXTRA_TIME_ZONES);
+        let mut config = RencalConfig::load()?;
+        config.extra_time_zones = zones;
         config.save().map_err(RpcError::from)
     }
 

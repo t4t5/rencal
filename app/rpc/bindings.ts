@@ -618,12 +618,14 @@ export type Router = {
   }
   config: {
     get_auto_sync_enabled: () => Promise<boolean>
+    get_extra_time_zones: () => Promise<string[]>
     get_first_day_of_week: () => Promise<FirstDayOfWeek>
     get_groups: () => Promise<Partial<{ [key in string]: string[] }>>
     get_notifications_enabled: () => Promise<boolean>
     get_show_week_numbers: () => Promise<boolean>
     get_theme: () => Promise<ThemeSettings>
     set_auto_sync_enabled: (enabled: boolean) => Promise<null>
+    set_extra_time_zones: (zones: string[]) => Promise<null>
     set_first_day_of_week: (day: FirstDayOfWeek) => Promise<null>
     set_groups: (groups: Partial<{ [key in string]: string[] }>) => Promise<null>
     set_notifications_enabled: (enabled: boolean) => Promise<null>

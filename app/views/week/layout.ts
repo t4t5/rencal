@@ -1,4 +1,4 @@
-/* The week view's track of days, and where events sit in it. */
+/* The week and day views' track of days, and where events sit in it. */
 import { Temporal } from "@js-temporal/polyfill"
 import { computed, signal } from "nsh"
 
@@ -29,9 +29,14 @@ const center = signal(today(), { equals: (a, b) => a.equals(b) })
 /** The first day of the track. */
 export const trackOrigin = computed(() => center().subtract({ days: HALF_TRACK_DAYS }))
 
-/** The track index of the first day of `date`'s week. */
-export const weekIndex = (date: Temporal.PlainDate) =>
-  epochDay(startOfWeek(date, firstDayOfWeek())) - epochDay(trackOrigin())
+/** How much of the strip the viewport shows: a whole week, or a single day. */
+export type Span = "week" | "day"
+
+export const VISIBLE_DAYS: Record<Span, number> = { week: 7, day: 1 }
+
+/** The track index of the day at the viewport's left edge when `date` is shown: its week's first day, or the day itself. */
+export const firstVisibleIndex = (date: Temporal.PlainDate, span: Span) =>
+  epochDay(span === "week" ? startOfWeek(date, firstDayOfWeek()) : date) - epochDay(trackOrigin())
 
 /** A jump past the end of the track starts a new one around `date`. */
 export const centerTrack = (date: Temporal.PlainDate) => center.set(date)

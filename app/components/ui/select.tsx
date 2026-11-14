@@ -58,6 +58,8 @@ type Props = Omit<SelectProps, "onChange" | "trigger" | "renderItem"> & {
   triggerClass?: string
   /** What the trigger shows; the chosen item's title otherwise. */
   label?: JSX.Element
+  /** A trigger of the caller's own, in place of the select field's. */
+  trigger?: JSX.Element
   /** Before a row's title. */
   leading?: (item: SelectEntry) => JSX.Element
   renderItem?: SelectProps["renderItem"]
@@ -71,6 +73,7 @@ export function Select(props: Props) {
     "variant",
     "triggerClass",
     "label",
+    "trigger",
     "leading",
     "renderItem",
     "popupClass",
@@ -96,13 +99,15 @@ export function Select(props: Props) {
         own.renderItem ?? ((item) => <SelectRow item={item} leading={own.leading?.(item)} />)
       }
       trigger={
-        <SelectTrigger variant={own.variant} class={own.triggerClass}>
-          {own.label ?? (
-            <Text class={cn("truncate text-sm", !title() && "text-placeholder-foreground")}>
-              {title() ?? own.placeholder ?? ""}
-            </Text>
-          )}
-        </SelectTrigger>
+        own.trigger ?? (
+          <SelectTrigger variant={own.variant} class={own.triggerClass}>
+            {own.label ?? (
+              <Text class={cn("truncate text-sm", !title() && "text-placeholder-foreground")}>
+                {title() ?? own.placeholder ?? ""}
+              </Text>
+            )}
+          </SelectTrigger>
+        )
       }
     />
   )

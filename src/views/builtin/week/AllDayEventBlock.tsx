@@ -1,7 +1,5 @@
 import { type AllDayBar, type CalendarEvent, cn, UntitledEventText, useEventProps } from "@/sdk"
 
-import { GUTTER_WIDTH } from "./grid"
-
 export function WeekAllDayBar({
   bar,
   colOffset,
@@ -37,7 +35,7 @@ export function WeekAllDayBar({
         <span
           data-slot="calendar-event-title"
           className="sticky truncate min-w-0"
-          style={{ left: GUTTER_WIDTH + 4 }}
+          style={{ left: "calc(var(--week-gutter-width) + 4px)" }}
         >
           {event.summary || <UntitledEventText />}
         </span>

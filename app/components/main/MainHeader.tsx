@@ -1,4 +1,5 @@
 import { type JSX, Text, token, View } from "nsh"
+import { titleBar } from "nsh/desktop"
 
 import { CommandTooltip } from "@/components/shortcuts/CommandTooltip"
 import { formatHotkeyKey } from "@/components/shortcuts/ShortcutKeys"
@@ -11,11 +12,24 @@ import { formatGroupName, getGroupOptions } from "@/lib/calendar-groups"
 import { today } from "@/lib/event-time"
 import { inspectable } from "@/lib/inspect"
 
-import { CheckIcon, ChevronDownIcon, SearchIcon, SettingsIcon, SidebarIcon } from "@/icons"
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  PlusIcon,
+  SearchIcon,
+  SettingsIcon,
+  SidebarIcon,
+} from "@/icons"
 import { activeGroup, navigateToDate, setActiveGroup } from "@/stores/calendar"
-import { actionKeys, setSearchOpen } from "@/stores/commands"
+import { actionKeys, composeNewEvent, setSearchOpen } from "@/stores/commands"
 import { groups } from "@/stores/settings"
-import { calendarView, openSettings, setCalendarView, toggleSidebar } from "@/stores/view"
+import {
+  calendarView,
+  openSettings,
+  setCalendarView,
+  sidebarCollapsed,
+  toggleSidebar,
+} from "@/stores/view"
 import { resolveView, VIEWS } from "@/views/manifest"
 
 /** A dropdown with the look of the old select button. */
@@ -85,6 +99,37 @@ function GroupSwitcher() {
   )
 }
 
+/** Hides the sidebar as well as bringing it back, from the same place. */
+function ToggleSidebarButton() {
+  const label = () => (sidebarCollapsed() ? "Show sidebar" : "Hide sidebar")
+  return (
+    <View tooltip={<CommandTooltip text={label()} action="sidebar.toggle" />}>
+      <Button variant="ghost" size="icon" accessibilityLabel={label()} onPress={toggleSidebar}>
+        <SidebarIcon />
+      </Button>
+    </View>
+  )
+}
+
+/** Stands in for the sidebar's compose button while the sidebar is hidden. */
+function NewEventButton() {
+  return (
+    <If when={sidebarCollapsed()}>
+      <View tooltip={<CommandTooltip text="Create new event" action="event.new" />}>
+        <Button
+          testID="toolbar-new-event"
+          variant="ghost"
+          size="icon"
+          accessibilityLabel="Create new event"
+          onPress={composeNewEvent}
+        >
+          <PlusIcon class="size-4" />
+        </Button>
+      </View>
+    </If>
+  )
+}
+
 export function MainHeader() {
   return (
     <View
@@ -92,10 +137,13 @@ export function MainHeader() {
       class="shrink-0 flex-row gap-2 p-(--layout-padding)"
       desktop={{ windowDrag: true }}
     >
-      <View class="flex-row gap-2 items-center">
-        <Button variant="ghost" size="icon" onPress={toggleSidebar}>
-          <SidebarIcon />
-        </Button>
+      {/* With the sidebar hidden, this toolbar sits under the macOS traffic lights. */}
+      <View
+        class="flex-row gap-2 items-center"
+        style={{ paddingLeft: sidebarCollapsed() ? titleBar().left : 0 }}
+      >
+        <ToggleSidebarButton />
+        <NewEventButton />
         <View tooltip={<CommandTooltip text="Go to Today" action="date.today" />}>
           <Button variant="secondary" label="Today" onPress={() => navigateToDate(today())} />
         </View>

@@ -20,6 +20,7 @@ import {
   parseAction,
   resolveInvocation,
 } from "@/lib/commands"
+import { largestVisibleDayArea } from "@/lib/day-hits"
 import {
   addMinutes,
   atTime,
@@ -44,10 +45,16 @@ import {
 import { triggerDuplicate } from "@/stores/duplicate"
 import { activeEvent, calendarEvents, setActiveEventKey } from "@/stores/events"
 import { toggleInvites } from "@/stores/invites"
-import { clearPopoverAnchor } from "@/stores/popover"
+import { anchorPopoverAt, clearPopoverAnchor } from "@/stores/popover"
 import { groups, setShowWeekNumbers, showWeekNumbers } from "@/stores/settings"
 import { syncNow } from "@/stores/sync"
-import { openSettings, setCalendarView, settingsFocused, toggleSidebar } from "@/stores/view"
+import {
+  openSettings,
+  setCalendarView,
+  settingsFocused,
+  sidebarCollapsed,
+  toggleSidebar,
+} from "@/stores/view"
 import { activeTheme, cycleTheme, pickTheme, themeDescriptors } from "@/themes/controller"
 import { viewBindings, VIEWS } from "@/views/manifest"
 
@@ -195,6 +202,31 @@ function newEventOnDay() {
   openDraftPopover({ start, end: addMinutes(start, DEFAULT_DURATION_MINS) })
 }
 
+/**
+ * Composes a new event in the sidebar. While that's hidden, it opens one on the
+ * selected day instead, or brings the sidebar back when the day isn't on screen.
+ */
+export function composeNewEvent() {
+  if (!untracked(sidebarCollapsed)) {
+    startDrafting()
+    return
+  }
+  const date = untracked(activeDate)
+  const area = largestVisibleDayArea(date)
+  if (!area) {
+    startDrafting()
+    toggleSidebar()
+    return
+  }
+  const hour = Temporal.Now.zonedDateTimeISO(getViewerTzid()).hour
+  const start = getLastEventEndTime(date, untracked(calendarEvents)) ?? atTime(date, hour)
+  anchorPopoverAt({
+    origin: { x: area.x, y: area.y },
+    size: { width: area.width, height: area.height },
+  })
+  openDraftPopover({ start, end: addMinutes(start, DEFAULT_DURATION_MINS) })
+}
+
 function duplicateEvent() {
   if (untracked(draftPopoverOpen)) throw new CommandError("Finish the new event first")
   const target = untracked(activeEvent) ?? untracked(selectedEvent)
@@ -243,7 +275,7 @@ const handlers: Record<CommandId, CommandHandler> = {
       promptToConnect()
       throw new CommandError("No calendar can take new events yet")
     }
-    startDrafting()
+    composeNewEvent()
   },
   "invites.toggle": toggleInvites,
   "view.switch": ({ view }) => {

@@ -61,3 +61,17 @@ export function dayArea(day: Temporal.PlainDate, zone: DayZone): DayArea | null 
   }
   return null
 }
+
+/** Where `day` shows largest on screen, in any zone: what a new event on it opens from. */
+export function largestVisibleDayArea(day: Temporal.PlainDate): Rect | null {
+  let largest: Rect | null = null
+  for (const areas of sources.values()) {
+    for (const area of areas()) {
+      if (!area.day.equals(day)) continue
+      const shown = area.visible ?? area.rect
+      if (shown.width <= 0 || shown.height <= 0) continue
+      if (!largest || shown.width * shown.height > largest.width * largest.height) largest = shown
+    }
+  }
+  return largest
+}

@@ -2,13 +2,15 @@ import { Temporal } from "@js-temporal/polyfill"
 import { type CSSProperties, type RefObject, useLayoutEffect, useRef } from "react"
 
 import {
+  AddTimeZoneButton,
   cn,
   dayProps,
   epochDay,
   formatWallclockTime,
   formatWeekday,
-  startOfWeek,
   type TimeFormat,
+  TimeZoneMenu,
+  Tooltip,
   useDayGrid,
   useDisplaySettings,
   useNavigation,
@@ -22,9 +24,12 @@ import { DragToCreateSelection } from "./DragToCreateSelection"
 import { WeekTimedEvent } from "./TimedEventBlock"
 import { GRID_HEIGHT, GUTTER_WIDTH, HOUR_HEIGHT } from "./grid"
 import type { DayRangeLayout } from "./useDayRangeLayout"
-import { TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
+import { useGutterZones } from "./useGutterZones"
+import { firstVisibleDay, type Span, TRACK_DAYS, type WeekDay } from "./useInfiniteDays"
+import { type GutterZone, hourInZone, zoneAbbreviation, zoneDescription } from "./zones"
 
 type WeekTimeGridProps = {
+  span: Span
   /** The first day of the scroll track; `days` start `startIndex` days after it. */
   origin: Temporal.PlainDate
   startIndex: number
@@ -36,6 +41,7 @@ type WeekTimeGridProps = {
 }
 
 export function WeekTimeGrid({
+  span,
   origin,
   startIndex,
   days,
@@ -48,14 +54,18 @@ export function WeekTimeGrid({
   const { timeFormat, firstDayOfWeek } = useDisplaySettings()
   const tzid = useViewerTzid()
   const { selection } = useDayGrid()
+  const zones = useGutterZones()
+  const gutterWidth = zones.length * GUTTER_WIDTH
 
   const activeDateKey = activeDate.toString()
+  // A day on its own is always the active one, so marking it selected says nothing.
+  const selectedDateKey = span === "day" ? null : activeDateKey
   const N = days.length
   const hasAllDay = allDayBars.length > 0
 
-  // scrollLeft that puts the first day of `date`'s week right of the gutter.
-  const weekScrollLeft = (date: Temporal.PlainDate, width: number) =>
-    (epochDay(startOfWeek(date, firstDayOfWeek)) - epochDay(origin)) * width
+  // scrollLeft that puts the first day shown with `date` right of the gutter.
+  const spanScrollLeft = (date: Temporal.PlainDate, width: number) =>
+    (epochDay(firstVisibleDay(date, span, firstDayOfWeek)) - epochDay(origin)) * width
 
   // Theme padding, font loading, or a window resize can change the tracks.
   // Preserve the visible day offset after the new track widths reach the DOM.
@@ -71,7 +81,7 @@ export function WeekTimeGrid({
   }, [dayWidth, scrollContainerRef])
 
   // Initial scroll (once dayWidth is measured): scrollTop to current time / 08:00,
-  // scrollLeft to the first day of activeDate's week.
+  // scrollLeft to the first day shown with activeDate.
   useLayoutEffect(() => {
     if (!dayWidthMeasured || didInitialScrollRef.current) return
     const el = scrollContainerRef.current
@@ -81,7 +91,7 @@ export function WeekTimeGrid({
     const now = Temporal.Now.zonedDateTimeISO(tzid)
     const targetHour = hasToday ? now.hour + now.minute / 60 : 8
     el.scrollTop = Math.max(0, targetHour * HOUR_HEIGHT - 16)
-    el.scrollLeft = weekScrollLeft(activeDate, dayWidth)
+    el.scrollLeft = spanScrollLeft(activeDate, dayWidth)
 
     didInitialScrollRef.current = true
   })
@@ -96,13 +106,13 @@ export function WeekTimeGrid({
     const el = scrollContainerRef.current
     if (!el) return
 
-    const columnLeft = GUTTER_WIDTH + (epochDay(activeDate) - epochDay(origin)) * dayWidth
+    const columnLeft = gutterWidth + (epochDay(activeDate) - epochDay(origin)) * dayWidth
     const columnRight = columnLeft + dayWidth
-    const viewportLeft = el.scrollLeft + GUTTER_WIDTH
+    const viewportLeft = el.scrollLeft + gutterWidth
     const viewportRight = el.scrollLeft + el.clientWidth
 
     if (originChanged || columnLeft < viewportLeft - 1 || columnRight > viewportRight + 1) {
-      const left = weekScrollLeft(activeDate, dayWidth)
+      const left = spanScrollLeft(activeDate, dayWidth)
       const far = Math.abs(left - el.scrollLeft) > 3 * el.clientWidth
       el.scrollTo({ left, behavior: originChanged || far ? "instant" : "smooth" })
     }
@@ -119,17 +129,28 @@ export function WeekTimeGrid({
     revealActiveDate()
   })
 
-  const trackWidth = GUTTER_WIDTH + TRACK_DAYS * dayWidth
-  const dayGridCols = `${GUTTER_WIDTH}px repeat(${N}, ${dayWidth}px)`
+  const trackWidth = gutterWidth + TRACK_DAYS * dayWidth
+  const dayGridCols = `${gutterWidth}px repeat(${N}, ${dayWidth}px)`
   // The rendered days, at their own offset on the track.
-  const windowBox = { marginLeft: startIndex * dayWidth, width: GUTTER_WIDTH + N * dayWidth }
+  const windowBox = { marginLeft: startIndex * dayWidth, width: gutterWidth + N * dayWidth }
 
   return (
     <div
       ref={scrollContainerRef}
       data-slot="week-scroll"
-      style={{ "--week-hour-height": `${HOUR_HEIGHT}px` } as CSSProperties}
-      className={cn("h-full w-full min-w-0 overflow-auto", selection && "select-none")}
+      data-span={span}
+      style={
+        {
+          "--week-hour-height": `${HOUR_HEIGHT}px`,
+          "--week-gutter-width": `${gutterWidth}px`,
+        } as CSSProperties
+      }
+      className={cn(
+        "h-full w-full min-w-0",
+        // A day never rests between two days: only navigation moves it sideways.
+        span === "day" ? "overflow-x-hidden overflow-y-auto" : "overflow-auto",
+        selection && "select-none",
+      )}
     >
       <div style={{ width: trackWidth, minHeight: "100%" }}>
         {/* The sticky header spans the whole track, so loading more days changes only
@@ -155,8 +176,26 @@ export function WeekTimeGrid({
               data-slot="week-header-gutter"
               className="sticky left-0 z-30 bg-background border-r border-b border-border"
               style={{ gridColumn: 1, gridRow: "1 / -1" }}
+            >
+              {/* One zone needs no name: every time on screen is in it. Once zones are
+                  named, their menus add more: a "+" beside them would cover a name. */}
+              {zones.length > 1 ? (
+                <ZoneLabels zones={zones} date={activeDate} />
+              ) : (
+                <div className="h-7.5 pl-1 flex items-center">
+                  <Tooltip content="Add time zone" side="bottom">
+                    <AddTimeZoneButton />
+                  </Tooltip>
+                </div>
+              )}
+            </div>
+            <DayHeaders
+              days={days}
+              span={span}
+              hasAllDay={hasAllDay}
+              selectedDateKey={selectedDateKey}
+              onDayClick={goToDate}
             />
-            <DayHeaders days={days} activeDateKey={activeDateKey} onDayClick={goToDate} />
             {hasAllDay && (
               <>
                 {/* Per-day backgrounds for the all-day region */}
@@ -165,14 +204,14 @@ export function WeekTimeGrid({
                     key={`${day.dateKey}-allday-bg`}
                     className={cn(
                       "border-r border-b border-border",
-                      day.dateKey === activeDateKey
+                      day.dateKey === selectedDateKey
                         ? "bg-selected text-selected-foreground"
-                        : day.isWeekend && "bg-weekend",
+                        : isWeekend(day, span) && "bg-weekend",
                     )}
                     style={{ gridColumn: i + 2, gridRow: "2 / -1" }}
                     data-slot="week-all-day"
-                    data-selected={day.dateKey === activeDateKey || undefined}
-                    data-weekend={day.isWeekend || undefined}
+                    data-selected={day.dateKey === selectedDateKey || undefined}
+                    data-weekend={isWeekend(day, span) || undefined}
                     {...dayProps(day.date, "all-day")}
                   />
                 ))}
@@ -194,24 +233,24 @@ export function WeekTimeGrid({
             data-slot="week-time-gutter"
             className="sticky left-0 z-10 bg-background border-r border-border"
           >
-            <TimeGutter timeFormat={timeFormat} />
+            <TimeGutter zones={zones} date={activeDate} viewerTzid={tzid} timeFormat={timeFormat} />
           </div>
           {days.map((day) => (
             <div
               key={day.dateKey}
               className={cn(
                 "relative border-r border-border cursor-default",
-                day.dateKey === activeDateKey
+                day.dateKey === selectedDateKey
                   ? "bg-selected text-selected-foreground"
-                  : day.isWeekend && "bg-weekend",
+                  : isWeekend(day, span) && "bg-weekend",
               )}
               style={{
                 backgroundImage: `var(--week-grid-background, repeating-linear-gradient(to bottom, transparent 0, transparent ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT - 1}px, var(--border) ${HOUR_HEIGHT}px))`,
               }}
               {...dayProps(day.date, "timed")}
               data-slot="week-day"
-              data-selected={day.dateKey === activeDateKey || undefined}
-              data-weekend={day.isWeekend || undefined}
+              data-selected={day.dateKey === selectedDateKey || undefined}
+              data-weekend={isWeekend(day, span) || undefined}
               onClick={() => goToDate(day.date)}
             >
               {(timedByDay.get(day.dateKey) ?? []).map((block) => (
@@ -222,7 +261,7 @@ export function WeekTimeGrid({
                 <DragToCreateSelection selection={selection} date={day.date} />
               )}
 
-              {day.isToday && <CurrentTimeIndicator />}
+              {day.isToday && <CurrentTimeIndicator inset={span === "day"} />}
             </div>
           ))}
         </div>
@@ -231,20 +270,89 @@ export function WeekTimeGrid({
   )
 }
 
-function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
+// A lone day has no weekdays beside it to stand apart from.
+const isWeekend = (day: WeekDay, span: Span) => span === "week" && day.isWeekend
+
+const formatZoneHour = ({ hour, minute }: { hour: number; minute: number }, format: TimeFormat) =>
+  formatWallclockTime(hour, minute, format)
+
+/**
+ * One column of hour labels per zone. The grid's hours are the viewer's; the other zones
+ * read them as they fall on `date`, since a zone's offset can change from one day to the next.
+ */
+function TimeGutter({
+  zones,
+  date,
+  viewerTzid,
+  timeFormat,
+}: {
+  zones: GutterZone[]
+  date: Temporal.PlainDate
+  viewerTzid: string
+  timeFormat: TimeFormat
+}) {
   return (
-    <div className="relative" style={{ height: GRID_HEIGHT }}>
-      {Array.from({ length: 23 }, (_, i) => i + 1).map((h) => {
+    <div className="flex" style={{ height: GRID_HEIGHT }}>
+      {zones.map(({ tzid, local }) => (
+        <div
+          key={tzid}
+          data-slot="week-time-zone"
+          data-local={local || undefined}
+          className="relative"
+          style={{ width: GUTTER_WIDTH }}
+        >
+          {Array.from({ length: 23 }, (_, i) => i + 1).map((hour) => (
+            <span
+              key={hour}
+              data-slot="week-hour-label"
+              data-typography="numerical"
+              className={cn(
+                "absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none whitespace-nowrap",
+                !local && "opacity-70",
+              )}
+              style={{ top: hour * HOUR_HEIGHT }}
+            >
+              {formatZoneHour(hourInZone(date, hour, viewerTzid, tzid), timeFormat)}
+            </span>
+          ))}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** Names the gutter's columns, at the height of the day headers. Extra zones open a menu. */
+function ZoneLabels({ zones, date }: { zones: GutterZone[]; date: Temporal.PlainDate }) {
+  return (
+    <div className="flex">
+      {zones.map(({ tzid, local }) => {
+        const name = zoneAbbreviation(tzid, date)
         return (
-          <span
-            key={h}
-            data-slot="week-hour-label"
-            data-typography="numerical"
-            className="absolute right-1.5 text-2xs text-muted-foreground leading-none -translate-y-1/2 select-none"
-            style={{ top: h * HOUR_HEIGHT }}
+          <div
+            key={tzid}
+            data-slot="week-zone-label"
+            data-local={local || undefined}
+            className={cn(
+              "h-7.5 pr-1 flex items-center justify-end text-2xs text-muted-foreground leading-none whitespace-nowrap overflow-hidden select-none",
+              !local && "opacity-70",
+            )}
+            style={{ width: GUTTER_WIDTH }}
           >
-            {formatWallclockTime(h, 0, timeFormat)}
-          </span>
+            <Tooltip content={zoneDescription(tzid, date)} side="bottom">
+              {local ? (
+                <span className="px-1 cursor-default">{name}</span>
+              ) : (
+                <TimeZoneMenu tzid={tzid}>
+                  <button
+                    type="button"
+                    className="px-1 py-1 rounded-sm outline-none hover:bg-accent hover:text-accent-foreground focus-visible:bg-accent aria-expanded:bg-accent"
+                  >
+                    {name}
+                  </button>
+                </TimeZoneMenu>
+              )}
+            </Tooltip>
+          </div>
         )
       })}
     </div>
@@ -253,11 +361,15 @@ function TimeGutter({ timeFormat }: { timeFormat: TimeFormat }) {
 
 const DayHeaders = ({
   days,
-  activeDateKey,
+  span,
+  hasAllDay,
+  selectedDateKey,
   onDayClick,
 }: {
   days: WeekDay[]
-  activeDateKey: string
+  span: Span
+  hasAllDay: boolean
+  selectedDateKey: string | null
   onDayClick: (date: Temporal.PlainDate) => void
 }) => {
   return days.map((day) => (
@@ -265,13 +377,17 @@ const DayHeaders = ({
       key={day.dateKey}
       data-slot="week-day-header"
       data-typography="numerical"
-      data-selected={day.dateKey === activeDateKey || undefined}
-      data-weekend={day.isWeekend || undefined}
+      data-selected={day.dateKey === selectedDateKey || undefined}
+      data-weekend={isWeekend(day, span) || undefined}
       className={cn(
-        "flex items-baseline justify-end gap-1 border-r border-border p-0.5 pb-px cursor-default",
-        day.dateKey === activeDateKey
+        "flex items-baseline gap-1 border-r border-border p-0.5 pb-px cursor-default",
+        // The all-day lane draws the line under the headers; without it, they do.
+        !hasAllDay && "border-b",
+        // A lone day reads from the left, like its events; a week's dates line up on the right.
+        span === "day" ? "justify-start pl-2" : "justify-end",
+        day.dateKey === selectedDateKey
           ? "bg-selected text-selected-foreground"
-          : day.isWeekend && "bg-weekend",
+          : isWeekend(day, span) && "bg-weekend",
       )}
       style={{ gridRow: 1 }}
       // Headers double as all-day days so multi-day bars can land here, and

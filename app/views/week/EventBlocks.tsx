@@ -1,4 +1,4 @@
-import { Text, View, type ViewRef } from "nsh"
+import { type AnimatedNode, Text, View, type ViewRef } from "nsh"
 
 import { Tooltip } from "@/components/ui/tooltip"
 
@@ -131,6 +131,8 @@ export function AllDayBarBlock(props: {
   bar: () => AllDayBar<Spanning>
   left: () => number
   width: () => number
+  /** How far the title moves right to stay on screen while the bar starts left of it. */
+  titleShift?: () => AnimatedNode
 }) {
   let block: ViewRef | undefined
   const event = () => props.bar().item.event
@@ -165,12 +167,14 @@ export function AllDayBarBlock(props: {
         )}
         style={blockStyle(event())}
       >
-        <Text
-          class={cn("text-xs leading-4 truncate", isDeclined(event()) && "line-through")}
-          style={{ color: paint().foreground }}
-        >
-          {event().summary || UNTITLED}
-        </Text>
+        <View style={props.titleShift ? { translate: [props.titleShift(), 0] } : undefined}>
+          <Text
+            class={cn("text-xs leading-4 truncate", isDeclined(event()) && "line-through")}
+            style={{ color: paint().foreground }}
+          >
+            {event().summary || UNTITLED}
+          </Text>
+        </View>
       </View>
     </View>
   )

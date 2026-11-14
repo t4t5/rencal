@@ -203,7 +203,13 @@ impl Backend {
 
     /// Every IANA zone name.
     pub fn zones() -> Vec<String> {
-        chrono_tz::TZ_VARIANTS.iter().map(|tz| tz.name().to_owned()).collect()
+        time_zone::names()
+    }
+
+    /// The abbreviation of the IANA zone `tz` at `epoch_ms` ("EST"), or its
+    /// offset where it has none ("+0530"); `null` for an unknown zone.
+    pub fn zone_abbreviation(tz: String, epoch_ms: f64) -> Option<String> {
+        time_zone::abbreviation(&tz, epoch_ms)
     }
 
     /// The colors of theme file `json` by token, as `#rrggbbaa`: previews paint

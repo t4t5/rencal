@@ -63,6 +63,13 @@ export function GeneralPage() {
       <Checkbox checked={showWeekNumbers()} onChange={(show) => void setShowWeekNumbers(show)}>
         <Text class="text-sm">Show week numbers</Text>
       </Checkbox>
+      {/* Time zones are added and changed on the time grid itself, so this only points there. */}
+      <SettingsField label="Time zones" class="w-[400px]">
+        <Text class="text-xs text-muted-foreground">
+          Add time zones with the + above the hours in day and week view. Click a zone's name to
+          change or remove it.
+        </Text>
+      </SettingsField>
       <DataDirectorySection />
       <View class="w-[400px] gap-1">
         <Checkbox checked={autoSyncEnabled()} onChange={(on) => void setAutoSyncEnabled(on)}>

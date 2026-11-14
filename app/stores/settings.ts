@@ -1,14 +1,20 @@
 // Settings the UI reads: mirrors of the backend's, refreshed when it announces a change.
-import { signal } from "nsh"
+import { computed, signal } from "nsh"
 
 import { api, type CaldirSettings } from "@/lib/api"
 import { emitAppEvent } from "@/lib/api/internal"
 import type { CalendarGroups } from "@/lib/calendar-groups"
-import type { FirstDayOfWeek, TimeFormat } from "@/lib/event-time"
+import { type FirstDayOfWeek, normalizeExtraTimeZones, type TimeFormat } from "@/lib/event-time"
+
+import { viewerTzid } from "@/stores/clock"
 
 const firstDay = signal<FirstDayOfWeek>("monday")
 const timeFormatValue = signal<TimeFormat>("24h")
 const weekNumbers = signal(false)
+// Every config change re-reads the settings: keep the array while its zones are the same.
+const storedZones = signal<string[]>([], {
+  equals: (a, b) => a.length === b.length && a.every((tzid, i) => tzid === b[i]),
+})
 const calendarGroups = signal<CalendarGroups>({})
 const defaultCalendarSlug = signal<string | null>(null)
 const defaultReminderList = signal<number[]>([])
@@ -20,6 +26,10 @@ const loaded = signal(false)
 export const firstDayOfWeek = () => firstDay()
 export const timeFormat = () => timeFormatValue()
 export const showWeekNumbers = () => weekNumbers()
+/** The zones the day and week views show next to the viewer's, as config.toml has them. */
+export const storedTimeZones = () => storedZones()
+/** The extra zones to show: a zone the viewer is in has nothing to add next to their own. */
+export const extraTimeZones = computed(() => storedZones().filter((tzid) => tzid !== viewerTzid()))
 export const groups = () => calendarGroups()
 export const settingsLoaded = () => loaded()
 export const defaultCalendar = () => defaultCalendarSlug()
@@ -29,15 +39,17 @@ export const notificationsEnabled = () => notifications()
 export const calendarDir = () => calendarDirValue()
 
 async function refreshConfig() {
-  const [day, numbers, loadedGroups, sync, notify] = await Promise.all([
+  const [day, numbers, zones, loadedGroups, sync, notify] = await Promise.all([
     api.settings.getFirstDayOfWeek(),
     api.settings.getShowWeekNumbers(),
+    api.settings.getExtraTimeZones(),
     api.settings.getCalendarGroups(),
     api.settings.getAutoSyncEnabled(),
     api.settings.getNotificationsEnabled(),
   ])
   firstDay.set(day)
   weekNumbers.set(numbers)
+  storedZones.set(zones)
   calendarGroups.set(loadedGroups)
   autoSync.set(sync)
   notifications.set(notify)
@@ -98,6 +110,13 @@ export async function setFirstDayOfWeek(day: FirstDayOfWeek) {
 export async function setShowWeekNumbers(show: boolean) {
   weekNumbers.set(show)
   await api.settings.setShowWeekNumbers(show)
+  await emitAppEvent("rencal-config-changed")
+}
+
+export async function setExtraTimeZones(zones: string[]) {
+  const next = normalizeExtraTimeZones(zones)
+  storedZones.set(next)
+  await api.settings.setExtraTimeZones(next)
   await emitAppEvent("rencal-config-changed")
 }
 

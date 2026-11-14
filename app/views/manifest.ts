@@ -3,7 +3,7 @@ import type { JSX } from "nsh"
 import type { Binding } from "@/lib/key-bindings"
 
 import { MonthView } from "@/views/month/MonthView"
-import { WeekView } from "@/views/week/WeekView"
+import { DayView, WeekView } from "@/views/week/WeekView"
 import { YearView } from "@/views/year/YearView"
 
 export type ViewDescriptor = {
@@ -16,6 +16,7 @@ export type ViewDescriptor = {
 
 /** The built-in views, in the order the switcher lists them. */
 export const VIEWS: readonly ViewDescriptor[] = [
+  { id: "day", name: "Day", component: DayView, shortcut: "d" },
   { id: "week", name: "Week", component: WeekView, shortcut: "w" },
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
   { id: "year", name: "Year", component: YearView, shortcut: "y" },

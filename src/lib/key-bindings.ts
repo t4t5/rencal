@@ -43,7 +43,7 @@ export const DEFAULT_BINDINGS: readonly Binding[] = [
   { keys: "/", action: "search.open" },
   { keys: "c", action: "event.new" },
   { keys: "a", action: "event.new-on-day" },
-  { keys: "d", action: "event.duplicate" },
+  { keys: "shift+d", action: "event.duplicate" },
   { keys: "i", action: "invites.toggle" },
   { keys: "s", action: "app.sync" },
   { keys: "mod+comma", action: "app.settings" },

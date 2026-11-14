@@ -56,9 +56,10 @@ export function setAppMenu() {
       label: "View",
       submenu: [
         // Views use Cmd+<digit> to avoid clobbering system Cmd+W (close) / Cmd+M (minimize).
-        command("Week", "view.switch:week", "mod+1"),
-        command("Month", "view.switch:month", "mod+2"),
-        command("Year", "view.switch:year", "mod+3"),
+        command("Day", "view.switch:day", "mod+1"),
+        command("Week", "view.switch:week", "mod+2"),
+        command("Month", "view.switch:month", "mod+3"),
+        command("Year", "view.switch:year", "mod+4"),
         { type: "separator" },
         command("Go to Today", "date.today", "mod+t"),
         command("Go to Date…", "date.go", "mod+g"),
