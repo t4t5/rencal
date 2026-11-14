@@ -54,14 +54,17 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .build()?;
 
     // Views use Cmd+<digit> to avoid clobbering system Cmd+W (close) / Cmd+M (minimize).
-    let week = MenuItemBuilder::with_id("view.switch:week", "Week")
+    let day = MenuItemBuilder::with_id("view.switch:day", "Day")
         .accelerator("CmdOrCtrl+1")
         .build(handle)?;
-    let month = MenuItemBuilder::with_id("view.switch:month", "Month")
+    let week = MenuItemBuilder::with_id("view.switch:week", "Week")
         .accelerator("CmdOrCtrl+2")
         .build(handle)?;
-    let year = MenuItemBuilder::with_id("view.switch:year", "Year")
+    let month = MenuItemBuilder::with_id("view.switch:month", "Month")
         .accelerator("CmdOrCtrl+3")
+        .build(handle)?;
+    let year = MenuItemBuilder::with_id("view.switch:year", "Year")
+        .accelerator("CmdOrCtrl+4")
         .build(handle)?;
     let today = MenuItemBuilder::with_id("date.today", "Go to Today")
         .accelerator("CmdOrCtrl+T")
@@ -70,6 +73,7 @@ pub fn build_menu<R: Runtime>(handle: &AppHandle<R>) -> tauri::Result<Menu<R>> {
         .accelerator("CmdOrCtrl+G")
         .build(handle)?;
     let view_menu = SubmenuBuilder::new(handle, "View")
+        .item(&day)
         .item(&week)
         .item(&month)
         .item(&year)

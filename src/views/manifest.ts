@@ -3,7 +3,7 @@ import type { ComponentType } from "react"
 import type { Binding } from "@/lib/key-bindings"
 
 import { MonthView } from "@/views/builtin/month/MonthView"
-import { WeekView } from "@/views/builtin/week/WeekView"
+import { DayView, WeekView } from "@/views/builtin/week/WeekView"
 import { YearView } from "@/views/builtin/year/YearView"
 
 export type ViewDescriptor = {
@@ -18,6 +18,7 @@ export const DEFAULT_VIEW_ID = "month"
 
 // Array order is display order (dropdown, palette, shortcuts overlay).
 export const BUILTIN_VIEWS: ViewDescriptor[] = [
+  { id: "day", name: "Day", component: DayView, shortcut: "d" },
   { id: "week", name: "Week", component: WeekView, shortcut: "w" },
   { id: "month", name: "Month", component: MonthView, shortcut: "m" },
   { id: "year", name: "Year", component: YearView, shortcut: "y" },
